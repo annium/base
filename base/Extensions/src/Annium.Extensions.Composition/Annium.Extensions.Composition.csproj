@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <PackageId>Annium.Extensions.Composition</PackageId>
+        <PackageVersion>0.1.0</PackageVersion>
+        <Description>Annium.Extensions.Composition</Description>
+        <TargetFramework>net7.0</TargetFramework>
+        <OutputType>Library</OutputType>
+        <DebugType>portable</DebugType>
+        <LangVersion>11.0</LangVersion>
+        <WarningsAsErrors>true</WarningsAsErrors>
+        <IsPackable>true</IsPackable>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+    <ItemGroup>
+        <ProjectReference Include="../../../Architecture/src/Annium.Architecture.Base/Annium.Architecture.Base.csproj" />
+        <ProjectReference Include="../../../Localization/src/Annium.Localization.Abstractions/Annium.Localization.Abstractions.csproj" />
+    </ItemGroup>
+</Project>

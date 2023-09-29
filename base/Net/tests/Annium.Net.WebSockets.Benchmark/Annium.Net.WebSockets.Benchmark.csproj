@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <PackageId>Annium.Net.WebSockets.Benchmark</PackageId>
+        <PackageVersion>0.1.0</PackageVersion>
+        <Description>Annium.Net.WebSockets.Benchmark</Description>
+        <TargetFramework>net7.0</TargetFramework>
+        <OutputType>Exe</OutputType>
+        <DebugType>portable</DebugType>
+        <LangVersion>11.0</LangVersion>
+        <WarningsAsErrors>true</WarningsAsErrors>
+        <IsPackable>false</IsPackable>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+    <ItemGroup>
+        <ProjectReference Include="../../src/Annium.Net.Servers/Annium.Net.Servers.csproj" />
+        <ProjectReference Include="../../src/Annium.Net.WebSockets/Annium.Net.WebSockets.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="BenchmarkDotNet" Version="0.13.8" />
+    </ItemGroup>
+</Project>

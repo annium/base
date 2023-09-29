@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <PackageId>Annium.Configuration.Tests.Lib</PackageId>
+        <PackageVersion>0.1.0</PackageVersion>
+        <Description>Annium.Configuration.Tests</Description>
+        <TargetFramework>net7.0</TargetFramework>
+        <OutputType>Library</OutputType>
+        <DebugType>portable</DebugType>
+        <LangVersion>11.0</LangVersion>
+        <WarningsAsErrors>true</WarningsAsErrors>
+        <IsPackable>false</IsPackable>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+    <ItemGroup>
+        <ProjectReference Include="../../../Testing/src/Annium.Testing.Lib/Annium.Testing.Lib.csproj" />
+        <ProjectReference Include="../../src/Annium.Configuration.Abstractions/Annium.Configuration.Abstractions.csproj" />
+    </ItemGroup>
+</Project>

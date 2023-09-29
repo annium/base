@@ -1,0 +1,9 @@
+# build
+/bin/
+/obj/
+
+# packages
+/*.nupkg
+
+# benchmark results
+/BenchmarkDotNet.Artifacts/

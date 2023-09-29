@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <PackageId>Annium.Extensions.Workers</PackageId>
+        <PackageVersion>0.1.0</PackageVersion>
+        <Description>Annium.Extensions.Workers</Description>
+        <TargetFramework>net7.0</TargetFramework>
+        <OutputType>Library</OutputType>
+        <DebugType>portable</DebugType>
+        <LangVersion>11.0</LangVersion>
+        <WarningsAsErrors>true</WarningsAsErrors>
+        <IsPackable>true</IsPackable>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+    <ItemGroup>
+        <ProjectReference Include="../../../Core/src/Annium.Core.DependencyInjection/Annium.Core.DependencyInjection.csproj" />
+        <ProjectReference Include="../Annium.Extensions.Execution/Annium.Extensions.Execution.csproj" />
+    </ItemGroup>
+</Project>

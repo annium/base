@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <PackageId>Annium.Configuration.Abstractions</PackageId>
+        <PackageVersion>0.1.0</PackageVersion>
+        <Description>Extension library for building configuration from multiple sources.</Description>
+        <TargetFramework>net7.0</TargetFramework>
+        <OutputType>Library</OutputType>
+        <DebugType>portable</DebugType>
+        <LangVersion>11.0</LangVersion>
+        <WarningsAsErrors>true</WarningsAsErrors>
+        <IsPackable>true</IsPackable>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+    <ItemGroup>
+        <ProjectReference Include="../../../Core/src/Annium.Core.Mapper/Annium.Core.Mapper.csproj" />
+    </ItemGroup>
+</Project>

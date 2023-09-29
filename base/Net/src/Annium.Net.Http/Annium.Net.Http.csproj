@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <PackageId>Annium.Net.Http</PackageId>
+        <PackageVersion>0.1.0</PackageVersion>
+        <Description>Extension library for simplification of HTTP interaction.</Description>
+        <TargetFramework>net7.0</TargetFramework>
+        <OutputType>Library</OutputType>
+        <DebugType>portable</DebugType>
+        <LangVersion>11.0</LangVersion>
+        <WarningsAsErrors>true</WarningsAsErrors>
+        <IsPackable>true</IsPackable>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+    <ItemGroup>
+        <ProjectReference Include="../../../Serialization/src/Annium.Serialization.Abstractions/Annium.Serialization.Abstractions.csproj" />
+        <ProjectReference Include="../Annium.Net.Base/Annium.Net.Base.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="OneOf" Version="3.0.263" />
+    </ItemGroup>
+</Project>

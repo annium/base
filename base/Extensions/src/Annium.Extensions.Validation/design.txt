@@ -1,0 +1,13 @@
+1. returned value is Result (Annium.Data.Operations)
+2. registration is done automatically through assembly discovery
+3. each validator is registered as interface implementation
+4. validate method returns Result
+5. Validator<T> is injected through DI
+6. Validator defines sealed Validate method, that uses declared rules to run validation
+7. Rules are declared as extension methods (as analogue to extensions.net.http)
+
+- rule - it's function
+- rule chain - chain of rules for execution stage
+- rule container - container of rule chains for field
+- validator - container for field rule containers
+- validation executor - executes actual validation

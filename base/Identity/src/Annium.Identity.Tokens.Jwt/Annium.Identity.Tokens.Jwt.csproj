@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <PackageId>Annium.Identity.Tokens.Jwt</PackageId>
+        <PackageVersion>0.1.0</PackageVersion>
+        <Description>Annium.Identity.Jwt</Description>
+        <TargetFramework>net7.0</TargetFramework>
+        <OutputType>Library</OutputType>
+        <DebugType>portable</DebugType>
+        <LangVersion>11.0</LangVersion>
+        <WarningsAsErrors>true</WarningsAsErrors>
+        <IsPackable>true</IsPackable>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+    <ItemGroup>
+        <ProjectReference Include="../../../../integrations/NodaTime/src/Annium.NodaTime.Extensions/Annium.NodaTime.Extensions.csproj" />
+        <ProjectReference Include="../../../Data/src/Annium.Data.Operations/Annium.Data.Operations.csproj" />
+        <ProjectReference Include="../Annium.Identity.Tokens/Annium.Identity.Tokens.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="OneOf" Version="3.0.263" />
+        <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.0.0" />
+    </ItemGroup>
+</Project>

@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <PackageId>Annium.Net.Types</PackageId>
+        <PackageVersion>0.1.0</PackageVersion>
+        <Description>Annium.Net.Types</Description>
+        <TargetFramework>net7.0</TargetFramework>
+        <OutputType>Library</OutputType>
+        <DebugType>portable</DebugType>
+        <LangVersion>11.0</LangVersion>
+        <WarningsAsErrors>true</WarningsAsErrors>
+        <IsPackable>true</IsPackable>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+    <ItemGroup>
+        <ProjectReference Include="../../../Core/src/Annium.Core.Runtime/Annium.Core.Runtime.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Namotion.Reflection" Version="3.0.0" />
+    </ItemGroup>
+</Project>

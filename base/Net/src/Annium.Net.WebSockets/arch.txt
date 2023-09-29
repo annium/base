@@ -1,0 +1,28 @@
+topics:
+- connect base
+- disconnect base
+- connection lost event
+- connection restored event
+- connection monitor
+
+ClientWebSocket
+- implements connect async
+-- fires connection restored if succeed
+-- fires connection lost if failed (reason - error)
+- implements disconnect async
+-- fires connection lost (reason - client)
+
+ServerWebSocket
+- implements disconnect async
+-- fires connection lost (reason - server)
+
+ConnectionMonitor
+- is passed by factory (Func<ManagedWebSocket>)
+- wraps ManagedWebSocket
+- sends specified message by timer A
+- starts disconnection detector time B
+- listens for any/specified message, that updates lastMessageTime, used by timer B to detect disconnection
+
+ClientWebSocketConnection
+- is client resilient client websocket connection
+- manages ClientWebSocket instances internally

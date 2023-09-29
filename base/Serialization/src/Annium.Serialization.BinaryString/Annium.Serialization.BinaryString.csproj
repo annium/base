@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <PackageId>Annium.Serialization.BinaryString</PackageId>
+        <PackageVersion>0.1.0</PackageVersion>
+        <Description>Annium.Serialization.BinaryString</Description>
+        <TargetFramework>net7.0</TargetFramework>
+        <OutputType>Library</OutputType>
+        <DebugType>portable</DebugType>
+        <LangVersion>11.0</LangVersion>
+        <WarningsAsErrors>true</WarningsAsErrors>
+        <IsPackable>true</IsPackable>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+    <ItemGroup>
+        <ProjectReference Include="../Annium.Serialization.Abstractions/Annium.Serialization.Abstractions.csproj" />
+    </ItemGroup>
+</Project>

@@ -1,0 +1,31 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <PackageId>Annium.Identity.Tokens.Jwt.Tests</PackageId>
+        <PackageVersion>0.1.0</PackageVersion>
+        <Description>Annium.Identity.Jwt.Tests</Description>
+        <TargetFramework>net7.0</TargetFramework>
+        <OutputType>Library</OutputType>
+        <DebugType>portable</DebugType>
+        <LangVersion>11.0</LangVersion>
+        <WarningsAsErrors>true</WarningsAsErrors>
+        <IsPackable>false</IsPackable>
+        <IsTestProject>true</IsTestProject>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+    <ItemGroup>
+        <ProjectReference Include="../../../Testing/src/Annium.Testing.Assertions/Annium.Testing.Assertions.csproj" />
+        <ProjectReference Include="../../../Testing/src/Annium.Testing.Lib/Annium.Testing.Lib.csproj" />
+        <ProjectReference Include="../../src/Annium.Identity.Tokens.Jwt/Annium.Identity.Tokens.Jwt.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="coverlet.collector" Version="6.0.0" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.7.2" />
+        <PackageReference Include="xunit" Version="2.5.0" />
+        <PackageReference Include="xunit.runner.visualstudio" Version="2.5.0" />
+    </ItemGroup>
+    <ItemGroup>
+        <None Update="keys\*.key">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+</Project>
