@@ -1,17 +1,11 @@
 using System;
 using System.Runtime.CompilerServices;
-using Annium.Internal.Logging;
 
 namespace Annium.Logging;
 
 public static class LogSubjectTraceExtensions
 {
-    private static readonly bool IsEnabled;
-
-    static LogSubjectTraceExtensions()
-    {
-        IsEnabled = LogConfig.Level <= LogLevel.Trace;
-    }
+    private static bool IsEnabled => LogConfig.Level <= LogLevel.Trace;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void Trace(

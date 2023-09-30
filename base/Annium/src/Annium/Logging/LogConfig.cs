@@ -1,12 +1,11 @@
 using System;
 using System.Linq;
-using Annium.Logging;
 
-namespace Annium.Internal.Logging;
+namespace Annium.Logging;
 
-internal static class LogConfig
+public static class LogConfig
 {
-    public static readonly LogLevel Level;
+    public static LogLevel Level { get; private set; }
 
     static LogConfig()
     {
@@ -38,4 +37,6 @@ internal static class LogConfig
                 break;
         }
     }
+
+    public static void SetLevel(LogLevel level) => Level = level;
 }

@@ -1,17 +1,11 @@
 using System;
 using System.Runtime.CompilerServices;
-using Annium.Internal.Logging;
 
 namespace Annium.Logging;
 
 public static class LogSubjectDebugExtensions
 {
-    private static readonly bool IsEnabled;
-
-    static LogSubjectDebugExtensions()
-    {
-        IsEnabled = LogConfig.Level <= LogLevel.Debug;
-    }
+    private static bool IsEnabled => LogConfig.Level <= LogLevel.Debug;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void Debug(
