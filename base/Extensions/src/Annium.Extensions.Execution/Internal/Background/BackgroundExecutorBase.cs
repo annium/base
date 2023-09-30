@@ -9,9 +9,13 @@ namespace Annium.Extensions.Execution.Internal.Background;
 internal abstract class BackgroundExecutorBase : IBackgroundExecutor, ILogSubject
 {
     public ILogger Logger { get; }
-    public bool IsAvailable => _state is State.Created or State.Started;
+
+    public bool IsAvailable => _state <= State.Started;
+
     protected bool IsStarted => _state is State.Started;
+
     protected readonly CancellationTokenSource Cts = new();
+    private readonly object _locker = new();
     private State _state = State.Created;
 
     protected BackgroundExecutorBase(ILogger logger)
@@ -61,21 +65,12 @@ internal abstract class BackgroundExecutorBase : IBackgroundExecutor, ILogSubjec
 
     public void Start(CancellationToken ct = default)
     {
-        EnsureAvailable();
-
-        var sl = new SpinLock();
-        var lockTaken = false;
-        try
+        lock (_locker)
         {
-            sl.Enter(ref lockTaken);
+            // ensure is in created state
             if (_state is not State.Created)
-                throw new InvalidOperationException("Executor has already started");
+                throw new InvalidOperationException($"Executor is already {_state}");
             _state = State.Started;
-        }
-        finally
-        {
-            if (lockTaken)
-                sl.Exit();
         }
 
         // change to state to unavailable
@@ -87,11 +82,8 @@ internal abstract class BackgroundExecutorBase : IBackgroundExecutor, ILogSubjec
 
     public async ValueTask DisposeAsync()
     {
-        var sl = new SpinLock();
-        var lockTaken = false;
-        try
+        lock (_locker)
         {
-            sl.Enter(ref lockTaken);
             if (_state is State.Disposed)
             {
                 this.Trace("already disposed");
@@ -100,15 +92,18 @@ internal abstract class BackgroundExecutorBase : IBackgroundExecutor, ILogSubjec
 
             _state = State.Disposed;
         }
-        finally
-        {
-            if (lockTaken)
-                sl.Exit();
-        }
 
         this.Trace("start");
-        Stop();
+
+        this.Trace("cancel cts");
+        Cts.Cancel();
+
+        this.Trace("handle stop");
+        HandleStop();
+
+        this.Trace("handle dispose");
         await HandleDisposeAsync();
+
         this.Trace("done");
     }
 
@@ -120,61 +115,61 @@ internal abstract class BackgroundExecutorBase : IBackgroundExecutor, ILogSubjec
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void ScheduleTask(Delegate task)
     {
-        EnsureAvailable();
+        lock (_locker)
+        {
+            if (_state is not (State.Created or State.Started))
+                throw new InvalidOperationException($"Executor is already {_state}");
+        }
+
+        this.Trace("schedule task");
         ScheduleTaskCore(task);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private bool TryScheduleTask(Delegate task)
     {
-        if (!IsAvailable)
-            return false;
+        lock (_locker)
+        {
+            if (_state is not (State.Created or State.Started))
+                return false;
+        }
 
+        this.Trace("schedule task");
         ScheduleTaskCore(task);
 
         return true;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void EnsureAvailable()
-    {
-        if (!IsAvailable)
-            throw new InvalidOperationException("Executor is not available already");
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void Stop()
     {
-        var sl = new SpinLock();
-        var lockTaken = false;
-        try
+        lock (_locker)
         {
-            sl.Enter(ref lockTaken);
-            if (_state is State.Stopped)
+            if (_state is State.Stopped or State.Disposed)
             {
-                this.Trace("already stopped");
+                this.Trace($"Executor is already {_state}");
                 return;
             }
 
             _state = State.Stopped;
         }
-        finally
-        {
-            if (lockTaken)
-                sl.Exit();
-        }
 
         this.Trace("start");
+
+        this.Trace("cancel cts");
         Cts.Cancel();
+
+        this.Trace("handle stop");
         HandleStop();
+
         this.Trace("done");
     }
 
     private enum State : byte
     {
-        Created,
-        Started,
-        Stopped,
-        Disposed
+        Created = 0,
+        Started = 1,
+        Stopped = 2,
+        Disposed = 3
     }
 }
