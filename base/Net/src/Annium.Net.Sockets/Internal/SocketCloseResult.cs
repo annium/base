@@ -1,8 +1,8 @@
 using System;
 
-namespace Annium.Net.Sockets;
+namespace Annium.Net.Sockets.Internal;
 
-public readonly struct SocketCloseResult
+internal readonly struct SocketCloseResult
 {
     public readonly SocketCloseStatus Status;
     public readonly Exception? Exception;

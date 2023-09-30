@@ -1,8 +1,8 @@
 using System;
 
-namespace Annium.Net.WebSockets;
+namespace Annium.Net.WebSockets.Internal;
 
-public readonly struct WebSocketCloseResult
+internal readonly struct WebSocketCloseResult
 {
     public readonly WebSocketCloseStatus Status;
     public readonly Exception? Exception;
