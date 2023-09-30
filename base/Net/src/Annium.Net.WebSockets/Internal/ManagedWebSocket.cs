@@ -11,8 +11,8 @@ internal class ManagedWebSocket : ISendingReceivingWebSocket, ILogSubject
 {
     public ILogger Logger { get; }
     private const int BufferSize = 65_536;
-    public event Action<ReadOnlyMemory<byte>> TextReceived = delegate { };
-    public event Action<ReadOnlyMemory<byte>> BinaryReceived = delegate { };
+    public event Action<ReadOnlyMemory<byte>> OnTextReceived = delegate { };
+    public event Action<ReadOnlyMemory<byte>> OnBinaryReceived = delegate { };
     private readonly WebSocket _socket;
 
     public ManagedWebSocket(WebSocket socket, ILogger logger)
@@ -119,9 +119,9 @@ internal class ManagedWebSocket : ISendingReceivingWebSocket, ILogSubject
 
             this.Trace("fire {messageType} received", receiveResult.MessageType);
             if (receiveResult.MessageType is WebSocketMessageType.Text)
-                TextReceived(buffer.AsDataReadOnlyMemory());
+                OnTextReceived(buffer.AsDataReadOnlyMemory());
             else
-                BinaryReceived(buffer.AsDataReadOnlyMemory());
+                OnBinaryReceived(buffer.AsDataReadOnlyMemory());
 
             return (false, new WebSocketCloseResult(WebSocketCloseStatus.ClosedRemote, null));
         }

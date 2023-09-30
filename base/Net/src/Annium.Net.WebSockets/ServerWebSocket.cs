@@ -11,8 +11,8 @@ namespace Annium.Net.WebSockets;
 public class ServerWebSocket : IServerWebSocket
 {
     public ILogger Logger { get; }
-    public event Action<ReadOnlyMemory<byte>> TextReceived = delegate { };
-    public event Action<ReadOnlyMemory<byte>> BinaryReceived = delegate { };
+    public event Action<ReadOnlyMemory<byte>> OnTextReceived = delegate { };
+    public event Action<ReadOnlyMemory<byte>> OnBinaryReceived = delegate { };
     public event Action<WebSocketCloseStatus> OnDisconnected = delegate { };
     public event Action<Exception> OnError = delegate { };
     private readonly object _locker = new();
@@ -30,8 +30,8 @@ public class ServerWebSocket : IServerWebSocket
         Logger = logger;
         this.Trace("start");
         _socket = new ServerManagedWebSocket(nativeSocket, logger, ct);
-        _socket.TextReceived += OnTextReceived;
-        _socket.BinaryReceived += OnBinaryReceived;
+        _socket.OnTextReceived += HandleOnTextReceived;
+        _socket.OnBinaryReceived += HandleOnBinaryReceived;
         this.Trace<string>("paired with {socket}", _socket.GetFullId());
 
         this.Trace("subscribe to IsClosed");
@@ -141,16 +141,16 @@ public class ServerWebSocket : IServerWebSocket
         _status = status;
     }
 
-    private void OnTextReceived(ReadOnlyMemory<byte> data)
+    private void HandleOnTextReceived(ReadOnlyMemory<byte> data)
     {
         this.Trace("trigger text received");
-        TextReceived(data);
+        OnTextReceived(data);
     }
 
-    private void OnBinaryReceived(ReadOnlyMemory<byte> data)
+    private void HandleOnBinaryReceived(ReadOnlyMemory<byte> data)
     {
         this.Trace("trigger binary received");
-        BinaryReceived(data);
+        OnBinaryReceived(data);
     }
 
     private enum Status

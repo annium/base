@@ -10,8 +10,8 @@ namespace Annium.Net.WebSockets.Internal;
 internal class ClientManagedWebSocket : IClientManagedWebSocket, ILogSubject
 {
     public ILogger Logger { get; }
-    public event Action<ReadOnlyMemory<byte>> TextReceived = delegate { };
-    public event Action<ReadOnlyMemory<byte>> BinaryReceived = delegate { };
+    public event Action<ReadOnlyMemory<byte>> OnTextReceived = delegate { };
+    public event Action<ReadOnlyMemory<byte>> OnBinaryReceived = delegate { };
 
     public Task<WebSocketCloseResult> IsClosed
     {
@@ -47,8 +47,8 @@ internal class ClientManagedWebSocket : IClientManagedWebSocket, ILogSubject
         this.Trace<string, string>("paired with {nativeSocket} / {managedSocket}", _nativeSocket.GetFullId(), _managedSocket.GetFullId());
 
         this.Trace("bind events");
-        _managedSocket.TextReceived += OnTextReceived;
-        _managedSocket.BinaryReceived += OnBinaryReceived;
+        _managedSocket.OnTextReceived += HandleOnTextReceived;
+        _managedSocket.OnBinaryReceived += HandleOnBinaryReceived;
 
         try
         {
@@ -64,8 +64,8 @@ internal class ClientManagedWebSocket : IClientManagedWebSocket, ILogSubject
             _nativeSocket = null;
 
             this.Trace("unbind events");
-            _managedSocket.TextReceived -= OnTextReceived;
-            _managedSocket.BinaryReceived -= OnBinaryReceived;
+            _managedSocket.OnTextReceived -= HandleOnTextReceived;
+            _managedSocket.OnBinaryReceived -= HandleOnBinaryReceived;
             _managedSocket = null;
 
             this.Trace("done (not connected)");
@@ -95,8 +95,8 @@ internal class ClientManagedWebSocket : IClientManagedWebSocket, ILogSubject
         }
 
         this.Trace("unbind events");
-        _managedSocket.TextReceived -= OnTextReceived;
-        _managedSocket.BinaryReceived -= OnBinaryReceived;
+        _managedSocket.OnTextReceived -= HandleOnTextReceived;
+        _managedSocket.OnBinaryReceived -= HandleOnBinaryReceived;
 
         try
         {
@@ -146,8 +146,8 @@ internal class ClientManagedWebSocket : IClientManagedWebSocket, ILogSubject
         if (_managedSocket is not null)
         {
             this.Trace("start, unsubscribe from managed socket");
-            _managedSocket.TextReceived -= OnTextReceived;
-            _managedSocket.BinaryReceived -= OnBinaryReceived;
+            _managedSocket.OnTextReceived -= HandleOnTextReceived;
+            _managedSocket.OnBinaryReceived -= HandleOnBinaryReceived;
         }
 
         this.Trace("reset socket references to null");
@@ -159,15 +159,15 @@ internal class ClientManagedWebSocket : IClientManagedWebSocket, ILogSubject
         return task.Result;
     }
 
-    private void OnTextReceived(ReadOnlyMemory<byte> data)
+    private void HandleOnTextReceived(ReadOnlyMemory<byte> data)
     {
         this.Trace("trigger text received");
-        TextReceived(data);
+        OnTextReceived(data);
     }
 
-    private void OnBinaryReceived(ReadOnlyMemory<byte> data)
+    private void HandleOnBinaryReceived(ReadOnlyMemory<byte> data)
     {
         this.Trace("trigger binary received");
-        BinaryReceived(data);
+        OnBinaryReceived(data);
     }
 }

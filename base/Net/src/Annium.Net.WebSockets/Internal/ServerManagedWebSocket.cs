@@ -10,8 +10,8 @@ namespace Annium.Net.WebSockets.Internal;
 internal class ServerManagedWebSocket : IServerManagedWebSocket, ILogSubject
 {
     public ILogger Logger { get; }
-    public event Action<ReadOnlyMemory<byte>> TextReceived = delegate { };
-    public event Action<ReadOnlyMemory<byte>> BinaryReceived = delegate { };
+    public event Action<ReadOnlyMemory<byte>> OnTextReceived = delegate { };
+    public event Action<ReadOnlyMemory<byte>> OnBinaryReceived = delegate { };
     public Task<WebSocketCloseResult> IsClosed { get; }
     private readonly NativeWebSocket _nativeSocket;
     private readonly ManagedWebSocket _managedSocket;
@@ -27,8 +27,8 @@ internal class ServerManagedWebSocket : IServerManagedWebSocket, ILogSubject
         _managedSocket = new ManagedWebSocket(nativeSocket, logger);
         this.Trace<string, string>("paired with {nativeSocket} / {managedSocket}", _nativeSocket.GetFullId(), _managedSocket.GetFullId());
 
-        _managedSocket.TextReceived += OnTextReceived;
-        _managedSocket.BinaryReceived += OnBinaryReceived;
+        _managedSocket.OnTextReceived += HandleOnTextReceived;
+        _managedSocket.OnBinaryReceived += HandleOnBinaryReceived;
 
         this.Trace("start listen");
         IsClosed = _managedSocket.ListenAsync(ct).ContinueWith(HandleClosed);
@@ -39,8 +39,8 @@ internal class ServerManagedWebSocket : IServerManagedWebSocket, ILogSubject
         this.Trace("start");
 
         this.Trace("unbind events");
-        _managedSocket.TextReceived -= OnTextReceived;
-        _managedSocket.BinaryReceived -= OnBinaryReceived;
+        _managedSocket.OnTextReceived -= HandleOnTextReceived;
+        _managedSocket.OnBinaryReceived -= HandleOnBinaryReceived;
 
         try
         {
@@ -77,23 +77,23 @@ internal class ServerManagedWebSocket : IServerManagedWebSocket, ILogSubject
         if (task.Exception is not null)
             this.Error(task.Exception);
 
-        _managedSocket.TextReceived -= OnTextReceived;
-        _managedSocket.BinaryReceived -= OnBinaryReceived;
+        _managedSocket.OnTextReceived -= HandleOnTextReceived;
+        _managedSocket.OnBinaryReceived -= HandleOnBinaryReceived;
 
         this.Trace("done");
 
         return task.Result;
     }
 
-    private void OnTextReceived(ReadOnlyMemory<byte> data)
+    private void HandleOnTextReceived(ReadOnlyMemory<byte> data)
     {
         this.Trace("trigger text received");
-        TextReceived(data);
+        OnTextReceived(data);
     }
 
-    private void OnBinaryReceived(ReadOnlyMemory<byte> data)
+    private void HandleOnBinaryReceived(ReadOnlyMemory<byte> data)
     {
         this.Trace("trigger binary received");
-        BinaryReceived(data);
+        OnBinaryReceived(data);
     }
 }

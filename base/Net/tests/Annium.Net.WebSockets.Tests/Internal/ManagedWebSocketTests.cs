@@ -220,13 +220,13 @@ public class ManagedWebSocketTests : TestBase, IAsyncLifetime
         await using var _ = RunServer(async (serverSocket, ct) =>
         {
             this.Trace("subscribe to text messages");
-            serverSocket.TextReceived += x => serverSocket
+            serverSocket.OnTextReceived += x => serverSocket
                 .SendTextAsync(x.ToArray(), CancellationToken.None)
                 .GetAwaiter()
                 .GetResult();
 
             this.Trace("subscribe to binary messages");
-            serverSocket.BinaryReceived += x => serverSocket
+            serverSocket.OnBinaryReceived += x => serverSocket
                 .SendBinaryAsync(x.ToArray(), CancellationToken.None)
                 .GetAwaiter()
                 .GetResult();
@@ -581,12 +581,12 @@ public class ManagedWebSocketTests : TestBase, IAsyncLifetime
         _managedSocket = new ManagedWebSocket(_clientSocket, Logger);
         this.Trace<string, string>("created pair of {clientSocket} and {managedSocket}", _clientSocket.GetFullId(), _managedSocket.GetFullId());
 
-        _managedSocket.TextReceived += x =>
+        _managedSocket.OnTextReceived += x =>
         {
             var message = Encoding.UTF8.GetString(x.Span);
             _texts.Enqueue(message);
         };
-        _managedSocket.BinaryReceived += x =>
+        _managedSocket.OnBinaryReceived += x =>
         {
             var message = x.ToArray();
             _binaries.Enqueue(message);

@@ -27,7 +27,7 @@ public partial class Benchmarks
 
         _plainSocket = new NativeClientWebSocket();
         var client = new ManagedWebSocket(_plainSocket, VoidLogger.Instance);
-        client.TextReceived += HandleMessage_Plain;
+        client.OnTextReceived += HandleMessage_Plain;
         _plainSocket.ConnectAsync(new Uri($"ws://127.0.0.1:{Constants.Port}/"), CancellationToken.None).GetAwaiter().GetResult();
         _plainListenTask = client.ListenAsync(_plainCts.Token);
     }

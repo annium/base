@@ -7,10 +7,10 @@ public interface IReceivingWebSocket
     /// <summary>
     /// Event is invoked, when text message arrives
     /// </summary>
-    event Action<ReadOnlyMemory<byte>> TextReceived;
+    event Action<ReadOnlyMemory<byte>> OnTextReceived;
 
     /// <summary>
     /// Event is invoked, when binary message arrives
     /// </summary>
-    event Action<ReadOnlyMemory<byte>> BinaryReceived;
+    event Action<ReadOnlyMemory<byte>> OnBinaryReceived;
 }

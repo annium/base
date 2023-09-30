@@ -150,14 +150,14 @@ public class ClientServerManagedWebSocketTests : TestBase, IAsyncLifetime
         await using var _ = RunServer(async serverSocket =>
         {
             this.Trace("subscribe to text messages");
-            serverSocket.TextReceived += x => serverSocket
+            serverSocket.OnTextReceived += x => serverSocket
                 .SendTextAsync(x.ToArray(), CancellationToken.None)
                 .GetAwaiter()
                 .GetResult();
             this.Trace("server subscribed to text");
 
             this.Trace("subscribe to binary messages");
-            serverSocket.BinaryReceived += x => serverSocket
+            serverSocket.OnBinaryReceived += x => serverSocket
                 .SendBinaryAsync(x.ToArray(), CancellationToken.None)
                 .GetAwaiter()
                 .GetResult();
@@ -221,14 +221,14 @@ public class ClientServerManagedWebSocketTests : TestBase, IAsyncLifetime
         await using var _ = RunServer(async serverSocket =>
         {
             this.Trace("subscribe to text messages");
-            serverSocket.TextReceived += x => serverSocket
+            serverSocket.OnTextReceived += x => serverSocket
                 .SendTextAsync(x.ToArray(), CancellationToken.None)
                 .GetAwaiter()
                 .GetResult();
             this.Trace("server subscribed to text");
 
             this.Trace("subscribe to binary messages");
-            serverSocket.BinaryReceived += x => serverSocket
+            serverSocket.OnBinaryReceived += x => serverSocket
                 .SendBinaryAsync(x.ToArray(), CancellationToken.None)
                 .GetAwaiter()
                 .GetResult();
@@ -499,12 +499,12 @@ public class ClientServerManagedWebSocketTests : TestBase, IAsyncLifetime
         this.Trace("start");
 
         _clientSocket = new ClientManagedWebSocket(Logger);
-        _clientSocket.TextReceived += x =>
+        _clientSocket.OnTextReceived += x =>
         {
             var message = Encoding.UTF8.GetString(x.Span);
             _texts.Enqueue(message);
         };
-        _clientSocket.BinaryReceived += x =>
+        _clientSocket.OnBinaryReceived += x =>
         {
             var message = x.ToArray();
             _binaries.Enqueue(message);
