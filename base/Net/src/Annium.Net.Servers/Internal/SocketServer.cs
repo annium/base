@@ -9,8 +9,9 @@ using Annium.Logging;
 
 namespace Annium.Net.Servers.Internal;
 
-internal class SocketServer : ISocketServer
+internal class SocketServer : ISocketServer, ILogSubject
 {
+    public ILogger Logger { get; }
     private readonly IServiceProvider _sp;
     private readonly TcpListener _listener;
     private readonly Func<IServiceProvider, Socket, CancellationToken, Task> _handle;
@@ -23,6 +24,7 @@ internal class SocketServer : ISocketServer
         Func<IServiceProvider, Socket, CancellationToken, Task> handle
     )
     {
+        Logger = sp.Resolve<ILogger>();
         _sp = sp;
         _listener = new TcpListener(IPAddress.Any, port);
         _handle = handle;
@@ -31,10 +33,15 @@ internal class SocketServer : ISocketServer
 
     public async Task RunAsync(CancellationToken ct = default)
     {
+        this.Trace("start");
+
         if (Interlocked.CompareExchange(ref _isListening, 1, 0) == 1)
             throw new InvalidOperationException("Server is already started");
 
+        this.Trace("start executor");
         _executor.Start(ct);
+
+        this.Trace("start listener");
         _listener.Start();
 
         while (!ct.IsCancellationRequested)
@@ -44,30 +51,53 @@ internal class SocketServer : ISocketServer
             {
                 // await for connection
                 socket = await _listener.AcceptSocketAsync(ct);
+                this.Trace("socket accepted");
             }
             catch (OperationCanceledException)
             {
+                this.Trace("break, operation canceled");
                 break;
             }
 
-            // schedule connection handling
-            _executor.Schedule(async () =>
+            // try schedule socket handling
+            if (_executor.TrySchedule(HandleSocket(socket, ct)))
             {
-                try
-                {
-                    await _handle(_sp, socket, ct).ConfigureAwait(false);
-                }
-                finally
-                {
-                    if (socket.Connected)
-                        socket.Close();
-                    socket.Dispose();
-                }
-            });
+                this.Trace("socket handle scheduled");
+                continue;
+            }
+
+            this.Trace("closed and dispose socket (server is already stopping)");
+            socket.Close();
+            socket.Dispose();
         }
 
         // when cancelled - await connections processing and stop listener
+        this.Trace("dispose executor");
         await _executor.DisposeAsync().ConfigureAwait(false);
+
+        this.Trace("stop listener");
         _listener.Stop();
     }
+
+    private Func<ValueTask> HandleSocket(Socket socket, CancellationToken ct) => async () =>
+    {
+        try
+        {
+            this.Trace("handle socket");
+            await _handle(_sp, socket, ct).ConfigureAwait(false);
+        }
+        finally
+        {
+            if (socket.Connected)
+            {
+                this.Trace("close socket");
+                socket.Close();
+            }
+            else
+                this.Trace("socket is not connected already");
+
+            this.Trace("dispose socket");
+            socket.Dispose();
+        }
+    };
 }
