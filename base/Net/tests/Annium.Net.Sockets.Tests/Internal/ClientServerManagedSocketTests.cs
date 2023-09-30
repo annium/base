@@ -147,7 +147,7 @@ public class ClientServerManagedSocketTests : TestBase, IAsyncLifetime
         await using var _ = RunServer(async serverSocket =>
         {
             this.Trace("subscribe to messages");
-            serverSocket.Received += x => serverSocket
+            serverSocket.OnReceived += x => serverSocket
                 .SendAsync(x.ToArray(), CancellationToken.None)
                 .GetAwaiter()
                 .GetResult();
@@ -199,7 +199,7 @@ public class ClientServerManagedSocketTests : TestBase, IAsyncLifetime
         await using var _ = RunServer(async serverSocket =>
         {
             this.Trace("subscribe to messages");
-            serverSocket.Received += x => serverSocket
+            serverSocket.OnReceived += x => serverSocket
                 .SendAsync(x.ToArray(), CancellationToken.None)
                 .GetAwaiter()
                 .GetResult();
@@ -419,7 +419,7 @@ public class ClientServerManagedSocketTests : TestBase, IAsyncLifetime
         this.Trace("start");
 
         _clientSocket = new ClientManagedSocket(Logger);
-        _clientSocket.Received += x => _stream.AddRange(x.ToArray());
+        _clientSocket.OnReceived += x => _stream.AddRange(x.ToArray());
 
         await Task.CompletedTask;
 

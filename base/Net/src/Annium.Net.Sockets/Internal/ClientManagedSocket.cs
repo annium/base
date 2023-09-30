@@ -10,7 +10,7 @@ namespace Annium.Net.Sockets.Internal;
 internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
 {
     public ILogger Logger { get; }
-    public event Action<ReadOnlyMemory<byte>> Received = delegate { };
+    public event Action<ReadOnlyMemory<byte>> OnReceived = delegate { };
 
     public Task<SocketCloseResult> IsClosed
     {
@@ -46,7 +46,7 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
         this.Trace<string, string>("paired with {nativeSocket} / {managedSocket}", _nativeSocket.GetFullId(), _managedSocket.GetFullId());
 
         this.Trace("bind events");
-        _managedSocket.Received += OnReceived;
+        _managedSocket.OnReceived += HandleOnReceived;
 
         try
         {
@@ -62,7 +62,7 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
             _nativeSocket = null;
 
             this.Trace("unbind events");
-            _managedSocket.Received -= OnReceived;
+            _managedSocket.OnReceived -= HandleOnReceived;
             _managedSocket = null;
 
             this.Trace("done (not connected)");
@@ -92,7 +92,7 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
         }
 
         this.Trace("unbind events");
-        _managedSocket.Received -= OnReceived;
+        _managedSocket.OnReceived -= HandleOnReceived;
 
         try
         {
@@ -139,7 +139,7 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
         if (_managedSocket is not null)
         {
             this.Trace("start, unsubscribe from managed socket");
-            _managedSocket.Received -= OnReceived;
+            _managedSocket.OnReceived -= HandleOnReceived;
         }
 
         this.Trace("reset socket references to null");
@@ -151,9 +151,9 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
         return task.Result;
     }
 
-    private void OnReceived(ReadOnlyMemory<byte> data)
+    private void HandleOnReceived(ReadOnlyMemory<byte> data)
     {
         this.Trace("trigger binary received");
-        Received(data);
+        OnReceived(data);
     }
 }

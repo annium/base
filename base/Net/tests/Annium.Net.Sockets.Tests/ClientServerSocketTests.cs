@@ -151,7 +151,7 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
         await using var _ = RunServer(async serverSocket =>
         {
             this.Trace("subscribe to messages");
-            serverSocket.Received += x => serverSocket
+            serverSocket.OnReceived += x => serverSocket
                 .SendAsync(x.ToArray(), CancellationToken.None)
                 .GetAwaiter()
                 .GetResult();
@@ -197,7 +197,7 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
         await using var _ = RunServer(async serverSocket =>
         {
             this.Trace("subscribe to messages");
-            serverSocket.Received += x => serverSocket
+            serverSocket.OnReceived += x => serverSocket
                 .SendAsync(x.ToArray(), CancellationToken.None)
                 .GetAwaiter()
                 .GetResult();
@@ -421,7 +421,7 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
         this.Trace("start");
 
         _clientSocket = new ClientSocket(ClientSocketOptions.Default with { ReconnectDelay = 1 }, Logger);
-        _clientSocket.Received += x => _stream.AddRange(x.ToArray());
+        _clientSocket.OnReceived += x => _stream.AddRange(x.ToArray());
 
         _clientSocket.OnConnected += () => this.Trace("STATE: Connected");
         _clientSocket.OnDisconnected += status => this.Trace("STATE: Disconnected: {status}", status);

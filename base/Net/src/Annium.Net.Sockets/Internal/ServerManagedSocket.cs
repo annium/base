@@ -9,7 +9,7 @@ namespace Annium.Net.Sockets.Internal;
 internal class ServerManagedSocket : IServerManagedSocket, ILogSubject
 {
     public ILogger Logger { get; }
-    public event Action<ReadOnlyMemory<byte>> Received = delegate { };
+    public event Action<ReadOnlyMemory<byte>> OnReceived = delegate { };
     public Task<SocketCloseResult> IsClosed { get; }
     private readonly NativeSocket _nativeSocket;
     private readonly ManagedSocket _managedSocket;
@@ -25,7 +25,7 @@ internal class ServerManagedSocket : IServerManagedSocket, ILogSubject
         _managedSocket = new ManagedSocket(nativeSocket, logger);
         this.Trace<string, string>("paired with {nativeSocket} / {managedSocket}", _nativeSocket.GetFullId(), _managedSocket.GetFullId());
 
-        _managedSocket.Received += OnReceived;
+        _managedSocket.OnReceived += HandleOnReceived;
 
         this.Trace("start listen");
         IsClosed = _managedSocket.ListenAsync(ct).ContinueWith(HandleClosed);
@@ -36,7 +36,7 @@ internal class ServerManagedSocket : IServerManagedSocket, ILogSubject
         this.Trace("start");
 
         this.Trace("unbind events");
-        _managedSocket.Received -= OnReceived;
+        _managedSocket.OnReceived -= HandleOnReceived;
 
         try
         {
@@ -68,16 +68,16 @@ internal class ServerManagedSocket : IServerManagedSocket, ILogSubject
         if (task.Exception is not null)
             this.Error(task.Exception);
 
-        _managedSocket.Received -= OnReceived;
+        _managedSocket.OnReceived -= HandleOnReceived;
 
         this.Trace("done");
 
         return task.Result;
     }
 
-    private void OnReceived(ReadOnlyMemory<byte> data)
+    private void HandleOnReceived(ReadOnlyMemory<byte> data)
     {
         this.Trace("trigger binary received");
-        Received(data);
+        OnReceived(data);
     }
 }

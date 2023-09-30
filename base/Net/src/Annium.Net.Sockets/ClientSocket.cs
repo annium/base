@@ -11,7 +11,7 @@ namespace Annium.Net.Sockets;
 public class ClientSocket : IClientSocket
 {
     public ILogger Logger { get; }
-    public event Action<ReadOnlyMemory<byte>> Received = delegate { };
+    public event Action<ReadOnlyMemory<byte>> OnReceived = delegate { };
     public event Action OnConnected = delegate { };
     public event Action<SocketCloseStatus> OnDisconnected = delegate { };
     public event Action<Exception> OnError = delegate { };
@@ -28,7 +28,7 @@ public class ClientSocket : IClientSocket
         Logger = logger;
         this.Trace("start monitor");
         _socket = new ClientManagedSocket(logger);
-        _socket.Received += OnReceived;
+        _socket.OnReceived += HandleOnReceived;
         this.Trace<string>("paired with {socket}", _socket.GetFullId());
 
         this.Trace("init monitor");
@@ -229,10 +229,10 @@ public class ClientSocket : IClientSocket
         _status = status;
     }
 
-    private void OnReceived(ReadOnlyMemory<byte> data)
+    private void HandleOnReceived(ReadOnlyMemory<byte> data)
     {
         this.Trace("trigger binary received");
-        Received(data);
+        OnReceived(data);
     }
 
     private enum Status

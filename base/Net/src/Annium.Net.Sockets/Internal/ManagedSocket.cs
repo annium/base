@@ -10,7 +10,7 @@ namespace Annium.Net.Sockets.Internal;
 internal class ManagedSocket : ISendingReceivingSocket, ILogSubject
 {
     public ILogger Logger { get; }
-    public event Action<ReadOnlyMemory<byte>> Received = delegate { };
+    public event Action<ReadOnlyMemory<byte>> OnReceived = delegate { };
     private const int BufferSize = 65_536;
     private readonly Socket _socket;
 
@@ -98,7 +98,7 @@ internal class ManagedSocket : ISendingReceivingSocket, ILogSubject
             buffer.TrackDataSize(receiveResult.Count);
 
             this.Trace("fire message received");
-            Received(buffer.AsDataReadOnlyMemory());
+            OnReceived(buffer.AsDataReadOnlyMemory());
 
             return (false, new SocketCloseResult(SocketCloseStatus.ClosedRemote, null));
         }

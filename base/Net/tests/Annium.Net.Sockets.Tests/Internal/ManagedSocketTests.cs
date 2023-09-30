@@ -144,7 +144,7 @@ public class ManagedSocketTests : TestBase, IAsyncLifetime
         this.Trace("run server");
         await using var _ = RunServer(async (serverSocket, ct) =>
         {
-            serverSocket.Received += x => serverSocket
+            serverSocket.OnReceived += x => serverSocket
                 .SendAsync(x.ToArray(), CancellationToken.None)
                 .GetAwaiter();
 
@@ -355,7 +355,7 @@ public class ManagedSocketTests : TestBase, IAsyncLifetime
         _managedSocket = new ManagedSocket(_clientSocket, Logger);
         this.Trace<string, string>("created pair of {clientSocket} and {managedSocket}", _clientSocket.GetFullId(), _managedSocket.GetFullId());
 
-        _managedSocket.Received += x => _stream.AddRange(x.ToArray());
+        _managedSocket.OnReceived += x => _stream.AddRange(x.ToArray());
 
         await Task.CompletedTask;
 
