@@ -8,5 +8,5 @@ public interface IObjectCache<TKey, TValue> : IAsyncDisposable
     where TKey : notnull
     where TValue : notnull
 {
-    Task<ICacheReference<TValue>> GetAsync(TKey key, CancellationToken ct = default);
+    Task<IDisposableReference<TValue>> GetAsync(TKey key, CancellationToken ct = default);
 }

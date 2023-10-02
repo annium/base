@@ -24,7 +24,7 @@ internal sealed class ObjectCache<TKey, TValue> : IObjectCache<TKey, TValue>, IL
         Logger = logger;
     }
 
-    public async Task<ICacheReference<TValue>> GetAsync(TKey key, CancellationToken ct = default)
+    public async Task<IDisposableReference<TValue>> GetAsync(TKey key, CancellationToken ct = default)
     {
         // get or create CacheEntry
         CacheEntry entry;
@@ -42,7 +42,7 @@ internal sealed class ObjectCache<TKey, TValue> : IObjectCache<TKey, TValue>, IL
         }
 
         // creator - immediately creates value, others - wait for access
-        ICacheReference<TValue>? reference = null;
+        IDisposableReference<TValue>? reference = null;
         if (isInitializing)
         {
             this.Trace("Get by {key}: initialize entry", key);
@@ -74,7 +74,7 @@ internal sealed class ObjectCache<TKey, TValue> : IObjectCache<TKey, TValue>, IL
         // create reference, incrementing reference counter
         this.Trace("Get by {key}: add entry reference", key);
         entry.AddReference();
-        reference ??= new CacheReference<TValue>(entry.Value, () => Release(key, entry));
+        reference ??= Disposable.Reference(entry.Value, () => Release(key, entry));
 
         entry.Release();
 
