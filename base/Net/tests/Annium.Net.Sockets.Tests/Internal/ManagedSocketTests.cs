@@ -17,30 +17,12 @@ namespace Annium.Net.Sockets.Tests.Internal;
 public class ManagedSocketTests : TestBase, IAsyncLifetime
 {
     private Socket _clientSocket = default!;
+    private NetworkStream _clientStream = default!;
     private ManagedSocket _managedSocket = default!;
     private readonly List<byte> _stream = new();
 
     public ManagedSocketTests(ITestOutputHelper outputHelper) : base(outputHelper)
     {
-    }
-
-    [Fact]
-    public async Task Send_NotConnected()
-    {
-        this.Trace("start");
-
-        // arrange
-        var message = "demo"u8.ToArray();
-
-        // act
-        this.Trace("send message");
-        var result = await _managedSocket.SendAsync(message);
-
-        // assert
-        this.Trace("assert close is received");
-        result.Is(SocketSendStatus.Closed);
-
-        this.Trace("done");
     }
 
     [Fact]
@@ -344,27 +326,14 @@ public class ManagedSocketTests : TestBase, IAsyncLifetime
         this.Trace("done");
     }
 
-    public async Task InitializeAsync()
+    public Task InitializeAsync()
     {
-        this.Trace("start");
-
-        _clientSocket = new Socket(SocketType.Stream, ProtocolType.Tcp)
-        {
-            NoDelay = true
-        };
-        _managedSocket = new ManagedSocket(_clientSocket, Logger);
-        this.Trace<string, string>("created pair of {clientSocket} and {managedSocket}", _clientSocket.GetFullId(), _managedSocket.GetFullId());
-
-        _managedSocket.OnReceived += x => _stream.AddRange(x.ToArray());
-
-        await Task.CompletedTask;
-
-        this.Trace("done");
+        return Task.CompletedTask;
     }
 
     public async Task DisposeAsync()
     {
-        await Task.CompletedTask;
+        await _clientStream.DisposeAsync();
     }
 
     private IAsyncDisposable RunServer(Func<ManagedSocket, CancellationToken, Task> handleSocket)
@@ -373,7 +342,9 @@ public class ManagedSocketTests : TestBase, IAsyncLifetime
         {
             this.Trace("start");
 
-            var socket = new ManagedSocket(raw, sp.Resolve<ILogger>());
+            this.Trace<string>("wrap {raw} into stream", raw.GetFullId());
+            await using var stream = new NetworkStream(raw);
+            var socket = new ManagedSocket(stream, sp.Resolve<ILogger>());
 
             this.Trace<string>("handle {socket}", socket.GetFullId());
             await handleSocket(socket, ct);
@@ -396,7 +367,22 @@ public class ManagedSocketTests : TestBase, IAsyncLifetime
     {
         this.Trace("start");
 
+        _clientSocket = new Socket(SocketType.Stream, ProtocolType.Tcp)
+        {
+            NoDelay = true
+        };
+
+        this.Trace("connect");
         await _clientSocket.ConnectAsync(EndPoint, ct);
+        _clientStream = new NetworkStream(_clientSocket);
+
+        this.Trace("create managed socket");
+        _managedSocket = new ManagedSocket(_clientStream, Logger);
+        this.Trace<string, string>("created pair of {clientSocket} and {managedSocket}", _clientSocket.GetFullId(), _managedSocket.GetFullId());
+
+        _managedSocket.OnReceived += x => _stream.AddRange(x.ToArray());
+
+        await Task.CompletedTask;
 
         this.Trace("done");
     }

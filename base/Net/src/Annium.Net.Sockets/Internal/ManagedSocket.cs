@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -12,12 +13,12 @@ internal class ManagedSocket : ISendingReceivingSocket, ILogSubject
     public ILogger Logger { get; }
     public event Action<ReadOnlyMemory<byte>> OnReceived = delegate { };
     private const int BufferSize = 65_536;
-    private readonly Socket _socket;
+    private readonly Stream _stream;
 
-    public ManagedSocket(Socket socket, ILogger logger)
+    public ManagedSocket(Stream socket, ILogger logger)
     {
         Logger = logger;
-        _socket = socket;
+        _stream = socket;
     }
 
     public async ValueTask<SocketSendStatus> SendAsync(ReadOnlyMemory<byte> data, CancellationToken ct = default)
@@ -32,14 +33,8 @@ internal class ManagedSocket : ISendingReceivingSocket, ILogSubject
                 return SocketSendStatus.Canceled;
             }
 
-            if (!_socket.Connected)
-            {
-                this.Trace("{dataLength} - closed because socket is not open", data.Length);
-                return SocketSendStatus.Closed;
-            }
-
-            var bytesSent = await _socket.SendAsync(data, ct).ConfigureAwait(false);
-            this.Trace("{dataLength} - send succeed - {bytesSent} bytesSent", data.Length, bytesSent);
+            await _stream.WriteAsync(data, ct).ConfigureAwait(false);
+            this.Trace("{dataLength} - send succeed", data.Length);
 
             return SocketSendStatus.Ok;
         }
@@ -53,9 +48,14 @@ internal class ManagedSocket : ISendingReceivingSocket, ILogSubject
             this.Trace("{dataLength} - closed with InvalidOperationException: {e}", data.Length, e);
             return SocketSendStatus.Closed;
         }
-        catch (SocketException e)
+        catch (IOException e) when (e.InnerException is ObjectDisposedException)
         {
-            this.Trace("{dataLength} - closed with SocketException: {e}", data.Length, e);
+            this.Trace("{dataLength} - closed with IOException(ObjectDisposedException)", data.Length);
+            return SocketSendStatus.Closed;
+        }
+        catch (IOException e) when (e.InnerException is SocketException)
+        {
+            this.Trace("{dataLength} - closed with IOException(SocketException)", data.Length);
             return SocketSendStatus.Closed;
         }
     }
@@ -115,13 +115,7 @@ internal class ManagedSocket : ISendingReceivingSocket, ILogSubject
                 return new ReceiveResult(0, SocketCloseStatus.ClosedLocal, null);
             }
 
-            if (!_socket.Connected)
-            {
-                this.Trace("closed because socket is not open");
-                return new ReceiveResult(0, SocketCloseStatus.ClosedLocal, null);
-            }
-
-            var bytesRead = await _socket.ReceiveAsync(buffer.AsFreeSpaceMemory(), ct).ConfigureAwait(false);
+            var bytesRead = await _stream.ReadAsync(buffer.AsFreeSpaceMemory(), ct).ConfigureAwait(false);
             this.Trace("received {bytesRead} bytes", bytesRead);
 
             return new ReceiveResult(bytesRead, bytesRead <= 0 ? SocketCloseStatus.ClosedRemote : null, null);
@@ -131,12 +125,17 @@ internal class ManagedSocket : ISendingReceivingSocket, ILogSubject
             this.Trace("closed locally with cancellation: {isCancellationRequested}", ct.IsCancellationRequested);
             return new ReceiveResult(0, SocketCloseStatus.ClosedLocal, null);
         }
-        catch (SocketException e)
+        catch (IOException e) when (e.InnerException is ObjectDisposedException)
         {
-            var status = e.SocketErrorCode is SocketError.OperationAborted
+            this.Trace("closed with ObjectDisposedException");
+            return new ReceiveResult(0, SocketCloseStatus.ClosedLocal, null);
+        }
+        catch (IOException e) when (e.InnerException is SocketException se)
+        {
+            var status = se.SocketErrorCode is SocketError.OperationAborted
                 ? SocketCloseStatus.ClosedLocal
                 : SocketCloseStatus.ClosedRemote;
-            this.Trace("{status} with SocketException (code: {code}): {e}", status, e.SocketErrorCode, e);
+            this.Trace("{status} with SocketException (code: {code}): {e}", status, se.SocketErrorCode, se);
             return new ReceiveResult(0, status, null);
         }
         catch (Exception e)
