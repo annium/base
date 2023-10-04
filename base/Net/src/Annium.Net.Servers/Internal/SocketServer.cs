@@ -28,7 +28,7 @@ internal class SocketServer : ISocketServer, ILogSubject
         _sp = sp;
         _listener = new TcpListener(IPAddress.Any, port);
         _handle = handle;
-        _executor = Executor.Background.Parallel<SocketServer>(_sp.Resolve<ILogger>());
+        _executor = Executor.Background.Parallel<SocketServer>(Logger);
     }
 
     public async Task RunAsync(CancellationToken ct = default)
