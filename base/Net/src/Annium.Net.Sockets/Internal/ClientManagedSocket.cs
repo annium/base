@@ -162,15 +162,6 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
         return _socket?.SendAsync(data, ct) ?? ValueTask.FromResult(SocketSendStatus.Closed);
     }
 
-    public void Dispose()
-    {
-        this.Trace("start");
-
-        _stream?.Close();
-
-        this.Trace("done");
-    }
-
     private SocketCloseResult HandleClosed(Task<SocketCloseResult> task)
     {
         this.Trace("start");
@@ -186,6 +177,7 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
 
         this.Trace("reset socket references to null");
         _stream?.Close();
+        _stream = null;
         _socket = null;
 
         this.Trace("done");

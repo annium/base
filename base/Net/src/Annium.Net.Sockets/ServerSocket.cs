@@ -1,10 +1,10 @@
 using System;
+using System.IO;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Annium.Logging;
 using Annium.Net.Sockets.Internal;
-using NativeSocket = System.Net.Sockets.Socket;
 
 namespace Annium.Net.Sockets;
 
@@ -20,7 +20,7 @@ public class ServerSocket : IServerSocket
     private Status _status = Status.Connected;
 
     public ServerSocket(
-        NativeSocket nativeSocket,
+        Stream stream,
         ServerSocketOptions options,
         ILogger logger,
         CancellationToken ct = default
@@ -28,7 +28,7 @@ public class ServerSocket : IServerSocket
     {
         Logger = logger;
         this.Trace("start");
-        _socket = new ServerManagedSocket(nativeSocket, logger, ct);
+        _socket = new ServerManagedSocket(stream, logger, ct);
         _socket.OnReceived += HandleOnReceived;
         this.Trace<string>("paired with {socket}", _socket.GetFullId());
 
@@ -47,11 +47,11 @@ public class ServerSocket : IServerSocket
     }
 
     public ServerSocket(
-        NativeSocket nativeSocket,
+        Stream stream,
         ILogger logger,
         CancellationToken ct = default
     ) : this(
-        nativeSocket,
+        stream,
         ServerSocketOptions.Default,
         logger,
         ct
@@ -90,6 +90,11 @@ public class ServerSocket : IServerSocket
     {
         this.Trace("send");
         return _socket.SendAsync(data, ct);
+    }
+
+    public void Dispose()
+    {
+        Disconnect();
     }
 
     private void HandleClosed(Task<SocketCloseResult> task)

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Annium.Core.DependencyInjection;
 using Annium.Logging;
 using Annium.Testing;
 using Annium.Testing.Assertions;
@@ -12,17 +11,16 @@ using Xunit.Abstractions;
 
 namespace Annium.Net.Sockets.Tests;
 
-public class ClientServerSocketTests : TestBase, IAsyncLifetime
+public abstract class ClientServerSocketTestsBase : TestBase, IAsyncLifetime
 {
     private ClientSocket _clientSocket = default!;
     private readonly List<byte> _stream = new();
 
-    public ClientServerSocketTests(ITestOutputHelper outputHelper) : base(outputHelper)
+    protected ClientServerSocketTestsBase(ITestOutputHelper outputHelper) : base(outputHelper)
     {
     }
 
-    [Fact]
-    public async Task Send_NotConnected()
+    protected async Task Send_NotConnected_Base()
     {
         this.Trace("start");
 
@@ -40,8 +38,7 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
         this.Trace("done");
     }
 
-    [Fact]
-    public async Task Send_Canceled()
+    protected async Task Send_Canceled_Base()
     {
         this.Trace("start");
 
@@ -49,7 +46,7 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
         var message = "demo"u8.ToArray();
 
         this.Trace("run server");
-        await using var _ = RunServer(async serverSocket => await serverSocket.WhenDisconnected());
+        await using var _ = RunServer(async (serverSocket, ct) => await serverSocket.WhenDisconnected(ct));
 
         this.Trace("connect");
         await ConnectAsync();
@@ -65,8 +62,7 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
         this.Trace("done");
     }
 
-    [Fact]
-    public async Task Send_ClientClosed()
+    protected async Task Send_ClientClosed_Base()
     {
         this.Trace("start");
 
@@ -75,10 +71,10 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
         var serverConnectionTcs = new TaskCompletionSource();
 
         this.Trace("run server");
-        await using var _ = RunServer(async serverSocket =>
+        await using var _ = RunServer(async (serverSocket, ct) =>
         {
             this.Trace("send signal to client");
-            var disconnectionTask = serverSocket.WhenDisconnected();
+            var disconnectionTask = serverSocket.WhenDisconnected(ct);
             serverConnectionTcs.SetResult();
             await disconnectionTask;
         });
@@ -103,8 +99,7 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
         this.Trace("done");
     }
 
-    [Fact]
-    public async Task Send_ServerClosed()
+    protected async Task Send_ServerClosed_Base()
     {
         this.Trace("start");
 
@@ -112,7 +107,7 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
         var message = "demo"u8.ToArray();
 
         this.Trace("run server");
-        await using var _ = RunServer(serverSocket =>
+        await using var _ = RunServer((serverSocket, _) =>
         {
             this.Trace("disconnect server socket");
             serverSocket.Disconnect();
@@ -138,8 +133,7 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
         this.Trace("done");
     }
 
-    [Fact]
-    public async Task Send_Normal()
+    protected async Task Send_Normal_Base()
     {
         this.Trace("start");
 
@@ -148,7 +142,7 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
         var serverConnectionTcs = new TaskCompletionSource();
 
         this.Trace("run server");
-        await using var _ = RunServer(async serverSocket =>
+        await using var _ = RunServer(async (serverSocket, ct) =>
         {
             this.Trace("subscribe to messages");
             serverSocket.OnReceived += x => serverSocket
@@ -158,7 +152,7 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
             this.Trace("server subscribed to messages");
 
             this.Trace("send signal to client");
-            var disconnectionTask = serverSocket.WhenDisconnected();
+            var disconnectionTask = serverSocket.WhenDisconnected(ct);
             serverConnectionTcs.TrySetResult();
             await disconnectionTask;
 
@@ -184,8 +178,7 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
         this.Trace("done");
     }
 
-    [Fact]
-    public async Task Send_Reconnect()
+    protected async Task Send_Reconnect_Base()
     {
         this.Trace("start");
 
@@ -194,7 +187,7 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
         var serverConnectionTcs = new TaskCompletionSource();
 
         this.Trace("run server");
-        await using var _ = RunServer(async serverSocket =>
+        await using var _ = RunServer(async (serverSocket, ct) =>
         {
             this.Trace("subscribe to messages");
             serverSocket.OnReceived += x => serverSocket
@@ -204,7 +197,7 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
             this.Trace("server subscribed to messages");
 
             this.Trace("send signal to client");
-            var disconnectionTask = serverSocket.WhenDisconnected();
+            var disconnectionTask = serverSocket.WhenDisconnected(ct);
             serverConnectionTcs.TrySetResult();
             await disconnectionTask;
 
@@ -254,18 +247,17 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
         this.Trace("done");
     }
 
-    [Fact]
-    public async Task Listen_Normal()
+    protected async Task Listen_Normal_Base()
     {
         this.Trace("start");
 
         // arrange
         this.Trace("generate messages");
         var (message, chunks) = GenerateMessage(100, 10);
-        var serverStopTcs = new TaskCompletionSource();
+        var clientTcs = new TaskCompletionSource();
 
         this.Trace("run server");
-        await using var _ = RunServer(async serverSocket =>
+        await using var _ = RunServer(async (serverSocket, _) =>
         {
             this.Trace("start sending chunks");
 
@@ -273,13 +265,13 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
             foreach (var chunk in chunks)
             {
                 this.Trace("send chunk#{num}", ++i);
-                await serverSocket.SendAsync(chunk);
+                await serverSocket.SendAsync(chunk, CancellationToken.None);
                 await Task.Delay(1, CancellationToken.None);
             }
 
             this.Trace("sending chunks complete");
 
-            await serverStopTcs.Task;
+            await clientTcs.Task;
         });
 
         // act
@@ -289,22 +281,21 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
         // assert
         this.Trace("assert data arrived");
         await Expect.To(() => _stream.IsEqual(message), 1000);
-        serverStopTcs.SetResult();
+        clientTcs.SetResult();
 
         this.Trace("done");
     }
 
-    [Fact]
-    public async Task Listen_SmallBuffer()
+    protected async Task Listen_SmallBuffer_Base()
     {
         this.Trace("start");
 
         // arrange
         var (message, chunks) = GenerateMessage(1_000_000, 100_000);
-        var serverStopTcs = new TaskCompletionSource();
+        var clientTcs = new TaskCompletionSource();
 
         this.Trace("run server");
-        await using var _ = RunServer(async serverSocket =>
+        await using var _ = RunServer(async (serverSocket, _) =>
         {
             this.Trace("start sending chunks");
 
@@ -312,13 +303,13 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
             foreach (var chunk in chunks)
             {
                 this.Trace("send chunk#{num}", ++i);
-                await serverSocket.SendAsync(chunk);
+                await serverSocket.SendAsync(chunk, CancellationToken.None);
                 await Task.Delay(1, CancellationToken.None);
             }
 
             this.Trace("sending chunks complete");
 
-            await serverStopTcs.Task;
+            await clientTcs.Task;
         });
 
         // act
@@ -334,7 +325,7 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
         _stream.SequenceEqual(message).IsTrue();
 
         this.Trace("disconnect");
-        serverStopTcs.SetResult();
+        clientTcs.SetResult();
         var result = await disconnectionTask;
 
         this.Trace("assert closed remote");
@@ -343,20 +334,19 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
         this.Trace("done");
     }
 
-    [Fact]
-    public async Task Listen_Reconnect()
+    protected async Task Listen_Reconnect_Base()
     {
         this.Trace("start");
 
         // arrange
         this.Trace("generate messages");
         var (message, chunks) = GenerateMessage(1_000_000, 100_000);
-        var serverStopTcs = new TaskCompletionSource();
+        var clientTcs = new TaskCompletionSource();
         var connectionIndex = 0;
         var connectionsCount = 3;
 
         this.Trace("run server");
-        await using var _ = RunServer(async serverSocket =>
+        await using var _ = RunServer(async (serverSocket, _) =>
         {
             this.Trace("start sending chunks");
 
@@ -378,7 +368,7 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
                 }
 
                 this.Trace("send chunk#{num}", i);
-                await serverSocket.SendAsync(chunk);
+                await serverSocket.SendAsync(chunk, CancellationToken.None);
 
                 await Task.Delay(1, CancellationToken.None);
             }
@@ -387,7 +377,7 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
 
             // await until 3-rd connection is handled
             this.Trace("wait for signal from client");
-            await serverStopTcs.Task;
+            await clientTcs.Task;
         });
 
         this.Trace("set disconnect handler");
@@ -408,7 +398,7 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
         _stream.SequenceEqual(message).IsTrue();
 
         this.Trace("send signal to stop server");
-        serverStopTcs.SetResult();
+        clientTcs.SetResult();
 
         this.Trace("disconnect");
         await DisconnectAsync();
@@ -443,23 +433,8 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
         return Task.CompletedTask;
     }
 
-    private IAsyncDisposable RunServer(Func<ServerSocket, Task> handleSocket)
-    {
-        return RunServerBase(async (sp, raw, ct) =>
-        {
-            this.Trace("start");
-
-            var socket = new ServerSocket(raw, sp.Resolve<ILogger>(), ct);
-
-            this.Trace<string>("handle {socket}", socket.GetFullId());
-            await handleSocket(socket);
-
-            this.Trace<string>("disconnect {socket}", socket.GetFullId());
-            socket.Disconnect();
-
-            this.Trace("done");
-        });
-    }
+    protected abstract void HandleConnect(IClientSocket socket);
+    protected abstract IAsyncDisposable RunServer(Func<IServerSocket, CancellationToken, Task> handleSocket);
 
     private async Task ConnectAsync()
     {
@@ -478,7 +453,7 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
 
         _clientSocket.OnConnected += HandleConnected;
 
-        _clientSocket.Connect(EndPoint);
+        HandleConnect(_clientSocket);
 
         await tcs.Task.WaitAsync(TimeSpan.FromSeconds(1));
 
@@ -518,44 +493,5 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
         this.Trace("done");
 
         return result;
-    }
-}
-
-file static class SocketExtensions
-{
-    public static Task<SocketCloseStatus> WhenDisconnected(this ClientSocket socket)
-    {
-        var tcs = new TaskCompletionSource<SocketCloseStatus>();
-
-        socket.Trace<string>("subscribe {tcs} to OnDisconnected", tcs.GetFullId());
-
-        void HandleDisconnected(SocketCloseStatus status)
-        {
-            socket.Trace("set {tcs} to signaled state with status {status}", tcs.GetFullId(), status);
-            tcs.SetResult(status);
-            socket.OnDisconnected -= HandleDisconnected;
-        }
-
-        socket.OnDisconnected += HandleDisconnected;
-
-        return tcs.Task;
-    }
-
-    public static Task<SocketCloseStatus> WhenDisconnected(this ServerSocket socket)
-    {
-        var tcs = new TaskCompletionSource<SocketCloseStatus>();
-
-        socket.Trace<string>("subscribe {tcs} to OnDisconnected", tcs.GetFullId());
-
-        void HandleDisconnected(SocketCloseStatus status)
-        {
-            socket.Trace("set {tcs} to signaled state with status {status}", tcs.GetFullId(), status);
-            tcs.SetResult(status);
-            socket.OnDisconnected -= HandleDisconnected;
-        }
-
-        socket.OnDisconnected += HandleDisconnected;
-
-        return tcs.Task;
     }
 }

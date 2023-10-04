@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Annium.Net.Sockets.Internal;
 
-internal interface IClientManagedSocket : ISendingReceivingSocket, IDisposable
+internal interface IClientManagedSocket : ISendingReceivingSocket
 {
     Task<SocketCloseResult> IsClosed { get; }
     Task<Exception?> ConnectAsync(IPEndPoint endpoint, SslClientAuthenticationOptions? authOptions = null, CancellationToken ct = default);

@@ -60,15 +60,6 @@ internal class ServerManagedSocket : IServerManagedSocket, ILogSubject
         return _socket.SendAsync(data, ct);
     }
 
-    public void Dispose()
-    {
-        this.Trace("start");
-
-        _stream.Close();
-
-        this.Trace("done");
-    }
-
     private SocketCloseResult HandleClosed(Task<SocketCloseResult> task)
     {
         this.Trace("start, unsubscribe from managed socket");

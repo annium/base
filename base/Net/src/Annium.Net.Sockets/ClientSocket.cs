@@ -1,5 +1,6 @@
 using System;
 using System.Net;
+using System.Net.Security;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,11 +16,11 @@ public class ClientSocket : IClientSocket
     public event Action OnConnected = delegate { };
     public event Action<SocketCloseStatus> OnDisconnected = delegate { };
     public event Action<Exception> OnError = delegate { };
-    private IPEndPoint Endpoint => _endpoint ?? throw new InvalidOperationException("Endpoint is not set");
+    private ConnectionConfig Config => _connectionConfig ?? throw new InvalidOperationException("Connection config is not set");
     private readonly object _locker = new();
     private readonly IClientManagedSocket _socket;
     private readonly IConnectionMonitor _connectionMonitor;
-    private IPEndPoint? _endpoint;
+    private ConnectionConfig? _connectionConfig;
     private Status _status = Status.Disconnected;
     private readonly int _reconnectDelay;
 
@@ -49,7 +50,7 @@ public class ClientSocket : IClientSocket
     {
     }
 
-    public void Connect(IPEndPoint endpoint)
+    public void Connect(IPEndPoint endpoint, SslClientAuthenticationOptions? authOptions = null)
     {
         this.Trace("start");
 
@@ -64,7 +65,7 @@ public class ClientSocket : IClientSocket
             SetStatus(Status.Connecting);
         }
 
-        ConnectPrivate(endpoint);
+        ConnectPrivate(new(endpoint, authOptions));
 
         this.Trace("done");
     }
@@ -102,7 +103,12 @@ public class ClientSocket : IClientSocket
         return _socket.SendAsync(data, ct);
     }
 
-    private void ReconnectPrivate(IPEndPoint endpoint, SocketCloseResult result)
+    public void Dispose()
+    {
+        Disconnect();
+    }
+
+    private void ReconnectPrivate(ConnectionConfig config, SocketCloseResult result)
     {
         this.Trace("start");
 
@@ -122,19 +128,28 @@ public class ClientSocket : IClientSocket
         Task.Delay(_reconnectDelay).ContinueWith(_ =>
         {
             this.Trace("trigger connect");
-            ConnectPrivate(endpoint);
+            ConnectPrivate(config);
 
             this.Trace("done");
         });
     }
 
-    private void ConnectPrivate(IPEndPoint endpoint)
+    private void ConnectPrivate(ConnectionConfig config)
     {
         this.Trace("start");
 
-        _endpoint = endpoint;
-        this.Trace("connect to {endpoint}", endpoint);
-        _socket.ConnectAsync(endpoint, CancellationToken.None).ContinueWith(HandleConnected, endpoint);
+        lock (_locker)
+        {
+            if (_status is Status.Disconnected)
+            {
+                this.Trace("skip - already {status}", _status);
+                return;
+            }
+        }
+
+        _connectionConfig = config;
+        this.Trace<IPEndPoint, string>("connect to {endpoint} ({ssl})", config.Endpoint, config.AuthOptions is not null ? "ssl" : "plaintext");
+        _socket.ConnectAsync(config.Endpoint, config.AuthOptions, CancellationToken.None).ContinueWith(HandleConnected, config);
 
         this.Trace("done");
     }
@@ -161,9 +176,9 @@ public class ClientSocket : IClientSocket
 
         if (task.Result is not null)
         {
-            var endpoint = (IPEndPoint)state!;
+            var config = (ConnectionConfig)state!;
             this.Trace("failure: {exception}, init reconnect", task.Exception);
-            ReconnectPrivate(endpoint, new SocketCloseResult(SocketCloseStatus.Error, task.Result));
+            ReconnectPrivate(config, new SocketCloseResult(SocketCloseStatus.Error, task.Result));
             return;
         }
 
@@ -194,7 +209,7 @@ public class ClientSocket : IClientSocket
             SetStatus(Status.Connecting);
         }
 
-        ReconnectPrivate(Endpoint, new SocketCloseResult(SocketCloseStatus.ClosedRemote, null));
+        ReconnectPrivate(Config, new SocketCloseResult(SocketCloseStatus.ClosedRemote, null));
 
         this.Trace("done");
     }
@@ -217,7 +232,7 @@ public class ClientSocket : IClientSocket
             SetStatus(Status.Connecting);
         }
 
-        ReconnectPrivate(Endpoint, task.Result);
+        ReconnectPrivate(Config, task.Result);
 
         this.Trace("done");
     }
@@ -234,6 +249,8 @@ public class ClientSocket : IClientSocket
         this.Trace("trigger binary received");
         OnReceived(data);
     }
+
+    private record ConnectionConfig(IPEndPoint Endpoint, SslClientAuthenticationOptions? AuthOptions);
 
     private enum Status
     {
