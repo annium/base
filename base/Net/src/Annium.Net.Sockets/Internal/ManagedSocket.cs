@@ -14,6 +14,8 @@ internal class ManagedSocket : ISendingReceivingSocket, ILogSubject
     public event Action<ReadOnlyMemory<byte>> OnReceived = delegate { };
     private const int BufferSize = 65_536;
     private readonly Stream _stream;
+    private int _sendCounter;
+    private int _recvCounter;
 
     public ManagedSocket(Stream socket, ILogger logger)
     {
@@ -34,7 +36,7 @@ internal class ManagedSocket : ISendingReceivingSocket, ILogSubject
             }
 
             await _stream.WriteAsync(data, ct).ConfigureAwait(false);
-            this.Trace("{dataLength} - send succeed", data.Length);
+            this.Trace("{dataLength} - send succeed (total: {total})", data.Length, _sendCounter += data.Length);
 
             return SocketSendStatus.Ok;
         }
@@ -68,6 +70,7 @@ internal class ManagedSocket : ISendingReceivingSocket, ILogSubject
 
         while (true)
         {
+            this.Trace("next");
             var (isClosed, result) = await ReceiveAsync(buffer, ct);
             if (isClosed)
             {
@@ -80,33 +83,40 @@ internal class ManagedSocket : ISendingReceivingSocket, ILogSubject
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private async ValueTask<(bool IsClosed, SocketCloseResult Result)> ReceiveAsync(DynamicBuffer<byte> buffer, CancellationToken ct)
     {
+        this.Trace("start");
+
         // reset buffer to start writing from start
+        this.Trace("reset buffer");
         buffer.Reset();
 
-        while (true)
+        // read chunk into buffer
+        this.Trace("receive chunk");
+        var receiveResult = await ReceiveChunkAsync(buffer, ct).ConfigureAwait(false);
+
+        // if close received - return false, indicating socket is closed
+        if (receiveResult.Status.HasValue)
         {
-            // read chunk into buffer
-            var receiveResult = await ReceiveChunkAsync(buffer, ct).ConfigureAwait(false);
-
-            // if close received - return false, indicating socket is closed
-            if (receiveResult.Status.HasValue)
-            {
-                return (true, new SocketCloseResult(receiveResult.Status.Value, receiveResult.Exception));
-            }
-
-            // track receiveResult count
-            buffer.TrackDataSize(receiveResult.Count);
-
-            this.Trace("fire message received");
-            OnReceived(buffer.AsDataReadOnlyMemory());
-
-            return (false, new SocketCloseResult(SocketCloseStatus.ClosedRemote, null));
+            this.Trace("closed with {status}", receiveResult.Status.Value);
+            return (true, new SocketCloseResult(receiveResult.Status.Value, receiveResult.Exception));
         }
+
+        // track receiveResult count
+        this.Trace("track data size: {size}", receiveResult.Count);
+        buffer.TrackDataSize(receiveResult.Count);
+
+        this.Trace("fire message received");
+        OnReceived(buffer.AsDataReadOnlyMemory());
+
+        this.Trace("done");
+
+        return (false, new SocketCloseResult(SocketCloseStatus.ClosedRemote, null));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private async ValueTask<ReceiveResult> ReceiveChunkAsync(DynamicBuffer<byte> buffer, CancellationToken ct)
     {
+        this.Trace("start");
+
         try
         {
             if (ct.IsCancellationRequested)
@@ -115,8 +125,9 @@ internal class ManagedSocket : ISendingReceivingSocket, ILogSubject
                 return new ReceiveResult(0, SocketCloseStatus.ClosedLocal, null);
             }
 
+            this.Trace("wait for message");
             var bytesRead = await _stream.ReadAsync(buffer.AsFreeSpaceMemory(), ct).ConfigureAwait(false);
-            this.Trace("received {bytesRead} bytes", bytesRead);
+            this.Trace("received {bytesRead} bytes (total: {total})", bytesRead, _recvCounter += bytesRead);
 
             return new ReceiveResult(bytesRead, bytesRead <= 0 ? SocketCloseStatus.ClosedRemote : null, null);
         }
@@ -140,8 +151,12 @@ internal class ManagedSocket : ISendingReceivingSocket, ILogSubject
         }
         catch (Exception e)
         {
-            this.Trace("Error!!: {e}", e);
+            this.Trace("Error: {e}", e);
             return new ReceiveResult(0, SocketCloseStatus.Error, e);
+        }
+        finally
+        {
+            this.Trace("done");
         }
     }
 }

@@ -1,8 +1,8 @@
 using System;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Annium.Logging;
-using NativeSocket = System.Net.Sockets.Socket;
 
 namespace Annium.Net.Sockets.Internal;
 
@@ -11,24 +11,24 @@ internal class ServerManagedSocket : IServerManagedSocket, ILogSubject
     public ILogger Logger { get; }
     public event Action<ReadOnlyMemory<byte>> OnReceived = delegate { };
     public Task<SocketCloseResult> IsClosed { get; }
-    private readonly NativeSocket _nativeSocket;
-    private readonly ManagedSocket _managedSocket;
+    private readonly Stream _stream;
+    private readonly ManagedSocket _socket;
 
     public ServerManagedSocket(
-        NativeSocket nativeSocket,
+        Stream stream,
         ILogger logger,
-        CancellationToken ct = default
+        CancellationToken ct
     )
     {
         Logger = logger;
-        _nativeSocket = nativeSocket;
-        _managedSocket = new ManagedSocket(nativeSocket, logger);
-        this.Trace<string, string>("paired with {nativeSocket} / {managedSocket}", _nativeSocket.GetFullId(), _managedSocket.GetFullId());
+        _stream = stream;
+        _socket = new ManagedSocket(stream, logger);
+        this.Trace<string, string>("paired with {nativeSocket} / {managedSocket}", _stream.GetFullId(), _socket.GetFullId());
 
-        _managedSocket.OnReceived += HandleOnReceived;
+        _socket.OnReceived += HandleOnReceived;
 
         this.Trace("start listen");
-        IsClosed = _managedSocket.ListenAsync(ct).ContinueWith(HandleClosed);
+        IsClosed = _socket.ListenAsync(ct).ContinueWith(HandleClosed);
     }
 
     public Task DisconnectAsync()
@@ -36,13 +36,12 @@ internal class ServerManagedSocket : IServerManagedSocket, ILogSubject
         this.Trace("start");
 
         this.Trace("unbind events");
-        _managedSocket.OnReceived -= HandleOnReceived;
+        _socket.OnReceived -= HandleOnReceived;
 
         try
         {
-            this.Trace("close output");
-            if (_nativeSocket.Connected)
-                _nativeSocket.Close();
+            this.Trace("close stream");
+            _stream.Close();
         }
         catch (Exception e)
         {
@@ -58,7 +57,16 @@ internal class ServerManagedSocket : IServerManagedSocket, ILogSubject
     {
         this.Trace("send binary");
 
-        return _managedSocket.SendAsync(data, ct);
+        return _socket.SendAsync(data, ct);
+    }
+
+    public void Dispose()
+    {
+        this.Trace("start");
+
+        _stream.Close();
+
+        this.Trace("done");
     }
 
     private SocketCloseResult HandleClosed(Task<SocketCloseResult> task)
@@ -68,7 +76,7 @@ internal class ServerManagedSocket : IServerManagedSocket, ILogSubject
         if (task.Exception is not null)
             this.Error(task.Exception);
 
-        _managedSocket.OnReceived -= HandleOnReceived;
+        _socket.OnReceived -= HandleOnReceived;
 
         this.Trace("done");
 

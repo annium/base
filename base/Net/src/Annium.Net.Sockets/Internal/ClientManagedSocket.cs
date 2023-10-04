@@ -1,5 +1,7 @@
 using System;
+using System.IO;
 using System.Net;
+using System.Net.Security;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -23,8 +25,8 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
         }
     }
 
-    private Socket? _nativeSocket;
-    private ManagedSocket? _managedSocket;
+    private Stream? _stream;
+    private ManagedSocket? _socket;
     private CancellationTokenSource? _listenCts;
     private Task<SocketCloseResult>? _listenTask;
 
@@ -33,37 +35,73 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
         Logger = logger;
     }
 
-    public async Task<Exception?> ConnectAsync(IPEndPoint endpoint, CancellationToken ct = default)
+    public async Task<Exception?> ConnectAsync(
+        IPEndPoint endpoint,
+        SslClientAuthenticationOptions? authOptions,
+        CancellationToken ct = default
+    )
     {
         this.Trace("start");
 
         // only sockets are checked, because after disconnect listen task can still be awaited
-        if (_nativeSocket is not null || _managedSocket is not null)
+        if (_stream is not null || _socket is not null)
             throw new InvalidOperationException("Socket is already connected");
-
-        _nativeSocket = new Socket(SocketType.Stream, ProtocolType.Tcp);
-        _managedSocket = new ManagedSocket(_nativeSocket, Logger);
-        this.Trace<string, string>("paired with {nativeSocket} / {managedSocket}", _nativeSocket.GetFullId(), _managedSocket.GetFullId());
-
-        this.Trace("bind events");
-        _managedSocket.OnReceived += HandleOnReceived;
 
         try
         {
+            this.Trace("create native socket");
+            var nativeSocket = new Socket(SocketType.Stream, ProtocolType.Tcp);
+
             this.Trace("connect native socket to {endpoint}", endpoint);
-            await _nativeSocket.ConnectAsync(endpoint, ct);
+            await nativeSocket.ConnectAsync(endpoint, ct);
+
+            if (authOptions is not null)
+            {
+                this.Trace("wrap native socket with network stream");
+                var networkStream = new NetworkStream(nativeSocket);
+
+                this.Trace("wrap network stream with ssl stream");
+                var sslStream = new SslStream(
+                    networkStream,
+                    false,
+                    authOptions.RemoteCertificateValidationCallback,
+                    null
+                );
+                _stream = sslStream;
+
+                this.Trace("authenticate client");
+                await sslStream.AuthenticateAsClientAsync(authOptions, ct);
+            }
+            else
+            {
+                this.Trace("wrap native socket with network stream");
+                _stream = new NetworkStream(nativeSocket);
+            }
+
+            this.Trace("wrap to managed socket");
+            _socket = new ManagedSocket(_stream, Logger);
+            this.Trace<string, string>("paired with {nativeSocket} / {managedSocket}", _stream.GetFullId(), _socket.GetFullId());
+
+            this.Trace("bind events");
+            _socket.OnReceived += HandleOnReceived;
         }
         catch (Exception e)
         {
-            this.Trace("failed: {e}", e);
+            this.Error("failed: {e}", e);
 
             this.Trace("dispose native socket");
-            _nativeSocket.Dispose();
-            _nativeSocket = null;
+            if (_stream is not null)
+            {
+                _stream.Close();
+                _stream = null;
+            }
 
             this.Trace("unbind events");
-            _managedSocket.OnReceived -= HandleOnReceived;
-            _managedSocket = null;
+            if (_socket is not null)
+            {
+                _socket.OnReceived -= HandleOnReceived;
+                _socket = null;
+            }
 
             this.Trace("done (not connected)");
 
@@ -74,7 +112,7 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
         _listenCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
 
         this.Trace("create listen task");
-        _listenTask = _managedSocket.ListenAsync(_listenCts.Token).ContinueWith(HandleClosed, CancellationToken.None);
+        _listenTask = _socket.ListenAsync(_listenCts.Token).ContinueWith(HandleClosed, CancellationToken.None);
 
         this.Trace("done (connected)");
 
@@ -85,24 +123,19 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
     {
         this.Trace("start");
 
-        if (_nativeSocket is null || _managedSocket is null || _listenCts is null || _listenTask is null)
+        if (_stream is null || _socket is null || _listenCts is null || _listenTask is null)
         {
             this.Trace("skip - not connected");
             return;
         }
 
         this.Trace("unbind events");
-        _managedSocket.OnReceived -= HandleOnReceived;
+        _socket.OnReceived -= HandleOnReceived;
 
         try
         {
-            if (_nativeSocket.Connected)
-            {
-                this.Trace("close socket");
-                _nativeSocket.Close();
-            }
-            else
-                this.Trace("close skipped - socket already closed");
+            this.Trace("close stream");
+            _stream.Close();
         }
         catch (Exception e)
         {
@@ -116,8 +149,8 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
         await _listenTask;
 
         this.Trace("reset socket references to null");
-        _nativeSocket = null;
-        _managedSocket = null;
+        _stream = null;
+        _socket = null;
 
         this.Trace("done");
     }
@@ -126,7 +159,16 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
     {
         this.Trace("send");
 
-        return _managedSocket?.SendAsync(data, ct) ?? ValueTask.FromResult(SocketSendStatus.Closed);
+        return _socket?.SendAsync(data, ct) ?? ValueTask.FromResult(SocketSendStatus.Closed);
+    }
+
+    public void Dispose()
+    {
+        this.Trace("start");
+
+        _stream?.Close();
+
+        this.Trace("done");
     }
 
     private SocketCloseResult HandleClosed(Task<SocketCloseResult> task)
@@ -136,15 +178,15 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
         if (task.Exception is not null)
             this.Error(task.Exception);
 
-        if (_managedSocket is not null)
+        if (_socket is not null)
         {
             this.Trace("start, unsubscribe from managed socket");
-            _managedSocket.OnReceived -= HandleOnReceived;
+            _socket.OnReceived -= HandleOnReceived;
         }
 
         this.Trace("reset socket references to null");
-        _nativeSocket = null;
-        _managedSocket = null;
+        _stream?.Close();
+        _socket = null;
 
         this.Trace("done");
 
