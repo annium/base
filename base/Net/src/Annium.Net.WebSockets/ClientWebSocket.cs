@@ -139,6 +139,15 @@ public class ClientWebSocket : IClientWebSocket
     {
         this.Trace("start");
 
+        lock (_locker)
+        {
+            if (_status is Status.Disconnected)
+            {
+                this.Trace("skip - already {status}", _status);
+                return;
+            }
+        }
+
         _uri = uri;
         this.Trace("connect to {uri}", uri);
         _socket.ConnectAsync(uri, CancellationToken.None).ContinueWith(HandleConnected, uri);
