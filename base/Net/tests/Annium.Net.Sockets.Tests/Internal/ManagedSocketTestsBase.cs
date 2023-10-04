@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
-using Annium.Core.DependencyInjection;
 using Annium.Logging;
 using Annium.Net.Sockets.Internal;
 using Annium.Testing;
@@ -14,19 +14,19 @@ using Xunit.Abstractions;
 
 namespace Annium.Net.Sockets.Tests.Internal;
 
-public class ManagedSocketTests : TestBase, IAsyncLifetime
+public abstract class ManagedSocketTestsBase : TestBase, IAsyncLifetime
 {
     private Socket _clientSocket = default!;
-    private NetworkStream _clientStream = default!;
+    private Stream _clientStream = default!;
     private ManagedSocket _managedSocket = default!;
     private readonly List<byte> _stream = new();
 
-    public ManagedSocketTests(ITestOutputHelper outputHelper) : base(outputHelper)
+    public ManagedSocketTestsBase(ITestOutputHelper outputHelper) : base(outputHelper)
     {
     }
 
     [Fact]
-    public async Task Send_Canceled()
+    public async Task Send_Canceled_Base()
     {
         this.Trace("start");
 
@@ -51,7 +51,7 @@ public class ManagedSocketTests : TestBase, IAsyncLifetime
     }
 
     [Fact]
-    public async Task Send_ClientClosed()
+    public async Task Send_ClientClosed_Base()
     {
         this.Trace("start");
 
@@ -79,7 +79,7 @@ public class ManagedSocketTests : TestBase, IAsyncLifetime
     }
 
     [Fact]
-    public async Task Send_ServerClosed()
+    public async Task Send_ServerClosed_Base()
     {
         // arrange
         this.Trace("start");
@@ -115,7 +115,7 @@ public class ManagedSocketTests : TestBase, IAsyncLifetime
     }
 
     [Fact]
-    public async Task Send_Normal()
+    public async Task Send_Normal_Base()
     {
         // arrange
         this.Trace("start");
@@ -159,7 +159,7 @@ public class ManagedSocketTests : TestBase, IAsyncLifetime
     }
 
     [Fact]
-    public async Task Listen_Canceled()
+    public async Task Listen_Canceled_Base()
     {
         // arrange
         this.Trace("start");
@@ -183,7 +183,7 @@ public class ManagedSocketTests : TestBase, IAsyncLifetime
     }
 
     [Fact]
-    public async Task Listen_ClientClosed()
+    public async Task Listen_ClientClosed_Base()
     {
         // arrange
         this.Trace("start");
@@ -210,7 +210,7 @@ public class ManagedSocketTests : TestBase, IAsyncLifetime
     }
 
     [Fact]
-    public async Task Listen_ServerClosed()
+    public async Task Listen_ServerClosed_Base()
     {
         // arrange
         this.Trace("start");
@@ -239,7 +239,7 @@ public class ManagedSocketTests : TestBase, IAsyncLifetime
     }
 
     [Fact]
-    public async Task Listen_Normal()
+    public async Task Listen_Normal_Base()
     {
         // arrange
         this.Trace("start");
@@ -278,7 +278,7 @@ public class ManagedSocketTests : TestBase, IAsyncLifetime
     }
 
     [Fact]
-    public async Task Listen_SmallBuffer()
+    public async Task Listen_SmallBuffer_Base()
     {
         // arrange
         this.Trace("start");
@@ -336,22 +336,8 @@ public class ManagedSocketTests : TestBase, IAsyncLifetime
         await _clientStream.DisposeAsync();
     }
 
-    private IAsyncDisposable RunServer(Func<ManagedSocket, CancellationToken, Task> handleSocket)
-    {
-        return RunServerBase(async (sp, raw, ct) =>
-        {
-            this.Trace("start");
-
-            this.Trace<string>("wrap {raw} into stream", raw.GetFullId());
-            await using var stream = new NetworkStream(raw);
-            var socket = new ManagedSocket(stream, sp.Resolve<ILogger>());
-
-            this.Trace<string>("handle {socket}", socket.GetFullId());
-            await handleSocket(socket, ct);
-
-            this.Trace("done");
-        });
-    }
+    internal abstract Stream WrapClientAsStream(Socket socket);
+    internal abstract IAsyncDisposable RunServer(Func<ManagedSocket, CancellationToken, Task> handleSocket);
 
     private async Task ConnectAndStartListenAsync(CancellationToken ct = default)
     {
