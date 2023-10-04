@@ -21,12 +21,11 @@ public abstract class ManagedSocketTestsBase : TestBase, IAsyncLifetime
     private ManagedSocket _managedSocket = default!;
     private readonly List<byte> _stream = new();
 
-    public ManagedSocketTestsBase(ITestOutputHelper outputHelper) : base(outputHelper)
+    protected ManagedSocketTestsBase(ITestOutputHelper outputHelper) : base(outputHelper)
     {
     }
 
-    [Fact]
-    public async Task Send_Canceled_Base()
+    protected async Task Send_Canceled_Base()
     {
         this.Trace("start");
 
@@ -50,8 +49,7 @@ public abstract class ManagedSocketTestsBase : TestBase, IAsyncLifetime
         this.Trace("done");
     }
 
-    [Fact]
-    public async Task Send_ClientClosed_Base()
+    protected async Task Send_ClientClosed_Base()
     {
         this.Trace("start");
 
@@ -78,8 +76,7 @@ public abstract class ManagedSocketTestsBase : TestBase, IAsyncLifetime
         this.Trace("done");
     }
 
-    [Fact]
-    public async Task Send_ServerClosed_Base()
+    protected async Task Send_ServerClosed_Base()
     {
         // arrange
         this.Trace("start");
@@ -114,8 +111,7 @@ public abstract class ManagedSocketTestsBase : TestBase, IAsyncLifetime
         this.Trace("done");
     }
 
-    [Fact]
-    public async Task Send_Normal_Base()
+    protected async Task Send_Normal_Base()
     {
         // arrange
         this.Trace("start");
@@ -126,9 +122,12 @@ public abstract class ManagedSocketTestsBase : TestBase, IAsyncLifetime
         this.Trace("run server");
         await using var _ = RunServer(async (serverSocket, ct) =>
         {
-            serverSocket.OnReceived += x => serverSocket
-                .SendAsync(x.ToArray(), CancellationToken.None)
-                .GetAwaiter();
+            serverSocket.OnReceived += x =>
+            {
+                serverSocket
+                    .SendAsync(x.ToArray(), CancellationToken.None)
+                    .GetAwaiter();
+            };
 
             Task.Delay(10, CancellationToken.None)
                 .ContinueWith(_ => serverTcs.SetResult(), CancellationToken.None)
@@ -158,8 +157,7 @@ public abstract class ManagedSocketTestsBase : TestBase, IAsyncLifetime
         this.Trace("done");
     }
 
-    [Fact]
-    public async Task Listen_Canceled_Base()
+    protected async Task Listen_Canceled_Base()
     {
         // arrange
         this.Trace("start");
@@ -182,8 +180,7 @@ public abstract class ManagedSocketTestsBase : TestBase, IAsyncLifetime
         this.Trace("done");
     }
 
-    [Fact]
-    public async Task Listen_ClientClosed_Base()
+    protected async Task Listen_ClientClosed_Base()
     {
         // arrange
         this.Trace("start");
@@ -209,8 +206,7 @@ public abstract class ManagedSocketTestsBase : TestBase, IAsyncLifetime
         this.Trace("done");
     }
 
-    [Fact]
-    public async Task Listen_ServerClosed_Base()
+    protected async Task Listen_ServerClosed_Base()
     {
         // arrange
         this.Trace("start");
@@ -238,8 +234,7 @@ public abstract class ManagedSocketTestsBase : TestBase, IAsyncLifetime
         this.Trace("done");
     }
 
-    [Fact]
-    public async Task Listen_Normal_Base()
+    protected async Task Listen_Normal_Base()
     {
         // arrange
         this.Trace("start");
@@ -277,8 +272,7 @@ public abstract class ManagedSocketTestsBase : TestBase, IAsyncLifetime
         this.Trace("done");
     }
 
-    [Fact]
-    public async Task Listen_SmallBuffer_Base()
+    protected async Task Listen_SmallBuffer_Base()
     {
         // arrange
         this.Trace("start");
@@ -333,10 +327,14 @@ public abstract class ManagedSocketTestsBase : TestBase, IAsyncLifetime
 
     public async Task DisposeAsync()
     {
+        this.Trace("start");
+
         await _clientStream.DisposeAsync();
+
+        this.Trace("done");
     }
 
-    internal abstract Stream WrapClientAsStream(Socket socket);
+    protected abstract Task<Stream> CreateClientStreamAsync(Socket socket);
     internal abstract IAsyncDisposable RunServer(Func<ManagedSocket, CancellationToken, Task> handleSocket);
 
     private async Task ConnectAndStartListenAsync(CancellationToken ct = default)
@@ -360,7 +358,9 @@ public abstract class ManagedSocketTestsBase : TestBase, IAsyncLifetime
 
         this.Trace("connect");
         await _clientSocket.ConnectAsync(EndPoint, ct);
-        _clientStream = new NetworkStream(_clientSocket);
+
+        this.Trace("create client stream");
+        _clientStream = await CreateClientStreamAsync(_clientSocket);
 
         this.Trace("create managed socket");
         _managedSocket = new ManagedSocket(_clientStream, Logger);

@@ -19,4 +19,8 @@ test:
 publish:
 	xs publish all 0.1.0 -p 1
 
+keys:
+	openssl req -x509 -nodes -days 3650 -keyout key.pem -out cert.pem
+	openssl pkcs12 -export -inkey key.pem -in cert.pem -out cert.pfx
+
 .PHONY: $(MAKECMDGOALS)

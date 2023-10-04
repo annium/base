@@ -24,4 +24,7 @@
         <PackageReference Include="xunit" Version="2.5.0" />
         <PackageReference Include="xunit.runner.visualstudio" Version="2.5.0" />
     </ItemGroup>
+    <ItemGroup>
+        <None Update="keys/cert.pfx" CopyToOutputDirectory="PreserveNewest" />
+    </ItemGroup>
 </Project>
