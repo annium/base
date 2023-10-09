@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using Annium.Configuration.Abstractions;
-using Annium.Configuration.Tests;
 using Annium.Configuration.Tests.Lib;
 using Annium.Core.DependencyInjection;
 using Annium.Testing;
