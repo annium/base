@@ -1,7 +1,6 @@
 using System;
-using System.Net.Sockets;
-using System.Threading;
-using System.Threading.Tasks;
+using Annium.Core.DependencyInjection;
+using Annium.Logging;
 using Annium.Net.Servers.Sockets.Internal;
 
 namespace Annium.Net.Servers.Sockets;
@@ -16,7 +15,11 @@ public static class ServerBuilder
 
 public interface IServerBuilder
 {
-    IServerBuilder WithHandler(Func<IServiceProvider, Socket, CancellationToken, Task> handler);
+    IServerBuilder WithHandler<THandler>()
+        where THandler : IHandler;
+
+    IServerBuilder WithHandler(IHandler handler);
+
     IServer Build();
 }
 
@@ -24,15 +27,25 @@ file class ServerBuilderInstance : IServerBuilder
 {
     private readonly IServiceProvider _sp;
     private readonly int _port;
-    private Func<IServiceProvider, Socket, CancellationToken, Task>? _handler;
+    private readonly ILogger _logger;
+    private IHandler? _handler;
 
     public ServerBuilderInstance(IServiceProvider sp, int port)
     {
         _sp = sp;
         _port = port;
+        _logger = sp.Resolve<ILogger>();
     }
 
-    public IServerBuilder WithHandler(Func<IServiceProvider, Socket, CancellationToken, Task> handler)
+    public IServerBuilder WithHandler<THandler>()
+        where THandler : IHandler
+    {
+        _handler = _sp.Resolve<THandler>();
+
+        return this;
+    }
+
+    public IServerBuilder WithHandler(IHandler handler)
     {
         _handler = handler;
 
@@ -44,6 +57,6 @@ file class ServerBuilderInstance : IServerBuilder
         if (_handler is null)
             throw new InvalidOperationException("Handler is not specified");
 
-        return new Server(_sp, _port, _handler);
+        return new Server(_port, _handler, _logger);
     }
 }

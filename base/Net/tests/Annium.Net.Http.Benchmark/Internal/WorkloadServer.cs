@@ -1,4 +1,3 @@
-using System;
 using System.Globalization;
 using System.Net;
 using System.Threading;
@@ -13,12 +12,17 @@ internal static class WorkloadServer
 {
     public static async Task RunAsync(CancellationToken ct)
     {
-        var sp = new ServiceCollection().BuildServiceProvider();
-        var server = ServerBuilder.New(sp, Constants.Port).WithHttp(HandleHttpRequest).Build();
+        var services = new ServiceCollection();
+        services.AddSingleton<HttpHandler>();
+        var sp = services.BuildServiceProvider();
+        var server = ServerBuilder.New(sp, Constants.Port).WithHttpHandler<HttpHandler>().Build();
         await server.RunAsync(ct);
     }
+}
 
-    private static Task HandleHttpRequest(IServiceProvider sp, HttpListenerContext ctx, CancellationToken ct)
+file class HttpHandler : IHttpHandler
+{
+    public Task HandleAsync(HttpListenerContext ctx, CancellationToken ct)
     {
         var path = ctx.Request.Url.NotNull().AbsolutePath;
 
@@ -30,6 +34,7 @@ internal static class WorkloadServer
             _           => Task.CompletedTask
         };
     }
+
 
     private static Task HandleHttpParamsRequest(HttpListenerContext ctx)
     {

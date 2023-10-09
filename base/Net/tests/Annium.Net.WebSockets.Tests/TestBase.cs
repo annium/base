@@ -21,7 +21,8 @@ public abstract class TestBase : Testing.Lib.TestBase
 
     protected IAsyncDisposable RunServerBase(Func<IServiceProvider, HttpListenerWebSocketContext, CancellationToken, Task> handleWebSocket)
     {
-        var server = ServerBuilder.New(Get<IServiceProvider>(), _port).WithWebSockets(handleWebSocket).Build();
+        var sp = Get<IServiceProvider>();
+        var server = ServerBuilder.New(sp, _port).WithWebSocketHandler(new WebSocketHandler(sp, handleWebSocket)).Build();
         var cts = new CancellationTokenSource();
         var serverTask = server.RunAsync(cts.Token);
 
@@ -32,5 +33,25 @@ public abstract class TestBase : Testing.Lib.TestBase
             cts.Cancel();
             await serverTask;
         });
+    }
+}
+
+file class WebSocketHandler : IWebSocketHandler
+{
+    private readonly IServiceProvider _sp;
+    private readonly Func<IServiceProvider, HttpListenerWebSocketContext, CancellationToken, Task> _handle;
+
+    public WebSocketHandler(
+        IServiceProvider sp,
+        Func<IServiceProvider, HttpListenerWebSocketContext, CancellationToken, Task> handle
+    )
+    {
+        _sp = sp;
+        _handle = handle;
+    }
+
+    public Task HandleAsync(HttpListenerWebSocketContext ctx, CancellationToken ct)
+    {
+        return _handle(_sp, ctx, ct);
     }
 }

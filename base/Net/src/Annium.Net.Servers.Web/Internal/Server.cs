@@ -3,7 +3,6 @@ using System.Net;
 using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
-using Annium.Core.DependencyInjection;
 using Annium.Extensions.Execution;
 using Annium.Logging;
 
@@ -12,37 +11,35 @@ namespace Annium.Net.Servers.Web.Internal;
 internal class Server : IServer, ILogSubject
 {
     public ILogger Logger { get; }
-    private readonly IServiceProvider _sp;
     private readonly HttpListener _listener;
-    private readonly Func<IServiceProvider, HttpListenerContext, CancellationToken, Task> _handleHttpRequest;
-    private readonly Func<IServiceProvider, HttpListenerContext, CancellationToken, Task> _handleWebSocketRequest;
-    private readonly Func<IServiceProvider, HttpListenerWebSocketContext, CancellationToken, Task> _handleWebSocket;
+    private readonly Func<HttpListenerContext, CancellationToken, Task> _handleHttpRequest;
+    private readonly Func<HttpListenerContext, CancellationToken, Task> _handleWebSocketRequest;
+    private readonly Func<HttpListenerWebSocketContext, CancellationToken, Task> _handleWebSocket;
     private readonly IBackgroundExecutor _executor;
 
     public Server(
-        IServiceProvider sp,
         int port,
-        Func<IServiceProvider, HttpListenerContext, CancellationToken, Task>? handleHttp,
-        Func<IServiceProvider, HttpListenerWebSocketContext, CancellationToken, Task>? handleWebSocket
+        IHttpHandler? httpHandler,
+        IWebSocketHandler? webSocketHandler,
+        ILogger logger
     )
     {
-        Logger = sp.Resolve<ILogger>();
-        _sp = sp;
+        Logger = logger;
         _listener = new HttpListener();
         _listener.Prefixes.Add($"http://*:{port}/");
-        _handleHttpRequest = handleHttp ?? CloseConnection;
-        if (handleWebSocket is null)
+        _handleHttpRequest = httpHandler is not null ? httpHandler.HandleAsync : CloseConnection;
+        if (webSocketHandler is not null)
+        {
+            _handleWebSocketRequest = HandleWebSocketRequest;
+            _handleWebSocket = webSocketHandler.HandleAsync;
+        }
+        else
         {
             _handleWebSocketRequest = CloseConnection;
             _handleWebSocket = IgnoreWebSocket;
         }
-        else
-        {
-            _handleWebSocketRequest = HandleWebSocketRequest;
-            _handleWebSocket = handleWebSocket;
-        }
 
-        _executor = Executor.Background.Parallel<Server>(_sp.Resolve<ILogger>());
+        _executor = Executor.Background.Parallel<Server>(logger);
     }
 
     public async Task RunAsync(CancellationToken ct = default)
@@ -74,14 +71,14 @@ internal class Server : IServer, ILogSubject
             }
 
             // try schedule socket handling
-            if (_executor.TrySchedule(HandleRequest(_sp, listenerContext, ct)))
+            if (_executor.TrySchedule(HandleRequest(listenerContext, ct)))
             {
                 this.Trace("socket handle scheduled");
                 continue;
             }
 
             this.Trace("closed and dispose socket (server is already stopping)");
-            await CloseConnection(_sp, listenerContext, ct);
+            await CloseConnection(listenerContext, ct);
         }
 
         // when cancelled - await connections processing and stop listener
@@ -92,15 +89,15 @@ internal class Server : IServer, ILogSubject
         _listener.Stop();
     }
 
-    private Func<ValueTask> HandleRequest(IServiceProvider sp, HttpListenerContext ctx, CancellationToken ct) => async () =>
+    private Func<ValueTask> HandleRequest(HttpListenerContext ctx, CancellationToken ct) => async () =>
     {
         if (ctx.Request.IsWebSocketRequest)
-            await _handleWebSocketRequest(sp, ctx, ct);
+            await _handleWebSocketRequest(ctx, ct);
         else
-            await _handleHttpRequest(sp, ctx, ct);
+            await _handleHttpRequest(ctx, ct);
     };
 
-    private async Task HandleWebSocketRequest(IServiceProvider sp, HttpListenerContext ctx, CancellationToken ct)
+    private async Task HandleWebSocketRequest(HttpListenerContext ctx, CancellationToken ct)
     {
         this.Trace("start");
 
@@ -112,7 +109,7 @@ internal class Server : IServer, ILogSubject
             var webSocketContext = await ctx.AcceptWebSocketAsync(subProtocol: null);
 
             this.Trace("handle web socket");
-            await _handleWebSocket(sp, webSocketContext, ct).ConfigureAwait(false);
+            await _handleWebSocket(webSocketContext, ct).ConfigureAwait(false);
 
             this.Trace("detect web socket state");
             isAborted = webSocketContext.WebSocket.State is WebSocketState.Aborted;
@@ -144,7 +141,7 @@ internal class Server : IServer, ILogSubject
         this.Trace("done");
     }
 
-    private Task CloseConnection(IServiceProvider sp, HttpListenerContext ctx, CancellationToken ct)
+    private Task CloseConnection(HttpListenerContext ctx, CancellationToken ct)
     {
         this.Trace("start");
 
@@ -156,7 +153,7 @@ internal class Server : IServer, ILogSubject
         return Task.CompletedTask;
     }
 
-    private Task IgnoreWebSocket(IServiceProvider sp, HttpListenerWebSocketContext ctx, CancellationToken ct)
+    private Task IgnoreWebSocket(HttpListenerWebSocketContext ctx, CancellationToken ct)
     {
         this.Trace("done");
 

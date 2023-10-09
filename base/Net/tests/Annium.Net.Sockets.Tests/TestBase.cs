@@ -28,7 +28,8 @@ public abstract class TestBase : Testing.Lib.TestBase
     {
         this.Trace("start");
 
-        var server = ServerBuilder.New(Get<IServiceProvider>(), _port).WithHandler(handle).Build();
+        var sp = Get<IServiceProvider>();
+        var server = ServerBuilder.New(sp, _port).WithHandler(new Handler(sp, handle)).Build();
         var cts = new CancellationTokenSource();
 
         this.Trace("run server");
@@ -73,5 +74,25 @@ public abstract class TestBase : Testing.Lib.TestBase
         var message = chunks.SelectMany(x => x).ToArray();
 
         return (message, chunks);
+    }
+}
+
+file class Handler : IHandler
+{
+    private readonly IServiceProvider _sp;
+    private readonly Func<IServiceProvider, Socket, CancellationToken, Task> _handle;
+
+    public Handler(
+        IServiceProvider sp,
+        Func<IServiceProvider, Socket, CancellationToken, Task> handle
+    )
+    {
+        _sp = sp;
+        _handle = handle;
+    }
+
+    public Task HandleAsync(Socket socket, CancellationToken ct)
+    {
+        return _handle(_sp, socket, ct);
     }
 }

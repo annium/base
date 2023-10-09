@@ -1,8 +1,6 @@
 using System;
-using System.Net;
-using System.Net.WebSockets;
-using System.Threading;
-using System.Threading.Tasks;
+using Annium.Core.DependencyInjection;
+using Annium.Logging;
 using Annium.Net.Servers.Web.Internal;
 
 namespace Annium.Net.Servers.Web;
@@ -17,8 +15,16 @@ public static class ServerBuilder
 
 public interface IServerBuilder
 {
-    IServerBuilder WithHttp(Func<IServiceProvider, HttpListenerContext, CancellationToken, Task> handler);
-    IServerBuilder WithWebSockets(Func<IServiceProvider, HttpListenerWebSocketContext, CancellationToken, Task> handler);
+    IServerBuilder WithHttpHandler<THandler>()
+        where THandler : IHttpHandler;
+
+    IServerBuilder WithHttpHandler(IHttpHandler handler);
+
+    IServerBuilder WithWebSocketHandler<THandler>()
+        where THandler : IWebSocketHandler;
+
+    IServerBuilder WithWebSocketHandler(IWebSocketHandler handler);
+
     IServer Build();
 }
 
@@ -26,31 +32,49 @@ file class ServerBuilderInstance : IServerBuilder
 {
     private readonly IServiceProvider _sp;
     private readonly int _port;
-    private Func<IServiceProvider, HttpListenerContext, CancellationToken, Task>? _handleHttp;
-    private Func<IServiceProvider, HttpListenerWebSocketContext, CancellationToken, Task>? _handleWebSocket;
+    private IHttpHandler? _httpHandler;
+    private IWebSocketHandler? _webSocketHandler;
+    private readonly ILogger _logger;
 
     public ServerBuilderInstance(IServiceProvider sp, int port)
     {
         _sp = sp;
         _port = port;
+        _logger = sp.Resolve<ILogger>();
     }
 
-    public IServerBuilder WithHttp(Func<IServiceProvider, HttpListenerContext, CancellationToken, Task> handler)
+    public IServerBuilder WithHttpHandler<THandler>()
+        where THandler : IHttpHandler
     {
-        _handleHttp = handler;
+        _httpHandler = _sp.Resolve<THandler>();
 
         return this;
     }
 
-    public IServerBuilder WithWebSockets(Func<IServiceProvider, HttpListenerWebSocketContext, CancellationToken, Task> handler)
+    public IServerBuilder WithHttpHandler(IHttpHandler handler)
     {
-        _handleWebSocket = handler;
+        _httpHandler = handler;
+
+        return this;
+    }
+
+    public IServerBuilder WithWebSocketHandler<THandler>()
+        where THandler : IWebSocketHandler
+    {
+        _webSocketHandler = _sp.Resolve<THandler>();
+
+        return this;
+    }
+
+    public IServerBuilder WithWebSocketHandler(IWebSocketHandler handler)
+    {
+        _webSocketHandler = handler;
 
         return this;
     }
 
     public IServer Build()
     {
-        return new Server(_sp, _port, _handleHttp, _handleWebSocket);
+        return new Server(_port, _httpHandler, _webSocketHandler, _logger);
     }
 }

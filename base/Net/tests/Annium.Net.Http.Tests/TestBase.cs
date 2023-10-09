@@ -24,27 +24,29 @@ public abstract class TestBase : Testing.Lib.TestBase
         Func<HttpListenerRequest, HttpListenerResponse, Task> handle
     )
     {
-        var server = ServerBuilder.New(Get<IServiceProvider>(), _port)
-            .WithHttp(async (_, ctx, _) =>
+        var handler = new HttpHandler(async ctx =>
+        {
+            this.Trace("start");
+
+            ctx.Response.Headers.Clear();
+            try
             {
-                this.Trace("start");
+                await handle(ctx.Request, ctx.Response);
+            }
+            catch
+            {
+                ctx.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+            }
+            finally
+            {
+                ctx.Response.Close();
+            }
 
-                ctx.Response.Headers.Clear();
-                try
-                {
-                    await handle(ctx.Request, ctx.Response);
-                }
-                catch
-                {
-                    ctx.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-                }
-                finally
-                {
-                    ctx.Response.Close();
-                }
+            this.Trace("done");
+        });
 
-                this.Trace("done");
-            })
+        var server = ServerBuilder.New(Get<IServiceProvider>(), _port)
+            .WithHttpHandler(handler)
             .Build();
         var cts = new CancellationTokenSource();
         var serverTask = server.RunAsync(cts.Token);
@@ -56,5 +58,22 @@ public abstract class TestBase : Testing.Lib.TestBase
             cts.Cancel();
             await serverTask;
         });
+    }
+}
+
+file class HttpHandler : IHttpHandler
+{
+    private readonly Func<HttpListenerContext, Task> _handle;
+
+    public HttpHandler(
+        Func<HttpListenerContext, Task> handle
+    )
+    {
+        _handle = handle;
+    }
+
+    public Task HandleAsync(HttpListenerContext socket, CancellationToken ct)
+    {
+        return _handle(socket);
     }
 }
