@@ -4,7 +4,7 @@ using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Annium.Net.Base;
-using Annium.Net.Servers;
+using Annium.Net.Servers.Web;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Annium.Net.Http.Benchmark.Internal;
@@ -14,7 +14,7 @@ internal static class WorkloadServer
     public static async Task RunAsync(CancellationToken ct)
     {
         var sp = new ServiceCollection().BuildServiceProvider();
-        var server = WebServerBuilder.New(sp, Constants.Port).WithHttp(HandleHttpRequest).Build();
+        var server = ServerBuilder.New(sp, Constants.Port).WithHttp(HandleHttpRequest).Build();
         await server.RunAsync(ct);
     }
 

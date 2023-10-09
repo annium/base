@@ -2,7 +2,7 @@ using System;
 using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
-using Annium.Net.Servers;
+using Annium.Net.Servers.Web;
 using Xunit.Abstractions;
 
 namespace Annium.Net.WebSockets.Tests;
@@ -21,7 +21,7 @@ public abstract class TestBase : Testing.Lib.TestBase
 
     protected IAsyncDisposable RunServerBase(Func<IServiceProvider, HttpListenerWebSocketContext, CancellationToken, Task> handleWebSocket)
     {
-        var server = WebServerBuilder.New(Get<IServiceProvider>(), _port).WithWebSockets(handleWebSocket).Build();
+        var server = ServerBuilder.New(Get<IServiceProvider>(), _port).WithWebSockets(handleWebSocket).Build();
         var cts = new CancellationTokenSource();
         var serverTask = server.RunAsync(cts.Token);
 

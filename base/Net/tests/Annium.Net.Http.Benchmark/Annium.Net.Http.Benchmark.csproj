@@ -14,7 +14,7 @@
     <ItemGroup>
         <ProjectReference Include="../../../Logging/src/Annium.Logging.InMemory/Annium.Logging.InMemory.csproj" />
         <ProjectReference Include="../../src/Annium.Net.Http/Annium.Net.Http.csproj" />
-        <ProjectReference Include="../../src/Annium.Net.Servers/Annium.Net.Servers.csproj" />
+        <ProjectReference Include="../../src/Annium.Net.Servers.Web/Annium.Net.Servers.Web.csproj" />
     </ItemGroup>
     <ItemGroup>
         <PackageReference Include="BenchmarkDotNet" Version="0.13.8" />

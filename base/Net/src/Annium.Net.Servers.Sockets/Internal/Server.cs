@@ -7,9 +7,9 @@ using Annium.Core.DependencyInjection;
 using Annium.Extensions.Execution;
 using Annium.Logging;
 
-namespace Annium.Net.Servers.Internal;
+namespace Annium.Net.Servers.Sockets.Internal;
 
-internal class SocketServer : ISocketServer, ILogSubject
+internal class Server : IServer, ILogSubject
 {
     public ILogger Logger { get; }
     private readonly IServiceProvider _sp;
@@ -18,7 +18,7 @@ internal class SocketServer : ISocketServer, ILogSubject
     private readonly IBackgroundExecutor _executor;
     private int _isListening;
 
-    public SocketServer(
+    public Server(
         IServiceProvider sp,
         int port,
         Func<IServiceProvider, Socket, CancellationToken, Task> handle
@@ -28,7 +28,7 @@ internal class SocketServer : ISocketServer, ILogSubject
         _sp = sp;
         _listener = new TcpListener(IPAddress.Any, port);
         _handle = handle;
-        _executor = Executor.Background.Parallel<SocketServer>(Logger);
+        _executor = Executor.Background.Parallel<Server>(Logger);
     }
 
     public async Task RunAsync(CancellationToken ct = default)

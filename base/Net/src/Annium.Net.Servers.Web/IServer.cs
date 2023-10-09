@@ -1,9 +1,9 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Annium.Net.Servers;
+namespace Annium.Net.Servers.Web;
 
-public interface ISocketServer
+public interface IServer
 {
     Task RunAsync(CancellationToken ct = default);
 }

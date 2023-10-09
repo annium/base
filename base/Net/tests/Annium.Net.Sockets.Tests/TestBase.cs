@@ -6,7 +6,7 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using Annium.Logging;
-using Annium.Net.Servers;
+using Annium.Net.Servers.Sockets;
 using Xunit.Abstractions;
 
 namespace Annium.Net.Sockets.Tests;
@@ -28,7 +28,7 @@ public abstract class TestBase : Testing.Lib.TestBase
     {
         this.Trace("start");
 
-        var server = SocketServerBuilder.New(Get<IServiceProvider>(), _port).WithHandler(handle).Build();
+        var server = ServerBuilder.New(Get<IServiceProvider>(), _port).WithHandler(handle).Build();
         var cts = new CancellationTokenSource();
 
         this.Trace("run server");

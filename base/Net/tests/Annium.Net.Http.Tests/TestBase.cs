@@ -3,7 +3,7 @@ using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Annium.Logging;
-using Annium.Net.Servers;
+using Annium.Net.Servers.Web;
 using Xunit.Abstractions;
 
 namespace Annium.Net.Http.Tests;
@@ -24,7 +24,7 @@ public abstract class TestBase : Testing.Lib.TestBase
         Func<HttpListenerRequest, HttpListenerResponse, Task> handle
     )
     {
-        var server = WebServerBuilder.New(Get<IServiceProvider>(), _port)
+        var server = ServerBuilder.New(Get<IServiceProvider>(), _port)
             .WithHttp(async (_, ctx, _) =>
             {
                 this.Trace("start");

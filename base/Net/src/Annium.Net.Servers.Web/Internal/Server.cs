@@ -7,9 +7,9 @@ using Annium.Core.DependencyInjection;
 using Annium.Extensions.Execution;
 using Annium.Logging;
 
-namespace Annium.Net.Servers.Internal;
+namespace Annium.Net.Servers.Web.Internal;
 
-internal class WebServer : IWebServer, ILogSubject
+internal class Server : IServer, ILogSubject
 {
     public ILogger Logger { get; }
     private readonly IServiceProvider _sp;
@@ -19,7 +19,7 @@ internal class WebServer : IWebServer, ILogSubject
     private readonly Func<IServiceProvider, HttpListenerWebSocketContext, CancellationToken, Task> _handleWebSocket;
     private readonly IBackgroundExecutor _executor;
 
-    public WebServer(
+    public Server(
         IServiceProvider sp,
         int port,
         Func<IServiceProvider, HttpListenerContext, CancellationToken, Task>? handleHttp,
@@ -42,7 +42,7 @@ internal class WebServer : IWebServer, ILogSubject
             _handleWebSocket = handleWebSocket;
         }
 
-        _executor = Executor.Background.Parallel<WebServer>(_sp.Resolve<ILogger>());
+        _executor = Executor.Background.Parallel<Server>(_sp.Resolve<ILogger>());
     }
 
     public async Task RunAsync(CancellationToken ct = default)

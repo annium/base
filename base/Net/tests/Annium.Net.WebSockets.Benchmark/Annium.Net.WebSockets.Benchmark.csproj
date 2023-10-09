@@ -12,7 +12,7 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
     <ItemGroup>
-        <ProjectReference Include="../../src/Annium.Net.Servers/Annium.Net.Servers.csproj" />
+        <ProjectReference Include="../../src/Annium.Net.Servers.Web/Annium.Net.Servers.Web.csproj" />
         <ProjectReference Include="../../src/Annium.Net.WebSockets/Annium.Net.WebSockets.csproj" />
     </ItemGroup>
     <ItemGroup>
