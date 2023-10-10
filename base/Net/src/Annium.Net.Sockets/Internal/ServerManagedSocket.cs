@@ -12,17 +12,17 @@ internal class ServerManagedSocket : IServerManagedSocket, ILogSubject
     public event Action<ReadOnlyMemory<byte>> OnReceived = delegate { };
     public Task<SocketCloseResult> IsClosed { get; }
     private readonly Stream _stream;
-    private readonly ManagedSocket _socket;
+    private readonly IManagedSocket _socket;
 
     public ServerManagedSocket(
         Stream stream,
+        SocketMode socketMode,
         ILogger logger,
-        CancellationToken ct
-    )
+        CancellationToken ct)
     {
         Logger = logger;
         _stream = stream;
-        _socket = new ManagedSocket(stream, logger);
+        _socket = Helper.GetManagedSocket(socketMode, stream, logger);
         this.Trace<string, string>("paired with {nativeSocket} / {managedSocket}", _stream.GetFullId(), _socket.GetFullId());
 
         _socket.OnReceived += HandleOnReceived;

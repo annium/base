@@ -28,7 +28,7 @@ public class ServerSocket : IServerSocket
     {
         Logger = logger;
         this.Trace("start");
-        _socket = new ServerManagedSocket(stream, logger, ct);
+        _socket = new ServerManagedSocket(stream, options.Mode, logger, ct);
         _socket.OnReceived += HandleOnReceived;
         this.Trace<string>("paired with {socket}", _socket.GetFullId());
 

@@ -1,6 +1,8 @@
 using System;
 using System.IO;
+using System.Net.Security;
 using System.Net.Sockets;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 using Annium.Core.DependencyInjection;
@@ -11,9 +13,9 @@ using Xunit.Abstractions;
 
 namespace Annium.Net.Sockets.Tests.Internal;
 
-public class ManagedSocketPlainTests : ManagedSocketTestsBase
+public class MessagingManagedSocketSslTests : MessagingManagedSocketTestsBase
 {
-    public ManagedSocketPlainTests(ITestOutputHelper outputHelper) : base(outputHelper)
+    public MessagingManagedSocketSslTests(ITestOutputHelper outputHelper) : base(outputHelper)
     {
     }
 
@@ -33,16 +35,6 @@ public class ManagedSocketPlainTests : ManagedSocketTestsBase
         this.Trace("start");
 
         await Send_ClientClosed_Base();
-
-        this.Trace("done");
-    }
-
-    [Fact]
-    public async Task Send_ServerClosed()
-    {
-        this.Trace("start");
-
-        await Send_ServerClosed_Base();
 
         this.Trace("done");
     }
@@ -78,16 +70,6 @@ public class ManagedSocketPlainTests : ManagedSocketTestsBase
     }
 
     [Fact]
-    public async Task Listen_ServerClosed()
-    {
-        this.Trace("start");
-
-        await Listen_ServerClosed_Base();
-
-        this.Trace("done");
-    }
-
-    [Fact]
     public async Task Listen_Normal()
     {
         this.Trace("start");
@@ -109,22 +91,45 @@ public class ManagedSocketPlainTests : ManagedSocketTestsBase
 
     protected override async Task<Stream> CreateClientStreamAsync(Socket socket)
     {
-        await Task.CompletedTask;
+        var networkStream = new NetworkStream(socket);
+        var sslStream = new SslStream(
+            networkStream,
+            false,
+            ValidateServerCertificate,
+            null
+        );
 
-        return new NetworkStream(socket);
+        await sslStream.AuthenticateAsClientAsync(string.Empty);
+
+        return sslStream;
+
+        bool ValidateServerCertificate(
+            object sender,
+            X509Certificate? certificate,
+            X509Chain? chain,
+            SslPolicyErrors sslPolicyErrors)
+        {
+            // by design, no ssl verification in tests (cause it will require valid SSL certificate)
+            return true;
+        }
     }
 
-    internal override IAsyncDisposable RunServer(Func<ManagedSocket, CancellationToken, Task> handleSocket)
+    internal override IAsyncDisposable RunServer(Func<IManagedSocket, CancellationToken, Task> handleSocket)
     {
+        var cert = X509Certificate.CreateFromCertFile("keys/cert.pfx");
+
         return RunServerBase(async (sp, raw, ct) =>
         {
             this.Trace("start");
 
-            this.Trace<string>("wrap {raw} into network stream", raw.GetFullId());
-            await using var stream = new NetworkStream(raw);
+            this.Trace<string>("wrap {raw} into ssl stream", raw.GetFullId());
+            await using var sslStream = new SslStream(new NetworkStream(raw), false);
+
+            this.Trace("authenticate as server");
+            await sslStream.AuthenticateAsServerAsync(cert, clientCertificateRequired: false, checkCertificateRevocation: true);
 
             this.Trace("create managed socket");
-            var socket = new ManagedSocket(stream, sp.Resolve<ILogger>());
+            var socket = new MessagingManagedSocket(sslStream, sp.Resolve<ILogger>());
 
             this.Trace<string>("handle {socket}", socket.GetFullId());
             await handleSocket(socket, ct);

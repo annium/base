@@ -1,7 +1,6 @@
 using System;
-using System.Net.Security;
+using System.IO;
 using System.Net.Sockets;
-using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 using Annium.Core.DependencyInjection;
@@ -12,20 +11,10 @@ using Xunit.Abstractions;
 
 namespace Annium.Net.Sockets.Tests.Internal;
 
-public class ClientServerManagedSocketSslTests : ClientServerManagedSocketTestsBase
+public class MessagingManagedSocketPlainTests : MessagingManagedSocketTestsBase
 {
-    public ClientServerManagedSocketSslTests(ITestOutputHelper outputHelper) : base(outputHelper)
+    public MessagingManagedSocketPlainTests(ITestOutputHelper outputHelper) : base(outputHelper)
     {
-    }
-
-    [Fact]
-    public async Task Send_NotConnected()
-    {
-        this.Trace("start");
-
-        await Send_NotConnected_Base();
-
-        this.Trace("done");
     }
 
     [Fact]
@@ -64,16 +53,6 @@ public class ClientServerManagedSocketSslTests : ClientServerManagedSocketTestsB
         this.Trace("start");
 
         await Send_Normal_Base();
-
-        this.Trace("done");
-    }
-
-    [Fact]
-    public async Task Send_Reconnect()
-    {
-        this.Trace("start");
-
-        await Send_Reconnect_Base();
 
         this.Trace("done");
     }
@@ -128,36 +107,24 @@ public class ClientServerManagedSocketSslTests : ClientServerManagedSocketTestsB
         this.Trace("done");
     }
 
-    internal override async Task HandleConnectAsync(IClientManagedSocket socket, CancellationToken ct)
+    protected override async Task<Stream> CreateClientStreamAsync(Socket socket)
     {
-        this.Trace("start");
+        await Task.CompletedTask;
 
-        var authOptions = new SslClientAuthenticationOptions
-        {
-            RemoteCertificateValidationCallback = (_, _, _, _) => true,
-        };
-
-        await socket.ConnectAsync(EndPoint, authOptions, ct);
-
-        this.Trace("done");
+        return new NetworkStream(socket);
     }
 
-    internal override IAsyncDisposable RunServer(Func<IServerManagedSocket, CancellationToken, Task> handleSocket)
+    internal override IAsyncDisposable RunServer(Func<IManagedSocket, CancellationToken, Task> handleSocket)
     {
-        var cert = X509Certificate.CreateFromCertFile("keys/cert.pfx");
-
         return RunServerBase(async (sp, raw, ct) =>
         {
             this.Trace("start");
 
-            this.Trace<string>("wrap {raw} into ssl stream", raw.GetFullId());
-            await using var sslStream = new SslStream(new NetworkStream(raw), false);
-
-            this.Trace("authenticate as server");
-            await sslStream.AuthenticateAsServerAsync(cert, clientCertificateRequired: false, checkCertificateRevocation: true);
+            this.Trace<string>("wrap {raw} into network stream", raw.GetFullId());
+            await using var stream = new NetworkStream(raw);
 
             this.Trace("create managed socket");
-            var socket = new ServerManagedSocket(sslStream, SocketMode.Raw, sp.Resolve<ILogger>(), ct);
+            var socket = new MessagingManagedSocket(stream, sp.Resolve<ILogger>());
 
             this.Trace<string>("handle {socket}", socket.GetFullId());
             await handleSocket(socket, ct);

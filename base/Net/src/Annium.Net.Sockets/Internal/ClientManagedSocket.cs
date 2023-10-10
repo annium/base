@@ -25,13 +25,18 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
         }
     }
 
+    private readonly SocketMode _socketMode;
     private Stream? _stream;
-    private ManagedSocket? _socket;
+    private IManagedSocket? _socket;
     private CancellationTokenSource? _listenCts;
     private Task<SocketCloseResult>? _listenTask;
 
-    public ClientManagedSocket(ILogger logger)
+    public ClientManagedSocket(
+        SocketMode socketMode,
+        ILogger logger
+    )
     {
+        _socketMode = socketMode;
         Logger = logger;
     }
 
@@ -79,7 +84,7 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
             }
 
             this.Trace("wrap to managed socket");
-            _socket = new ManagedSocket(_stream, Logger);
+            _socket = Helper.GetManagedSocket(_socketMode, _stream, Logger);
             this.Trace<string, string>("paired with {nativeSocket} / {managedSocket}", _stream.GetFullId(), _socket.GetFullId());
 
             this.Trace("bind events");

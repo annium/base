@@ -8,7 +8,7 @@ using Annium.Logging;
 
 namespace Annium.Net.Sockets.Internal;
 
-internal class ManagedSocket : ISendingReceivingSocket, ILogSubject
+internal class MessagingManagedSocket : IManagedSocket, ILogSubject
 {
     public ILogger Logger { get; }
     public event Action<ReadOnlyMemory<byte>> OnReceived = delegate { };
@@ -17,7 +17,7 @@ internal class ManagedSocket : ISendingReceivingSocket, ILogSubject
     private int _sendCounter;
     private int _recvCounter;
 
-    public ManagedSocket(Stream socket, ILogger logger)
+    public MessagingManagedSocket(Stream socket, ILogger logger)
     {
         Logger = logger;
         _stream = socket;

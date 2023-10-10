@@ -14,14 +14,14 @@ using Xunit.Abstractions;
 
 namespace Annium.Net.Sockets.Tests.Internal;
 
-public abstract class ManagedSocketTestsBase : TestBase, IAsyncLifetime
+public abstract class MessagingManagedSocketTestsBase : TestBase, IAsyncLifetime
 {
     private Socket _clientSocket = default!;
     private Stream _clientStream = default!;
-    private ManagedSocket _managedSocket = default!;
+    private IManagedSocket _managedSocket = default!;
     private readonly List<byte> _stream = new();
 
-    protected ManagedSocketTestsBase(ITestOutputHelper outputHelper) : base(outputHelper)
+    protected MessagingManagedSocketTestsBase(ITestOutputHelper outputHelper) : base(outputHelper)
     {
     }
 
@@ -335,7 +335,7 @@ public abstract class ManagedSocketTestsBase : TestBase, IAsyncLifetime
     }
 
     protected abstract Task<Stream> CreateClientStreamAsync(Socket socket);
-    internal abstract IAsyncDisposable RunServer(Func<ManagedSocket, CancellationToken, Task> handleSocket);
+    internal abstract IAsyncDisposable RunServer(Func<IManagedSocket, CancellationToken, Task> handleSocket);
 
     private async Task ConnectAndStartListenAsync(CancellationToken ct = default)
     {
@@ -363,7 +363,7 @@ public abstract class ManagedSocketTestsBase : TestBase, IAsyncLifetime
         _clientStream = await CreateClientStreamAsync(_clientSocket);
 
         this.Trace("create managed socket");
-        _managedSocket = new ManagedSocket(_clientStream, Logger);
+        _managedSocket = new MessagingManagedSocket(_clientStream, Logger);
         this.Trace<string, string>("created pair of {clientSocket} and {managedSocket}", _clientSocket.GetFullId(), _managedSocket.GetFullId());
 
         _managedSocket.OnReceived += x => _stream.AddRange(x.ToArray());
