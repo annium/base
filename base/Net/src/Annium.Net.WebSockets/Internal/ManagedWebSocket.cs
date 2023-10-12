@@ -33,7 +33,7 @@ internal class ManagedWebSocket : ISendingReceivingWebSocket, ILogSubject
 
     public async Task<WebSocketCloseResult> ListenAsync(CancellationToken ct)
     {
-        using var buffer = new DynamicBuffer<byte>(BufferSize);
+        using var buffer = new ManagedBuffer(BufferSize);
 
         this.Trace("start");
 
@@ -90,7 +90,7 @@ internal class ManagedWebSocket : ISendingReceivingWebSocket, ILogSubject
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private async ValueTask<(bool IsClosed, WebSocketCloseResult Result)> ReceiveAsync(DynamicBuffer<byte> buffer, CancellationToken ct)
+    private async ValueTask<(bool IsClosed, WebSocketCloseResult Result)> ReceiveAsync(ManagedBuffer buffer, CancellationToken ct)
     {
         // reset buffer to start writing from start
         buffer.Reset();
@@ -119,16 +119,16 @@ internal class ManagedWebSocket : ISendingReceivingWebSocket, ILogSubject
 
             this.Trace("fire {messageType} received", receiveResult.MessageType);
             if (receiveResult.MessageType is WebSocketMessageType.Text)
-                OnTextReceived(buffer.AsDataReadOnlyMemory());
+                OnTextReceived(buffer.Data);
             else
-                OnBinaryReceived(buffer.AsDataReadOnlyMemory());
+                OnBinaryReceived(buffer.Data);
 
             return (false, new WebSocketCloseResult(WebSocketCloseStatus.ClosedRemote, null));
         }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private async ValueTask<ReceiveResult> ReceiveChunkAsync(DynamicBuffer<byte> buffer, CancellationToken ct)
+    private async ValueTask<ReceiveResult> ReceiveChunkAsync(ManagedBuffer buffer, CancellationToken ct)
     {
         try
         {
@@ -144,7 +144,7 @@ internal class ManagedWebSocket : ISendingReceivingWebSocket, ILogSubject
                 return new ReceiveResult(WebSocketMessageType.Close, 0, true, WebSocketCloseStatus.ClosedLocal, null);
             }
 
-            var result = await _socket.ReceiveAsync(buffer.AsFreeSpaceMemory(), ct).ConfigureAwait(false);
+            var result = await _socket.ReceiveAsync(buffer.FreeSpace, ct).ConfigureAwait(false);
             this.Trace("received {messageType} ({bytesCount} - {endOfMessage})", result.MessageType, result.Count, result.EndOfMessage);
 
             return new ReceiveResult(result.MessageType, result.Count, result.EndOfMessage, WebSocketCloseStatus.ClosedRemote, null);
