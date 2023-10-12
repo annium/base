@@ -14,8 +14,8 @@ internal class RawManagedSocket : IManagedSocket, ILogSubject
     public event Action<ReadOnlyMemory<byte>> OnReceived = delegate { };
     private const int BufferSize = 65_536;
     private readonly Stream _stream;
-    private int _sendCounter;
-    private int _recvCounter;
+    private long _sendCounter;
+    private long _recvCounter;
 
     public RawManagedSocket(Stream socket, ILogger logger)
     {
@@ -64,7 +64,7 @@ internal class RawManagedSocket : IManagedSocket, ILogSubject
 
     public async Task<SocketCloseResult> ListenAsync(CancellationToken ct)
     {
-        using var buffer = new DynamicBuffer<byte>(BufferSize);
+        using var buffer = new RawBuffer(BufferSize);
 
         this.Trace("start");
 
@@ -81,7 +81,7 @@ internal class RawManagedSocket : IManagedSocket, ILogSubject
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private async ValueTask<(bool IsClosed, SocketCloseResult Result)> ReceiveAsync(DynamicBuffer<byte> buffer, CancellationToken ct)
+    private async ValueTask<(bool IsClosed, SocketCloseResult Result)> ReceiveAsync(RawBuffer buffer, CancellationToken ct)
     {
         this.Trace("start");
 
@@ -102,7 +102,7 @@ internal class RawManagedSocket : IManagedSocket, ILogSubject
 
         // track receiveResult count
         this.Trace("track data size: {size}", receiveResult.Count);
-        buffer.TrackDataSize(receiveResult.Count);
+        buffer.TrackData(receiveResult.Count);
 
         this.Trace("fire message received");
         OnReceived(buffer.AsDataReadOnlyMemory());
@@ -113,7 +113,7 @@ internal class RawManagedSocket : IManagedSocket, ILogSubject
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private async ValueTask<ReceiveResult> ReceiveChunkAsync(DynamicBuffer<byte> buffer, CancellationToken ct)
+    private async ValueTask<ReceiveResult> ReceiveChunkAsync(RawBuffer buffer, CancellationToken ct)
     {
         this.Trace("start");
 
