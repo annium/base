@@ -14,8 +14,8 @@ internal class MessagingManagedSocket : IManagedSocket, ILogSubject
     public event Action<ReadOnlyMemory<byte>> OnReceived = delegate { };
     private const int BufferSize = 65_536;
     private readonly Stream _stream;
-    private int _sendCounter;
-    private int _recvCounter;
+    private long _sendCounter;
+    private long _recvCounter;
 
     public MessagingManagedSocket(Stream socket, ILogger logger)
     {
@@ -35,8 +35,14 @@ internal class MessagingManagedSocket : IManagedSocket, ILogSubject
                 return SocketSendStatus.Canceled;
             }
 
+            var messageSize = BitConverter.GetBytes(data.Length);
+            this.Trace("{dataLength} - send message size (total: {total})", data.Length, _sendCounter += messageSize.Length);
+            await _stream.WriteAsync(messageSize, ct).ConfigureAwait(false);
+
+            this.Trace("{dataLength} - message itself (total: {total})", data.Length, _sendCounter += data.Length);
             await _stream.WriteAsync(data, ct).ConfigureAwait(false);
-            this.Trace("{dataLength} - send succeed (total: {total})", data.Length, _sendCounter += data.Length);
+
+            this.Trace("{dataLength} - send succeed (total: {total})", data.Length, _sendCounter);
 
             return SocketSendStatus.Ok;
         }
@@ -64,7 +70,7 @@ internal class MessagingManagedSocket : IManagedSocket, ILogSubject
 
     public async Task<SocketCloseResult> ListenAsync(CancellationToken ct)
     {
-        using var buffer = new DynamicBuffer<byte>(BufferSize);
+        using var buffer = new MessagingBuffer(BufferSize);
 
         this.Trace("start");
 
@@ -81,16 +87,19 @@ internal class MessagingManagedSocket : IManagedSocket, ILogSubject
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private async ValueTask<(bool IsClosed, SocketCloseResult Result)> ReceiveAsync(DynamicBuffer<byte> buffer, CancellationToken ct)
+    private async ValueTask<(bool IsClosed, SocketCloseResult Result)> ReceiveAsync(MessagingBuffer buffer, CancellationToken ct)
     {
         this.Trace("start");
 
-        // reset buffer to start writing from start
-        this.Trace("reset buffer");
-        buffer.Reset();
+        // grow buffer if needed
+        if (buffer.IsFull)
+        {
+            this.Trace("buffer {buffer} is full, grow", buffer);
+            buffer.Grow();
+        }
 
         // read chunk into buffer
-        this.Trace("receive chunk");
+        this.Trace("receive data chunk into buffer {buffer}", buffer);
         var receiveResult = await ReceiveChunkAsync(buffer, ct).ConfigureAwait(false);
 
         // if close received - return false, indicating socket is closed
@@ -101,19 +110,26 @@ internal class MessagingManagedSocket : IManagedSocket, ILogSubject
         }
 
         // track receiveResult count
-        this.Trace("track data size: {size}", receiveResult.Count);
-        buffer.TrackDataSize(receiveResult.Count);
+        this.Trace("track received data size: {size}", receiveResult.Count);
+        buffer.TrackData(receiveResult.Count);
 
-        this.Trace("fire message received");
-        OnReceived(buffer.AsDataReadOnlyMemory());
+        while (buffer.ContainsFullMessage)
+        {
+            this.Trace("buffer {buffer} contains full message, fire message received", buffer);
+            OnReceived(buffer.Message);
 
-        this.Trace("done");
+            // reset buffer to forget fired message
+            this.Trace("reset buffer");
+            buffer.Reset();
+        }
+
+        this.Trace("buffer {buffer} doesn't contain full message, done", buffer);
 
         return (false, new SocketCloseResult(SocketCloseStatus.ClosedRemote, null));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private async ValueTask<ReceiveResult> ReceiveChunkAsync(DynamicBuffer<byte> buffer, CancellationToken ct)
+    private async ValueTask<ReceiveResult> ReceiveChunkAsync(MessagingBuffer buffer, CancellationToken ct)
     {
         this.Trace("start");
 
@@ -126,7 +142,7 @@ internal class MessagingManagedSocket : IManagedSocket, ILogSubject
             }
 
             this.Trace("wait for message");
-            var bytesRead = await _stream.ReadAsync(buffer.AsFreeSpaceMemory(), ct).ConfigureAwait(false);
+            var bytesRead = await _stream.ReadAsync(buffer.FreeSpace, ct).ConfigureAwait(false);
             this.Trace("received {bytesRead} bytes (total: {total})", bytesRead, _recvCounter += bytesRead);
 
             return new ReceiveResult(bytesRead, bytesRead <= 0 ? SocketCloseStatus.ClosedRemote : null, null);

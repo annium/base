@@ -105,7 +105,7 @@ internal class RawManagedSocket : IManagedSocket, ILogSubject
         buffer.TrackData(receiveResult.Count);
 
         this.Trace("fire message received");
-        OnReceived(buffer.AsDataReadOnlyMemory());
+        OnReceived(buffer.Data);
 
         this.Trace("done");
 
@@ -126,7 +126,7 @@ internal class RawManagedSocket : IManagedSocket, ILogSubject
             }
 
             this.Trace("wait for message");
-            var bytesRead = await _stream.ReadAsync(buffer.AsFreeSpaceMemory(), ct).ConfigureAwait(false);
+            var bytesRead = await _stream.ReadAsync(buffer.FreeSpace, ct).ConfigureAwait(false);
             this.Trace("received {bytesRead} bytes (total: {total})", bytesRead, _recvCounter += bytesRead);
 
             return new ReceiveResult(bytesRead, bytesRead <= 0 ? SocketCloseStatus.ClosedRemote : null, null);

@@ -75,6 +75,22 @@ public abstract class TestBase : Testing.Lib.TestBase
 
         return (message, chunks);
     }
+
+    protected IReadOnlyList<byte[]> GenerateMessages(int count, int averageSize)
+    {
+        var minSize = (int)Math.Floor((double)averageSize / 2);
+        var maxSize = minSize * 3;
+        var messages = new List<byte[]>(count);
+
+        for (var i = 0; i < count; i++)
+        {
+            var message = new byte[_random.Next(minSize, maxSize)];
+            _random.NextBytes(message);
+            messages.Add(message);
+        }
+
+        return messages;
+    }
 }
 
 file class Handler : IHandler

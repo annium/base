@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -19,7 +18,7 @@ public abstract class MessagingManagedSocketTestsBase : TestBase, IAsyncLifetime
     private Socket _clientSocket = default!;
     private Stream _clientStream = default!;
     private IManagedSocket _managedSocket = default!;
-    private readonly List<byte> _stream = new();
+    private readonly List<byte[]> _messages = new();
 
     protected MessagingManagedSocketTestsBase(ITestOutputHelper outputHelper) : base(outputHelper)
     {
@@ -152,7 +151,11 @@ public abstract class MessagingManagedSocketTestsBase : TestBase, IAsyncLifetime
         messageResult.Is(SocketSendStatus.Ok);
 
         this.Trace("assert message is echoed back");
-        await Expect.To(() => _stream.IsEqual(message));
+        await Expect.To(() =>
+        {
+            _messages.Has(1);
+            _messages.At(0).IsEqual(message);
+        });
 
         this.Trace("done");
     }
@@ -240,7 +243,7 @@ public abstract class MessagingManagedSocketTestsBase : TestBase, IAsyncLifetime
         this.Trace("start");
 
         this.Trace("generate messages");
-        var (message, chunks) = GenerateMessage(100, 10);
+        var messages = GenerateMessages(10, 100);
 
         this.Trace("run server");
         await using var _ = RunServer(async (serverSocket, ct) =>
@@ -248,10 +251,10 @@ public abstract class MessagingManagedSocketTestsBase : TestBase, IAsyncLifetime
             this.Trace("start sending chunks");
 
             var i = 0;
-            foreach (var chunk in chunks)
+            foreach (var message in messages)
             {
-                this.Trace("send chunk#{num}", ++i);
-                await serverSocket.SendAsync(chunk, ct);
+                this.Trace("send message#{num}", ++i);
+                await serverSocket.SendAsync(message, ct);
                 await Task.Delay(1, CancellationToken.None);
             }
 
@@ -267,7 +270,11 @@ public abstract class MessagingManagedSocketTestsBase : TestBase, IAsyncLifetime
 
         // assert
         this.Trace("assert data arrived");
-        await Expect.To(() => _stream.IsEqual(message), 1000);
+        await Expect.To(() =>
+        {
+            _messages.Has(messages.Count);
+            _messages.IsEqual(messages);
+        });
 
         this.Trace("done");
     }
@@ -278,7 +285,7 @@ public abstract class MessagingManagedSocketTestsBase : TestBase, IAsyncLifetime
         this.Trace("start");
 
         this.Trace("generate messages");
-        var (message, chunks) = GenerateMessage(1_000_000, 100_000);
+        var messages = GenerateMessages(10, 100_000);
 
         this.Trace("run server");
         await using var _ = RunServer(async (serverSocket, ct) =>
@@ -286,10 +293,10 @@ public abstract class MessagingManagedSocketTestsBase : TestBase, IAsyncLifetime
             this.Trace("start sending chunks");
 
             var i = 0;
-            foreach (var chunk in chunks)
+            foreach (var message in messages)
             {
                 this.Trace("send chunk#{num}", ++i);
-                await serverSocket.SendAsync(chunk, ct);
+                await serverSocket.SendAsync(message, ct);
                 await Task.Delay(1, CancellationToken.None);
             }
 
@@ -305,10 +312,11 @@ public abstract class MessagingManagedSocketTestsBase : TestBase, IAsyncLifetime
 
         // assert
         this.Trace("assert data arrived");
-        await Expect.To(() => _stream.Count.Is(message.Length));
-
-        this.Trace("verify stream to be equal to message");
-        _stream.SequenceEqual(message).IsTrue();
+        await Expect.To(() =>
+        {
+            _messages.Has(messages.Count);
+            _messages.IsEqual(messages);
+        });
 
         this.Trace("await listen completion");
         var result = await listenTask;
@@ -366,7 +374,7 @@ public abstract class MessagingManagedSocketTestsBase : TestBase, IAsyncLifetime
         _managedSocket = new MessagingManagedSocket(_clientStream, Logger);
         this.Trace<string, string>("created pair of {clientSocket} and {managedSocket}", _clientSocket.GetFullId(), _managedSocket.GetFullId());
 
-        _managedSocket.OnReceived += x => _stream.AddRange(x.ToArray());
+        _managedSocket.OnReceived += x => _messages.Add(x.ToArray());
 
         await Task.CompletedTask;
 

@@ -9,6 +9,34 @@ internal struct RawBuffer : IDisposable
     private int _dataLength;
     private bool _isDisposed;
 
+    /// <summary>
+    /// Wrap buffer free space as Memory
+    /// </summary>
+    /// <returns>Buffer free space as Memory</returns>
+    public Memory<byte> FreeSpace
+    {
+        get
+        {
+            EnsureNotDisposed();
+
+            return new Memory<byte>(_buffer, _dataLength, _buffer.Length - _dataLength);
+        }
+    }
+
+    /// <summary>
+    /// Wrap buffer message as ReadOnlyMemory
+    /// </summary>
+    /// <returns>Buffer data as ReadOnlyMemory</returns>
+    public ReadOnlyMemory<byte> Data
+    {
+        get
+        {
+            EnsureNotDisposed();
+
+            return new ReadOnlyMemory<byte>(_buffer, 0, _dataLength);
+        }
+    }
+
     public RawBuffer(int size)
     {
         _buffer = ArrayPool<byte>.Shared.Rent(size);
@@ -35,28 +63,6 @@ internal struct RawBuffer : IDisposable
     public void TrackData(int dataSize)
     {
         _dataLength += dataSize;
-    }
-
-    /// <summary>
-    /// Wrap buffer free space as ArraySegment
-    /// </summary>
-    /// <returns>Buffer free space as ArraySegment</returns>
-    public Memory<byte> AsFreeSpaceMemory()
-    {
-        EnsureNotDisposed();
-
-        return new Memory<byte>(_buffer, _dataLength, _buffer.Length - _dataLength);
-    }
-
-    /// <summary>
-    /// Wrap buffer data as ReadOnlySpan
-    /// </summary>
-    /// <returns>Buffer data as ReadOnlySpan</returns>
-    public ReadOnlyMemory<byte> AsDataReadOnlyMemory()
-    {
-        EnsureNotDisposed();
-
-        return new ReadOnlyMemory<byte>(_buffer, 0, _dataLength);
     }
 
     public void Dispose()
