@@ -92,9 +92,15 @@ internal class Server : IServer, ILogSubject
     private Func<ValueTask> HandleRequest(HttpListenerContext ctx, CancellationToken ct) => async () =>
     {
         if (ctx.Request.IsWebSocketRequest)
+        {
+            this.Trace("handle websocket request");
             await _handleWebSocketRequest(ctx, ct);
+        }
         else
+        {
+            this.Trace("handle http request");
             await _handleHttpRequest(ctx, ct);
+        }
     };
 
     private async Task HandleWebSocketRequest(HttpListenerContext ctx, CancellationToken ct)
