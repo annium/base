@@ -130,7 +130,7 @@ public class ClientServerSocketSslTests : ClientServerSocketTestsBase
             this.Trace("start");
 
             this.Trace<string>("wrap {raw} into ssl stream", raw.GetFullId());
-            await using var sslStream = new SslStream(new NetworkStream(raw), false);
+            await using var sslStream = new SslStream(new NetworkStream(raw, true), false);
 
             this.Trace("authenticate as server");
             await sslStream.AuthenticateAsServerAsync(cert, clientCertificateRequired: false, checkCertificateRevocation: true);

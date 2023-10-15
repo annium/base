@@ -63,7 +63,7 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
             if (authOptions is not null)
             {
                 this.Trace("wrap native socket with network stream");
-                var networkStream = new NetworkStream(nativeSocket);
+                var networkStream = new NetworkStream(nativeSocket, true);
 
                 this.Trace("wrap network stream with ssl stream");
                 var sslStream = new SslStream(
@@ -80,7 +80,7 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
             else
             {
                 this.Trace("wrap native socket with network stream");
-                _stream = new NetworkStream(nativeSocket);
+                _stream = new NetworkStream(nativeSocket, true);
             }
 
             this.Trace("wrap to managed socket");

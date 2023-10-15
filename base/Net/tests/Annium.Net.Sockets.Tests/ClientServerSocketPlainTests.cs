@@ -121,7 +121,7 @@ public class ClientServerSocketPlainTests : ClientServerSocketTestsBase
             this.Trace("start");
 
             this.Trace<string>("wrap {raw} into network stream", raw.GetFullId());
-            await using var stream = new NetworkStream(raw);
+            await using var stream = new NetworkStream(raw, true);
 
             this.Trace("create managed socket");
             var socket = new ServerSocket(stream, sp.Resolve<ILogger>(), ct);
