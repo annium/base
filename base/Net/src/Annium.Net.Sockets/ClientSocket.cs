@@ -20,9 +20,11 @@ public class ClientSocket : IClientSocket
     private readonly object _locker = new();
     private readonly IClientManagedSocket _socket;
     private readonly IConnectionMonitor _connectionMonitor;
-    private ConnectionConfig? _connectionConfig;
-    private Status _status = Status.Disconnected;
+    private readonly int _connectTimeout;
     private readonly int _reconnectDelay;
+    private ConnectionConfig? _connectionConfig;
+    private CancellationTokenSource _connectionCts = new();
+    private Status _status = Status.Disconnected;
 
     public ClientSocket(ClientSocketOptions options, ILogger logger)
     {
@@ -35,6 +37,8 @@ public class ClientSocket : IClientSocket
         this.Trace("init monitor");
         _connectionMonitor = options.ConnectionMonitor;
         _connectionMonitor.Init(this);
+
+        _connectTimeout = options.ConnectTimeout;
         _reconnectDelay = options.ReconnectDelay;
 
         this.Trace("subscribe to OnConnectionLost");
@@ -83,6 +87,8 @@ public class ClientSocket : IClientSocket
             }
 
             SetStatus(Status.Disconnected);
+            _connectionCts.Cancel();
+            _connectionCts.Dispose();
         }
 
         this.Trace("stop monitor");
@@ -149,7 +155,9 @@ public class ClientSocket : IClientSocket
 
         _connectionConfig = config;
         this.Trace<IPEndPoint, string>("connect to {endpoint} ({ssl})", config.Endpoint, config.AuthOptions is not null ? "ssl" : "plaintext");
-        _socket.ConnectAsync(config.Endpoint, config.AuthOptions, CancellationToken.None).ContinueWith(HandleConnected, config);
+        var cts = new CancellationTokenSource(_connectTimeout);
+        _connectionCts = cts;
+        _socket.ConnectAsync(config.Endpoint, config.AuthOptions, cts.Token).ContinueWith(HandleConnected, config, CancellationToken.None);
 
         this.Trace("done");
     }
