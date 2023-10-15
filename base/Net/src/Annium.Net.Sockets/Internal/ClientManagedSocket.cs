@@ -13,23 +13,12 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
 {
     public ILogger Logger { get; }
     public event Action<ReadOnlyMemory<byte>> OnReceived = delegate { };
-
-    public Task<SocketCloseResult> IsClosed
-    {
-        get
-        {
-            if (_listenTask is null)
-                throw new InvalidOperationException("Socket is not connected");
-
-            return _listenTask;
-        }
-    }
-
+    public Task<SocketCloseResult> IsClosed => _listenTask;
     private readonly SocketMode _socketMode;
     private Stream? _stream;
     private IManagedSocket? _socket;
-    private CancellationTokenSource? _listenCts;
-    private Task<SocketCloseResult>? _listenTask;
+    private CancellationTokenSource _listenCts = new();
+    private Task<SocketCloseResult> _listenTask = Task.FromResult(new SocketCloseResult(SocketCloseStatus.ClosedLocal, null));
 
     public ClientManagedSocket(
         SocketMode socketMode,
@@ -114,7 +103,7 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
         }
 
         this.Trace("create listen cts");
-        _listenCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        _listenCts = new CancellationTokenSource();
 
         this.Trace("create listen task");
         _listenTask = _socket.ListenAsync(_listenCts.Token).ContinueWith(HandleClosed, CancellationToken.None);
@@ -128,7 +117,7 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
     {
         this.Trace("start");
 
-        if (_stream is null || _socket is null || _listenCts is null || _listenTask is null)
+        if (_stream is null || _socket is null)
         {
             this.Trace("skip - not connected");
             return;
@@ -149,6 +138,7 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
 
         this.Trace("cancel listen cts");
         _listenCts.Cancel();
+        _listenCts.Dispose();
 
         this.Trace("await listen task");
         await _listenTask;
