@@ -3,7 +3,7 @@ using Annium.Logging;
 
 namespace Annium.Net.WebSockets;
 
-public interface IClientWebSocket : ISendingReceivingWebSocket, ILogSubject
+public interface IClientWebSocket : ISendingReceivingWebSocket, IDisposable, ILogSubject
 {
     event Action OnConnected;
     event Action<WebSocketCloseStatus> OnDisconnected;

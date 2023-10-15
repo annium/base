@@ -19,9 +19,11 @@ public class ClientWebSocket : IClientWebSocket
     private readonly object _locker = new();
     private readonly IClientManagedWebSocket _socket;
     private readonly IConnectionMonitor _connectionMonitor;
-    private Uri? _uri;
-    private Status _status = Status.Disconnected;
+    private readonly int _connectTimeout;
     private readonly int _reconnectDelay;
+    private Uri? _uri;
+    private CancellationTokenSource _connectionCts = new();
+    private Status _status = Status.Disconnected;
 
     public ClientWebSocket(ClientWebSocketOptions options, ILogger logger)
     {
@@ -35,6 +37,8 @@ public class ClientWebSocket : IClientWebSocket
         this.Trace("init monitor");
         _connectionMonitor = options.ConnectionMonitor;
         _connectionMonitor.Init(this);
+
+        _connectTimeout = options.ConnectTimeout;
         _reconnectDelay = options.ReconnectDelay;
 
         this.Trace("subscribe to OnConnectionLost");
@@ -83,6 +87,8 @@ public class ClientWebSocket : IClientWebSocket
             }
 
             SetStatus(Status.Disconnected);
+            _connectionCts.Cancel();
+            _connectionCts.Dispose();
         }
 
         this.Trace("stop monitor");
@@ -107,6 +113,11 @@ public class ClientWebSocket : IClientWebSocket
     {
         this.Trace("send binary");
         return _socket.SendBinaryAsync(data, ct);
+    }
+
+    public void Dispose()
+    {
+        Disconnect();
     }
 
     private void ReconnectPrivate(Uri uri, WebSocketCloseResult result)
@@ -150,7 +161,9 @@ public class ClientWebSocket : IClientWebSocket
 
         _uri = uri;
         this.Trace("connect to {uri}", uri);
-        _socket.ConnectAsync(uri, CancellationToken.None).ContinueWith(HandleConnected, uri);
+        var cts = new CancellationTokenSource(_connectTimeout);
+        _connectionCts = cts;
+        _socket.ConnectAsync(uri, cts.Token).ContinueWith(HandleConnected, uri, CancellationToken.None);
 
         this.Trace("done");
     }
