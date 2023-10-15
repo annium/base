@@ -296,8 +296,8 @@ public class ClientServerManagedWebSocketTests : TestBase, IAsyncLifetime
         var cts = new CancellationTokenSource();
         await ConnectAsync(cts.Token);
 
-        this.Trace("cancel cts");
-        cts.Cancel();
+        this.Trace("disconnect");
+        await _clientSocket.DisconnectAsync();
 
         // act
         this.Trace("await closed state");

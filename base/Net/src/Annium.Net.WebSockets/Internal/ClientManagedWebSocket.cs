@@ -12,22 +12,11 @@ internal class ClientManagedWebSocket : IClientManagedWebSocket, ILogSubject
     public ILogger Logger { get; }
     public event Action<ReadOnlyMemory<byte>> OnTextReceived = delegate { };
     public event Action<ReadOnlyMemory<byte>> OnBinaryReceived = delegate { };
-
-    public Task<WebSocketCloseResult> IsClosed
-    {
-        get
-        {
-            if (_listenTask is null)
-                throw new InvalidOperationException("Socket is not connected");
-
-            return _listenTask;
-        }
-    }
-
+    public Task<WebSocketCloseResult> IsClosed => _listenTask;
     private NativeWebSocket? _nativeSocket;
     private ManagedWebSocket? _managedSocket;
-    private CancellationTokenSource? _listenCts;
-    private Task<WebSocketCloseResult>? _listenTask;
+    private CancellationTokenSource _listenCts = new();
+    private Task<WebSocketCloseResult> _listenTask = Task.FromResult(new WebSocketCloseResult(WebSocketCloseStatus.ClosedLocal, null));
 
     public ClientManagedWebSocket(ILogger logger)
     {
@@ -74,7 +63,7 @@ internal class ClientManagedWebSocket : IClientManagedWebSocket, ILogSubject
         }
 
         this.Trace("create listen cts");
-        _listenCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        _listenCts = new CancellationTokenSource();
 
         this.Trace("create listen task");
         _listenTask = _managedSocket.ListenAsync(_listenCts.Token).ContinueWith(HandleClosed, CancellationToken.None);
@@ -88,7 +77,7 @@ internal class ClientManagedWebSocket : IClientManagedWebSocket, ILogSubject
     {
         this.Trace("start");
 
-        if (_nativeSocket is null || _managedSocket is null || _listenCts is null || _listenTask is null)
+        if (_nativeSocket is null || _managedSocket is null)
         {
             this.Trace("skip - not connected");
             return;
@@ -111,6 +100,7 @@ internal class ClientManagedWebSocket : IClientManagedWebSocket, ILogSubject
 
         this.Trace("cancel listen cts");
         _listenCts.Cancel();
+        _listenCts.Dispose();
 
         this.Trace("await listen task");
         await _listenTask;
