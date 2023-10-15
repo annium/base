@@ -108,7 +108,7 @@ public abstract class BackgroundExecutorTestBase : TestBase
             Interlocked.Increment(ref successes);
         }));
 
-        this.Trace("assert not events registered");
+        this.Trace("assert no events registered");
         successes.Is(0);
         failures.Is(0);
 
@@ -123,10 +123,12 @@ public abstract class BackgroundExecutorTestBase : TestBase
             await Task.Delay(10);
             if (i % 5 == 0)
             {
+                this.Trace("add failure");
                 Interlocked.Increment(ref failures);
                 throw new Exception("Some failure");
             }
 
+            this.Trace("add success");
             Interlocked.Increment(ref successes);
         }));
 
