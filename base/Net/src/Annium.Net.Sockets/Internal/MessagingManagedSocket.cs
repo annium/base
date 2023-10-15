@@ -14,6 +14,8 @@ internal class MessagingManagedSocket : IManagedSocket, ILogSubject
     public event Action<ReadOnlyMemory<byte>> OnReceived = delegate { };
     private const int BufferSize = 65_536;
     private readonly Stream _stream;
+    private readonly SemaphoreSlim _gate = new(1, 1);
+    private bool _isDisposed;
     private long _sendCounter;
     private long _recvCounter;
 
@@ -25,17 +27,26 @@ internal class MessagingManagedSocket : IManagedSocket, ILogSubject
 
     public async ValueTask<SocketSendStatus> SendAsync(ReadOnlyMemory<byte> data, CancellationToken ct = default)
     {
+        this.Trace("{dataLength} - start", data.Length);
+
+        if (_isDisposed)
+        {
+            this.Trace("{dataLength} - disposed, return closed", data.Length);
+            return SocketSendStatus.Closed;
+        }
+
+        if (ct.IsCancellationRequested)
+        {
+            this.Trace("{dataLength} - canceled with cancellation token", data.Length);
+            return SocketSendStatus.Canceled;
+        }
+
         try
         {
-            this.Trace("{dataLength} - start", data.Length);
-
-            if (ct.IsCancellationRequested)
-            {
-                this.Trace("{dataLength} - canceled with cancellation token", data.Length);
-                return SocketSendStatus.Canceled;
-            }
+            await _gate.WaitAsync(ct);
 
             var messageSize = BitConverter.GetBytes(data.Length);
+
             this.Trace("{dataLength} - send message size (total: {total})", data.Length, _sendCounter += messageSize.Length);
             await _stream.WriteAsync(messageSize, ct).ConfigureAwait(false);
 
@@ -66,10 +77,20 @@ internal class MessagingManagedSocket : IManagedSocket, ILogSubject
             this.Trace("{dataLength} - closed with IOException(SocketException)", data.Length);
             return SocketSendStatus.Closed;
         }
+        finally
+        {
+            _gate.Release();
+        }
     }
 
     public async Task<SocketCloseResult> ListenAsync(CancellationToken ct)
     {
+        if (_isDisposed)
+        {
+            this.Trace("disposed, return closed local");
+            return new SocketCloseResult(SocketCloseStatus.ClosedLocal, null);
+        }
+
         using var buffer = new MessagingBuffer(BufferSize);
 
         this.Trace("start");
@@ -84,6 +105,24 @@ internal class MessagingManagedSocket : IManagedSocket, ILogSubject
                 return result;
             }
         }
+    }
+
+    public void Dispose()
+    {
+        this.Trace("start");
+
+        if (_isDisposed)
+        {
+            this.Trace("already disposed");
+            return;
+        }
+
+        _isDisposed = true;
+
+        _gate.Dispose();
+        GC.SuppressFinalize(this);
+
+        this.Trace("done");
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

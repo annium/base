@@ -25,16 +25,16 @@ internal class RawManagedSocket : IManagedSocket, ILogSubject
 
     public async ValueTask<SocketSendStatus> SendAsync(ReadOnlyMemory<byte> data, CancellationToken ct = default)
     {
+        this.Trace("{dataLength} - start", data.Length);
+
+        if (ct.IsCancellationRequested)
+        {
+            this.Trace("{dataLength} - canceled with cancellation token", data.Length);
+            return SocketSendStatus.Canceled;
+        }
+
         try
         {
-            this.Trace("{dataLength} - start", data.Length);
-
-            if (ct.IsCancellationRequested)
-            {
-                this.Trace("{dataLength} - canceled with cancellation token", data.Length);
-                return SocketSendStatus.Canceled;
-            }
-
             await _stream.WriteAsync(data, ct).ConfigureAwait(false);
             this.Trace("{dataLength} - send succeed (total: {total})", data.Length, _sendCounter += data.Length);
 
@@ -78,6 +78,11 @@ internal class RawManagedSocket : IManagedSocket, ILogSubject
                 return result;
             }
         }
+    }
+
+    public void Dispose()
+    {
+        this.Trace("run");
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

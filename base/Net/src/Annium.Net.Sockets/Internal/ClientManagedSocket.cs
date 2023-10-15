@@ -94,6 +94,7 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
             if (_socket is not null)
             {
                 _socket.OnReceived -= HandleOnReceived;
+                _socket.Dispose();
                 _socket = null;
             }
 
@@ -128,6 +129,9 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
 
         try
         {
+            this.Trace("dispose socket");
+            _socket.Dispose();
+
             this.Trace("close stream");
             _stream.Close();
         }

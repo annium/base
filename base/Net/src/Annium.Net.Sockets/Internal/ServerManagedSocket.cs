@@ -40,6 +40,9 @@ internal class ServerManagedSocket : IServerManagedSocket, ILogSubject
 
         try
         {
+            this.Trace("dispose socket");
+            _socket.Dispose();
+
             this.Trace("close stream");
             _stream.Close();
         }
