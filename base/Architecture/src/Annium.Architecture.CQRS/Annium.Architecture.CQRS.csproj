@@ -12,10 +12,8 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
     <ItemGroup>
-        <ProjectReference Include="../Annium.Architecture.Base/Annium.Architecture.Base.csproj" />
-    </ItemGroup>
-    <ItemGroup>
         <ProjectReference Include="../../../Core/src/Annium.Core.Mediator/Annium.Core.Mediator.csproj" />
         <ProjectReference Include="../../../Data/src/Annium.Data.Operations/Annium.Data.Operations.csproj" />
+        <ProjectReference Include="../Annium.Architecture.Base/Annium.Architecture.Base.csproj" />
     </ItemGroup>
 </Project>
