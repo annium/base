@@ -12,6 +12,7 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
     <ItemGroup>
+        <ProjectReference Include="../../../Core/src/Annium.Core.Mediator/Annium.Core.Mediator.csproj" />
         <ProjectReference Include="../../../Extensions/src/Annium.Extensions.Composition/Annium.Extensions.Composition.csproj" />
         <ProjectReference Include="../../../Extensions/src/Annium.Extensions.Validation/Annium.Extensions.Validation.csproj" />
     </ItemGroup>

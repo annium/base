@@ -11,9 +11,4 @@
         <IsPackable>true</IsPackable>
         <Nullable>enable</Nullable>
     </PropertyGroup>
-    <ItemGroup>
-        <ProjectReference Include="../../../Core/src/Annium.Core.Mediator/Annium.Core.Mediator.csproj" />
-        <ProjectReference Include="../../../Data/src/Annium.Data.Models/Annium.Data.Models.csproj" />
-        <ProjectReference Include="../../../Data/src/Annium.Data.Operations/Annium.Data.Operations.csproj" />
-    </ItemGroup>
 </Project>
