@@ -4,7 +4,6 @@ using System.Linq;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Annium.Testing;
-using Annium.Testing.Lib;
 using Xunit;
 using Xunit.Abstractions;
 

@@ -3,7 +3,7 @@ using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Annium.Logging;
-using Annium.Testing.Lib;
+using Annium.Testing;
 using Xunit;
 using Xunit.Abstractions;
 

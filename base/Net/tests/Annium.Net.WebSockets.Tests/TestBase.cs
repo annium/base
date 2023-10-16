@@ -7,7 +7,7 @@ using Xunit.Abstractions;
 
 namespace Annium.Net.WebSockets.Tests;
 
-public abstract class TestBase : Testing.Lib.TestBase
+public abstract class TestBase : Testing.TestBase
 {
     private static int _basePort = 15000;
     protected readonly Uri ServerUri;

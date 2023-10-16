@@ -8,7 +8,6 @@ using Annium.Core.DependencyInjection;
 using Annium.Logging;
 using Annium.Net.WebSockets.Internal;
 using Annium.Testing;
-using Annium.Testing.Assertions;
 using Xunit;
 using Xunit.Abstractions;
 

@@ -11,7 +11,7 @@ using Xunit.Abstractions;
 
 namespace Annium.Net.Sockets.Tests;
 
-public abstract class TestBase : Testing.Lib.TestBase
+public abstract class TestBase : Testing.TestBase
 {
     private static int _basePort = 10000;
     protected readonly IPEndPoint EndPoint;

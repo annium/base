@@ -5,7 +5,7 @@ using Xunit.Abstractions;
 
 namespace Annium.Architecture.Mediator.Tests;
 
-public class TestBase : Testing.Lib.TestBase
+public class TestBase : Testing.TestBase
 {
     public TestBase(ITestOutputHelper outputHelper) : base(outputHelper)
     {

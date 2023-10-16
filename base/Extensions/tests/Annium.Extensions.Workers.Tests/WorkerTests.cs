@@ -6,8 +6,6 @@ using System.Threading.Tasks;
 using Annium.Core.DependencyInjection;
 using Annium.Logging;
 using Annium.Testing;
-using Annium.Testing.Assertions;
-using Annium.Testing.Lib;
 using Annium.Threading;
 using Xunit;
 using Xunit.Abstractions;

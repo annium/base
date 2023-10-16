@@ -13,9 +13,8 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
     <ItemGroup>
+        <ProjectReference Include="../../../Annium/src/Annium.Testing/Annium.Testing.csproj" />
         <ProjectReference Include="../../../Logging/src/Annium.Logging.InMemory/Annium.Logging.InMemory.csproj" />
-        <ProjectReference Include="../../../Testing/src/Annium.Testing.Assertions/Annium.Testing.Assertions.csproj" />
-        <ProjectReference Include="../../../Testing/src/Annium.Testing.Lib/Annium.Testing.Lib.csproj" />
         <ProjectReference Include="../../src/Annium.Extensions.Pooling/Annium.Extensions.Pooling.csproj" />
     </ItemGroup>
     <ItemGroup>

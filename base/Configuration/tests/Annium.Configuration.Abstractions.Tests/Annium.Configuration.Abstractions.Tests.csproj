@@ -13,7 +13,7 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
     <ItemGroup>
-        <ProjectReference Include="../../../Testing/src/Annium.Testing.Assertions/Annium.Testing.Assertions.csproj" />
+        <ProjectReference Include="../../../Annium/src/Annium.Testing/Annium.Testing.csproj" />
         <ProjectReference Include="../Annium.Configuration.Tests.Lib/Annium.Configuration.Tests.Lib.csproj" />
     </ItemGroup>
     <ItemGroup>

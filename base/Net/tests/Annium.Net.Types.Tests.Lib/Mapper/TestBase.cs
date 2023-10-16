@@ -7,7 +7,7 @@ using Xunit.Abstractions;
 
 namespace Annium.Net.Types.Tests.Lib.Mapper;
 
-public abstract class TestBase : Testing.Lib.TestBase
+public abstract class TestBase : Testing.TestBase
 {
     protected IReadOnlyCollection<IModel> Models => _testProvider.Models;
     protected readonly IMapperConfig Config;

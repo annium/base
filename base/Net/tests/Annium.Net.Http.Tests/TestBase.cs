@@ -8,7 +8,7 @@ using Xunit.Abstractions;
 
 namespace Annium.Net.Http.Tests;
 
-public abstract class TestBase : Testing.Lib.TestBase
+public abstract class TestBase : Testing.TestBase
 {
     private static int _basePort = 14000;
     protected readonly Uri ServerUri;
