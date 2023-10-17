@@ -103,7 +103,7 @@ public abstract class ClientServerManagedSocketTestsBase : TestBase, IAsyncLifet
             this.Trace("disconnect server socket");
             await serverSocket.DisconnectAsync();
 
-            Task.Delay(10, CancellationToken.None).ContinueWith(_ =>
+            Task.Delay(50, CancellationToken.None).ContinueWith(_ =>
             {
                 this.Trace("send signal to client");
                 serverTcs.SetResult();
