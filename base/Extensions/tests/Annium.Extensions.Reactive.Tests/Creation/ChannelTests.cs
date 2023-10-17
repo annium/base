@@ -28,16 +28,14 @@ public class ChannelTests : TestBase
         var dataSize = 100_000;
         var data = Enumerable.Range(0, dataSize).ToArray();
         var channel = Channel.CreateUnbounded<int>();
+
+        this.Trace("write to channel");
         Observable.Range(0, dataSize).WriteToChannel(channel.Writer, CancellationToken.None);
         var log = new List<int>();
         var disposeCounter = 0;
 
-        void OnDisposed()
-        {
-            disposeCounter++;
-        }
-
-        var observable = ObservableExt.FromChannel(channel.Reader, OnDisposed);
+        this.Trace("create observable from channel");
+        var observable = ObservableExt.FromChannel(channel.Reader, Disposed);
         var disposable = Disposable.Box(logger);
 
         // act
@@ -45,11 +43,24 @@ public class ChannelTests : TestBase
         disposable += observable.Subscribe(log.Add);
 
         // assert
-        this.Trace("assert");
-        await Expect.To(() => { log.IsEqual(data); });
+        this.Trace("assert log is complete");
+        await Expect.To(() => log.Has(data.Length));
+
+        this.Trace("assert log matches data and dispose callback is not called");
+        log.IsEqual(data);
+        disposeCounter.Is(0);
+
+        this.Trace("dispose and verify dispose callback is called");
         disposable.Dispose();
         disposeCounter.Is(0);
 
         this.Trace("done");
+        return;
+
+        void Disposed()
+        {
+            this.Trace("disposed");
+            disposeCounter++;
+        }
     }
 }
