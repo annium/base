@@ -6,14 +6,14 @@ namespace Annium.Reflection;
 
 public static class GetPropertyOrFieldValueExtension
 {
-    public static object? GetPropertyOrFieldValue(this MemberInfo member, object target) => member switch
+    public static object? GetPropertyOrFieldValue(this MemberInfo member, object? target = null) => member switch
     {
         PropertyInfo property => property.GetMethod?.Invoke(target, Array.Empty<object>()),
         FieldInfo field       => field.GetValue(target),
         _                     => throw new InvalidOperationException($"{member} is neither readable property nor field")
     };
 
-    public static T? GetPropertyOrFieldValue<T>(this MemberInfo member, object target)
+    public static T? GetPropertyOrFieldValue<T>(this MemberInfo member, object? target = null)
     {
         var value = member.GetPropertyOrFieldValue(target);
 
