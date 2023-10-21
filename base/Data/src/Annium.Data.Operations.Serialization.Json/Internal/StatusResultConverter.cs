@@ -14,7 +14,7 @@ internal class StatusResultConverter<TS> : ResultConverterBase<IStatusResult<TS>
     )
     {
         TS status = default !;
-        var (plainErrors, labeledErrors) = ReadProperties(ref reader, options, (ref Utf8JsonReader r) =>
+        var (plainErrors, labeledErrors) = ReadErrors(ref reader, options, (ref Utf8JsonReader r) =>
         {
             if (r.HasProperty(nameof(X.Status)))
                 status = JsonSerializer.Deserialize<TS>(ref r, options)!;

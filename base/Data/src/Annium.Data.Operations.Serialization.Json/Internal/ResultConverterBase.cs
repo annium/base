@@ -11,7 +11,7 @@ internal abstract class ResultConverterBase<T> : JsonConverter<T>
 {
     protected delegate void CycleAction(ref Utf8JsonReader reader);
 
-    protected (IReadOnlyCollection<string>, IReadOnlyDictionary<string, IReadOnlyCollection<string>>) ReadProperties(
+    protected (IReadOnlyCollection<string>, IReadOnlyDictionary<string, IReadOnlyCollection<string>>) ReadErrors(
         ref Utf8JsonReader reader,
         JsonSerializerOptions options,
         CycleAction runCycle

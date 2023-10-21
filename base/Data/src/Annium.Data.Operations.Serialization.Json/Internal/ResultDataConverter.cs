@@ -15,7 +15,7 @@ internal class ResultDataConverter<TD> : ResultConverterBase<IResult<TD>>
     {
         TD data = default!;
 
-        var (plainErrors, labeledErrors) = ReadProperties(ref reader, options, (ref Utf8JsonReader r) =>
+        var (plainErrors, labeledErrors) = ReadErrors(ref reader, options, (ref Utf8JsonReader r) =>
         {
             if (r.HasProperty(nameof(X.Data)))
                 data = JsonSerializer.Deserialize<TD>(ref r, options)!;
