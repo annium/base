@@ -13,5 +13,5 @@ public interface ISerializer<TValue>
     T Deserialize<T>(TValue value);
     object? Deserialize(Type type, TValue value);
     TValue Serialize<T>(T value);
-    TValue Serialize(object? value);
+    TValue Serialize(Type type, object? value);
 }

@@ -67,11 +67,11 @@ internal class StringSerializer : ISerializer<string>
         }
     }
 
-    public string Serialize(object? value)
+    public string Serialize(Type type, object? value)
     {
         try
         {
-            return _serializer.Serialize(value!);
+            return _serializer.Serialize(value, type);
         }
         catch (YamlException e)
         {

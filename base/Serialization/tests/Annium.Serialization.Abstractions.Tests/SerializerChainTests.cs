@@ -13,7 +13,7 @@ public class SerializerChainTests
     {
         // arrange
         var generic = Serializer.Create(
-            value => JsonSerializer.Serialize(value),
+            (type, value) => JsonSerializer.Serialize(value, type),
             (type, value) => JsonSerializer.Deserialize(value, type)!
         );
         var precise = Serializer.Create<string, byte[]>(

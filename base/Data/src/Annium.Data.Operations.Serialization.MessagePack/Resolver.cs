@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using Annium.Data.Operations.Serialization.MessagePack.Internal;
 using MessagePack;
@@ -41,26 +40,13 @@ public class Resolver : IFormatterResolver
     private IMessagePackFormatter? GetFormatterPrivate<T>()
     {
         var type = typeof(T);
-        var formatterInstance = FormatterInstances
-            .FirstOrDefault(x => type.IsAssignableTo(x.Key))
-            .Value;
-
-        if (formatterInstance is not null)
+        if (FormatterInstances.TryGetValue(type, out var formatterInstance))
             return formatterInstance;
 
-        if (!typeof(T).IsGenericType)
-            return null;
+        if (typeof(T).IsGenericType && FormatterInstanceTypes.TryGetValue(type.GetGenericTypeDefinition(), out var formatterBaseType))
+            return Formatters.GetOrAdd(type, ResolveInstance, formatterBaseType);
 
-        var definition = type.GetGenericTypeDefinition();
-        var interfaces = type.GetInterfaces().Where(x => x.IsGenericType).Select(x => x.GetGenericTypeDefinition()).ToHashSet();
-        var formatterInstanceType = FormatterInstanceTypes
-            .FirstOrDefault(x => definition == x.Key || interfaces.Contains(x.Key))
-            .Value;
-
-        if (formatterInstanceType is null)
-            return null;
-
-        return Formatters.GetOrAdd(typeof(T), ResolveInstance, formatterInstanceType);
+        return null;
     }
 
     private static IMessagePackFormatter ResolveInstance(Type type, Type formatterBaseType)

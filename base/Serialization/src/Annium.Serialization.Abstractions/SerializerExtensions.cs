@@ -8,7 +8,7 @@ public static class SerializerExtensions
     )
     {
         return Serializer.Create(
-            value => wrapper.Serialize(source.Serialize(value)),
+            (type, value) => wrapper.Serialize(source.Serialize(type, value)),
             (type, value) => source.Deserialize(type, wrapper.Deserialize(value))
         );
     }
@@ -19,7 +19,7 @@ public static class SerializerExtensions
     )
     {
         return Serializer.Create(
-            value => wrapper.Deserialize(source.Serialize(value)),
+            (type, value) => wrapper.Deserialize(source.Serialize(type, value)),
             (type, value) => source.Deserialize(type, wrapper.Serialize(value))
         );
     }

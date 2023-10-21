@@ -64,11 +64,11 @@ internal class ReadOnlyMemoryByteSerializer : ISerializer<ReadOnlyMemory<byte>>
         }
     }
 
-    public ReadOnlyMemory<byte> Serialize(object? value)
+    public ReadOnlyMemory<byte> Serialize(Type type, object? value)
     {
         try
         {
-            return JsonSerializer.SerializeToUtf8Bytes(value, _options);
+            return JsonSerializer.SerializeToUtf8Bytes(value, type, _options);
         }
         catch (JsonException e)
         {

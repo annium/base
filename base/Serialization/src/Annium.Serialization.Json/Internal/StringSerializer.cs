@@ -63,11 +63,11 @@ internal class StringSerializer : ISerializer<string>
         }
     }
 
-    public string Serialize(object? value)
+    public string Serialize(Type type, object? value)
     {
         try
         {
-            return JsonSerializer.Serialize(value, _options);
+            return JsonSerializer.Serialize(value, type, _options);
         }
         catch (JsonException e)
         {

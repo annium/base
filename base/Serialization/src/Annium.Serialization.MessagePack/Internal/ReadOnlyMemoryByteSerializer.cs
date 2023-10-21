@@ -62,11 +62,11 @@ internal class ReadOnlyMemoryByteSerializer : ISerializer<ReadOnlyMemory<byte>>
         }
     }
 
-    public ReadOnlyMemory<byte> Serialize(object? value)
+    public ReadOnlyMemory<byte> Serialize(Type type, object? value)
     {
         try
         {
-            return MessagePackSerializer.Serialize(value, _opts);
+            return MessagePackSerializer.Serialize(type, value, _opts);
         }
         catch (MessagePackSerializationException e)
         {

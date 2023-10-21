@@ -68,12 +68,12 @@ internal class StreamSerializer : ISerializer<Stream>
         }
     }
 
-    public Stream Serialize(object? value)
+    public Stream Serialize(Type type, object? value)
     {
         try
         {
             var ms = new MemoryStream();
-            JsonSerializer.Serialize(ms, value, _options);
+            JsonSerializer.Serialize(ms, value, type, _options);
             ms.Position = 0;
             return ms;
         }

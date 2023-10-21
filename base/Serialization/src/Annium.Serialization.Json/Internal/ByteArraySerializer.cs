@@ -64,11 +64,11 @@ internal class ByteArraySerializer : ISerializer<byte[]>
         }
     }
 
-    public byte[] Serialize(object? value)
+    public byte[] Serialize(Type type, object? value)
     {
         try
         {
-            return JsonSerializer.SerializeToUtf8Bytes(value, _options);
+            return JsonSerializer.SerializeToUtf8Bytes(value, type, _options);
         }
         catch (JsonException e)
         {

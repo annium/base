@@ -23,11 +23,11 @@ internal class SerializerInstance<TSource, TDestination> : ISerializer<TSource, 
 
 internal class SerializerInstance<TValue> : ISerializer<TValue>
 {
-    private readonly Func<object?, TValue> _serialize;
+    private readonly Func<Type, object?, TValue> _serialize;
     private readonly Func<Type, TValue, object?> _deserialize;
 
     public SerializerInstance(
-        Func<object?, TValue> serialize,
+        Func<Type, object?, TValue> serialize,
         Func<Type, TValue, object?> deserialize
     )
     {
@@ -39,7 +39,7 @@ internal class SerializerInstance<TValue> : ISerializer<TValue>
 
     public object? Deserialize(Type type, TValue value) => _deserialize(type, value);
 
-    public TValue Serialize<T>(T value) => _serialize(value);
+    public TValue Serialize<T>(T value) => _serialize(typeof(T), value);
 
-    public TValue Serialize(object? value) => _serialize(value);
+    public TValue Serialize(Type type, object? value) => _serialize(type, value);
 }

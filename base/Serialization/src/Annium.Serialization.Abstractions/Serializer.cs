@@ -6,7 +6,7 @@ namespace Annium.Serialization.Abstractions;
 public static class Serializer
 {
     public static ISerializer<TValue> Create<TValue>(
-        Func<object?, TValue> serialize,
+        Func<Type, object?, TValue> serialize,
         Func<Type, TValue, object?> deserialize
     ) => new SerializerInstance<TValue>(serialize, deserialize);
 

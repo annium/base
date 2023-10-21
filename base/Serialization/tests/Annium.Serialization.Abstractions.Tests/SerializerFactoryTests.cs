@@ -11,7 +11,7 @@ public class SerializerFactoryTests
     public void Create_GenericSerializer_Works()
     {
         // arrange
-        Func<object?, string> serialize = value => JsonSerializer.Serialize(value);
+        Func<Type, object?, string> serialize = (type, value) => JsonSerializer.Serialize(value, type);
         Func<Type, string, object?> deserialize = (type, value) => JsonSerializer.Deserialize(value, type)!;
         var data = new Point { X = 1, Y = -1 };
 
