@@ -5,16 +5,20 @@ using MessagePack;
 
 namespace Annium.Serialization.MessagePack.Internal;
 
-internal class MessagePackSerializer : ISerializer<ReadOnlyMemory<byte>>
+internal class ReadOnlyMemoryByteSerializer : ISerializer<ReadOnlyMemory<byte>>
 {
-    private readonly MessagePackSerializerOptions _opts =
-        MessagePackSerializerOptions.Standard.WithCompression(MessagePackCompression.Lz4BlockArray);
+    private readonly MessagePackSerializerOptions _opts;
+
+    public ReadOnlyMemoryByteSerializer(MessagePackSerializerOptions opts)
+    {
+        _opts = opts;
+    }
 
     public T Deserialize<T>(ReadOnlyMemory<byte> value)
     {
         try
         {
-            return global::MessagePack.MessagePackSerializer.Deserialize<T>(value, _opts);
+            return MessagePackSerializer.Deserialize<T>(value, _opts);
         }
         catch (MessagePackSerializationException e)
         {
@@ -30,7 +34,7 @@ internal class MessagePackSerializer : ISerializer<ReadOnlyMemory<byte>>
     {
         try
         {
-            return global::MessagePack.MessagePackSerializer.Deserialize(type, value, _opts);
+            return MessagePackSerializer.Deserialize(type, value, _opts);
         }
         catch (MessagePackSerializationException e)
         {
@@ -46,7 +50,7 @@ internal class MessagePackSerializer : ISerializer<ReadOnlyMemory<byte>>
     {
         try
         {
-            return global::MessagePack.MessagePackSerializer.Serialize(value, _opts);
+            return MessagePackSerializer.Serialize(value, _opts);
         }
         catch (MessagePackSerializationException e)
         {
@@ -62,7 +66,7 @@ internal class MessagePackSerializer : ISerializer<ReadOnlyMemory<byte>>
     {
         try
         {
-            return global::MessagePack.MessagePackSerializer.Serialize(value, _opts);
+            return MessagePackSerializer.Serialize(value, _opts);
         }
         catch (MessagePackSerializationException e)
         {

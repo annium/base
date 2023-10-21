@@ -10,9 +10,11 @@ using Constants = Annium.Serialization.Json.Constants;
 // ReSharper disable once CheckNamespace
 namespace Annium.Core.DependencyInjection;
 
+public delegate void ConfigureSerializer(IServiceProvider provider, JsonSerializerOptions options);
+
 public static class SerializationConfigurationBuilderExtensions
 {
-    private static readonly ConcurrentDictionary<(SerializerKey, Action<IServiceProvider, JsonSerializerOptions>), JsonSerializerOptions> Options = new();
+    private static readonly ConcurrentDictionary<OptionsKey, JsonSerializerOptions> Options = new();
 
     public static ISerializationConfigurationBuilder WithJson(
         this ISerializationConfigurationBuilder builder,
@@ -47,7 +49,7 @@ public static class SerializationConfigurationBuilderExtensions
 
     public static ISerializationConfigurationBuilder WithJson(
         this ISerializationConfigurationBuilder builder,
-        Action<IServiceProvider, JsonSerializerOptions> configure,
+        ConfigureSerializer configure,
         bool isDefault = false
     )
     {
@@ -60,19 +62,20 @@ public static class SerializationConfigurationBuilderExtensions
 
     private static Func<IServiceProvider, TSerializer> ResolveSerializer<TSerializer>(
         string key,
-        Action<IServiceProvider, JsonSerializerOptions> configure,
+        ConfigureSerializer configure,
         Func<JsonSerializerOptions, TSerializer> factory
     ) => sp =>
     {
-        var options = Options.GetOrAdd((SerializerKey.Create(key, Constants.MediaType), configure), _ =>
+        var optionsKey = new OptionsKey(SerializerKey.Create(key, Constants.MediaType), configure);
+        var options = Options.GetOrAdd(optionsKey, static (key, sp) =>
         {
             var opts = new JsonSerializerOptions();
 
             opts.ConfigureDefault(sp.Resolve<ITypeManager>());
 
-            configure(sp, opts);
+            key.Configure(sp, opts);
             return opts;
-        });
+        }, sp);
 
         return factory(options);
     };
@@ -81,4 +84,6 @@ public static class SerializationConfigurationBuilderExtensions
     private static ReadOnlyMemoryByteSerializer CreateReadOnlyMemoryByte(JsonSerializerOptions opts) => new(opts);
     private static StringSerializer CreateString(JsonSerializerOptions opts) => new(opts);
     private static StreamSerializer CreateStream(JsonSerializerOptions opts) => new(opts);
+
+    private record OptionsKey(SerializerKey SerializerKey, ConfigureSerializer Configure);
 }
