@@ -497,7 +497,7 @@ public class ClientServerManagedWebSocketTests : TestBase, IAsyncLifetime
     {
         this.Trace("start");
 
-        _clientSocket = new ClientManagedWebSocket(Logger);
+        _clientSocket = new ClientManagedWebSocket(1_000, Logger);
         _clientSocket.OnTextReceived += x =>
         {
             var message = Encoding.UTF8.GetString(x.Span);

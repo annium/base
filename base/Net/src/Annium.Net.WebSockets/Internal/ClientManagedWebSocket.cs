@@ -13,13 +13,18 @@ internal class ClientManagedWebSocket : IClientManagedWebSocket, ILogSubject
     public event Action<ReadOnlyMemory<byte>> OnTextReceived = delegate { };
     public event Action<ReadOnlyMemory<byte>> OnBinaryReceived = delegate { };
     public Task<WebSocketCloseResult> IsClosed => _listenTask;
+    private readonly int _keepAliveInterval;
     private NativeWebSocket? _nativeSocket;
     private ManagedWebSocket? _managedSocket;
     private CancellationTokenSource _listenCts = new();
     private Task<WebSocketCloseResult> _listenTask = Task.FromResult(new WebSocketCloseResult(WebSocketCloseStatus.ClosedLocal, null));
 
-    public ClientManagedWebSocket(ILogger logger)
+    public ClientManagedWebSocket(
+        int keepAliveInterval,
+        ILogger logger
+    )
     {
+        _keepAliveInterval = keepAliveInterval;
         Logger = logger;
     }
 
@@ -31,7 +36,13 @@ internal class ClientManagedWebSocket : IClientManagedWebSocket, ILogSubject
         if (_nativeSocket is not null || _managedSocket is not null)
             throw new InvalidOperationException("Socket is already connected");
 
-        _nativeSocket = new NativeWebSocket();
+        _nativeSocket = new NativeWebSocket()
+        {
+            Options =
+            {
+                KeepAliveInterval = TimeSpan.FromMilliseconds(_keepAliveInterval)
+            }
+        };
         _managedSocket = new ManagedWebSocket(_nativeSocket, Logger);
         this.Trace<string, string>("paired with {nativeSocket} / {managedSocket}", _nativeSocket.GetFullId(), _managedSocket.GetFullId());
 

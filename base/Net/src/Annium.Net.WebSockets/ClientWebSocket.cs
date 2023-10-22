@@ -29,7 +29,7 @@ public class ClientWebSocket : IClientWebSocket
     {
         Logger = logger;
         this.Trace("start monitor");
-        _socket = new ClientManagedWebSocket(logger);
+        _socket = new ClientManagedWebSocket(options.KeepAliveInterval, logger);
         _socket.OnTextReceived += HandleOnTextReceived;
         _socket.OnBinaryReceived += HandleOnBinaryReceived;
         this.Trace<string>("paired with {socket}", _socket.GetFullId());
