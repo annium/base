@@ -10,12 +10,9 @@ namespace Annium.Identity.Tokens.Jwt;
 public static class JwtReader
 {
     public static IStatusResult<JwtReadStatus, OneOf<JwtSecurityToken, Exception>> Read(
-        RsaSecurityKey securityKey,
         string raw,
-        string issuer,
-        string? audience,
-        Instant now,
-        Duration? expirationWindow
+        TokenValidationParameters opts,
+        Instant now
     )
     {
         var handler = new JwtSecurityTokenHandler();
@@ -24,22 +21,14 @@ public static class JwtReader
         if (!handler.CanReadToken(raw))
             return Fail(JwtReadStatus.BadSource, "Token is not valid JWT");
 
-        // define validation parameters
-        var validationParameters = GetTokenValidationParameters(
-            securityKey,
-            issuer,
-            audience,
-            expirationWindow
-        );
-
         try
         {
             // execute validation
-            handler.ValidateToken(raw, validationParameters, out var securityToken);
+            handler.ValidateToken(raw, opts, out var securityToken);
             var token = (JwtSecurityToken)securityToken;
 
             // if expiration window has value - expiration is already validated,
-            if (expirationWindow.HasValue)
+            if (opts.ValidateLifetime)
                 return Result.Status<JwtReadStatus, OneOf<JwtSecurityToken, Exception>>(JwtReadStatus.Ok, token);
 
             var nowUtc = now.ToDateTimeUtc();
@@ -58,8 +47,8 @@ public static class JwtReader
         }
     }
 
-    private static TokenValidationParameters GetTokenValidationParameters(
-        RsaSecurityKey securityKey,
+    public static TokenValidationParameters GetValidationParameters(
+        SecurityKey securityKey,
         string issuer,
         string? audience,
         Duration? expirationWindow

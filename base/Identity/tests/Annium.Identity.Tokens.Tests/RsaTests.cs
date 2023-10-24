@@ -1,20 +1,21 @@
 using System.IO;
+using System.Security.Cryptography;
 using Annium.Testing;
 using Microsoft.IdentityModel.Tokens;
 using Xunit;
 
 namespace Annium.Identity.Tokens.Tests;
 
-public class KeyReaderTests
+public class RsaTests
 {
     [Fact]
-    public void ReadRsaKey_PrivateKey_Works()
+    public void Rsa_PrivateKey()
     {
         // arrange
         var raw = File.ReadAllText(Path.Combine("keys", "private.key"));
 
         // act
-        var key = KeyReader.ReadRsaKey(raw);
+        var key = RSA.Create().ImportPem(raw).GetKey();
 
         // assert
         key.IsNotDefault();
@@ -24,13 +25,13 @@ public class KeyReaderTests
     }
 
     [Fact]
-    public void ReadRsaKey_PublicKey_Works()
+    public void Rsa_PublicKey()
     {
         // arrange
         var raw = File.ReadAllText(Path.Combine("keys", "public.key"));
 
         // act
-        var key = KeyReader.ReadRsaKey(raw);
+        var key = RSA.Create().ImportPem(raw).GetKey();
 
         // assert
         key.IsNotDefault();

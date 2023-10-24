@@ -10,7 +10,8 @@ namespace Annium.Identity.Tokens.Jwt;
 public static class JwtWriter
 {
     public static JwtSecurityToken Create(
-        RsaSecurityKey securityKey,
+        SecurityKey securityKey,
+        string algorithm,
         string tokenId,
         string issuer,
         string audience,
@@ -19,7 +20,7 @@ public static class JwtWriter
         params (string key, string value)[] data
     )
     {
-        var header = CreateHeader(securityKey);
+        var header = CreateHeader(securityKey, algorithm);
         var payload = CreatePayload(tokenId, issuer, audience, now, lifetime, data);
         var jwt = new JwtSecurityToken(header, payload);
 
@@ -27,10 +28,11 @@ public static class JwtWriter
     }
 
     private static JwtHeader CreateHeader(
-        RsaSecurityKey signingKey
+        SecurityKey signingKey,
+        string algorithm
     )
     {
-        var header = new JwtHeader(new SigningCredentials(signingKey, SecurityAlgorithms.RsaSha256));
+        var header = new JwtHeader(new SigningCredentials(signingKey, algorithm));
 
         return header;
     }

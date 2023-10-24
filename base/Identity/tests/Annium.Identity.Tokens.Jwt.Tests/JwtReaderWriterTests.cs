@@ -1,8 +1,10 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using Annium.NodaTime.Extensions;
 using Annium.Testing;
+using Microsoft.IdentityModel.Tokens;
 using NodaTime;
 using Xunit;
 
@@ -14,8 +16,8 @@ public class JwtReaderWriterTests
     public void Works()
     {
         // arrange
-        var privateKey = KeyReader.ReadRsaKey(File.ReadAllText(Path.Combine("keys", "private.key")));
-        var publicKey = KeyReader.ReadRsaKey(File.ReadAllText(Path.Combine("keys", "public.key")));
+        var privateKey = RSA.Create().ImportPem(File.ReadAllText(Path.Combine("keys", "private.key"))).GetKey();
+        var publicKey = RSA.Create().ImportPem(File.ReadAllText(Path.Combine("keys", "public.key"))).GetKey();
         var tokenId = Guid.NewGuid().ToString();
         var issuer = "service";
         var audience = "audience";
@@ -25,10 +27,12 @@ public class JwtReaderWriterTests
         var expiresUtc = (now + lifetime).ToDateTimeUtc();
         var key = "sample";
         var data = "g87asgdf";
+        var opts = JwtReader.GetValidationParameters(publicKey, issuer, audience, Duration.FromSeconds(10));
 
         // act - write
         var token = JwtWriter.Create(
             privateKey,
+            SecurityAlgorithms.RsaSha256,
             tokenId,
             issuer,
             audience,
@@ -53,14 +57,7 @@ public class JwtReaderWriterTests
             .Value.Is(data);
 
         // act - read
-        var readResult = JwtReader.Read(
-            publicKey,
-            encoded,
-            issuer,
-            audience,
-            now,
-            Duration.FromSeconds(10)
-        );
+        var readResult = JwtReader.Read(encoded,opts,now);
 
         // assert - read
         readResult.HasErrors.IsFalse();
