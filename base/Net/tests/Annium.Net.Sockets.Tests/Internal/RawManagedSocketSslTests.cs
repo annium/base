@@ -116,7 +116,7 @@ public class RawManagedSocketSslTests : RawManagedSocketTestsBase
 
     internal override IAsyncDisposable RunServer(Func<IManagedSocket, CancellationToken, Task> handleSocket)
     {
-        var cert = X509Certificate.CreateFromCertFile("keys/cert.pfx");
+        var cert = X509Certificate.CreateFromCertFile("keys/ecdsa_cert.pfx");
 
         return RunServerBase(async (sp, raw, ct) =>
         {
