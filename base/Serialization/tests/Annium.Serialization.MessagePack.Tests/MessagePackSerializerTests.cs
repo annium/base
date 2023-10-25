@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using Annium.Testing;
 using MessagePack;
 using Xunit;
@@ -11,7 +13,7 @@ public class MessagePackSerializerTests : TestBase
     {
         // arrange
         var serializer = GetSerializer();
-        var data = new Person { FirstName = "Max", LastName = "Madness" };
+        var data = new Person { FirstName = "Max", LastName = "Madness", Tags = new[] { "a", "b" } };
 
         // act
         var serialized = serializer.Serialize(data);
@@ -31,5 +33,8 @@ public class MessagePackSerializerTests : TestBase
 
         [Key(1)]
         public string LastName { get; set; } = string.Empty;
+
+        [Key(2)]
+        public IReadOnlyCollection<string> Tags { get; set; } = Array.Empty<string>();
     }
 }
