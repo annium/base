@@ -23,7 +23,7 @@
         <PackageReference Include="xunit.runner.visualstudio" Version="2.5.0" />
     </ItemGroup>
     <ItemGroup>
-        <None Update="keys\*.key">
+        <None Update="keys\*.pem">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
     </ItemGroup>

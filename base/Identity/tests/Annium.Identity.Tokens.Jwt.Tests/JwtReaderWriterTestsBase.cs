@@ -1,23 +1,21 @@
 using System;
-using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
 using Annium.NodaTime.Extensions;
 using Annium.Testing;
 using Microsoft.IdentityModel.Tokens;
 using NodaTime;
-using Xunit;
 
 namespace Annium.Identity.Tokens.Jwt.Tests;
 
-public class JwtReaderWriterTests
+public class JwtReaderWriterTestsBase
 {
-    [Fact]
-    public void Works()
+    protected void Works_Base(
+        SecurityKey privateKey,
+        SecurityKey publicKey,
+        string signatureAlgorithm
+    )
     {
         // arrange
-        var privateKey = RSA.Create().ImportPem(File.ReadAllText(Path.Combine("keys", "private.key"))).GetKey();
-        var publicKey = RSA.Create().ImportPem(File.ReadAllText(Path.Combine("keys", "public.key"))).GetKey();
         var tokenId = Guid.NewGuid().ToString();
         var issuer = "service";
         var audience = "audience";
@@ -32,7 +30,7 @@ public class JwtReaderWriterTests
         // act - write
         var token = JwtWriter.Create(
             privateKey,
-            SecurityAlgorithms.RsaSha256,
+            signatureAlgorithm,
             tokenId,
             issuer,
             audience,
@@ -57,7 +55,7 @@ public class JwtReaderWriterTests
             .Value.Is(data);
 
         // act - read
-        var readResult = JwtReader.Read(encoded,opts,now);
+        var readResult = JwtReader.Read(encoded, opts, now);
 
         // assert - read
         readResult.HasErrors.IsFalse();

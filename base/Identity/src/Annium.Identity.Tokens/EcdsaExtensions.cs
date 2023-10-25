@@ -3,11 +3,11 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace Annium.Identity.Tokens;
 
-public static class RsaExtensions
+public static class EcdsaExtensions
 {
-    public static RsaSecurityKey GetKey(this RSA algorithm)
+    public static ECDsaSecurityKey GetKey(this ECDsa algorithm)
     {
-        return new RsaSecurityKey(algorithm)
+        return new ECDsaSecurityKey(algorithm)
         {
             KeyId = algorithm.GetKeyId()
         };
