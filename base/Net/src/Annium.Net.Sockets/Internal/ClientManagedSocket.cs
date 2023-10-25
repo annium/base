@@ -127,6 +127,10 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
         this.Trace("unbind events");
         _socket.OnReceived -= HandleOnReceived;
 
+        this.Trace("cancel listen cts");
+        _listenCts.Cancel();
+        _listenCts.Dispose();
+
         try
         {
             this.Trace("dispose socket");
@@ -139,10 +143,6 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
         {
             this.Trace("failed: {e}", e);
         }
-
-        this.Trace("cancel listen cts");
-        _listenCts.Cancel();
-        _listenCts.Dispose();
 
         this.Trace("await listen task");
         await _listenTask;
