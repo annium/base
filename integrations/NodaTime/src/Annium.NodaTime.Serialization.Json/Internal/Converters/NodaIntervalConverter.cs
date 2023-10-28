@@ -32,11 +32,7 @@ internal sealed class NodaIntervalConverter : ConverterBase<Interval>
         return new Interval(startInstant, endInstant);
     }
 
-    public override void WriteImplementation(
-        Utf8JsonWriter writer,
-        Interval value,
-        JsonSerializerOptions options
-    )
+    public override void WriteImplementation(Utf8JsonWriter writer, Interval value, JsonSerializerOptions options)
     {
         writer.WriteStartObject();
         if (value.HasStart)

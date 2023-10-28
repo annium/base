@@ -9,7 +9,8 @@ namespace Annium.Core.Mapper.Tests.Resolvers;
 
 public class EnumerableMapResolverTest : TestBase
 {
-    public EnumerableMapResolverTest(ITestOutputHelper outputHelper) : base(outputHelper)
+    public EnumerableMapResolverTest(ITestOutputHelper outputHelper)
+        : base(outputHelper)
     {
         Register(c => c.AddMapper(autoload: false));
     }
@@ -52,7 +53,13 @@ public class EnumerableMapResolverTest : TestBase
     {
         // arrange
         var mapper = Get<IMapper>();
-        var value = new Dictionary<string, A> { { "one", new A { Name = "name" } } };
+        var value = new Dictionary<string, A>
+        {
+            {
+                "one",
+                new A { Name = "name" }
+            }
+        };
 
         // act
         IDictionary<string, B> result = mapper.Map<Dictionary<string, B>>(value);
@@ -82,7 +89,13 @@ public class EnumerableMapResolverTest : TestBase
     {
         // arrange
         var mapper = Get<IMapper>();
-        var value = new Dictionary<string, A> { { "one", new A { Name = "name" } } };
+        var value = new Dictionary<string, A>
+        {
+            {
+                "one",
+                new A { Name = "name" }
+            }
+        };
 
         // act
         var result = mapper.Map<IReadOnlyDictionary<string, B>>(value);
@@ -97,7 +110,13 @@ public class EnumerableMapResolverTest : TestBase
     {
         // arrange
         var mapper = Get<IMapper>();
-        var value = new Dictionary<string, A> { { "one", new A { Name = "name" } } };
+        var value = new Dictionary<string, A>
+        {
+            {
+                "one",
+                new A { Name = "name" }
+            }
+        };
 
         // act
         var result = mapper.Map<IReadOnlyDictionary<string, A>>(value);

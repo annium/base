@@ -16,7 +16,8 @@ internal class ResolvingLoadContext : AssemblyLoadContext
     public ResolvingLoadContext(
         IReadOnlyCollection<Func<AssemblyName, string?>> pathResolvers,
         IReadOnlyCollection<Func<AssemblyName, Task<byte[]>?>> byteArrayResolvers
-    ) : base(true)
+    )
+        : base(true)
     {
         _pathResolvers = pathResolvers;
         _byteArrayResolvers = byteArrayResolvers;

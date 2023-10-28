@@ -9,7 +9,8 @@ namespace Annium.Core.Mapper.Tests;
 
 public class ComplexFieldMappingTest : TestBase
 {
-    public ComplexFieldMappingTest(ITestOutputHelper outputHelper) : base(outputHelper)
+    public ComplexFieldMappingTest(ITestOutputHelper outputHelper)
+        : base(outputHelper)
     {
         Register(c => c.AddMapper(autoload: false).AddProfile(ConfigureProfile));
     }
@@ -27,17 +28,16 @@ public class ComplexFieldMappingTest : TestBase
         var restored = mapper.Map<A>(result);
 
         // assert
-        result.IsShallowEqual(new B
-        {
-            IgnoredA = 0,
-            IgnoredB = 0,
-            Name = "Alex",
-            Age = 20,
-        });
-        restored.IsShallowEqual(new A
-        {
-            SerializedValue = serialized,
-        });
+        result.IsShallowEqual(
+            new B
+            {
+                IgnoredA = 0,
+                IgnoredB = 0,
+                Name = "Alex",
+                Age = 20,
+            }
+        );
+        restored.IsShallowEqual(new A { SerializedValue = serialized, });
     }
 
     [Fact]
@@ -54,24 +54,33 @@ public class ComplexFieldMappingTest : TestBase
 
         // assert
         result.IsShallowEqual(new C(0, 0, "Alex", 20));
-        restored.IsShallowEqual(new A
-        {
-            SerializedValue = serialized,
-        });
+        restored.IsShallowEqual(new A { SerializedValue = serialized, });
     }
 
     private void ConfigureProfile(Profile p)
     {
         p.Map<A, B>()
             .Ignore(x => new { x.IgnoredA, x.IgnoredB })
-            .For(x => new { x.Name, x.Age }, x => JsonSerializer.Deserialize<Serialized>(x.SerializedValue, default(JsonSerializerOptions)));
+            .For(
+                x => new { x.Name, x.Age },
+                x => JsonSerializer.Deserialize<Serialized>(x.SerializedValue, default(JsonSerializerOptions))
+            );
         p.Map<B, A>()
-            .For(x => x.SerializedValue, x => JsonSerializer.Serialize(new { x.Name, x.Age }, default(JsonSerializerOptions)));
+            .For(
+                x => x.SerializedValue,
+                x => JsonSerializer.Serialize(new { x.Name, x.Age }, default(JsonSerializerOptions))
+            );
         p.Map<A, C>()
             .Ignore(x => new { x.IgnoredA, x.IgnoredB })
-            .For(x => new { x.Name, x.Age }, x => JsonSerializer.Deserialize<Serialized>(x.SerializedValue, default(JsonSerializerOptions)));
+            .For(
+                x => new { x.Name, x.Age },
+                x => JsonSerializer.Deserialize<Serialized>(x.SerializedValue, default(JsonSerializerOptions))
+            );
         p.Map<C, A>()
-            .For(x => x.SerializedValue, x => JsonSerializer.Serialize(new { x.Name, x.Age }, default(JsonSerializerOptions)));
+            .For(
+                x => x.SerializedValue,
+                x => JsonSerializer.Serialize(new { x.Name, x.Age }, default(JsonSerializerOptions))
+            );
     }
 
     private class A

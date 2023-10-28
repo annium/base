@@ -48,13 +48,11 @@ internal class CommandLineConfigurationProvider : ConfigurationProviderBase
 
                 i++;
             }
-
             else if (IsFlag(value, next))
                 if (flags.Contains(name))
                     throw new Exception($"Same flag '{value}' is used twice");
                 else
                     flags.Add(name);
-
             else
                 throw new Exception($"Can't process value '{value}', followed by '{next}'");
         }
@@ -75,8 +73,7 @@ internal class CommandLineConfigurationProvider : ConfigurationProviderBase
         return Data;
     }
 
-    private bool IsPosition(string value) =>
-        !IsOptionLike(value);
+    private bool IsPosition(string value) => !IsOptionLike(value);
 
     private bool IsOption(string value, string next) =>
         IsOptionLike(value) && next != string.Empty && !IsOptionLike(next);
@@ -84,13 +81,15 @@ internal class CommandLineConfigurationProvider : ConfigurationProviderBase
     private bool IsFlag(string value, string next) =>
         IsOptionLike(value) && (next == string.Empty || IsOptionLike(next));
 
-    private bool IsOptionLike(string value) =>
-        value.StartsWith('-');
+    private bool IsOptionLike(string value) => value.StartsWith('-');
 
-    private string ParseName(string value) => string.Join(Separator,
-        Regex.Replace(value.Trim(), @"^-+", string.Empty)
-            .Split('.')
-            .Where(e => !string.IsNullOrWhiteSpace(e))
-            .Select(e => e.PascalCase())
-    );
+    private string ParseName(string value) =>
+        string.Join(
+            Separator,
+            Regex
+                .Replace(value.Trim(), @"^-+", string.Empty)
+                .Split('.')
+                .Where(e => !string.IsNullOrWhiteSpace(e))
+                .Select(e => e.PascalCase())
+        );
 }

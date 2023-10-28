@@ -18,11 +18,15 @@ public class ConfigurationTest
         // default
         container.AddSerializers().WithYaml(isDefault: true);
         // custom
-        container.AddSerializers("a").WithYaml((s, d) =>
-        {
-            s.WithNamingConvention(CamelCaseNamingConvention.Instance);
-            d.WithNamingConvention(CamelCaseNamingConvention.Instance);
-        });
+        container
+            .AddSerializers("a")
+            .WithYaml(
+                (s, d) =>
+                {
+                    s.WithNamingConvention(CamelCaseNamingConvention.Instance);
+                    d.WithNamingConvention(CamelCaseNamingConvention.Instance);
+                }
+            );
         var sp = container.BuildServiceProvider();
 
         var serializerDefault = sp.ResolveSerializer<string>(Abstractions.Constants.DefaultKey, Constants.MediaType);

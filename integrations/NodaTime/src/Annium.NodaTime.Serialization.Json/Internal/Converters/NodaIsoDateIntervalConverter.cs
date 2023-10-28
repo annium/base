@@ -18,7 +18,9 @@ internal sealed class NodaIsoDateIntervalConverter : ConverterBase<DateInterval>
     )
     {
         if (reader.TokenType != JsonTokenType.String)
-            throw new InvalidNodaDataException($"Unexpected token parsing DateInterval. Expected String, got {reader.TokenType}.");
+            throw new InvalidNodaDataException(
+                $"Unexpected token parsing DateInterval. Expected String, got {reader.TokenType}."
+            );
 
         var text = reader.GetString()!;
         var slash = text.IndexOf('/');
@@ -40,11 +42,7 @@ internal sealed class NodaIsoDateIntervalConverter : ConverterBase<DateInterval>
         return new DateInterval(start, end);
     }
 
-    public override void WriteImplementation(
-        Utf8JsonWriter writer,
-        DateInterval value,
-        JsonSerializerOptions options
-    )
+    public override void WriteImplementation(Utf8JsonWriter writer, DateInterval value, JsonSerializerOptions options)
     {
         var pattern = LocalDatePattern.Iso;
         var text = pattern.Format(value.Start) + "/" + pattern.Format(value.End);

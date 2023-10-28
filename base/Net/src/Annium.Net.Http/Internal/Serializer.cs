@@ -8,9 +8,7 @@ internal class Serializer
 {
     private readonly IIndex<string, ISerializer<string>> _serializers;
 
-    public Serializer(
-        IIndex<string, ISerializer<string>> serializers
-    )
+    public Serializer(IIndex<string, ISerializer<string>> serializers)
     {
         _serializers = serializers;
     }

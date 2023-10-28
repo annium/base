@@ -42,14 +42,17 @@ internal class ConfigurationBuilder : IConfigurationBuilder
 
     private void SetPositions<T>(T value, string[] positions)
     {
-        var properties = _configurationProcessor.GetPropertiesWithAttribute<PositionAttribute>(typeof(T))
+        var properties = _configurationProcessor
+            .GetPropertiesWithAttribute<PositionAttribute>(typeof(T))
             .OrderBy(e => e.attribute.Position);
 
         var i = 1;
         foreach (var (property, attribute) in properties)
         {
             if (attribute.Position != i)
-                throw new Exception($"Position argument expected to have position '{i}', but got position '{attribute.Position}");
+                throw new Exception(
+                    $"Position argument expected to have position '{i}', but got position '{attribute.Position}"
+                );
 
             if (i > positions.Length)
                 if (attribute.IsRequired)
@@ -64,7 +67,8 @@ internal class ConfigurationBuilder : IConfigurationBuilder
 
     private void SetFlags<T>(T value, string[] flags)
     {
-        var properties = _configurationProcessor.GetPropertiesWithAttribute<OptionAttribute>(typeof(T))
+        var properties = _configurationProcessor
+            .GetPropertiesWithAttribute<OptionAttribute>(typeof(T))
             .Where(e => e.property.PropertyType == typeof(bool))
             .ToArray();
 
@@ -102,7 +106,8 @@ internal class ConfigurationBuilder : IConfigurationBuilder
             property.SetValue(value, GetValue(property, property.PropertyType, plainOptions[key]));
         }
 
-        var arrayProperties = _configurationProcessor.GetPropertiesWithAttribute<OptionAttribute>(typeof(T))
+        var arrayProperties = _configurationProcessor
+            .GetPropertiesWithAttribute<OptionAttribute>(typeof(T))
             .Where(e => e.property.PropertyType.IsArray)
             .ToArray();
 
@@ -131,7 +136,8 @@ internal class ConfigurationBuilder : IConfigurationBuilder
 
     private void SetRaw<T>(T value, string raw)
     {
-        var (property, _) = _configurationProcessor.GetPropertiesWithAttribute<RawAttribute>(typeof(T))
+        var (property, _) = _configurationProcessor
+            .GetPropertiesWithAttribute<RawAttribute>(typeof(T))
             .FirstOrDefault();
 
         if (property != null!)

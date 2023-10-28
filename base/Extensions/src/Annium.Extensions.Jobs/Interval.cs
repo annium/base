@@ -8,6 +8,8 @@ public static class Interval
     public const string Daily = "0 0 0 * *";
 
     public static string InSeconds(uint seconds) => $"*/{seconds} * * * *";
+
     public static string InMinutes(uint minutes) => $"0 */{minutes} * * *";
+
     public static string InHours(uint hours) => $"0 0 */{hours} * *";
 }

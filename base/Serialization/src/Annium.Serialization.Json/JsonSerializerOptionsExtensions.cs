@@ -14,10 +14,7 @@ namespace Annium.Core.DependencyInjection;
 
 public static class JsonSerializerOptionsExtensions
 {
-    public static JsonSerializerOptions ConfigureDefault(
-        this JsonSerializerOptions options,
-        ITypeManager typeManager
-    )
+    public static JsonSerializerOptions ConfigureDefault(this JsonSerializerOptions options, ITypeManager typeManager)
     {
         options.Converters.Insert(0, new EnumJsonConverterFactory());
         options.Converters.Insert(1, new JsonStringEnumConverter());
@@ -51,7 +48,11 @@ public static class JsonSerializerOptionsExtensions
 
     private static readonly IReadOnlyCollection<PropertyInfo> CloneableProperties = typeof(JsonSerializerOptions)
         .GetProperties(BindingFlags.Public | BindingFlags.Instance)
-        .Where(x => x.PropertyType.GetTargetImplementation(typeof(IEnumerable<>)) is null && x is { CanRead: true, CanWrite: true })
+        .Where(
+            x =>
+                x.PropertyType.GetTargetImplementation(typeof(IEnumerable<>)) is null
+                && x is { CanRead: true, CanWrite: true }
+        )
         .ToArray();
 
     public static JsonSerializerOptions Clone(this JsonSerializerOptions opts)

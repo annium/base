@@ -10,10 +10,8 @@ internal class ConcurrentBackgroundExecutor<TSource> : BackgroundExecutorBase
 {
     private readonly SemaphoreSlim _gate;
 
-    public ConcurrentBackgroundExecutor(
-        int parallelism,
-        ILogger logger
-    ) : base(logger)
+    public ConcurrentBackgroundExecutor(int parallelism, ILogger logger)
+        : base(logger)
     {
         _gate = new SemaphoreSlim(parallelism, parallelism);
     }

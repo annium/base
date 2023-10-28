@@ -13,43 +13,35 @@ public class ResolveByImplementationExtensionTests
     public void TypeNull_Throws()
     {
         // assert
-        Wrap.It(() => (null as System.Type)!.ResolveByImplementation(typeof(byte)))
-            .Throws<ArgumentNullException>();
+        Wrap.It(() => (null as System.Type)!.ResolveByImplementation(typeof(byte))).Throws<ArgumentNullException>();
     }
 
     [Fact]
     public void TargetNull_Throws()
     {
         // assert
-        Wrap.It(() => typeof(byte).ResolveByImplementation((null as System.Type)!))
-            .Throws<ArgumentNullException>();
+        Wrap.It(() => typeof(byte).ResolveByImplementation((null as System.Type)!)).Throws<ArgumentNullException>();
     }
 
     [Fact]
     public void Defined_Assignable_ReturnsType()
     {
         // assert
-        typeof(MemoryStream)
-            .ResolveByImplementation(typeof(Stream))
-            .Is(typeof(MemoryStream));
+        typeof(MemoryStream).ResolveByImplementation(typeof(Stream)).Is(typeof(MemoryStream));
     }
 
     [Fact]
     public void Defined_NotAssignable_ReturnsType()
     {
         // assert
-        typeof(FileInfo)
-            .ResolveByImplementation(typeof(Stream))
-            .IsDefault();
+        typeof(FileInfo).ResolveByImplementation(typeof(Stream)).IsDefault();
     }
 
     [Fact]
     public void Generic_NotResolved_ReturnsNull()
     {
         // assert
-        typeof(List<>)
-            .ResolveByImplementation(typeof(Stream))
-            .IsDefault();
+        typeof(List<>).ResolveByImplementation(typeof(Stream)).IsDefault();
     }
 
     [Fact]
@@ -65,8 +57,6 @@ public class ResolveByImplementationExtensionTests
     public void GenericType_ReturnsType()
     {
         // assert
-        typeof(List<>)
-            .ResolveByImplementation(typeof(IEnumerable<int>))
-            .Is(typeof(List<int>));
+        typeof(List<>).ResolveByImplementation(typeof(IEnumerable<int>)).Is(typeof(List<int>));
     }
 }

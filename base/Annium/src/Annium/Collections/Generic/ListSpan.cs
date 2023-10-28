@@ -12,14 +12,12 @@ public record ListSpan<T> : IListSpan<T>
 
     private readonly IReadOnlyList<T> _collection;
 
-    public ListSpan(
-        IReadOnlyList<T> collection,
-        int start,
-        int count
-    )
+    public ListSpan(IReadOnlyList<T> collection, int start, int count)
     {
         if (start < 0 || start + count > collection.Count)
-            throw new ArgumentOutOfRangeException($"Invalid span at {start} with length {count} for collection of size {collection.Count}");
+            throw new ArgumentOutOfRangeException(
+                $"Invalid span at {start} with length {count} for collection of size {collection.Count}"
+            );
 
         _collection = collection;
         Start = start;

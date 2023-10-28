@@ -16,7 +16,8 @@ public class DoSequentialAsyncTest
         // arrange
         var log = new List<string>();
         var tcs = new TaskCompletionSource();
-        using var observable = Observable.Range(1, 5)
+        using var observable = Observable
+            .Range(1, 5)
             .DoSequentialAsync(async x =>
             {
                 lock (log)
@@ -25,22 +26,21 @@ public class DoSequentialAsyncTest
                 lock (log)
                     log.Add($"end: {x}");
             })
-            .Subscribe(x =>
-            {
-                lock (log)
-                    log.Add($"sub: {x}");
-            }, tcs.SetResult);
+            .Subscribe(
+                x =>
+                {
+                    lock (log)
+                        log.Add($"sub: {x}");
+                },
+                tcs.SetResult
+            );
 
         await tcs.Task;
 
         log.Has(15);
-        var expectedLog = Enumerable.Range(1, 5)
-            .Select(x => new[]
-            {
-                $"start: {x}",
-                $"end: {x}",
-                $"sub: {x}"
-            })
+        var expectedLog = Enumerable
+            .Range(1, 5)
+            .Select(x => new[] { $"start: {x}", $"end: {x}", $"sub: {x}" })
             .SelectMany(x => x)
             .ToArray();
         log.IsEqual(expectedLog);

@@ -7,11 +7,7 @@ namespace Annium.Reflection;
 
 public static class GetInheritanceChainExtension
 {
-    public static Type[] GetInheritanceChain(
-        this Type type,
-        bool self = false,
-        bool root = false
-    )
+    public static Type[] GetInheritanceChain(this Type type, bool self = false, bool root = false)
     {
         if (type is null)
             throw new ArgumentNullException(nameof(type));

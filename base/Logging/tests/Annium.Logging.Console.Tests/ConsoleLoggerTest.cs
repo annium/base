@@ -8,9 +8,8 @@ namespace Annium.Logging.Console.Tests;
 
 public class ConsoleLoggerTest : TestBase
 {
-    public ConsoleLoggerTest(ITestOutputHelper outputHelper) : base(outputHelper)
-    {
-    }
+    public ConsoleLoggerTest(ITestOutputHelper outputHelper)
+        : base(outputHelper) { }
 
     [Fact]
     public void LogMessage_WritesLogMessageToConsole()
@@ -71,11 +70,7 @@ public class ConsoleLoggerTest : TestBase
         container.AddLogging();
 
         var provider = container.BuildServiceProvider();
-        provider.UseLogging(
-            route => route
-                .For(m => m.Level >= minLogLevel)
-                .UseConsole()
-        );
+        provider.UseLogging(route => route.For(m => m.Level >= minLogLevel).UseConsole());
 
         return provider.Resolve<ILogSubject>();
     }

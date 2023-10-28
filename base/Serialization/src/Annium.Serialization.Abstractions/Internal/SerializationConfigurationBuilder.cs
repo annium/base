@@ -15,25 +15,39 @@ internal class SerializationConfigurationBuilder : ISerializationConfigurationBu
     }
 
     public ISerializationConfigurationBuilder Register<TValue, TSerializer>(string mediaType, bool isDefault)
-        where TSerializer : class, ISerializer<TValue>
-        => RegisterInternal<ISerializer<TValue>, TSerializer>(mediaType, isDefault);
+        where TSerializer : class, ISerializer<TValue> =>
+        RegisterInternal<ISerializer<TValue>, TSerializer>(mediaType, isDefault);
 
-    public ISerializationConfigurationBuilder Register<TValue, TSerializer>(string mediaType, bool isDefault, Func<IServiceProvider, TSerializer> resolveSerializer)
-        where TSerializer : class, ISerializer<TValue>
-        => RegisterInternal<ISerializer<TValue>, TSerializer>(mediaType, isDefault, resolveSerializer);
+    public ISerializationConfigurationBuilder Register<TValue, TSerializer>(
+        string mediaType,
+        bool isDefault,
+        Func<IServiceProvider, TSerializer> resolveSerializer
+    )
+        where TSerializer : class, ISerializer<TValue> =>
+        RegisterInternal<ISerializer<TValue>, TSerializer>(mediaType, isDefault, resolveSerializer);
 
-    public ISerializationConfigurationBuilder Register<TSource, TDestination, TSerializer>(string mediaType, bool isDefault)
-        where TSerializer : class, ISerializer<TSource, TDestination>
-        => RegisterInternal<ISerializer<TSource, TDestination>, TSerializer>(mediaType, isDefault);
+    public ISerializationConfigurationBuilder Register<TSource, TDestination, TSerializer>(
+        string mediaType,
+        bool isDefault
+    )
+        where TSerializer : class, ISerializer<TSource, TDestination> =>
+        RegisterInternal<ISerializer<TSource, TDestination>, TSerializer>(mediaType, isDefault);
 
-    public ISerializationConfigurationBuilder Register<TSource, TDestination, TSerializer>(string mediaType, bool isDefault, Func<IServiceProvider, TSerializer> resolveSerializer)
-        where TSerializer : class, ISerializer<TSource, TDestination>
-        => RegisterInternal<ISerializer<TSource, TDestination>, TSerializer>(mediaType, isDefault, resolveSerializer);
+    public ISerializationConfigurationBuilder Register<TSource, TDestination, TSerializer>(
+        string mediaType,
+        bool isDefault,
+        Func<IServiceProvider, TSerializer> resolveSerializer
+    )
+        where TSerializer : class, ISerializer<TSource, TDestination> =>
+        RegisterInternal<ISerializer<TSource, TDestination>, TSerializer>(mediaType, isDefault, resolveSerializer);
 
-    private ISerializationConfigurationBuilder RegisterInternal<TISerializer, TSerializer>(string mediaType, bool isDefault, Func<IServiceProvider, TSerializer> resolveSerializer)
+    private ISerializationConfigurationBuilder RegisterInternal<TISerializer, TSerializer>(
+        string mediaType,
+        bool isDefault,
+        Func<IServiceProvider, TSerializer> resolveSerializer
+    )
         where TISerializer : class
         where TSerializer : class, TISerializer
-
     {
         var key = SerializerKey.Create(Key, mediaType);
 
@@ -47,7 +61,10 @@ internal class SerializationConfigurationBuilder : ISerializationConfigurationBu
         return this;
     }
 
-    private ISerializationConfigurationBuilder RegisterInternal<TISerializer, TSerializer>(string mediaType, bool isDefault)
+    private ISerializationConfigurationBuilder RegisterInternal<TISerializer, TSerializer>(
+        string mediaType,
+        bool isDefault
+    )
         where TISerializer : class
         where TSerializer : TISerializer
     {
@@ -67,10 +84,16 @@ internal class SerializationConfigurationBuilder : ISerializationConfigurationBu
         where TISerializer : class
     {
         // for default key - configure as default for media type
-        _container.Add<TISerializer>(sp => sp.Resolve<IIndex<SerializerKey, TISerializer>>()[key]).AsKeyed<TISerializer, string>(key.MediaType).Singleton();
+        _container
+            .Add<TISerializer>(sp => sp.Resolve<IIndex<SerializerKey, TISerializer>>()[key])
+            .AsKeyed<TISerializer, string>(key.MediaType)
+            .Singleton();
 
         // if default media type - configure as default
         if (isDefault)
-            _container.Add<TISerializer>(sp => sp.Resolve<IIndex<SerializerKey, TISerializer>>()[key]).As<TISerializer>().Singleton();
+            _container
+                .Add<TISerializer>(sp => sp.Resolve<IIndex<SerializerKey, TISerializer>>()[key])
+                .As<TISerializer>()
+                .Singleton();
     }
 }

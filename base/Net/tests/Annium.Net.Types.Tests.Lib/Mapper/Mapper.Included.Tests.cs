@@ -9,12 +9,8 @@ namespace Annium.Net.Types.Tests.Lib.Mapper;
 
 public abstract class MapperIncludedTestsBase : TestBase
 {
-    protected MapperIncludedTestsBase(
-        ITestProvider testProvider,
-        ITestOutputHelper outputHelper
-    ) : base(testProvider, outputHelper)
-    {
-    }
+    protected MapperIncludedTestsBase(ITestProvider testProvider, ITestOutputHelper outputHelper)
+        : base(testProvider, outputHelper) { }
 
     protected void Included_Base()
     {

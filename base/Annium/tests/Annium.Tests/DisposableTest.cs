@@ -8,9 +8,8 @@ namespace Annium.Tests;
 
 public class DisposableTest : TestBase
 {
-    public DisposableTest(ITestOutputHelper outputHelper) : base(outputHelper)
-    {
-    }
+    public DisposableTest(ITestOutputHelper outputHelper)
+        : base(outputHelper) { }
 
     [Fact]
     public async Task AsyncDisposable_Add_Works()

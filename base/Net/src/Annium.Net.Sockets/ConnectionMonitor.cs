@@ -9,9 +9,7 @@ public class ConnectionMonitor : IConnectionMonitor, ILogSubject
     public ILogger Logger { get; } = VoidLogger.Instance;
     public event Action OnConnectionLost = delegate { };
 
-    private ConnectionMonitor()
-    {
-    }
+    private ConnectionMonitor() { }
 
     public void Init(ISendingReceivingSocket socket)
     {

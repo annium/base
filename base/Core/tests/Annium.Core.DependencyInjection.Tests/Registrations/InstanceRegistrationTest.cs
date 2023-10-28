@@ -17,7 +17,8 @@ public class InstanceRegistrationTest : TestBase
         Build();
 
         // assert
-        Get<D>().Is(instance);
+        Get<D>()
+            .Is(instance);
     }
 
     [Fact]
@@ -44,7 +45,8 @@ public class InstanceRegistrationTest : TestBase
         Build();
 
         // assert
-        Get<IC>().Is(Get<D>());
+        Get<IC>()
+            .Is(Get<D>());
         Get<ID>().Is(Get<D>());
     }
 
@@ -87,7 +89,8 @@ public class InstanceRegistrationTest : TestBase
         Build();
 
         // assert
-        Get<Func<D>>()().Is(instance);
+        Get<Func<D>>()()
+            .Is(instance);
     }
 
     [Fact]
@@ -101,7 +104,8 @@ public class InstanceRegistrationTest : TestBase
         Build();
 
         // assert
-        Get<Func<C>>()().Is(instance);
+        Get<Func<C>>()()
+            .Is(instance);
     }
 
     [Fact]
@@ -134,28 +138,19 @@ public class InstanceRegistrationTest : TestBase
 
     private sealed class D : C, ID
     {
-        public D(A x) : base(x)
-        {
-        }
+        public D(A x)
+            : base(x) { }
     }
 
     private class C : IC
     {
         // ReSharper disable once UnusedParameter.Local
-        protected C(A _)
-        {
-        }
+        protected C(A _) { }
     }
 
-    private interface ID : IC
-    {
-    }
+    private interface ID : IC { }
 
-    private interface IC
-    {
-    }
+    private interface IC { }
 
-    private class A
-    {
-    }
+    private class A { }
 }

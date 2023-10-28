@@ -13,16 +13,22 @@ public abstract class TestBase : Testing.TestBase
     protected readonly Uri ServerUri;
     private readonly int _port;
 
-    protected TestBase(ITestOutputHelper outputHelper) : base(outputHelper)
+    protected TestBase(ITestOutputHelper outputHelper)
+        : base(outputHelper)
     {
         _port = Interlocked.Increment(ref _basePort);
         ServerUri = new Uri($"ws://127.0.0.1:{_port}");
     }
 
-    protected IAsyncDisposable RunServerBase(Func<IServiceProvider, HttpListenerWebSocketContext, CancellationToken, Task> handleWebSocket)
+    protected IAsyncDisposable RunServerBase(
+        Func<IServiceProvider, HttpListenerWebSocketContext, CancellationToken, Task> handleWebSocket
+    )
     {
         var sp = Get<IServiceProvider>();
-        var server = ServerBuilder.New(sp, _port).WithWebSocketHandler(new WebSocketHandler(sp, handleWebSocket)).Build();
+        var server = ServerBuilder
+            .New(sp, _port)
+            .WithWebSocketHandler(new WebSocketHandler(sp, handleWebSocket))
+            .Build();
         var cts = new CancellationTokenSource();
         var serverTask = server.RunAsync(cts.Token);
 

@@ -7,9 +7,7 @@ namespace Annium.Core.DependencyInjection;
 
 public static class LoggingBuilderExtensions
 {
-    public static ILoggingBuilder ConfigureLoggingBridge(
-        this ILoggingBuilder builder
-    )
+    public static ILoggingBuilder ConfigureLoggingBridge(this ILoggingBuilder builder)
     {
         builder.ClearProviders();
         builder.Services.AddScoped<ILoggerProvider, LoggingBridgeProvider>();

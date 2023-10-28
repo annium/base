@@ -10,10 +10,7 @@ internal class Processor : ILogSubject
     public ILogger Logger { get; }
     private readonly IEnumerable<IProcessor> _processors;
 
-    public Processor(
-        IEnumerable<IProcessor> processors,
-        ILogger logger
-    )
+    public Processor(IEnumerable<IProcessor> processors, ILogger logger)
     {
         Logger = logger;
         _processors = processors;
@@ -31,7 +28,11 @@ internal class Processor : ILogSubject
             if (!result)
                 continue;
 
-            this.Trace<string, string>("Processed {type} via {processorType}", type.FriendlyName(), processor.GetType().FriendlyName());
+            this.Trace<string, string>(
+                "Processed {type} via {processorType}",
+                type.FriendlyName(),
+                processor.GetType().FriendlyName()
+            );
             return;
         }
     }

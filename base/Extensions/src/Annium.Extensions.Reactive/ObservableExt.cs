@@ -38,35 +38,30 @@ public static class ObservableExt
 
     #region From
 
-    public static IObservable<T> FromChannel<T>(
-        ChannelReader<T> reader,
-        Action? onDisposed = null
-    )
+    public static IObservable<T> FromChannel<T>(ChannelReader<T> reader, Action? onDisposed = null)
     {
-        return Observable.Create<T>(async (observer, ct) =>
-        {
-            try
+        return Observable.Create<T>(
+            async (observer, ct) =>
             {
-                while (!ct.IsCancellationRequested)
+                try
                 {
-                    var data = await reader.ReadAsync(ct);
-                    observer.OnNext(data);
+                    while (!ct.IsCancellationRequested)
+                    {
+                        var data = await reader.ReadAsync(ct);
+                        observer.OnNext(data);
+                    }
                 }
-            }
-            catch (OperationCanceledException)
-            {
-            }
-            catch (Exception)
-            {
-                //
-            }
+                catch (OperationCanceledException) { }
+                catch (Exception)
+                {
+                    //
+                }
 
-            return onDisposed ?? OnDisposed;
-        });
+                return onDisposed ?? OnDisposed;
+            }
+        );
 
-        static void OnDisposed()
-        {
-        }
+        static void OnDisposed() { }
     }
 
     #endregion

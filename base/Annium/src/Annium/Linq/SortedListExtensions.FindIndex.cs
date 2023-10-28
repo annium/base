@@ -5,10 +5,7 @@ namespace Annium.Linq;
 
 public static class SortedListFindIndexExtensions
 {
-    public static int FindIndex<TKey, TValue>(
-        this SortedList<TKey, TValue> source,
-        TKey key
-    )
+    public static int FindIndex<TKey, TValue>(this SortedList<TKey, TValue> source, TKey key)
         where TKey : notnull
     {
         var i = 0;
@@ -22,10 +19,7 @@ public static class SortedListFindIndexExtensions
         return -1;
     }
 
-    public static int FindIndex<TKey, TValue>(
-        this SortedList<TKey, TValue> source,
-        Predicate<TValue> match
-    )
+    public static int FindIndex<TKey, TValue>(this SortedList<TKey, TValue> source, Predicate<TValue> match)
         where TKey : notnull
     {
         var i = 0;

@@ -7,7 +7,8 @@ namespace Annium.Core.Mapper.Tests;
 
 public class ContextualProfileTest : TestBase
 {
-    public ContextualProfileTest(ITestOutputHelper outputHelper) : base(outputHelper)
+    public ContextualProfileTest(ITestOutputHelper outputHelper)
+        : base(outputHelper)
     {
         Register(c => c.AddMapper(autoload: false).AddProfile<ContextualProfile>());
     }

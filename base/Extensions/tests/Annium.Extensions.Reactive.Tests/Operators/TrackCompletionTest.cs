@@ -11,9 +11,8 @@ namespace Annium.Extensions.Reactive.Tests.Operators;
 
 public class TrackCompletionTest : TestBase
 {
-    public TrackCompletionTest(ITestOutputHelper outputHelper) : base(outputHelper)
-    {
-    }
+    public TrackCompletionTest(ITestOutputHelper outputHelper)
+        : base(outputHelper) { }
 
     [Fact]
     public async Task TrackCompletion_IncompleteWorks()
@@ -21,12 +20,18 @@ public class TrackCompletionTest : TestBase
         // arrange
         var logger = Get<ILogger>();
         var cts = new CancellationTokenSource();
-        var observable = ObservableExt.StaticAsyncInstance<string>(async ctx =>
-        {
-            await Task.Delay(10, ctx.Ct);
+        var observable = ObservableExt
+            .StaticAsyncInstance<string>(
+                async ctx =>
+                {
+                    await Task.Delay(10, ctx.Ct);
 
-            return () => Task.CompletedTask;
-        }, cts.Token, logger).TrackCompletion(logger);
+                    return () => Task.CompletedTask;
+                },
+                cts.Token,
+                logger
+            )
+            .TrackCompletion(logger);
 
         // act
         await observable.WhenCompleted(logger);
@@ -38,11 +43,17 @@ public class TrackCompletionTest : TestBase
         // arrange
         var logger = Get<ILogger>();
         var cts = new CancellationTokenSource();
-        var observable = ObservableExt.StaticAsyncInstance<string>(async _ =>
-        {
-            await Task.Delay(10, CancellationToken.None);
-            return () => Task.CompletedTask;
-        }, cts.Token, logger).TrackCompletion(logger);
+        var observable = ObservableExt
+            .StaticAsyncInstance<string>(
+                async _ =>
+                {
+                    await Task.Delay(10, CancellationToken.None);
+                    return () => Task.CompletedTask;
+                },
+                cts.Token,
+                logger
+            )
+            .TrackCompletion(logger);
 
         // act
         await observable.WhenCompleted(logger);

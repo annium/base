@@ -6,14 +6,8 @@ namespace Annium.Net.Types.Serialization.Json.Tests.Mapper;
 
 public class MapperGenericParameterTests : MapperGenericParameterTestsBase
 {
-    public MapperGenericParameterTests(
-        ITestOutputHelper outputHelper
-    ) : base(
-        new TestProvider(),
-        outputHelper
-    )
-    {
-    }
+    public MapperGenericParameterTests(ITestOutputHelper outputHelper)
+        : base(new TestProvider(), outputHelper) { }
 
     [Fact]
     public void GenericParameter_NotNullable()

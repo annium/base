@@ -8,14 +8,14 @@ public record ObjectPoolConfig<T>
     public PoolLoadMode LoadMode { get; }
     public PoolStorageMode StorageMode { get; }
 
-    public ObjectPoolConfig(
-        int capacity,
-        PoolLoadMode loadMode,
-        PoolStorageMode storageMode
-    )
+    public ObjectPoolConfig(int capacity, PoolLoadMode loadMode, PoolStorageMode storageMode)
     {
         if (capacity <= 0)
-            throw new ArgumentOutOfRangeException(nameof(capacity), capacity, $"Capacity = '{nameof(capacity)}', but must be greater than zero.");
+            throw new ArgumentOutOfRangeException(
+                nameof(capacity),
+                capacity,
+                $"Capacity = '{nameof(capacity)}', but must be greater than zero."
+            );
 
         Capacity = capacity;
         LoadMode = loadMode;

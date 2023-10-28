@@ -10,9 +10,8 @@ namespace Annium.Architecture.Mediator.Tests;
 
 public class LoggingPipeHandlerTest : TestBase
 {
-    public LoggingPipeHandlerTest(ITestOutputHelper outputHelper) : base(outputHelper)
-    {
-    }
+    public LoggingPipeHandlerTest(ITestOutputHelper outputHelper)
+        : base(outputHelper) { }
 
     [Fact]
     public async Task ReturnsOriginalResult()

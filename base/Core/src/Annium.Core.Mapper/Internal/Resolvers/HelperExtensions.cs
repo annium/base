@@ -18,30 +18,31 @@ internal static class HelperExtensions
         if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IEnumerable<>))
             return type.GenericTypeArguments[0];
 
-        var enumerable = type.GetTypeInfo().ImplementedInterfaces
-            .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>));
+        var enumerable = type.GetTypeInfo()
+            .ImplementedInterfaces.FirstOrDefault(
+                i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>)
+            );
 
         return enumerable?.GenericTypeArguments[0];
     }
 
-    public static ConstructorInfo GetParametrizedConstructor(this Type type) => type
-            .GetConstructors(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+    public static ConstructorInfo GetParametrizedConstructor(this Type type) =>
+        type.GetConstructors(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
             .Where(x => x.GetParameters().Length > 0)
             .OrderByDescending(c => c.GetParameters().Length)
-            .FirstOrDefault()
-        ?? throw new InvalidOperationException("Parameterized constructor not found");
+            .FirstOrDefault() ?? throw new InvalidOperationException("Parameterized constructor not found");
 
-    public static ConstructorInfo GetDefaultConstructor(this Type type) => type
-            .GetConstructor(Type.EmptyTypes)
+    public static ConstructorInfo GetDefaultConstructor(this Type type) =>
+        type.GetConstructor(Type.EmptyTypes)
         ?? throw new InvalidOperationException("Parameterless constructor not found");
 
-    public static PropertyInfo[] GetReadableProperties(this Type type) => type
-        .GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
-        .Where(x => x.CanRead)
-        .ToArray();
+    public static PropertyInfo[] GetReadableProperties(this Type type) =>
+        type.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+            .Where(x => x.CanRead)
+            .ToArray();
 
-    public static PropertyInfo[] GetWriteableProperties(this Type type) => type
-        .GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
-        .Where(x => x.CanWrite)
-        .ToArray();
+    public static PropertyInfo[] GetWriteableProperties(this Type type) =>
+        type.GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+            .Where(x => x.CanWrite)
+            .ToArray();
 }

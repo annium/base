@@ -8,8 +8,7 @@ using System.Threading.Tasks;
 namespace Annium.Logging.Shared.Internal;
 
 internal class BackgroundLogScheduler<TContext> : ILogScheduler<TContext>, ILogSubject, IAsyncDisposable
-    where TContext :
-    class, ILogContext
+    where TContext : class, ILogContext
 {
     public ILogger Logger { get; }
     public Func<LogMessage<TContext>, bool> Filter { get; }
@@ -28,23 +27,33 @@ internal class BackgroundLogScheduler<TContext> : ILogScheduler<TContext>, ILogS
     )
     {
         if (configuration.BufferTime == TimeSpan.Zero)
-            throw new ArgumentOutOfRangeException(nameof(configuration.BufferTime), "Buffer time is expected to be non-zero");
+            throw new ArgumentOutOfRangeException(
+                nameof(configuration.BufferTime),
+                "Buffer time is expected to be non-zero"
+            );
 
         if (configuration.BufferCount <= 0)
-            throw new ArgumentOutOfRangeException(nameof(configuration.BufferCount), "Buffer count is expected to be positive");
+            throw new ArgumentOutOfRangeException(
+                nameof(configuration.BufferCount),
+                "Buffer count is expected to be positive"
+            );
 
         Logger = VoidLogger.Instance;
         Filter = filter;
 
-        var channel = Channel.CreateUnbounded<LogMessage<TContext>>(new UnboundedChannelOptions
-        {
-            AllowSynchronousContinuations = true,
-            SingleWriter = false,
-            SingleReader = true
-        });
+        var channel = Channel.CreateUnbounded<LogMessage<TContext>>(
+            new UnboundedChannelOptions
+            {
+                AllowSynchronousContinuations = true,
+                SingleWriter = false,
+                SingleReader = true
+            }
+        );
         _messageWriter = channel.Writer;
         _messageReader = channel.Reader;
-        _observable = ObservableExt.StaticSyncInstance<LogMessage<TContext>>(Run, _observableCts.Token, VoidLogger.Instance).TrackCompletion(VoidLogger.Instance);
+        _observable = ObservableExt
+            .StaticSyncInstance<LogMessage<TContext>>(Run, _observableCts.Token, VoidLogger.Instance)
+            .TrackCompletion(VoidLogger.Instance);
         _subscription = _observable
             .Buffer(configuration.BufferTime, configuration.BufferCount)
             .Where(x => x.Count > 0)

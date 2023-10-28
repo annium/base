@@ -10,12 +10,24 @@ namespace Annium.Data.Operations.Serialization.MessagePack.Tests;
 
 public class StatusResultTest : StatusResultTestBase
 {
-    public StatusResultTest(ITestOutputHelper outputHelper) : base(outputHelper)
+    public StatusResultTest(ITestOutputHelper outputHelper)
+        : base(outputHelper)
     {
-        Register(container => container.AddSerializers().WithMessagePack(() => new MessagePackSerializerOptions(CompositeResolver.Create(
-            Resolver.Instance,
-            MessagePackSerializerOptions.Standard.Resolver
-        )), true));
+        Register(
+            container =>
+                container
+                    .AddSerializers()
+                    .WithMessagePack(
+                        () =>
+                            new MessagePackSerializerOptions(
+                                CompositeResolver.Create(
+                                    Resolver.Instance,
+                                    MessagePackSerializerOptions.Standard.Resolver
+                                )
+                            ),
+                        true
+                    )
+        );
     }
 
     [Theory]

@@ -39,10 +39,7 @@ public static class ArrayExtensions
         return value;
     }
 
-    public static T[] IsEmpty<T>(
-        this T[] value,
-        [CallerArgumentExpression("value")] string valueEx = default!
-    )
+    public static T[] IsEmpty<T>(this T[] value, [CallerArgumentExpression("value")] string valueEx = default!)
     {
         if (value is null)
             throw new ArgumentNullException(nameof(value));
@@ -53,10 +50,7 @@ public static class ArrayExtensions
         return value;
     }
 
-    public static T[] IsNotEmpty<T>(
-        this T[] value,
-        [CallerArgumentExpression("value")] string valueEx = default!
-    )
+    public static T[] IsNotEmpty<T>(this T[] value, [CallerArgumentExpression("value")] string valueEx = default!)
     {
         if (value is null)
             throw new ArgumentNullException(nameof(value));

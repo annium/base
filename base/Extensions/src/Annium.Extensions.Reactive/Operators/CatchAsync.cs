@@ -10,10 +10,6 @@ public static class CatchAsyncOperatorExtensions
         this IObservable<TSource> source,
         Func<TException, Task<IObservable<TSource>>> handler
     )
-        where TException : Exception
-        => source.Catch<TSource, TException>(
-            e => Observable
-                .FromAsync(() => handler(e))
-                .SelectMany(x => x)
-        );
+        where TException : Exception =>
+        source.Catch<TSource, TException>(e => Observable.FromAsync(() => handler(e)).SelectMany(x => x));
 }

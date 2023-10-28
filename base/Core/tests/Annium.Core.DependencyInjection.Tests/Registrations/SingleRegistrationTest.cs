@@ -44,7 +44,8 @@ public class SingleRegistrationTest : TestBase
         Build();
 
         // assert
-        Get<IA>().Is(Get<IB>());
+        Get<IA>()
+            .Is(Get<IB>());
         Get<IB>().Is(Get<IB>());
     }
 
@@ -92,7 +93,8 @@ public class SingleRegistrationTest : TestBase
         Build();
 
         // assert
-        Get<Func<B>>()().Is(Get<B>());
+        Get<Func<B>>()()
+            .Is(Get<B>());
     }
 
     [Fact]
@@ -105,7 +107,8 @@ public class SingleRegistrationTest : TestBase
         Build();
 
         // assert
-        Get<Func<A>>()().Is(Get<B>());
+        Get<Func<A>>()()
+            .Is(Get<B>());
     }
 
     [Fact]
@@ -149,15 +152,9 @@ public class SingleRegistrationTest : TestBase
         }
     }
 
-    private class A : IA
-    {
-    }
+    private class A : IA { }
 
-    private interface IB : IA
-    {
-    }
+    private interface IB : IA { }
 
-    private interface IA
-    {
-    }
+    private interface IA { }
 }

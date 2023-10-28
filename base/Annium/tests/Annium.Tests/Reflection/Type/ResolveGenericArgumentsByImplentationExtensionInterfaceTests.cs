@@ -58,7 +58,8 @@ public class ResolveGenericArgumentsByImplementationExtensionInterfaceTests
     public void Interface_SameGenericDefinition_BuildsArgs()
     {
         // assert
-        typeof(IEquatable<>).ResolveGenericArgumentsByImplementation(typeof(IEquatable<bool>))
+        typeof(IEquatable<>)
+            .ResolveGenericArgumentsByImplementation(typeof(IEquatable<bool>))
             .IsEqual(new[] { typeof(bool) });
     }
 
@@ -66,52 +67,43 @@ public class ResolveGenericArgumentsByImplementationExtensionInterfaceTests
     public void Interface_NoImplementation_ReturnsNull()
     {
         // assert
-        typeof(IEnumerable<>).ResolveGenericArgumentsByImplementation(typeof(IEquatable<bool>))
-            .IsDefault();
+        typeof(IEnumerable<>).ResolveGenericArgumentsByImplementation(typeof(IEquatable<bool>)).IsDefault();
     }
 
     [Fact]
     public void Interface_WithImplementation_BuildArgs()
     {
         // assert
-        typeof(IParentOther<,>).ResolveGenericArgumentsByImplementation(
-                typeof(IBase<string[], int, bool, IEnumerable<string[]>>))
+        typeof(IParentOther<,>)
+            .ResolveGenericArgumentsByImplementation(typeof(IBase<string[], int, bool, IEnumerable<string[]>>))
             .IsEqual(new[] { typeof(string), typeof(int) });
     }
 
-    private interface IParentOther<T1, T2> : IBase<T1[], T2, bool, IEnumerable<T1[]>> where T2 : struct
-    {
-    }
+    private interface IParentOther<T1, T2> : IBase<T1[], T2, bool, IEnumerable<T1[]>>
+        where T2 : struct { }
 
-    private interface IBase<T1, T2, T3, T4> where T1 : class where T2 : struct where T4 : IEnumerable<T1>
-    {
-    }
+    private interface IBase<T1, T2, T3, T4>
+        where T1 : class
+        where T2 : struct
+        where T4 : IEnumerable<T1> { }
 
-    private interface IClassConstraint<T> where T : class
-    {
-    }
+    private interface IClassConstraint<T>
+        where T : class { }
 
-    private interface IStructConstraint<T> where T : struct
-    {
-    }
+    private interface IStructConstraint<T>
+        where T : struct { }
 
-    private interface INewConstraint<T> where T : new()
-    {
-    }
+    private interface INewConstraint<T>
+        where T : new() { }
 
-    private interface IClassBaseConstraint<T> where T : ClassBase
-    {
-    }
+    private interface IClassBaseConstraint<T>
+        where T : ClassBase { }
 
-    private interface IEnumerableConstraint<T> where T : IEnumerable
-    {
-    }
+    private interface IEnumerableConstraint<T>
+        where T : IEnumerable { }
 
-    private interface IEquatableConstraint<T> where T : IEquatable<T>
-    {
-    }
+    private interface IEquatableConstraint<T>
+        where T : IEquatable<T> { }
 
-    private class ClassBase
-    {
-    }
+    private class ClassBase { }
 }

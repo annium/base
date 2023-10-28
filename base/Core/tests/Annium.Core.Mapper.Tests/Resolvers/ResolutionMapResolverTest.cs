@@ -9,7 +9,8 @@ namespace Annium.Core.Mapper.Tests.Resolvers;
 
 public class ResolutionMapResolverTest : TestBase
 {
-    public ResolutionMapResolverTest(ITestOutputHelper outputHelper) : base(outputHelper)
+    public ResolutionMapResolverTest(ITestOutputHelper outputHelper)
+        : base(outputHelper)
     {
         Register(c => c.AddMapper(autoload: false));
     }
@@ -19,7 +20,11 @@ public class ResolutionMapResolverTest : TestBase
     {
         // arrange
         var mapper = Get<IMapper>();
-        var value = new Payload[] { new ImagePayload("img"), new LinkPayload { Link = "lnk" } };
+        var value = new Payload[]
+        {
+            new ImagePayload("img"),
+            new LinkPayload { Link = "lnk" }
+        };
 
         // act
         var result = mapper.Map<List<Model>>(value);
@@ -35,7 +40,11 @@ public class ResolutionMapResolverTest : TestBase
     {
         // arrange
         var mapper = Get<IMapper>();
-        var value = new Req[] { new ImageReq("img"), new LinkReq { Data = "lnk" } };
+        var value = new Req[]
+        {
+            new ImageReq("img"),
+            new LinkReq { Data = "lnk" }
+        };
 
         // act
         var result = mapper.Map<List<Mod>>(value);
@@ -46,9 +55,7 @@ public class ResolutionMapResolverTest : TestBase
         result.At(1).As<LinkMod>().Data.Is("lnk");
     }
 
-    private abstract class Payload
-    {
-    }
+    private abstract class Payload { }
 
     private class ImagePayload : Payload
     {
@@ -65,9 +72,7 @@ public class ResolutionMapResolverTest : TestBase
         public string Link { get; set; } = string.Empty;
     }
 
-    private abstract class Model
-    {
-    }
+    private abstract class Model { }
 
     private class ImageModel : Model
     {
@@ -99,7 +104,8 @@ public class ResolutionMapResolverTest : TestBase
     {
         public string Data { get; }
 
-        public ImageReq(string data) : base(typeof(ImageMod).GetIdString())
+        public ImageReq(string data)
+            : base(typeof(ImageMod).GetIdString())
         {
             Data = data;
         }
@@ -109,9 +115,8 @@ public class ResolutionMapResolverTest : TestBase
     {
         public string Data { get; set; } = string.Empty;
 
-        public LinkReq() : base(typeof(LinkMod).GetIdString())
-        {
-        }
+        public LinkReq()
+            : base(typeof(LinkMod).GetIdString()) { }
     }
 
     private abstract class Mod

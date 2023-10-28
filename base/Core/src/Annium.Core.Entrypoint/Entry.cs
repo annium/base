@@ -6,21 +6,16 @@ using Annium.Logging;
 
 namespace Annium.Core.Entrypoint;
 
-public readonly record struct Entry(
-    IServiceProvider Provider,
-    CancellationToken Ct,
-    ManualResetEventSlim _gate
-) : ILogSubject, IAsyncDisposable
+public readonly record struct Entry(IServiceProvider Provider, CancellationToken Ct, ManualResetEventSlim _gate)
+    : ILogSubject,
+        IAsyncDisposable
 {
     public ILogger Logger { get; } = Provider.Resolve<ILogger>();
     public readonly IServiceProvider Provider = Provider;
     public readonly CancellationToken Ct = Ct;
     private readonly ManualResetEventSlim _gate = _gate;
 
-    public void Deconstruct(
-        out IServiceProvider provider,
-        out CancellationToken ct
-    )
+    public void Deconstruct(out IServiceProvider provider, out CancellationToken ct)
     {
         provider = Provider;
         ct = Ct;

@@ -42,14 +42,22 @@ internal class ManagedWebSocket : ISendingReceivingWebSocket, ILogSubject
             var (isClosed, result) = await ReceiveAsync(buffer, ct);
             if (isClosed)
             {
-                this.Trace(result.Exception is not null ? $"stop with {result.Status}: {result.Exception}" : $"stop with {result.Status}");
+                this.Trace(
+                    result.Exception is not null
+                        ? $"stop with {result.Status}: {result.Exception}"
+                        : $"stop with {result.Status}"
+                );
                 return result;
             }
         }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private async ValueTask<WebSocketSendStatus> SendAsync(ReadOnlyMemory<byte> data, WebSocketMessageType messageType, CancellationToken ct = default)
+    private async ValueTask<WebSocketSendStatus> SendAsync(
+        ReadOnlyMemory<byte> data,
+        WebSocketMessageType messageType,
+        CancellationToken ct = default
+    )
     {
         try
         {
@@ -63,7 +71,11 @@ internal class ManagedWebSocket : ISendingReceivingWebSocket, ILogSubject
 
             if (_socket.State is not WebSocketState.Open)
             {
-                this.Trace("{messageType} ({dataLength}) - closed because socket is not open", messageType, data.Length);
+                this.Trace(
+                    "{messageType} ({dataLength}) - closed because socket is not open",
+                    messageType,
+                    data.Length
+                );
                 return WebSocketSendStatus.Closed;
             }
 
@@ -74,23 +86,40 @@ internal class ManagedWebSocket : ISendingReceivingWebSocket, ILogSubject
         }
         catch (OperationCanceledException)
         {
-            this.Trace("{messageType} ({dataLength}) - canceled with OperationCanceledException", messageType, data.Length);
+            this.Trace(
+                "{messageType} ({dataLength}) - canceled with OperationCanceledException",
+                messageType,
+                data.Length
+            );
             return WebSocketSendStatus.Canceled;
         }
         catch (InvalidOperationException e)
         {
-            this.Trace("{messageType} ({dataLength}) - closed with InvalidOperationException: {e}", messageType, data.Length, e);
+            this.Trace(
+                "{messageType} ({dataLength}) - closed with InvalidOperationException: {e}",
+                messageType,
+                data.Length,
+                e
+            );
             return WebSocketSendStatus.Closed;
         }
         catch (WebSocketException e)
         {
-            this.Trace("{messageType} ({dataLength}) - closed with WebSocketException: {e}", messageType, data.Length, e);
+            this.Trace(
+                "{messageType} ({dataLength}) - closed with WebSocketException: {e}",
+                messageType,
+                data.Length,
+                e
+            );
             return WebSocketSendStatus.Closed;
         }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private async ValueTask<(bool IsClosed, WebSocketCloseResult Result)> ReceiveAsync(ManagedBuffer buffer, CancellationToken ct)
+    private async ValueTask<(bool IsClosed, WebSocketCloseResult Result)> ReceiveAsync(
+        ManagedBuffer buffer,
+        CancellationToken ct
+    )
     {
         // reset buffer to start writing from start
         buffer.Reset();
@@ -145,9 +174,20 @@ internal class ManagedWebSocket : ISendingReceivingWebSocket, ILogSubject
             }
 
             var result = await _socket.ReceiveAsync(buffer.FreeSpace, ct).ConfigureAwait(false);
-            this.Trace("received {messageType} ({bytesCount} - {endOfMessage})", result.MessageType, result.Count, result.EndOfMessage);
+            this.Trace(
+                "received {messageType} ({bytesCount} - {endOfMessage})",
+                result.MessageType,
+                result.Count,
+                result.EndOfMessage
+            );
 
-            return new ReceiveResult(result.MessageType, result.Count, result.EndOfMessage, WebSocketCloseStatus.ClosedRemote, null);
+            return new ReceiveResult(
+                result.MessageType,
+                result.Count,
+                result.EndOfMessage,
+                WebSocketCloseStatus.ClosedRemote,
+                null
+            );
         }
         catch (OperationCanceledException)
         {

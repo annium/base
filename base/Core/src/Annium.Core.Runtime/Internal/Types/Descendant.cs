@@ -12,9 +12,7 @@ internal sealed class Descendant
     public object? Key { get; }
     public bool HasKey { get; }
 
-    public Descendant(
-        Type type
-    )
+    public Descendant(Type type)
     {
         Type = type;
         Signature = TypeSignature.Create(type);

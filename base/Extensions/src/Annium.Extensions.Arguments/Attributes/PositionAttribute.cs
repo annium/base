@@ -10,10 +10,7 @@ public class PositionAttribute : BaseAttribute
 
     public bool IsRequired { get; }
 
-    public PositionAttribute(
-        int position,
-        bool isRequired = true
-    )
+    public PositionAttribute(int position, bool isRequired = true)
     {
         Position = position;
         IsRequired = isRequired;

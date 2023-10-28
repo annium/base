@@ -10,12 +10,8 @@ namespace Annium.Net.Types.Tests.Lib.Mapper;
 
 public abstract class MapperInterfaceTestsBase : TestBase
 {
-    protected MapperInterfaceTestsBase(
-        ITestProvider testProvider,
-        ITestOutputHelper outputHelper
-    ) : base(testProvider, outputHelper)
-    {
-    }
+    protected MapperInterfaceTestsBase(ITestProvider testProvider, ITestOutputHelper outputHelper)
+        : base(testProvider, outputHelper) { }
 
     protected void Empty_Base(Type type)
     {

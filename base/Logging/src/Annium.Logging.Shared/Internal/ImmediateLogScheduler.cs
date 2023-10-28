@@ -8,10 +8,7 @@ internal class ImmediateLogScheduler<TContext> : ILogScheduler<TContext>
     public Func<LogMessage<TContext>, bool> Filter { get; }
     private readonly ILogHandler<TContext> _handler;
 
-    public ImmediateLogScheduler(
-        Func<LogMessage<TContext>, bool> filter,
-        ILogHandler<TContext> handler
-    )
+    public ImmediateLogScheduler(Func<LogMessage<TContext>, bool> filter, ILogHandler<TContext> handler)
     {
         Filter = filter;
         _handler = handler;

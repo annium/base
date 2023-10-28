@@ -9,7 +9,8 @@ namespace Annium.Data.Operations.Serialization.Json.Tests;
 
 public class StatusResultTest : StatusResultTestBase
 {
-    public StatusResultTest(ITestOutputHelper outputHelper) : base(outputHelper)
+    public StatusResultTest(ITestOutputHelper outputHelper)
+        : base(outputHelper)
     {
         Register(container => container.AddSerializers().WithJson(opts => opts.ConfigureForOperations(), true));
     }

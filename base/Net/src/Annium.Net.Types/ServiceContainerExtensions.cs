@@ -12,16 +12,19 @@ public static class ServiceContainerExtensions
     public static IServiceContainer AddModelMapper(this IServiceContainer container)
     {
         container.Add<MapperConfig>().AsSelf().Singleton();
-        container.Add<IMapperConfigInternal>(sp =>
-        {
-            var config = sp.Resolve<MapperConfig>();
-            config.SetBaseTypes();
-            config.Ignore();
-            config.RegisterArrays();
-            config.RegisterRecords();
+        container
+            .Add<IMapperConfigInternal>(sp =>
+            {
+                var config = sp.Resolve<MapperConfig>();
+                config.SetBaseTypes();
+                config.Ignore();
+                config.RegisterArrays();
+                config.RegisterRecords();
 
-            return config;
-        }).AsSelf().Singleton();
+                return config;
+            })
+            .AsSelf()
+            .Singleton();
         container.Add<IMapperConfig>(sp => sp.Resolve<IMapperConfigInternal>()).AsSelf().Singleton();
         container.Add<IModelMapper, ModelMapper>().Transient();
         container.Add<IMapperProcessingContext, ProcessingContext>().Transient();

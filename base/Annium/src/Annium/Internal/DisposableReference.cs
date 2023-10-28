@@ -9,10 +9,7 @@ internal class DisposableReference<TValue> : IDisposableReference<TValue>
     public TValue Value { get; private set; }
     private readonly Func<Task> _dispose;
 
-    public DisposableReference(
-        TValue value,
-        Func<Task> dispose
-    )
+    public DisposableReference(TValue value, Func<Task> dispose)
     {
         Value = value;
         _dispose = dispose;

@@ -48,18 +48,8 @@ public class ServerWebSocket : IServerWebSocket
         _connectionMonitor.OnConnectionLost += Disconnect;
     }
 
-    public ServerWebSocket(
-        NativeWebSocket nativeSocket,
-        ILogger logger,
-        CancellationToken ct = default
-    ) : this(
-        nativeSocket,
-        ServerWebSocketOptions.Default,
-        logger,
-        ct
-    )
-    {
-    }
+    public ServerWebSocket(NativeWebSocket nativeSocket, ILogger logger, CancellationToken ct = default)
+        : this(nativeSocket, ServerWebSocketOptions.Default, logger, ct) { }
 
     public void Disconnect()
     {

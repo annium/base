@@ -17,19 +17,49 @@ public class IsShallowEqualExtensionTest
         {
             Nullable = true,
             Uris = new[] { new Uri("http://localhost") },
-            Samples = new List<Sample> { new() { Date = now, Point = new Point(1, 2) } },
+            Samples = new List<Sample>
+            {
+                new() { Date = now, Point = new Point(1, 2) }
+            },
             Points = new HashSet<Point>(new[] { new Point(1, 2) }),
-            Dictionary = new Dictionary<Point, Sample> { { new Point(1, 2), new Sample { Date = now, Point = new Point(2, 1) } } },
-            ReadOnlyDictionary = new Dictionary<Point, Sample> { { new Point(1, 2), new Sample { Date = now, Point = new Point(2, 1) } } },
+            Dictionary = new Dictionary<Point, Sample>
+            {
+                {
+                    new Point(1, 2),
+                    new Sample { Date = now, Point = new Point(2, 1) }
+                }
+            },
+            ReadOnlyDictionary = new Dictionary<Point, Sample>
+            {
+                {
+                    new Point(1, 2),
+                    new Sample { Date = now, Point = new Point(2, 1) }
+                }
+            },
         };
         var demo2 = new Demo
         {
             Nullable = true,
             Uris = new[] { new Uri("http://localhost") },
-            Samples = new List<Sample> { new() { Date = now, Point = new Point(1, 2) } },
+            Samples = new List<Sample>
+            {
+                new() { Date = now, Point = new Point(1, 2) }
+            },
             Points = new HashSet<Point>(new[] { new Point(1, 2) }),
-            Dictionary = new Dictionary<Point, Sample> { { new Point(1, 2), new Sample { Date = now, Point = new Point(2, 1) } } },
-            ReadOnlyDictionary = new Dictionary<Point, Sample> { { new Point(1, 2), new Sample { Date = now, Point = new Point(2, 1) } } },
+            Dictionary = new Dictionary<Point, Sample>
+            {
+                {
+                    new Point(1, 2),
+                    new Sample { Date = now, Point = new Point(2, 1) }
+                }
+            },
+            ReadOnlyDictionary = new Dictionary<Point, Sample>
+            {
+                {
+                    new Point(1, 2),
+                    new Sample { Date = now, Point = new Point(2, 1) }
+                }
+            },
         };
 
         // assert
@@ -59,9 +89,18 @@ public class IsShallowEqualExtensionTest
     {
         // arrange
         var now = DateTimeOffset.Now;
-        Sample[] a = { new() { Date = now, Point = new Point(2, 1) } };
-        Sample[] b = { new() { Date = now, Point = new Point(2, 1) } };
-        Sample[] c = { new() { Date = now + TimeSpan.FromSeconds(1), Point = new Point(2, 1) } };
+        Sample[] a =
+        {
+            new() { Date = now, Point = new Point(2, 1) }
+        };
+        Sample[] b =
+        {
+            new() { Date = now, Point = new Point(2, 1) }
+        };
+        Sample[] c =
+        {
+            new() { Date = now + TimeSpan.FromSeconds(1), Point = new Point(2, 1) }
+        };
         Sample[] d = { default };
         Sample[] e = a;
 
@@ -77,9 +116,18 @@ public class IsShallowEqualExtensionTest
     {
         // arrange
         var now = DateTimeOffset.Now;
-        IList<Sample> a = new List<Sample> { new() { Date = now, Point = new Point(2, 1) } };
-        IList<Sample> b = new List<Sample> { new() { Date = now, Point = new Point(2, 1) } };
-        IList<Sample> c = new List<Sample> { new() { Date = now + TimeSpan.FromSeconds(1), Point = new Point(2, 1) } };
+        IList<Sample> a = new List<Sample>
+        {
+            new() { Date = now, Point = new Point(2, 1) }
+        };
+        IList<Sample> b = new List<Sample>
+        {
+            new() { Date = now, Point = new Point(2, 1) }
+        };
+        IList<Sample> c = new List<Sample>
+        {
+            new() { Date = now + TimeSpan.FromSeconds(1), Point = new Point(2, 1) }
+        };
         IList<Sample> d = new List<Sample> { default };
         IList<Sample> e = a;
 
@@ -95,9 +143,27 @@ public class IsShallowEqualExtensionTest
     {
         // arrange
         var now = DateTimeOffset.Now;
-        IDictionary<Key, Sample> a = new Dictionary<Key, Sample> { { new Key(1, 1), new Sample { Date = now, Point = new Point(2, 1) } } };
-        IDictionary<Key, Sample> b = new Dictionary<Key, Sample> { { new Key(1, 1), new Sample { Date = now, Point = new Point(2, 1) } } };
-        IDictionary<Key, Sample> c = new Dictionary<Key, Sample> { { new Key(1, 2), new Sample { Date = now, Point = new Point(2, 1) } } };
+        IDictionary<Key, Sample> a = new Dictionary<Key, Sample>
+        {
+            {
+                new Key(1, 1),
+                new Sample { Date = now, Point = new Point(2, 1) }
+            }
+        };
+        IDictionary<Key, Sample> b = new Dictionary<Key, Sample>
+        {
+            {
+                new Key(1, 1),
+                new Sample { Date = now, Point = new Point(2, 1) }
+            }
+        };
+        IDictionary<Key, Sample> c = new Dictionary<Key, Sample>
+        {
+            {
+                new Key(1, 2),
+                new Sample { Date = now, Point = new Point(2, 1) }
+            }
+        };
         IDictionary<Key, Sample> d = new Dictionary<Key, Sample> { { new Key(0, 0), default } };
         IDictionary<Key, Sample> e = a;
 
@@ -113,9 +179,27 @@ public class IsShallowEqualExtensionTest
     {
         // arrange
         var now = DateTimeOffset.Now;
-        IReadOnlyDictionary<Key, Sample> a = new Dictionary<Key, Sample> { { new Key(1, 1), new Sample { Date = now, Point = new Point(2, 1) } } };
-        IReadOnlyDictionary<Key, Sample> b = new Dictionary<Key, Sample> { { new Key(1, 1), new Sample { Date = now, Point = new Point(2, 1) } } };
-        IReadOnlyDictionary<Key, Sample> c = new Dictionary<Key, Sample> { { new Key(1, 2), new Sample { Date = now, Point = new Point(2, 1) } } };
+        IReadOnlyDictionary<Key, Sample> a = new Dictionary<Key, Sample>
+        {
+            {
+                new Key(1, 1),
+                new Sample { Date = now, Point = new Point(2, 1) }
+            }
+        };
+        IReadOnlyDictionary<Key, Sample> b = new Dictionary<Key, Sample>
+        {
+            {
+                new Key(1, 1),
+                new Sample { Date = now, Point = new Point(2, 1) }
+            }
+        };
+        IReadOnlyDictionary<Key, Sample> c = new Dictionary<Key, Sample>
+        {
+            {
+                new Key(1, 2),
+                new Sample { Date = now, Point = new Point(2, 1) }
+            }
+        };
         IReadOnlyDictionary<Key, Sample> d = new Dictionary<Key, Sample> { { new Key(0, 0), default } };
         IReadOnlyDictionary<Key, Sample> e = a;
 
@@ -159,43 +243,19 @@ public class IsShallowEqualExtensionTest
         {
             Samples = new[]
             {
-                new Sample
-                {
-                    Date = now + TimeSpan.FromDays(1),
-                    Point = new Point(1, 2)
-                },
-                new Sample
-                {
-                    Date = now + TimeSpan.FromHours(1),
-                    Point = new Point(4, 3)
-                }
+                new Sample { Date = now + TimeSpan.FromDays(1), Point = new Point(1, 2) },
+                new Sample { Date = now + TimeSpan.FromHours(1), Point = new Point(4, 3) }
             },
-            Keys = new Dictionary<string, Key>
-            {
-                { "a", new Key(5, 3) },
-                { "c", new Key(2, 4) },
-            }
+            Keys = new Dictionary<string, Key> { { "a", new Key(5, 3) }, { "c", new Key(2, 4) }, }
         };
         var tgt = new
         {
             Samples = new[]
             {
-                new
-                {
-                    Date = now + TimeSpan.FromDays(1),
-                    Point = new Point(1, 2)
-                },
-                new
-                {
-                    Date = now + TimeSpan.FromHours(1),
-                    Point = new Point(4, 3)
-                }
+                new { Date = now + TimeSpan.FromDays(1), Point = new Point(1, 2) },
+                new { Date = now + TimeSpan.FromHours(1), Point = new Point(4, 3) }
             },
-            Keys = new Dictionary<string, Key>
-            {
-                { "a", new Key(5, 3) },
-                { "c", new Key(2, 4) },
-            }
+            Keys = new Dictionary<string, Key> { { "a", new Key(5, 3) }, { "c", new Key(2, 4) }, }
         };
 
         // assert

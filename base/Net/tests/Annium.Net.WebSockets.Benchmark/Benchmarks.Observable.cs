@@ -27,14 +27,21 @@ public partial class Benchmarks
         _observableSocket = new NativeClientWebSocket();
         var client = new ManagedWebSocket(_observableSocket, VoidLogger.Instance);
         client.ObserveText().Subscribe(HandleMessage_Observable);
-        _observableSocket.ConnectAsync(new Uri($"ws://127.0.0.1:{Constants.Port}/"), CancellationToken.None).GetAwaiter().GetResult();
+        _observableSocket
+            .ConnectAsync(new Uri($"ws://127.0.0.1:{Constants.Port}/"), CancellationToken.None)
+            .GetAwaiter()
+            .GetResult();
         _observableListenTask = client.ListenAsync(_observableCts.Token);
     }
 
     [IterationCleanup(Target = nameof(Observable))]
     public void IterationCleanup_Observable()
     {
-        _observableSocket.CloseOutputAsync(System.Net.WebSockets.WebSocketCloseStatus.NormalClosure, string.Empty, CancellationToken.None);
+        _observableSocket.CloseOutputAsync(
+            System.Net.WebSockets.WebSocketCloseStatus.NormalClosure,
+            string.Empty,
+            CancellationToken.None
+        );
         _observableCts.Cancel();
         _observableListenTask.Wait();
     }

@@ -6,14 +6,8 @@ namespace Annium.Net.Types.Tests.Mapper;
 
 public class MapperNullableTests : MapperNullableTestsBase
 {
-    public MapperNullableTests(
-        ITestOutputHelper outputHelper
-    ) : base(
-        new TestProvider(),
-        outputHelper
-    )
-    {
-    }
+    public MapperNullableTests(ITestOutputHelper outputHelper)
+        : base(new TestProvider(), outputHelper) { }
 
     [Fact]
     public void Nullable_BaseType_Struct()

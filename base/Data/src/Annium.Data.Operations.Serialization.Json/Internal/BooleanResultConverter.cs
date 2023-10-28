@@ -7,20 +7,20 @@ namespace Annium.Data.Operations.Serialization.Json.Internal;
 
 internal class BooleanResultConverter : ResultConverterBase<X>
 {
-    public override X Read(
-        ref Utf8JsonReader reader,
-        Type typeToConvert,
-        JsonSerializerOptions options
-    )
+    public override X Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         var isSuccess = false;
-        var (plainErrors, labeledErrors) = ReadErrors(ref reader, options, (ref Utf8JsonReader r) =>
-        {
-            if (r.HasProperty(nameof(X.IsSuccess)))
-                isSuccess = JsonSerializer.Deserialize<bool>(ref r, options);
-            else if (r.HasProperty(nameof(X.IsFailure)))
-                isSuccess = !JsonSerializer.Deserialize<bool>(ref r, options);
-        });
+        var (plainErrors, labeledErrors) = ReadErrors(
+            ref reader,
+            options,
+            (ref Utf8JsonReader r) =>
+            {
+                if (r.HasProperty(nameof(X.IsSuccess)))
+                    isSuccess = JsonSerializer.Deserialize<bool>(ref r, options);
+                else if (r.HasProperty(nameof(X.IsFailure)))
+                    isSuccess = !JsonSerializer.Deserialize<bool>(ref r, options);
+            }
+        );
 
         var value = isSuccess ? Result.Success() : Result.Failure();
         value.Errors(plainErrors);
@@ -29,11 +29,7 @@ internal class BooleanResultConverter : ResultConverterBase<X>
         return value;
     }
 
-    public override void Write(
-        Utf8JsonWriter writer,
-        X value,
-        JsonSerializerOptions options
-    )
+    public override void Write(Utf8JsonWriter writer, X value, JsonSerializerOptions options)
     {
         writer.WriteStartObject();
 

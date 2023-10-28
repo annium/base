@@ -14,15 +14,14 @@ public abstract class TestBase : Testing.TestBase
     protected readonly Uri ServerUri;
     private readonly int _port;
 
-    protected TestBase(ITestOutputHelper outputHelper) : base(outputHelper)
+    protected TestBase(ITestOutputHelper outputHelper)
+        : base(outputHelper)
     {
         _port = Interlocked.Increment(ref _basePort);
         ServerUri = new Uri($"http://127.0.0.1:{_port}");
     }
 
-    protected IAsyncDisposable RunServer(
-        Func<HttpListenerRequest, HttpListenerResponse, Task> handle
-    )
+    protected IAsyncDisposable RunServer(Func<HttpListenerRequest, HttpListenerResponse, Task> handle)
     {
         var handler = new HttpHandler(async ctx =>
         {
@@ -45,9 +44,7 @@ public abstract class TestBase : Testing.TestBase
             this.Trace("done");
         });
 
-        var server = ServerBuilder.New(Get<IServiceProvider>(), _port)
-            .WithHttpHandler(handler)
-            .Build();
+        var server = ServerBuilder.New(Get<IServiceProvider>(), _port).WithHttpHandler(handler).Build();
         var cts = new CancellationTokenSource();
         var serverTask = server.RunAsync(cts.Token);
 
@@ -65,9 +62,7 @@ file class HttpHandler : IHttpHandler
 {
     private readonly Func<HttpListenerContext, Task> _handle;
 
-    public HttpHandler(
-        Func<HttpListenerContext, Task> handle
-    )
+    public HttpHandler(Func<HttpListenerContext, Task> handle)
     {
         _handle = handle;
     }

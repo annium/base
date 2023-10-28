@@ -23,9 +23,11 @@ public static class Expect
                 }
             },
             ct,
-            pollDelay);
+            pollDelay
+        );
         validate();
     }
 
-    public static Task To(Action validate, int ms = 10_000, int pollDelay = 25) => To(validate, new CancellationTokenSource(ms).Token, pollDelay);
+    public static Task To(Action validate, int ms = 10_000, int pollDelay = 25) =>
+        To(validate, new CancellationTokenSource(ms).Token, pollDelay);
 }

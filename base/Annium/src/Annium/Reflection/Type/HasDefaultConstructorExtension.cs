@@ -18,7 +18,8 @@ public static class HasDefaultConstructorExtension
             return type.GetConstructor(bindingFlags, Type.EmptyTypes) != null;
 
         if (type.IsValueType)
-            return type.GetConstructors(bindingFlags).Length == 0 || type.GetConstructor(bindingFlags, Type.EmptyTypes) != null;
+            return type.GetConstructors(bindingFlags).Length == 0
+                || type.GetConstructor(bindingFlags, Type.EmptyTypes) != null;
 
         throw new ArgumentException($"{type} is not constructable");
     }

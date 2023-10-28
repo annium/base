@@ -13,16 +13,20 @@ internal class StatusDataResultConverter<TS, TD> : ResultConverterBase<IStatusRe
         JsonSerializerOptions options
     )
     {
-        TS status = default !;
-        TD data = default !;
+        TS status = default!;
+        TD data = default!;
 
-        var (plainErrors, labeledErrors) = ReadErrors(ref reader, options, (ref Utf8JsonReader r) =>
-        {
-            if (r.HasProperty(nameof(X.Status)))
-                status = JsonSerializer.Deserialize<TS>(ref r, options)!;
-            else if (r.HasProperty(nameof(X.Data)))
-                data = JsonSerializer.Deserialize<TD>(ref r, options)!;
-        });
+        var (plainErrors, labeledErrors) = ReadErrors(
+            ref reader,
+            options,
+            (ref Utf8JsonReader r) =>
+            {
+                if (r.HasProperty(nameof(X.Status)))
+                    status = JsonSerializer.Deserialize<TS>(ref r, options)!;
+                else if (r.HasProperty(nameof(X.Data)))
+                    data = JsonSerializer.Deserialize<TD>(ref r, options)!;
+            }
+        );
 
         var value = Result.Status(status, data);
 
@@ -32,11 +36,7 @@ internal class StatusDataResultConverter<TS, TD> : ResultConverterBase<IStatusRe
         return value;
     }
 
-    public override void Write(
-        Utf8JsonWriter writer,
-        IStatusResult<TS, TD> value,
-        JsonSerializerOptions options
-    )
+    public override void Write(Utf8JsonWriter writer, IStatusResult<TS, TD> value, JsonSerializerOptions options)
     {
         writer.WriteStartObject();
 
@@ -58,7 +58,8 @@ internal class StatusDataResultConverterFactory : ResultConverterBaseFactory
     {
         var typeArgs = GetImplementation(typeToConvert).GetGenericArguments();
 
-        return (JsonConverter)Activator.CreateInstance(typeof(StatusDataResultConverter<,>).MakeGenericType(typeArgs[0], typeArgs[1]))!;
+        return (JsonConverter)
+            Activator.CreateInstance(typeof(StatusDataResultConverter<,>).MakeGenericType(typeArgs[0], typeArgs[1]))!;
     }
 
     protected override bool IsConvertibleInterface(Type type) =>

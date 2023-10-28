@@ -2,10 +2,7 @@ using System;
 
 namespace Annium.Data.Models;
 
-public sealed record ComputedValueRange<T>(
-    Func<T> _getStart,
-    Func<T> _getEnd
-) : ValueRange<T>
+public sealed record ComputedValueRange<T>(Func<T> _getStart, Func<T> _getEnd) : ValueRange<T>
     where T : IComparable<T>
 {
     public override T Start => _getStart();

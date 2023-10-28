@@ -12,11 +12,7 @@ internal class ChainBuilder : ILogSubject
     private readonly MediatorConfiguration _configuration;
     private readonly NextBuilder _nextBuilder;
 
-    public ChainBuilder(
-        IEnumerable<MediatorConfiguration> configurations,
-        NextBuilder nextBuilder,
-        ILogger logger
-    )
+    public ChainBuilder(IEnumerable<MediatorConfiguration> configurations, NextBuilder nextBuilder, ILogger logger)
     {
         _configuration = MediatorConfiguration.Merge(configurations.ToArray());
         _nextBuilder = nextBuilder;
@@ -29,14 +25,23 @@ internal class ChainBuilder : ILogSubject
 
         output = ResolveOutput(input, output);
 
-        this.Trace<string, string, int>("Build execution chain for {input} -> {output} from {handlersCount} handler(s) available", input.FriendlyName(), output.FriendlyName(), handlers.Count);
+        this.Trace<string, string, int>(
+            "Build execution chain for {input} -> {output} from {handlersCount} handler(s) available",
+            input.FriendlyName(),
+            output.FriendlyName(),
+            handlers.Count
+        );
 
         var chain = new List<ChainElement>();
         var isFinalized = false;
 
         while (true)
         {
-            this.Trace<string, string>("Find chain element for {input} -> {output}", input.FriendlyName(), output.FriendlyName());
+            this.Trace<string, string>(
+                "Find chain element for {input} -> {output}",
+                input.FriendlyName(),
+                output.FriendlyName()
+            );
 
             Type? service = null;
 
@@ -46,11 +51,20 @@ internal class ChainBuilder : ILogSubject
 
                 if (service is null)
                 {
-                    this.Trace<string, string>("Handler {requestIn} -> {responseOut} didn't match", handler.RequestIn.FriendlyName(), handler.ResponseOut.FriendlyName());
+                    this.Trace<string, string>(
+                        "Handler {requestIn} -> {responseOut} didn't match",
+                        handler.RequestIn.FriendlyName(),
+                        handler.ResponseOut.FriendlyName()
+                    );
                     continue;
                 }
 
-                this.Trace<string, string, string>("Handler {requestIn} -> {responseOut} resolved into {service}", handler.RequestIn.FriendlyName(), handler.ResponseOut.FriendlyName(), service.FriendlyName());
+                this.Trace<string, string, string>(
+                    "Handler {requestIn} -> {responseOut} resolved into {service}",
+                    handler.RequestIn.FriendlyName(),
+                    handler.ResponseOut.FriendlyName(),
+                    service.FriendlyName()
+                );
 
                 handlers.Remove(handler);
                 break;
@@ -58,7 +72,11 @@ internal class ChainBuilder : ILogSubject
 
             if (service is null)
             {
-                this.Trace<string, string>("No handler resolved for {input} -> {output}", input.FriendlyName(), output.FriendlyName());
+                this.Trace<string, string>(
+                    "No handler resolved for {input} -> {output}",
+                    input.FriendlyName(),
+                    output.FriendlyName()
+                );
                 break;
             }
 
@@ -83,15 +101,16 @@ internal class ChainBuilder : ILogSubject
         TraceChain(chain);
 
         if (!isFinalized)
-            throw new InvalidOperationException($"Can't resolve request handler by input {input.FriendlyName()} and output {output.FriendlyName()}");
+            throw new InvalidOperationException(
+                $"Can't resolve request handler by input {input.FriendlyName()} and output {output.FriendlyName()}"
+            );
 
         return chain;
     }
 
     private Type ResolveOutput(Type input, Type output)
     {
-        var match = _configuration.Matches
-            .SingleOrDefault(x => x.RequestedType == input && x.ExpectedType == output);
+        var match = _configuration.Matches.SingleOrDefault(x => x.RequestedType == input && x.ExpectedType == output);
 
         return match?.ResolvedType ?? output;
     }
@@ -108,7 +127,12 @@ internal class ChainBuilder : ILogSubject
         var service = handler.Implementation.ResolveByImplementation(handlerInput);
         if (service is null)
         {
-            this.Trace<string, string, string>("Can't resolve {handler} by input {requestIn} and output {responseOut}", handler.Implementation.FriendlyName(), requestIn.FriendlyName(), responseOut.FriendlyName());
+            this.Trace<string, string, string>(
+                "Can't resolve {handler} by input {requestIn} and output {responseOut}",
+                handler.Implementation.FriendlyName(),
+                requestIn.FriendlyName(),
+                responseOut.FriendlyName()
+            );
             return null;
         }
 

@@ -14,9 +14,7 @@ internal class TableBuilder<T> : ITableBuilder<T>
     private Func<T, bool>? _isActive;
     private readonly ILogger _logger;
 
-    public TableBuilder(
-        ILogger logger
-    )
+    public TableBuilder(ILogger logger)
     {
         _logger = logger;
     }
@@ -50,8 +48,7 @@ internal class TableBuilder<T> : ITableBuilder<T>
         return this;
     }
 
-    public ITable<T> Build(
-    )
+    public ITable<T> Build()
     {
         if (_getKey is null)
             throw new InvalidOperationException($"Table<{typeof(T).Name},{typeof(T).Name}> must have key");

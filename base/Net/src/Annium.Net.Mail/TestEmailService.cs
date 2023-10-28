@@ -24,11 +24,7 @@ public class TestEmailService : IEmailService
         public string Template { get; }
         public object Data { get; }
 
-        public TestEmail(
-            MailMessage message,
-            string template,
-            object data
-        )
+        public TestEmail(MailMessage message, string template, object data)
         {
             Message = message;
             Template = template;

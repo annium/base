@@ -11,9 +11,8 @@ namespace Annium.Architecture.Mediator.Tests;
 
 public class ValidationPipeHandlerTest : TestBase
 {
-    public ValidationPipeHandlerTest(ITestOutputHelper outputHelper) : base(outputHelper)
-    {
-    }
+    public ValidationPipeHandlerTest(ITestOutputHelper outputHelper)
+        : base(outputHelper) { }
 
     [Fact]
     public async Task ValidationFailure_ReturnsBadRequest()

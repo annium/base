@@ -6,7 +6,10 @@ namespace Annium.Net.WebSockets;
 
 public static class ServerWebSocketExtensions
 {
-    public static Task<WebSocketCloseStatus> WhenDisconnected(this IServerWebSocket socket, CancellationToken ct = default)
+    public static Task<WebSocketCloseStatus> WhenDisconnected(
+        this IServerWebSocket socket,
+        CancellationToken ct = default
+    )
     {
         var tcs = new TaskCompletionSource<WebSocketCloseStatus>();
 

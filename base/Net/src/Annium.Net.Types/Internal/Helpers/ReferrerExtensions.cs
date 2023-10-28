@@ -10,7 +10,12 @@ namespace Annium.Net.Types.Internal.Helpers;
 
 internal static class ReferrerExtensions
 {
-    public static TRef BuildRef<TRef>(this IReferrer referrer, ContextualType type, IProcessingContext ctx, Func<string, string, IRef[], TRef> factory)
+    public static TRef BuildRef<TRef>(
+        this IReferrer referrer,
+        ContextualType type,
+        IProcessingContext ctx,
+        Func<string, string, IRef[], TRef> factory
+    )
         where TRef : IModelRef
     {
         var name = type.PureName();

@@ -4,9 +4,9 @@ using Annium.Data.Operations;
 
 namespace Annium.Architecture.Http.Internal.PipeHandlers.RequestResponse;
 
-internal class HttpStatusPipeHandler<TRequest, TResponse> :
-    HttpStatusPipeHandlerBase<TRequest, IStatusResult<OperationStatus, TResponse>, IResult<TResponse>>,
-    IPipeRequestHandler<TRequest, TRequest, IStatusResult<OperationStatus, TResponse>, IResult<TResponse>>
+internal class HttpStatusPipeHandler<TRequest, TResponse>
+    : HttpStatusPipeHandlerBase<TRequest, IStatusResult<OperationStatus, TResponse>, IResult<TResponse>>,
+        IPipeRequestHandler<TRequest, TRequest, IStatusResult<OperationStatus, TResponse>, IResult<TResponse>>
 {
     protected override IResult<TResponse> GetResponse(IStatusResult<OperationStatus, TResponse> response)
     {

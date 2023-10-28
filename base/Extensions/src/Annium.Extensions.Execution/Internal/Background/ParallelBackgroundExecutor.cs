@@ -7,11 +7,8 @@ namespace Annium.Extensions.Execution.Internal.Background;
 // ReSharper disable once UnusedTypeParameter
 internal class ParallelBackgroundExecutor<TSource> : BackgroundExecutorBase
 {
-    public ParallelBackgroundExecutor(
-        ILogger logger
-    ) : base(logger)
-    {
-    }
+    public ParallelBackgroundExecutor(ILogger logger)
+        : base(logger) { }
 
     protected override Task RunTask(Delegate task)
     {

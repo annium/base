@@ -15,9 +15,8 @@ public class ServiceContainer : IServiceContainer
     public IServiceCollection Collection { get; }
     public event Action<IServiceProvider> OnBuild = delegate { };
 
-    public ServiceContainer() : this(new ServiceCollection())
-    {
-    }
+    public ServiceContainer()
+        : this(new ServiceCollection()) { }
 
     public ServiceContainer(IServiceCollection collection)
     {
@@ -38,22 +37,19 @@ public class ServiceContainer : IServiceContainer
     public IFactoryRegistrationBuilderBase Add(Type type, Func<IServiceProvider, object> factory) =>
         new FactoryRegistrationBuilder(this, type, factory, new Registrar(Register));
 
-    public IInstanceRegistrationBuilderBase Add<T>(T instance) where T : class =>
-        new InstanceRegistrationBuilder(this, typeof(T), instance, new Registrar(Register));
+    public IInstanceRegistrationBuilderBase Add<T>(T instance)
+        where T : class => new InstanceRegistrationBuilder(this, typeof(T), instance, new Registrar(Register));
 
     public ISingleRegistrationBuilderBase Add(Type type) =>
         new SingleRegistrationBuilder(this, type, new Registrar(Register));
 
     public IFactoryRegistrationBuilderBase Add<T>(Func<IServiceProvider, T> factory)
-        where T : class
-        => Add(typeof(T), factory);
+        where T : class => Add(typeof(T), factory);
 
     public ISingleRegistrationBuilderBase Add<TService, TImplementation>()
-        where TImplementation : TService
-        => Add(typeof(TImplementation)).As<TService>();
+        where TImplementation : TService => Add(typeof(TImplementation)).As<TService>();
 
-    public ISingleRegistrationBuilderBase Add<TImplementationType>() =>
-        Add(typeof(TImplementationType));
+    public ISingleRegistrationBuilderBase Add<TImplementationType>() => Add(typeof(TImplementationType));
 
     public IServiceContainer Clone()
     {
@@ -71,24 +67,27 @@ public class ServiceContainer : IServiceContainer
 
         return descriptor switch
         {
-            ITypeServiceDescriptor d => Collection
-                .Any(x =>
-                    x.Lifetime == lifetime &&
-                    x.ServiceType == d.ServiceType &&
-                    x.ImplementationType == d.ImplementationType
+            ITypeServiceDescriptor d
+                => Collection.Any(
+                    x =>
+                        x.Lifetime == lifetime
+                        && x.ServiceType == d.ServiceType
+                        && x.ImplementationType == d.ImplementationType
                 ),
-            IFactoryServiceDescriptor d => Collection
-                .Any(x =>
-                    x.Lifetime == lifetime &&
-                    x.ServiceType == d.ServiceType &&
-                    x.ImplementationFactory?.Method == d.ImplementationFactory.Method &&
-                    x.ImplementationFactory?.Target == d.ImplementationFactory.Target
+            IFactoryServiceDescriptor d
+                => Collection.Any(
+                    x =>
+                        x.Lifetime == lifetime
+                        && x.ServiceType == d.ServiceType
+                        && x.ImplementationFactory?.Method == d.ImplementationFactory.Method
+                        && x.ImplementationFactory?.Target == d.ImplementationFactory.Target
                 ),
-            IInstanceServiceDescriptor d => Collection
-                .Any(x =>
-                    x.Lifetime == lifetime &&
-                    x.ServiceType == d.ServiceType &&
-                    x.ImplementationInstance == d.ImplementationInstance
+            IInstanceServiceDescriptor d
+                => Collection.Any(
+                    x =>
+                        x.Lifetime == lifetime
+                        && x.ServiceType == d.ServiceType
+                        && x.ImplementationInstance == d.ImplementationInstance
                 ),
             _ => throw new NotSupportedException($"{descriptor.GetType().FriendlyName()} is not supported")
         };

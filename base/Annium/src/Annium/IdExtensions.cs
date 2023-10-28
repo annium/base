@@ -11,7 +11,9 @@ public static class IdExtensions
 
     public static string GetFullId<T>(this T obj) =>
         // ReSharper disable once ConditionIsAlwaysTrueOrFalse
-        obj is null ? "null" : $"{obj.GetType().FriendlyName()}#{obj.GetId()}";
+        obj is null
+            ? "null"
+            : $"{obj.GetType().FriendlyName()}#{obj.GetId()}";
 
     public static string GetId<T>(this T obj) =>
         obj is null ? "null" : IdTables.GetOrAdd(obj.GetType(), _ => new IdTable()).GetId(obj);
@@ -21,7 +23,6 @@ public static class IdExtensions
         private long _id;
         private readonly ConditionalWeakTable<object, string> _ids = new();
 
-        public string GetId(object obj) =>
-            _ids.GetValue(obj, _ => Interlocked.Increment(ref _id).ToString());
+        public string GetId(object obj) => _ids.GetValue(obj, _ => Interlocked.Increment(ref _id).ToString());
     }
 }

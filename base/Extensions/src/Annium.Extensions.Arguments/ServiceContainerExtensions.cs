@@ -15,9 +15,6 @@ public static class ServiceContainerExtensions
         container.Add<Root>().AsSelf().Singleton();
 
         // groups and commands
-        container.AddAll()
-            .AssignableTo<CommandBase>()
-            .AsSelf()
-            .Singleton();
+        container.AddAll().AssignableTo<CommandBase>().AsSelf().Singleton();
     }
 }

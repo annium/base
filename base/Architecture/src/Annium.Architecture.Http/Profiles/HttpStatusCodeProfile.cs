@@ -11,13 +11,14 @@ public class HttpStatusCodeProfile : Profile
         Map<HttpStatusCode, OperationStatus>(x => Map(x));
     }
 
-    private OperationStatus Map(HttpStatusCode x) => x switch
-    {
-        HttpStatusCode.BadRequest => OperationStatus.BadRequest,
-        HttpStatusCode.Conflict   => OperationStatus.Conflict,
-        HttpStatusCode.Forbidden  => OperationStatus.Forbidden,
-        HttpStatusCode.NotFound   => OperationStatus.NotFound,
-        HttpStatusCode.OK         => OperationStatus.Ok,
-        _                         => OperationStatus.UncaughtError,
-    };
+    private OperationStatus Map(HttpStatusCode x) =>
+        x switch
+        {
+            HttpStatusCode.BadRequest => OperationStatus.BadRequest,
+            HttpStatusCode.Conflict => OperationStatus.Conflict,
+            HttpStatusCode.Forbidden => OperationStatus.Forbidden,
+            HttpStatusCode.NotFound => OperationStatus.NotFound,
+            HttpStatusCode.OK => OperationStatus.Ok,
+            _ => OperationStatus.UncaughtError,
+        };
 }

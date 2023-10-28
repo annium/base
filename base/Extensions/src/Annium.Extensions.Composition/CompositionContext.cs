@@ -11,13 +11,7 @@ public class CompositionContext<TValue>
     private readonly IResult _result;
     private readonly ILocalizer _localizer;
 
-    internal CompositionContext(
-        TValue root,
-        string label,
-        string field,
-        IResult result,
-        ILocalizer localizer
-    )
+    internal CompositionContext(TValue root, string label, string field, IResult result, ILocalizer localizer)
     {
         Root = root;
         Label = label;

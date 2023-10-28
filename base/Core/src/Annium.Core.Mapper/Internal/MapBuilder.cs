@@ -17,7 +17,8 @@ internal class MapBuilder : IMapBuilder, ILogSubject
     private readonly IEnumerable<IMapResolver> _mapResolvers;
     private readonly IRepacker _repacker;
     private readonly Lazy<IMapContext> _mapContext;
-    private readonly IDictionary<ValueTuple<Type, Type>, Entry> _entries = new Dictionary<ValueTuple<Type, Type>, Entry>();
+    private readonly IDictionary<ValueTuple<Type, Type>, Entry> _entries =
+        new Dictionary<ValueTuple<Type, Type>, Entry>();
     private readonly IMapResolverContext _context;
 
     public MapBuilder(
@@ -52,8 +53,7 @@ internal class MapBuilder : IMapBuilder, ILogSubject
     }
 
     public IMapBuilder AddProfile<T>()
-        where T : Profile
-        => AddProfileInternal(typeof(T));
+        where T : Profile => AddProfileInternal(typeof(T));
 
     public IMapBuilder AddProfile(Type profileType)
     {
@@ -81,7 +81,12 @@ internal class MapBuilder : IMapBuilder, ILogSubject
 
             var result = Expression.Lambda(mapping(param), param);
             var resultView = result.ToReadableString();
-            this.Trace<string, string, string>("Resolved map for {src} -> {tgt} to:\n{resultView}", src.FriendlyName(), tgt.FriendlyName(), resultView);
+            this.Trace<string, string, string>(
+                "Resolved map for {src} -> {tgt} to:\n{resultView}",
+                src.FriendlyName(),
+                tgt.FriendlyName(),
+                resultView
+            );
 
             entry.SetMap(result.Compile());
         }
@@ -96,11 +101,17 @@ internal class MapBuilder : IMapBuilder, ILogSubject
         {
             if (entry.HasMapping)
             {
-                this.Trace<string, string>("Use existing mapping for {src} -> {tgt}", src.FriendlyName(), tgt.FriendlyName());
+                this.Trace<string, string>(
+                    "Use existing mapping for {src} -> {tgt}",
+                    src.FriendlyName(),
+                    tgt.FriendlyName()
+                );
                 return entry.Mapping;
             }
 
-            entry.SetMapping(() => BuildMapping(src, tgt, entry.HasConfiguration ? entry.Configuration : MapConfiguration.Empty));
+            entry.SetMapping(
+                () => BuildMapping(src, tgt, entry.HasConfiguration ? entry.Configuration : MapConfiguration.Empty)
+            );
         }
 
         return entry.Mapping;
@@ -111,23 +122,26 @@ internal class MapBuilder : IMapBuilder, ILogSubject
         var mapResolver = _mapResolvers.FirstOrDefault(x => x.CanResolveMap(src, tgt));
         if (mapResolver is not null)
         {
-            this.Trace<string, string, string>("Build mapping for {src} -> {tgt} with {resolver}", src.FriendlyName(), tgt.FriendlyName(), mapResolver.GetType().FriendlyName());
+            this.Trace<string, string, string>(
+                "Build mapping for {src} -> {tgt} with {resolver}",
+                src.FriendlyName(),
+                tgt.FriendlyName(),
+                mapResolver.GetType().FriendlyName()
+            );
             return mapResolver.ResolveMap(src, tgt, cfg, _context);
         }
 
         throw new MappingException(src, tgt, "No map found.");
     }
 
-    private IMapBuilder AddProfileInternal(
-        Type profileType
-    )
+    private IMapBuilder AddProfileInternal(Type profileType)
     {
         var types = _typeResolver.ResolveType(profileType);
 
         foreach (var type in types)
         {
-            var profile = _knownProfiles.SingleOrDefault(x => x.GetType() == type)
-                ?? (Profile)Activator.CreateInstance(type)!;
+            var profile =
+                _knownProfiles.SingleOrDefault(x => x.GetType() == type) ?? (Profile)Activator.CreateInstance(type)!;
 
             AddEntriesFromProfile(profile);
         }
@@ -154,7 +168,11 @@ internal class MapBuilder : IMapBuilder, ILogSubject
             if (_entries.TryGetValue(key, out var entry))
                 return entry;
 
-            this.Trace<string, string>("Create entry for {src} -> {tgt}", key.Item1.FriendlyName(), key.Item2.FriendlyName());
+            this.Trace<string, string>(
+                "Create entry for {src} -> {tgt}",
+                key.Item1.FriendlyName(),
+                key.Item2.FriendlyName()
+            );
             return _entries[key] = Entry.Create();
         }
     }
@@ -164,7 +182,8 @@ internal class MapBuilder : IMapBuilder, ILogSubject
         public static Entry Create() => new();
 
         public bool HasConfiguration => _configuration is not null;
-        public IMapConfiguration Configuration => _configuration ?? throw new InvalidOperationException("Configuration is not set");
+        public IMapConfiguration Configuration =>
+            _configuration ?? throw new InvalidOperationException("Configuration is not set");
         public readonly object MappingLock = new();
         public bool HasMapping => _mapping is not null;
         public Mapping Mapping => _mapping?.Value ?? throw new InvalidOperationException("Mapping is not set");
@@ -175,9 +194,7 @@ internal class MapBuilder : IMapBuilder, ILogSubject
         private Lazy<Mapping>? _mapping;
         private Delegate? _map;
 
-        private Entry()
-        {
-        }
+        private Entry() { }
 
         public void SetConfiguration(IMapConfiguration configuration)
         {

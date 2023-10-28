@@ -119,7 +119,15 @@ public static class LogSubjectErrorExtensions
         [CallerLineNumber] int line = 0
     )
     {
-        subject.Logger.Log(subject, file, member, line, LogLevel.Error, message, new object?[] { x1, x2, x3, x4, x5, x6 });
+        subject.Logger.Log(
+            subject,
+            file,
+            member,
+            line,
+            LogLevel.Error,
+            message,
+            new object?[] { x1, x2, x3, x4, x5, x6 }
+        );
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -138,7 +146,15 @@ public static class LogSubjectErrorExtensions
         [CallerLineNumber] int line = 0
     )
     {
-        subject.Logger.Log(subject, file, member, line, LogLevel.Error, message, new object?[] { x1, x2, x3, x4, x5, x6, x7 });
+        subject.Logger.Log(
+            subject,
+            file,
+            member,
+            line,
+            LogLevel.Error,
+            message,
+            new object?[] { x1, x2, x3, x4, x5, x6, x7 }
+        );
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -158,6 +174,14 @@ public static class LogSubjectErrorExtensions
         [CallerLineNumber] int line = 0
     )
     {
-        subject.Logger.Log(subject, file, member, line, LogLevel.Error, message, new object?[] { x1, x2, x3, x4, x5, x6, x7, x8 });
+        subject.Logger.Log(
+            subject,
+            file,
+            member,
+            line,
+            LogLevel.Error,
+            message,
+            new object?[] { x1, x2, x3, x4, x5, x6, x7, x8 }
+        );
     }
 }

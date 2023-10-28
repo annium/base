@@ -16,31 +16,44 @@ public static class ServiceContainerExtensions
         return container.AddHttpRequestFactory(Constants.DefaultKey, isDefault);
     }
 
-    public static IServiceContainer AddHttpRequestFactory(this IServiceContainer container, string key, bool isDefault = false)
+    public static IServiceContainer AddHttpRequestFactory(
+        this IServiceContainer container,
+        string key,
+        bool isDefault = false
+    )
     {
-        container.Add<Serializer>(sp =>
-        {
-            var serializers = sp.Resolve<IIndex<SerializerKey, ISerializer<string>>>()
-                .Where(x => x.Key.Key == key)
-                .ToIndex(x => x.Key.MediaType, x => x.Value);
+        container
+            .Add<Serializer>(sp =>
+            {
+                var serializers = sp.Resolve<IIndex<SerializerKey, ISerializer<string>>>()
+                    .Where(x => x.Key.Key == key)
+                    .ToIndex(x => x.Key.MediaType, x => x.Value);
 
-            return new Serializer(serializers);
-        }).AsKeyed<Serializer, string>(key).Singleton();
+                return new Serializer(serializers);
+            })
+            .AsKeyed<Serializer, string>(key)
+            .Singleton();
 
-        container.Add<IHttpRequestFactory>(sp =>
-        {
-            var serializer = sp.Resolve<IIndex<string, Serializer>>()[key];
-            var logger = sp.Resolve<ILogger>();
+        container
+            .Add<IHttpRequestFactory>(sp =>
+            {
+                var serializer = sp.Resolve<IIndex<string, Serializer>>()[key];
+                var logger = sp.Resolve<ILogger>();
 
-            return new HttpRequestFactory(serializer, logger);
-        }).AsKeyed<IHttpRequestFactory, string>(key).Singleton();
+                return new HttpRequestFactory(serializer, logger);
+            })
+            .AsKeyed<IHttpRequestFactory, string>(key)
+            .Singleton();
 
         if (!isDefault)
             return container;
 
         // default serializer+factory
         container.Add(sp => sp.Resolve<IIndex<string, Serializer>>()[key]).As<Serializer>().Singleton();
-        container.Add(sp => sp.Resolve<IIndex<string, IHttpRequestFactory>>()[key]).As<IHttpRequestFactory>().Singleton();
+        container
+            .Add(sp => sp.Resolve<IIndex<string, IHttpRequestFactory>>()[key])
+            .As<IHttpRequestFactory>()
+            .Singleton();
 
         return container;
     }

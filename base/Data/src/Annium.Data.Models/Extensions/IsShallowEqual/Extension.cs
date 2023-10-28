@@ -11,14 +11,11 @@ public static partial class IsShallowEqualExtensions
 {
     private static readonly object Locker = new();
 
-    private static readonly HashSet<Type> ComparersInProgress =
-        new();
+    private static readonly HashSet<Type> ComparersInProgress = new();
 
-    private static readonly IDictionary<Type, Delegate> Comparers =
-        new Dictionary<Type, Delegate>();
+    private static readonly IDictionary<Type, Delegate> Comparers = new Dictionary<Type, Delegate>();
 
-    private static readonly IDictionary<Type, LambdaExpression> RawComparers =
-        new Dictionary<Type, LambdaExpression>();
+    private static readonly IDictionary<Type, LambdaExpression> RawComparers = new Dictionary<Type, LambdaExpression>();
 
     public static bool IsShallowEqual<T, TD>(this T value, TD data)
     {

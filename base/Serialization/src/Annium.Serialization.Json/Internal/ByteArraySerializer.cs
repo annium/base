@@ -9,9 +9,7 @@ internal class ByteArraySerializer : ISerializer<byte[]>
 {
     private readonly JsonSerializerOptions _options;
 
-    public ByteArraySerializer(
-        JsonSerializerOptions options
-    )
+    public ByteArraySerializer(JsonSerializerOptions options)
     {
         _options = options;
     }
@@ -24,11 +22,20 @@ internal class ByteArraySerializer : ISerializer<byte[]>
         }
         catch (JsonException e)
         {
-            throw new JsonException($"Failed to deserialize {Encoding.UTF8.GetString(value)} as {typeof(T).FriendlyName()}", e.Path, e.LineNumber, e.BytePositionInLine, e);
+            throw new JsonException(
+                $"Failed to deserialize {Encoding.UTF8.GetString(value)} as {typeof(T).FriendlyName()}",
+                e.Path,
+                e.LineNumber,
+                e.BytePositionInLine,
+                e
+            );
         }
         catch (Exception e)
         {
-            throw new JsonException($"Failed to deserialize {Encoding.UTF8.GetString(value)} as {typeof(T).FriendlyName()}", e);
+            throw new JsonException(
+                $"Failed to deserialize {Encoding.UTF8.GetString(value)} as {typeof(T).FriendlyName()}",
+                e
+            );
         }
     }
 
@@ -40,11 +47,20 @@ internal class ByteArraySerializer : ISerializer<byte[]>
         }
         catch (JsonException e)
         {
-            throw new JsonException($"Failed to deserialize {Encoding.UTF8.GetString(value)} as {type.FriendlyName()}", e.Path, e.LineNumber, e.BytePositionInLine, e);
+            throw new JsonException(
+                $"Failed to deserialize {Encoding.UTF8.GetString(value)} as {type.FriendlyName()}",
+                e.Path,
+                e.LineNumber,
+                e.BytePositionInLine,
+                e
+            );
         }
         catch (Exception e)
         {
-            throw new JsonException($"Failed to deserialize {Encoding.UTF8.GetString(value)} as {type.FriendlyName()}", e);
+            throw new JsonException(
+                $"Failed to deserialize {Encoding.UTF8.GetString(value)} as {type.FriendlyName()}",
+                e
+            );
         }
     }
 
@@ -56,7 +72,13 @@ internal class ByteArraySerializer : ISerializer<byte[]>
         }
         catch (JsonException e)
         {
-            throw new JsonException($"Failed to serialize {value} as {typeof(T).FriendlyName()}", e.Path, e.LineNumber, e.BytePositionInLine, e);
+            throw new JsonException(
+                $"Failed to serialize {value} as {typeof(T).FriendlyName()}",
+                e.Path,
+                e.LineNumber,
+                e.BytePositionInLine,
+                e
+            );
         }
         catch (Exception e)
         {
@@ -72,11 +94,20 @@ internal class ByteArraySerializer : ISerializer<byte[]>
         }
         catch (JsonException e)
         {
-            throw new JsonException($"Failed to serialize {value} as {value?.GetType().FriendlyName() ?? (object)"null"}", e.Path, e.LineNumber, e.BytePositionInLine, e);
+            throw new JsonException(
+                $"Failed to serialize {value} as {value?.GetType().FriendlyName() ?? (object)"null"}",
+                e.Path,
+                e.LineNumber,
+                e.BytePositionInLine,
+                e
+            );
         }
         catch (Exception e)
         {
-            throw new JsonException($"Failed to serialize {value} as {value?.GetType().FriendlyName() ?? (object)"null"}", e);
+            throw new JsonException(
+                $"Failed to serialize {value} as {value?.GetType().FriendlyName() ?? (object)"null"}",
+                e
+            );
         }
     }
 }

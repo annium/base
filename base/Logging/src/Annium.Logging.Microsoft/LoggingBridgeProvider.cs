@@ -8,9 +8,7 @@ internal class LoggingBridgeProvider : ILoggerProvider
 {
     private readonly ILogSentryBridge _sentryBridge;
 
-    public LoggingBridgeProvider(
-        ILogSentryBridge sentryBridge
-    )
+    public LoggingBridgeProvider(ILogSentryBridge sentryBridge)
     {
         _sentryBridge = sentryBridge;
     }
@@ -20,7 +18,5 @@ internal class LoggingBridgeProvider : ILoggerProvider
         return new LoggingBridge(_sentryBridge, categoryName);
     }
 
-    public void Dispose()
-    {
-    }
+    public void Dispose() { }
 }

@@ -9,12 +9,8 @@ namespace Annium.Net.Types.Tests.Lib.Mapper;
 
 public abstract class MapperEnumTestsBase : TestBase
 {
-    protected MapperEnumTestsBase(
-        ITestProvider testProvider,
-        ITestOutputHelper outputHelper
-    ) : base(testProvider, outputHelper)
-    {
-    }
+    protected MapperEnumTestsBase(ITestProvider testProvider, ITestOutputHelper outputHelper)
+        : base(testProvider, outputHelper) { }
 
     protected void Enum_Base()
     {

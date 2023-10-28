@@ -47,7 +47,11 @@ internal class MessagingManagedSocket : IManagedSocket, ILogSubject
 
             var messageSize = BitConverter.GetBytes(data.Length);
 
-            this.Trace("{dataLength} - send message size (total: {total})", data.Length, _sendCounter += messageSize.Length);
+            this.Trace(
+                "{dataLength} - send message size (total: {total})",
+                data.Length,
+                _sendCounter += messageSize.Length
+            );
             await _stream.WriteAsync(messageSize, ct).ConfigureAwait(false);
 
             this.Trace("{dataLength} - message itself (total: {total})", data.Length, _sendCounter += data.Length);
@@ -101,7 +105,11 @@ internal class MessagingManagedSocket : IManagedSocket, ILogSubject
             var (isClosed, result) = await ReceiveAsync(buffer, ct);
             if (isClosed)
             {
-                this.Trace(result.Exception is not null ? $"stop with {result.Status}: {result.Exception}" : $"stop with {result.Status}");
+                this.Trace(
+                    result.Exception is not null
+                        ? $"stop with {result.Status}: {result.Exception}"
+                        : $"stop with {result.Status}"
+                );
                 return result;
             }
         }
@@ -126,7 +134,10 @@ internal class MessagingManagedSocket : IManagedSocket, ILogSubject
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private async ValueTask<(bool IsClosed, SocketCloseResult Result)> ReceiveAsync(MessagingBuffer buffer, CancellationToken ct)
+    private async ValueTask<(bool IsClosed, SocketCloseResult Result)> ReceiveAsync(
+        MessagingBuffer buffer,
+        CancellationToken ct
+    )
     {
         this.Trace("start");
 
@@ -198,9 +209,10 @@ internal class MessagingManagedSocket : IManagedSocket, ILogSubject
         }
         catch (IOException e) when (e.InnerException is SocketException se)
         {
-            var status = se.SocketErrorCode is SocketError.OperationAborted
-                ? SocketCloseStatus.ClosedLocal
-                : SocketCloseStatus.ClosedRemote;
+            var status =
+                se.SocketErrorCode is SocketError.OperationAborted
+                    ? SocketCloseStatus.ClosedLocal
+                    : SocketCloseStatus.ClosedRemote;
             this.Trace("{status} with SocketException (code: {code}): {e}", status, se.SocketErrorCode, se);
             return new ReceiveResult(0, status, null);
         }

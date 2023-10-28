@@ -7,18 +7,13 @@ namespace Annium.Configuration.Abstractions;
 
 public static class ConfigurationContainerExtensions
 {
-    public static TContainer AddCommandLineArgs<TContainer>(
-        this TContainer container
-    )
+    public static TContainer AddCommandLineArgs<TContainer>(this TContainer container)
         where TContainer : IConfigurationContainer
     {
         return container.AddCommandLineArgs(Environment.GetCommandLineArgs().Skip(1).ToArray());
     }
 
-    public static TContainer AddCommandLineArgs<TContainer>(
-        this TContainer container,
-        string[] args
-    )
+    public static TContainer AddCommandLineArgs<TContainer>(this TContainer container, string[] args)
         where TContainer : IConfigurationContainer
     {
         var configuration = new CommandLineConfigurationProvider(args).Read();

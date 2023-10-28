@@ -2,10 +2,7 @@ using System;
 
 namespace Annium.Data.Models;
 
-public sealed record ManagedValueRange<T>(
-    T _start,
-    T _end
-) : ValueRange<T>
+public sealed record ManagedValueRange<T>(T _start, T _end) : ValueRange<T>
     where T : IComparable<T>
 {
     public override T Start => _start;
@@ -20,6 +17,7 @@ public sealed record ManagedValueRange<T>(
     }
 
     public void SetStart(T start) => _start = start;
+
     public void SetEnd(T end) => _end = end;
 
     public override string ToString() => base.ToString();

@@ -13,7 +13,10 @@ public class Resolver : IFormatterResolver
     public static IFormatterResolver Instance { get; } = new Resolver();
     private static readonly ConcurrentDictionary<Type, IMessagePackFormatter> Formatters = new();
 
-    private static readonly IReadOnlyDictionary<Type, IMessagePackFormatter> FormatterInstances = new Dictionary<Type, IMessagePackFormatter>()
+    private static readonly IReadOnlyDictionary<Type, IMessagePackFormatter> FormatterInstances = new Dictionary<
+        Type,
+        IMessagePackFormatter
+    >()
     {
         { typeof(IResult), ResultFormatter.Instance },
         { typeof(IBooleanResult), BooleanResultFormatter.Instance },
@@ -27,9 +30,7 @@ public class Resolver : IFormatterResolver
         { typeof(IStatusResult<,>), typeof(StatusDataResultFormatter<,>) },
     };
 
-    private Resolver()
-    {
-    }
+    private Resolver() { }
 
     public IMessagePackFormatter<T>? GetFormatter<T>()
     {
@@ -43,7 +44,10 @@ public class Resolver : IFormatterResolver
         if (FormatterInstances.TryGetValue(type, out var formatterInstance))
             return formatterInstance;
 
-        if (typeof(T).IsGenericType && FormatterInstanceTypes.TryGetValue(type.GetGenericTypeDefinition(), out var formatterBaseType))
+        if (
+            typeof(T).IsGenericType
+            && FormatterInstanceTypes.TryGetValue(type.GetGenericTypeDefinition(), out var formatterBaseType)
+        )
             return Formatters.GetOrAdd(type, ResolveInstance, formatterBaseType);
 
         return null;
@@ -58,7 +62,9 @@ public class Resolver : IFormatterResolver
         var formatterType = formatterBaseType.MakeGenericType(typeArgs);
 
         // resolve instance property
-        var instanceProperty = formatterType.GetProperty("Instance", BindingFlags.Public | BindingFlags.Static).NotNull();
+        var instanceProperty = formatterType
+            .GetProperty("Instance", BindingFlags.Public | BindingFlags.Static)
+            .NotNull();
 
         // and finally - instance itself
         var instance = instanceProperty.GetValue(null).NotNull();

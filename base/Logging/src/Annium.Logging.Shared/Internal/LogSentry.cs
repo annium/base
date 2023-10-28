@@ -10,8 +10,7 @@ internal class LogSentry<TContext> : ILogSentry<TContext>
     private Action<LogMessage<TContext>> _handler;
     private bool _isHandlerSet;
 
-    public LogSentry(
-    )
+    public LogSentry()
     {
         _handler = _messagesBuffer.Add;
     }

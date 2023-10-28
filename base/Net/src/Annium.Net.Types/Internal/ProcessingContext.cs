@@ -36,26 +36,29 @@ internal sealed record ProcessingContext : IMapperProcessingContext
         _processIncluded = new Lazy<None>(ProcessIncluded);
     }
 
-    public IReadOnlyCollection<ContextualType> GetImplementations(ContextualType type) => _typeManager
-        .GetImplementations(type.Type)
-        .Select(x => x.ToContextualType())
-        .ToArray();
+    public IReadOnlyCollection<ContextualType> GetImplementations(ContextualType type) =>
+        _typeManager.GetImplementations(type.Type).Select(x => x.ToContextualType()).ToArray();
 
     public void Process(ContextualType type) => _processor.Process(type, this);
+
     public void Process(ContextualType type, Nullability nullability) => _processor.Process(type, nullability, this);
+
     public IRef GetRef(ContextualType type) => _referrer.GetRef(type, this);
+
     public IRef GetRef(ContextualType type, Nullability nullability) => _referrer.GetRef(type, nullability, this);
 
     public IRef RequireRef(ContextualType type)
     {
-        var model = _models.GetValueOrDefault(type.Type) ?? throw new InvalidOperationException($"No model is registered for type {type.Type}");
+        var model =
+            _models.GetValueOrDefault(type.Type)
+            ?? throw new InvalidOperationException($"No model is registered for type {type.Type}");
 
         return model switch
         {
-            EnumModel x      => new EnumRef(x.Namespace.ToString(), x.Name),
+            EnumModel x => new EnumRef(x.Namespace.ToString(), x.Name),
             InterfaceModel x => new InterfaceRef(x.Namespace.ToString(), x.Name, x.Args.ToArray()),
-            StructModel x    => new StructRef(x.Namespace.ToString(), x.Name, x.Args.ToArray()),
-            _                => throw new ArgumentOutOfRangeException($"Unexpected model {model}")
+            StructModel x => new StructRef(x.Namespace.ToString(), x.Name, x.Args.ToArray()),
+            _ => throw new ArgumentOutOfRangeException($"Unexpected model {model}")
         };
     }
 

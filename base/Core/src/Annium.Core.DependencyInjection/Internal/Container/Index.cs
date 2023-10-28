@@ -14,11 +14,12 @@ internal class Index<TKey, TValue> : IIndex<TKey, TValue>
     public IEnumerable<TKey> Keys => _items.Keys;
     public IEnumerable<TValue> Values => _items.Values.Select(x => x.Value);
 
-    public TValue this[TKey key] => _items.TryGetValue(key, out var item)
-        ? item.Value
-        : throw new InvalidOperationException(
-            $"No {typeof(TValue).FriendlyName()} value registered for key {typeof(TKey).FriendlyName()} {key}"
-        );
+    public TValue this[TKey key] =>
+        _items.TryGetValue(key, out var item)
+            ? item.Value
+            : throw new InvalidOperationException(
+                $"No {typeof(TValue).FriendlyName()} value registered for key {typeof(TKey).FriendlyName()} {key}"
+            );
 
     private readonly IReadOnlyDictionary<TKey, Lazy<TValue>> _items;
 
@@ -37,8 +38,7 @@ internal class Index<TKey, TValue> : IIndex<TKey, TValue>
         _items = items;
     }
 
-    public bool ContainsKey(TKey key) =>
-        TryGetValue(key, out _);
+    public bool ContainsKey(TKey key) => TryGetValue(key, out _);
 
     public bool TryGetValue(TKey key, out TValue value)
     {
@@ -52,9 +52,8 @@ internal class Index<TKey, TValue> : IIndex<TKey, TValue>
         return false;
     }
 
-    public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator() => _items
-        .Select(x => new KeyValuePair<TKey, TValue>(x.Key, x.Value.Value))
-        .GetEnumerator();
+    public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator() =>
+        _items.Select(x => new KeyValuePair<TKey, TValue>(x.Key, x.Value.Value)).GetEnumerator();
 
     IEnumerator IEnumerable.GetEnumerator() => _items.GetEnumerator();
 }

@@ -17,10 +17,7 @@ internal class ShellInstance : IShellInstance, ILogSubject
     private ProcessStartInfo _startInfo;
     private bool _pipe;
 
-    public ShellInstance(
-        string cmd,
-        ILogger logger
-    )
+    public ShellInstance(string cmd, ILogger logger)
     {
         _cmd = cmd;
         Logger = logger;
@@ -64,12 +61,7 @@ internal class ShellInstance : IShellInstance, ILogSubject
 
         var result = StartProcess(process, ct).Task;
 
-        return new ShellAsyncResult(
-            process.StandardInput,
-            process.StandardOutput,
-            process.StandardError,
-            result
-        );
+        return new ShellAsyncResult(process.StandardInput, process.StandardOutput, process.StandardError, result);
     }
 
     private Process GetProcess()
@@ -86,7 +78,11 @@ internal class ShellInstance : IShellInstance, ILogSubject
         process.StartInfo.FileName = args[0];
         process.StartInfo.Arguments = string.Join(" ", args.Skip(1));
 
-        this.Trace<string, string>("shell: {fileName} {arguments}", process.StartInfo.FileName, process.StartInfo.Arguments);
+        this.Trace<string, string>(
+            "shell: {fileName} {arguments}",
+            process.StartInfo.FileName,
+            process.StartInfo.Arguments
+        );
 
         return process;
     }
@@ -129,13 +125,17 @@ internal class ShellInstance : IShellInstance, ILogSubject
         if (_pipe)
         {
             Task.Run(() =>
-            {
-                lock (_consoleLock) PipeOut(process.StandardOutput);
-            }).ConfigureAwait(false);
+                {
+                    lock (_consoleLock)
+                        PipeOut(process.StandardOutput);
+                })
+                .ConfigureAwait(false);
             Task.Run(() =>
-            {
-                lock (_consoleLock) PipeOut(process.StandardError);
-            }).ConfigureAwait(false);
+                {
+                    lock (_consoleLock)
+                        PipeOut(process.StandardError);
+                })
+                .ConfigureAwait(false);
         }
 
         return tcs;

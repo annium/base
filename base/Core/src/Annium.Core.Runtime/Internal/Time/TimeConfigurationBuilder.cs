@@ -10,10 +10,7 @@ internal class TimeConfigurationBuilder : ITimeConfigurationBuilder
     private readonly IServiceContainer _container;
     private readonly ServiceLifetime _lifetime;
 
-    public TimeConfigurationBuilder(
-        IServiceContainer container,
-        ServiceLifetime lifetime
-    )
+    public TimeConfigurationBuilder(IServiceContainer container, ServiceLifetime lifetime)
     {
         _container = container;
         _lifetime = lifetime;
@@ -39,7 +36,10 @@ internal class TimeConfigurationBuilder : ITimeConfigurationBuilder
 
     public ITimeConfigurationBuilder WithManagedTime()
     {
-        _container.Add<ITimeManager, ManagedTimeProvider>().AsKeyed(typeof(IInternalTimeProvider), TimeType.Managed).In(_lifetime);
+        _container
+            .Add<ITimeManager, ManagedTimeProvider>()
+            .AsKeyed(typeof(IInternalTimeProvider), TimeType.Managed)
+            .In(_lifetime);
         _container.Add<IActionScheduler, ManagedActionScheduler>().In(_lifetime);
         _type = TimeType.Managed;
 

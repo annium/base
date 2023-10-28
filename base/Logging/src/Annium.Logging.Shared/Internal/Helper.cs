@@ -6,7 +6,10 @@ namespace Annium.Logging.Shared.Internal;
 
 internal static class Helper
 {
-    public static (string, IReadOnlyDictionary<string, object?>) Process(string messageTemplate, IReadOnlyList<object?> dataItems)
+    public static (string, IReadOnlyDictionary<string, object?>) Process(
+        string messageTemplate,
+        IReadOnlyList<object?> dataItems
+    )
     {
         var depth = 0;
         var keyIndex = -1;

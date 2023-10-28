@@ -19,9 +19,8 @@ public abstract class MessagingManagedSocketTestsBase : TestBase, IAsyncLifetime
     private IManagedSocket _managedSocket = default!;
     private readonly List<byte[]> _messages = new();
 
-    protected MessagingManagedSocketTestsBase(ITestOutputHelper outputHelper) : base(outputHelper)
-    {
-    }
+    protected MessagingManagedSocketTestsBase(ITestOutputHelper outputHelper)
+        : base(outputHelper) { }
 
     protected async Task Send_Canceled_Base()
     {
@@ -83,13 +82,15 @@ public abstract class MessagingManagedSocketTestsBase : TestBase, IAsyncLifetime
         var serverTcs = new TaskCompletionSource();
 
         this.Trace("run server");
-        await using var _ = RunServerBase(async (_, socket, _) =>
-        {
-            socket.LingerState = new LingerOption(true, 0);
-            socket.Close();
-            await Task.Delay(10, CancellationToken.None);
-            serverTcs.SetResult();
-        });
+        await using var _ = RunServerBase(
+            async (_, socket, _) =>
+            {
+                socket.LingerState = new LingerOption(true, 0);
+                socket.Close();
+                await Task.Delay(10, CancellationToken.None);
+                serverTcs.SetResult();
+            }
+        );
 
         this.Trace("connect and start listening");
         await ConnectAndStartListenAsync();
@@ -118,21 +119,21 @@ public abstract class MessagingManagedSocketTestsBase : TestBase, IAsyncLifetime
         var serverTcs = new TaskCompletionSource();
 
         this.Trace("run server");
-        await using var _ = RunServer(async (serverSocket, ct) =>
-        {
-            serverSocket.OnReceived += x =>
+        await using var _ = RunServer(
+            async (serverSocket, ct) =>
             {
-                serverSocket
-                    .SendAsync(x.ToArray(), CancellationToken.None)
+                serverSocket.OnReceived += x =>
+                {
+                    serverSocket.SendAsync(x.ToArray(), CancellationToken.None).GetAwaiter();
+                };
+
+                Task.Delay(10, CancellationToken.None)
+                    .ContinueWith(_ => serverTcs.SetResult(), CancellationToken.None)
                     .GetAwaiter();
-            };
 
-            Task.Delay(10, CancellationToken.None)
-                .ContinueWith(_ => serverTcs.SetResult(), CancellationToken.None)
-                .GetAwaiter();
-
-            await serverSocket.ListenAsync(ct);
-        });
+                await serverSocket.ListenAsync(ct);
+            }
+        );
 
         this.Trace("connect and start listening");
         await ConnectAndStartListenAsync();
@@ -214,12 +215,14 @@ public abstract class MessagingManagedSocketTestsBase : TestBase, IAsyncLifetime
         this.Trace("start");
 
         this.Trace("run server");
-        await using var _ = RunServerBase((_, socket, _) =>
-        {
-            socket.Close();
+        await using var _ = RunServerBase(
+            (_, socket, _) =>
+            {
+                socket.Close();
 
-            return Task.CompletedTask;
-        });
+                return Task.CompletedTask;
+            }
+        );
 
         this.Trace("connect");
         await ConnectAsync();
@@ -245,20 +248,22 @@ public abstract class MessagingManagedSocketTestsBase : TestBase, IAsyncLifetime
         var messages = GenerateMessages(10, 100);
 
         this.Trace("run server");
-        await using var _ = RunServer(async (serverSocket, ct) =>
-        {
-            this.Trace("start sending chunks");
-
-            var i = 0;
-            foreach (var message in messages)
+        await using var _ = RunServer(
+            async (serverSocket, ct) =>
             {
-                this.Trace("send message#{num}", ++i);
-                await serverSocket.SendAsync(message, ct);
-                await Task.Delay(1, CancellationToken.None);
-            }
+                this.Trace("start sending chunks");
 
-            this.Trace("sending chunks complete");
-        });
+                var i = 0;
+                foreach (var message in messages)
+                {
+                    this.Trace("send message#{num}", ++i);
+                    await serverSocket.SendAsync(message, ct);
+                    await Task.Delay(1, CancellationToken.None);
+                }
+
+                this.Trace("sending chunks complete");
+            }
+        );
 
         // act
         this.Trace("connect");
@@ -287,20 +292,22 @@ public abstract class MessagingManagedSocketTestsBase : TestBase, IAsyncLifetime
         var messages = GenerateMessages(10, 100_000);
 
         this.Trace("run server");
-        await using var _ = RunServer(async (serverSocket, ct) =>
-        {
-            this.Trace("start sending chunks");
-
-            var i = 0;
-            foreach (var message in messages)
+        await using var _ = RunServer(
+            async (serverSocket, ct) =>
             {
-                this.Trace("send chunk#{num}", ++i);
-                await serverSocket.SendAsync(message, ct);
-                await Task.Delay(1, CancellationToken.None);
-            }
+                this.Trace("start sending chunks");
 
-            this.Trace("sending chunks complete");
-        });
+                var i = 0;
+                foreach (var message in messages)
+                {
+                    this.Trace("send chunk#{num}", ++i);
+                    await serverSocket.SendAsync(message, ct);
+                    await Task.Delay(1, CancellationToken.None);
+                }
+
+                this.Trace("sending chunks complete");
+            }
+        );
 
         // act
         this.Trace("connect");
@@ -358,10 +365,7 @@ public abstract class MessagingManagedSocketTestsBase : TestBase, IAsyncLifetime
     {
         this.Trace("start");
 
-        _clientSocket = new Socket(SocketType.Stream, ProtocolType.Tcp)
-        {
-            NoDelay = true
-        };
+        _clientSocket = new Socket(SocketType.Stream, ProtocolType.Tcp) { NoDelay = true };
 
         this.Trace("connect");
         await _clientSocket.ConnectAsync(EndPoint, ct);
@@ -371,7 +375,11 @@ public abstract class MessagingManagedSocketTestsBase : TestBase, IAsyncLifetime
 
         this.Trace("create managed socket");
         _managedSocket = new MessagingManagedSocket(_clientStream, Logger);
-        this.Trace<string, string>("created pair of {clientSocket} and {managedSocket}", _clientSocket.GetFullId(), _managedSocket.GetFullId());
+        this.Trace<string, string>(
+            "created pair of {clientSocket} and {managedSocket}",
+            _clientSocket.GetFullId(),
+            _managedSocket.GetFullId()
+        );
 
         _managedSocket.OnReceived += x => _messages.Add(x.ToArray());
 

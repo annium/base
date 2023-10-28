@@ -1,5 +1,3 @@
 namespace Annium.Net.Sockets;
 
-public interface ISendingReceivingSocket : ISendingSocket, IReceivingSocket
-{
-}
+public interface ISendingReceivingSocket : ISendingSocket, IReceivingSocket { }

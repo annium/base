@@ -9,9 +9,7 @@ internal class ResultFormatter : IMessagePackFormatter<IResult>
 {
     public static IMessagePackFormatter Instance { get; } = new ResultFormatter();
 
-    private ResultFormatter()
-    {
-    }
+    private ResultFormatter() { }
 
     public IResult Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
     {
@@ -23,7 +21,8 @@ internal class ResultFormatter : IMessagePackFormatter<IResult>
         options.Security.DepthStep(ref reader);
 
         IReadOnlyCollection<string> plainErrors = Array.Empty<string>();
-        IReadOnlyDictionary<string, IReadOnlyCollection<string>> labeledErrors = new Dictionary<string, IReadOnlyCollection<string>>();
+        IReadOnlyDictionary<string, IReadOnlyCollection<string>> labeledErrors =
+            new Dictionary<string, IReadOnlyCollection<string>>();
 
         var count = reader.ReadArrayHeader();
         for (var i = 0; i < count; i++)

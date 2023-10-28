@@ -26,7 +26,6 @@ internal sealed class NodaDateIntervalConverter : ConverterBase<DateInterval>
         {
             if (reader.HasProperty(nameof(Interval.Start)))
                 startLocalDate = JsonSerializer.Deserialize<LocalDate>(ref reader, options);
-
             else if (reader.HasProperty(nameof(Interval.End)))
                 endLocalDate = JsonSerializer.Deserialize<LocalDate>(ref reader, options);
         }
@@ -40,11 +39,7 @@ internal sealed class NodaDateIntervalConverter : ConverterBase<DateInterval>
         return new DateInterval(startLocalDate.Value, endLocalDate.Value);
     }
 
-    public override void WriteImplementation(
-        Utf8JsonWriter writer,
-        DateInterval value,
-        JsonSerializerOptions options
-    )
+    public override void WriteImplementation(Utf8JsonWriter writer, DateInterval value, JsonSerializerOptions options)
     {
         writer.WriteStartObject();
 

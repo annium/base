@@ -6,14 +6,8 @@ namespace Annium.Net.Types.Tests.Mapper;
 
 public class MapperSpecialTests : MapperSpecialTestsBase
 {
-    public MapperSpecialTests(
-        ITestOutputHelper outputHelper
-    ) : base(
-        new TestProvider(),
-        outputHelper
-    )
-    {
-    }
+    public MapperSpecialTests(ITestOutputHelper outputHelper)
+        : base(new TestProvider(), outputHelper) { }
 
     [Fact]
     public void Task_Generic_Nullable()

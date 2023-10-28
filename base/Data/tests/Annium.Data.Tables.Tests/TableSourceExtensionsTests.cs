@@ -10,7 +10,8 @@ namespace Annium.Data.Tables.Tests;
 
 public class TableSourceExtensionsTests : TestBase
 {
-    public TableSourceExtensionsTests(ITestOutputHelper outputHelper) : base(outputHelper)
+    public TableSourceExtensionsTests(ITestOutputHelper outputHelper)
+        : base(outputHelper)
     {
         Register(x => x.AddTables());
     }
@@ -19,17 +20,9 @@ public class TableSourceExtensionsTests : TestBase
     public void MapWriteTo_Works()
     {
         // arrange - init
-        var source = Get<ITableFactory>()
-            .New<Raw>()
-            .Allow(TablePermission.All)
-            .Key(x => x.Key)
-            .Build();
+        var source = Get<ITableFactory>().New<Raw>().Allow(TablePermission.All).Key(x => x.Key).Build();
         source.Init(new[] { new Raw(1, 2), new Raw(2, 3) });
-        var target = Get<ITableFactory>()
-            .New<Sample>()
-            .Allow(TablePermission.All)
-            .Key(x => x.Key)
-            .Build();
+        var target = Get<ITableFactory>().New<Sample>().Allow(TablePermission.All).Key(x => x.Key).Build();
         var log = new List<IChangeEvent<Sample>>();
 
         // arrange - prepare log
@@ -59,17 +52,9 @@ public class TableSourceExtensionsTests : TestBase
     public void MapAppendTo_Works()
     {
         // arrange - init
-        var source = Get<ITableFactory>()
-            .New<Raw>()
-            .Allow(TablePermission.All)
-            .Key(x => x.Key)
-            .Build();
+        var source = Get<ITableFactory>().New<Raw>().Allow(TablePermission.All).Key(x => x.Key).Build();
         source.Init(new[] { new Raw(1, 2), new Raw(2, 3) });
-        var target = Get<ITableFactory>()
-            .New<Sample>()
-            .Allow(TablePermission.All)
-            .Key(x => x.Key)
-            .Build();
+        var target = Get<ITableFactory>().New<Sample>().Allow(TablePermission.All).Key(x => x.Key).Build();
         var log = new List<IChangeEvent<Sample>>();
 
         // arrange - prepare log
@@ -101,11 +86,7 @@ public class TableSourceExtensionsTests : TestBase
     public async Task SyncAddRemove_Works()
     {
         // arrange
-        var table = Get<ITableFactory>()
-            .New<Sample>()
-            .Allow(TablePermission.All)
-            .Key(x => x.Key)
-            .Build();
+        var table = Get<ITableFactory>().New<Sample>().Allow(TablePermission.All).Key(x => x.Key).Build();
         var initValues = new[] { new Sample(1, "a"), new Sample(2, "b") };
         table.Init(initValues);
         var log = new List<IChangeEvent<Sample>>();
@@ -128,11 +109,7 @@ public class TableSourceExtensionsTests : TestBase
     public async Task SyncAddUpdateRemove_Works()
     {
         // arrange
-        var table = Get<ITableFactory>()
-            .New<Sample>()
-            .Allow(TablePermission.All)
-            .Key(x => x.Key)
-            .Build();
+        var table = Get<ITableFactory>().New<Sample>().Allow(TablePermission.All).Key(x => x.Key).Build();
         var initValues = new[] { new Sample(1, "a"), new Sample(2, "b") };
         table.Init(initValues);
         var log = new List<IChangeEvent<Sample>>();

@@ -36,23 +36,14 @@ internal class HttpRequest : IHttpRequest
     private readonly List<Configuration> _configurations = new();
     private readonly List<Middleware> _middlewares = new();
 
-    internal HttpRequest(
-        Uri baseUri,
-        Serializer httpContentSerializer,
-        ILogger logger
-    ) : this(
-        httpContentSerializer,
-        logger
-    )
+    internal HttpRequest(Uri baseUri, Serializer httpContentSerializer, ILogger logger)
+        : this(httpContentSerializer, logger)
     {
         Logger = logger;
         _baseUri = baseUri;
     }
 
-    internal HttpRequest(
-        Serializer httpContentSerializer,
-        ILogger logger
-    )
+    internal HttpRequest(Serializer httpContentSerializer, ILogger logger)
     {
         Serializer = httpContentSerializer;
         Logger = logger;
@@ -141,12 +132,7 @@ internal class HttpRequest : IHttpRequest
 
     public IHttpRequest Param<T>(string key, IEnumerable<T> values)
     {
-        var parameters =
-        (
-            from value in values
-            where value is not null
-            select value.ToString()
-        ).ToArray();
+        var parameters = (from value in values where value is not null select value.ToString()).ToArray();
 
         _parameters[key] = new StringValues(parameters);
 
@@ -192,27 +178,22 @@ internal class HttpRequest : IHttpRequest
     {
         this.Trace("start");
 
-        var cts = CancellationTokenSource.CreateLinkedTokenSource(
-            new CancellationTokenSource(_timeout).Token,
-            ct
-        );
+        var cts = CancellationTokenSource.CreateLinkedTokenSource(new CancellationTokenSource(_timeout).Token, ct);
 
         foreach (var configure in _configurations)
             configure(this);
 
-        var response = _middlewares.Count > 0
-            ? await InternalRunAsync(0, cts.Token).ConfigureAwait(false)
-            : await InternalRunAsync(cts.Token).ConfigureAwait(false);
+        var response =
+            _middlewares.Count > 0
+                ? await InternalRunAsync(0, cts.Token).ConfigureAwait(false)
+                : await InternalRunAsync(cts.Token).ConfigureAwait(false);
 
         this.Trace("done");
 
         return response;
     }
 
-    private async Task<IHttpResponse> InternalRunAsync(
-        int middlewareIndex,
-        CancellationToken ct
-    )
+    private async Task<IHttpResponse> InternalRunAsync(int middlewareIndex, CancellationToken ct)
     {
         this.Trace("start {index}/{total}", middlewareIndex + 1, _middlewares.Count);
 
@@ -223,9 +204,10 @@ internal class HttpRequest : IHttpRequest
         }
 
         var middleware = _middlewares[middlewareIndex];
-        Func<Task<IHttpResponse>> next = middlewareIndex + 1 < _middlewares.Count
-            ? () => InternalRunAsync(middlewareIndex + 1, ct)
-            : () => InternalRunAsync(ct);
+        Func<Task<IHttpResponse>> next =
+            middlewareIndex + 1 < _middlewares.Count
+                ? () => InternalRunAsync(middlewareIndex + 1, ct)
+                : () => InternalRunAsync(ct);
 
         var response = await middleware(next, this).ConfigureAwait(false);
 
@@ -295,11 +277,7 @@ file static class Helper
         return factory.Build();
     }
 
-    public static UriFactory GetUriFactory(
-        HttpClient client,
-        Uri? baseUri,
-        string? uri
-    )
+    public static UriFactory GetUriFactory(HttpClient client, Uri? baseUri, string? uri)
     {
         var baseAddress = baseUri ?? client.BaseAddress;
         if (baseAddress is null)

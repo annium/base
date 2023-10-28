@@ -12,9 +12,7 @@ internal class EmailService : IEmailService
 {
     private readonly Configuration _cfg;
 
-    public EmailService(
-        Configuration cfg
-    )
+    public EmailService(Configuration cfg)
     {
         _cfg = cfg;
     }

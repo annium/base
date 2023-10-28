@@ -7,8 +7,5 @@ public interface IResource
     string Name { get; }
     ReadOnlyMemory<byte> Content { get; }
 
-    void Deconstruct(
-        out string name,
-        out ReadOnlyMemory<byte> content
-    );
+    void Deconstruct(out string name, out ReadOnlyMemory<byte> content);
 }

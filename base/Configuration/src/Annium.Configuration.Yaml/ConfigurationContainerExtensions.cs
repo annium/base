@@ -8,11 +8,7 @@ namespace Annium.Configuration.Abstractions;
 
 public static class ConfigurationContainerExtensions
 {
-    public static TContainer AddYamlFile<TContainer>(
-        this TContainer container,
-        string path,
-        bool optional = false
-    )
+    public static TContainer AddYamlFile<TContainer>(this TContainer container, string path, bool optional = false)
         where TContainer : IConfigurationContainer
     {
         path = Path.GetFullPath(path);

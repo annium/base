@@ -7,7 +7,8 @@ namespace Annium.Core.Mapper.Tests.Resolvers;
 
 public class InstanceOfMapResolverTest : TestBase
 {
-    public InstanceOfMapResolverTest(ITestOutputHelper outputHelper) : base(outputHelper)
+    public InstanceOfMapResolverTest(ITestOutputHelper outputHelper)
+        : base(outputHelper)
     {
         Register(c => c.AddMapper(autoload: false));
     }
@@ -26,7 +27,5 @@ public class InstanceOfMapResolverTest : TestBase
         result.Is(value);
     }
 
-    private class Payload
-    {
-    }
+    private class Payload { }
 }

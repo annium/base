@@ -7,7 +7,8 @@ namespace Annium.Core.Mapper.Tests.Resolvers;
 
 public class AssignmentMapResolverTest : TestBase
 {
-    public AssignmentMapResolverTest(ITestOutputHelper outputHelper) : base(outputHelper)
+    public AssignmentMapResolverTest(ITestOutputHelper outputHelper)
+        : base(outputHelper)
     {
         Register(c => c.AddMapper(autoload: false));
     }
@@ -50,7 +51,5 @@ public class AssignmentMapResolverTest : TestBase
         public string? Name { get; set; }
     }
 
-    private class C
-    {
-    }
+    private class C { }
 }

@@ -8,12 +8,8 @@ namespace Annium.Net.Types.Tests.Lib.Mapper;
 
 public abstract class MapperArrayTestsBase : TestBase
 {
-    protected MapperArrayTestsBase(
-        ITestProvider testProvider,
-        ITestOutputHelper outputHelper
-    ) : base(testProvider, outputHelper)
-    {
-    }
+    protected MapperArrayTestsBase(ITestProvider testProvider, ITestOutputHelper outputHelper)
+        : base(testProvider, outputHelper) { }
 
     protected void Array_Base()
     {
@@ -24,9 +20,7 @@ public abstract class MapperArrayTestsBase : TestBase
         var modelRef = Map(target);
 
         // assert
-        modelRef
-            .As<ArrayRef>().Value
-            .As<BaseTypeRef>().Name.Is(BaseType.Int);
+        modelRef.As<ArrayRef>().Value.As<BaseTypeRef>().Name.Is(BaseType.Int);
         Models.IsEmpty();
     }
 
@@ -39,9 +33,7 @@ public abstract class MapperArrayTestsBase : TestBase
         var modelRef = Map(target);
 
         // assert
-        modelRef
-            .As<ArrayRef>().Value
-            .As<GenericParameterRef>().Name.Is("T");
+        modelRef.As<ArrayRef>().Value.As<GenericParameterRef>().Name.Is("T");
         Models.IsEmpty();
     }
 }

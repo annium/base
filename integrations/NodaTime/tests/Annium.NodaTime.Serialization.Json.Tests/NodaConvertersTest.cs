@@ -41,7 +41,8 @@ public class ConvertersTest
     {
         var localDate = new LocalDate(2012, 1, 2, CalendarSystem.Coptic);
 
-        Wrap.It(() => JsonSerializer.Serialize(localDate, With(Converters.LocalDateConverter))).Throws<ArgumentException>();
+        Wrap.It(() => JsonSerializer.Serialize(localDate, With(Converters.LocalDateConverter)))
+            .Throws<ArgumentException>();
     }
 
     [Fact]
@@ -57,7 +58,8 @@ public class ConvertersTest
     {
         var localDateTime = new LocalDateTime(2012, 1, 2, 3, 4, 5, CalendarSystem.Coptic);
 
-        Wrap.It(() => JsonSerializer.Serialize(localDateTime, With(Converters.LocalDateTimeConverter))).Throws<ArgumentException>();
+        Wrap.It(() => JsonSerializer.Serialize(localDateTime, With(Converters.LocalDateTimeConverter)))
+            .Throws<ArgumentException>();
     }
 
     [Fact]
@@ -112,7 +114,9 @@ public class ConvertersTest
     [Fact]
     public void OffsetDateTimeConverter()
     {
-        var value = new LocalDateTime(2012, 1, 2, 3, 4, 5).PlusNanoseconds(123456789).WithOffset(Offset.FromHoursAndMinutes(-1, -30));
+        var value = new LocalDateTime(2012, 1, 2, 3, 4, 5)
+            .PlusNanoseconds(123456789)
+            .WithOffset(Offset.FromHoursAndMinutes(-1, -30));
         string json = "\"2012-01-02T03:04:05.123456789-01:30\"";
         AssertConversions(value, json, Converters.OffsetDateTimeConverter);
     }
@@ -146,20 +150,41 @@ public class ConvertersTest
     [Fact]
     public void Duration_FractionalSeconds()
     {
-        AssertConversions(Duration.FromHours(48) + Duration.FromSeconds(3) + Duration.FromNanoseconds(123456789), "\"48:00:03.123456789\"",
-            Converters.DurationConverter);
-        AssertConversions(Duration.FromHours(48) + Duration.FromSeconds(3) + Duration.FromTicks(1230000), "\"48:00:03.123\"", Converters.DurationConverter);
-        AssertConversions(Duration.FromHours(48) + Duration.FromSeconds(3) + Duration.FromTicks(1234000), "\"48:00:03.1234\"",
-            Converters.DurationConverter);
-        AssertConversions(Duration.FromHours(48) + Duration.FromSeconds(3) + Duration.FromTicks(12345), "\"48:00:03.0012345\"",
-            Converters.DurationConverter);
+        AssertConversions(
+            Duration.FromHours(48) + Duration.FromSeconds(3) + Duration.FromNanoseconds(123456789),
+            "\"48:00:03.123456789\"",
+            Converters.DurationConverter
+        );
+        AssertConversions(
+            Duration.FromHours(48) + Duration.FromSeconds(3) + Duration.FromTicks(1230000),
+            "\"48:00:03.123\"",
+            Converters.DurationConverter
+        );
+        AssertConversions(
+            Duration.FromHours(48) + Duration.FromSeconds(3) + Duration.FromTicks(1234000),
+            "\"48:00:03.1234\"",
+            Converters.DurationConverter
+        );
+        AssertConversions(
+            Duration.FromHours(48) + Duration.FromSeconds(3) + Duration.FromTicks(12345),
+            "\"48:00:03.0012345\"",
+            Converters.DurationConverter
+        );
     }
 
     [Fact]
     public void Duration_MinAndMaxValues()
     {
-        AssertConversions(Duration.FromTicks(long.MaxValue), "\"256204778:48:05.4775807\"", Converters.DurationConverter);
-        AssertConversions(Duration.FromTicks(long.MinValue), "\"-256204778:48:05.4775808\"", Converters.DurationConverter);
+        AssertConversions(
+            Duration.FromTicks(long.MaxValue),
+            "\"256204778:48:05.4775807\"",
+            Converters.DurationConverter
+        );
+        AssertConversions(
+            Duration.FromTicks(long.MinValue),
+            "\"-256204778:48:05.4775808\"",
+            Converters.DurationConverter
+        );
     }
 
     /// <summary>

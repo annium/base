@@ -10,13 +10,7 @@ internal record Handler
     public Type? ResponseIn { get; }
     public Type ResponseOut { get; }
 
-    internal Handler(
-        Type implementation,
-        Type requestIn,
-        Type? requestOut,
-        Type? responseIn,
-        Type responseOut
-    )
+    internal Handler(Type implementation, Type requestIn, Type? requestOut, Type? responseIn, Type responseOut)
     {
         Implementation = implementation;
         RequestIn = requestIn;

@@ -7,7 +7,8 @@ namespace Annium.Core.Mapper.Tests.Resolvers;
 
 public class ConstructorMapResolverTest : TestBase
 {
-    public ConstructorMapResolverTest(ITestOutputHelper outputHelper) : base(outputHelper)
+    public ConstructorMapResolverTest(ITestOutputHelper outputHelper)
+        : base(outputHelper)
     {
         Register(c => c.AddMapper(autoload: false));
     }

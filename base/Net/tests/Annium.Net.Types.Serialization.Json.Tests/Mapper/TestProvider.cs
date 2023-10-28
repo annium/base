@@ -27,8 +27,15 @@ internal class TestProvider : ITestProvider
     public void ConfigureContainer(IServiceContainer container)
     {
         container.AddRuntime(GetType().Assembly);
-        container.AddSerializers()
-            .WithJson(opts => { opts.ConfigureForNetTypes(); }, isDefault: true);
+        container
+            .AddSerializers()
+            .WithJson(
+                opts =>
+                {
+                    opts.ConfigureForNetTypes();
+                },
+                isDefault: true
+            );
     }
 
     public void Setup(IServiceProvider sp)

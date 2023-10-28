@@ -18,7 +18,9 @@ public static class ShallowEqualityExtensions
     )
     {
         if (!value.IsShallowEqual(data, mapper ?? Mapper.GetFor(Assembly.GetCallingAssembly())))
-            throw new AssertionFailedException(message ?? $"{value.Wrap(valueEx)} is not shallow equal to {data.Wrap(dataEx)}");
+            throw new AssertionFailedException(
+                message ?? $"{value.Wrap(valueEx)} is not shallow equal to {data.Wrap(dataEx)}"
+            );
     }
 
     public static void IsNotEqual<T, TD>(
@@ -31,6 +33,8 @@ public static class ShallowEqualityExtensions
     )
     {
         if (value.IsShallowEqual(data, mapper ?? Mapper.GetFor(Assembly.GetCallingAssembly())))
-            throw new AssertionFailedException(message ?? $"{value.Wrap(valueEx)} is shallow equal to {data.Wrap(dataEx)}");
+            throw new AssertionFailedException(
+                message ?? $"{value.Wrap(valueEx)} is shallow equal to {data.Wrap(dataEx)}"
+            );
     }
 }

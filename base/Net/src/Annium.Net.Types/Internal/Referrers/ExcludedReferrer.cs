@@ -8,7 +8,9 @@ namespace Annium.Net.Types.Internal.Referrers;
 internal class ExcludedReferrer : IReferrer
 {
     private static StructRef BuildStructRef(string ns, string name, IRef[] args) => new(ns, name, args);
+
     private static InterfaceRef BuildInterfaceRef(string ns, string name, IRef[] args) => new(ns, name, args);
+
     private static EnumRef BuildEnumRef(string ns, string name, IRef[] args) => new(ns, name);
 
     public ILogger Logger { get; }

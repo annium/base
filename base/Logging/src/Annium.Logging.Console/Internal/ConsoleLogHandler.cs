@@ -9,10 +9,7 @@ internal class ConsoleLogHandler<TContext> : ILogHandler<TContext>
     private readonly Func<LogMessage<TContext>, string> _format;
     private readonly bool _color;
 
-    public ConsoleLogHandler(
-        Func<LogMessage<TContext>, string> format,
-        bool color
-    )
+    public ConsoleLogHandler(Func<LogMessage<TContext>, string> format, bool color)
     {
         _format = format;
         _color = color;

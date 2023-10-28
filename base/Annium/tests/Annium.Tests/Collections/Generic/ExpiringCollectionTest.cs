@@ -12,9 +12,8 @@ namespace Annium.Tests.Collections.Generic;
 
 public class ExpiringCollectionTest : TestBase
 {
-    public ExpiringCollectionTest(ITestOutputHelper outputHelper) : base(outputHelper)
-    {
-    }
+    public ExpiringCollectionTest(ITestOutputHelper outputHelper)
+        : base(outputHelper) { }
 
     [Fact]
     public void Add_Works()

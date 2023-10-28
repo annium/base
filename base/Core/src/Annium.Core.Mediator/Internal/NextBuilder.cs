@@ -10,8 +10,10 @@ namespace Annium.Core.Mediator.Internal;
 
 internal class NextBuilder
 {
-    private readonly MethodInfo _executeAsync = typeof(ChainExecutor)
-        .GetMethod(nameof(ChainExecutor.ExecuteAsync), BindingFlags.Public | BindingFlags.Static)!;
+    private readonly MethodInfo _executeAsync = typeof(ChainExecutor).GetMethod(
+        nameof(ChainExecutor.ExecuteAsync),
+        BindingFlags.Public | BindingFlags.Static
+    )!;
 
     private readonly MethodInfo _getAwaiter = typeof(Task<object>).GetMethod(nameof(Task<int>.GetAwaiter))!;
 
@@ -19,10 +21,7 @@ internal class NextBuilder
 
     private readonly MethodInfo _fromResult = typeof(Task).GetMethod(nameof(Task.FromResult))!;
 
-    public Delegate BuildNext(
-        Type input,
-        Type output
-    )
+    public Delegate BuildNext(Type input, Type output)
     {
         var provider = Ex.Parameter(typeof(IServiceProvider));
         var chain = Ex.Parameter(typeof(IReadOnlyList<ChainElement>));
@@ -38,7 +37,15 @@ internal class NextBuilder
                 Ex.Convert(
                     Ex.Call(
                         Ex.Call(
-                            Ex.Call(null, _executeAsync, provider, chain, Ex.Convert(request, typeof(object)), token, index),
+                            Ex.Call(
+                                null,
+                                _executeAsync,
+                                provider,
+                                chain,
+                                Ex.Convert(request, typeof(object)),
+                                token,
+                                index
+                            ),
                             _getAwaiter
                         ),
                         _getResult

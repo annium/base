@@ -110,6 +110,7 @@ public class ObjectArrayJsonConverterTest : TestBase
         public string Data { get; private set; } = string.Empty;
         public byte IsFinal;
         public bool IsOdd => Value % 2 == 0;
+
         public void SetData(string data) => Data = data;
     }
 
@@ -127,6 +128,7 @@ public class ObjectArrayJsonConverterTest : TestBase
 
         public bool Ignored;
         public bool IsOdd => Value % 2 == 0;
+
         public void SetData(string data) => Data = data;
     }
 
@@ -138,6 +140,7 @@ public class ObjectArrayJsonConverterTest : TestBase
         public string Data { get; private set; } = string.Empty;
 
         public bool Ignored;
+
         public void SetData(string data) => Data = data;
     }
 }

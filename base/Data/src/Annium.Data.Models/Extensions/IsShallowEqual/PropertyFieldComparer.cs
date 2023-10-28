@@ -25,15 +25,13 @@ public static partial class IsShallowEqualExtensions
         if (type.IsClass)
             expressions.AddRange(AddReferenceEqualityChecks(a, b, returnTarget));
 
-        var propertyExpressions = type
-            .GetAllProperties(BindingFlags.Public | BindingFlags.Instance)
+        var propertyExpressions = type.GetAllProperties(BindingFlags.Public | BindingFlags.Instance)
             .Where(x => x.CanRead && x.GetIndexParameters().Length == 0)
             .ToArray();
         foreach (var property in propertyExpressions)
             RegisterMember(property.PropertyType, Expression.Property(a, property), Expression.Property(b, property));
 
-        var fieldExpressions = type
-            .GetAllFields(BindingFlags.Public | BindingFlags.Instance);
+        var fieldExpressions = type.GetAllFields(BindingFlags.Public | BindingFlags.Instance);
         foreach (var field in fieldExpressions)
             RegisterMember(field.FieldType, Expression.Field(a, field), Expression.Field(b, field));
 
@@ -49,10 +47,12 @@ public static partial class IsShallowEqualExtensions
             vars.Add(comparerVar);
             expressions.Add(Expression.Assign(comparerVar, comparer));
 
-            expressions.Add(Expression.IfThen(
-                Expression.Not(Expression.Invoke(comparerVar, ax, bx)),
-                Expression.Return(returnTarget, Expression.Constant(false))
-            ));
+            expressions.Add(
+                Expression.IfThen(
+                    Expression.Not(Expression.Invoke(comparerVar, ax, bx)),
+                    Expression.Return(returnTarget, Expression.Constant(false))
+                )
+            );
         }
     }
 }

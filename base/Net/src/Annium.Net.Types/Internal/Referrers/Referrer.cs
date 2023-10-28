@@ -12,10 +12,7 @@ internal class Referrer : ILogSubject
     public ILogger Logger { get; }
     private readonly IEnumerable<IReferrer> _referrers;
 
-    public Referrer(
-        IEnumerable<IReferrer> referrers,
-        ILogger logger
-    )
+    public Referrer(IEnumerable<IReferrer> referrers, ILogger logger)
     {
         _referrers = referrers;
         Logger = logger;
@@ -33,7 +30,12 @@ internal class Referrer : ILogSubject
             if (result is null)
                 continue;
 
-            this.Trace<string, IRef?, string>("Resolved {type} ref as {result} via {referrerType}", type.FriendlyName(), result, referrer.GetType().FriendlyName());
+            this.Trace<string, IRef?, string>(
+                "Resolved {type} ref as {result} via {referrerType}",
+                type.FriendlyName(),
+                result,
+                referrer.GetType().FriendlyName()
+            );
             return result;
         }
 

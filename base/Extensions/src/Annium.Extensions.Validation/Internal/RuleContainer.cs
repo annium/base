@@ -9,9 +9,7 @@ internal class RuleContainer<TValue, TField> : IRuleBuilder<TValue, TField>, IRu
     private readonly Func<TValue, TField> _getField;
     private readonly IList<IList<Delegate>> _chains = new List<IList<Delegate>>();
 
-    public RuleContainer(
-        Func<TValue, TField> getField
-    )
+    public RuleContainer(Func<TValue, TField> getField)
     {
         _getField = getField;
 
@@ -68,11 +66,7 @@ internal class RuleContainer<TValue, TField> : IRuleBuilder<TValue, TField>, IRu
         return this;
     }
 
-    public async Task<bool> ValidateAsync(
-        ValidationContext<TValue> context,
-        TValue value,
-        int stage
-    )
+    public async Task<bool> ValidateAsync(ValidationContext<TValue> context, TValue value, int stage)
     {
         // no validation if no chain at this stage
         if (stage >= _chains.Count)

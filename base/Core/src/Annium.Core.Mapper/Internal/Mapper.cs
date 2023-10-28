@@ -42,10 +42,14 @@ internal class Mapper : IMapper
         if (source is null)
         {
             if (!type.IsConstructable())
-                throw new InvalidOperationException($"Can't convert null to {type.FriendlyName()}, that is not constructable");
+                throw new InvalidOperationException(
+                    $"Can't convert null to {type.FriendlyName()}, that is not constructable"
+                );
 
             if (!type.HasDefaultConstructor())
-                throw new InvalidOperationException($"Can't convert null to {type.FriendlyName()}, that has no default constructor");
+                throw new InvalidOperationException(
+                    $"Can't convert null to {type.FriendlyName()}, that has no default constructor"
+                );
 
             return Activator.CreateInstance(type)!;
         }

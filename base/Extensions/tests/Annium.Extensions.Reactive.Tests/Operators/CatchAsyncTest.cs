@@ -15,7 +15,8 @@ public class CatchAsyncTest
         // arrange
         var log = new List<string>();
         var tcs = new TaskCompletionSource();
-        using var observable = Observable.Range(1, 5)
+        using var observable = Observable
+            .Range(1, 5)
             .Select(x =>
             {
                 if (x == 3)
@@ -26,24 +27,29 @@ public class CatchAsyncTest
 
                 return x;
             })
-            .CatchAsync(async (InvalidOperationException e) =>
-            {
-                await Task.Delay(10);
-                lock (log)
-                    log.Add($"err: {e.Message}");
+            .CatchAsync(
+                async (InvalidOperationException e) =>
+                {
+                    await Task.Delay(10);
+                    lock (log)
+                        log.Add($"err: {e.Message}");
 
-                return Observable.Empty<int>();
-            })
-            .Subscribe(x =>
-            {
-                lock (log)
-                    log.Add($"sub: {x}");
-            }, () =>
-            {
-                lock (log)
-                    log.Add("done");
-                tcs.SetResult();
-            });
+                    return Observable.Empty<int>();
+                }
+            )
+            .Subscribe(
+                x =>
+                {
+                    lock (log)
+                        log.Add($"sub: {x}");
+                },
+                () =>
+                {
+                    lock (log)
+                        log.Add("done");
+                    tcs.SetResult();
+                }
+            );
 
         await tcs.Task;
 

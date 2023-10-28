@@ -20,18 +20,17 @@ internal abstract class TableBase<T> : ITableView<T>, ILogSubject
     private readonly ChannelWriter<IChangeEvent<T>> _eventWriter;
     private readonly ChannelReader<IChangeEvent<T>> _eventReader;
 
-    protected TableBase(
-        TablePermission permissions,
-        ILogger logger
-    )
+    protected TableBase(TablePermission permissions, ILogger logger)
     {
         _permissions = permissions;
-        var taskChannel = Channel.CreateUnbounded<IChangeEvent<T>>(new UnboundedChannelOptions
-        {
-            AllowSynchronousContinuations = true,
-            SingleWriter = false,
-            SingleReader = true
-        });
+        var taskChannel = Channel.CreateUnbounded<IChangeEvent<T>>(
+            new UnboundedChannelOptions
+            {
+                AllowSynchronousContinuations = true,
+                SingleWriter = false,
+                SingleReader = true
+            }
+        );
         _eventWriter = taskChannel.Writer;
         _eventReader = taskChannel.Reader;
 
@@ -68,31 +67,32 @@ internal abstract class TableBase<T> : ITableView<T>, ILogSubject
 
     protected abstract IReadOnlyCollection<T> Get();
 
-    private IObservable<IChangeEvent<T>> CreateObservable(CancellationToken ct, ILogger logger) => ObservableExt.StaticSyncInstance<IChangeEvent<T>>(async ctx =>
-    {
-        try
-        {
-            while (!ctx.Ct.IsCancellationRequested)
+    private IObservable<IChangeEvent<T>> CreateObservable(CancellationToken ct, ILogger logger) =>
+        ObservableExt.StaticSyncInstance<IChangeEvent<T>>(
+            async ctx =>
             {
-                var message = await _eventReader.ReadAsync(ctx.Ct);
+                try
+                {
+                    while (!ctx.Ct.IsCancellationRequested)
+                    {
+                        var message = await _eventReader.ReadAsync(ctx.Ct);
 
-                ctx.OnNext(message);
-            }
-        }
-        // token was canceled
-        catch (OperationCanceledException)
-        {
-        }
-        catch (ChannelClosedException)
-        {
-        }
-        catch (Exception e)
-        {
-            ctx.OnError(e);
-        }
+                        ctx.OnNext(message);
+                    }
+                }
+                // token was canceled
+                catch (OperationCanceledException) { }
+                catch (ChannelClosedException) { }
+                catch (Exception e)
+                {
+                    ctx.OnError(e);
+                }
 
-        return () => Task.CompletedTask;
-    }, ct, logger);
+                return () => Task.CompletedTask;
+            },
+            ct,
+            logger
+        );
 
     public IEnumerator<T> GetEnumerator() => Get().GetEnumerator();
 

@@ -6,9 +6,8 @@ namespace Annium.Data.Operations.Serialization.Tests.Base;
 
 public abstract class StatusResultTestBase : TestBase
 {
-    protected StatusResultTestBase(ITestOutputHelper outputHelper) : base(outputHelper)
-    {
-    }
+    protected StatusResultTestBase(ITestOutputHelper outputHelper)
+        : base(outputHelper) { }
 
     public void Simple_Base<T>()
     {

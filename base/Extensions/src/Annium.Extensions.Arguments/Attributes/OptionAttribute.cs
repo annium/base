@@ -10,10 +10,7 @@ public class OptionAttribute : BaseAttribute
 
     public bool IsRequired { get; }
 
-    public OptionAttribute(
-        string? alias = null,
-        bool isRequired = false
-    )
+    public OptionAttribute(string? alias = null, bool isRequired = false)
     {
         Alias = alias;
         IsRequired = isRequired;

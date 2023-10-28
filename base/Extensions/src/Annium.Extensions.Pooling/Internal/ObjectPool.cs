@@ -14,10 +14,7 @@ internal class ObjectPool<T> : IObjectPool<T>
     private readonly IStorage<T> _storage;
     private readonly Semaphore _semaphore;
 
-    public ObjectPool(
-        IServiceProvider sp,
-        ObjectPoolConfig<T> config
-    )
+    public ObjectPool(IServiceProvider sp, ObjectPoolConfig<T> config)
     {
         _storage = StorageFactory.Create<T>(config.StorageMode, config.Capacity);
         _loader = LoaderFactory.Create(config.LoadMode, sp.Resolve<T>, _storage);

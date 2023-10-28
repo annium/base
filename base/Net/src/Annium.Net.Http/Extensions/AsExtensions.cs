@@ -8,10 +8,7 @@ namespace Annium.Net.Http;
 
 public static class AsExtensions
 {
-    public static async Task<T?> AsAsync<T>(
-        this IHttpRequest request,
-        CancellationToken ct = default
-    )
+    public static async Task<T?> AsAsync<T>(this IHttpRequest request, CancellationToken ct = default)
     {
         var response = await request.RunAsync(ct);
         if (response.IsAbort)
@@ -29,11 +26,7 @@ public static class AsExtensions
         }
     }
 
-    public static async Task<T> AsAsync<T>(
-        this IHttpRequest request,
-        T defaultData,
-        CancellationToken ct = default
-    )
+    public static async Task<T> AsAsync<T>(this IHttpRequest request, T defaultData, CancellationToken ct = default)
     {
         var response = await request.RunAsync(ct);
         if (response.IsAbort)

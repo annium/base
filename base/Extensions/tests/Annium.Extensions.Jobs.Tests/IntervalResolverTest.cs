@@ -53,10 +53,8 @@ public class IntervalResolverTest
         isMatch(GetInstant(2000, 1, 12, 0, 30, 0)).IsTrue();
     }
 
-    private IIntervalResolver GetResolver() => new ServiceContainer()
-        .AddScheduler()
-        .BuildServiceProvider()
-        .Resolve<IIntervalResolver>();
+    private IIntervalResolver GetResolver() =>
+        new ServiceContainer().AddScheduler().BuildServiceProvider().Resolve<IIntervalResolver>();
 
     private Instant GetInstant(int year, int month, int day, int hour, int minute, int second) =>
         Instant.FromDateTimeUtc(new DateTime(year, month, day, hour, minute, second, DateTimeKind.Utc));

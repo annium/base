@@ -18,7 +18,9 @@ internal sealed class NodaIsoIntervalConverter : ConverterBase<Interval>
     )
     {
         if (reader.TokenType != JsonTokenType.String)
-            throw new InvalidNodaDataException($"Unexpected token parsing Interval. Expected String, got {reader.TokenType}.");
+            throw new InvalidNodaDataException(
+                $"Unexpected token parsing Interval. Expected String, got {reader.TokenType}."
+            );
 
         var text = reader.GetString()!;
         var slash = text.IndexOf('/');
@@ -34,14 +36,11 @@ internal sealed class NodaIsoIntervalConverter : ConverterBase<Interval>
         return new Interval(start, end);
     }
 
-    public override void WriteImplementation(
-        Utf8JsonWriter writer,
-        Interval value,
-        JsonSerializerOptions options
-    )
+    public override void WriteImplementation(Utf8JsonWriter writer, Interval value, JsonSerializerOptions options)
     {
         var pattern = InstantPattern.ExtendedIso;
-        var text = (value.HasStart ? pattern.Format(value.Start) : "") + "/" + (value.HasEnd ? pattern.Format(value.End) : "");
+        var text =
+            (value.HasStart ? pattern.Format(value.Start) : "") + "/" + (value.HasEnd ? pattern.Format(value.End) : "");
         writer.WriteStringValue(text);
     }
 }

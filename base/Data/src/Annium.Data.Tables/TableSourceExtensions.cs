@@ -11,22 +11,16 @@ public static class TableSourceExtensions
         ITableSource<TD> target,
         Func<TS, TD?> map
     )
-        where TD : notnull
-        => source.Subscribe(e => target.MapWrite(e, map));
+        where TD : notnull => source.Subscribe(e => target.MapWrite(e, map));
 
     public static IDisposable MapAppendTo<TS, TD>(
         this IObservable<IChangeEvent<TS>> source,
         ITableSource<TD> target,
         Func<TS, TD?> map
     )
-        where TD : notnull
-        => source.Subscribe(e => target.MapAppend(e, map));
+        where TD : notnull => source.Subscribe(e => target.MapAppend(e, map));
 
-    private static void MapWrite<TS, TD>(
-        this ITableSource<TD> target,
-        IChangeEvent<TS> e,
-        Func<TS, TD?> map
-    )
+    private static void MapWrite<TS, TD>(this ITableSource<TD> target, IChangeEvent<TS> e, Func<TS, TD?> map)
         where TD : notnull
     {
         switch (e)
@@ -52,11 +46,7 @@ public static class TableSourceExtensions
         }
     }
 
-    private static void MapAppend<TS, TD>(
-        this ITableSource<TD> target,
-        IChangeEvent<TS> e,
-        Func<TS, TD?> map
-    )
+    private static void MapAppend<TS, TD>(this ITableSource<TD> target, IChangeEvent<TS> e, Func<TS, TD?> map)
         where TD : notnull
     {
         switch (e)
@@ -88,10 +78,7 @@ public static class TableSourceExtensions
         }
     }
 
-    public static void SyncAddDelete<T>(
-        this ITableSource<T> target,
-        IReadOnlyCollection<T> values
-    )
+    public static void SyncAddDelete<T>(this ITableSource<T> target, IReadOnlyCollection<T> values)
         where T : notnull
     {
         var source = target.Source;
@@ -108,10 +95,7 @@ public static class TableSourceExtensions
                 target.Set(value);
     }
 
-    public static void SyncAddUpdateDelete<T>(
-        this ITableSource<T> target,
-        IReadOnlyCollection<T> values
-    )
+    public static void SyncAddUpdateDelete<T>(this ITableSource<T> target, IReadOnlyCollection<T> values)
         where T : notnull
     {
         var source = target.Source;

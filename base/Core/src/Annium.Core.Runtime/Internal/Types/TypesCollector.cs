@@ -25,7 +25,11 @@ internal class TypesCollector : ILogSubject
         foreach (var assembly in assemblies)
         {
             var assemblyTypes = assembly.GetTypes();
-            this.Trace<int, string>("register {assemblyTypesLength} type(s) from assembly {assembly}", assemblyTypes.Length, assembly.ShortName());
+            this.Trace<int, string>(
+                "register {assemblyTypesLength} type(s) from assembly {assembly}",
+                assemblyTypes.Length,
+                assembly.ShortName()
+            );
             foreach (var type in assemblyTypes)
                 types.Add(type);
         }

@@ -20,14 +20,17 @@ public class ConstructorJsonConverterFactory : JsonConverterFactory
 
     public override JsonConverter CreateConverter(Type typeToConvert, JsonSerializerOptions options)
     {
-        var configuration = _configurations[typeToConvert] ?? throw new ArgumentException($"Type {typeToConvert.FriendlyName()} configuration is missing");
+        var configuration =
+            _configurations[typeToConvert]
+            ?? throw new ArgumentException($"Type {typeToConvert.FriendlyName()} configuration is missing");
 
-        return (JsonConverter)Activator.CreateInstance(
-            typeof(ConstructorJsonConverter<>).MakeGenericType(typeToConvert),
-            configuration.Constructor,
-            configuration.Parameters,
-            configuration.Properties
-        )!;
+        return (JsonConverter)
+            Activator.CreateInstance(
+                typeof(ConstructorJsonConverter<>).MakeGenericType(typeToConvert),
+                configuration.Constructor,
+                configuration.Parameters,
+                configuration.Properties
+            )!;
     }
 
     private ConstructorJsonConverterConfiguration? GetConfiguration(Type type)
@@ -36,21 +39,25 @@ public class ConstructorJsonConverterFactory : JsonConverterFactory
             return null;
 
         // select non-default constructors
-        var constructors = type
-            .GetConstructors(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+        var constructors = type.GetConstructors(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
             .Where(IsSuitableConstructor)
-            .Select(x => (
-                constructor: x,
-                isSelected: x.GetCustomAttribute<DeserializationConstructorAttribute>() != null,
-                paramsCount: x.GetParameters().Length
-            ))
+            .Select(
+                x =>
+                    (
+                        constructor: x,
+                        isSelected: x.GetCustomAttribute<DeserializationConstructorAttribute>() != null,
+                        paramsCount: x.GetParameters().Length
+                    )
+            )
             .OrderByDescending(x => x.paramsCount)
             .ToArray();
 
         // if ambiguous selection - throw
         var selected = constructors.Where(x => x.isSelected).ToArray();
         if (selected.Length > 1)
-            throw new JsonException($"Type {type.FriendlyName()} has multiple constructors, marked with {typeof(DeserializationConstructorAttribute).FriendlyName()}");
+            throw new JsonException(
+                $"Type {type.FriendlyName()} has multiple constructors, marked with {typeof(DeserializationConstructorAttribute).FriendlyName()}"
+            );
 
         if (selected.Length == 1)
             return BuildConfiguration(selected[0].constructor);
@@ -66,7 +73,8 @@ public class ConstructorJsonConverterFactory : JsonConverterFactory
     private static ConstructorJsonConverterConfiguration BuildConfiguration(ConstructorInfo constructor)
     {
         var type = constructor.DeclaringType!;
-        var parameters = constructor.GetParameters()
+        var parameters = constructor
+            .GetParameters()
             .Select(x =>
             {
                 var property = type.GetProperty(x.Name!.PascalCase());

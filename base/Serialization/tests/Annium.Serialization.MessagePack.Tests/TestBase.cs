@@ -18,7 +18,10 @@ public class TestBase
         var sp = container.BuildServiceProvider();
         sp.UseLogging(x => x.UseInMemory());
 
-        var serializer = sp.ResolveSerializer<ReadOnlyMemory<byte>>(Abstractions.Constants.DefaultKey, Constants.MediaType);
+        var serializer = sp.ResolveSerializer<ReadOnlyMemory<byte>>(
+            Abstractions.Constants.DefaultKey,
+            Constants.MediaType
+        );
 
         return serializer;
     }

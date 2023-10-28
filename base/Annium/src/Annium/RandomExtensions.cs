@@ -7,7 +7,8 @@ public static class RandomExtensions
 {
     public static bool NextBool(this Random random) => random.Next(0, 1) == 1;
 
-    public static T NextEnum<T>(this Random random, params T[] values) where T : Enum
+    public static T NextEnum<T>(this Random random, params T[] values)
+        where T : Enum
     {
         if (values.Length == 0)
             values = Enum.GetValues(typeof(T)).OfType<T>().ToArray();

@@ -8,15 +8,12 @@ internal class ManagedActionScheduler : IActionScheduler
 {
     private readonly ITimeManager _timeManager;
 
-    public ManagedActionScheduler(
-        ITimeManager timeManager
-    )
+    public ManagedActionScheduler(ITimeManager timeManager)
     {
         _timeManager = timeManager;
     }
 
-    public Action Delay(Action handle, int timeout)
-        => Delay(handle, Duration.FromMilliseconds(timeout));
+    public Action Delay(Action handle, int timeout) => Delay(handle, Duration.FromMilliseconds(timeout));
 
     public Action Delay(Action handle, Duration timeout)
     {
@@ -36,8 +33,7 @@ internal class ManagedActionScheduler : IActionScheduler
         return () => _timeManager.NowChanged -= CheckTime;
     }
 
-    public Action Interval(Action handle, int interval)
-        => Interval(handle, Duration.FromMilliseconds(interval));
+    public Action Interval(Action handle, int interval) => Interval(handle, Duration.FromMilliseconds(interval));
 
     public Action Interval(Action handle, Duration interval)
     {

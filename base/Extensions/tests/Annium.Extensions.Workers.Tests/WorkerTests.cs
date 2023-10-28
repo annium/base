@@ -83,10 +83,7 @@ file class Worker : IWorker<WorkerData>, ILogSubject
     public ILogger Logger { get; }
     private readonly SharedLog _log;
 
-    public Worker(
-        SharedLog log,
-        ILogger logger
-    )
+    public Worker(SharedLog log, ILogger logger)
     {
         Logger = logger;
         _log = log;

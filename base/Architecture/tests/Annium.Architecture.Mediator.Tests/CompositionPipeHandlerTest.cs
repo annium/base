@@ -11,9 +11,8 @@ namespace Annium.Architecture.Mediator.Tests;
 
 public class CompositionPipeHandlerTest : TestBase
 {
-    public CompositionPipeHandlerTest(ITestOutputHelper outputHelper) : base(outputHelper)
-    {
-    }
+    public CompositionPipeHandlerTest(ITestOutputHelper outputHelper)
+        : base(outputHelper) { }
 
     [Fact]
     public async Task CompositionFailure_ReturnsNotFound()

@@ -19,7 +19,8 @@ public static class GetUnboundBaseTypeExtension
             return baseType;
 
         var genericArgs = baseType.GetGenericTypeDefinition().GetGenericArguments();
-        var unboundBaseArgs = baseType.GetGenericArguments()
+        var unboundBaseArgs = baseType
+            .GetGenericArguments()
             .Select((arg, i) => arg.IsGenericParameter ? genericArgs[i] : arg)
             .ToArray();
 

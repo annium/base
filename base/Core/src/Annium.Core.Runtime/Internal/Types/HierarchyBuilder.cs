@@ -8,7 +8,9 @@ internal static class HierarchyBuilder
 {
     private delegate void RegisterAncestor(Type type, Type ancestor);
 
-    public static IReadOnlyDictionary<Ancestor, IReadOnlyCollection<Descendant>> BuildHierarchy(IReadOnlyCollection<Type> types)
+    public static IReadOnlyDictionary<Ancestor, IReadOnlyCollection<Descendant>> BuildHierarchy(
+        IReadOnlyCollection<Type> types
+    )
     {
         var result = new Dictionary<Type, HashSet<Type>>();
         var descendantsRegistry = new Dictionary<Type, Descendant>();

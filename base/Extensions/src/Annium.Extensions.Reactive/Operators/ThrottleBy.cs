@@ -22,21 +22,25 @@ public static class ThrottleByOperatorExtensions
         {
             var keys = new ConcurrentDictionary<TKey, long>();
 
-            return source.Subscribe(x =>
-            {
-                var now = clock.GetCurrentInstant().ToUnixTimeMilliseconds();
-                var key = getKey(x);
+            return source.Subscribe(
+                x =>
+                {
+                    var now = clock.GetCurrentInstant().ToUnixTimeMilliseconds();
+                    var key = getKey(x);
 
-                var stamp = keys.AddOrUpdate(
-                    key,
-                    static (_, data) => data.now + data.interval,
-                    static (_, value, data) => value <= data.now ? data.now + data.interval : value,
-                    (now, interval: intervalMs)
-                );
+                    var stamp = keys.AddOrUpdate(
+                        key,
+                        static (_, data) => data.now + data.interval,
+                        static (_, value, data) => value <= data.now ? data.now + data.interval : value,
+                        (now, interval: intervalMs)
+                    );
 
-                if (stamp == now + intervalMs)
-                    observer.OnNext(x);
-            }, observer.OnError, observer.OnCompleted);
+                    if (stamp == now + intervalMs)
+                        observer.OnNext(x);
+                },
+                observer.OnError,
+                observer.OnCompleted
+            );
         });
     }
 }

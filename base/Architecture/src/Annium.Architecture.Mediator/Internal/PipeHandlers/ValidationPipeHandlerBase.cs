@@ -12,10 +12,7 @@ internal abstract class ValidationPipeHandlerBase<TRequest, TResponse> : ILogSub
     public ILogger Logger { get; }
     private readonly IValidator<TRequest> _validator;
 
-    protected ValidationPipeHandlerBase(
-        IValidator<TRequest> validator,
-        ILogger logger
-    )
+    protected ValidationPipeHandlerBase(IValidator<TRequest> validator, ILogger logger)
     {
         _validator = validator;
         Logger = logger;

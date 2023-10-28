@@ -21,9 +21,8 @@ public class ManagedWebSocketTests : TestBase, IAsyncLifetime
     private readonly ConcurrentQueue<string> _texts = new();
     private readonly ConcurrentQueue<byte[]> _binaries = new();
 
-    public ManagedWebSocketTests(ITestOutputHelper outputHelper) : base(outputHelper)
-    {
-    }
+    public ManagedWebSocketTests(ITestOutputHelper outputHelper)
+        : base(outputHelper) { }
 
     [Fact]
     public async Task Send_NotConnected()
@@ -85,7 +84,9 @@ public class ManagedWebSocketTests : TestBase, IAsyncLifetime
 
         // act
         this.Trace("close output");
-        _clientSocket.CloseOutputAsync(System.Net.WebSockets.WebSocketCloseStatus.Empty, string.Empty, CancellationToken.None).GetAwaiter();
+        _clientSocket
+            .CloseOutputAsync(System.Net.WebSockets.WebSocketCloseStatus.Empty, string.Empty, CancellationToken.None)
+            .GetAwaiter();
 
         this.Trace("send message");
         var result = await SendTextAsync(message);
@@ -107,13 +108,19 @@ public class ManagedWebSocketTests : TestBase, IAsyncLifetime
         var serverTcs = new TaskCompletionSource();
 
         this.Trace("run server");
-        await using var _ = RunServerBase(async (_, ctx, _) =>
-        {
-            await ctx.WebSocket.CloseOutputAsync(System.Net.WebSockets.WebSocketCloseStatus.Empty, string.Empty, default);
-            Task.Delay(10, CancellationToken.None)
-                .ContinueWith(_ => serverTcs.SetResult(), CancellationToken.None)
-                .GetAwaiter();
-        });
+        await using var _ = RunServerBase(
+            async (_, ctx, _) =>
+            {
+                await ctx.WebSocket.CloseOutputAsync(
+                    System.Net.WebSockets.WebSocketCloseStatus.Empty,
+                    string.Empty,
+                    default
+                );
+                Task.Delay(10, CancellationToken.None)
+                    .ContinueWith(_ => serverTcs.SetResult(), CancellationToken.None)
+                    .GetAwaiter();
+            }
+        );
 
         this.Trace("connect and start listening");
         await ConnectAndStartListenAsync();
@@ -171,21 +178,26 @@ public class ManagedWebSocketTests : TestBase, IAsyncLifetime
         var serverTcs = new TaskCompletionSource();
 
         this.Trace("run server");
-        await using var _ = RunServerBase(async (_, ctx, _) =>
-        {
-            this.Trace("abort server socket");
-            ctx.WebSocket.Abort();
+        await using var _ = RunServerBase(
+            async (_, ctx, _) =>
+            {
+                this.Trace("abort server socket");
+                ctx.WebSocket.Abort();
 
-            await Task.CompletedTask;
+                await Task.CompletedTask;
 
-            Task.Delay(10, CancellationToken.None)
-                .ContinueWith(_ =>
-                {
-                    this.Trace("send signal to client");
-                    serverTcs.SetResult();
-                }, CancellationToken.None)
-                .GetAwaiter();
-        });
+                Task.Delay(10, CancellationToken.None)
+                    .ContinueWith(
+                        _ =>
+                        {
+                            this.Trace("send signal to client");
+                            serverTcs.SetResult();
+                        },
+                        CancellationToken.None
+                    )
+                    .GetAwaiter();
+            }
+        );
 
         this.Trace("connect and start listening");
         await ConnectAndStartListenAsync();
@@ -216,33 +228,34 @@ public class ManagedWebSocketTests : TestBase, IAsyncLifetime
         var serverTcs = new TaskCompletionSource();
 
         this.Trace("run server");
-        await using var _ = RunServer(async (serverSocket, ct) =>
-        {
-            this.Trace("subscribe to text messages");
-            serverSocket.OnTextReceived += x => serverSocket
-                .SendTextAsync(x.ToArray(), CancellationToken.None)
-                .GetAwaiter()
-                .GetResult();
+        await using var _ = RunServer(
+            async (serverSocket, ct) =>
+            {
+                this.Trace("subscribe to text messages");
+                serverSocket.OnTextReceived += x =>
+                    serverSocket.SendTextAsync(x.ToArray(), CancellationToken.None).GetAwaiter().GetResult();
 
-            this.Trace("subscribe to binary messages");
-            serverSocket.OnBinaryReceived += x => serverSocket
-                .SendBinaryAsync(x.ToArray(), CancellationToken.None)
-                .GetAwaiter()
-                .GetResult();
+                this.Trace("subscribe to binary messages");
+                serverSocket.OnBinaryReceived += x =>
+                    serverSocket.SendBinaryAsync(x.ToArray(), CancellationToken.None).GetAwaiter().GetResult();
 
-            Task.Delay(10, CancellationToken.None)
-                .ContinueWith(_ =>
-                {
-                    this.Trace("send signal to client");
-                    serverTcs.SetResult();
-                }, CancellationToken.None)
-                .GetAwaiter();
+                Task.Delay(10, CancellationToken.None)
+                    .ContinueWith(
+                        _ =>
+                        {
+                            this.Trace("send signal to client");
+                            serverTcs.SetResult();
+                        },
+                        CancellationToken.None
+                    )
+                    .GetAwaiter();
 
-            this.Trace("listen server socket");
-            await serverSocket.ListenAsync(ct);
+                this.Trace("listen server socket");
+                await serverSocket.ListenAsync(ct);
 
-            this.Trace("server socket closed");
-        });
+                this.Trace("server socket closed");
+            }
+        );
 
         this.Trace("connect and start listening");
         await ConnectAndStartListenAsync();
@@ -313,7 +326,11 @@ public class ManagedWebSocketTests : TestBase, IAsyncLifetime
         await ConnectAsync();
 
         this.Trace("close client socket");
-        await _clientSocket.CloseOutputAsync(System.Net.WebSockets.WebSocketCloseStatus.NormalClosure, string.Empty, default);
+        await _clientSocket.CloseOutputAsync(
+            System.Net.WebSockets.WebSocketCloseStatus.NormalClosure,
+            string.Empty,
+            default
+        );
 
         // act
         this.Trace("listen");
@@ -334,7 +351,14 @@ public class ManagedWebSocketTests : TestBase, IAsyncLifetime
 
         // arrange
         this.Trace("run server");
-        await using var _ = RunServerBase(async (_, ctx, _) => await ctx.WebSocket.CloseOutputAsync(System.Net.WebSockets.WebSocketCloseStatus.Empty, string.Empty, default));
+        await using var _ = RunServerBase(
+            async (_, ctx, _) =>
+                await ctx.WebSocket.CloseOutputAsync(
+                    System.Net.WebSockets.WebSocketCloseStatus.Empty,
+                    string.Empty,
+                    default
+                )
+        );
 
         this.Trace("connect");
         await ConnectAsync();
@@ -390,21 +414,26 @@ public class ManagedWebSocketTests : TestBase, IAsyncLifetime
         var serverTcs = new TaskCompletionSource();
 
         this.Trace("run server");
-        await using var _ = RunServerBase(async (_, ctx, _) =>
-        {
-            this.Trace("abort server socket");
-            ctx.WebSocket.Abort();
+        await using var _ = RunServerBase(
+            async (_, ctx, _) =>
+            {
+                this.Trace("abort server socket");
+                ctx.WebSocket.Abort();
 
-            await Task.CompletedTask;
+                await Task.CompletedTask;
 
-            Task.Delay(10, CancellationToken.None)
-                .ContinueWith(_ =>
-                {
-                    this.Trace("send signal to client");
-                    serverTcs.SetResult();
-                }, CancellationToken.None)
-                .GetAwaiter();
-        });
+                Task.Delay(10, CancellationToken.None)
+                    .ContinueWith(
+                        _ =>
+                        {
+                            this.Trace("send signal to client");
+                            serverTcs.SetResult();
+                        },
+                        CancellationToken.None
+                    )
+                    .GetAwaiter();
+            }
+        );
 
         this.Trace("connect");
         await ConnectAsync();
@@ -436,23 +465,23 @@ public class ManagedWebSocketTests : TestBase, IAsyncLifetime
 
         // arrange
         this.Trace("generate messages");
-        var messages = Enumerable.Range(0, 3)
-            .Select(x => new string((char)x, 10))
-            .ToArray();
+        var messages = Enumerable.Range(0, 3).Select(x => new string((char)x, 10)).ToArray();
 
         this.Trace("run server");
-        await using var _ = RunServer(async (serverSocket, ct) =>
-        {
-            this.Trace("start sending messages");
-
-            foreach (var message in messages)
+        await using var _ = RunServer(
+            async (serverSocket, ct) =>
             {
-                await serverSocket.SendTextAsync(Encoding.UTF8.GetBytes(message), ct);
-                await Task.Delay(1, CancellationToken.None);
-            }
+                this.Trace("start sending messages");
 
-            this.Trace("done sending messages");
-        });
+                foreach (var message in messages)
+                {
+                    await serverSocket.SendTextAsync(Encoding.UTF8.GetBytes(message), ct);
+                    await Task.Delay(1, CancellationToken.None);
+                }
+
+                this.Trace("done sending messages");
+            }
+        );
 
         // act
         this.Trace("connect");
@@ -475,23 +504,23 @@ public class ManagedWebSocketTests : TestBase, IAsyncLifetime
 
         // arrange
         this.Trace("generate messages");
-        var messages = Enumerable.Range(0, 3)
-            .Select(x => new string((char)x, 1_000_000))
-            .ToArray();
+        var messages = Enumerable.Range(0, 3).Select(x => new string((char)x, 1_000_000)).ToArray();
 
         this.Trace("run server");
-        await using var _ = RunServer(async (serverSocket, ct) =>
-        {
-            this.Trace("start sending messages");
-
-            foreach (var message in messages)
+        await using var _ = RunServer(
+            async (serverSocket, ct) =>
             {
-                await serverSocket.SendTextAsync(Encoding.UTF8.GetBytes(message), ct);
-                await Task.Delay(1, CancellationToken.None);
-            }
+                this.Trace("start sending messages");
 
-            this.Trace("done sending messages");
-        });
+                foreach (var message in messages)
+                {
+                    await serverSocket.SendTextAsync(Encoding.UTF8.GetBytes(message), ct);
+                    await Task.Delay(1, CancellationToken.None);
+                }
+
+                this.Trace("done sending messages");
+            }
+        );
 
         // act
         this.Trace("connect");
@@ -521,32 +550,30 @@ public class ManagedWebSocketTests : TestBase, IAsyncLifetime
 
         // arrange
         this.Trace("generate messages");
-        var texts = Enumerable.Range(0, 3)
-            .Select(x => new string((char)x, 10))
-            .ToArray();
-        var binaries = texts
-            .Select(Encoding.UTF8.GetBytes)
-            .ToArray();
+        var texts = Enumerable.Range(0, 3).Select(x => new string((char)x, 10)).ToArray();
+        var binaries = texts.Select(Encoding.UTF8.GetBytes).ToArray();
 
         this.Trace("run server");
-        await using var _ = RunServer(async (serverSocket, ct) =>
-        {
-            this.Trace("start sending messages");
-
-            foreach (var message in texts)
+        await using var _ = RunServer(
+            async (serverSocket, ct) =>
             {
-                await serverSocket.SendTextAsync(Encoding.UTF8.GetBytes(message), ct);
-                await Task.Delay(1, CancellationToken.None);
-            }
+                this.Trace("start sending messages");
 
-            foreach (var message in binaries)
-            {
-                await serverSocket.SendBinaryAsync(message, ct);
-                await Task.Delay(1, CancellationToken.None);
-            }
+                foreach (var message in texts)
+                {
+                    await serverSocket.SendTextAsync(Encoding.UTF8.GetBytes(message), ct);
+                    await Task.Delay(1, CancellationToken.None);
+                }
 
-            this.Trace("done sending messages");
-        });
+                foreach (var message in binaries)
+                {
+                    await serverSocket.SendBinaryAsync(message, ct);
+                    await Task.Delay(1, CancellationToken.None);
+                }
+
+                this.Trace("done sending messages");
+            }
+        );
 
         // act
         this.Trace("connect");
@@ -578,7 +605,11 @@ public class ManagedWebSocketTests : TestBase, IAsyncLifetime
 
         _clientSocket = new NativeClientWebSocket();
         _managedSocket = new ManagedWebSocket(_clientSocket, Logger);
-        this.Trace<string, string>("created pair of {clientSocket} and {managedSocket}", _clientSocket.GetFullId(), _managedSocket.GetFullId());
+        this.Trace<string, string>(
+            "created pair of {clientSocket} and {managedSocket}",
+            _clientSocket.GetFullId(),
+            _managedSocket.GetFullId()
+        );
 
         _managedSocket.OnTextReceived += x =>
         {
@@ -603,17 +634,19 @@ public class ManagedWebSocketTests : TestBase, IAsyncLifetime
 
     private IAsyncDisposable RunServer(Func<ManagedWebSocket, CancellationToken, Task> handleWebSocket)
     {
-        return RunServerBase(async (sp, ctx, ct) =>
-        {
-            this.Trace("start");
+        return RunServerBase(
+            async (sp, ctx, ct) =>
+            {
+                this.Trace("start");
 
-            var socket = new ManagedWebSocket(ctx.WebSocket, sp.Resolve<ILogger>());
+                var socket = new ManagedWebSocket(ctx.WebSocket, sp.Resolve<ILogger>());
 
-            this.Trace<string>("handle {socket}", socket.GetFullId());
-            await handleWebSocket(socket, ct);
+                this.Trace<string>("handle {socket}", socket.GetFullId());
+                await handleWebSocket(socket, ct);
 
-            this.Trace("done");
-        });
+                this.Trace("done");
+            }
+        );
     }
 
     private async Task ConnectAndStartListenAsync(CancellationToken ct = default)

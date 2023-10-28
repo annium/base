@@ -8,11 +8,7 @@ internal readonly struct ReceiveResult
     public readonly SocketCloseStatus? Status;
     public readonly Exception? Exception;
 
-    public ReceiveResult(
-        int count,
-        SocketCloseStatus? status,
-        Exception? exception
-    )
+    public ReceiveResult(int count, SocketCloseStatus? status, Exception? exception)
     {
         Count = count;
         Status = status;

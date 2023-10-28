@@ -11,16 +11,14 @@ internal class LoggingBridge : IMicrosoftLogger
     private readonly ILogSentryBridge _sentryBridge;
     private readonly string _source;
 
-    public LoggingBridge(
-        ILogSentryBridge sentryBridge,
-        string source
-    )
+    public LoggingBridge(ILogSentryBridge sentryBridge, string source)
     {
         _sentryBridge = sentryBridge;
         _source = source;
     }
 
-    public IDisposable BeginScope<TState>(TState state) where TState : notnull => Disposable.Empty;
+    public IDisposable BeginScope<TState>(TState state)
+        where TState : notnull => Disposable.Empty;
 
     public bool IsEnabled(MicrosoftLogLevel logLevel) => true;
 

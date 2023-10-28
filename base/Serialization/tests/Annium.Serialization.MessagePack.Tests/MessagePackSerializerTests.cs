@@ -13,7 +13,12 @@ public class MessagePackSerializerTests : TestBase
     {
         // arrange
         var serializer = GetSerializer();
-        var data = new Person { FirstName = "Max", LastName = "Madness", Tags = new[] { "a", "b" } };
+        var data = new Person
+        {
+            FirstName = "Max",
+            LastName = "Madness",
+            Tags = new[] { "a", "b" }
+        };
 
         // act
         var serialized = serializer.Serialize(data);

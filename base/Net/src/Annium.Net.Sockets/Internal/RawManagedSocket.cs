@@ -74,7 +74,11 @@ internal class RawManagedSocket : IManagedSocket, ILogSubject
             var (isClosed, result) = await ReceiveAsync(buffer, ct);
             if (isClosed)
             {
-                this.Trace(result.Exception is not null ? $"stop with {result.Status}: {result.Exception}" : $"stop with {result.Status}");
+                this.Trace(
+                    result.Exception is not null
+                        ? $"stop with {result.Status}: {result.Exception}"
+                        : $"stop with {result.Status}"
+                );
                 return result;
             }
         }
@@ -86,7 +90,10 @@ internal class RawManagedSocket : IManagedSocket, ILogSubject
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private async ValueTask<(bool IsClosed, SocketCloseResult Result)> ReceiveAsync(RawBuffer buffer, CancellationToken ct)
+    private async ValueTask<(bool IsClosed, SocketCloseResult Result)> ReceiveAsync(
+        RawBuffer buffer,
+        CancellationToken ct
+    )
     {
         this.Trace("start");
 
@@ -148,9 +155,10 @@ internal class RawManagedSocket : IManagedSocket, ILogSubject
         }
         catch (IOException e) when (e.InnerException is SocketException se)
         {
-            var status = se.SocketErrorCode is SocketError.OperationAborted
-                ? SocketCloseStatus.ClosedLocal
-                : SocketCloseStatus.ClosedRemote;
+            var status =
+                se.SocketErrorCode is SocketError.OperationAborted
+                    ? SocketCloseStatus.ClosedLocal
+                    : SocketCloseStatus.ClosedRemote;
             this.Trace("{status} with SocketException (code: {code}): {e}", status, se.SocketErrorCode, se);
             return new ReceiveResult(0, status, null);
         }

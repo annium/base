@@ -17,12 +17,11 @@ internal class ClientManagedWebSocket : IClientManagedWebSocket, ILogSubject
     private NativeWebSocket? _nativeSocket;
     private ManagedWebSocket? _managedSocket;
     private CancellationTokenSource _listenCts = new();
-    private Task<WebSocketCloseResult> _listenTask = Task.FromResult(new WebSocketCloseResult(WebSocketCloseStatus.ClosedLocal, null));
+    private Task<WebSocketCloseResult> _listenTask = Task.FromResult(
+        new WebSocketCloseResult(WebSocketCloseStatus.ClosedLocal, null)
+    );
 
-    public ClientManagedWebSocket(
-        int keepAliveInterval,
-        ILogger logger
-    )
+    public ClientManagedWebSocket(int keepAliveInterval, ILogger logger)
     {
         _keepAliveInterval = keepAliveInterval;
         Logger = logger;
@@ -38,13 +37,14 @@ internal class ClientManagedWebSocket : IClientManagedWebSocket, ILogSubject
 
         _nativeSocket = new NativeWebSocket()
         {
-            Options =
-            {
-                KeepAliveInterval = TimeSpan.FromMilliseconds(_keepAliveInterval)
-            }
+            Options = { KeepAliveInterval = TimeSpan.FromMilliseconds(_keepAliveInterval) }
         };
         _managedSocket = new ManagedWebSocket(_nativeSocket, Logger);
-        this.Trace<string, string>("paired with {nativeSocket} / {managedSocket}", _nativeSocket.GetFullId(), _managedSocket.GetFullId());
+        this.Trace<string, string>(
+            "paired with {nativeSocket} / {managedSocket}",
+            _nativeSocket.GetFullId(),
+            _managedSocket.GetFullId()
+        );
 
         this.Trace("bind events");
         _managedSocket.OnTextReceived += HandleOnTextReceived;
@@ -102,7 +102,11 @@ internal class ClientManagedWebSocket : IClientManagedWebSocket, ILogSubject
         {
             this.Trace("close output");
             if (_nativeSocket.State is WebSocketState.Open or WebSocketState.CloseReceived)
-                await _nativeSocket.CloseOutputAsync(System.Net.WebSockets.WebSocketCloseStatus.NormalClosure, string.Empty, CancellationToken.None);
+                await _nativeSocket.CloseOutputAsync(
+                    System.Net.WebSockets.WebSocketCloseStatus.NormalClosure,
+                    string.Empty,
+                    CancellationToken.None
+                );
         }
         catch (Exception e)
         {

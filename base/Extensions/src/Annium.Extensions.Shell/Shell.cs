@@ -8,9 +8,7 @@ internal class Shell : IShell
 {
     private readonly ILogger _logger;
 
-    public Shell(
-        ILogger logger
-    )
+    public Shell(ILogger logger)
     {
         _logger = logger;
     }

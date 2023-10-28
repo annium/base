@@ -9,9 +9,7 @@ internal class HelpBuilder : IHelpBuilder
 {
     private readonly IConfigurationProcessor _configurationProcessor;
 
-    public HelpBuilder(
-        IConfigurationProcessor configurationProcessor
-    )
+    public HelpBuilder(IConfigurationProcessor configurationProcessor)
     {
         _configurationProcessor = configurationProcessor;
     }
@@ -108,7 +106,11 @@ internal class HelpBuilder : IHelpBuilder
             var maxAliasLength = aliases.Values.Max(e => e.Length);
             var descriptions = options.ToDictionary(
                 o => o.Key,
-                o => Description(Option(o.Key) + (o.Value.Item3 == OptionType.Multi ? "[]" : string.Empty), o.Value.Item2)
+                o =>
+                    Description(
+                        Option(o.Key) + (o.Value.Item3 == OptionType.Multi ? "[]" : string.Empty),
+                        o.Value.Item2
+                    )
             );
             var maxDescriptionLength = descriptions.Values.Max(e => e.Length);
             foreach (var option in options.Keys)
@@ -123,42 +125,41 @@ internal class HelpBuilder : IHelpBuilder
         return sb.ToString();
     }
 
-    private IReadOnlyDictionary<string, bool> GetPositions(Type[] types) => types
-        .SelectMany(t => _configurationProcessor.GetPropertiesWithAttribute<PositionAttribute>(t))
-        .OrderBy(e => e.attribute.Position)
-        .ToDictionary(
-            e => e.property.Name.KebabCase(),
-            e => e.attribute.IsRequired
-        );
+    private IReadOnlyDictionary<string, bool> GetPositions(Type[] types) =>
+        types
+            .SelectMany(t => _configurationProcessor.GetPropertiesWithAttribute<PositionAttribute>(t))
+            .OrderBy(e => e.attribute.Position)
+            .ToDictionary(e => e.property.Name.KebabCase(), e => e.attribute.IsRequired);
 
-    private IReadOnlyDictionary<string, ValueTuple<string?, bool, OptionType>> GetOptions(Type[] types) => types
-        .SelectMany(t => _configurationProcessor.GetPropertiesWithAttribute<OptionAttribute>(t))
-        .OrderBy(e => e.attribute.IsRequired)
-        .ThenBy(e => e.property.Name)
-        .ToDictionary(
-            e => e.property.Name.KebabCase(),
-            e => (
-                e.attribute.Alias?.KebabCase(),
-                e.attribute.IsRequired,
-                e.property.PropertyType.IsArray
-                    ? OptionType.Multi
-                    : e.property.PropertyType == typeof(bool)
-                        ? OptionType.Flag
-                        : OptionType.Normal
-            )
-        );
+    private IReadOnlyDictionary<string, ValueTuple<string?, bool, OptionType>> GetOptions(Type[] types) =>
+        types
+            .SelectMany(t => _configurationProcessor.GetPropertiesWithAttribute<OptionAttribute>(t))
+            .OrderBy(e => e.attribute.IsRequired)
+            .ThenBy(e => e.property.Name)
+            .ToDictionary(
+                e => e.property.Name.KebabCase(),
+                e =>
+                    (
+                        e.attribute.Alias?.KebabCase(),
+                        e.attribute.IsRequired,
+                        e.property.PropertyType.IsArray
+                            ? OptionType.Multi
+                            : e.property.PropertyType == typeof(bool)
+                                ? OptionType.Flag
+                                : OptionType.Normal
+                    )
+            );
 
-    private IReadOnlyDictionary<string, string> GetHelps(Type[] types) => types
-        .SelectMany(t => _configurationProcessor.GetPropertiesWithAttribute<HelpAttribute>(t))
-        .ToDictionary(
-            e => e.property.Name.KebabCase(),
-            e => e.attribute.Help
-        );
+    private IReadOnlyDictionary<string, string> GetHelps(Type[] types) =>
+        types
+            .SelectMany(t => _configurationProcessor.GetPropertiesWithAttribute<HelpAttribute>(t))
+            .ToDictionary(e => e.property.Name.KebabCase(), e => e.attribute.Help);
 
-    private string? GetRaw(Type[] types) => types
-        .SelectMany(t => _configurationProcessor.GetPropertiesWithAttribute<RawAttribute>(t))
-        .Select(e => e.property.Name.KebabCase())
-        .FirstOrDefault();
+    private string? GetRaw(Type[] types) =>
+        types
+            .SelectMany(t => _configurationProcessor.GetPropertiesWithAttribute<RawAttribute>(t))
+            .Select(e => e.property.Name.KebabCase())
+            .FirstOrDefault();
 
     private string Option(string argument) => $"{Constants.OptionSign}{argument}";
 

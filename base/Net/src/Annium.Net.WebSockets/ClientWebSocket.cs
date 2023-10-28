@@ -45,14 +45,8 @@ public class ClientWebSocket : IClientWebSocket
         _connectionMonitor.OnConnectionLost += HandleConnectionLost;
     }
 
-    public ClientWebSocket(
-        ILogger logger
-    ) : this(
-        ClientWebSocketOptions.Default,
-        logger
-    )
-    {
-    }
+    public ClientWebSocket(ILogger logger)
+        : this(ClientWebSocketOptions.Default, logger) { }
 
     public void Connect(Uri uri)
     {
@@ -137,13 +131,14 @@ public class ClientWebSocket : IClientWebSocket
         OnDisconnected(result.Status);
 
         this.Trace("schedule connection in {reconnectDelay}ms", _reconnectDelay);
-        Task.Delay(_reconnectDelay).ContinueWith(_ =>
-        {
-            this.Trace("trigger connect");
-            ConnectPrivate(uri);
+        Task.Delay(_reconnectDelay)
+            .ContinueWith(_ =>
+            {
+                this.Trace("trigger connect");
+                ConnectPrivate(uri);
 
-            this.Trace("done");
-        });
+                this.Trace("done");
+            });
     }
 
     private void ConnectPrivate(Uri uri)
@@ -184,7 +179,10 @@ public class ClientWebSocket : IClientWebSocket
             }
 
             // set status in lock
-            this.Trace<string>("set status by connection result: {result}", task.Result is null ? "ok" : task.Result.ToString());
+            this.Trace<string>(
+                "set status by connection result: {result}",
+                task.Result is null ? "ok" : task.Result.ToString()
+            );
             SetStatus(task.Result is null ? Status.Connected : Status.Connecting);
         }
 

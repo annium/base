@@ -67,15 +67,15 @@ public class CustomRulesTest : TestBase
             Field(p => p.Name)
                 .Required()
                 .Then()
-                .Add(async (context, value) =>
-                {
-                    await Task.CompletedTask;
-                    if (value.Length < 3)
-                        context.Error("{0} value is too short", context.Field);
-                });
-            Field(p => p.Age)
-                .When(age => age.HasValue)
-                .Must(age => age!.Value > 18);
+                .Add(
+                    async (context, value) =>
+                    {
+                        await Task.CompletedTask;
+                        if (value.Length < 3)
+                            context.Error("{0} value is too short", context.Field);
+                    }
+                );
+            Field(p => p.Age).When(age => age.HasValue).Must(age => age!.Value > 18);
         }
     }
 }

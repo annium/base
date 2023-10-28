@@ -52,7 +52,16 @@ public static class ArrayExtensions
         rest = GetRestOfArray(array, 5);
     }
 
-    public static void Deconstruct<T>(this T[] array, out T x1, out T x2, out T x3, out T x4, out T x5, out T x6, out T[] rest)
+    public static void Deconstruct<T>(
+        this T[] array,
+        out T x1,
+        out T x2,
+        out T x3,
+        out T x4,
+        out T x5,
+        out T x6,
+        out T[] rest
+    )
     {
         x1 = array[0];
         x2 = array[1];
@@ -63,7 +72,17 @@ public static class ArrayExtensions
         rest = GetRestOfArray(array, 6);
     }
 
-    public static void Deconstruct<T>(this T[] array, out T x1, out T x2, out T x3, out T x4, out T x5, out T x6, out T x7, out T[] rest)
+    public static void Deconstruct<T>(
+        this T[] array,
+        out T x1,
+        out T x2,
+        out T x3,
+        out T x4,
+        out T x5,
+        out T x6,
+        out T x7,
+        out T[] rest
+    )
     {
         x1 = array[0];
         x2 = array[1];
@@ -75,7 +94,18 @@ public static class ArrayExtensions
         rest = GetRestOfArray(array, 7);
     }
 
-    public static void Deconstruct<T>(this T[] array, out T x1, out T x2, out T x3, out T x4, out T x5, out T x6, out T x7, out T x8, out T[] rest)
+    public static void Deconstruct<T>(
+        this T[] array,
+        out T x1,
+        out T x2,
+        out T x3,
+        out T x4,
+        out T x5,
+        out T x6,
+        out T x7,
+        out T x8,
+        out T[] rest
+    )
     {
         x1 = array[0];
         x2 = array[1];

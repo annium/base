@@ -15,7 +15,8 @@ public class SubscribeAsyncTest
         // arrange
         var log = new List<string>();
         var tcs = new TaskCompletionSource();
-        using var observable = Observable.Range(1, 5)
+        using var observable = Observable
+            .Range(1, 5)
             .Select(x =>
             {
                 if (x == 3)
@@ -47,7 +48,8 @@ public class SubscribeAsyncTest
         // arrange
         var log = new List<string>();
         var tcs = new TaskCompletionSource();
-        using var observable = Observable.Range(1, 5)
+        using var observable = Observable
+            .Range(1, 5)
             .Select(x =>
             {
                 lock (log)

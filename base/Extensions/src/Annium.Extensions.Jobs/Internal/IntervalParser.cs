@@ -21,7 +21,9 @@ internal class IntervalParser : IIntervalParser
             throw new ArgumentException("Interval format has 5 parts: second minute hour day day-of-week");
 
         if (intervals[3] != EveryMoment && intervals[4] != EveryMoment)
-            throw new ArgumentException($"Interval format {interval} must not have conditions on both day and day-of-week parts");
+            throw new ArgumentException(
+                $"Interval format {interval} must not have conditions on both day and day-of-week parts"
+            );
 
         var dateTime = Expression.Parameter(typeof(LocalDateTime), "x");
         var expressions = new List<Expression>();
@@ -34,22 +36,43 @@ internal class IntervalParser : IIntervalParser
         HandleRepeatablePartExpression(
             Property(dateTime, nameof(LocalDateTime.Second)),
             FromLong(nameof(Duration.FromSeconds)),
-            "second", intervals[0], 0, 59, 60,
-            expressions.Add, result, Ceil(dateTime, nameof(LocalDateTimeExtensions.CeilToMinute)));
+            "second",
+            intervals[0],
+            0,
+            59,
+            60,
+            expressions.Add,
+            result,
+            Ceil(dateTime, nameof(LocalDateTimeExtensions.CeilToMinute))
+        );
 
         // minutes
         HandleRepeatablePartExpression(
             Property(dateTime, nameof(LocalDateTime.Minute)),
             FromLong(nameof(Duration.FromMinutes)),
-            "minute", intervals[1], 0, 59, 60,
-            expressions.Add, result, Ceil(dateTime, nameof(LocalDateTimeExtensions.CeilToHour)));
+            "minute",
+            intervals[1],
+            0,
+            59,
+            60,
+            expressions.Add,
+            result,
+            Ceil(dateTime, nameof(LocalDateTimeExtensions.CeilToHour))
+        );
 
         // days
         HandleRepeatablePartExpression(
             Property(dateTime, nameof(LocalDateTime.Hour)),
             FromInt(nameof(Duration.FromHours)),
-            "hour", intervals[2], 0, 23, 24,
-            expressions.Add, result, Ceil(dateTime, nameof(LocalDateTimeExtensions.CeilToDay)));
+            "hour",
+            intervals[2],
+            0,
+            23,
+            24,
+            expressions.Add,
+            result,
+            Ceil(dateTime, nameof(LocalDateTimeExtensions.CeilToDay))
+        );
 
         if (intervals[4] == EveryMoment)
         {
@@ -57,8 +80,15 @@ internal class IntervalParser : IIntervalParser
             HandleRepeatablePartExpression(
                 Property(dateTime, nameof(LocalDateTime.Day)),
                 FromInt(nameof(Duration.FromDays)),
-                "day", intervals[3], 0, 29, 30,
-                expressions.Add, result, null);
+                "day",
+                intervals[3],
+                0,
+                29,
+                30,
+                expressions.Add,
+                result,
+                null
+            );
         }
         else
         {
@@ -66,8 +96,15 @@ internal class IntervalParser : IIntervalParser
             HandleExactPartExpression(
                 Expression.Convert(Property(dateTime, nameof(LocalDateTime.DayOfWeek)), typeof(int)),
                 FromInt(nameof(Duration.FromDays)),
-                "day of week", intervals[4], 1, 7, 7,
-                expressions.Add, result, null);
+                "day of week",
+                intervals[4],
+                1,
+                7,
+                7,
+                expressions.Add,
+                result,
+                null
+            );
         }
 
         var returnLabel = Expression.Label(typeof(Duration));
@@ -161,19 +198,32 @@ internal class IntervalParser : IIntervalParser
             throw new ArgumentException($"'{name}' modulo {value} is not valid");
 
         if (value < min || value > max)
-            throw new ArgumentOutOfRangeException(nameof(interval), value, $"'{name}' modulo {value} must be in [{min};{max}] range");
+            throw new ArgumentOutOfRangeException(
+                nameof(interval),
+                value,
+                $"'{name}' modulo {value} must be in [{min};{max}] range"
+            );
 
         if (size % value != 0)
-            throw new ArgumentOutOfRangeException(nameof(interval), value, $"'{name}' modulo {value} is not acceptable for range {size}");
+            throw new ArgumentOutOfRangeException(
+                nameof(interval),
+                value,
+                $"'{name}' modulo {value} is not acceptable for range {size}"
+            );
 
-        var assignment = Expression.AddAssign(sum, from(Expression.Condition(
-            Expression.Equal(Expression.Modulo(source, Expression.Constant(value)), Expression.Constant(0)),
-            Expression.Constant(0),
-            Expression.Subtract(
-                Expression.Constant(value),
-                Expression.Modulo(source, Expression.Constant(value))
+        var assignment = Expression.AddAssign(
+            sum,
+            from(
+                Expression.Condition(
+                    Expression.Equal(Expression.Modulo(source, Expression.Constant(value)), Expression.Constant(0)),
+                    Expression.Constant(0),
+                    Expression.Subtract(
+                        Expression.Constant(value),
+                        Expression.Modulo(source, Expression.Constant(value))
+                    )
+                )
             )
-        )));
+        );
         add(assignment);
         if (align is not null)
             add(Expression.IfThen(Expression.GreaterThan(source, Expression.Constant(size - value)), align));
@@ -198,13 +248,22 @@ internal class IntervalParser : IIntervalParser
             return false;
 
         if (value < min || value > max)
-            throw new ArgumentOutOfRangeException(nameof(interval), value, $"'{name}' value {value} must be in [{min};{max}] range");
+            throw new ArgumentOutOfRangeException(
+                nameof(interval),
+                value,
+                $"'{name}' value {value} must be in [{min};{max}] range"
+            );
 
-        var assignment = Expression.AddAssign(sum, from(Expression.Condition(
-            Expression.LessThan(Expression.Constant(value), source),
-            Expression.Subtract(Expression.Constant(value + size), source),
-            Expression.Subtract(Expression.Constant(value), source)
-        )));
+        var assignment = Expression.AddAssign(
+            sum,
+            from(
+                Expression.Condition(
+                    Expression.LessThan(Expression.Constant(value), source),
+                    Expression.Subtract(Expression.Constant(value + size), source),
+                    Expression.Subtract(Expression.Constant(value), source)
+                )
+            )
+        );
         add(assignment);
         if (align is not null)
             add(Expression.IfThen(Expression.GreaterThan(source, Expression.Constant(value)), align));
@@ -232,7 +291,11 @@ internal class IntervalParser : IIntervalParser
                 return false;
 
             if (value < min || value > max)
-                throw new ArgumentOutOfRangeException(nameof(interval), value, $"'{name}' value {value} must be in [{min};{max}] range");
+                throw new ArgumentOutOfRangeException(
+                    nameof(interval),
+                    value,
+                    $"'{name}' value {value} must be in [{min};{max}] range"
+                );
 
             values.Add(value);
         }
@@ -268,8 +331,16 @@ internal class IntervalParser : IIntervalParser
         ex => Expression.Call(null, typeof(Duration).GetMethod(name, new[] { typeof(int) })!, ex);
 
     private static Func<Expression, Expression> FromLong(string name) =>
-        ex => Expression.Call(null, typeof(Duration).GetMethod(name, new[] { typeof(long) })!, Expression.Convert(ex, typeof(long)));
+        ex =>
+            Expression.Call(
+                null,
+                typeof(Duration).GetMethod(name, new[] { typeof(long) })!,
+                Expression.Convert(ex, typeof(long))
+            );
 
     private static Expression Ceil(ParameterExpression ex, string name) =>
-        Expression.Assign(ex, Expression.Call(null, typeof(LocalDateTimeExtensions).GetMethod(name, new[] { ex.Type })!, ex));
+        Expression.Assign(
+            ex,
+            Expression.Call(null, typeof(LocalDateTimeExtensions).GetMethod(name, new[] { ex.Type })!, ex)
+        );
 }

@@ -6,9 +6,8 @@ namespace Annium.Tests;
 
 public class ArrayExtensionsTest : TestBase
 {
-    public ArrayExtensionsTest(ITestOutputHelper outputHelper) : base(outputHelper)
-    {
-    }
+    public ArrayExtensionsTest(ITestOutputHelper outputHelper)
+        : base(outputHelper) { }
 
     [Fact]
     public void Deconstruct_1_Works()

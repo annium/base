@@ -32,7 +32,6 @@ public class NodaDateTimeZoneConverterTest
     public void Deserialize_TimeZoneNotFound()
     {
         string json = "\"America/DOES_NOT_EXIST\"";
-        Wrap.It(() => JsonSerializer.Deserialize<DateTimeZone>(json, With(_converter)))
-            .Throws<JsonException>();
+        Wrap.It(() => JsonSerializer.Deserialize<DateTimeZone>(json, With(_converter))).Throws<JsonException>();
     }
 }

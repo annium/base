@@ -13,10 +13,8 @@ public abstract class TestBase : Testing.TestBase
     protected readonly IMapperConfig Config;
     private readonly ITestProvider _testProvider;
 
-    protected TestBase(
-        ITestProvider testProvider,
-        ITestOutputHelper outputHelper
-    ) : base(outputHelper)
+    protected TestBase(ITestProvider testProvider, ITestOutputHelper outputHelper)
+        : base(outputHelper)
     {
         _testProvider = testProvider;
         Register(container =>

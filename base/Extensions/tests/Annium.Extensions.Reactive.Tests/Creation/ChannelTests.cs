@@ -14,9 +14,8 @@ namespace Annium.Extensions.Reactive.Tests.Creation;
 
 public class ChannelTests : TestBase
 {
-    public ChannelTests(ITestOutputHelper outputHelper) : base(outputHelper)
-    {
-    }
+    public ChannelTests(ITestOutputHelper outputHelper)
+        : base(outputHelper) { }
 
     [Fact]
     public async Task Events_AreEmittedCorrectly()

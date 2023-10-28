@@ -59,22 +59,10 @@ public abstract record TypeId
     public string Name { get; }
     public string Id { get; protected init; } = string.Empty;
 
-    protected TypeId(
-        Type type,
-        string name
-    ) : this(
-        type,
-        type,
-        name
-    )
-    {
-    }
+    protected TypeId(Type type, string name)
+        : this(type, type, name) { }
 
-    protected TypeId(
-        Type type,
-        Type baseType,
-        string name
-    )
+    protected TypeId(Type type, Type baseType, string name)
     {
         Type = type;
         BaseType = baseType;

@@ -82,9 +82,8 @@ public class FactoryRegistrationTest : TestBase
 
     private sealed class D : C, IX
     {
-        public D(A x) : base(x)
-        {
-        }
+        public D(A x)
+            : base(x) { }
     }
 
     private class C
@@ -97,11 +96,7 @@ public class FactoryRegistrationTest : TestBase
         }
     }
 
-    private class A
-    {
-    }
+    private class A { }
 
-    private interface IX
-    {
-    }
+    private interface IX { }
 }

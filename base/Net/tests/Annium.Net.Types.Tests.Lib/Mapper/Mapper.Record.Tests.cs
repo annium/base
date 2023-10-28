@@ -9,12 +9,8 @@ namespace Annium.Net.Types.Tests.Lib.Mapper;
 
 public abstract class MapperRecordTestsBase : TestBase
 {
-    protected MapperRecordTestsBase(
-        ITestProvider testProvider,
-        ITestOutputHelper outputHelper
-    ) : base(testProvider, outputHelper)
-    {
-    }
+    protected MapperRecordTestsBase(ITestProvider testProvider, ITestOutputHelper outputHelper)
+        : base(testProvider, outputHelper) { }
 
     protected void Interface_Base()
     {
@@ -25,12 +21,8 @@ public abstract class MapperRecordTestsBase : TestBase
         var modelRef = Map(target);
 
         // assert
-        modelRef
-            .As<RecordRef>().Key
-            .As<GenericParameterRef>().Name.Is("TKey");
-        modelRef
-            .As<RecordRef>().Value
-            .As<GenericParameterRef>().Name.Is("TValue");
+        modelRef.As<RecordRef>().Key.As<GenericParameterRef>().Name.Is("TKey");
+        modelRef.As<RecordRef>().Value.As<GenericParameterRef>().Name.Is("TValue");
         Models.IsEmpty();
     }
 
@@ -43,12 +35,8 @@ public abstract class MapperRecordTestsBase : TestBase
         var modelRef = Map(target);
 
         // assert
-        modelRef
-            .As<RecordRef>().Key
-            .As<BaseTypeRef>().Name.Is(BaseType.String);
-        modelRef
-            .As<RecordRef>().Value
-            .As<BaseTypeRef>().Name.Is(BaseType.Int);
+        modelRef.As<RecordRef>().Key.As<BaseTypeRef>().Name.Is(BaseType.String);
+        modelRef.As<RecordRef>().Value.As<BaseTypeRef>().Name.Is(BaseType.Int);
         Models.IsEmpty();
     }
 }

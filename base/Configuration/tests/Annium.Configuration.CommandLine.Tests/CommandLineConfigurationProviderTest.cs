@@ -11,7 +11,8 @@ namespace Annium.Configuration.CommandLine.Tests;
 
 public class CommandLineConfigurationProviderTest : TestBase
 {
-    public CommandLineConfigurationProviderTest(ITestOutputHelper outputHelper) : base(outputHelper)
+    public CommandLineConfigurationProviderTest(ITestOutputHelper outputHelper)
+        : base(outputHelper)
     {
         RegisterMapper();
     }

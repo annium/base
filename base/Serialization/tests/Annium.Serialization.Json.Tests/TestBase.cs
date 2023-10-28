@@ -12,7 +12,8 @@ public class TestBase
         var container = new ServiceContainer();
         container.AddRuntime(GetType().Assembly);
         container.AddTime().WithRealTime().SetDefault();
-        container.AddSerializers()
+        container
+            .AddSerializers()
             .WithJson(opts =>
             {
                 opts.UseCamelCaseNamingPolicy();

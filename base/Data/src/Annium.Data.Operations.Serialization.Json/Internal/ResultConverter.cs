@@ -7,11 +7,7 @@ namespace Annium.Data.Operations.Serialization.Json.Internal;
 
 internal class ResultConverter : ResultConverterBase<X>
 {
-    public override X Read(
-        ref Utf8JsonReader reader,
-        Type typeToConvert,
-        JsonSerializerOptions options
-    )
+    public override X Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         var value = Result.New();
 
@@ -23,11 +19,7 @@ internal class ResultConverter : ResultConverterBase<X>
         return value;
     }
 
-    public override void Write(
-        Utf8JsonWriter writer,
-        X value,
-        JsonSerializerOptions options
-    )
+    public override void Write(Utf8JsonWriter writer, X value, JsonSerializerOptions options)
     {
         writer.WriteStartObject();
 

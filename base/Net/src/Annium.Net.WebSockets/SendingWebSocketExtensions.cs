@@ -10,13 +10,11 @@ public static class SendingWebSocketExtensions
         this ISendingWebSocket socket,
         string text,
         CancellationToken ct = default
-    ) =>
-        socket.SendTextAsync(Encoding.UTF8.GetBytes(text), ct);
+    ) => socket.SendTextAsync(Encoding.UTF8.GetBytes(text), ct);
 
     public static ValueTask<WebSocketSendStatus> SendBinaryAsync(
         this ISendingWebSocket socket,
         string text,
         CancellationToken ct = default
-    ) =>
-        socket.SendTextAsync(Encoding.UTF8.GetBytes(text), ct);
+    ) => socket.SendTextAsync(Encoding.UTF8.GetBytes(text), ct);
 }

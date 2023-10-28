@@ -37,11 +37,9 @@ internal class ConfigurationProcessor<T>
     {
         if (type.IsEnum || type.IsNullableValueType() || _mapper.HasMap(string.Empty, type))
             return ProcessValue(type);
-        if (type.IsGenericType &&
-            type.GetGenericTypeDefinition() == typeof(Dictionary<,>))
+        if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Dictionary<,>))
             return ProcessDictionary(type);
-        if (type.IsGenericType &&
-            type.GetGenericTypeDefinition() == typeof(List<>))
+        if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>))
             return ProcessList(type);
         if (type.IsArray)
             return ProcessArray(type);
@@ -61,7 +59,9 @@ internal class ConfigurationProcessor<T>
         {
             // var name = key.Substring(path.Length + separator.Length).Split(separator) [0];
             _context.Push(name);
-            var key = _mapper.Map(name, keyType) ?? throw new InvalidOperationException($"Key at {keyType} is mapped to null");
+            var key =
+                _mapper.Map(name, keyType)
+                ?? throw new InvalidOperationException($"Key at {keyType} is mapped to null");
             result[key] = Process(valueType);
             _context.Pop();
         }
@@ -114,7 +114,8 @@ internal class ConfigurationProcessor<T>
                 return null!;
 
             var key = _mapper.Map(rawKey, resolutionKeyProperty.PropertyType);
-            type = _typeManager.ResolveByKey(key!, type)
+            type =
+                _typeManager.ResolveByKey(key!, type)
                 ?? throw new ArgumentException($"Can't resolve abstract type {type} with key {key}");
         }
 

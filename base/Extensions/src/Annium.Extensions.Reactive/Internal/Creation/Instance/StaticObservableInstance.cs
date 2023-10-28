@@ -16,7 +16,8 @@ internal class StaticObservableInstance<T> : ObservableInstanceBase<T>, IObserva
         bool isAsync,
         CancellationToken ct,
         ILogger logger
-    ) : base(logger)
+    )
+        : base(logger)
     {
         _factory = factory;
         _isAsync = isAsync;
@@ -47,8 +48,7 @@ internal class StaticObservableInstance<T> : ObservableInstanceBase<T>, IObserva
             RunAsync().GetAwaiter();
     }
 
-    private async Task RunAsync(
-    )
+    private async Task RunAsync()
     {
         var ctx = GetObserverContext(_ct);
         try

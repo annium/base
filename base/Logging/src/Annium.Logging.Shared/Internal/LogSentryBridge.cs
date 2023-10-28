@@ -13,11 +13,7 @@ internal class LogSentryBridge<TContext> : ILogSentryBridge
     private readonly TContext _context;
     private readonly ILogSentry<TContext> _logSentry;
 
-    public LogSentryBridge(
-        ITimeProvider timeProvider,
-        TContext context,
-        ILogSentry<TContext> logSentry
-    )
+    public LogSentryBridge(ITimeProvider timeProvider, TContext context, ILogSentry<TContext> logSentry)
     {
         _timeProvider = timeProvider;
         _context = context;

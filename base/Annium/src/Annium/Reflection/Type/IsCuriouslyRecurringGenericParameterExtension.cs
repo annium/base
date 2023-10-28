@@ -14,7 +14,6 @@ public static class IsCuriouslyRecurringGenericParameterExtension
         if (!type.IsGenericParameter)
             return false;
 
-        return type.GetGenericParameterConstraints()
-            .Any(constraint => constraint.GetGenericArguments().Contains(type));
+        return type.GetGenericParameterConstraints().Any(constraint => constraint.GetGenericArguments().Contains(type));
     }
 }

@@ -12,18 +12,24 @@ public static partial class ResolveGenericArgumentsByImplementationExtension
         var targetAttrs = target.GenericParameterAttributes;
 
         // if reference type constraint is not presented
-        if (targetAttrs.HasFlag(GenericParameterAttributes.ReferenceTypeConstraint) &&
-            !typeAttrs.HasFlag(GenericParameterAttributes.ReferenceTypeConstraint))
+        if (
+            targetAttrs.HasFlag(GenericParameterAttributes.ReferenceTypeConstraint)
+            && !typeAttrs.HasFlag(GenericParameterAttributes.ReferenceTypeConstraint)
+        )
             return null;
 
         // if not nullable value type constraint is not presented
-        if (targetAttrs.HasFlag(GenericParameterAttributes.NotNullableValueTypeConstraint) &&
-            !typeAttrs.HasFlag(GenericParameterAttributes.NotNullableValueTypeConstraint))
+        if (
+            targetAttrs.HasFlag(GenericParameterAttributes.NotNullableValueTypeConstraint)
+            && !typeAttrs.HasFlag(GenericParameterAttributes.NotNullableValueTypeConstraint)
+        )
             return null;
 
         // if default parameter constraint is not presented
-        if (targetAttrs.HasFlag(GenericParameterAttributes.DefaultConstructorConstraint) &&
-            !typeAttrs.HasFlag(GenericParameterAttributes.DefaultConstructorConstraint))
+        if (
+            targetAttrs.HasFlag(GenericParameterAttributes.DefaultConstructorConstraint)
+            && !typeAttrs.HasFlag(GenericParameterAttributes.DefaultConstructorConstraint)
+        )
             return null;
 
         // ensure all parameter constraints are implemented

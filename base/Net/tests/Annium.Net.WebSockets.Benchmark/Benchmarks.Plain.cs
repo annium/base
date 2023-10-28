@@ -28,14 +28,21 @@ public partial class Benchmarks
         _plainSocket = new NativeClientWebSocket();
         var client = new ManagedWebSocket(_plainSocket, VoidLogger.Instance);
         client.OnTextReceived += HandleMessage_Plain;
-        _plainSocket.ConnectAsync(new Uri($"ws://127.0.0.1:{Constants.Port}/"), CancellationToken.None).GetAwaiter().GetResult();
+        _plainSocket
+            .ConnectAsync(new Uri($"ws://127.0.0.1:{Constants.Port}/"), CancellationToken.None)
+            .GetAwaiter()
+            .GetResult();
         _plainListenTask = client.ListenAsync(_plainCts.Token);
     }
 
     [IterationCleanup(Target = nameof(Plain))]
     public void IterationCleanup_Plain()
     {
-        _plainSocket.CloseOutputAsync(System.Net.WebSockets.WebSocketCloseStatus.NormalClosure, string.Empty, CancellationToken.None);
+        _plainSocket.CloseOutputAsync(
+            System.Net.WebSockets.WebSocketCloseStatus.NormalClosure,
+            string.Empty,
+            CancellationToken.None
+        );
         _plainCts.Cancel();
         _plainListenTask.Wait();
     }

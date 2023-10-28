@@ -28,13 +28,12 @@ file class HttpHandler : IHttpHandler
 
         return path switch
         {
-            "/params"   => HandleHttpParamsRequest(ctx),
-            "/upload"   => HandleHttpUploadRequest(ctx),
+            "/params" => HandleHttpParamsRequest(ctx),
+            "/upload" => HandleHttpUploadRequest(ctx),
             "/download" => HandleHttpDownloadRequest(ctx),
-            _           => Task.CompletedTask
+            _ => Task.CompletedTask
         };
     }
-
 
     private static Task HandleHttpParamsRequest(HttpListenerContext ctx)
     {

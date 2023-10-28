@@ -13,12 +13,7 @@ internal class InstanceRegistrationBuilder : IInstanceRegistrationBuilderBase
     private readonly Registrar _registrar;
     private readonly RegistrationsCollection _registrations = new();
 
-    public InstanceRegistrationBuilder(
-        IServiceContainer container,
-        Type type,
-        object instance,
-        Registrar registrar
-    )
+    public InstanceRegistrationBuilder(IServiceContainer container, Type type, object instance, Registrar registrar)
     {
         _container = container;
         _type = type;
@@ -26,8 +21,7 @@ internal class InstanceRegistrationBuilder : IInstanceRegistrationBuilderBase
         _registrar = registrar;
     }
 
-    public IInstanceRegistrationBuilderBase AsSelf() =>
-        WithRegistration(new InstanceRegistration(_type, _instance));
+    public IInstanceRegistrationBuilderBase AsSelf() => WithRegistration(new InstanceRegistration(_type, _instance));
 
     public IInstanceRegistrationBuilderBase As(Type serviceType) =>
         WithRegistration(new InstanceRegistration(serviceType, _instance));
@@ -35,10 +29,11 @@ internal class InstanceRegistrationBuilder : IInstanceRegistrationBuilderBase
     public IInstanceRegistrationBuilderBase AsInterfaces() =>
         WithRegistrations(_type.GetInterfaces().Select(x => new InstanceRegistration(x, _instance)));
 
-    public IInstanceRegistrationBuilderBase AsKeyedSelf<TKey>(TKey key) where TKey : notnull =>
-        WithRegistration(new InstanceKeyedRegistration(_type, _instance, typeof(TKey), key));
+    public IInstanceRegistrationBuilderBase AsKeyedSelf<TKey>(TKey key)
+        where TKey : notnull => WithRegistration(new InstanceKeyedRegistration(_type, _instance, typeof(TKey), key));
 
-    public IInstanceRegistrationBuilderBase AsKeyed<TKey>(Type serviceType, TKey key) where TKey : notnull =>
+    public IInstanceRegistrationBuilderBase AsKeyed<TKey>(Type serviceType, TKey key)
+        where TKey : notnull =>
         WithRegistration(new InstanceKeyedRegistration(serviceType, _instance, typeof(TKey), key));
 
     public IInstanceRegistrationBuilderBase AsSelfFactory() =>
@@ -47,10 +42,12 @@ internal class InstanceRegistrationBuilder : IInstanceRegistrationBuilderBase
     public IInstanceRegistrationBuilderBase AsFactory(Type serviceType) =>
         WithRegistration(new InstanceFactoryRegistration(serviceType, _instance));
 
-    public IInstanceRegistrationBuilderBase AsKeyedSelfFactory<TKey>(TKey key) where TKey : notnull =>
+    public IInstanceRegistrationBuilderBase AsKeyedSelfFactory<TKey>(TKey key)
+        where TKey : notnull =>
         WithRegistration(new InstanceKeyedFactoryRegistration(_type, _instance, typeof(TKey), key));
 
-    public IInstanceRegistrationBuilderBase AsKeyedFactory<TKey>(Type serviceType, TKey key) where TKey : notnull =>
+    public IInstanceRegistrationBuilderBase AsKeyedFactory<TKey>(Type serviceType, TKey key)
+        where TKey : notnull =>
         WithRegistration(new InstanceKeyedFactoryRegistration(serviceType, _instance, typeof(TKey), key));
 
     public IServiceContainer Singleton()

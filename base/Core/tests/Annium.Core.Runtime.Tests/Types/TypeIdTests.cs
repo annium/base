@@ -9,9 +9,8 @@ namespace Annium.Core.Runtime.Tests.Types;
 
 public class TypeIdTests : TestBase
 {
-    public TypeIdTests(ITestOutputHelper outputHelper) : base(outputHelper)
-    {
-    }
+    public TypeIdTests(ITestOutputHelper outputHelper)
+        : base(outputHelper) { }
 
     [Fact]
     public void PlainId_Works()

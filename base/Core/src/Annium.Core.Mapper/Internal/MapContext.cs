@@ -4,9 +4,7 @@ internal class MapContext : IMapContext
 {
     private readonly IMapper _mapper;
 
-    public MapContext(
-        IMapper mapper
-    )
+    public MapContext(IMapper mapper)
     {
         _mapper = mapper;
     }

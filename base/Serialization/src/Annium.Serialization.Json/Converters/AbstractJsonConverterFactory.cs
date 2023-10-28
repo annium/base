@@ -13,9 +13,7 @@ public class AbstractJsonConverterFactory : JsonConverterFactory
 {
     private readonly ITypeManager _typeManager;
 
-    public AbstractJsonConverterFactory(
-        ITypeManager typeManager
-    )
+    public AbstractJsonConverterFactory(ITypeManager typeManager)
     {
         _typeManager = typeManager;
     }
@@ -27,10 +25,15 @@ public class AbstractJsonConverterFactory : JsonConverterFactory
             return false;
 
         // if implements IEnumerable - likely will be serialized as Json Array, so not suitable for type resolution
-        if (objectType.GetInterfaces().Any(
-            x => x == typeof(IEnumerable) ||
-                x.IsGenericType && x.GetGenericTypeDefinition() == typeof(IEnumerable<>)
-        ))
+        if (
+            objectType
+                .GetInterfaces()
+                .Any(
+                    x =>
+                        x == typeof(IEnumerable)
+                        || x.IsGenericType && x.GetGenericTypeDefinition() == typeof(IEnumerable<>)
+                )
+        )
             return false;
 
         var targetType = objectType.IsGenericType ? objectType.GetGenericTypeDefinition() : objectType;

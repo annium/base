@@ -10,7 +10,8 @@ namespace Annium.Data.Tables.Tests;
 
 public class TableOfTTests : TestBase
 {
-    public TableOfTTests(ITestOutputHelper outputHelper) : base(outputHelper)
+    public TableOfTTests(ITestOutputHelper outputHelper)
+        : base(outputHelper)
     {
         Register(x => x.AddTables());
     }

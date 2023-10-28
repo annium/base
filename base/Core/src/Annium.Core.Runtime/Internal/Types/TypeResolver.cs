@@ -12,10 +12,7 @@ internal class TypeResolver : ITypeResolver, ILogSubject
     public ILogger Logger { get; }
     private readonly ITypeManager _typeManager;
 
-    public TypeResolver(
-        ITypeManager typeManager,
-        ILogger logger
-    )
+    public TypeResolver(ITypeManager typeManager, ILogger logger)
     {
         Logger = logger;
         _typeManager = typeManager;
@@ -31,7 +28,9 @@ internal class TypeResolver : ITypeResolver, ILogSubject
         foreach (var argument in type.GetGenericArguments())
         {
             if (argument.GetGenericParameterConstraints().Length == 0)
-                throw new ArgumentException($"Can't use generic Profile {type} with unconstrained parameter {argument}");
+                throw new ArgumentException(
+                    $"Can't use generic Profile {type} with unconstrained parameter {argument}"
+                );
 
             var implementations = _typeManager.Types
                 .Where(x => !x.ContainsGenericParameters)
@@ -42,9 +41,7 @@ internal class TypeResolver : ITypeResolver, ILogSubject
         }
 
         var combinations = GetCombinations(sets).ToArray();
-        var types = combinations
-            .Select(type.MakeGenericType)
-            .ToArray();
+        var types = combinations.Select(type.MakeGenericType).ToArray();
 
         this.Trace<string>("{type} - end", type.FriendlyName());
 

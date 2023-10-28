@@ -64,12 +64,15 @@ public class ObjectPoolTests
 
         void Log(string message)
         {
-            lock (logs) logs.Add(message);
+            lock (logs)
+                logs.Add(message);
         }
 
         var sp = new ServiceContainer()
             .AddObjectPool<Item>(5, ServiceLifetime.Singleton, loadMode, storageMode)
-            .Add(_ => new Item(nextId++, Log)).AsSelf().Transient()
+            .Add(_ => new Item(nextId++, Log))
+            .AsSelf()
+            .Transient()
             .BuildServiceProvider();
 
         var pool = sp.Resolve<IObjectPool<Item>>();
@@ -77,16 +80,21 @@ public class ObjectPoolTests
         return (pool, logs);
     }
 
-    private static async Task Run(
-        IObjectPool<Item> pool
-    )
+    private static async Task Run(IObjectPool<Item> pool)
     {
-        await Task.WhenAll(Enumerable.Range(0, Jobs).Select(i => Task.Run(() =>
-        {
-            var item = pool.Get();
-            item.ExecuteAction(i);
-            pool.Return(item);
-        })));
+        await Task.WhenAll(
+            Enumerable
+                .Range(0, Jobs)
+                .Select(
+                    i =>
+                        Task.Run(() =>
+                        {
+                            var item = pool.Get();
+                            item.ExecuteAction(i);
+                            pool.Return(item);
+                        })
+                )
+        );
     }
 
     private class Item : IDisposable
@@ -94,10 +102,7 @@ public class ObjectPoolTests
         private readonly uint _id;
         private readonly Action<string> _log;
 
-        public Item(
-            uint id,
-            Action<string> log
-        )
+        public Item(uint id, Action<string> log)
         {
             _id = id;
             _log = log;

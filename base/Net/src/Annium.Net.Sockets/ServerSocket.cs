@@ -19,12 +19,7 @@ public class ServerSocket : IServerSocket
     private readonly IConnectionMonitor _connectionMonitor;
     private Status _status = Status.Connected;
 
-    public ServerSocket(
-        Stream stream,
-        ServerSocketOptions options,
-        ILogger logger,
-        CancellationToken ct = default
-    )
+    public ServerSocket(Stream stream, ServerSocketOptions options, ILogger logger, CancellationToken ct = default)
     {
         Logger = logger;
         this.Trace("start");
@@ -46,18 +41,8 @@ public class ServerSocket : IServerSocket
         _connectionMonitor.OnConnectionLost += Disconnect;
     }
 
-    public ServerSocket(
-        Stream stream,
-        ILogger logger,
-        CancellationToken ct = default
-    ) : this(
-        stream,
-        ServerSocketOptions.Default,
-        logger,
-        ct
-    )
-    {
-    }
+    public ServerSocket(Stream stream, ILogger logger, CancellationToken ct = default)
+        : this(stream, ServerSocketOptions.Default, logger, ct) { }
 
     public void Disconnect()
     {

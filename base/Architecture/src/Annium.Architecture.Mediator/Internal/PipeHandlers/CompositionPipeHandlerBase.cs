@@ -14,10 +14,7 @@ internal abstract class CompositionPipeHandlerBase<TRequest, TResponse> : ILogSu
     public ILogger Logger { get; }
     private readonly IComposer<TRequest> _composer;
 
-    public CompositionPipeHandlerBase(
-        IComposer<TRequest> composer,
-        ILogger logger
-    )
+    public CompositionPipeHandlerBase(IComposer<TRequest> composer, ILogger logger)
     {
         _composer = composer;
         Logger = logger;

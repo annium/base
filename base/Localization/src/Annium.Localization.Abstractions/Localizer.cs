@@ -12,10 +12,7 @@ internal class Localizer<T> : ILocalizer<T>
     private readonly ILocaleStorage _storage;
     private readonly Func<CultureInfo> _getCulture;
 
-    public Localizer(
-        ILocaleStorage storage,
-        Func<CultureInfo> getCulture
-    )
+    public Localizer(ILocaleStorage storage, Func<CultureInfo> getCulture)
     {
         _storage = storage;
         _getCulture = getCulture;
@@ -23,9 +20,11 @@ internal class Localizer<T> : ILocalizer<T>
 
     public string this[string entry] => Translate(entry);
 
-    public string this[string entry, params object[] arguments] => string.Format(_getCulture(), Translate(entry), arguments);
+    public string this[string entry, params object[] arguments] =>
+        string.Format(_getCulture(), Translate(entry), arguments);
 
-    public string this[string entry, IEnumerable<object> arguments] => string.Format(_getCulture(), Translate(entry), arguments);
+    public string this[string entry, IEnumerable<object> arguments] =>
+        string.Format(_getCulture(), Translate(entry), arguments);
 
     private string Translate(string entry)
     {

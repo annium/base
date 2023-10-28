@@ -8,9 +8,7 @@ namespace Annium.Core.DependencyInjection;
 
 public static class LocalizationOptionsExtensions
 {
-    public static LocalizationOptions UseInMemoryStorage(
-        this LocalizationOptions options
-    )
+    public static LocalizationOptions UseInMemoryStorage(this LocalizationOptions options)
     {
         return options.UseInMemoryStorage(new Dictionary<CultureInfo, IReadOnlyDictionary<string, string>>());
     }

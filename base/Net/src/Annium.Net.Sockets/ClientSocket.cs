@@ -16,7 +16,8 @@ public class ClientSocket : IClientSocket
     public event Action OnConnected = delegate { };
     public event Action<SocketCloseStatus> OnDisconnected = delegate { };
     public event Action<Exception> OnError = delegate { };
-    private ConnectionConfig Config => _connectionConfig ?? throw new InvalidOperationException("Connection config is not set");
+    private ConnectionConfig Config =>
+        _connectionConfig ?? throw new InvalidOperationException("Connection config is not set");
     private readonly object _locker = new();
     private readonly IClientManagedSocket _socket;
     private readonly IConnectionMonitor _connectionMonitor;
@@ -45,14 +46,8 @@ public class ClientSocket : IClientSocket
         _connectionMonitor.OnConnectionLost += HandleConnectionLost;
     }
 
-    public ClientSocket(
-        ILogger logger
-    ) : this(
-        ClientSocketOptions.Default,
-        logger
-    )
-    {
-    }
+    public ClientSocket(ILogger logger)
+        : this(ClientSocketOptions.Default, logger) { }
 
     public void Connect(IPEndPoint endpoint, SslClientAuthenticationOptions? authOptions = null)
     {
@@ -131,13 +126,14 @@ public class ClientSocket : IClientSocket
         OnDisconnected(result.Status);
 
         this.Trace("schedule connection in {reconnectDelay}ms", _reconnectDelay);
-        Task.Delay(_reconnectDelay).ContinueWith(_ =>
-        {
-            this.Trace("trigger connect");
-            ConnectPrivate(config);
+        Task.Delay(_reconnectDelay)
+            .ContinueWith(_ =>
+            {
+                this.Trace("trigger connect");
+                ConnectPrivate(config);
 
-            this.Trace("done");
-        });
+                this.Trace("done");
+            });
     }
 
     private void ConnectPrivate(ConnectionConfig config)
@@ -154,10 +150,16 @@ public class ClientSocket : IClientSocket
         }
 
         _connectionConfig = config;
-        this.Trace<IPEndPoint, string>("connect to {endpoint} ({ssl})", config.Endpoint, config.AuthOptions is not null ? "ssl" : "plaintext");
+        this.Trace<IPEndPoint, string>(
+            "connect to {endpoint} ({ssl})",
+            config.Endpoint,
+            config.AuthOptions is not null ? "ssl" : "plaintext"
+        );
         var cts = new CancellationTokenSource(_connectTimeout);
         _connectionCts = cts;
-        _socket.ConnectAsync(config.Endpoint, config.AuthOptions, cts.Token).ContinueWith(HandleConnected, config, CancellationToken.None);
+        _socket
+            .ConnectAsync(config.Endpoint, config.AuthOptions, cts.Token)
+            .ContinueWith(HandleConnected, config, CancellationToken.None);
 
         this.Trace("done");
     }
@@ -178,7 +180,10 @@ public class ClientSocket : IClientSocket
             }
 
             // set status in lock
-            this.Trace<string>("set status by connection result: {result}", task.Result is null ? "ok" : task.Result.ToString());
+            this.Trace<string>(
+                "set status by connection result: {result}",
+                task.Result is null ? "ok" : task.Result.ToString()
+            );
             SetStatus(task.Result is null ? Status.Connected : Status.Connecting);
         }
 

@@ -65,7 +65,8 @@ public class BulkRegistrationTest : TestBase
         Build();
 
         // assert
-        Get<IA>().Is(Get<IB>());
+        Get<IA>()
+            .Is(Get<IB>());
         Get<IEnumerable<IA>>().At(0).AsExact<A>();
         Get<IEnumerable<IA>>().At(1).AsExact<B>();
     }
@@ -158,7 +159,10 @@ public class BulkRegistrationTest : TestBase
     public void AsKeyedFactory_Works()
     {
         // arrange
-        Container.Add(new[] { typeof(A), typeof(B) }.AsEnumerable()).AsKeyedFactory(typeof(A), x => x.Name).Singleton();
+        Container
+            .Add(new[] { typeof(A), typeof(B) }.AsEnumerable())
+            .AsKeyedFactory(typeof(A), x => x.Name)
+            .Singleton();
 
         // act
         Build();
@@ -186,15 +190,9 @@ public class BulkRegistrationTest : TestBase
         }
     }
 
-    private class A : IA
-    {
-    }
+    private class A : IA { }
 
-    private interface IB : IA
-    {
-    }
+    private interface IB : IA { }
 
-    private interface IA
-    {
-    }
+    private interface IA { }
 }

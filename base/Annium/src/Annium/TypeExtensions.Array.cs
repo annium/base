@@ -26,10 +26,7 @@ public static class TypeArrayExtensions
         throw new InvalidOperationException($"Type {type.FriendlyName()} is not array-like type");
     }
 
-    public static bool TryGetArrayElementType(
-        this Type type,
-        [NotNullWhen(true)] out Type? elementType
-    )
+    public static bool TryGetArrayElementType(this Type type, [NotNullWhen(true)] out Type? elementType)
     {
         elementType = null;
         if (type == typeof(string))

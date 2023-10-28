@@ -26,13 +26,21 @@ public class JsonNotIndentedJsonConverterTest : TestBase
         var serializer = GetSerializer(opts => opts.WriteIndented = true);
 
         // act
-        var str = serializer.Serialize(new A { Normal = 5, NotIndented = new B { Field = 7 } });
+        var str = serializer.Serialize(
+            new A
+            {
+                Normal = 5,
+                NotIndented = new B { Field = 7 }
+            }
+        );
 
         // assert
-        str.Is(@"{
+        str.Is(
+            @"{
   ""normal"": 5,
   ""notIndented"": {""field"":7}
-}");
+}"
+        );
     }
 
     internal sealed record A

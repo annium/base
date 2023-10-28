@@ -13,18 +13,12 @@ internal class AbstractJsonConverter<T> : JsonConverter<T>
 {
     private readonly ITypeManager _typeManager;
 
-    public AbstractJsonConverter(
-        ITypeManager typeManager
-    )
+    public AbstractJsonConverter(ITypeManager typeManager)
     {
         _typeManager = typeManager;
     }
 
-    public override T Read(
-        ref Utf8JsonReader reader,
-        Type typeToConvert,
-        JsonSerializerOptions options
-    )
+    public override T Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         var doc = JsonDocument.ParseValue(ref reader);
 
@@ -35,20 +29,12 @@ internal class AbstractJsonConverter<T> : JsonConverter<T>
         return (T)JsonSerializer.Deserialize(doc.RootElement.GetRawText(), type, options)!;
     }
 
-    public override void Write(
-        Utf8JsonWriter writer,
-        T value,
-        JsonSerializerOptions options
-    )
+    public override void Write(Utf8JsonWriter writer, T value, JsonSerializerOptions options)
     {
         JsonSerializer.Serialize(writer, value, value?.GetType() ?? typeof(object), options);
     }
 
-    private Type ResolveType(
-        JsonElement root,
-        Type baseType,
-        JsonSerializerOptions options
-    )
+    private Type ResolveType(JsonElement root, Type baseType, JsonSerializerOptions options)
     {
         var resolutionIdProperty = _typeManager.GetResolutionIdProperty(baseType);
         if (resolutionIdProperty is not null)
@@ -69,9 +55,9 @@ internal class AbstractJsonConverter<T> : JsonConverter<T>
     )
     {
         var idPropertyName =
-            resolutionIdProperty.GetCustomAttribute<JsonPropertyNameAttribute>()?.Name ??
-            options.PropertyNamingPolicy?.ConvertName(resolutionIdProperty.Name) ??
-            resolutionIdProperty.Name;
+            resolutionIdProperty.GetCustomAttribute<JsonPropertyNameAttribute>()?.Name
+            ?? options.PropertyNamingPolicy?.ConvertName(resolutionIdProperty.Name)
+            ?? resolutionIdProperty.Name;
         if (!root.TryGetProperty(idPropertyName, out var idElement))
             throw new SerializationException(Error(baseType, "id property is missing"));
 
@@ -91,9 +77,9 @@ internal class AbstractJsonConverter<T> : JsonConverter<T>
     )
     {
         var keyPropertyName =
-            resolutionKeyProperty.GetCustomAttribute<JsonPropertyNameAttribute>()?.Name ??
-            options.PropertyNamingPolicy?.ConvertName(resolutionKeyProperty.Name) ??
-            resolutionKeyProperty.Name;
+            resolutionKeyProperty.GetCustomAttribute<JsonPropertyNameAttribute>()?.Name
+            ?? options.PropertyNamingPolicy?.ConvertName(resolutionKeyProperty.Name)
+            ?? resolutionKeyProperty.Name;
         if (!root.TryGetProperty(keyPropertyName, out var keyElement))
             throw new SerializationException(Error(baseType, "key property is missing"));
 
@@ -105,10 +91,7 @@ internal class AbstractJsonConverter<T> : JsonConverter<T>
         return type;
     }
 
-    private Type ResolveTypeBySignature(
-        JsonElement root,
-        Type baseType
-    )
+    private Type ResolveTypeBySignature(JsonElement root, Type baseType)
     {
         var properties = root.EnumerateObject().Select(p => p.Name).ToArray();
 

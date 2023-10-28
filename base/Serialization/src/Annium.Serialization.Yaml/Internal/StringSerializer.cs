@@ -10,10 +10,7 @@ internal class StringSerializer : ISerializer<string>
     private readonly ISerializer _serializer;
     private readonly IDeserializer _deserializer;
 
-    public StringSerializer(
-        ISerializer serializer,
-        IDeserializer deserializer
-    )
+    public StringSerializer(ISerializer serializer, IDeserializer deserializer)
     {
         _serializer = serializer;
         _deserializer = deserializer;
@@ -75,11 +72,19 @@ internal class StringSerializer : ISerializer<string>
         }
         catch (YamlException e)
         {
-            throw new YamlException(e.Start, e.End, $"Failed to serialize {value} as {value?.GetType().FriendlyName() ?? (object)"null"}", e);
+            throw new YamlException(
+                e.Start,
+                e.End,
+                $"Failed to serialize {value} as {value?.GetType().FriendlyName() ?? (object)"null"}",
+                e
+            );
         }
         catch (Exception e)
         {
-            throw new YamlException($"Failed to serialize {value} as {value?.GetType().FriendlyName() ?? (object)"null"}", e);
+            throw new YamlException(
+                $"Failed to serialize {value} as {value?.GetType().FriendlyName() ?? (object)"null"}",
+                e
+            );
         }
     }
 }

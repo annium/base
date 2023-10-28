@@ -6,14 +6,8 @@ namespace Annium.Net.Types.Serialization.Json.Tests.Mapper;
 
 public class MapperBaseTypeTests : MapperBaseTypeTestsBase
 {
-    public MapperBaseTypeTests(
-        ITestOutputHelper outputHelper
-    ) : base(
-        new TestProvider(),
-        outputHelper
-    )
-    {
-    }
+    public MapperBaseTypeTests(ITestOutputHelper outputHelper)
+        : base(new TestProvider(), outputHelper) { }
 
     [Fact]
     public void BaseType()

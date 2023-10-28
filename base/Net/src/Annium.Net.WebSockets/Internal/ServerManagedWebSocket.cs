@@ -16,16 +16,16 @@ internal class ServerManagedWebSocket : IServerManagedWebSocket, ILogSubject
     private readonly NativeWebSocket _nativeSocket;
     private readonly ManagedWebSocket _managedSocket;
 
-    public ServerManagedWebSocket(
-        NativeWebSocket nativeSocket,
-        ILogger logger,
-        CancellationToken ct = default
-    )
+    public ServerManagedWebSocket(NativeWebSocket nativeSocket, ILogger logger, CancellationToken ct = default)
     {
         Logger = logger;
         _nativeSocket = nativeSocket;
         _managedSocket = new ManagedWebSocket(nativeSocket, logger);
-        this.Trace<string, string>("paired with {nativeSocket} / {managedSocket}", _nativeSocket.GetFullId(), _managedSocket.GetFullId());
+        this.Trace<string, string>(
+            "paired with {nativeSocket} / {managedSocket}",
+            _nativeSocket.GetFullId(),
+            _managedSocket.GetFullId()
+        );
 
         _managedSocket.OnTextReceived += HandleOnTextReceived;
         _managedSocket.OnBinaryReceived += HandleOnBinaryReceived;
@@ -46,7 +46,11 @@ internal class ServerManagedWebSocket : IServerManagedWebSocket, ILogSubject
         {
             this.Trace("close output");
             if (_nativeSocket.State is WebSocketState.Open or WebSocketState.CloseReceived)
-                await _nativeSocket.CloseOutputAsync(System.Net.WebSockets.WebSocketCloseStatus.NormalClosure, string.Empty, CancellationToken.None);
+                await _nativeSocket.CloseOutputAsync(
+                    System.Net.WebSockets.WebSocketCloseStatus.NormalClosure,
+                    string.Empty,
+                    CancellationToken.None
+                );
         }
         catch (Exception e)
         {

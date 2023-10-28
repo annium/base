@@ -22,7 +22,6 @@ internal struct KeyValueAccumulator
             // First value for this key
             _accumulator[key] = new StringValues(value);
         }
-
         else
             switch (values.Count)
             {
@@ -55,7 +54,6 @@ internal struct KeyValueAccumulator
                 }
             }
     }
-
 
     public Dictionary<string, StringValues> GetResults()
     {

@@ -24,7 +24,6 @@ public class IsCuriouslyRecurringGenericParameterExtensionTests
         typeof(Demo<>).GetGenericArguments()[0].IsCuriouslyRecurringGenericParameter().IsTrue();
     }
 
-    private class Demo<T> where T : Demo<T>
-    {
-    }
+    private class Demo<T>
+        where T : Demo<T> { }
 }

@@ -9,9 +9,7 @@ internal class StatusDataResultFormatter<TS, TD> : IMessagePackFormatter<IStatus
 {
     public static IMessagePackFormatter Instance { get; } = new StatusDataResultFormatter<TS, TD>();
 
-    private StatusDataResultFormatter()
-    {
-    }
+    private StatusDataResultFormatter() { }
 
     public IStatusResult<TS, TD> Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
     {
@@ -25,7 +23,8 @@ internal class StatusDataResultFormatter<TS, TD> : IMessagePackFormatter<IStatus
         var status = default(TS)!;
         var data = default(TD)!;
         IReadOnlyCollection<string> plainErrors = Array.Empty<string>();
-        IReadOnlyDictionary<string, IReadOnlyCollection<string>> labeledErrors = new Dictionary<string, IReadOnlyCollection<string>>();
+        IReadOnlyDictionary<string, IReadOnlyCollection<string>> labeledErrors =
+            new Dictionary<string, IReadOnlyCollection<string>>();
 
         var count = reader.ReadArrayHeader();
         for (var i = 0; i < count; i++)
@@ -57,7 +56,11 @@ internal class StatusDataResultFormatter<TS, TD> : IMessagePackFormatter<IStatus
         return result;
     }
 
-    public void Serialize(ref MessagePackWriter writer, IStatusResult<TS, TD> value, MessagePackSerializerOptions options)
+    public void Serialize(
+        ref MessagePackWriter writer,
+        IStatusResult<TS, TD> value,
+        MessagePackSerializerOptions options
+    )
     {
         if (value == null!)
         {

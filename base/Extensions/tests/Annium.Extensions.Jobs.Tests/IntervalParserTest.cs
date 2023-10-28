@@ -103,13 +103,15 @@ public class IntervalParserTest
         new(2000, 1, day, hour, minute, second);
 
     private static Duration Zero { get; } = Duration.Zero;
+
     private static Duration Day(int x) => Duration.FromDays(x);
+
     private static Duration Hour(int x) => Duration.FromHours(x);
+
     private static Duration Min(int x) => Duration.FromMinutes(x);
+
     private static Duration Sec(int x) => Duration.FromSeconds(x);
 
-    private static IIntervalParser GetParser() => new ServiceContainer()
-        .AddScheduler()
-        .BuildServiceProvider()
-        .Resolve<IIntervalParser>();
+    private static IIntervalParser GetParser() =>
+        new ServiceContainer().AddScheduler().BuildServiceProvider().Resolve<IIntervalParser>();
 }

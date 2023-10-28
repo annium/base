@@ -20,10 +20,7 @@ internal class TypeManagerInstance : ITypeManager, ILogSubject
     private readonly IReadOnlyDictionary<Ancestor, IReadOnlyCollection<Descendant>> _hierarchy;
     private readonly IReadOnlyDictionary<TypeId, Type> _ids;
 
-    public TypeManagerInstance(
-        Assembly assembly,
-        ILogger logger
-    )
+    public TypeManagerInstance(Assembly assembly, ILogger logger)
     {
         Logger = logger;
         this.Trace("start for {assembly}", assembly);
@@ -83,7 +80,9 @@ internal class TypeManagerInstance : ITypeManager, ILogSubject
 
         var property = _hierarchy.Keys.FirstOrDefault(x => x.Type == lookupType)?.IdProperty;
         if (property is not null && property.PropertyType != typeof(string))
-            throw new InvalidOperationException($"Type '{baseType}' id property '{property}' must be of type '{typeof(string)}'");
+            throw new InvalidOperationException(
+                $"Type '{baseType}' id property '{property}' must be of type '{typeof(string)}'"
+            );
 
         return property;
     }
@@ -144,12 +143,19 @@ internal class TypeManagerInstance : ITypeManager, ILogSubject
             throw new ArgumentNullException(nameof(baseType));
 
         if (GetResolutionKeyProperty(baseType) is null)
-            throw new TypeResolutionException(typeof(object), baseType, $"Type '{baseType}' has no {nameof(ResolutionKeyAttribute)}");
+            throw new TypeResolutionException(
+                typeof(object),
+                baseType,
+                $"Type '{baseType}' has no {nameof(ResolutionKeyAttribute)}"
+            );
 
         var descendants = GetImplementationDescendants(baseType).Where(x => x.HasKey && key.Equals(x.Key)).ToArray();
         if (descendants.Length > 1)
-            throw new TypeResolutionException(typeof(object), baseType,
-                $"Ambiguous resolution between {string.Join(", ", descendants.Select(x => x.Type.FullName))}");
+            throw new TypeResolutionException(
+                typeof(object),
+                baseType,
+                $"Ambiguous resolution between {string.Join(", ", descendants.Select(x => x.Type.FullName))}"
+            );
 
         return descendants.FirstOrDefault()?.Type;
     }
@@ -235,14 +241,20 @@ internal class TypeManagerInstance : ITypeManager, ILogSubject
 
         if (matches.Length > 1)
         {
-            var rivals = matches.TakeWhile(x => x.match == matches[0].match).Select(x => x.descendant.Type.FullName).ToArray();
+            var rivals = matches
+                .TakeWhile(x => x.match == matches[0].match)
+                .Select(x => x.descendant.Type.FullName)
+                .ToArray();
             if (rivals.Length > 1)
-                throw new TypeResolutionException(assumedSourceType, baseType, $"Ambiguous resolution between {string.Join(", ", rivals)}");
+                throw new TypeResolutionException(
+                    assumedSourceType,
+                    baseType,
+                    $"Ambiguous resolution between {string.Join(", ", rivals)}"
+                );
         }
 
         return matches.Select(x => x.descendant).ToArray();
     }
-
 
     /// <summary>
     /// Returns all direct implementations of <see cref="baseType"/>.
@@ -273,17 +285,24 @@ internal class TypeManagerInstance : ITypeManager, ILogSubject
 
         var ancestor = new Ancestor(instance.GetType());
         if (!ancestor.HasIdProperty)
-            throw new TypeResolutionException(type, property.DeclaringType, $"Source type '{type}' has no '{nameof(ResolutionIdAttribute)}'");
+            throw new TypeResolutionException(
+                type,
+                property.DeclaringType,
+                $"Source type '{type}' has no '{nameof(ResolutionIdAttribute)}'"
+            );
 
         var realProperty = ancestor.IdProperty!;
         if (realProperty.PropertyType != typeof(string))
-            throw new InvalidOperationException($"Type '{ancestor.Type}' id property '{realProperty}' must be of type '{typeof(string)}'");
+            throw new InvalidOperationException(
+                $"Type '{ancestor.Type}' id property '{realProperty}' must be of type '{typeof(string)}'"
+            );
 
         if (realProperty.Name != property.Name)
             throw new TypeResolutionException(
-                type, property.DeclaringType,
-                $"Source type '{type}' '{nameof(ResolutionIdAttribute)}' is assigned to property named '{realProperty.Name}'." +
-                $"Expected property name is '{property.Name}'."
+                type,
+                property.DeclaringType,
+                $"Source type '{type}' '{nameof(ResolutionIdAttribute)}' is assigned to property named '{realProperty.Name}'."
+                    + $"Expected property name is '{property.Name}'."
             );
 
         return realProperty;
@@ -305,14 +324,19 @@ internal class TypeManagerInstance : ITypeManager, ILogSubject
 
         var ancestor = new Ancestor(instance.GetType());
         if (!ancestor.HasKeyProperty)
-            throw new TypeResolutionException(type, property.DeclaringType, $"Source type '{type}' has no '{nameof(ResolutionKeyAttribute)}'");
+            throw new TypeResolutionException(
+                type,
+                property.DeclaringType,
+                $"Source type '{type}' has no '{nameof(ResolutionKeyAttribute)}'"
+            );
 
         var realProperty = ancestor.KeyProperty!;
         if (realProperty.Name != property.Name)
             throw new TypeResolutionException(
-                type, property.DeclaringType,
-                $"Source type '{type}' '{nameof(ResolutionKeyAttribute)}' is assigned to property named '{realProperty.Name}'." +
-                $"Expected property name is '{property.Name}'."
+                type,
+                property.DeclaringType,
+                $"Source type '{type}' '{nameof(ResolutionKeyAttribute)}' is assigned to property named '{realProperty.Name}'."
+                    + $"Expected property name is '{property.Name}'."
             );
 
         return realProperty;

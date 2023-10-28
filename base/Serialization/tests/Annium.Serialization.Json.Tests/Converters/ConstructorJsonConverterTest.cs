@@ -51,7 +51,9 @@ public class ConstructorJsonConverterTest : TestBase
         var result = serializer.Serialize(x);
 
         // assert
-        result.Is(@"[{""one"":{""value"":2,""isOdd"":true},""two"":{""value"":3,""isOdd"":false}},{""value"":1,""isOdd"":false}]");
+        result.Is(
+            @"[{""one"":{""value"":2,""isOdd"":true},""two"":{""value"":3,""isOdd"":false}},{""value"":1,""isOdd"":false}]"
+        );
     }
 
     [Fact]
@@ -265,14 +267,10 @@ public class ConstructorJsonConverterTest : TestBase
         }
 
         [DeserializationConstructor]
-        private ForceDefault()
-        {
-        }
+        private ForceDefault() { }
     }
 
-    public interface IX
-    {
-    }
+    public interface IX { }
 
     public record InfoMessage(string Message) : MessageBase;
 

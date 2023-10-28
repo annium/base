@@ -7,14 +7,8 @@ namespace Annium.Net.Types.Tests.Mapper;
 
 public class MapperInterfaceTests : MapperInterfaceTestsBase
 {
-    public MapperInterfaceTests(
-        ITestOutputHelper outputHelper
-    ) : base(
-        new TestProvider(),
-        outputHelper
-    )
-    {
-    }
+    public MapperInterfaceTests(ITestOutputHelper outputHelper)
+        : base(new TestProvider(), outputHelper) { }
 
     [Theory]
     [InlineData(typeof(IEmptyInterface))]
@@ -24,6 +18,4 @@ public class MapperInterfaceTests : MapperInterfaceTestsBase
     }
 }
 
-file interface IEmptyInterface
-{
-}
+file interface IEmptyInterface { }

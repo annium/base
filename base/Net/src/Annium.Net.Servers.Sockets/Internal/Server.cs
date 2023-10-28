@@ -16,11 +16,7 @@ internal class Server : IServer, ILogSubject
     private readonly IHandler _handler;
     private int _isListening;
 
-    public Server(
-        int port,
-        IHandler handler,
-        ILogger logger
-    )
+    public Server(int port, IHandler handler, ILogger logger)
     {
         Logger = logger;
         _listener = new TcpListener(IPAddress.Any, port);
@@ -76,25 +72,26 @@ internal class Server : IServer, ILogSubject
         _listener.Stop();
     }
 
-    private Func<ValueTask> HandleSocket(Socket socket, CancellationToken ct) => async () =>
-    {
-        try
+    private Func<ValueTask> HandleSocket(Socket socket, CancellationToken ct) =>
+        async () =>
         {
-            this.Trace("handle socket");
-            await _handler.HandleAsync(socket, ct).ConfigureAwait(false);
-        }
-        finally
-        {
-            if (socket.Connected)
+            try
             {
-                this.Trace("close socket");
-                socket.Close();
+                this.Trace("handle socket");
+                await _handler.HandleAsync(socket, ct).ConfigureAwait(false);
             }
-            else
-                this.Trace("socket is not connected already");
+            finally
+            {
+                if (socket.Connected)
+                {
+                    this.Trace("close socket");
+                    socket.Close();
+                }
+                else
+                    this.Trace("socket is not connected already");
 
-            this.Trace("dispose socket");
-            socket.Dispose();
-        }
-    };
+                this.Trace("dispose socket");
+                socket.Dispose();
+            }
+        };
 }

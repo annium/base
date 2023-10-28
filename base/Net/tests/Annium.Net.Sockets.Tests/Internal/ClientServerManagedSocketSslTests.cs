@@ -14,9 +14,8 @@ namespace Annium.Net.Sockets.Tests.Internal;
 
 public class ClientServerManagedSocketSslTests : ClientServerManagedSocketTestsBase
 {
-    public ClientServerManagedSocketSslTests(ITestOutputHelper outputHelper) : base(outputHelper)
-    {
-    }
+    public ClientServerManagedSocketSslTests(ITestOutputHelper outputHelper)
+        : base(outputHelper) { }
 
     [Fact]
     public async Task Send_NotConnected()
@@ -146,23 +145,29 @@ public class ClientServerManagedSocketSslTests : ClientServerManagedSocketTestsB
     {
         var cert = X509Certificate.CreateFromCertFile("keys/ecdsa_cert.pfx");
 
-        return RunServerBase(async (sp, raw, ct) =>
-        {
-            this.Trace("start");
+        return RunServerBase(
+            async (sp, raw, ct) =>
+            {
+                this.Trace("start");
 
-            this.Trace<string>("wrap {raw} into ssl stream", raw.GetFullId());
-            await using var sslStream = new SslStream(new NetworkStream(raw), false);
+                this.Trace<string>("wrap {raw} into ssl stream", raw.GetFullId());
+                await using var sslStream = new SslStream(new NetworkStream(raw), false);
 
-            this.Trace("authenticate as server");
-            await sslStream.AuthenticateAsServerAsync(cert, clientCertificateRequired: false, checkCertificateRevocation: true);
+                this.Trace("authenticate as server");
+                await sslStream.AuthenticateAsServerAsync(
+                    cert,
+                    clientCertificateRequired: false,
+                    checkCertificateRevocation: true
+                );
 
-            this.Trace("create managed socket");
-            var socket = new ServerManagedSocket(sslStream, SocketMode.Raw, sp.Resolve<ILogger>(), ct);
+                this.Trace("create managed socket");
+                var socket = new ServerManagedSocket(sslStream, SocketMode.Raw, sp.Resolve<ILogger>(), ct);
 
-            this.Trace<string>("handle {socket}", socket.GetFullId());
-            await handleSocket(socket, ct);
+                this.Trace<string>("handle {socket}", socket.GetFullId());
+                await handleSocket(socket, ct);
 
-            this.Trace("done");
-        });
+                this.Trace("done");
+            }
+        );
     }
 }

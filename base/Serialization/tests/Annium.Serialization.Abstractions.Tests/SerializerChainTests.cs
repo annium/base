@@ -39,10 +39,7 @@ public class SerializerChainTests
             value => Encoding.UTF8.GetBytes(value),
             value => Encoding.UTF8.GetString(value)
         );
-        var wrapper = Serializer.Create<string, byte[]>(
-            Convert.FromBase64String,
-            Convert.ToBase64String
-        );
+        var wrapper = Serializer.Create<string, byte[]>(Convert.FromBase64String, Convert.ToBase64String);
         var data = "demo";
 
         // act

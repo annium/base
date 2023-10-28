@@ -9,11 +9,7 @@ namespace Annium.Identity.Tokens.Jwt.Tests;
 
 public class JwtReaderWriterTestsBase
 {
-    protected void Works_Base(
-        SecurityKey privateKey,
-        SecurityKey publicKey,
-        string signatureAlgorithm
-    )
+    protected void Works_Base(SecurityKey privateKey, SecurityKey publicKey, string signatureAlgorithm)
     {
         // arrange
         var tokenId = Guid.NewGuid().ToString();
@@ -49,10 +45,7 @@ public class JwtReaderWriterTestsBase
         token.IssuedAt.Is(nowUtc);
         token.ValidFrom.Is(nowUtc);
         token.ValidTo.Is(expiresUtc);
-        token.Claims
-            .FirstOrDefault(x => x.Type == key)
-            .IsNotDefault()
-            .Value.Is(data);
+        token.Claims.FirstOrDefault(x => x.Type == key).IsNotDefault().Value.Is(data);
 
         // act - read
         var readResult = JwtReader.Read(encoded, opts, now);
@@ -70,9 +63,6 @@ public class JwtReaderWriterTestsBase
         restored.AsT0.IssuedAt.Is(nowUtc);
         restored.AsT0.ValidFrom.Is(nowUtc);
         restored.AsT0.ValidTo.Is(expiresUtc);
-        restored.AsT0.Claims
-            .FirstOrDefault(x => x.Type == key)
-            .IsNotDefault()
-            .Value.Is(data);
+        restored.AsT0.Claims.FirstOrDefault(x => x.Type == key).IsNotDefault().Value.Is(data);
     }
 }

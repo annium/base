@@ -10,21 +10,14 @@ internal class ConfigurationBuilder : IConfigurationBuilder
     private readonly IMapper _mapper;
     private readonly IConfigurationContainer _container;
 
-    public ConfigurationBuilder(
-        ITypeManager typeManager,
-        IMapper mapper
-    )
+    public ConfigurationBuilder(ITypeManager typeManager, IMapper mapper)
     {
         _typeManager = typeManager;
         _mapper = mapper;
         _container = new ConfigurationContainer();
     }
 
-    internal ConfigurationBuilder(
-        ITypeManager typeManager,
-        IMapper mapper,
-        IConfigurationContainer container
-    )
+    internal ConfigurationBuilder(ITypeManager typeManager, IMapper mapper, IConfigurationContainer container)
     {
         _typeManager = typeManager;
         _mapper = mapper;

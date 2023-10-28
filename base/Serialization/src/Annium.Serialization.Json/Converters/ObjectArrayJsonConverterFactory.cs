@@ -16,6 +16,7 @@ public class ObjectArrayJsonConverterFactory : JsonConverterFactory
 
     public override JsonConverter CreateConverter(Type typeToConvert, JsonSerializerOptions options)
     {
-        return (JsonConverter)Activator.CreateInstance(typeof(ObjectArrayJsonConverter<>).MakeGenericType(typeToConvert))!;
+        return (JsonConverter)
+            Activator.CreateInstance(typeof(ObjectArrayJsonConverter<>).MakeGenericType(typeToConvert))!;
     }
 }

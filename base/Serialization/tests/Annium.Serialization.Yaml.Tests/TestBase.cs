@@ -12,13 +12,16 @@ public class TestBase
     {
         var container = new ServiceContainer();
         container.AddRuntime(GetType().Assembly);
-        container.AddSerializers()
-            .WithYaml((s, d) =>
-            {
-                s.WithNamingConvention(CamelCaseNamingConvention.Instance);
-                d.WithNamingConvention(CamelCaseNamingConvention.Instance);
-                configure(s, d);
-            });
+        container
+            .AddSerializers()
+            .WithYaml(
+                (s, d) =>
+                {
+                    s.WithNamingConvention(CamelCaseNamingConvention.Instance);
+                    d.WithNamingConvention(CamelCaseNamingConvention.Instance);
+                    configure(s, d);
+                }
+            );
 
         var provider = container.BuildServiceProvider();
 

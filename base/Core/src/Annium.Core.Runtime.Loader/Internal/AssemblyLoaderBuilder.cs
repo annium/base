@@ -9,7 +9,8 @@ namespace Annium.Core.Runtime.Loader.Internal;
 internal class AssemblyLoaderBuilder : IAssemblyLoaderBuilder
 {
     private readonly IList<Func<AssemblyName, string?>> _pathResolvers = new List<Func<AssemblyName, string?>>();
-    private readonly IList<Func<AssemblyName, Task<byte[]>?>> _byteArrayResolvers = new List<Func<AssemblyName, Task<byte[]>?>>();
+    private readonly IList<Func<AssemblyName, Task<byte[]>?>> _byteArrayResolvers =
+        new List<Func<AssemblyName, Task<byte[]>?>>();
 
     public IAssemblyLoaderBuilder AddResolver(Func<AssemblyName, string?> pathResolver)
     {

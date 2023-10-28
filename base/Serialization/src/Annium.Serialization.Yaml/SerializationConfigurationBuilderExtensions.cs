@@ -10,19 +10,23 @@ namespace Annium.Core.DependencyInjection;
 
 public static class SerializationConfigurationBuilderExtensions
 {
-    private static readonly ConcurrentDictionary<(SerializerKey, Action<IServiceProvider, SerializerBuilder, DeserializerBuilder>), (ISerializer, IDeserializer)> Options = new();
+    private static readonly ConcurrentDictionary<
+        (SerializerKey, Action<IServiceProvider, SerializerBuilder, DeserializerBuilder>),
+        (ISerializer, IDeserializer)
+    > Options = new();
 
     public static ISerializationConfigurationBuilder WithYaml(
         this ISerializationConfigurationBuilder builder,
         bool isDefault = false
     )
     {
-        static void Configure(IServiceProvider sp, SerializerBuilder serializer, DeserializerBuilder deserializer)
-        {
-        }
+        static void Configure(IServiceProvider sp, SerializerBuilder serializer, DeserializerBuilder deserializer) { }
 
-        return builder
-            .Register<string, StringSerializer>(Constants.MediaType, isDefault, ResolveSerializer(builder.Key, Configure, CreateString));
+        return builder.Register<string, StringSerializer>(
+            Constants.MediaType,
+            isDefault,
+            ResolveSerializer(builder.Key, Configure, CreateString)
+        );
     }
 
     public static ISerializationConfigurationBuilder WithYaml(
@@ -31,10 +35,14 @@ public static class SerializationConfigurationBuilderExtensions
         bool isDefault = false
     )
     {
-        void Configure(IServiceProvider sp, SerializerBuilder serializer, DeserializerBuilder deserializer) => configure(serializer, deserializer);
+        void Configure(IServiceProvider sp, SerializerBuilder serializer, DeserializerBuilder deserializer) =>
+            configure(serializer, deserializer);
 
-        return builder
-            .Register<string, StringSerializer>(Constants.MediaType, isDefault, ResolveSerializer(builder.Key, Configure, CreateString));
+        return builder.Register<string, StringSerializer>(
+            Constants.MediaType,
+            isDefault,
+            ResolveSerializer(builder.Key, Configure, CreateString)
+        );
     }
 
     public static ISerializationConfigurationBuilder WithYaml(
@@ -43,28 +51,36 @@ public static class SerializationConfigurationBuilderExtensions
         bool isDefault = false
     )
     {
-        return builder
-            .Register<string, StringSerializer>(Constants.MediaType, isDefault, ResolveSerializer(builder.Key, configure, CreateString));
+        return builder.Register<string, StringSerializer>(
+            Constants.MediaType,
+            isDefault,
+            ResolveSerializer(builder.Key, configure, CreateString)
+        );
     }
 
     private static Func<IServiceProvider, TSerializer> ResolveSerializer<TSerializer>(
         string key,
         Action<IServiceProvider, SerializerBuilder, DeserializerBuilder> configure,
         Func<ISerializer, IDeserializer, TSerializer> factory
-    ) => sp =>
-    {
-        var (serializer, deserializer) = Options.GetOrAdd((SerializerKey.Create(key, Constants.MediaType), configure), _ =>
+    ) =>
+        sp =>
         {
-            var serializerBuilder = new SerializerBuilder();
-            var deserializerBuilder = new DeserializerBuilder();
+            var (serializer, deserializer) = Options.GetOrAdd(
+                (SerializerKey.Create(key, Constants.MediaType), configure),
+                _ =>
+                {
+                    var serializerBuilder = new SerializerBuilder();
+                    var deserializerBuilder = new DeserializerBuilder();
 
-            configure(sp, serializerBuilder, deserializerBuilder);
+                    configure(sp, serializerBuilder, deserializerBuilder);
 
-            return (serializerBuilder.Build(), deserializerBuilder.Build());
-        });
+                    return (serializerBuilder.Build(), deserializerBuilder.Build());
+                }
+            );
 
-        return factory(serializer, deserializer);
-    };
+            return factory(serializer, deserializer);
+        };
 
-    private static StringSerializer CreateString(ISerializer serializer, IDeserializer deserializer) => new(serializer, deserializer);
+    private static StringSerializer CreateString(ISerializer serializer, IDeserializer deserializer) =>
+        new(serializer, deserializer);
 }

@@ -10,6 +10,5 @@ public static class SendingSocketExtensions
         this ISendingSocket socket,
         string text,
         CancellationToken ct = default
-    ) =>
-        socket.SendAsync(Encoding.UTF8.GetBytes(text), ct);
+    ) => socket.SendAsync(Encoding.UTF8.GetBytes(text), ct);
 }

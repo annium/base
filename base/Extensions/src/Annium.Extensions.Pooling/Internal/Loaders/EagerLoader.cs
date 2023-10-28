@@ -8,10 +8,7 @@ internal class EagerLoader<T> : ILoader<T>
     private readonly Func<T> _factory;
     private readonly IStorage<T> _storage;
 
-    public EagerLoader(
-        Func<T> factory,
-        IStorage<T> storage
-    )
+    public EagerLoader(Func<T> factory, IStorage<T> storage)
     {
         _factory = factory;
         _storage = storage;

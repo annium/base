@@ -13,9 +13,8 @@ namespace Annium.Core.Mediator.Tests;
 
 public class MediatorTest : TestBase
 {
-    public MediatorTest(ITestOutputHelper outputHelper) : base(outputHelper)
-    {
-    }
+    public MediatorTest(ITestOutputHelper outputHelper)
+        : base(outputHelper) { }
 
     [Fact]
     public async Task SingleClosedHandler_Works()
@@ -53,10 +52,11 @@ public class MediatorTest : TestBase
     public async Task ChainOfHandlers_WithExpectedParameters_Works()
     {
         // arrange
-        RegisterMediator(cfg => cfg
-            .AddHandler(typeof(ConversionHandler<,>))
-            .AddHandler(typeof(ValidationHandler<,>))
-            .AddHandler(typeof(OpenFinalHandler<,>))
+        RegisterMediator(
+            cfg =>
+                cfg.AddHandler(typeof(ConversionHandler<,>))
+                    .AddHandler(typeof(ValidationHandler<,>))
+                    .AddHandler(typeof(OpenFinalHandler<,>))
         );
         SetupLogging();
         var mediator = Get<IMediator>();
@@ -75,11 +75,12 @@ public class MediatorTest : TestBase
     public async Task ChainOfHandlers_WithRegisteredResponse_Works()
     {
         // arrange
-        RegisterMediator(cfg => cfg
-            .AddHandler(typeof(ConversionHandler<,>))
-            .AddHandler(typeof(ValidationHandler<,>))
-            .AddHandler(typeof(OpenFinalHandler<,>))
-            .AddMatch(typeof(Request<Two>), typeof(IResponse), typeof(Response<IBooleanResult<Base>>))
+        RegisterMediator(
+            cfg =>
+                cfg.AddHandler(typeof(ConversionHandler<,>))
+                    .AddHandler(typeof(ValidationHandler<,>))
+                    .AddHandler(typeof(OpenFinalHandler<,>))
+                    .AddMatch(typeof(Request<Two>), typeof(IResponse), typeof(Response<IBooleanResult<Base>>))
         );
         SetupLogging();
         var mediator = Get<IMediator>();
@@ -94,40 +95,42 @@ public class MediatorTest : TestBase
         response.Data.GetHashCode().Is(new Base { Value = "one_two_three" }.GetHashCode());
     }
 
-    private void RegisterMediator(Action<MediatorConfiguration> configure) => Register(container =>
-    {
-        container.Add<Func<One, bool>>(value => value.First % 2 == 1).AsSelf().Singleton();
-        container.Add<Func<Two, bool>>(value => value.Second % 2 == 0).AsSelf().Singleton();
+    private void RegisterMediator(Action<MediatorConfiguration> configure) =>
+        Register(container =>
+        {
+            container.Add<Func<One, bool>>(value => value.First % 2 == 1).AsSelf().Singleton();
+            container.Add<Func<Two, bool>>(value => value.Second % 2 == 0).AsSelf().Singleton();
 
-        container.AddMediatorConfiguration(configure);
-        container.AddMediator();
-    });
+            container.AddMediatorConfiguration(configure);
+            container.AddMediator();
+        });
 
-    private void SetupLogging() => Setup(sp =>
-    {
-        sp.UseLogging(route => route
-            .For(m =>
-                m.SubjectType.StartsWith("ConversionHandler") ||
-                m.SubjectType.StartsWith("ValidationHandler") ||
-                m.SubjectType.StartsWith("OpenFinalHandler") ||
-                m.SubjectType.StartsWith("ClosedFinalHandler")
-            )
-            .UseInMemory()
-        );
-    });
+    private void SetupLogging() =>
+        Setup(sp =>
+        {
+            sp.UseLogging(
+                route =>
+                    route
+                        .For(
+                            m =>
+                                m.SubjectType.StartsWith("ConversionHandler")
+                                || m.SubjectType.StartsWith("ValidationHandler")
+                                || m.SubjectType.StartsWith("OpenFinalHandler")
+                                || m.SubjectType.StartsWith("ClosedFinalHandler")
+                        )
+                        .UseInMemory()
+            );
+        });
 
-    private class ConversionHandler<TRequest, TResponse> :
-        IPipeRequestHandler<Request<TRequest>, TRequest, TResponse, Response<TResponse>>,
-        ILogSubject
+    private class ConversionHandler<TRequest, TResponse>
+        : IPipeRequestHandler<Request<TRequest>, TRequest, TResponse, Response<TResponse>>,
+            ILogSubject
     {
-        private readonly JsonSerializerOptions
-            _options = new JsonSerializerOptions().ConfigureForOperations();
+        private readonly JsonSerializerOptions _options = new JsonSerializerOptions().ConfigureForOperations();
 
         public ILogger Logger { get; }
 
-        public ConversionHandler(
-            ILogger logger
-        )
+        public ConversionHandler(ILogger logger)
         {
             Logger = logger;
         }
@@ -172,21 +175,16 @@ public class MediatorTest : TestBase
         }
     }
 
-    private interface IResponse
-    {
-    }
+    private interface IResponse { }
 
-    private class ValidationHandler<TRequest, TResponse> :
-        IPipeRequestHandler<TRequest, TRequest, TResponse, IBooleanResult<TResponse>>,
-        ILogSubject
+    private class ValidationHandler<TRequest, TResponse>
+        : IPipeRequestHandler<TRequest, TRequest, TResponse, IBooleanResult<TResponse>>,
+            ILogSubject
     {
         public ILogger Logger { get; }
         private readonly Func<TRequest, bool> _validate;
 
-        public ValidationHandler(
-            Func<TRequest, bool> validate,
-            ILogger logger
-        )
+        public ValidationHandler(Func<TRequest, bool> validate, ILogger logger)
         {
             _validate = validate;
             Logger = logger;
@@ -202,7 +200,11 @@ public class MediatorTest : TestBase
             var result = _validate(request)
                 ? Result.Success(default(TResponse)!)
                 : Result.Failure(default(TResponse)!).Error("Validation failed");
-            this.Trace("Status of {request} validation: {isSuccess}", typeof(TRequest).FriendlyName(), result.IsSuccess);
+            this.Trace(
+                "Status of {request} validation: {isSuccess}",
+                typeof(TRequest).FriendlyName(),
+                result.IsSuccess
+            );
             if (result.HasErrors)
                 return result;
 
@@ -218,17 +220,12 @@ public class MediatorTest : TestBase
     {
         public ILogger Logger { get; }
 
-        public OpenFinalHandler(
-            ILogger logger
-        )
+        public OpenFinalHandler(ILogger logger)
         {
             Logger = logger;
         }
 
-        public Task<TResponse> HandleAsync(
-            TRequest request,
-            CancellationToken ct
-        )
+        public Task<TResponse> HandleAsync(TRequest request, CancellationToken ct)
         {
             this.Info(GetType().FriendlyName());
             this.Trace(request.GetHashCode().ToString());
@@ -243,17 +240,12 @@ public class MediatorTest : TestBase
     {
         public ILogger Logger { get; }
 
-        public ClosedFinalHandler(
-            ILogger logger
-        )
+        public ClosedFinalHandler(ILogger logger)
         {
             Logger = logger;
         }
 
-        public Task<One> HandleAsync(
-            Base request,
-            CancellationToken ct
-        )
+        public Task<One> HandleAsync(Base request, CancellationToken ct)
         {
             this.Trace(GetType().FullName!);
             this.Trace(request.GetHashCode().ToString());

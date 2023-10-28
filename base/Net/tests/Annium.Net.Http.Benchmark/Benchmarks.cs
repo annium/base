@@ -52,7 +52,10 @@ public class Benchmarks
     {
         for (var i = 0; i < TotalRequests; i++)
         {
-            var request = _httpRequestFactory.New(ServerUri).Get("/upload").Attach(new ByteArrayContent(Helper.GetContent(Size)));
+            var request = _httpRequestFactory
+                .New(ServerUri)
+                .Get("/upload")
+                .Attach(new ByteArrayContent(Helper.GetContent(Size)));
             var response = await request.RunAsync();
             if (response.IsFailure)
                 throw new Exception($"Response #{i} failed");

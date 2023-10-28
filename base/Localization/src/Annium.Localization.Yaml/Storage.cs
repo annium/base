@@ -26,7 +26,12 @@ internal class Storage : ILocaleStorage
         var targetNamespacePath = Path.Combine(target.Namespace?.Split('.') ?? Array.Empty<string>());
         var localeRelativePath = Path.GetRelativePath(assemblyNamePath, targetNamespacePath);
 
-        var file = Path.Combine(location ?? string.Empty, localeRelativePath, "locale", $"{culture.TwoLetterISOLanguageName}.yml");
+        var file = Path.Combine(
+            location ?? string.Empty,
+            localeRelativePath,
+            "locale",
+            $"{culture.TwoLetterISOLanguageName}.yml"
+        );
 
         return ResolveLocale(file);
     }

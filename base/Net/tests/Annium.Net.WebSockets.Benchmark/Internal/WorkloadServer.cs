@@ -24,7 +24,8 @@ internal static class WorkloadServer
 
 file class WebSocketHandler : IWebSocketHandler
 {
-    const string WorkloadMessage = "{{\"stream\":\"{0}@aggTrade\",\"data\":{{\"e\":\"aggTrade\",\"E\":1689659049498,\"s\":\"{1}\",\"a\":2675370021,\"p\":\"30048.53000000\",\"q\":\"0.00332000\",\"f\":3174123265,\"l\":3174123265,\"T\":1689659049497,\"m\":false,\"M\":true}}}}";
+    const string WorkloadMessage =
+        "{{\"stream\":\"{0}@aggTrade\",\"data\":{{\"e\":\"aggTrade\",\"E\":1689659049498,\"s\":\"{1}\",\"a\":2675370021,\"p\":\"30048.53000000\",\"q\":\"0.00332000\",\"f\":3174123265,\"l\":3174123265,\"T\":1689659049497,\"m\":false,\"M\":true}}}}";
     private readonly ILogger _logger;
 
     public WebSocketHandler(ILogger logger)
@@ -40,6 +41,10 @@ file class WebSocketHandler : IWebSocketHandler
         for (var i = 0; i < Constants.TotalMessages; i++)
             await clientSocket.SendTextAsync(workloadMessageBytes, CancellationToken.None).ConfigureAwait(false);
 
-        await ctx.WebSocket.CloseOutputAsync(System.Net.WebSockets.WebSocketCloseStatus.NormalClosure, null, CancellationToken.None);
+        await ctx.WebSocket.CloseOutputAsync(
+            System.Net.WebSockets.WebSocketCloseStatus.NormalClosure,
+            null,
+            CancellationToken.None
+        );
     }
 }

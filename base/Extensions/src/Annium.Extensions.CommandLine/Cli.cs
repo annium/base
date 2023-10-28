@@ -10,7 +10,8 @@ public static class Cli
     public static void Clear()
     {
         Console.SetCursorPosition(0, 0);
-        var clr = Enumerable.Range(0, Console.WindowHeight)
+        var clr = Enumerable
+            .Range(0, Console.WindowHeight)
             .Select(_ => new string(' ', Console.WindowWidth))
             .Join(Environment.NewLine);
         Console.Write(clr);
@@ -104,7 +105,6 @@ public static class Cli
         var originalForeground = Console.ForegroundColor;
         if (foreground.HasValue)
             Console.ForegroundColor = foreground.Value;
-
 
         return Disposable.Create(() =>
         {

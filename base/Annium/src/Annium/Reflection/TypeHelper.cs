@@ -10,9 +10,7 @@ public static class TypeHelper
     public static LambdaExpression[] GetAccessExpressions<T>(Expression<Func<T, object>> map)
     {
         if (map.Body is NewExpression create)
-            return create.Arguments
-                .Select(x => Expression.Lambda(x, map.Parameters))
-                .ToArray();
+            return create.Arguments.Select(x => Expression.Lambda(x, map.Parameters)).ToArray();
 
         return new LambdaExpression[] { map };
     }
@@ -25,11 +23,9 @@ public static class TypeHelper
         return new[] { ResolveProperty(map.Body) };
     }
 
-    public static PropertyInfo ResolveProperty<T, TV>(Expression<Func<T, TV>> map)
-        => ResolveProperty(map.Body);
+    public static PropertyInfo ResolveProperty<T, TV>(Expression<Func<T, TV>> map) => ResolveProperty(map.Body);
 
-    public static PropertyInfo ResolveProperty<T>(Expression<Func<T, object>> map)
-        => ResolveProperty(map.Body);
+    public static PropertyInfo ResolveProperty<T>(Expression<Func<T, object>> map) => ResolveProperty(map.Body);
 
     private static PropertyInfo ResolveProperty(Expression ex)
     {

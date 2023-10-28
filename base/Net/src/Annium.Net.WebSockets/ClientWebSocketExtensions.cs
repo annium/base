@@ -24,7 +24,10 @@ public static class ClientWebSocketExtensions
         return tcs.Task.WaitAsync(ct);
     }
 
-    public static Task<WebSocketCloseStatus> WhenDisconnected(this IClientWebSocket socket, CancellationToken ct = default)
+    public static Task<WebSocketCloseStatus> WhenDisconnected(
+        this IClientWebSocket socket,
+        CancellationToken ct = default
+    )
     {
         var tcs = new TaskCompletionSource<WebSocketCloseStatus>();
 

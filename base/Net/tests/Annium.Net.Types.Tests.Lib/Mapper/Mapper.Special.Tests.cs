@@ -8,12 +8,8 @@ namespace Annium.Net.Types.Tests.Lib.Mapper;
 
 public abstract class MapperSpecialTestsBase : TestBase
 {
-    protected MapperSpecialTestsBase(
-        ITestProvider testProvider,
-        ITestOutputHelper outputHelper
-    ) : base(testProvider, outputHelper)
-    {
-    }
+    protected MapperSpecialTestsBase(ITestProvider testProvider, ITestOutputHelper outputHelper)
+        : base(testProvider, outputHelper) { }
 
     protected void Task_Generic_Nullable_Base()
     {
@@ -24,10 +20,7 @@ public abstract class MapperSpecialTestsBase : TestBase
         var modelRef = Map(target);
 
         // assert
-        modelRef
-            .As<PromiseRef>().Value
-            .As<NullableRef>().Value
-            .As<BaseTypeRef>().Name.Is(BaseType.String);
+        modelRef.As<PromiseRef>().Value.As<NullableRef>().Value.As<BaseTypeRef>().Name.Is(BaseType.String);
         Models.IsEmpty();
     }
 
@@ -40,9 +33,7 @@ public abstract class MapperSpecialTestsBase : TestBase
         var modelRef = Map(target);
 
         // assert
-        modelRef
-            .As<PromiseRef>().Value
-            .As<BaseTypeRef>().Name.Is(BaseType.String);
+        modelRef.As<PromiseRef>().Value.As<BaseTypeRef>().Name.Is(BaseType.String);
         Models.IsEmpty();
     }
 
@@ -55,9 +46,7 @@ public abstract class MapperSpecialTestsBase : TestBase
         var modelRef = Map(target);
 
         // assert
-        modelRef
-            .As<PromiseRef>().Value
-            .IsDefault();
+        modelRef.As<PromiseRef>().Value.IsDefault();
         Models.IsEmpty();
     }
 }

@@ -9,9 +9,7 @@ internal class BooleanResultDataFormatter<T> : IMessagePackFormatter<IBooleanRes
 {
     public static IMessagePackFormatter Instance { get; } = new BooleanResultDataFormatter<T>();
 
-    private BooleanResultDataFormatter()
-    {
-    }
+    private BooleanResultDataFormatter() { }
 
     public IBooleanResult<T> Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
     {
@@ -25,7 +23,8 @@ internal class BooleanResultDataFormatter<T> : IMessagePackFormatter<IBooleanRes
         var isSuccess = false;
         var data = default(T)!;
         IReadOnlyCollection<string> plainErrors = Array.Empty<string>();
-        IReadOnlyDictionary<string, IReadOnlyCollection<string>> labeledErrors = new Dictionary<string, IReadOnlyCollection<string>>();
+        IReadOnlyDictionary<string, IReadOnlyCollection<string>> labeledErrors =
+            new Dictionary<string, IReadOnlyCollection<string>>();
 
         var count = reader.ReadArrayHeader();
         for (var i = 0; i < count; i++)

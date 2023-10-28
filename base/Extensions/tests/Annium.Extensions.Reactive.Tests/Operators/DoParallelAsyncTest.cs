@@ -16,7 +16,8 @@ public class DoParallelAsyncTest
         // arrange
         var log = new ConcurrentQueue<string>();
         var tcs = new TaskCompletionSource();
-        using var observable = Observable.Range(1, 5)
+        using var observable = Observable
+            .Range(1, 5)
             .DoParallelAsync(async x =>
             {
                 log.Enqueue($"start: {x}");

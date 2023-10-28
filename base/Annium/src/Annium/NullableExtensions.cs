@@ -9,10 +9,7 @@ public static class NullableExtensions
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [return: NotNull]
-    public static T NotNull<T>(
-        this T? value,
-        [CallerArgumentExpression("value")] string expression = ""
-    )
+    public static T NotNull<T>(this T? value, [CallerArgumentExpression("value")] string expression = "")
         where T : class
     {
         if (value is not null)
@@ -22,10 +19,7 @@ public static class NullableExtensions
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static T NotNull<T>(
-        this T? value,
-        [CallerArgumentExpression("value")] string expression = ""
-    )
+    public static T NotNull<T>(this T? value, [CallerArgumentExpression("value")] string expression = "")
         where T : struct
     {
         if (value.HasValue)
@@ -91,6 +85,5 @@ public static class NullableExtensions
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static NullReferenceException Exception(string expression) =>
-        new($"{expression} is null");
+    private static NullReferenceException Exception(string expression) => new($"{expression} is null");
 }

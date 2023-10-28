@@ -13,9 +13,8 @@ namespace Annium.Net.Sockets.Tests.Internal;
 
 public class MessagingManagedSocketPlainTests : MessagingManagedSocketTestsBase
 {
-    public MessagingManagedSocketPlainTests(ITestOutputHelper outputHelper) : base(outputHelper)
-    {
-    }
+    public MessagingManagedSocketPlainTests(ITestOutputHelper outputHelper)
+        : base(outputHelper) { }
 
     [Fact]
     public async Task Send_Canceled()
@@ -116,20 +115,22 @@ public class MessagingManagedSocketPlainTests : MessagingManagedSocketTestsBase
 
     internal override IAsyncDisposable RunServer(Func<IManagedSocket, CancellationToken, Task> handleSocket)
     {
-        return RunServerBase(async (sp, raw, ct) =>
-        {
-            this.Trace("start");
+        return RunServerBase(
+            async (sp, raw, ct) =>
+            {
+                this.Trace("start");
 
-            this.Trace<string>("wrap {raw} into network stream", raw.GetFullId());
-            await using var stream = new NetworkStream(raw);
+                this.Trace<string>("wrap {raw} into network stream", raw.GetFullId());
+                await using var stream = new NetworkStream(raw);
 
-            this.Trace("create managed socket");
-            var socket = new MessagingManagedSocket(stream, sp.Resolve<ILogger>());
+                this.Trace("create managed socket");
+                var socket = new MessagingManagedSocket(stream, sp.Resolve<ILogger>());
 
-            this.Trace<string>("handle {socket}", socket.GetFullId());
-            await handleSocket(socket, ct);
+                this.Trace<string>("handle {socket}", socket.GetFullId());
+                await handleSocket(socket, ct);
 
-            this.Trace("done");
-        });
+                this.Trace("done");
+            }
+        );
     }
 }

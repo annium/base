@@ -12,7 +12,9 @@ namespace Annium.Net.Types.Internal.Extensions;
 internal static class ContextualExtensions
 {
     public static string FriendlyName(this ContextualType type) => type.Type.FriendlyName();
+
     public static string PureName(this ContextualType type) => type.Type.PureName();
+
     public static Namespace GetNamespace(this ContextualType type) => type.Type.GetNamespace();
 
     public static ContextualType[] GetGenericArguments(this ContextualType type)
@@ -22,13 +24,11 @@ internal static class ContextualExtensions
             : type.GenericArguments;
     }
 
-    public static IReadOnlyCollection<ContextualType> GetOwnInterfaces(this ContextualType type) => type.Type.GetOwnInterfaces()
-        .Select(x => x.ToContextualType())
-        .ToArray();
+    public static IReadOnlyCollection<ContextualType> GetOwnInterfaces(this ContextualType type) =>
+        type.Type.GetOwnInterfaces().Select(x => x.ToContextualType()).ToArray();
 
-    public static IReadOnlyCollection<ContextualType> GetInterfaces(this ContextualType type) => type.Type.GetInterfaces()
-        .Select(x => x.ToContextualType())
-        .ToArray();
+    public static IReadOnlyCollection<ContextualType> GetInterfaces(this ContextualType type) =>
+        type.Type.GetInterfaces().Select(x => x.ToContextualType()).ToArray();
 
     public static IReadOnlyCollection<ContextualAccessorInfo> GetOwnMembers(this ContextualType type)
     {
@@ -42,14 +42,12 @@ internal static class ContextualExtensions
         return ownMembers;
     }
 
-    public static IReadOnlyCollection<ContextualAccessorInfo> GetMembers(this ContextualType type) => type.GetProperties()
-        .Concat(type.GetFields())
-        .Select(x => x.ToContextualAccessor())
-        .ToArray();
+    public static IReadOnlyCollection<ContextualAccessorInfo> GetMembers(this ContextualType type) =>
+        type.GetProperties().Concat(type.GetFields()).Select(x => x.ToContextualAccessor()).ToArray();
 
-    private static IReadOnlyCollection<MemberInfo> GetProperties(this ContextualType type) => type.Type
-        .GetProperties(BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.Instance);
+    private static IReadOnlyCollection<MemberInfo> GetProperties(this ContextualType type) =>
+        type.Type.GetProperties(BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.Instance);
 
-    private static IReadOnlyCollection<MemberInfo> GetFields(this ContextualType type) => type.Type
-        .GetFields(BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.Instance);
+    private static IReadOnlyCollection<MemberInfo> GetFields(this ContextualType type) =>
+        type.Type.GetFields(BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.Instance);
 }

@@ -6,8 +6,11 @@ namespace Annium.Data.Tables;
 public static class ChangeEvent
 {
     public static IChangeEvent<T> Init<T>(IReadOnlyCollection<T> values) => new InitEvent<T>(values);
+
     public static IChangeEvent<T> Add<T>(T value) => new AddEvent<T>(value);
+
     public static IChangeEvent<T> Update<T>(T value) => new UpdateEvent<T>(value);
+
     public static IChangeEvent<T> Delete<T>(T value) => new DeleteEvent<T>(value);
 }
 

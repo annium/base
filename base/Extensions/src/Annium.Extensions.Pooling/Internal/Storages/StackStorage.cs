@@ -8,7 +8,8 @@ internal class StackStorage<T> : StorageBase<T>, IStorage<T>
     private readonly Stack<T> _freeItems;
     private readonly List<T> _usedItems;
 
-    public StackStorage(int capacity) : base(capacity)
+    public StackStorage(int capacity)
+        : base(capacity)
     {
         _freeItems = new Stack<T>(capacity);
         _usedItems = new List<T>(capacity);

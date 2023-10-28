@@ -10,6 +10,5 @@ public static class SerializationConfigurationBuilderExtensions
     public static ISerializationConfigurationBuilder WithBinaryString(
         this ISerializationConfigurationBuilder builder,
         bool isDefault = false
-    ) => builder
-        .Register<byte[], string, HexStringSerializer>(Constants.MediaType, isDefault);
+    ) => builder.Register<byte[], string, HexStringSerializer>(Constants.MediaType, isDefault);
 }

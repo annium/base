@@ -19,7 +19,8 @@ internal static class Helper
         MessagePackSerializerOptions options
     )
     {
-        return MessagePackSerializer.Deserialize<Dictionary<string, string[]>>(ref reader, options)
+        return MessagePackSerializer
+            .Deserialize<Dictionary<string, string[]>>(ref reader, options)
             .ToDictionary(x => x.Key, x => (IReadOnlyCollection<string>)x.Value);
     }
 }

@@ -6,9 +6,7 @@ namespace Annium.Configuration.Abstractions;
 
 public static class Configurator
 {
-    public static T Get<T>(
-        Action<IConfigurationContainer> configure
-    )
+    public static T Get<T>(Action<IConfigurationContainer> configure)
         where T : class, new()
     {
         var container = GetServices<T>();
@@ -18,9 +16,7 @@ public static class Configurator
         return Get<T>(container);
     }
 
-    public static async Task<T> Get<T>(
-        Func<IConfigurationContainer, Task> configure
-    )
+    public static async Task<T> Get<T>(Func<IConfigurationContainer, Task> configure)
         where T : class, new()
     {
         var container = GetServices<T>();

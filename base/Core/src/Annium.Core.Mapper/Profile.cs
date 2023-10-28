@@ -19,8 +19,7 @@ public abstract class Profile
 
     internal IReadOnlyDictionary<ValueTuple<Type, Type>, IMapConfiguration> MapConfigurations => _mapConfigurations;
 
-    private readonly Dictionary<ValueTuple<Type, Type>, IMapConfiguration> _mapConfigurations =
-        new();
+    private readonly Dictionary<ValueTuple<Type, Type>, IMapConfiguration> _mapConfigurations = new();
 
     public void Map<TSource, TTarget>(Expression<Func<TSource, TTarget>> mapping)
     {

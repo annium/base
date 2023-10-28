@@ -14,17 +14,21 @@ internal class BooleanDataResultConverter<TD> : ResultConverterBase<IBooleanResu
     )
     {
         var isSuccess = false;
-        TD data = default !;
+        TD data = default!;
 
-        var (plainErrors, labeledErrors) = ReadErrors(ref reader, options, (ref Utf8JsonReader r) =>
-        {
-            if (r.HasProperty(nameof(X.IsSuccess)))
-                isSuccess = JsonSerializer.Deserialize<bool>(ref r, options);
-            else if (r.HasProperty(nameof(X.IsFailure)))
-                isSuccess = !JsonSerializer.Deserialize<bool>(ref r, options);
-            else if (r.HasProperty(nameof(X.Data)))
-                data = JsonSerializer.Deserialize<TD>(ref r, options)!;
-        });
+        var (plainErrors, labeledErrors) = ReadErrors(
+            ref reader,
+            options,
+            (ref Utf8JsonReader r) =>
+            {
+                if (r.HasProperty(nameof(X.IsSuccess)))
+                    isSuccess = JsonSerializer.Deserialize<bool>(ref r, options);
+                else if (r.HasProperty(nameof(X.IsFailure)))
+                    isSuccess = !JsonSerializer.Deserialize<bool>(ref r, options);
+                else if (r.HasProperty(nameof(X.Data)))
+                    data = JsonSerializer.Deserialize<TD>(ref r, options)!;
+            }
+        );
 
         var value = isSuccess ? Result.Success(data) : Result.Failure(data);
 
@@ -34,11 +38,7 @@ internal class BooleanDataResultConverter<TD> : ResultConverterBase<IBooleanResu
         return value;
     }
 
-    public override void Write(
-        Utf8JsonWriter writer,
-        IBooleanResult<TD> value,
-        JsonSerializerOptions options
-    )
+    public override void Write(Utf8JsonWriter writer, IBooleanResult<TD> value, JsonSerializerOptions options)
     {
         writer.WriteStartObject();
 
@@ -63,7 +63,8 @@ internal class BooleanDataResultConverterFactory : ResultConverterBaseFactory
     {
         var typeArgs = GetImplementation(typeToConvert).GetGenericArguments();
 
-        return (JsonConverter)Activator.CreateInstance(typeof(BooleanDataResultConverter<>).MakeGenericType(typeArgs[0]))!;
+        return (JsonConverter)
+            Activator.CreateInstance(typeof(BooleanDataResultConverter<>).MakeGenericType(typeArgs[0]))!;
     }
 
     protected override bool IsConvertibleInterface(Type type) =>

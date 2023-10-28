@@ -14,19 +14,23 @@ internal sealed class Ancestor
     public PropertyInfo? KeyProperty { get; }
     public bool HasKeyProperty { get; }
 
-    public Ancestor(
-        Type type
-    )
+    public Ancestor(Type type)
     {
-        var properties = type.GetAllProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.FlattenHierarchy);
+        var properties = type.GetAllProperties(
+            BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.FlattenHierarchy
+        );
         var idProperties = properties.Where(p => p.GetCustomAttribute<ResolutionIdAttribute>() != null).ToArray();
         var keyProperties = properties.Where(p => p.GetCustomAttribute<ResolutionKeyAttribute>() != null).ToArray();
 
         if (idProperties.Length > 1)
-            throw new ArgumentException($"Type '{type}' has multiple resolution ids defined: {string.Join(", ", idProperties.Select(f => f.Name))}.");
+            throw new ArgumentException(
+                $"Type '{type}' has multiple resolution ids defined: {string.Join(", ", idProperties.Select(f => f.Name))}."
+            );
 
         if (keyProperties.Length > 1)
-            throw new ArgumentException($"Type '{type}' has multiple resolution keys defined: {string.Join(", ", keyProperties.Select(f => f.Name))}.");
+            throw new ArgumentException(
+                $"Type '{type}' has multiple resolution keys defined: {string.Join(", ", keyProperties.Select(f => f.Name))}."
+            );
 
         Type = type;
         IdProperty = idProperties.FirstOrDefault();

@@ -46,29 +46,33 @@ public static partial class IsShallowEqualExtensions
         expressions.Add(Expression.Assign(comparerVar, ResolveComparer(elementType, mapper)));
 
         var breakLabel = Expression.Label(typeof(void));
-        expressions.Add(Expression.Loop(
-            Expression.Block(
-                // no next element in a - break
-                Expression.IfThen(
-                    Expression.Not(Expression.Call(enumeratorAVar, moveNext)),
-                    Expression.Break(breakLabel)
+        expressions.Add(
+            Expression.Loop(
+                Expression.Block(
+                    // no next element in a - break
+                    Expression.IfThen(
+                        Expression.Not(Expression.Call(enumeratorAVar, moveNext)),
+                        Expression.Break(breakLabel)
+                    ),
+                    // no next element in b - different count, return false
+                    Expression.IfThen(
+                        Expression.Not(Expression.Call(enumeratorBVar, moveNext)),
+                        Expression.Return(returnTarget, Expression.Constant(false))
+                    ),
+                    Expression.IfThen(
+                        Expression.Not(
+                            Expression.Invoke(
+                                comparerVar,
+                                Expression.Property(enumeratorAVar, current),
+                                Expression.Property(enumeratorBVar, current)
+                            )
+                        ),
+                        Expression.Return(returnTarget, Expression.Constant(false))
+                    )
                 ),
-                // no next element in b - different count, return false
-                Expression.IfThen(
-                    Expression.Not(Expression.Call(enumeratorBVar, moveNext)),
-                    Expression.Return(returnTarget, Expression.Constant(false))
-                ),
-                Expression.IfThen(
-                    Expression.Not(Expression.Invoke(
-                        comparerVar,
-                        Expression.Property(enumeratorAVar, current),
-                        Expression.Property(enumeratorBVar, current)
-                    )),
-                    Expression.Return(returnTarget, Expression.Constant(false))
-                )
-            ),
-            breakLabel
-        ));
+                breakLabel
+            )
+        );
 
         // return true, if no next element in b (means same count)
         expressions.Add(Expression.Label(returnTarget, Expression.Not(Expression.Call(enumeratorBVar, moveNext))));

@@ -8,11 +8,13 @@ namespace Annium.Data.Models.Extensions;
 
 public static partial class IsShallowEqualExtensions
 {
-    private static MethodInfo? ResolveEqualityOperatorMethod(Type type) => type.GetMethods()
-        .SingleOrDefault(x =>
-            x is { IsSpecialName: true, Name: "op_Equality" } &&
-            x.GetParameters().All(y => y.ParameterType == type)
-        );
+    private static MethodInfo? ResolveEqualityOperatorMethod(Type type) =>
+        type.GetMethods()
+            .SingleOrDefault(
+                x =>
+                    x is { IsSpecialName: true, Name: "op_Equality" }
+                    && x.GetParameters().All(y => y.ParameterType == type)
+            );
 
     private static LambdaExpression BuildEqualityOperatorComparer(Type type, MethodInfo equalityOperatorMethod)
     {

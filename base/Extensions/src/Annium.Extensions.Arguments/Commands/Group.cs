@@ -16,7 +16,11 @@ public abstract class Group : CommandBase
     public Group Add<T>()
         where T : CommandBase, ICommandDescriptor
     {
-        var configurationTypes = typeof(T).GetInterfaces().SingleOrDefault(x => x.PureName() == ConfigurationTypesName)?.GetGenericArguments() ?? Type.EmptyTypes;
+        var configurationTypes =
+            typeof(T)
+                .GetInterfaces()
+                .SingleOrDefault(x => x.PureName() == ConfigurationTypesName)
+                ?.GetGenericArguments() ?? Type.EmptyTypes;
         _commands.Add(new CommandInfo(T.Id, T.Description, typeof(T), configurationTypes));
 
         return this;

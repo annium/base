@@ -17,12 +17,7 @@ internal class Server : IServer, ILogSubject
     private readonly Func<HttpListenerWebSocketContext, CancellationToken, Task> _handleWebSocket;
     private readonly IBackgroundExecutor _executor;
 
-    public Server(
-        int port,
-        IHttpHandler? httpHandler,
-        IWebSocketHandler? webSocketHandler,
-        ILogger logger
-    )
+    public Server(int port, IHttpHandler? httpHandler, IWebSocketHandler? webSocketHandler, ILogger logger)
     {
         Logger = logger;
         _listener = new HttpListener();
@@ -89,19 +84,20 @@ internal class Server : IServer, ILogSubject
         _listener.Stop();
     }
 
-    private Func<ValueTask> HandleRequest(HttpListenerContext ctx, CancellationToken ct) => async () =>
-    {
-        if (ctx.Request.IsWebSocketRequest)
+    private Func<ValueTask> HandleRequest(HttpListenerContext ctx, CancellationToken ct) =>
+        async () =>
         {
-            this.Trace("handle websocket request");
-            await _handleWebSocketRequest(ctx, ct);
-        }
-        else
-        {
-            this.Trace("handle http request");
-            await _handleHttpRequest(ctx, ct);
-        }
-    };
+            if (ctx.Request.IsWebSocketRequest)
+            {
+                this.Trace("handle websocket request");
+                await _handleWebSocketRequest(ctx, ct);
+            }
+            else
+            {
+                this.Trace("handle http request");
+                await _handleHttpRequest(ctx, ct);
+            }
+        };
 
     private async Task HandleWebSocketRequest(HttpListenerContext ctx, CancellationToken ct)
     {

@@ -7,7 +7,8 @@ using Annium.Localization.Abstractions;
 
 namespace Annium.Extensions.Composition.Internal;
 
-internal interface ICompositionContainer<in TValue> where TValue : class
+internal interface ICompositionContainer<in TValue>
+    where TValue : class
 {
     IEnumerable<PropertyInfo> Fields { get; }
 

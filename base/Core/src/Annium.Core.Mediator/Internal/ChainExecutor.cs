@@ -30,6 +30,10 @@ internal static class ChainExecutor
         var result = handleMethod.Invoke(provider.Resolve(handler), parameters.ToArray())!;
         await (Task)result;
 
-        return result.GetType().GetProperty(nameof(Task<int>.Result))!.GetGetMethod()!.Invoke(result, Array.Empty<object>())!;
+        return result
+            .GetType()
+            .GetProperty(nameof(Task<int>.Result))!
+            .GetGetMethod()!
+            .Invoke(result, Array.Empty<object>())!;
     }
 }

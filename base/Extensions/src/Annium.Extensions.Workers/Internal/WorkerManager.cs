@@ -17,10 +17,7 @@ internal sealed class WorkerManager<TData> : IWorkerManager<TData>, IAsyncDispos
     private readonly IBackgroundExecutor _executor;
     private bool _isDisposed;
 
-    public WorkerManager(
-        IServiceProvider sp,
-        ILogger logger
-    )
+    public WorkerManager(IServiceProvider sp, ILogger logger)
     {
         Logger = logger;
         _sp = sp;

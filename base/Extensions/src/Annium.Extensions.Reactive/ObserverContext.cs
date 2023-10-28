@@ -11,12 +11,7 @@ public sealed record ObserverContext<T> : IObserver<T>
 
     public CancellationToken Ct { get; }
 
-    public ObserverContext(
-        Action<T> onNext,
-        Action<Exception> onError,
-        Action onCompleted,
-        CancellationToken ct
-    )
+    public ObserverContext(Action<T> onNext, Action<Exception> onError, Action onCompleted, CancellationToken ct)
     {
         _onNext = onNext;
         _onError = onError;

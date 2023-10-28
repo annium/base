@@ -9,7 +9,8 @@ public class DoubleEdgeQueue<T> : IDoubleEdgeQueue<T>
 {
     private readonly bool _isDirect;
     public int Count => _entries.Count;
-    public T First => _entries.Count > 0 ? _entries.First!.Value : throw new InvalidOperationException("queue is empty");
+    public T First =>
+        _entries.Count > 0 ? _entries.First!.Value : throw new InvalidOperationException("queue is empty");
     public T Last => _entries.Count > 0 ? _entries.Last!.Value : throw new InvalidOperationException("queue is empty");
     private readonly LinkedList<T> _entries = new();
 

@@ -64,9 +64,7 @@ internal class MessagingBuffer : IDisposable
 
     private int DataEnd => _dataStart + _dataLength;
 
-    public MessagingBuffer(
-        int size
-    )
+    public MessagingBuffer(int size)
     {
         _buffer = ArrayPool<byte>.Shared.Rent(HeaderSize + size);
     }

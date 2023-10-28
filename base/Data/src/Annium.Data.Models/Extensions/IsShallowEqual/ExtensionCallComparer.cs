@@ -14,7 +14,8 @@ public static partial class IsShallowEqualExtensions
         var b = Expression.Parameter(type);
         var m = Expression.Constant(mapper);
 
-        var method = typeof(IsShallowEqualExtensions).GetMethods()
+        var method = typeof(IsShallowEqualExtensions)
+            .GetMethods()
             .Single(x => x.GetParameters().Length == 3)
             .MakeGenericMethod(type, type);
 

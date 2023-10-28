@@ -11,7 +11,8 @@ using Annium.Reflection;
 
 namespace Annium.Extensions.Composition.Internal;
 
-internal class CompositionExecutor<TValue> : IComposer<TValue> where TValue : class
+internal class CompositionExecutor<TValue> : IComposer<TValue>
+    where TValue : class
 {
     private static readonly Type[] ComposerSets = typeof(TValue)
         .GetInheritanceChain(self: true)
@@ -23,9 +24,7 @@ internal class CompositionExecutor<TValue> : IComposer<TValue> where TValue : cl
 
     private readonly ILocalizer<TValue> _localizer;
 
-    public CompositionExecutor(
-        IServiceProvider serviceProvider
-    )
+    public CompositionExecutor(IServiceProvider serviceProvider)
     {
         _composers = ComposerSets
             .Select(s => (IEnumerable<ICompositionContainer<TValue>>)serviceProvider.Resolve(s))
@@ -35,7 +34,8 @@ internal class CompositionExecutor<TValue> : IComposer<TValue> where TValue : cl
         var duplicates = GetDuplicates(_composers);
         if (duplicates.Count > 0)
             throw new InvalidOperationException(
-                $@"{typeof(TValue)} has {duplicates.Count} properties with multiple loaders:{Environment.NewLine}{string.Join(Environment.NewLine, duplicates.Select(p => $"{p.Key.Name}: {string.Join(", ", p.Value)}"))}");
+                $@"{typeof(TValue)} has {duplicates.Count} properties with multiple loaders:{Environment.NewLine}{string.Join(Environment.NewLine, duplicates.Select(p => $"{p.Key.Name}: {string.Join(", ", p.Value)}"))}"
+            );
 
         _localizer = serviceProvider.Resolve<ILocalizer<TValue>>();
     }
@@ -64,11 +64,11 @@ internal class CompositionExecutor<TValue> : IComposer<TValue> where TValue : cl
     {
         var duplicates = new Dictionary<PropertyInfo, IList<Type>>();
         foreach (var composer in composers)
-        foreach (var field in composer.Fields)
-            if (duplicates.ContainsKey(field))
-                duplicates[field].Add(composer.GetType());
-            else
-                duplicates[field] = new List<Type> { composer.GetType() };
+            foreach (var field in composer.Fields)
+                if (duplicates.ContainsKey(field))
+                    duplicates[field].Add(composer.GetType());
+                else
+                    duplicates[field] = new List<Type> { composer.GetType() };
 
         return duplicates.Where(p => p.Value.Count > 1).ToDictionary(p => p.Key, p => p.Value);
     }

@@ -9,10 +9,8 @@ public class HttpResponse<T> : HttpResponse, IHttpResponse<T>
 {
     public T Data { get; }
 
-    public HttpResponse(
-        IHttpResponse message,
-        T data
-    ) : base(message)
+    public HttpResponse(IHttpResponse message, T data)
+        : base(message)
     {
         Data = data;
     }
@@ -49,12 +47,7 @@ public class HttpResponse : IHttpResponse
         Content = message.Content;
     }
 
-    internal HttpResponse(
-        Uri uri,
-        HttpStatusCode statusCode,
-        string statusText,
-        string message
-    )
+    internal HttpResponse(Uri uri, HttpStatusCode statusCode, string statusText, string message)
     {
         IsAbort = true;
         IsSuccess = false;

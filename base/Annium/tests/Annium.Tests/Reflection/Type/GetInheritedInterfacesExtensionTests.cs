@@ -23,27 +23,15 @@ public class GetInheritedInterfacesExtensionTests
         typeof(IBase).GetInheritedInterfaces().IsEmpty();
     }
 
-    private class Derived : Base, IDerived
-    {
-    }
+    private class Derived : Base, IDerived { }
 
-    private class Base : IBase, IShared
-    {
-    }
+    private class Base : IBase, IShared { }
 
-    private interface IDerived
-    {
-    }
+    private interface IDerived { }
 
-    private interface IBase : IInner
-    {
-    }
+    private interface IBase : IInner { }
 
-    private interface IShared
-    {
-    }
+    private interface IShared { }
 
-    private interface IInner
-    {
-    }
+    private interface IInner { }
 }

@@ -41,7 +41,8 @@ internal sealed class Table<T> : TableBase<T>, ITable<T>
         Action<T, T> update,
         Func<T, bool> isActive,
         ILogger logger
-    ) : base(permissions, logger)
+    )
+        : base(permissions, logger)
     {
         _getKey = getKey;
         _hasChanged = hasChanged;

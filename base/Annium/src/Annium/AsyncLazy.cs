@@ -35,12 +35,15 @@ public sealed class AsyncLazy<T>
     /// <param name="factory">The delegate that is invoked on a background thread to produce the value when it is needed.</param>
     public AsyncLazy(Func<T> factory)
     {
-        _instance = new Lazy<Task<T>>(async () =>
-        {
-            var value = await Task.Run(factory).ConfigureAwait(false);
-            Volatile.Write(ref _isValueCreated, true);
-            return value;
-        }, isThreadSafe: true);
+        _instance = new Lazy<Task<T>>(
+            async () =>
+            {
+                var value = await Task.Run(factory).ConfigureAwait(false);
+                Volatile.Write(ref _isValueCreated, true);
+                return value;
+            },
+            isThreadSafe: true
+        );
     }
 
     /// <summary>
@@ -49,12 +52,15 @@ public sealed class AsyncLazy<T>
     /// <param name="factory">The asynchronous delegate that is invoked on a background thread to produce the value when it is needed.</param>
     public AsyncLazy(Func<Task<T>> factory)
     {
-        _instance = new Lazy<Task<T>>(async () =>
-        {
-            var value = await Task.Run(factory).ConfigureAwait(false);
-            Volatile.Write(ref _isValueCreated, true);
-            return value;
-        }, isThreadSafe: true);
+        _instance = new Lazy<Task<T>>(
+            async () =>
+            {
+                var value = await Task.Run(factory).ConfigureAwait(false);
+                Volatile.Write(ref _isValueCreated, true);
+                return value;
+            },
+            isThreadSafe: true
+        );
     }
 
     /// <summary>

@@ -17,19 +17,16 @@ namespace Annium.Core.DependencyInjection;
 
 public static class ServiceContainerExtensions
 {
-    public static IServiceContainer AddMapper(
-        this IServiceContainer container,
-        bool autoload = true
-    )
+    public static IServiceContainer AddMapper(this IServiceContainer container, bool autoload = true)
     {
         // register base services
         container.Add<IRepacker, Repacker>().Singleton();
         container.Add<IMapBuilder, MapBuilder>().Singleton();
         container.Add<IMapper, Mapper.Internal.Mapper>().Singleton();
-        container.Add(sp => new Lazy<IMapContext>(
-            () => new MapContext(sp.Resolve<IMapper>()),
-            true
-        )).AsSelf().Singleton();
+        container
+            .Add(sp => new Lazy<IMapContext>(() => new MapContext(sp.Resolve<IMapper>()), true))
+            .AsSelf()
+            .Singleton();
 
         // register resolvers
         container.Add<IMapResolver, InstanceOfMapResolver>().Singleton();
@@ -63,10 +60,7 @@ public static class ServiceContainerExtensions
         return container;
     }
 
-    public static IServiceContainer AddProfile(
-        this IServiceContainer container,
-        Action<Profile> configure
-    )
+    public static IServiceContainer AddProfile(this IServiceContainer container, Action<Profile> configure)
     {
         var profile = new EmptyProfile();
         configure(profile);
@@ -76,9 +70,7 @@ public static class ServiceContainerExtensions
         return container;
     }
 
-    public static IServiceContainer AddProfile<T>(
-        this IServiceContainer container
-    )
+    public static IServiceContainer AddProfile<T>(this IServiceContainer container)
         where T : Profile
     {
         container.AddProfileType(typeof(T));
@@ -86,10 +78,7 @@ public static class ServiceContainerExtensions
         return container;
     }
 
-    public static IServiceContainer AddProfile(
-        this IServiceContainer container,
-        Type profileType
-    )
+    public static IServiceContainer AddProfile(this IServiceContainer container, Type profileType)
     {
         if (!profileType.GetInheritanceChain().Contains(typeof(Profile)))
             throw new ArgumentException($"Type {profileType} is not inherited from {typeof(Profile)}");
@@ -99,10 +88,7 @@ public static class ServiceContainerExtensions
         return container;
     }
 
-    private static IServiceContainer AddProfileInstance<T>(
-        this IServiceContainer container,
-        T profile
-    )
+    private static IServiceContainer AddProfileInstance<T>(this IServiceContainer container, T profile)
         where T : Profile
     {
         container.Add(profile).AsSelf().Singleton();
@@ -111,10 +97,7 @@ public static class ServiceContainerExtensions
         return container;
     }
 
-    private static IServiceContainer AddProfileType(
-        this IServiceContainer container,
-        Type profileType
-    )
+    private static IServiceContainer AddProfileType(this IServiceContainer container, Type profileType)
     {
         container.Add(profileType).AsSelf().Singleton();
         container.Add(new ProfileType(profileType)).AsSelf().Singleton();
@@ -122,29 +105,23 @@ public static class ServiceContainerExtensions
         return container;
     }
 
-    private static IEnumerable<Profile> ResolveProfiles(
-        IServiceProvider sp
-    )
+    private static IEnumerable<Profile> ResolveProfiles(IServiceProvider sp)
     {
-        var baseInstances = sp.Resolve<IEnumerable<ProfileInstance>>()
-            .Select(x => x.Instance)
-            .ToArray();
+        var baseInstances = sp.Resolve<IEnumerable<ProfileInstance>>().Select(x => x.Instance).ToArray();
 
         var typeResolver = sp.Resolve<ITypeResolver>();
         var profileTypes = sp.Resolve<IEnumerable<ProfileType>>().ToArray();
 
         var types = profileTypes
             .SelectMany(x => typeResolver.ResolveType(x.Type))
-            .Where(x =>
-                !x.IsGenericType ||
-                x.GetGenericArguments().All(a => a.GetCustomAttribute<AutoMappedAttribute>() is not null)
+            .Where(
+                x =>
+                    !x.IsGenericType
+                    || x.GetGenericArguments().All(a => a.GetCustomAttribute<AutoMappedAttribute>() is not null)
             )
             .ToArray();
 
-        var typeInstances = types
-            .Select(sp.Resolve)
-            .OfType<Profile>()
-            .ToArray();
+        var typeInstances = types.Select(sp.Resolve).OfType<Profile>().ToArray();
 
         return baseInstances.Concat(typeInstances).ToArray();
     }

@@ -32,6 +32,7 @@ internal class MapperConfig : IMapperConfigInternal
     }
 
     public bool IsBaseType(Type type) => _baseTypes.GetValueOrDefault(type) is not null;
+
     public BaseTypeRef? GetBaseTypeRefFor(Type type) => _baseTypes.GetValueOrDefault(type);
 
     #endregion
@@ -137,9 +138,15 @@ internal class MapperConfig : IMapperConfigInternal
         if (type != type.TryGetPure())
             throw new ArgumentException($"Can't register type {type.FriendlyName()} as Record type");
 
-        var arrayImplementation = type.GetInterfaces().SingleOrDefault(x => x.IsGenericType && x.GetGenericTypeDefinition() == BaseArrayType);
-        if (arrayImplementation is null || arrayImplementation.GetGenericArguments()[0].GetGenericTypeDefinition() != BaseRecordValueType)
-            throw new ArgumentException($"Type {type.FriendlyName()} doesn't implement {BaseRecordType.FriendlyName()}");
+        var arrayImplementation = type.GetInterfaces()
+            .SingleOrDefault(x => x.IsGenericType && x.GetGenericTypeDefinition() == BaseArrayType);
+        if (
+            arrayImplementation is null
+            || arrayImplementation.GetGenericArguments()[0].GetGenericTypeDefinition() != BaseRecordValueType
+        )
+            throw new ArgumentException(
+                $"Type {type.FriendlyName()} doesn't implement {BaseRecordType.FriendlyName()}"
+            );
 
         if (!_recordTypes.Add(type))
             throw new ArgumentException($"Type {type.FriendlyName()} is already registered as Record type");

@@ -13,14 +13,12 @@ public record SortedListSpan<TKey, TValue> : ISortedListSpan<TKey, TValue>
 
     private readonly SortedList<TKey, TValue> _collection;
 
-    public SortedListSpan(
-        SortedList<TKey, TValue> collection,
-        int start,
-        int count
-    )
+    public SortedListSpan(SortedList<TKey, TValue> collection, int start, int count)
     {
         if (start < 0 || start + count > collection.Count)
-            throw new ArgumentOutOfRangeException($"Invalid span at {start} with length {count} for collection of size {collection.Count}");
+            throw new ArgumentOutOfRangeException(
+                $"Invalid span at {start} with length {count} for collection of size {collection.Count}"
+            );
 
         _collection = collection;
         Start = start;

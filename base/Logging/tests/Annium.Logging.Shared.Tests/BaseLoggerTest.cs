@@ -12,10 +12,8 @@ public class BaseLoggerTest : TestBase
 {
     private readonly IList<LogMessage<Context>> _messages = new List<LogMessage<Context>>();
 
-    public BaseLoggerTest(ITestOutputHelper outputHelper) : base(outputHelper)
-    {
-    }
-
+    public BaseLoggerTest(ITestOutputHelper outputHelper)
+        : base(outputHelper) { }
 
     [Fact]
     public void Log_ValidLevel_WritesLogEntry()
@@ -149,9 +147,11 @@ public class BaseLoggerTest : TestBase
 
         var provider = container.BuildServiceProvider();
 
-        provider.UseLogging<Context>(route => route
-            .For(m => m.Level >= minLogLevel)
-            .UseInstance(new LogHandler(_messages), new LogRouteConfiguration())
+        provider.UseLogging<Context>(
+            route =>
+                route
+                    .For(m => m.Level >= minLogLevel)
+                    .UseInstance(new LogHandler(_messages), new LogRouteConfiguration())
         );
 
         return provider;
@@ -161,9 +161,7 @@ public class BaseLoggerTest : TestBase
     {
         public IList<LogMessage<Context>> Messages { get; }
 
-        public LogHandler(
-            IList<LogMessage<Context>> messages
-        )
+        public LogHandler(IList<LogMessage<Context>> messages)
         {
             Messages = messages;
         }
@@ -174,7 +172,5 @@ public class BaseLoggerTest : TestBase
         }
     }
 
-    private class Context : ILogContext
-    {
-    }
+    private class Context : ILogContext { }
 }

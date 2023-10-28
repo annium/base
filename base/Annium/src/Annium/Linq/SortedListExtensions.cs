@@ -10,6 +10,5 @@ public static class SortedListExtensions
         int start,
         int count
     )
-        where TKey : notnull =>
-        new SortedListSpan<TKey, TValue>(items, start, count);
+        where TKey : notnull => new SortedListSpan<TKey, TValue>(items, start, count);
 }

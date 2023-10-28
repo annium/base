@@ -18,11 +18,7 @@ public class UriFactory
     private string? _uri;
     private readonly UriQuery _query = UriQuery.New();
 
-    private UriFactory(
-        Uri? baseUri,
-        string? uri,
-        UriQuery query
-    )
+    private UriFactory(Uri? baseUri, string? uri, UriQuery query)
     {
         if (baseUri != null)
             EnsureAbsolute(baseUri);
@@ -32,18 +28,14 @@ public class UriFactory
         _query = query.Copy();
     }
 
-    private UriFactory(
-        Uri baseUri
-    )
+    private UriFactory(Uri baseUri)
     {
         EnsureAbsolute(baseUri);
 
         _baseUri = baseUri;
     }
 
-    private UriFactory()
-    {
-    }
+    private UriFactory() { }
 
     public UriFactory Path(string uri)
     {
@@ -53,9 +45,13 @@ public class UriFactory
     }
 
     public UriFactory Param<T>(string key, List<T> values) => Param(key, values.AsEnumerable());
+
     public UriFactory Param<T>(string key, IList<T> values) => Param(key, values.AsEnumerable());
+
     public UriFactory Param<T>(string key, IReadOnlyList<T> values) => Param(key, values.AsEnumerable());
+
     public UriFactory Param<T>(string key, IReadOnlyCollection<T> values) => Param(key, values.AsEnumerable());
+
     public UriFactory Param<T>(string key, T[] values) => Param(key, values.AsEnumerable());
 
     public UriFactory Param<T>(string key, IEnumerable<T> values)

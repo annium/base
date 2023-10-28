@@ -21,18 +21,10 @@ public class MediatorConfiguration
     private readonly IList<Handler> _handlers;
     private readonly IList<Match> _matches;
 
-    internal MediatorConfiguration(
-    ) : this(
-        new List<Handler>(),
-        new List<Match>()
-    )
-    {
-    }
+    internal MediatorConfiguration()
+        : this(new List<Handler>(), new List<Match>()) { }
 
-    private MediatorConfiguration(
-        IList<Handler> handlers,
-        IList<Match> matches
-    )
+    private MediatorConfiguration(IList<Handler> handlers, IList<Match> matches)
     {
         _handlers = handlers;
         _matches = matches;
@@ -41,9 +33,7 @@ public class MediatorConfiguration
     public MediatorConfiguration AddHandler(Type handlerType)
     {
         // ensure type is pipe or final handler
-        var interfaces = handlerType.GetInterfaces()
-            .Where(i => i.IsGenericType)
-            .ToArray();
+        var interfaces = handlerType.GetInterfaces().Where(i => i.IsGenericType).ToArray();
 
         var isRegistered = false;
 
@@ -93,15 +83,11 @@ public class MediatorConfiguration
 
         var match = new Match(requestType, expectedType, resolvedType);
         var duplicates = _matches
-            .Where(x =>
-                x.RequestedType == match.RequestedType &&
-                x.ExpectedType == match.ExpectedType
-            )
+            .Where(x => x.RequestedType == match.RequestedType && x.ExpectedType == match.ExpectedType)
             .ToArray();
 
         if (duplicates.Length == 0)
             _matches.Add(match);
-
         // if duplicates - throw or skip if same
         else
         {

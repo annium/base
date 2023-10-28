@@ -7,19 +7,19 @@ namespace Annium.Data.Operations.Serialization.Json.Internal;
 
 internal class ResultDataConverter<TD> : ResultConverterBase<IResult<TD>>
 {
-    public override IResult<TD> Read(
-        ref Utf8JsonReader reader,
-        Type typeToConvert,
-        JsonSerializerOptions options
-    )
+    public override IResult<TD> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         TD data = default!;
 
-        var (plainErrors, labeledErrors) = ReadErrors(ref reader, options, (ref Utf8JsonReader r) =>
-        {
-            if (r.HasProperty(nameof(X.Data)))
-                data = JsonSerializer.Deserialize<TD>(ref r, options)!;
-        });
+        var (plainErrors, labeledErrors) = ReadErrors(
+            ref reader,
+            options,
+            (ref Utf8JsonReader r) =>
+            {
+                if (r.HasProperty(nameof(X.Data)))
+                    data = JsonSerializer.Deserialize<TD>(ref r, options)!;
+            }
+        );
 
         var value = Result.New(data);
 
@@ -29,11 +29,7 @@ internal class ResultDataConverter<TD> : ResultConverterBase<IResult<TD>>
         return value;
     }
 
-    public override void Write(
-        Utf8JsonWriter writer,
-        IResult<TD> value,
-        JsonSerializerOptions options
-    )
+    public override void Write(Utf8JsonWriter writer, IResult<TD> value, JsonSerializerOptions options)
     {
         writer.WriteStartObject();
 

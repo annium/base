@@ -123,7 +123,13 @@ public class ResultTest
         var result = Result.New();
 
         // act
-        result.Errors(new Dictionary<string, IReadOnlyCollection<string>> { { "label", new[] { "plain" } }, { "other", new[] { "another" } } });
+        result.Errors(
+            new Dictionary<string, IReadOnlyCollection<string>>
+            {
+                { "label", new[] { "plain" } },
+                { "other", new[] { "another" } }
+            }
+        );
 
         // assert
         result.LabeledErrors.Count.Is(2);

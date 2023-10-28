@@ -15,9 +15,8 @@ namespace Annium.Net.Sockets.Tests.Internal;
 
 public class RawManagedSocketSslTests : RawManagedSocketTestsBase
 {
-    public RawManagedSocketSslTests(ITestOutputHelper outputHelper) : base(outputHelper)
-    {
-    }
+    public RawManagedSocketSslTests(ITestOutputHelper outputHelper)
+        : base(outputHelper) { }
 
     [Fact]
     public async Task Send_Canceled()
@@ -92,12 +91,7 @@ public class RawManagedSocketSslTests : RawManagedSocketTestsBase
     protected override async Task<Stream> CreateClientStreamAsync(Socket socket)
     {
         var networkStream = new NetworkStream(socket);
-        var sslStream = new SslStream(
-            networkStream,
-            false,
-            ValidateServerCertificate,
-            null
-        );
+        var sslStream = new SslStream(networkStream, false, ValidateServerCertificate, null);
 
         await sslStream.AuthenticateAsClientAsync(string.Empty);
 
@@ -107,7 +101,8 @@ public class RawManagedSocketSslTests : RawManagedSocketTestsBase
             object sender,
             X509Certificate? certificate,
             X509Chain? chain,
-            SslPolicyErrors sslPolicyErrors)
+            SslPolicyErrors sslPolicyErrors
+        )
         {
             // by design, no ssl verification in tests (cause it will require valid SSL certificate)
             return true;
@@ -118,23 +113,29 @@ public class RawManagedSocketSslTests : RawManagedSocketTestsBase
     {
         var cert = X509Certificate.CreateFromCertFile("keys/ecdsa_cert.pfx");
 
-        return RunServerBase(async (sp, raw, ct) =>
-        {
-            this.Trace("start");
+        return RunServerBase(
+            async (sp, raw, ct) =>
+            {
+                this.Trace("start");
 
-            this.Trace<string>("wrap {raw} into ssl stream", raw.GetFullId());
-            await using var sslStream = new SslStream(new NetworkStream(raw), false);
+                this.Trace<string>("wrap {raw} into ssl stream", raw.GetFullId());
+                await using var sslStream = new SslStream(new NetworkStream(raw), false);
 
-            this.Trace("authenticate as server");
-            await sslStream.AuthenticateAsServerAsync(cert, clientCertificateRequired: false, checkCertificateRevocation: true);
+                this.Trace("authenticate as server");
+                await sslStream.AuthenticateAsServerAsync(
+                    cert,
+                    clientCertificateRequired: false,
+                    checkCertificateRevocation: true
+                );
 
-            this.Trace("create managed socket");
-            var socket = new RawManagedSocket(sslStream, sp.Resolve<ILogger>());
+                this.Trace("create managed socket");
+                var socket = new RawManagedSocket(sslStream, sp.Resolve<ILogger>());
 
-            this.Trace<string>("handle {socket}", socket.GetFullId());
-            await handleSocket(socket, ct);
+                this.Trace<string>("handle {socket}", socket.GetFullId());
+                await handleSocket(socket, ct);
 
-            this.Trace("done");
-        });
+                this.Trace("done");
+            }
+        );
     }
 }

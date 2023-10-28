@@ -55,7 +55,8 @@ internal static class QueryHelpers
                 string value = queryString.Substring(equalIndex + 1, delimiterIndex - equalIndex - 1);
                 accumulator.Append(
                     Uri.UnescapeDataString(name.Replace('+', ' ')),
-                    Uri.UnescapeDataString(value.Replace('+', ' ')));
+                    Uri.UnescapeDataString(value.Replace('+', ' '))
+                );
                 equalIndex = queryString.IndexOf('=', delimiterIndex);
                 if (equalIndex == -1)
                 {

@@ -7,12 +7,10 @@ using Annium.Data.Operations;
 
 namespace Annium.Architecture.Mediator.Tests;
 
-internal class EchoRequestHandler<TRequest> : IFinalRequestHandler<TRequest, IStatusResult<OperationStatus, TRequest>> where TRequest : IThrowing
+internal class EchoRequestHandler<TRequest> : IFinalRequestHandler<TRequest, IStatusResult<OperationStatus, TRequest>>
+    where TRequest : IThrowing
 {
-    public Task<IStatusResult<OperationStatus, TRequest>> HandleAsync(
-        TRequest request,
-        CancellationToken ct
-    )
+    public Task<IStatusResult<OperationStatus, TRequest>> HandleAsync(TRequest request, CancellationToken ct)
     {
         if (request.Throw)
             throw new InvalidOperationException("TEST EXCEPTION");

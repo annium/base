@@ -6,22 +6,18 @@ namespace Annium.Core.DependencyInjection.Tests;
 
 internal static class ServiceContainerExtensions
 {
-    public static void Has(
-        this IServiceContainer container,
-        int count
-    )
+    public static void Has(this IServiceContainer container, int count)
     {
         container.Count.Is(count, $"Expected to have {count} descriptor registered, but found {container.Count}.");
     }
 
-    public static void Has(
-        this IServiceContainer container,
-        Type serviceType,
-        int count
-    )
+    public static void Has(this IServiceContainer container, Type serviceType, int count)
     {
         var descriptors = container.Where(x => x.ServiceType == serviceType).ToArray();
-        descriptors.Length.Is(count, $"Expected to have {count} {serviceType.FriendlyName()} descriptor registered, but found {descriptors.Length}.");
+        descriptors.Length.Is(
+            count,
+            $"Expected to have {count} {serviceType.FriendlyName()} descriptor registered, but found {descriptors.Length}."
+        );
     }
 
     public static void HasScoped(this IServiceContainer container, Type serviceType, Type implementationType) =>
@@ -51,25 +47,38 @@ internal static class ServiceContainerExtensions
     public static void HasTransientFuncFactory(this IServiceContainer container, Type serviceType, int count = 1) =>
         container.HasFuncFactory(serviceType, ServiceLifetime.Transient, count);
 
-    private static void Has(this IServiceContainer container, Type serviceType, Type implementationType, ServiceLifetime lifetime)
+    private static void Has(
+        this IServiceContainer container,
+        Type serviceType,
+        Type implementationType,
+        ServiceLifetime lifetime
+    )
     {
-        var descriptor = container.GetDescriptors(serviceType)
+        var descriptor = container
+            .GetDescriptors(serviceType)
             .OfType<ITypeServiceDescriptor>()
             .SingleOrDefault(x => x.ImplementationType == implementationType);
-        descriptor.IsNotDefault($"Not found {serviceType.FriendlyName()} -> {implementationType.FriendlyName()} descriptor");
+        descriptor.IsNotDefault(
+            $"Not found {serviceType.FriendlyName()} -> {implementationType.FriendlyName()} descriptor"
+        );
         descriptor!.Lifetime.Is(
             lifetime,
             $"Descriptor {descriptor.ToReadableString()} is {descriptor.Lifetime}, but {lifetime} expected."
         );
     }
 
-    private static void HasTypeFactory(this IServiceContainer container, Type serviceType, ServiceLifetime lifetime, int count)
+    private static void HasTypeFactory(
+        this IServiceContainer container,
+        Type serviceType,
+        ServiceLifetime lifetime,
+        int count
+    )
     {
-        var descriptors = container
-            .GetDescriptors(serviceType)
-            .OfType<IFactoryServiceDescriptor>()
-            .ToArray();
-        descriptors.Length.Is(count, $"Expected {count} {serviceType.FriendlyName()} descriptors, but found {descriptors.Length}");
+        var descriptors = container.GetDescriptors(serviceType).OfType<IFactoryServiceDescriptor>().ToArray();
+        descriptors.Length.Is(
+            count,
+            $"Expected {count} {serviceType.FriendlyName()} descriptors, but found {descriptors.Length}"
+        );
         foreach (var descriptor in descriptors)
             descriptor.Lifetime.Is(
                 lifetime,
@@ -77,13 +86,21 @@ internal static class ServiceContainerExtensions
             );
     }
 
-    private static void HasFuncFactory(this IServiceContainer container, Type serviceType, ServiceLifetime lifetime, int count)
+    private static void HasFuncFactory(
+        this IServiceContainer container,
+        Type serviceType,
+        ServiceLifetime lifetime,
+        int count
+    )
     {
         var descriptors = container
             .GetDescriptors(typeof(Func<>).MakeGenericType(serviceType))
             .OfType<IFactoryServiceDescriptor>()
             .ToArray();
-        descriptors.Length.Is(count, $"Expected {count} () => {serviceType.FriendlyName()} descriptors, but found {descriptors.Length}");
+        descriptors.Length.Is(
+            count,
+            $"Expected {count} () => {serviceType.FriendlyName()} descriptors, but found {descriptors.Length}"
+        );
         foreach (var descriptor in descriptors)
             descriptor.Lifetime.Is(
                 lifetime,
@@ -91,10 +108,7 @@ internal static class ServiceContainerExtensions
             );
     }
 
-    private static IServiceDescriptor[] GetDescriptors(
-        this IServiceContainer container,
-        Type serviceType
-    )
+    private static IServiceDescriptor[] GetDescriptors(this IServiceContainer container, Type serviceType)
     {
         var descriptors = container.Where(x => x.ServiceType == serviceType).ToArray();
         descriptors.Length.IsNotDefault($"No {serviceType.FriendlyName()} based descriptors found");

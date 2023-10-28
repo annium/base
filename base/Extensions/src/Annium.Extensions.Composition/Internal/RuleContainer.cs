@@ -12,10 +12,7 @@ internal class RuleContainer<TValue, TField> : IRuleBuilder<TValue, TField>, IRu
     private string _message = string.Empty;
     private bool _allowDefault;
 
-    public RuleContainer(
-        MethodInfo setTarget,
-        bool allowDefault
-    )
+    public RuleContainer(MethodInfo setTarget, bool allowDefault)
     {
         _setTarget = setTarget;
         _allowDefault = allowDefault;
@@ -35,19 +32,13 @@ internal class RuleContainer<TValue, TField> : IRuleBuilder<TValue, TField>, IRu
         return this;
     }
 
-    public void LoadWith(
-        Func<CompositionContext<TValue>, TField?> load,
-        string message = ""
-    )
+    public void LoadWith(Func<CompositionContext<TValue>, TField?> load, string message = "")
     {
         _load = load;
         _message = message;
     }
 
-    public void LoadWith(
-        Func<CompositionContext<TValue>, Task<TField?>> load,
-        string message = ""
-    )
+    public void LoadWith(Func<CompositionContext<TValue>, Task<TField?>> load, string message = "")
     {
         _load = load;
         _message = message;
@@ -66,17 +57,19 @@ internal class RuleContainer<TValue, TField> : IRuleBuilder<TValue, TField>, IRu
             _setTarget.Invoke(value, new object[] { target! });
     }
 
-    private async Task<bool> CheckAsync(CompositionContext<TValue> context) => _check switch
-    {
-        Func<CompositionContext<TValue>, bool> check       => check(context),
-        Func<CompositionContext<TValue>, Task<bool>> check => await check(context),
-        _                                                  => true,
-    };
+    private async Task<bool> CheckAsync(CompositionContext<TValue> context) =>
+        _check switch
+        {
+            Func<CompositionContext<TValue>, bool> check => check(context),
+            Func<CompositionContext<TValue>, Task<bool>> check => await check(context),
+            _ => true,
+        };
 
-    private async Task<TField?> LoadAsync(CompositionContext<TValue> context) => _load switch
-    {
-        Func<CompositionContext<TValue>, TField?> load       => load(context),
-        Func<CompositionContext<TValue>, Task<TField?>> load => await load(context),
-        _                                                    => throw new InvalidOperationException($"{context.Field} has no {nameof(LoadWith)} defined."),
-    };
+    private async Task<TField?> LoadAsync(CompositionContext<TValue> context) =>
+        _load switch
+        {
+            Func<CompositionContext<TValue>, TField?> load => load(context),
+            Func<CompositionContext<TValue>, Task<TField?>> load => await load(context),
+            _ => throw new InvalidOperationException($"{context.Field} has no {nameof(LoadWith)} defined."),
+        };
 }

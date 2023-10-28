@@ -9,9 +9,7 @@ public class LocalizationOptions
     internal IServiceContainer LocaleStorageServices { get; private set; } = new ServiceContainer();
     internal Func<CultureInfo> CultureAccessor { get; private set; } = () => CultureInfo.CurrentCulture;
 
-    internal LocalizationOptions()
-    {
-    }
+    internal LocalizationOptions() { }
 
     public LocalizationOptions SetLocaleStorage(Action<IServiceContainer> configure)
     {

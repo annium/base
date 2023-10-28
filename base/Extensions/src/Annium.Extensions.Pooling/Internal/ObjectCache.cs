@@ -15,10 +15,7 @@ internal sealed class ObjectCache<TKey, TValue> : IObjectCache<TKey, TValue>, IL
     public ILogger Logger { get; }
     private readonly IDictionary<TKey, CacheEntry> _entries = new Dictionary<TKey, CacheEntry>();
 
-    public ObjectCache(
-        ObjectCacheProvider<TKey, TValue> provider,
-        ILogger logger
-    )
+    public ObjectCache(ObjectCacheProvider<TKey, TValue> provider, ILogger logger)
     {
         _provider = provider;
         Logger = logger;
@@ -141,6 +138,7 @@ internal sealed class ObjectCache<TKey, TValue> : IObjectCache<TKey, TValue>, IL
         }
 
         public void AddReference() => ++_references;
+
         public void RemoveReference() => --_references;
 
         public override string ToString() => $"{Value} [{_references}]";

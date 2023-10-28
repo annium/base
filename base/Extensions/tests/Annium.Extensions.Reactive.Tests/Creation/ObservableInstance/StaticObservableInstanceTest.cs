@@ -13,9 +13,8 @@ namespace Annium.Extensions.Reactive.Tests.Creation.ObservableInstance;
 
 public class StaticObservableInstanceTest : TestBase
 {
-    public StaticObservableInstanceTest(ITestOutputHelper outputHelper) : base(outputHelper)
-    {
-    }
+    public StaticObservableInstanceTest(ITestOutputHelper outputHelper)
+        : base(outputHelper) { }
 
     [Fact]
     public async Task Events_AreEmittedCorrectly()
@@ -26,22 +25,26 @@ public class StaticObservableInstanceTest : TestBase
         var errors = new List<Exception>();
         var disposeCounter = 0;
         var instance = ObservableExt
-            .StaticAsyncInstance<Sample>(async ctx =>
-            {
-                for (int i = 0; i < 5; i++)
+            .StaticAsyncInstance<Sample>(
+                async ctx =>
                 {
-                    await Task.Delay(100);
-                    ctx.OnNext(new Sample(i));
-                    if (i == 2)
-                        ctx.OnError(new ArgumentOutOfRangeException(nameof(i)));
-                }
+                    for (int i = 0; i < 5; i++)
+                    {
+                        await Task.Delay(100);
+                        ctx.OnNext(new Sample(i));
+                        if (i == 2)
+                            ctx.OnError(new ArgumentOutOfRangeException(nameof(i)));
+                    }
 
-                return async () =>
-                {
-                    await Task.Delay(5);
-                    Interlocked.Increment(ref disposeCounter);
-                };
-            }, CancellationToken.None, Get<ILogger>())
+                    return async () =>
+                    {
+                        await Task.Delay(5);
+                        Interlocked.Increment(ref disposeCounter);
+                    };
+                },
+                CancellationToken.None,
+                Get<ILogger>()
+            )
             .Do(_ => { }, errors.Add)
             .Retry()
             .Catch(Observable.Empty<Sample>());

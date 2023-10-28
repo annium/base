@@ -27,10 +27,7 @@ public static class JwtWriter
         return jwt;
     }
 
-    private static JwtHeader CreateHeader(
-        SecurityKey signingKey,
-        string algorithm
-    )
+    private static JwtHeader CreateHeader(SecurityKey signingKey, string algorithm)
     {
         var header = new JwtHeader(new SigningCredentials(signingKey, algorithm));
 
@@ -49,10 +46,7 @@ public static class JwtWriter
         var issuedAt = now.ToDateTimeUtc();
         var expires = (now + lifetime).ToDateTimeUtc();
 
-        var claims = new Claim[]
-            {
-                new(Claims.TokenId, tokenId)
-            }
+        var claims = new Claim[] { new(Claims.TokenId, tokenId) }
             .Concat(data.Select(x => new Claim(x.key, x.value)))
             .ToArray();
 

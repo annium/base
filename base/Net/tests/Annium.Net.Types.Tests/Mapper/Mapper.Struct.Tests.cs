@@ -7,14 +7,8 @@ namespace Annium.Net.Types.Tests.Mapper;
 
 public class MapperStructTests : MapperStructTestsBase
 {
-    public MapperStructTests(
-        ITestOutputHelper outputHelper
-    ) : base(
-        new TestProvider(),
-        outputHelper
-    )
-    {
-    }
+    public MapperStructTests(ITestOutputHelper outputHelper)
+        : base(new TestProvider(), outputHelper) { }
 
     [Theory]
     [InlineData(typeof(EmptyStruct))]
@@ -31,8 +25,6 @@ public class MapperStructTests : MapperStructTestsBase
     }
 }
 
-file struct EmptyStruct
-{
-}
+file struct EmptyStruct { }
 
 file record EmptyRecord;

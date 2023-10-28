@@ -9,10 +9,7 @@ namespace System;
 
 public static class TrackCompletionOperatorExtensions
 {
-    public static IObservable<T> TrackCompletion<T>(
-        this IObservable<T> source,
-        ILogger logger
-    )
+    public static IObservable<T> TrackCompletion<T>(this IObservable<T> source, ILogger logger)
     {
         var ctx = new CompletionContext<T>(source, logger);
 
@@ -46,10 +43,7 @@ file record CompletionContext<T> : ILogSubject
     private readonly List<IObserver<T>> _incompleteObservers = new();
     private readonly CancellationTokenSource _completionCts = new();
 
-    public CompletionContext(
-        IObservable<T> source,
-        ILogger logger
-    )
+    public CompletionContext(IObservable<T> source, ILogger logger)
     {
         Logger = logger;
         _source = source;

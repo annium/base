@@ -23,9 +23,7 @@ public static class ValueTaskSet
                 exceptions.Add(ex);
             }
 
-        return exceptions is null
-            ? results
-            : throw new AggregateException(exceptions);
+        return exceptions is null ? results : throw new AggregateException(exceptions);
     }
 
     public static async ValueTask WhenAll(IReadOnlyList<ValueTask> tasks)
@@ -47,12 +45,9 @@ public static class ValueTaskSet
             throw new AggregateException(exceptions);
     }
 
-    public static ValueTask<T[]> WhenAll<T>(IEnumerable<ValueTask<T>> tasks) =>
-        WhenAll(tasks.ToList());
+    public static ValueTask<T[]> WhenAll<T>(IEnumerable<ValueTask<T>> tasks) => WhenAll(tasks.ToList());
 
-    public static ValueTask WhenAll(IEnumerable<ValueTask> tasks) =>
-        WhenAll(tasks.ToList());
+    public static ValueTask WhenAll(IEnumerable<ValueTask> tasks) => WhenAll(tasks.ToList());
 
-    public static ValueTask WhenAll(params ValueTask[] tasks) =>
-        WhenAll(tasks as IReadOnlyList<ValueTask>);
+    public static ValueTask WhenAll(params ValueTask[] tasks) => WhenAll(tasks as IReadOnlyList<ValueTask>);
 }

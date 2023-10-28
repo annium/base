@@ -7,12 +7,8 @@ namespace Annium.Core.Runtime.Internal.Types;
 
 internal sealed record NonGenericTypeId : TypeId
 {
-    public NonGenericTypeId(
-        Type type
-    ) : base(
-        type,
-        GetName(type)
-    )
+    public NonGenericTypeId(Type type)
+        : base(type, GetName(type))
     {
         Id = Name;
     }
@@ -24,13 +20,8 @@ internal sealed record NonGenericTypeId : TypeId
 
 internal sealed record OpenGenericTypeId : TypeId
 {
-    public OpenGenericTypeId(
-        Type type
-    ) : base(
-        type,
-        type,
-        GetName(type)
-    )
+    public OpenGenericTypeId(Type type)
+        : base(type, type, GetName(type))
     {
         Id = GetName(type);
     }
@@ -47,13 +38,8 @@ internal sealed record ClosedGenericTypeId : TypeId
 
     public IReadOnlyCollection<TypeId> Arguments { get; }
 
-    public ClosedGenericTypeId(
-        Type type
-    ) : base(
-        type,
-        type.GetGenericTypeDefinition(),
-        GetName(type)
-    )
+    public ClosedGenericTypeId(Type type)
+        : base(type, type.GetGenericTypeDefinition(), GetName(type))
     {
         Arguments = type.GetGenericArguments().Select(Create).ToArray();
         Id = GetId(type, Arguments);

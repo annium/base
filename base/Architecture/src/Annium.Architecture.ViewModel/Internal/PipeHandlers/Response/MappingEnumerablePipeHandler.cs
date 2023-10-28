@@ -10,23 +10,20 @@ using Annium.Logging;
 
 namespace Annium.Architecture.ViewModel.Internal.PipeHandlers.Response;
 
-internal class MappingEnumerablePipeHandler<TRequest, TResponseIn, TResponseOut> :
-    IPipeRequestHandler<
+internal class MappingEnumerablePipeHandler<TRequest, TResponseIn, TResponseOut>
+    : IPipeRequestHandler<
         TRequest,
         TRequest,
         IStatusResult<OperationStatus, IEnumerable<TResponseIn>>,
         IStatusResult<OperationStatus, IEnumerable<TResponseOut>>
     >,
-    ILogSubject
+        ILogSubject
     where TResponseOut : IResponse<TResponseIn>
 {
     public ILogger Logger { get; }
     private readonly IMapper _mapper;
 
-    public MappingEnumerablePipeHandler(
-        IMapper mapper,
-        ILogger logger
-    )
+    public MappingEnumerablePipeHandler(IMapper mapper, ILogger logger)
     {
         _mapper = mapper;
         Logger = logger;

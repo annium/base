@@ -6,14 +6,17 @@ using Annium.Logging;
 
 namespace Annium.Architecture.Mediator.Internal.PipeHandlers.RequestResponse;
 
-internal class ExceptionPipeHandler<TRequest, TResponse> : ExceptionPipeHandlerBase<TRequest, IStatusResult<OperationStatus, TResponse>>,
-    IPipeRequestHandler<TRequest, TRequest, IStatusResult<OperationStatus, TResponse>, IStatusResult<OperationStatus, TResponse>>
+internal class ExceptionPipeHandler<TRequest, TResponse>
+    : ExceptionPipeHandlerBase<TRequest, IStatusResult<OperationStatus, TResponse>>,
+        IPipeRequestHandler<
+            TRequest,
+            TRequest,
+            IStatusResult<OperationStatus, TResponse>,
+            IStatusResult<OperationStatus, TResponse>
+        >
 {
-    public ExceptionPipeHandler(
-        ILogger logger
-    ) : base(logger)
-    {
-    }
+    public ExceptionPipeHandler(ILogger logger)
+        : base(logger) { }
 
     protected override IStatusResult<OperationStatus, TResponse> GetFailure(Exception exception)
     {

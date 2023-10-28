@@ -20,9 +20,8 @@ internal sealed class NodaPatternConverter<T> : ConverterBase<T>
     /// </summary>
     /// <param name="pattern">The pattern to use for parsing and formatting.</param>
     /// <exception cref="ArgumentNullException"><paramref name="pattern"/> is null.</exception>
-    public NodaPatternConverter(IPattern<T> pattern) : this(pattern, _ => { })
-    {
-    }
+    public NodaPatternConverter(IPattern<T> pattern)
+        : this(pattern, _ => { }) { }
 
     /// <summary>
     /// Creates a new instance with a pattern and an optional validator. The validator will be called before each
@@ -38,23 +37,17 @@ internal sealed class NodaPatternConverter<T> : ConverterBase<T>
         _validator = validator;
     }
 
-    public override T ReadImplementation(
-        ref Utf8JsonReader reader,
-        Type typeToConvert,
-        JsonSerializerOptions options
-    )
+    public override T ReadImplementation(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         if (reader.TokenType != JsonTokenType.String)
-            throw new InvalidNodaDataException($"Unexpected token parsing {typeof(T).Name}. Expected String, got {reader.TokenType}.");
+            throw new InvalidNodaDataException(
+                $"Unexpected token parsing {typeof(T).Name}. Expected String, got {reader.TokenType}."
+            );
 
         return _pattern.Parse(reader.GetString()!).Value;
     }
 
-    public override void WriteImplementation(
-        Utf8JsonWriter writer,
-        T value,
-        JsonSerializerOptions options
-    )
+    public override void WriteImplementation(Utf8JsonWriter writer, T value, JsonSerializerOptions options)
     {
         _validator.Invoke(value);
         writer.WriteStringValue(_pattern.Format(value));

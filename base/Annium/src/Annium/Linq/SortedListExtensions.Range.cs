@@ -72,10 +72,38 @@ public static class SortedListRangeExtensions
         var targetIndex = 0;
 
         while (sourceIndex < sourceSize && rangeIndex < range.Count)
-            MergeRanges(comparer, targetKeys, targetValues, sourceKeys, sourceValues, ref sourceIndex, rangeKeys, rangeValues, ref rangeIndex, ref targetIndex, replaceDuplicate);
+            MergeRanges(
+                comparer,
+                targetKeys,
+                targetValues,
+                sourceKeys,
+                sourceValues,
+                ref sourceIndex,
+                rangeKeys,
+                rangeValues,
+                ref rangeIndex,
+                ref targetIndex,
+                replaceDuplicate
+            );
 
-        AppendLeftRangeItems(targetKeys, targetValues, sourceKeys, sourceValues, sourceSize, ref sourceIndex, ref targetIndex);
-        AppendLeftRangeItems(targetKeys, targetValues, rangeKeys, rangeValues, rangeValues.Length, ref rangeIndex, ref targetIndex);
+        AppendLeftRangeItems(
+            targetKeys,
+            targetValues,
+            sourceKeys,
+            sourceValues,
+            sourceSize,
+            ref sourceIndex,
+            ref targetIndex
+        );
+        AppendLeftRangeItems(
+            targetKeys,
+            targetValues,
+            rangeKeys,
+            rangeValues,
+            rangeValues.Length,
+            ref rangeIndex,
+            ref targetIndex
+        );
 
         keysField.SetValue(source, targetKeys);
         valuesField.SetValue(source, targetValues);
@@ -83,7 +111,10 @@ public static class SortedListRangeExtensions
         versionField.SetValue(source, versionField.GetPropertyOrFieldValue<int>(source) + 1);
     }
 
-    private static (TKey[] keys, TValue[] values) InitRangeData<TKey, TValue>(IReadOnlyDictionary<TKey, TValue> range, IComparer<TKey> comparer)
+    private static (TKey[] keys, TValue[] values) InitRangeData<TKey, TValue>(
+        IReadOnlyDictionary<TKey, TValue> range,
+        IComparer<TKey> comparer
+    )
         where TKey : notnull
     {
         var keys = new TKey[range.Count];
@@ -132,14 +163,29 @@ public static class SortedListRangeExtensions
         }
     }
 
-    private static void AppendLeftRangeItems<TKey, TValue>(TKey[] targetKeys, TValue[] targetValues, TKey[] sourceKeys, TValue[] sourceValues, int sourceSize, ref int sourceIndex, ref int targetIndex)
+    private static void AppendLeftRangeItems<TKey, TValue>(
+        TKey[] targetKeys,
+        TValue[] targetValues,
+        TKey[] sourceKeys,
+        TValue[] sourceValues,
+        int sourceSize,
+        ref int sourceIndex,
+        ref int targetIndex
+    )
         where TKey : notnull
     {
         while (sourceIndex < sourceSize)
             SetItemFromRange(targetKeys, targetValues, sourceKeys, sourceValues, ref sourceIndex, ref targetIndex);
     }
 
-    private static void SetItemFromRange<TKey, TValue>(TKey[] targetKeys, TValue[] targetValues, TKey[] sourceKeys, TValue[] sourceValues, ref int sourceIndex, ref int targetIndex)
+    private static void SetItemFromRange<TKey, TValue>(
+        TKey[] targetKeys,
+        TValue[] targetValues,
+        TKey[] sourceKeys,
+        TValue[] sourceValues,
+        ref int sourceIndex,
+        ref int targetIndex
+    )
         where TKey : notnull
     {
         targetKeys[targetIndex] = sourceKeys[sourceIndex];

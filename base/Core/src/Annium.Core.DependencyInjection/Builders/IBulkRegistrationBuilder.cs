@@ -13,12 +13,16 @@ public interface IBulkRegistrationBuilderTarget : IBulkRegistrationBuilderLifeti
     IBulkRegistrationBuilderTarget AsSelf();
     IBulkRegistrationBuilderTarget As(Type serviceType);
     IBulkRegistrationBuilderTarget AsInterfaces();
-    IBulkRegistrationBuilderTarget AsKeyedSelf<TKey>(Func<Type, TKey> getKey) where TKey : notnull;
-    IBulkRegistrationBuilderTarget AsKeyed<TKey>(Type serviceType, Func<Type, TKey> getKey) where TKey : notnull;
+    IBulkRegistrationBuilderTarget AsKeyedSelf<TKey>(Func<Type, TKey> getKey)
+        where TKey : notnull;
+    IBulkRegistrationBuilderTarget AsKeyed<TKey>(Type serviceType, Func<Type, TKey> getKey)
+        where TKey : notnull;
     IBulkRegistrationBuilderTarget AsSelfFactory();
     IBulkRegistrationBuilderTarget AsFactory(Type serviceType);
-    IBulkRegistrationBuilderTarget AsKeyedSelfFactory<TKey>(Func<Type, TKey> getKey) where TKey : notnull;
-    IBulkRegistrationBuilderTarget AsKeyedFactory<TKey>(Type serviceType, Func<Type, TKey> getKey) where TKey : notnull;
+    IBulkRegistrationBuilderTarget AsKeyedSelfFactory<TKey>(Func<Type, TKey> getKey)
+        where TKey : notnull;
+    IBulkRegistrationBuilderTarget AsKeyedFactory<TKey>(Type serviceType, Func<Type, TKey> getKey)
+        where TKey : notnull;
 }
 
 public interface IBulkRegistrationBuilderLifetime

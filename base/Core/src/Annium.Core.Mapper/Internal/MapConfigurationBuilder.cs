@@ -28,7 +28,10 @@ internal class MapConfigurationBuilder<TS, TD> : IMapConfigurationBuilder<TS, TD
         return this;
     }
 
-    public IMapConfigurationBuilder<TS, TD> For<TF>(Expression<Func<TD, object>> members, Func<IMapContext, Expression<Func<TS, TF>>> map)
+    public IMapConfigurationBuilder<TS, TD> For<TF>(
+        Expression<Func<TD, object>> members,
+        Func<IMapContext, Expression<Func<TS, TF>>> map
+    )
     {
         var properties = TypeHelper.ResolveProperties(members);
 

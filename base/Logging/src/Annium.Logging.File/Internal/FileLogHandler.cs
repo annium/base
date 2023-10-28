@@ -16,10 +16,8 @@ internal class FileLogHandler<TContext> : BufferingLogHandler<TContext>
     private readonly FileLoggingConfiguration<TContext> _cfg;
     private readonly ConcurrentDictionary<string, bool> _files = new();
 
-    public FileLogHandler(
-        Func<LogMessage<TContext>, string> format,
-        FileLoggingConfiguration<TContext> cfg
-    ) : base(cfg)
+    public FileLogHandler(Func<LogMessage<TContext>, string> format, FileLoggingConfiguration<TContext> cfg)
+        : base(cfg)
     {
         _format = format;
         _cfg = cfg;

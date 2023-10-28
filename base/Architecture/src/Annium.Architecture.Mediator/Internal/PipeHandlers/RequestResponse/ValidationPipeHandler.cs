@@ -6,15 +6,17 @@ using Annium.Logging;
 
 namespace Annium.Architecture.Mediator.Internal.PipeHandlers.RequestResponse;
 
-internal class ValidationPipeHandler<TRequest, TResponse> : ValidationPipeHandlerBase<TRequest, IStatusResult<OperationStatus, TResponse>>,
-    IPipeRequestHandler<TRequest, TRequest, IStatusResult<OperationStatus, TResponse>, IStatusResult<OperationStatus, TResponse>>
+internal class ValidationPipeHandler<TRequest, TResponse>
+    : ValidationPipeHandlerBase<TRequest, IStatusResult<OperationStatus, TResponse>>,
+        IPipeRequestHandler<
+            TRequest,
+            TRequest,
+            IStatusResult<OperationStatus, TResponse>,
+            IStatusResult<OperationStatus, TResponse>
+        >
 {
-    public ValidationPipeHandler(
-        IValidator<TRequest> validator,
-        ILogger logger
-    ) : base(validator, logger)
-    {
-    }
+    public ValidationPipeHandler(IValidator<TRequest> validator, ILogger logger)
+        : base(validator, logger) { }
 
     protected override IStatusResult<OperationStatus, TResponse> GetResponse(IResult validationResult)
     {

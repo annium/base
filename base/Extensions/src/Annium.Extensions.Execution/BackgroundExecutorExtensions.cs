@@ -119,7 +119,10 @@ public static class BackgroundExecutorExtensions
         await tcs.Task.ConfigureAwait(false);
     }
 
-    public static async ValueTask ExecuteAsync(this IBackgroundExecutor executor, Func<CancellationToken, ValueTask> task)
+    public static async ValueTask ExecuteAsync(
+        this IBackgroundExecutor executor,
+        Func<CancellationToken, ValueTask> task
+    )
     {
         var tcs = new TaskCompletionSource();
         executor.Schedule(async ct =>
@@ -164,7 +167,10 @@ public static class BackgroundExecutorExtensions
         return await tcs.Task.ConfigureAwait(false);
     }
 
-    public static async ValueTask<T> ExecuteAsync<T>(this IBackgroundExecutor executor, Func<CancellationToken, ValueTask<T>> task)
+    public static async ValueTask<T> ExecuteAsync<T>(
+        this IBackgroundExecutor executor,
+        Func<CancellationToken, ValueTask<T>> task
+    )
     {
         var tcs = new TaskCompletionSource<T>();
         executor.Schedule(async ct =>
@@ -260,7 +266,10 @@ public static class BackgroundExecutorExtensions
         return await tcs.Task.ConfigureAwait(false);
     }
 
-    public static async ValueTask<T> TryExecuteAsync<T>(this IBackgroundExecutor executor, Func<CancellationToken, T> task)
+    public static async ValueTask<T> TryExecuteAsync<T>(
+        this IBackgroundExecutor executor,
+        Func<CancellationToken, T> task
+    )
     {
         var tcs = new TaskCompletionSource<T>();
         var scheduled = executor.TrySchedule(ct =>
@@ -309,7 +318,10 @@ public static class BackgroundExecutorExtensions
         await tcs.Task.ConfigureAwait(false);
     }
 
-    public static async ValueTask TryExecuteAsync(this IBackgroundExecutor executor, Func<CancellationToken, ValueTask> task)
+    public static async ValueTask TryExecuteAsync(
+        this IBackgroundExecutor executor,
+        Func<CancellationToken, ValueTask> task
+    )
     {
         var tcs = new TaskCompletionSource();
         var scheduled = executor.TrySchedule(async ct =>
@@ -358,7 +370,10 @@ public static class BackgroundExecutorExtensions
         return await tcs.Task.ConfigureAwait(false);
     }
 
-    public static async ValueTask<T> TryExecuteAsync<T>(this IBackgroundExecutor executor, Func<CancellationToken, ValueTask<T>> task)
+    public static async ValueTask<T> TryExecuteAsync<T>(
+        this IBackgroundExecutor executor,
+        Func<CancellationToken, ValueTask<T>> task
+    )
     {
         var tcs = new TaskCompletionSource<T>();
         var scheduled = executor.TrySchedule(async ct =>
@@ -382,7 +397,5 @@ public static class BackgroundExecutorExtensions
         return await tcs.Task.ConfigureAwait(false);
     }
 
-
-    private static InvalidOperationException UnavailableException() =>
-        new("Executor is not available already");
+    private static InvalidOperationException UnavailableException() => new("Executor is not available already");
 }

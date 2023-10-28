@@ -7,18 +7,18 @@ namespace Annium.Data.Operations.Serialization.Json.Internal;
 
 internal class StatusResultConverter<TS> : ResultConverterBase<IStatusResult<TS>>
 {
-    public override IStatusResult<TS> Read(
-        ref Utf8JsonReader reader,
-        Type typeToConvert,
-        JsonSerializerOptions options
-    )
+    public override IStatusResult<TS> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        TS status = default !;
-        var (plainErrors, labeledErrors) = ReadErrors(ref reader, options, (ref Utf8JsonReader r) =>
-        {
-            if (r.HasProperty(nameof(X.Status)))
-                status = JsonSerializer.Deserialize<TS>(ref r, options)!;
-        });
+        TS status = default!;
+        var (plainErrors, labeledErrors) = ReadErrors(
+            ref reader,
+            options,
+            (ref Utf8JsonReader r) =>
+            {
+                if (r.HasProperty(nameof(X.Status)))
+                    status = JsonSerializer.Deserialize<TS>(ref r, options)!;
+            }
+        );
 
         var value = Result.Status(status);
 
@@ -28,11 +28,7 @@ internal class StatusResultConverter<TS> : ResultConverterBase<IStatusResult<TS>
         return value;
     }
 
-    public override void Write(
-        Utf8JsonWriter writer,
-        IStatusResult<TS> value,
-        JsonSerializerOptions options
-    )
+    public override void Write(Utf8JsonWriter writer, IStatusResult<TS> value, JsonSerializerOptions options)
     {
         writer.WriteStartObject();
 

@@ -8,26 +8,28 @@ namespace Annium;
 
 public static class TypeNameExtensions
 {
-    private static readonly ConcurrentDictionary<Type, string> TypeNames = new(new Dictionary<Type, string>
-        {
-            { typeof(int), "int" },
-            { typeof(uint), "uint" },
-            { typeof(long), "long" },
-            { typeof(ulong), "ulong" },
-            { typeof(short), "short" },
-            { typeof(ushort), "ushort" },
-            { typeof(byte), "byte" },
-            { typeof(sbyte), "sbyte" },
-            { typeof(bool), "bool" },
-            { typeof(float), "float" },
-            { typeof(double), "double" },
-            { typeof(decimal), "decimal" },
-            { typeof(char), "char" },
-            { typeof(string), "string" },
-            { typeof(object), "object" },
-            { typeof(void), "void" },
-        }
-    );
+    private static readonly ConcurrentDictionary<Type, string> TypeNames =
+        new(
+            new Dictionary<Type, string>
+            {
+                { typeof(int), "int" },
+                { typeof(uint), "uint" },
+                { typeof(long), "long" },
+                { typeof(ulong), "ulong" },
+                { typeof(short), "short" },
+                { typeof(ushort), "ushort" },
+                { typeof(byte), "byte" },
+                { typeof(sbyte), "sbyte" },
+                { typeof(bool), "bool" },
+                { typeof(float), "float" },
+                { typeof(double), "double" },
+                { typeof(decimal), "decimal" },
+                { typeof(char), "char" },
+                { typeof(string), "string" },
+                { typeof(object), "object" },
+                { typeof(void), "void" },
+            }
+        );
 
     private static readonly ConcurrentDictionary<Type, string> TypePureNames = new(TypeNames);
 

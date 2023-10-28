@@ -7,9 +7,6 @@ public static class RsaExtensions
 {
     public static RsaSecurityKey GetKey(this RSA algorithm)
     {
-        return new RsaSecurityKey(algorithm)
-        {
-            KeyId = algorithm.GetKeyId()
-        };
+        return new RsaSecurityKey(algorithm) { KeyId = algorithm.GetKeyId() };
     }
 }

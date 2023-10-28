@@ -7,12 +7,8 @@ namespace Annium.Net.Types.Tests.Lib.Mapper;
 
 public abstract class MapperNullableTestsBase : TestBase
 {
-    protected MapperNullableTestsBase(
-        ITestProvider testProvider,
-        ITestOutputHelper outputHelper
-    ) : base(testProvider, outputHelper)
-    {
-    }
+    protected MapperNullableTestsBase(ITestProvider testProvider, ITestOutputHelper outputHelper)
+        : base(testProvider, outputHelper) { }
 
     protected void Nullable_BaseType_Struct_Base()
     {
@@ -23,9 +19,7 @@ public abstract class MapperNullableTestsBase : TestBase
         var model = Map(target);
 
         // assert
-        model
-            .As<NullableRef>().Value
-            .As<BaseTypeRef>().Name.Is(BaseType.Int);
+        model.As<NullableRef>().Value.As<BaseTypeRef>().Name.Is(BaseType.Int);
         Models.IsEmpty();
     }
 
@@ -38,9 +32,7 @@ public abstract class MapperNullableTestsBase : TestBase
         var model = Map(target);
 
         // assert
-        model
-            .As<NullableRef>().Value
-            .As<BaseTypeRef>().Name.Is(BaseType.String);
+        model.As<NullableRef>().Value.As<BaseTypeRef>().Name.Is(BaseType.String);
         Models.IsEmpty();
     }
 }

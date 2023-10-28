@@ -210,27 +210,18 @@ public class MessagingBufferTests
 
 file static class BufferExtensions
 {
-    public static void WriteMessage(
-        this MessagingBuffer buffer,
-        byte[] data
-    )
+    public static void WriteMessage(this MessagingBuffer buffer, byte[] data)
     {
         buffer.WriteMessageSize(data.Length);
         buffer.Write(data);
     }
 
-    public static void WriteMessageSize(
-        this MessagingBuffer buffer,
-        int size
-    )
+    public static void WriteMessageSize(this MessagingBuffer buffer, int size)
     {
         buffer.Write(BitConverter.GetBytes(size));
     }
 
-    public static void Write(
-        this MessagingBuffer buffer,
-        ReadOnlySpan<byte> data
-    )
+    public static void Write(this MessagingBuffer buffer, ReadOnlySpan<byte> data)
     {
         var freeSpace = buffer.FreeSpace.Span;
         for (int i = 0; i < data.Length; i++)

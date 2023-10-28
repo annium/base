@@ -17,7 +17,8 @@ public class HttpRequestTests : TestBase
 {
     private readonly IHttpRequestFactory _httpRequestFactory;
 
-    public HttpRequestTests(ITestOutputHelper outputHelper) : base(outputHelper)
+    public HttpRequestTests(ITestOutputHelper outputHelper)
+        : base(outputHelper)
     {
         Register(container =>
         {
@@ -51,18 +52,18 @@ public class HttpRequestTests : TestBase
         this.Trace("start");
 
         // arrange
-        await using var _ = RunServer((_, response) =>
-        {
-            response.Ok();
+        await using var _ = RunServer(
+            (_, response) =>
+            {
+                response.Ok();
 
-            return Task.CompletedTask;
-        });
+                return Task.CompletedTask;
+            }
+        );
 
         // act
         this.Trace("send");
-        var response = await _httpRequestFactory.New(ServerUri)
-            .Get("/")
-            .RunAsync(new CancellationToken(true));
+        var response = await _httpRequestFactory.New(ServerUri).Get("/").RunAsync(new CancellationToken(true));
 
         // assert
         response.IsAbort.IsTrue();
@@ -79,15 +80,18 @@ public class HttpRequestTests : TestBase
         this.Trace("start");
 
         // arrange
-        await using var _ = RunServer(async (_, response) =>
-        {
-            await Task.Delay(100);
-            response.Ok();
-        });
+        await using var _ = RunServer(
+            async (_, response) =>
+            {
+                await Task.Delay(100);
+                response.Ok();
+            }
+        );
 
         // act
         this.Trace("send");
-        var response = await _httpRequestFactory.New(ServerUri)
+        var response = await _httpRequestFactory
+            .New(ServerUri)
             .Get("/")
             .Timeout(TimeSpan.FromMilliseconds(50))
             .RunAsync();
@@ -107,18 +111,18 @@ public class HttpRequestTests : TestBase
         this.Trace("start");
 
         // arrange
-        await using var _ = RunServer(async (request, response) =>
-        {
-            var data = Encoding.UTF8.GetBytes(request.HttpMethod);
-            await response.OutputStream.WriteAsync(data);
-            response.Ok();
-        });
+        await using var _ = RunServer(
+            async (request, response) =>
+            {
+                var data = Encoding.UTF8.GetBytes(request.HttpMethod);
+                await response.OutputStream.WriteAsync(data);
+                response.Ok();
+            }
+        );
 
         // act
         this.Trace("send");
-        var response = await _httpRequestFactory.New(ServerUri)
-            .With(HttpMethod.Patch, "/")
-            .RunAsync();
+        var response = await _httpRequestFactory.New(ServerUri).With(HttpMethod.Patch, "/").RunAsync();
 
         // assert
         response.IsAbort.IsFalse();
@@ -140,27 +144,26 @@ public class HttpRequestTests : TestBase
         const string headerPrefix = "custom";
         const string headerKey = $"{headerPrefix}-header";
         const string headerValue = $"{headerPrefix} content";
-        await using var _ = RunServer((request, response) =>
-        {
-            var targetHeaders = request.Headers.AllKeys
-                .OfType<string>()
-                .Where(x => x.StartsWith(headerPrefix))
-                .ToArray();
+        await using var _ = RunServer(
+            (request, response) =>
+            {
+                var targetHeaders = request.Headers.AllKeys
+                    .OfType<string>()
+                    .Where(x => x.StartsWith(headerPrefix))
+                    .ToArray();
 
-            foreach (var key in targetHeaders)
-                response.Headers.Add(key, request.Headers.Get(key));
+                foreach (var key in targetHeaders)
+                    response.Headers.Add(key, request.Headers.Get(key));
 
-            response.Ok();
+                response.Ok();
 
-            return Task.CompletedTask;
-        });
+                return Task.CompletedTask;
+            }
+        );
 
         // act
         this.Trace("send");
-        var response = await _httpRequestFactory.New(ServerUri)
-            .Head("/")
-            .Header(headerKey, headerValue)
-            .RunAsync();
+        var response = await _httpRequestFactory.New(ServerUri).Head("/").Header(headerKey, headerValue).RunAsync();
 
         // assert
         response.IsAbort.IsFalse();
@@ -181,16 +184,19 @@ public class HttpRequestTests : TestBase
         this.Trace("start");
 
         // arrange
-        await using var _ = RunServer(async (request, response) =>
-        {
-            var data = Encoding.UTF8.GetBytes(request.Url.NotNull().Query);
-            await response.OutputStream.WriteAsync(data);
-            response.Ok();
-        });
+        await using var _ = RunServer(
+            async (request, response) =>
+            {
+                var data = Encoding.UTF8.GetBytes(request.Url.NotNull().Query);
+                await response.OutputStream.WriteAsync(data);
+                response.Ok();
+            }
+        );
 
         // act
         this.Trace("send");
-        var response = await _httpRequestFactory.New(ServerUri)
+        var response = await _httpRequestFactory
+            .New(ServerUri)
             .Get("/")
             .Param("x", "a")
             .Param("y", new[] { "b", "c" })
@@ -214,18 +220,17 @@ public class HttpRequestTests : TestBase
 
         // arrange
         const string message = "demo";
-        await using var _ = RunServer(async (request, response) =>
-        {
-            await request.InputStream.CopyToAsync(response.OutputStream);
-            response.Ok();
-        });
+        await using var _ = RunServer(
+            async (request, response) =>
+            {
+                await request.InputStream.CopyToAsync(response.OutputStream);
+                response.Ok();
+            }
+        );
 
         // act
         this.Trace("send");
-        var response = await _httpRequestFactory.New(ServerUri)
-            .Post("/")
-            .StringContent(message)
-            .RunAsync();
+        var response = await _httpRequestFactory.New(ServerUri).Post("/").StringContent(message).RunAsync();
 
         // assert
         response.IsAbort.IsFalse();

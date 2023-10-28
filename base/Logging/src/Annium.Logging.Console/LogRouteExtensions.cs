@@ -8,12 +8,8 @@ namespace Annium.Core.DependencyInjection;
 
 public static class LogRouteExtensions
 {
-    public static LogRoute<TContext> UseConsole<TContext>(
-        this LogRoute<TContext> route,
-        bool color = false
-    )
-        where TContext : class, ILogContext
-        => route.UseConsole(DefaultFormat<TContext>(LocalTime), color);
+    public static LogRoute<TContext> UseConsole<TContext>(this LogRoute<TContext> route, bool color = false)
+        where TContext : class, ILogContext => route.UseConsole(DefaultFormat<TContext>(LocalTime), color);
 
     public static LogRoute<TContext> UseConsole<TContext>(
         this LogRoute<TContext> route,

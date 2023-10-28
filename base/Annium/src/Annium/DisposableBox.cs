@@ -12,9 +12,7 @@ public sealed class AsyncDisposableBox : DisposableBoxBase<AsyncDisposableBox>, 
     private readonly List<Func<Task>> _asyncDisposes = new();
 
     internal AsyncDisposableBox(ILogger logger)
-        : base(logger)
-    {
-    }
+        : base(logger) { }
 
     public async ValueTask DisposeAndResetAsync()
     {
@@ -29,47 +27,82 @@ public sealed class AsyncDisposableBox : DisposableBoxBase<AsyncDisposableBox>, 
         DisposeBase();
 
         if (_asyncDisposables.Count > 0)
-            await Task.WhenAll(Pull(_asyncDisposables).Select(async entry =>
-            {
-                this.Trace<string>("dispose {entry} - start", entry.GetFullId());
-                await entry.DisposeAsync();
-                this.Trace<string>("dispose {entry} - done", entry.GetFullId());
-            }));
+            await Task.WhenAll(
+                Pull(_asyncDisposables)
+                    .Select(async entry =>
+                    {
+                        this.Trace<string>("dispose {entry} - start", entry.GetFullId());
+                        await entry.DisposeAsync();
+                        this.Trace<string>("dispose {entry} - done", entry.GetFullId());
+                    })
+            );
         if (_asyncDisposes.Count > 0)
-            await Task.WhenAll(Pull(_asyncDisposes).Select(async entry =>
-            {
-                this.Trace<string>("dispose {entry} - start", entry.GetFullId());
-                await entry();
-                this.Trace<string>("dispose {entry} - done", entry.GetFullId());
-            }));
+            await Task.WhenAll(
+                Pull(_asyncDisposes)
+                    .Select(async entry =>
+                    {
+                        this.Trace<string>("dispose {entry} - start", entry.GetFullId());
+                        await entry();
+                        this.Trace<string>("dispose {entry} - done", entry.GetFullId());
+                    })
+            );
 
         this.Trace("done");
     }
 
-    public static AsyncDisposableBox operator +(AsyncDisposableBox box, IDisposable disposable) => box.Add(box.SyncDisposables, disposable);
-    public static AsyncDisposableBox operator -(AsyncDisposableBox box, IDisposable disposable) => box.Remove(box.SyncDisposables, disposable);
-    public static AsyncDisposableBox operator +(AsyncDisposableBox box, IEnumerable<IDisposable> disposables) => box.Add(box.SyncDisposables, disposables);
-    public static AsyncDisposableBox operator -(AsyncDisposableBox box, IEnumerable<IDisposable> disposables) => box.Remove(box.SyncDisposables, disposables);
-    public static AsyncDisposableBox operator +(AsyncDisposableBox box, IAsyncDisposable disposable) => box.Add(box._asyncDisposables, disposable);
-    public static AsyncDisposableBox operator -(AsyncDisposableBox box, IAsyncDisposable disposable) => box.Remove(box._asyncDisposables, disposable);
-    public static AsyncDisposableBox operator +(AsyncDisposableBox box, IEnumerable<IAsyncDisposable> disposables) => box.Add(box._asyncDisposables, disposables);
-    public static AsyncDisposableBox operator -(AsyncDisposableBox box, IEnumerable<IAsyncDisposable> disposables) => box.Remove(box._asyncDisposables, disposables);
-    public static AsyncDisposableBox operator +(AsyncDisposableBox box, Action dispose) => box.Add(box.SyncDisposes, dispose);
-    public static AsyncDisposableBox operator -(AsyncDisposableBox box, Action dispose) => box.Remove(box.SyncDisposes, dispose);
-    public static AsyncDisposableBox operator +(AsyncDisposableBox box, IEnumerable<Action> disposes) => box.Add(box.SyncDisposes, disposes);
-    public static AsyncDisposableBox operator -(AsyncDisposableBox box, IEnumerable<Action> disposes) => box.Remove(box.SyncDisposes, disposes);
-    public static AsyncDisposableBox operator +(AsyncDisposableBox box, Func<Task> dispose) => box.Add(box._asyncDisposes, dispose);
-    public static AsyncDisposableBox operator -(AsyncDisposableBox box, Func<Task> dispose) => box.Remove(box._asyncDisposes, dispose);
-    public static AsyncDisposableBox operator +(AsyncDisposableBox box, IEnumerable<Func<Task>> disposes) => box.Add(box._asyncDisposes, disposes);
-    public static AsyncDisposableBox operator -(AsyncDisposableBox box, IEnumerable<Func<Task>> disposes) => box.Remove(box._asyncDisposes, disposes);
+    public static AsyncDisposableBox operator +(AsyncDisposableBox box, IDisposable disposable) =>
+        box.Add(box.SyncDisposables, disposable);
+
+    public static AsyncDisposableBox operator -(AsyncDisposableBox box, IDisposable disposable) =>
+        box.Remove(box.SyncDisposables, disposable);
+
+    public static AsyncDisposableBox operator +(AsyncDisposableBox box, IEnumerable<IDisposable> disposables) =>
+        box.Add(box.SyncDisposables, disposables);
+
+    public static AsyncDisposableBox operator -(AsyncDisposableBox box, IEnumerable<IDisposable> disposables) =>
+        box.Remove(box.SyncDisposables, disposables);
+
+    public static AsyncDisposableBox operator +(AsyncDisposableBox box, IAsyncDisposable disposable) =>
+        box.Add(box._asyncDisposables, disposable);
+
+    public static AsyncDisposableBox operator -(AsyncDisposableBox box, IAsyncDisposable disposable) =>
+        box.Remove(box._asyncDisposables, disposable);
+
+    public static AsyncDisposableBox operator +(AsyncDisposableBox box, IEnumerable<IAsyncDisposable> disposables) =>
+        box.Add(box._asyncDisposables, disposables);
+
+    public static AsyncDisposableBox operator -(AsyncDisposableBox box, IEnumerable<IAsyncDisposable> disposables) =>
+        box.Remove(box._asyncDisposables, disposables);
+
+    public static AsyncDisposableBox operator +(AsyncDisposableBox box, Action dispose) =>
+        box.Add(box.SyncDisposes, dispose);
+
+    public static AsyncDisposableBox operator -(AsyncDisposableBox box, Action dispose) =>
+        box.Remove(box.SyncDisposes, dispose);
+
+    public static AsyncDisposableBox operator +(AsyncDisposableBox box, IEnumerable<Action> disposes) =>
+        box.Add(box.SyncDisposes, disposes);
+
+    public static AsyncDisposableBox operator -(AsyncDisposableBox box, IEnumerable<Action> disposes) =>
+        box.Remove(box.SyncDisposes, disposes);
+
+    public static AsyncDisposableBox operator +(AsyncDisposableBox box, Func<Task> dispose) =>
+        box.Add(box._asyncDisposes, dispose);
+
+    public static AsyncDisposableBox operator -(AsyncDisposableBox box, Func<Task> dispose) =>
+        box.Remove(box._asyncDisposes, dispose);
+
+    public static AsyncDisposableBox operator +(AsyncDisposableBox box, IEnumerable<Func<Task>> disposes) =>
+        box.Add(box._asyncDisposes, disposes);
+
+    public static AsyncDisposableBox operator -(AsyncDisposableBox box, IEnumerable<Func<Task>> disposes) =>
+        box.Remove(box._asyncDisposes, disposes);
 }
 
 public sealed class DisposableBox : DisposableBoxBase<DisposableBox>, IDisposable
 {
     internal DisposableBox(ILogger logger)
-        : base(logger)
-    {
-    }
+        : base(logger) { }
 
     public void DisposeAndReset()
     {
@@ -84,14 +117,27 @@ public sealed class DisposableBox : DisposableBoxBase<DisposableBox>, IDisposabl
         this.Trace("done");
     }
 
-    public static DisposableBox operator +(DisposableBox box, IDisposable disposable) => box.Add(box.SyncDisposables, disposable);
-    public static DisposableBox operator -(DisposableBox box, IDisposable disposable) => box.Remove(box.SyncDisposables, disposable);
-    public static DisposableBox operator +(DisposableBox box, IEnumerable<IDisposable> disposables) => box.Add(box.SyncDisposables, disposables);
-    public static DisposableBox operator -(DisposableBox box, IEnumerable<IDisposable> disposables) => box.Remove(box.SyncDisposables, disposables);
+    public static DisposableBox operator +(DisposableBox box, IDisposable disposable) =>
+        box.Add(box.SyncDisposables, disposable);
+
+    public static DisposableBox operator -(DisposableBox box, IDisposable disposable) =>
+        box.Remove(box.SyncDisposables, disposable);
+
+    public static DisposableBox operator +(DisposableBox box, IEnumerable<IDisposable> disposables) =>
+        box.Add(box.SyncDisposables, disposables);
+
+    public static DisposableBox operator -(DisposableBox box, IEnumerable<IDisposable> disposables) =>
+        box.Remove(box.SyncDisposables, disposables);
+
     public static DisposableBox operator +(DisposableBox box, Action dispose) => box.Add(box.SyncDisposes, dispose);
+
     public static DisposableBox operator -(DisposableBox box, Action dispose) => box.Remove(box.SyncDisposes, dispose);
-    public static DisposableBox operator +(DisposableBox box, IEnumerable<Action> disposes) => box.Add(box.SyncDisposes, disposes);
-    public static DisposableBox operator -(DisposableBox box, IEnumerable<Action> disposes) => box.Remove(box.SyncDisposes, disposes);
+
+    public static DisposableBox operator +(DisposableBox box, IEnumerable<Action> disposes) =>
+        box.Add(box.SyncDisposes, disposes);
+
+    public static DisposableBox operator -(DisposableBox box, IEnumerable<Action> disposes) =>
+        box.Remove(box.SyncDisposes, disposes);
 }
 
 public abstract class DisposableBoxBase<TBox> : ILogSubject

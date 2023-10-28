@@ -14,17 +14,11 @@ public abstract class ServicePackBase
         _packs.Add(new TServicePack());
     }
 
-    public virtual void Configure(IServiceContainer container)
-    {
-    }
+    public virtual void Configure(IServiceContainer container) { }
 
-    public virtual void Register(IServiceContainer container, IServiceProvider provider)
-    {
-    }
+    public virtual void Register(IServiceContainer container, IServiceProvider provider) { }
 
-    public virtual void Setup(IServiceProvider provider)
-    {
-    }
+    public virtual void Setup(IServiceProvider provider) { }
 
     internal void InternalConfigure(IServiceContainer container)
     {

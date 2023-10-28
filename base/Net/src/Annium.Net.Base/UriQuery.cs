@@ -8,8 +8,10 @@ using Microsoft.Extensions.Primitives;
 
 namespace Annium.Net.Base;
 
-public sealed record UriQuery : IDictionary<string, StringValues>, IReadOnlyDictionary<string, StringValues>,
-    ICopyable<UriQuery>
+public sealed record UriQuery
+    : IDictionary<string, StringValues>,
+        IReadOnlyDictionary<string, StringValues>,
+        ICopyable<UriQuery>
 {
     public static UriQuery New()
     {
@@ -31,21 +33,31 @@ public sealed record UriQuery : IDictionary<string, StringValues>, IReadOnlyDict
     }
 
     public IEnumerator<KeyValuePair<string, StringValues>> GetEnumerator() => _data.GetEnumerator();
+
     IEnumerator IEnumerable.GetEnumerator() => _data.GetEnumerator();
+
     public void Add(KeyValuePair<string, StringValues> item) => _data.Add(item);
+
     public void Clear() => _data.Clear();
+
     public bool Contains(KeyValuePair<string, StringValues> item) => _data.Contains(item);
+
     public void CopyTo(KeyValuePair<string, StringValues>[] array, int arrayIndex) => _data.Clear();
+
     public bool Remove(KeyValuePair<string, StringValues> item) => _data.Remove(item);
+
     int ICollection<KeyValuePair<string, StringValues>>.Count => _data.Count;
     public bool IsReadOnly => false;
+
     public void Add(string key, StringValues value) => _data.Add(key, value);
+
     bool IDictionary<string, StringValues>.ContainsKey(string key) => _data.ContainsKey(key);
 
     bool IReadOnlyDictionary<string, StringValues>.TryGetValue(string key, out StringValues value) =>
         _data.TryGetValue(key, out value);
 
     public bool Remove(string key) => _data.Remove(key);
+
     bool IReadOnlyDictionary<string, StringValues>.ContainsKey(string key) => _data.ContainsKey(key);
 
     bool IDictionary<string, StringValues>.TryGetValue(string key, out StringValues value) =>
@@ -72,10 +84,10 @@ public sealed record UriQuery : IDictionary<string, StringValues>, IReadOnlyDict
         var code = 0;
 
         foreach (var (key, values) in _data.OrderBy(x => x.Key))
-        foreach (var value in values.OrderBy(x => x))
-        {
-            code = HashCode.Combine(code, key, value);
-        }
+            foreach (var value in values.OrderBy(x => x))
+            {
+                code = HashCode.Combine(code, key, value);
+            }
 
         return code;
     }

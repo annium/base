@@ -23,18 +23,17 @@ internal sealed class NodaDateTimeZoneConverter : ConverterBase<DateTimeZone>
         JsonSerializerOptions options
     )
     {
-        Preconditions.CheckData(reader.TokenType == JsonTokenType.String, $"Unexpected token parsing instant. Expected String, got {reader.TokenType}.");
+        Preconditions.CheckData(
+            reader.TokenType == JsonTokenType.String,
+            $"Unexpected token parsing instant. Expected String, got {reader.TokenType}."
+        );
 
         var timeZoneId = reader.GetString()!;
 
         return _provider[timeZoneId];
     }
 
-    public override void WriteImplementation(
-        Utf8JsonWriter writer,
-        DateTimeZone value,
-        JsonSerializerOptions options
-    )
+    public override void WriteImplementation(Utf8JsonWriter writer, DateTimeZone value, JsonSerializerOptions options)
     {
         writer.WriteStringValue(value.Id);
     }

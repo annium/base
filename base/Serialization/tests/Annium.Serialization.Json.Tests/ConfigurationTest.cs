@@ -19,11 +19,13 @@ public class ConfigurationTest
         // default
         container.AddSerializers().WithJson(isDefault: true);
         // custom
-        container.AddSerializers("a").WithJson(x =>
-        {
-            x.UseCamelCaseNamingPolicy();
-            x.NumberHandling = JsonNumberHandling.WriteAsString;
-        });
+        container
+            .AddSerializers("a")
+            .WithJson(x =>
+            {
+                x.UseCamelCaseNamingPolicy();
+                x.NumberHandling = JsonNumberHandling.WriteAsString;
+            });
         container.AddSerializers("b").WithJson(x => x.UseCamelCaseNamingPolicy());
         var sp = container.BuildServiceProvider();
         sp.UseLogging(x => x.UseInMemory());

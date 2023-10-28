@@ -12,10 +12,7 @@ namespace Annium.Core.DependencyInjection;
 
 public static class ServiceContainerExtensions
 {
-    public static IServiceContainer AddConfiguration<T>(
-        this IServiceContainer container,
-        T configuration
-    )
+    public static IServiceContainer AddConfiguration<T>(this IServiceContainer container, T configuration)
         where T : class, new()
     {
         container.Add(configuration).AsSelf().Singleton();
@@ -36,13 +33,16 @@ public static class ServiceContainerExtensions
         var cfgContainer = new ConfigurationContainer();
         configure(cfgContainer);
 
-        container.Add(sp =>
-        {
-            var builder = sp.Resolve<IConfigurationBuilder>();
-            builder.Add(cfgContainer.Get());
+        container
+            .Add(sp =>
+            {
+                var builder = sp.Resolve<IConfigurationBuilder>();
+                builder.Add(cfgContainer.Get());
 
-            return builder.Build<T>();
-        }).AsSelf().Singleton();
+                return builder.Build<T>();
+            })
+            .AsSelf()
+            .Singleton();
 
         Register(container, typeof(T));
 
@@ -60,40 +60,34 @@ public static class ServiceContainerExtensions
         var cfgContainer = new ConfigurationContainer();
         await configure(cfgContainer);
 
-        container.Add(sp =>
-        {
-            var builder = sp.Resolve<IConfigurationBuilder>();
-            builder.Add(cfgContainer.Get());
+        container
+            .Add(sp =>
+            {
+                var builder = sp.Resolve<IConfigurationBuilder>();
+                builder.Add(cfgContainer.Get());
 
-            return builder.Build<T>();
-        }).AsSelf().Singleton();
+                return builder.Build<T>();
+            })
+            .AsSelf()
+            .Singleton();
 
         Register(container, typeof(T));
 
         return container;
     }
 
-    private static void AddConfigurationBuilder(
-        this IServiceContainer container
-    )
+    private static void AddConfigurationBuilder(this IServiceContainer container)
     {
         container.Add<IConfigurationBuilder, ConfigurationBuilder>().AsFactory<IConfigurationBuilder>().Transient();
     }
 
-    private static void Register(
-        IServiceContainer container,
-        Type type
-    )
+    private static void Register(IServiceContainer container, Type type)
     {
         foreach (var property in GetRegisteredProperties(type))
             Register(container, type, property);
     }
 
-    private static void Register(
-        IServiceContainer container,
-        Type type,
-        PropertyInfo property
-    )
+    private static void Register(IServiceContainer container, Type type, PropertyInfo property)
     {
         var propertyType = property.PropertyType;
         container.Add(propertyType, sp => property.GetValue(sp.Resolve(type))!).AsSelf().Singleton();
@@ -102,10 +96,12 @@ public static class ServiceContainerExtensions
             Register(container, propertyType, prop);
     }
 
-    private static IReadOnlyCollection<PropertyInfo> GetRegisteredProperties(Type type) => type
-        .GetProperties()
-        .Where(x =>
-            x is { CanRead: true, PropertyType: { IsEnum: false, IsValueType: false, IsPrimitive: false } } && !x.PropertyType.IsDerivedFrom(typeof(IEnumerable<>))
-        )
-        .ToArray();
+    private static IReadOnlyCollection<PropertyInfo> GetRegisteredProperties(Type type) =>
+        type.GetProperties()
+            .Where(
+                x =>
+                    x is { CanRead: true, PropertyType: { IsEnum: false, IsValueType: false, IsPrimitive: false } }
+                    && !x.PropertyType.IsDerivedFrom(typeof(IEnumerable<>))
+            )
+            .ToArray();
 }

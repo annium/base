@@ -3,11 +3,13 @@ using System.Collections.Generic;
 
 namespace Annium.Data.Models;
 
-public abstract class Comparable<T> : IEquatable<T>, IComparable<T>, IComparable where T : Comparable<T>
+public abstract class Comparable<T> : IEquatable<T>, IComparable<T>, IComparable
+    where T : Comparable<T>
 {
     public int CompareTo(T? other)
     {
-        if (other is null) return 1;
+        if (other is null)
+            return 1;
 
         foreach (var accessor in GetComparables())
         {
@@ -38,9 +40,12 @@ public abstract class Comparable<T> : IEquatable<T>, IComparable<T>, IComparable
 
     private static int Compare(IComparable? a, IComparable? b)
     {
-        if (ReferenceEquals(a, b)) return 0;
-        if (a is null) return -1;
-        if (b is null) return 1;
+        if (ReferenceEquals(a, b))
+            return 0;
+        if (a is null)
+            return -1;
+        if (b is null)
+            return 1;
 
         return a.CompareTo(b);
     }

@@ -68,19 +68,36 @@ public class UriFactoryTest
     public void Path_Full_Throws()
     {
         // assert
-        Wrap.It(() => UriFactory.Base("https://example.com").Path("https://localhost:9000/path").Build()).Throws<UriFormatException>();
+        Wrap.It(() => UriFactory.Base("https://example.com").Path("https://localhost:9000/path").Build())
+            .Throws<UriFormatException>();
     }
 
     [Fact]
     public void Path_Relative_Works()
     {
-        UriFactory.Base("https://example.com/some").Path("/path/on/server").Build().ToString()
+        UriFactory
+            .Base("https://example.com/some")
+            .Path("/path/on/server")
+            .Build()
+            .ToString()
             .Is("https://example.com/path/on/server");
-        UriFactory.Base("https://example.com/some").Path("path/on/server").Build().ToString()
+        UriFactory
+            .Base("https://example.com/some")
+            .Path("path/on/server")
+            .Build()
+            .ToString()
             .Is("https://example.com/some/path/on/server");
-        UriFactory.Base("https://example.com").Path("/path/on/server").Build().ToString()
+        UriFactory
+            .Base("https://example.com")
+            .Path("/path/on/server")
+            .Build()
+            .ToString()
             .Is("https://example.com/path/on/server");
-        UriFactory.Base("https://example.com").Path("path/on/server").Build().ToString()
+        UriFactory
+            .Base("https://example.com")
+            .Path("path/on/server")
+            .Build()
+            .ToString()
             .Is("https://example.com/path/on/server");
     }
 
@@ -98,13 +115,29 @@ public class UriFactoryTest
     public void Path_Ports_Work()
     {
         // assert
-        UriFactory.Base("https://example.com:443/").Path("/path/on/server").Build().ToString()
+        UriFactory
+            .Base("https://example.com:443/")
+            .Path("/path/on/server")
+            .Build()
+            .ToString()
             .Is("https://example.com/path/on/server");
-        UriFactory.Base("https://example.com:8443/").Path("/path/on/server").Build().ToString()
+        UriFactory
+            .Base("https://example.com:8443/")
+            .Path("/path/on/server")
+            .Build()
+            .ToString()
             .Is("https://example.com:8443/path/on/server");
-        UriFactory.Base("https://example.com:443/").Path("path/on/server").Build().ToString()
+        UriFactory
+            .Base("https://example.com:443/")
+            .Path("path/on/server")
+            .Build()
+            .ToString()
             .Is("https://example.com/path/on/server");
-        UriFactory.Base("https://example.com:8443/").Path("path/on/server").Build().ToString()
+        UriFactory
+            .Base("https://example.com:8443/")
+            .Path("path/on/server")
+            .Build()
+            .ToString()
             .Is("https://example.com:8443/path/on/server");
     }
 
@@ -122,7 +155,8 @@ public class UriFactoryTest
     public void Path_QueryParams_Works()
     {
         // act
-        var uri = UriFactory.Base("https://example.com")
+        var uri = UriFactory
+            .Base("https://example.com")
             .Path("path/on/server?with=query")
             .Param("with", "param")
             .Param("int", 20)
@@ -139,8 +173,14 @@ public class UriFactoryTest
     public void Clone_Works()
     {
         // act
-        var uri = UriFactory.Base("https://example.com").Path("path/on/server?with=query")
-            .Param("with", "param").Param("int", 20).Clone().Build().ToString();
+        var uri = UriFactory
+            .Base("https://example.com")
+            .Path("path/on/server?with=query")
+            .Param("with", "param")
+            .Param("int", 20)
+            .Clone()
+            .Build()
+            .ToString();
 
         // assert
         uri.Is("https://example.com/path/on/server?with=query&with=param&int=20");

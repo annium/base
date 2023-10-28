@@ -10,9 +10,8 @@ namespace Annium.Architecture.Mediator.Tests;
 
 public class ExceptionPipeHandlerTest : TestBase
 {
-    public ExceptionPipeHandlerTest(ITestOutputHelper outputHelper) : base(outputHelper)
-    {
-    }
+    public ExceptionPipeHandlerTest(ITestOutputHelper outputHelper)
+        : base(outputHelper) { }
 
     [Fact]
     public async Task Exception_ReturnsUncaughtExceptionResult()

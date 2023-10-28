@@ -9,9 +9,8 @@ namespace Annium.Core.Mapper.Tests;
 
 public class GenericProfilesTest : TestBase
 {
-    public GenericProfilesTest(ITestOutputHelper outputHelper) : base(outputHelper)
-    {
-    }
+    public GenericProfilesTest(ITestOutputHelper outputHelper)
+        : base(outputHelper) { }
 
     [Fact]
     public void GenericProfiles_Work()

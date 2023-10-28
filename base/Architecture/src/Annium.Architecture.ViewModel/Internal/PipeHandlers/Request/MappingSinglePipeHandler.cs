@@ -7,23 +7,15 @@ using Annium.Logging;
 
 namespace Annium.Architecture.ViewModel.Internal.PipeHandlers.Request;
 
-internal class MappingSinglePipeHandler<TRequestIn, TRequestOut, TResponse> :
-    IPipeRequestHandler<
-        TRequestIn,
-        TRequestOut,
-        TResponse,
-        TResponse
-    >,
-    ILogSubject
+internal class MappingSinglePipeHandler<TRequestIn, TRequestOut, TResponse>
+    : IPipeRequestHandler<TRequestIn, TRequestOut, TResponse, TResponse>,
+        ILogSubject
     where TRequestIn : IRequest<TRequestOut>
 {
     public ILogger Logger { get; }
     private readonly IMapper _mapper;
 
-    public MappingSinglePipeHandler(
-        IMapper mapper,
-        ILogger logger
-    )
+    public MappingSinglePipeHandler(IMapper mapper, ILogger logger)
     {
         _mapper = mapper;
         Logger = logger;

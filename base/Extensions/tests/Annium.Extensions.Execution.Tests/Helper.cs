@@ -6,9 +6,11 @@ namespace Annium.Extensions.Execution.Tests;
 internal static class Helper
 {
     public static Task AsyncLongWork() => AsyncWork(200);
+
     public static Task AsyncFastWork() => AsyncWork(20);
 
     public static void SyncLongWork() => SyncWork(400);
+
     public static void SyncFastWork() => SyncWork(40);
 
     private static async Task AsyncWork(int iterations)

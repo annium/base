@@ -46,13 +46,11 @@ internal class ArgumentProcessor : IArgumentProcessor
 
                 i++;
             }
-
             else if (IsFlag(value, next))
                 if (flags.Contains(name))
                     throw new Exception($"Same flag '{value}' is used twice");
                 else
                     flags.Add(name);
-
             else
                 throw new Exception($"Can't process value '{value}', followed by '{next}'");
         }
@@ -61,16 +59,12 @@ internal class ArgumentProcessor : IArgumentProcessor
             positions,
             flags,
             options,
-            multiOptions.ToDictionary(
-                e => e.Key,
-                e => e.Value.ToArray() as IReadOnlyCollection<string>
-            ),
+            multiOptions.ToDictionary(e => e.Key, e => e.Value.ToArray() as IReadOnlyCollection<string>),
             raw
         );
     }
 
-    private bool IsPosition(string value) =>
-        !IsOptionLike(value);
+    private bool IsPosition(string value) => !IsOptionLike(value);
 
     private bool IsOption(string value, string next) =>
         IsOptionLike(value) && !string.IsNullOrEmpty(next) && !IsOptionLike(next);
@@ -78,9 +72,7 @@ internal class ArgumentProcessor : IArgumentProcessor
     private bool IsFlag(string value, string next) =>
         IsOptionLike(value) && (string.IsNullOrEmpty(next) || IsOptionLike(next));
 
-    private bool IsRawDelimeter(string value) =>
-        value.All(c => c == Constants.OptionSign);
+    private bool IsRawDelimeter(string value) => value.All(c => c == Constants.OptionSign);
 
-    private bool IsOptionLike(string value) =>
-        value.StartsWith(Constants.OptionSign);
+    private bool IsOptionLike(string value) => value.StartsWith(Constants.OptionSign);
 }

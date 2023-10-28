@@ -38,7 +38,8 @@ public static class NamespaceExtensions
         return Namespace.New(ns.Concat(target).ToArray());
     }
 
-    public static string ToPath(this Namespace ns, string basePath) => Path.Combine(basePath, Path.Combine(ns.ToArray()));
+    public static string ToPath(this Namespace ns, string basePath) =>
+        Path.Combine(basePath, Path.Combine(ns.ToArray()));
 
     internal static T EnsureValidNamespace<T>(this T ns)
         where T : IEnumerable<string>

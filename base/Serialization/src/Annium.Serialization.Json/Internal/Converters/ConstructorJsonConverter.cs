@@ -27,11 +27,7 @@ internal class ConstructorJsonConverter<T> : JsonConverter<T>
         _properties = properties;
     }
 
-    public override T Read(
-        ref Utf8JsonReader reader,
-        Type typeToConvert,
-        JsonSerializerOptions options
-    )
+    public override T Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         using var doc = JsonDocument.ParseValue(ref reader);
         var root = doc.RootElement;
@@ -57,16 +53,16 @@ internal class ConstructorJsonConverter<T> : JsonConverter<T>
             }
 
             // try find property
-            var property = _properties.SingleOrDefault(x => x.Name.Equals(prop.Name, StringComparison.OrdinalIgnoreCase));
+            var property = _properties.SingleOrDefault(
+                x => x.Name.Equals(prop.Name, StringComparison.OrdinalIgnoreCase)
+            );
             if (property is null)
                 continue;
 
             properties[property] = prop.Value.Deserialize(property.PropertyType, options);
         }
 
-        var args = parameters
-            .Select((x, i) => x ?? _parameters[i].Type.DefaultValue())
-            .ToArray();
+        var args = parameters.Select((x, i) => x ?? _parameters[i].Type.DefaultValue()).ToArray();
         var result = _constructor.Invoke(args);
         foreach (var (property, val) in properties)
             property.SetValue(result, val);
@@ -74,11 +70,7 @@ internal class ConstructorJsonConverter<T> : JsonConverter<T>
         return (T)result;
     }
 
-    public override void Write(
-        Utf8JsonWriter writer,
-        T value,
-        JsonSerializerOptions options
-    )
+    public override void Write(Utf8JsonWriter writer, T value, JsonSerializerOptions options)
     {
         JsonSerializer.Serialize(writer, value, options.Clone().RemoveConverter<ConstructorJsonConverterFactory>());
     }

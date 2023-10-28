@@ -11,9 +11,8 @@ namespace Annium.Extensions.Reactive.Tests.Operators;
 
 public class WhenCompletedTest : TestBase
 {
-    public WhenCompletedTest(ITestOutputHelper outputHelper) : base(outputHelper)
-    {
-    }
+    public WhenCompletedTest(ITestOutputHelper outputHelper)
+        : base(outputHelper) { }
 
     [Fact]
     public async Task SubscribeAsync_OnErrorWorksCorrectly()

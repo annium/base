@@ -10,15 +10,18 @@ public static class Mapper
     private static readonly ConcurrentDictionary<Assembly, IMapper> Mappers = new();
 
     public static IMapper GetFor(Assembly assembly) =>
-        Mappers.GetOrAdd(assembly, x =>
-        {
-            var container = new ServiceContainer();
-            container.AddRuntime(x);
-            container.AddMapper(false);
-            container.Add(VoidLogger.Instance).AsSelf().Singleton();
+        Mappers.GetOrAdd(
+            assembly,
+            x =>
+            {
+                var container = new ServiceContainer();
+                container.AddRuntime(x);
+                container.AddMapper(false);
+                container.Add(VoidLogger.Instance).AsSelf().Singleton();
 
-            var provider = container.BuildServiceProvider();
+                var provider = container.BuildServiceProvider();
 
-            return provider.Resolve<IMapper>();
-        });
+                return provider.Resolve<IMapper>();
+            }
+        );
 }

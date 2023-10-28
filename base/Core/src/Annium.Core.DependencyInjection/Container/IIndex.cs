@@ -5,6 +5,4 @@ namespace Annium.Core.DependencyInjection;
 
 public interface IIndex<TKey, TValue> : IReadOnlyDictionary<TKey, TValue>
     where TKey : notnull
-    where TValue : notnull
-{
-}
+    where TValue : notnull { }

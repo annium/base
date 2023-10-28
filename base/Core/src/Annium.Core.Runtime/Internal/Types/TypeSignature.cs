@@ -6,7 +6,9 @@ namespace Annium.Core.Runtime.Internal.Types;
 
 internal sealed class TypeSignature : IEquatable<TypeSignature>
 {
-    public static TypeSignature Create(object instance) => Create(instance.GetType() ?? throw new ArgumentNullException(nameof(instance)));
+    public static TypeSignature Create(object instance) =>
+        Create(instance.GetType() ?? throw new ArgumentNullException(nameof(instance)));
+
     public static TypeSignature Create(Type type) => Create(type.GetProperties().Select(x => x.Name));
 
     public static TypeSignature Create(params string[] signature) => Create(signature.AsEnumerable());

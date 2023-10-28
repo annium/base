@@ -171,39 +171,28 @@ public class ResolveGenericArgumentsByImplementationExtensionParameterTests
             .IsEqual(new[] { typeof(IEquatable<string>) });
     }
 
-    private class RecurringDerived : RecurringBase<RecurringDerived>
-    {
-    }
+    private class RecurringDerived : RecurringBase<RecurringDerived> { }
 
-    private class RecurringBase<T> where T : RecurringBase<T>
-    {
-    }
+    private class RecurringBase<T>
+        where T : RecurringBase<T> { }
 
-    private interface IEquatableConstraint<T> where T : IEquatable<T>
-    {
-    }
+    private interface IEquatableConstraint<T>
+        where T : IEquatable<T> { }
 
-    private interface IClassConstraint<T> where T : class
-    {
-    }
+    private interface IClassConstraint<T>
+        where T : class { }
 
-    private interface IStructConstraint<T> where T : struct
-    {
-    }
+    private interface IStructConstraint<T>
+        where T : struct { }
 
-    private interface INewConstraint<T> where T : new()
-    {
-    }
+    private interface INewConstraint<T>
+        where T : new() { }
 
-    private interface IClassBaseConstraint<T> where T : ClassBase
-    {
-    }
+    private interface IClassBaseConstraint<T>
+        where T : ClassBase { }
 
-    private interface IEnumerableConstraint<T> where T : IEnumerable
-    {
-    }
+    private interface IEnumerableConstraint<T>
+        where T : IEnumerable { }
 
-    private class ClassBase
-    {
-    }
+    private class ClassBase { }
 }

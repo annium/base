@@ -70,7 +70,9 @@ public static class TaskExtensions
         return result.Data;
     }
 
-    public static async Task<IReadOnlyCollection<TD>> GetData<TS, TD>(this Task<IStatusResult<TS, IEnumerable<TD>>> task)
+    public static async Task<IReadOnlyCollection<TD>> GetData<TS, TD>(
+        this Task<IStatusResult<TS, IEnumerable<TD>>> task
+    )
     {
         var result = await task;
 

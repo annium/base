@@ -10,9 +10,7 @@ internal abstract class ExceptionPipeHandlerBase<TRequest, TResponse> : ILogSubj
 {
     public ILogger Logger { get; }
 
-    protected ExceptionPipeHandlerBase(
-        ILogger logger
-    )
+    protected ExceptionPipeHandlerBase(ILogger logger)
     {
         Logger = logger;
     }

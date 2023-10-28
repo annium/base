@@ -10,7 +10,8 @@ namespace Annium.Core.Mapper.Tests;
 
 public class ProfilesTest : TestBase
 {
-    public ProfilesTest(ITestOutputHelper outputHelper) : base(outputHelper)
+    public ProfilesTest(ITestOutputHelper outputHelper)
+        : base(outputHelper)
     {
         Register(c => c.AddMapper(autoload: false).AddProfile(ConfigureProfile));
     }
@@ -22,7 +23,11 @@ public class ProfilesTest : TestBase
         var mapper = Get<IMapper>();
         var date = new DateTime(2000, 10, 7).ToUniversalTime();
         var instant = Instant.FromDateTimeUtc(new DateTime(2002, 6, 17).ToUniversalTime());
-        var value = new Payload[] { new ImagePayload("img", date), new LinkPayload { Link = "lnk", Created = instant } };
+        var value = new Payload[]
+        {
+            new ImagePayload("img", date),
+            new LinkPayload { Link = "lnk", Created = instant }
+        };
 
         // act
         var result = mapper.Map<List<Model>>(value);
@@ -41,9 +46,7 @@ public class ProfilesTest : TestBase
         p.Map<Instant, DateTime>(i => i.ToDateTimeUtc());
     }
 
-    private abstract class Payload
-    {
-    }
+    private abstract class Payload { }
 
     private class ImagePayload : Payload
     {
@@ -65,9 +68,7 @@ public class ProfilesTest : TestBase
         public Instant Created { get; set; }
     }
 
-    private abstract class Model
-    {
-    }
+    private abstract class Model { }
 
     private class ImageModel : Model
     {

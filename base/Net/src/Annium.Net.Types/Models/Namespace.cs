@@ -10,6 +10,7 @@ public sealed record Namespace : IReadOnlyList<string>
     #region static
 
     public static Namespace New(IEnumerable<string> ns) => new(ns.ToArray().EnsureValidNamespace());
+
     public static Namespace New(IReadOnlyList<string> ns) => new(ns.EnsureValidNamespace());
 
     #endregion
@@ -26,14 +27,17 @@ public sealed record Namespace : IReadOnlyList<string>
     }
 
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
     public IEnumerator<string> GetEnumerator() => _parts.GetEnumerator();
 
     public override string ToString() => _parts.ToNamespaceString();
 
     public bool Equals(Namespace? other)
     {
-        if (ReferenceEquals(null, other)) return false;
-        if (ReferenceEquals(this, other)) return true;
+        if (ReferenceEquals(null, other))
+            return false;
+        if (ReferenceEquals(this, other))
+            return true;
         return _parts.SequenceEqual(other._parts);
     }
 
@@ -44,6 +48,7 @@ public sealed record Namespace : IReadOnlyList<string>
     #region operators
 
     public static implicit operator Namespace(string value) => value.ToNamespace();
+
     public static implicit operator string(Namespace value) => value.ToString();
 
     #endregion

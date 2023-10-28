@@ -18,7 +18,8 @@ public static class IsDerivedFromExtension
         }
 
         if (target.IsClass)
-            return type.GetInheritanceChain(self, true).Any(x => x.IsGenericType && x.GetGenericTypeDefinition() == target);
+            return type.GetInheritanceChain(self, true)
+                .Any(x => x.IsGenericType && x.GetGenericTypeDefinition() == target);
 
         if (target.IsInterface)
         {

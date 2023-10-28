@@ -7,7 +7,8 @@ namespace Annium.Core.Mapper.Tests;
 
 public class BaseTest : TestBase
 {
-    public BaseTest(ITestOutputHelper outputHelper) : base(outputHelper)
+    public BaseTest(ITestOutputHelper outputHelper)
+        : base(outputHelper)
     {
         Register(c => c.AddMapper(autoload: false));
     }

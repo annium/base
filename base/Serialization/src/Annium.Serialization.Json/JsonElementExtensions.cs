@@ -13,9 +13,14 @@ public static class JsonElementExtensions
         return value is null ? default : (T)value;
     }
 
-    public static object? Deserialize(this JsonDocument document, Type valueType, JsonSerializerOptions? options = default)
+    public static object? Deserialize(
+        this JsonDocument document,
+        Type valueType,
+        JsonSerializerOptions? options = default
+    )
     {
-        if (document is null) throw new ArgumentNullException(nameof(document));
+        if (document is null)
+            throw new ArgumentNullException(nameof(document));
 
         return document.RootElement.Deserialize(valueType, options);
     }
@@ -27,7 +32,11 @@ public static class JsonElementExtensions
         return value is null ? default : (T)value;
     }
 
-    public static object? Deserialize(this JsonElement element, Type valueType, JsonSerializerOptions? options = default)
+    public static object? Deserialize(
+        this JsonElement element,
+        Type valueType,
+        JsonSerializerOptions? options = default
+    )
     {
         var bufferWriter = new ArrayBufferWriter<byte>();
         using var writer = new Utf8JsonWriter(bufferWriter);

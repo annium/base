@@ -11,7 +11,8 @@ using Annium.Reflection;
 
 namespace Annium.Extensions.Composition;
 
-public abstract class Composer<TValue> : ICompositionContainer<TValue> where TValue : class
+public abstract class Composer<TValue> : ICompositionContainer<TValue>
+    where TValue : class
 {
     public IEnumerable<PropertyInfo> Fields => _rules.Keys;
 
@@ -24,8 +25,9 @@ public abstract class Composer<TValue> : ICompositionContainer<TValue> where TVa
     )
     {
         var target = TypeHelper.ResolveProperty(targetAccessor);
-        var targetSetter = target.GetSetMethod(true) ??
-            throw new ArgumentException("Target property has no setter", nameof(targetAccessor));
+        var targetSetter =
+            target.GetSetMethod(true)
+            ?? throw new ArgumentException("Target property has no setter", nameof(targetAccessor));
 
         var rule = new RuleContainer<TValue, TField>(targetSetter, allowDefault);
 

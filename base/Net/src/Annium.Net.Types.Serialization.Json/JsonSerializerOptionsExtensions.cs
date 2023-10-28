@@ -7,9 +7,7 @@ namespace Annium.Core.DependencyInjection;
 
 public static class JsonSerializerOptionsExtensions
 {
-    public static JsonSerializerOptions ConfigureForNetTypes(
-        this JsonSerializerOptions options
-    )
+    public static JsonSerializerOptions ConfigureForNetTypes(this JsonSerializerOptions options)
     {
         options.Converters.Insert(0, new NamespaceJsonConverter());
         return options;

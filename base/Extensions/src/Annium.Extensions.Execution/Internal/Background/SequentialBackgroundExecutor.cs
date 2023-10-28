@@ -7,11 +7,8 @@ namespace Annium.Extensions.Execution.Internal.Background;
 // ReSharper disable once UnusedTypeParameter
 internal class SequentialBackgroundExecutor<TSource> : BackgroundExecutorBase
 {
-    public SequentialBackgroundExecutor(
-        ILogger logger
-    ) : base(logger)
-    {
-    }
+    public SequentialBackgroundExecutor(ILogger logger)
+        : base(logger) { }
 
     protected override async Task RunTask(Delegate task)
     {

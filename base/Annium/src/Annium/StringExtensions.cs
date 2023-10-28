@@ -40,8 +40,7 @@ public static class StringExtensions
     {
         return Compound(value, PascalCaseInternal);
 
-        static string PascalCaseInternal(string result, string word) =>
-            result + word.ToLowerInvariant().UpperFirst();
+        static string PascalCaseInternal(string result, string word) => result + word.ToLowerInvariant().UpperFirst();
     }
 
     public static string CamelCase(this string value)
@@ -49,7 +48,8 @@ public static class StringExtensions
         return Compound(value, CamelCaseInternal);
 
         static string CamelCaseInternal(string result, string word) =>
-            result + (result == string.Empty ? word.ToLowerInvariant().LowerFirst() : word.ToLowerInvariant().UpperFirst());
+            result
+            + (result == string.Empty ? word.ToLowerInvariant().LowerFirst() : word.ToLowerInvariant().UpperFirst());
     }
 
     public static string KebabCase(this string value)
@@ -70,17 +70,17 @@ public static class StringExtensions
 
     public static string Repeat(this string value, int count)
     {
-        if (string.IsNullOrEmpty(value) || count <= 0) return value;
+        if (string.IsNullOrEmpty(value) || count <= 0)
+            return value;
 
-        return new StringBuilder(value.Length * count)
-            .AppendJoin(value, new string[count + 1])
-            .ToString();
+        return new StringBuilder(value.Length * count).AppendJoin(value, new string[count + 1]).ToString();
     }
 
     public static IEnumerable<string> ToWords(this string value)
     {
         value = Preprocess(value);
-        if (string.IsNullOrEmpty(value)) yield break;
+        if (string.IsNullOrEmpty(value))
+            yield break;
 
         var pos = Symbol.Other;
         var from = 0;
@@ -222,9 +222,12 @@ public static class StringExtensions
 
     private static Symbol GetSymbol(char c)
     {
-        if (char.IsUpper(c)) return Symbol.Upper;
-        if (char.IsLower(c)) return Symbol.Lower;
-        if (char.IsDigit(c)) return Symbol.Digit;
+        if (char.IsUpper(c))
+            return Symbol.Upper;
+        if (char.IsLower(c))
+            return Symbol.Lower;
+        if (char.IsDigit(c))
+            return Symbol.Digit;
 
         return Symbol.Other;
     }

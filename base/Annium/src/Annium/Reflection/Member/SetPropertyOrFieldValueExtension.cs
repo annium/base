@@ -15,10 +15,8 @@ public static class SetPropertyOrFieldValueExtension
                 throw new InvalidOperationException($"property {member} is not writable");
             setter.Invoke(target, new[] { value });
         }
-
         else if (member is FieldInfo field)
             field.SetValue(target, value);
-
         else
             throw new InvalidOperationException($"{member} is neither readable property nor field");
     }

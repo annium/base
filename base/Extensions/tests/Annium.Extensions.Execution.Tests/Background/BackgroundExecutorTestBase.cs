@@ -14,7 +14,8 @@ public abstract class BackgroundExecutorTestBase : TestBase
 {
     private readonly IBackgroundExecutor _executor;
 
-    protected BackgroundExecutorTestBase(Func<ILogger, IBackgroundExecutor> getExecutor, ITestOutputHelper outputHelper) : base(outputHelper)
+    protected BackgroundExecutorTestBase(Func<ILogger, IBackgroundExecutor> getExecutor, ITestOutputHelper outputHelper)
+        : base(outputHelper)
     {
         _executor = getExecutor(Get<ILogger>());
     }
@@ -95,17 +96,22 @@ public abstract class BackgroundExecutorTestBase : TestBase
         // act
         // schedule batch of work
         this.Trace("schedule work");
-        Parallel.For(0, 10, i => _executor.Schedule(async () =>
-        {
-            await Task.Delay(10);
-            if (i % 5 == 0)
-            {
-                Interlocked.Increment(ref failures);
-                throw new Exception("Some failure");
-            }
+        Parallel.For(
+            0,
+            10,
+            i =>
+                _executor.Schedule(async () =>
+                {
+                    await Task.Delay(10);
+                    if (i % 5 == 0)
+                    {
+                        Interlocked.Increment(ref failures);
+                        throw new Exception("Some failure");
+                    }
 
-            Interlocked.Increment(ref successes);
-        }));
+                    Interlocked.Increment(ref successes);
+                })
+        );
 
         this.Trace("assert no events registered");
         successes.Is(0);
@@ -117,19 +123,24 @@ public abstract class BackgroundExecutorTestBase : TestBase
 
         // schedule another batch of work
         this.Trace("schedule work");
-        Parallel.For(0, 10, i => _executor.Schedule(async () =>
-        {
-            await Task.Delay(10);
-            if (i % 5 == 0)
-            {
-                this.Trace("add failure");
-                Interlocked.Increment(ref failures);
-                throw new Exception("Some failure");
-            }
+        Parallel.For(
+            0,
+            10,
+            i =>
+                _executor.Schedule(async () =>
+                {
+                    await Task.Delay(10);
+                    if (i % 5 == 0)
+                    {
+                        this.Trace("add failure");
+                        Interlocked.Increment(ref failures);
+                        throw new Exception("Some failure");
+                    }
 
-            this.Trace("add success");
-            Interlocked.Increment(ref successes);
-        }));
+                    this.Trace("add success");
+                    Interlocked.Increment(ref successes);
+                })
+        );
 
         // assert
         this.Trace("ensure executor is available");

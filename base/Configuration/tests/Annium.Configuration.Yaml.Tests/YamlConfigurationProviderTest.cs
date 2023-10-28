@@ -13,7 +13,8 @@ namespace Annium.Configuration.Yaml.Tests;
 
 public class YamlConfigurationProviderTest : TestBase
 {
-    public YamlConfigurationProviderTest(ITestOutputHelper outputHelper) : base(outputHelper)
+    public YamlConfigurationProviderTest(ITestOutputHelper outputHelper)
+        : base(outputHelper)
     {
         RegisterMapper();
     }
@@ -29,8 +30,18 @@ public class YamlConfigurationProviderTest : TestBase
             Nullable = 3,
             Array = new[] { 4, 7 },
             Matrix = new List<int[]> { new[] { 3, 2 }, new[] { 5, 4 } },
-            List = new List<Val> { new() { Plain = 8 }, new() { Array = new[] { 2m, 6m } } },
-            Dictionary = new Dictionary<string, Val> { { "demo", new Val { Plain = 14, Array = new[] { 3m, 15m } } } },
+            List = new List<Val>
+            {
+                new() { Plain = 8 },
+                new() { Array = new[] { 2m, 6m } }
+            },
+            Dictionary = new Dictionary<string, Val>
+            {
+                {
+                    "demo",
+                    new Val { Plain = 14, Array = new[] { 3m, 15m } }
+                }
+            },
             Nested = new Val { Plain = 4, Array = new[] { 4m, 13m } },
             Abstract = new ConfigTwo { Value = 10 },
         };

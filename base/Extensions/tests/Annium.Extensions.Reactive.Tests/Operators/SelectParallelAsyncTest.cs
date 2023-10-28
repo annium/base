@@ -12,9 +12,7 @@ namespace Annium.Extensions.Reactive.Tests.Operators;
 public class SelectParallelAsyncTest : TestBase
 {
     public SelectParallelAsyncTest(ITestOutputHelper outputHelper)
-        : base(outputHelper)
-    {
-    }
+        : base(outputHelper) { }
 
     [Fact]
     public async Task SelectParallelAsync_WorksCorrectly()
@@ -22,7 +20,8 @@ public class SelectParallelAsyncTest : TestBase
         // arrange
         var log = new ConcurrentQueue<string>();
         var tcs = new TaskCompletionSource();
-        using var observable = Observable.Range(1, 5)
+        using var observable = Observable
+            .Range(1, 5)
             .SelectParallelAsync(async x =>
             {
                 log.Enqueue($"start: {x}");

@@ -44,10 +44,8 @@ public static class CancellationTokenExtensions
         // The compiler will generate stuff that hooks in
         // here. We hook those methods directly into the
         // cancellation token.
-        public void OnCompleted(Action continuation) =>
-            _cancellationToken.Register(continuation);
+        public void OnCompleted(Action continuation) => _cancellationToken.Register(continuation);
 
-        public void UnsafeOnCompleted(Action continuation) =>
-            _cancellationToken.Register(continuation);
+        public void UnsafeOnCompleted(Action continuation) => _cancellationToken.Register(continuation);
     }
 }

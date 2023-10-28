@@ -14,7 +14,10 @@ public static class LogRouteExtensions
         return route;
     }
 
-    public static LogRoute<TContext> UseInMemory<TContext>(this LogRoute<TContext> route, InMemoryLogHandler<TContext> handler)
+    public static LogRoute<TContext> UseInMemory<TContext>(
+        this LogRoute<TContext> route,
+        InMemoryLogHandler<TContext> handler
+    )
         where TContext : class, ILogContext
     {
         route.UseInstance(handler, new LogRouteConfiguration());

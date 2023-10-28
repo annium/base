@@ -27,8 +27,12 @@ public static class Wait
             await Task.Delay(pollDelay, CancellationToken.None).ConfigureAwait(true);
     }
 
-    public static Task WhileAsync(Func<bool> condition, int ms, int pollDelay) => WhileAsync(condition, new CancellationTokenSource(ms).Token, pollDelay);
-    public static Task WhileAsync(Func<bool> condition, int ms) => WhileAsync(condition, new CancellationTokenSource(ms).Token);
+    public static Task WhileAsync(Func<bool> condition, int ms, int pollDelay) =>
+        WhileAsync(condition, new CancellationTokenSource(ms).Token, pollDelay);
+
+    public static Task WhileAsync(Func<bool> condition, int ms) =>
+        WhileAsync(condition, new CancellationTokenSource(ms).Token);
+
     public static Task WhileAsync(Func<bool> condition) => WhileAsync(condition, CancellationToken.None);
 
     /// <summary>
@@ -52,7 +56,11 @@ public static class Wait
             await Task.Delay(pollDelay, CancellationToken.None).ConfigureAwait(true);
     }
 
-    public static Task UntilAsync(Func<bool> condition, int ms, int pollDelay) => UntilAsync(condition, new CancellationTokenSource(ms).Token, pollDelay);
-    public static Task UntilAsync(Func<bool> condition, int ms) => UntilAsync(condition, new CancellationTokenSource(ms).Token);
+    public static Task UntilAsync(Func<bool> condition, int ms, int pollDelay) =>
+        UntilAsync(condition, new CancellationTokenSource(ms).Token, pollDelay);
+
+    public static Task UntilAsync(Func<bool> condition, int ms) =>
+        UntilAsync(condition, new CancellationTokenSource(ms).Token);
+
     public static Task UntilAsync(Func<bool> condition) => UntilAsync(condition, CancellationToken.None);
 }

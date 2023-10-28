@@ -8,5 +8,6 @@ public static class CastExtensions
     public static T CastTo<T>(this object value) => (T)value;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static T? TryCastTo<T>(this object value) where T : class => value as T;
+    public static T? TryCastTo<T>(this object value)
+        where T : class => value as T;
 }

@@ -21,26 +21,29 @@ public class GenericDictionaryJsonConverterFactory : JsonConverterFactory
     {
         var (key, value) = GetKeyValueType(typeToConvert)!.Value;
 
-        return (JsonConverter)Activator.CreateInstance(typeof(GenericDictionaryJsonConverter<,>).MakeGenericType(key, value))!;
+        return (JsonConverter)
+            Activator.CreateInstance(typeof(GenericDictionaryJsonConverter<,>).MakeGenericType(key, value))!;
     }
 
     private static (Type, Type)? GetKeyValueType(Type type) => TypeResolutions.GetOrAdd(type, ResolveKeyValueType);
 
-    private static (Type, Type)? ResolveKeyValueType(Type type) => type
-        .GetInterfaces()
-        .Select<Type, (Type, Type)?>(x =>
-        {
-            if (x.IsGenericType &&
-                x.GetGenericTypeDefinition() == typeof(IEnumerable<>) &&
-                x.GenericTypeArguments[0].IsGenericType &&
-                x.GenericTypeArguments[0].GetGenericTypeDefinition() == typeof(KeyValuePair<,>))
+    private static (Type, Type)? ResolveKeyValueType(Type type) =>
+        type.GetInterfaces()
+            .Select<Type, (Type, Type)?>(x =>
             {
-                var args = x.GenericTypeArguments[0].GenericTypeArguments;
+                if (
+                    x.IsGenericType
+                    && x.GetGenericTypeDefinition() == typeof(IEnumerable<>)
+                    && x.GenericTypeArguments[0].IsGenericType
+                    && x.GenericTypeArguments[0].GetGenericTypeDefinition() == typeof(KeyValuePair<,>)
+                )
+                {
+                    var args = x.GenericTypeArguments[0].GenericTypeArguments;
 
-                return (args[0], args[1]);
-            }
+                    return (args[0], args[1]);
+                }
 
-            return null;
-        })
-        .SingleOrDefault(x => x is not null);
+                return null;
+            })
+            .SingleOrDefault(x => x is not null);
 }

@@ -13,7 +13,8 @@ public class ResolveGenericArgumentsByImplementationExtensionStructTests
     public void Param_TypeNotGeneric_ReturnEmptyTypes()
     {
         // assert
-        typeof(long).ResolveGenericArgumentsByImplementation(typeof(IEnumerable<>).GetGenericArguments()[0])
+        typeof(long)
+            .ResolveGenericArgumentsByImplementation(typeof(IEnumerable<>).GetGenericArguments()[0])
             .Is(System.Type.EmptyTypes);
     }
 
@@ -21,7 +22,8 @@ public class ResolveGenericArgumentsByImplementationExtensionStructTests
     public void Param_TypeGenericDefined_ReturnTypeArguments()
     {
         // assert
-        typeof(ValueTuple<int>).ResolveGenericArgumentsByImplementation(typeof(IEnumerable<>).GetGenericArguments()[0])
+        typeof(ValueTuple<int>)
+            .ResolveGenericArgumentsByImplementation(typeof(IEnumerable<>).GetGenericArguments()[0])
             .IsEqual(new[] { typeof(int) });
     }
 
@@ -57,8 +59,7 @@ public class ResolveGenericArgumentsByImplementationExtensionStructTests
     {
         // assert
         typeof(StructEnumerable)
-            .ResolveGenericArgumentsByImplementation(
-                typeof(IEnumerableConstraint<>).GetGenericArguments()[0])!
+            .ResolveGenericArgumentsByImplementation(typeof(IEnumerableConstraint<>).GetGenericArguments()[0])!
             .IsEqual(System.Type.EmptyTypes);
     }
 
@@ -66,7 +67,8 @@ public class ResolveGenericArgumentsByImplementationExtensionStructTests
     public void Struct_SameGenericDefinition_BuildArgs()
     {
         // assert
-        typeof(ValueTuple<,>).ResolveGenericArgumentsByImplementation(typeof(ValueTuple<int, bool>))!
+        typeof(ValueTuple<,>)
+            .ResolveGenericArgumentsByImplementation(typeof(ValueTuple<int, bool>))!
             .IsEqual(new[] { typeof(int), typeof(bool) });
     }
 
@@ -74,7 +76,8 @@ public class ResolveGenericArgumentsByImplementationExtensionStructTests
     public void Struct_DifferentGenericDefinition_ReturnsNull()
     {
         // assert
-        typeof(ValueTuple<,>).ResolveGenericArgumentsByImplementation(typeof(ValueTuple<int, string, bool>))
+        typeof(ValueTuple<,>)
+            .ResolveGenericArgumentsByImplementation(typeof(ValueTuple<int, string, bool>))
             .IsDefault();
     }
 
@@ -82,7 +85,8 @@ public class ResolveGenericArgumentsByImplementationExtensionStructTests
     public void Interface_TypeNotGeneric_ReturnEmptyTypes()
     {
         // assert
-        typeof(StructEnumerable).ResolveGenericArgumentsByImplementation(typeof(IEnumerable))
+        typeof(StructEnumerable)
+            .ResolveGenericArgumentsByImplementation(typeof(IEnumerable))
             .Is(System.Type.EmptyTypes);
     }
 
@@ -90,7 +94,8 @@ public class ResolveGenericArgumentsByImplementationExtensionStructTests
     public void Interface_TypeGenericDefined_ReturnTypeArguments()
     {
         // assert
-        typeof(BaseStruct<string, bool, int, IEnumerable<string>>).ResolveGenericArgumentsByImplementation(typeof(IBase<,,,>))
+        typeof(BaseStruct<string, bool, int, IEnumerable<string>>)
+            .ResolveGenericArgumentsByImplementation(typeof(IBase<,,,>))
             .IsEqual(new[] { typeof(string), typeof(bool), typeof(int), typeof(IEnumerable<string>) });
     }
 
@@ -98,34 +103,36 @@ public class ResolveGenericArgumentsByImplementationExtensionStructTests
     public void Interface_TargetNotGeneric_ReturnsTypeArguments()
     {
         // assert
-        typeof(List<>).ResolveGenericArgumentsByImplementation(typeof(IEnumerable)).IsEqual(new[]
-            { typeof(List<>).GetGenericArguments()[0] });
+        typeof(List<>)
+            .ResolveGenericArgumentsByImplementation(typeof(IEnumerable))
+            .IsEqual(new[] { typeof(List<>).GetGenericArguments()[0] });
     }
 
     [Fact]
     public void Interface_NoImplementation_ReturnsNull()
     {
         // assert
-        typeof(ValueTuple<,>).ResolveGenericArgumentsByImplementation(typeof(IEquatable<bool>))
-            .IsDefault();
+        typeof(ValueTuple<,>).ResolveGenericArgumentsByImplementation(typeof(IEquatable<bool>)).IsDefault();
     }
 
     [Fact]
     public void Interface_WithImplementation_BuildArgs()
     {
         // assert
-        typeof(BaseStruct<,,,>).ResolveGenericArgumentsByImplementation(
-                typeof(IBase<string, int, bool, IEnumerable<string>>))!
+        typeof(BaseStruct<,,,>)
+            .ResolveGenericArgumentsByImplementation(typeof(IBase<string, int, bool, IEnumerable<string>>))!
             .IsEqual(new[] { typeof(string), typeof(int), typeof(bool), typeof(IEnumerable<string>) });
     }
 
-    public struct BaseStruct<T1, T2, T3, T4> : IBase<T1, T2, T3, T4> where T1 : class where T2 : struct where T4 : IEnumerable<T1>
-    {
-    }
+    public struct BaseStruct<T1, T2, T3, T4> : IBase<T1, T2, T3, T4>
+        where T1 : class
+        where T2 : struct
+        where T4 : IEnumerable<T1> { }
 
-    private interface IBase<T1, T2, T3, T4> where T1 : class where T2 : struct where T4 : IEnumerable<T1>
-    {
-    }
+    private interface IBase<T1, T2, T3, T4>
+        where T1 : class
+        where T2 : struct
+        where T4 : IEnumerable<T1> { }
 
     private struct StructEnumerable : IEnumerable
     {
@@ -135,15 +142,12 @@ public class ResolveGenericArgumentsByImplementationExtensionStructTests
         }
     }
 
-    private interface IClassConstraint<T> where T : class
-    {
-    }
+    private interface IClassConstraint<T>
+        where T : class { }
 
-    private interface INewConstraint<T> where T : new()
-    {
-    }
+    private interface INewConstraint<T>
+        where T : new() { }
 
-    private interface IEnumerableConstraint<T> where T : IEnumerable
-    {
-    }
+    private interface IEnumerableConstraint<T>
+        where T : IEnumerable { }
 }

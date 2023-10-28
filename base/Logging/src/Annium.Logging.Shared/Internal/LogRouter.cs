@@ -7,10 +7,7 @@ internal class LogRouter<TContext>
 {
     private readonly IEnumerable<ILogScheduler<TContext>> _schedulers;
 
-    public LogRouter(
-        ILogSentry<TContext> sentry,
-        IReadOnlyCollection<ILogScheduler<TContext>> schedulers
-    )
+    public LogRouter(ILogSentry<TContext> sentry, IReadOnlyCollection<ILogScheduler<TContext>> schedulers)
     {
         sentry.SetHandler(Send);
         _schedulers = schedulers;

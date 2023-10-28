@@ -16,16 +16,22 @@ public class AsExtensionsTests : TestBase
     private readonly IHttpRequestFactory _httpRequestFactory;
     private readonly Serializer _serializer;
 
-    public AsExtensionsTests(ITestOutputHelper outputHelper) : base(outputHelper)
+    public AsExtensionsTests(ITestOutputHelper outputHelper)
+        : base(outputHelper)
     {
         Register(container =>
         {
-            container.AddSerializers().WithJson(opts =>
-            {
-                opts.Converters.Clear();
-                opts.Converters.Add(new DataConverter());
-                opts.Converters.Add(new ErrorConverter());
-            }, true);
+            container
+                .AddSerializers()
+                .WithJson(
+                    opts =>
+                    {
+                        opts.Converters.Clear();
+                        opts.Converters.Add(new DataConverter());
+                        opts.Converters.Add(new ErrorConverter());
+                    },
+                    true
+                );
             container.AddHttpRequestFactory(true);
         });
         _httpRequestFactory = Get<IHttpRequestFactory>();
@@ -39,11 +45,13 @@ public class AsExtensionsTests : TestBase
 
         // arrange
         var data = new Data(5);
-        await using var _ = RunServer(async (_, response) =>
-        {
-            await WriteJsonAsync(response, data);
-            response.Ok();
-        });
+        await using var _ = RunServer(
+            async (_, response) =>
+            {
+                await WriteJsonAsync(response, data);
+                response.Ok();
+            }
+        );
 
         // act
         this.Trace("send");
@@ -62,11 +70,13 @@ public class AsExtensionsTests : TestBase
         this.Trace("start");
 
         // arrange
-        await using var _ = RunServer(async (_, response) =>
-        {
-            await WriteInvalidJsonAsync(response);
-            response.Ok();
-        });
+        await using var _ = RunServer(
+            async (_, response) =>
+            {
+                await WriteInvalidJsonAsync(response);
+                response.Ok();
+            }
+        );
 
         // act
         this.Trace("send");
@@ -86,11 +96,13 @@ public class AsExtensionsTests : TestBase
         // arrange
         var data = new Data(5);
         var defaultData = new Data(7);
-        await using var _ = RunServer(async (_, response) =>
-        {
-            await WriteJsonAsync(response, data);
-            response.Ok();
-        });
+        await using var _ = RunServer(
+            async (_, response) =>
+            {
+                await WriteJsonAsync(response, data);
+                response.Ok();
+            }
+        );
 
         // act
         this.Trace("send");
@@ -110,11 +122,13 @@ public class AsExtensionsTests : TestBase
 
         // arrange
         var defaultData = new Data(7);
-        await using var _ = RunServer(async (_, response) =>
-        {
-            await WriteInvalidJsonAsync(response);
-            response.Ok();
-        });
+        await using var _ = RunServer(
+            async (_, response) =>
+            {
+                await WriteInvalidJsonAsync(response);
+                response.Ok();
+            }
+        );
 
         // act
         this.Trace("send");
@@ -134,11 +148,13 @@ public class AsExtensionsTests : TestBase
 
         // arrange
         var data = new Data(5);
-        await using var _ = RunServer(async (_, response) =>
-        {
-            await WriteJsonAsync(response, data);
-            response.Ok();
-        });
+        await using var _ = RunServer(
+            async (_, response) =>
+            {
+                await WriteJsonAsync(response, data);
+                response.Ok();
+            }
+        );
 
         // act
         this.Trace("send");
@@ -159,11 +175,13 @@ public class AsExtensionsTests : TestBase
 
         // arrange
         var error = new Error("failure");
-        await using var _ = RunServer(async (_, response) =>
-        {
-            await WriteJsonAsync(response, error);
-            response.Ok();
-        });
+        await using var _ = RunServer(
+            async (_, response) =>
+            {
+                await WriteJsonAsync(response, error);
+                response.Ok();
+            }
+        );
 
         // act
         this.Trace("send");
@@ -185,11 +203,13 @@ public class AsExtensionsTests : TestBase
         // arrange
         var data = new Data(5);
         var defaultData = new Data(7);
-        await using var _ = RunServer(async (_, response) =>
-        {
-            await WriteJsonAsync(response, data);
-            response.Ok();
-        });
+        await using var _ = RunServer(
+            async (_, response) =>
+            {
+                await WriteJsonAsync(response, data);
+                response.Ok();
+            }
+        );
 
         // act
         this.Trace("send");
@@ -211,11 +231,13 @@ public class AsExtensionsTests : TestBase
         // arrange
         var error = new Error("failure");
         var defaultData = new Data(7);
-        await using var _ = RunServer(async (_, response) =>
-        {
-            await WriteJsonAsync(response, error);
-            response.Ok();
-        });
+        await using var _ = RunServer(
+            async (_, response) =>
+            {
+                await WriteJsonAsync(response, error);
+                response.Ok();
+            }
+        );
 
         // act
         this.Trace("send");
@@ -236,11 +258,13 @@ public class AsExtensionsTests : TestBase
 
         // arrange
         var defaultData = new Data(7);
-        await using var _ = RunServer(async (_, response) =>
-        {
-            await WriteInvalidJsonAsync(response);
-            response.Ok();
-        });
+        await using var _ = RunServer(
+            async (_, response) =>
+            {
+                await WriteInvalidJsonAsync(response);
+                response.Ok();
+            }
+        );
 
         // act
         this.Trace("send");

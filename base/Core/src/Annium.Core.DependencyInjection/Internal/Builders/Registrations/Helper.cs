@@ -40,9 +40,14 @@ internal static class Helper
 {
     public static Type FactoryType(Type type) => typeof(Func<>).MakeGenericType(type);
 
-    public static Type KeyValueType(Type keyType, Type valueType) => typeof(KeyValue<,>).MakeGenericType(keyType, valueType);
+    public static Type KeyValueType(Type keyType, Type valueType) =>
+        typeof(KeyValue<,>).MakeGenericType(keyType, valueType);
 
-    public static IServiceDescriptor Factory(Type serviceType, Func<ParameterExpression, Expression> getBody, ServiceLifetime lifetime)
+    public static IServiceDescriptor Factory(
+        Type serviceType,
+        Func<ParameterExpression, Expression> getBody,
+        ServiceLifetime lifetime
+    )
     {
         var sp = Expression.Parameter(typeof(IServiceProvider));
         var body = getBody(sp);
@@ -52,11 +57,7 @@ internal static class Helper
     }
 
     public static Expression KeyValue(Type keyType, Type valueType, object key, Expression value) =>
-        Expression.New(
-            KeyValueConstructor(keyType, valueType),
-            Expression.Constant(key),
-            Expression.Lambda(value)
-        );
+        Expression.New(KeyValueConstructor(keyType, valueType), Expression.Constant(key), Expression.Lambda(value));
 
     public static Expression Resolve(ParameterExpression sp, Type type)
     {
@@ -67,10 +68,11 @@ internal static class Helper
 
     private static readonly MethodInfo GetRequiredServiceMethod = typeof(ServiceProviderServiceExtensions)
         .GetMethods()
-        .Single(x =>
-            x.Name == nameof(ServiceProviderServiceExtensions.GetRequiredService) &&
-            x.GetParameters().Length == 1 &&
-            x.GetParameters().Single().ParameterType == typeof(IServiceProvider)
+        .Single(
+            x =>
+                x.Name == nameof(ServiceProviderServiceExtensions.GetRequiredService)
+                && x.GetParameters().Length == 1
+                && x.GetParameters().Single().ParameterType == typeof(IServiceProvider)
         );
 
     private static MethodInfo GetRequiredService(Type type) => GetRequiredServiceMethod.MakeGenericMethod(type);

@@ -11,9 +11,7 @@ namespace Annium.Extensions.Execution.Tests.Background;
 public class ParallelBackgroundExecutorTests : BackgroundExecutorTestBase
 {
     public ParallelBackgroundExecutorTests(ITestOutputHelper outputHelper)
-        : base(Executor.Background.Parallel<ParallelBackgroundExecutorTests>, outputHelper)
-    {
-    }
+        : base(Executor.Background.Parallel<ParallelBackgroundExecutorTests>, outputHelper) { }
 
     [Fact]
     public async Task Works()

@@ -85,21 +85,16 @@ public class ComposerTest : TestBase
 
         // assert
         resultWithoutUser.IsOk.IsTrue();
-        personWithoutUser.IsShallowEqual(new Person
-        {
-            Name = nameof(Person.Name),
-        });
+        personWithoutUser.IsShallowEqual(new Person { Name = nameof(Person.Name), });
         resultWithUser.IsOk.IsTrue();
-        personWithUser.IsShallowEqual(new Person
-        {
-            Name = nameof(Person.Name),
-            UserId = personWithUser.UserId,
-            User = new User
+        personWithUser.IsShallowEqual(
+            new Person
             {
-                Email = nameof(User.Email),
-                Login = nameof(User.Login),
+                Name = nameof(Person.Name),
+                UserId = personWithUser.UserId,
+                User = new User { Email = nameof(User.Email), Login = nameof(User.Login), }
             }
-        });
+        );
     }
 
     private class User : IEmail, ILogin
@@ -146,7 +141,9 @@ public class ComposerTest : TestBase
         public PersonComposer()
         {
             Field(p => p.Name).LoadWith(ctx => ctx.Label);
-            Field(p => p.User).When(p => p.Root.UserId.HasValue).LoadWith(_ => new User { Email = nameof(User.Email), Login = nameof(User.Login) });
+            Field(p => p.User)
+                .When(p => p.Root.UserId.HasValue)
+                .LoadWith(_ => new User { Email = nameof(User.Email), Login = nameof(User.Login) });
         }
     }
 

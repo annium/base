@@ -48,17 +48,14 @@ public abstract class TestBase : ILogSubject
         _builder.UseServicePack(new DynamicServicePack().Setup(setup));
     }
 
-    protected IAsyncServiceScope CreateAsyncScope()
-        => _sp.Value.CreateAsyncScope();
+    protected IAsyncServiceScope CreateAsyncScope() => _sp.Value.CreateAsyncScope();
 
     protected T Get<T>()
-        where T : notnull
-        => _sp.Value.Resolve<T>();
+        where T : notnull => _sp.Value.Resolve<T>();
 
     protected T GetKeyed<TKey, T>(TKey key)
         where TKey : notnull
-        where T : notnull
-        => _sp.Value.ResolveKeyed<TKey, T>(key);
+        where T : notnull => _sp.Value.ResolveKeyed<TKey, T>(key);
 
     private void SharedRegister(IServiceContainer container)
     {

@@ -7,8 +7,7 @@ namespace Annium;
 
 public static class TypeRecordExtensions
 {
-    public static bool IsRecordLike(this Type type) =>
-        type.TryGetRecordElementTypes(out _, out _);
+    public static bool IsRecordLike(this Type type) => type.TryGetRecordElementTypes(out _, out _);
 
     public static (Type keyType, Type valueType) GetRecordElementTypes(this Type type)
     {
@@ -27,10 +26,11 @@ public static class TypeRecordExtensions
         keyType = null;
         valueType = null;
 
-        var arrayImplementation = type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IEnumerable<>)
-            ? type
-            : type.GetInterfaces()
-                .SingleOrDefault(x => x.IsGenericType && x.GetGenericTypeDefinition() == typeof(IEnumerable<>));
+        var arrayImplementation =
+            type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IEnumerable<>)
+                ? type
+                : type.GetInterfaces()
+                    .SingleOrDefault(x => x.IsGenericType && x.GetGenericTypeDefinition() == typeof(IEnumerable<>));
         if (arrayImplementation is null)
             return false;
 

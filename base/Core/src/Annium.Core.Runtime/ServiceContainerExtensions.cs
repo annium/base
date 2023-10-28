@@ -14,10 +14,7 @@ namespace Annium.Core.DependencyInjection;
 
 public static class ServiceContainerExtensions
 {
-    public static IServiceContainer AddRuntime(
-        this IServiceContainer container,
-        Assembly assembly
-    )
+    public static IServiceContainer AddRuntime(this IServiceContainer container, Assembly assembly)
     {
         container.Add(TypeManager.GetInstance(assembly, VoidLogger.Instance)).As<ITypeManager>().Singleton();
         container.Add<ITypeResolver, TypeResolver>().Singleton();
@@ -32,8 +29,10 @@ public static class ServiceContainerExtensions
         return container;
     }
 
-    public static ITimeConfigurationBuilder AddTime(this IServiceContainer container, ServiceLifetime serviceLifetime = ServiceLifetime.Singleton)
-        => new TimeConfigurationBuilder(container, serviceLifetime);
+    public static ITimeConfigurationBuilder AddTime(
+        this IServiceContainer container,
+        ServiceLifetime serviceLifetime = ServiceLifetime.Singleton
+    ) => new TimeConfigurationBuilder(container, serviceLifetime);
 
     public static ITypeManager GetTypeManager(this IServiceContainer container)
     {
@@ -49,9 +48,9 @@ public static class ServiceContainerExtensions
         throw new InvalidOperationException($"{nameof(ITypeManager)} must be registered with instance.");
     }
 
-    public static IBulkRegistrationBuilderBase AddAll(this IServiceContainer container)
-        => container.Add(container.GetTypeManager().Types.AsEnumerable());
+    public static IBulkRegistrationBuilderBase AddAll(this IServiceContainer container) =>
+        container.Add(container.GetTypeManager().Types.AsEnumerable());
 
-    public static IBulkRegistrationBuilderBase AddAll(this IServiceContainer container, Assembly assembly)
-        => container.Add(assembly.GetTypes().AsEnumerable());
+    public static IBulkRegistrationBuilderBase AddAll(this IServiceContainer container, Assembly assembly) =>
+        container.Add(assembly.GetTypes().AsEnumerable());
 }

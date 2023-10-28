@@ -9,7 +9,8 @@ namespace Annium.Configuration.Abstractions.Tests;
 
 public class ConfigurationBuilderTest : TestBase
 {
-    public ConfigurationBuilderTest(ITestOutputHelper outputHelper) : base(outputHelper)
+    public ConfigurationBuilderTest(ITestOutputHelper outputHelper)
+        : base(outputHelper)
     {
         RegisterMapper();
     }

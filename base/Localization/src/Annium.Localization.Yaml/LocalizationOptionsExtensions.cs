@@ -6,11 +6,12 @@ namespace Annium.Core.DependencyInjection;
 
 public static class LocalizationOptionsExtensions
 {
-    public static LocalizationOptions UseYamlStorage(
-        this LocalizationOptions options
-    )
+    public static LocalizationOptions UseYamlStorage(this LocalizationOptions options)
     {
-        options.SetLocaleStorage(container => { container.Add<ILocaleStorage, Storage>().Singleton(); });
+        options.SetLocaleStorage(container =>
+        {
+            container.Add<ILocaleStorage, Storage>().Singleton();
+        });
 
         return options;
     }

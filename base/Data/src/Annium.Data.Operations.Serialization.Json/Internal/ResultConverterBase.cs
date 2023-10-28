@@ -18,7 +18,8 @@ internal abstract class ResultConverterBase<T> : JsonConverter<T>
     )
     {
         IReadOnlyCollection<string> plainErrors = Array.Empty<string>();
-        IReadOnlyDictionary<string, IReadOnlyCollection<string>> labeledErrors = new Dictionary<string, IReadOnlyCollection<string>>();
+        IReadOnlyDictionary<string, IReadOnlyCollection<string>> labeledErrors =
+            new Dictionary<string, IReadOnlyCollection<string>>();
 
         var depth = reader.CurrentDepth + 1;
         while (reader.Read())
@@ -32,17 +33,16 @@ internal abstract class ResultConverterBase<T> : JsonConverter<T>
             if (reader.HasProperty(nameof(IResultBase.PlainErrors)))
                 plainErrors = JsonSerializer.Deserialize<IReadOnlyCollection<string>>(ref reader, options)!;
             else if (reader.HasProperty(nameof(IResultBase.LabeledErrors)))
-                labeledErrors = JsonSerializer.Deserialize<IReadOnlyDictionary<string, IReadOnlyCollection<string>>>(ref reader, options)!;
+                labeledErrors = JsonSerializer.Deserialize<IReadOnlyDictionary<string, IReadOnlyCollection<string>>>(
+                    ref reader,
+                    options
+                )!;
         }
 
         return (plainErrors, labeledErrors);
     }
 
-    protected void WriteErrors(
-        Utf8JsonWriter writer,
-        T value,
-        JsonSerializerOptions options
-    )
+    protected void WriteErrors(Utf8JsonWriter writer, T value, JsonSerializerOptions options)
     {
         writer.WritePropertyName(nameof(IResultBase.PlainErrors).CamelCase());
         JsonSerializer.Serialize(writer, value.PlainErrors, options);
@@ -74,7 +74,6 @@ internal abstract class ResultConverterBaseFactory : JsonConverterFactory
         if (type.IsInterface)
             return type;
 
-        return type.GetInterfaces()
-            .First(IsConvertibleInterface);
+        return type.GetInterfaces().First(IsConvertibleInterface);
     }
 }

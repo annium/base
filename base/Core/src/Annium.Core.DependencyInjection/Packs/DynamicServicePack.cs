@@ -27,12 +27,10 @@ public class DynamicServicePack : ServicePackBase
         return this;
     }
 
-    public override void Configure(IServiceContainer container)
-        => _configure(container);
+    public override void Configure(IServiceContainer container) => _configure(container);
 
-    public override void Register(IServiceContainer container, IServiceProvider provider)
-        => _register(container, provider);
+    public override void Register(IServiceContainer container, IServiceProvider provider) =>
+        _register(container, provider);
 
-    public override void Setup(IServiceProvider provider)
-        => _setup(provider);
+    public override void Setup(IServiceProvider provider) => _setup(provider);
 }

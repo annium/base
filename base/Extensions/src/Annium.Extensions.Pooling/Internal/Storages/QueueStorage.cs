@@ -8,7 +8,8 @@ internal class QueueStorage<T> : StorageBase<T>, IStorage<T>
     private readonly Queue<T> _freeItems;
     private readonly List<T> _usedItems;
 
-    public QueueStorage(int capacity) : base(capacity)
+    public QueueStorage(int capacity)
+        : base(capacity)
     {
         _freeItems = new Queue<T>(capacity);
         _usedItems = new List<T>(capacity);

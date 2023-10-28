@@ -13,7 +13,8 @@ public static class GetDefaultConstructorExtension
         type.TryGetDefaultConstructor(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 
     public static ConstructorInfo GetDefaultConstructor(this Type type, BindingFlags bindingFlags) =>
-        type.TryGetDefaultConstructor() ?? throw new ArgumentException($"{type.FriendlyName()} has no default constructor");
+        type.TryGetDefaultConstructor()
+        ?? throw new ArgumentException($"{type.FriendlyName()} has no default constructor");
 
     public static ConstructorInfo? TryGetDefaultConstructor(this Type type, BindingFlags bindingFlags)
     {

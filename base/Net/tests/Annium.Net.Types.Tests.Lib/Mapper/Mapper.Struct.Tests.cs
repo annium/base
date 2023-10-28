@@ -11,12 +11,8 @@ namespace Annium.Net.Types.Tests.Lib.Mapper;
 
 public abstract class MapperStructTestsBase : TestBase
 {
-    protected MapperStructTestsBase(
-        ITestProvider testProvider,
-        ITestOutputHelper outputHelper
-    ) : base(testProvider, outputHelper)
-    {
-    }
+    protected MapperStructTestsBase(ITestProvider testProvider, ITestOutputHelper outputHelper)
+        : base(testProvider, outputHelper) { }
 
     protected void Empty_Base(Type type)
     {
@@ -54,12 +50,9 @@ public abstract class MapperStructTestsBase : TestBase
         modelRef.Name.Is(nameof(Struct<object, object>));
         modelRef.Args.Has(2);
         var refArg1 = modelRef.Args.At(0);
-        refArg1
-            .As<BaseTypeRef>().Name.Is(BaseType.String);
+        refArg1.As<BaseTypeRef>().Name.Is(BaseType.String);
         var refArg2 = modelRef.Args.At(1);
-        refArg2
-            .As<ArrayRef>().Value
-            .As<BaseTypeRef>().Name.Is(BaseType.String);
+        refArg2.As<ArrayRef>().Value.As<BaseTypeRef>().Name.Is(BaseType.String);
 
         Models.Has(5);
         var structModel = Models.At(0).As<StructModel>();
@@ -70,62 +63,80 @@ public abstract class MapperStructTestsBase : TestBase
         structModel.Args.At(1).Is(new GenericParameterRef("T2"));
         structModel.Base.IsDefault();
         structModel.Interfaces.Has(2);
-        structModel.Interfaces.At(0).Is(new InterfaceRef(
-            typeof(IMulti<,>).GetNamespace().ToString(),
-            nameof(IMulti<object, object>),
-            new GenericParameterRef("T2"),
-            new GenericParameterRef("T1")
-        ));
-        structModel.Interfaces.At(1).Is(new InterfaceRef(
-            typeof(Struct<,>).GetNamespace().ToString(),
-            nameof(IUno<object>),
-            new StructRef(
-                typeof(Struct<,>).GetNamespace().ToString(),
-                nameof(Struct<object, object>),
-                new GenericParameterRef("T1"),
-                new GenericParameterRef("T2")
-            )
-        ));
-        structModel.Fields.Has(8);
-        structModel.Fields.At(0).Is(new FieldModel(
-            new BaseTypeRef(BaseType.String),
-            nameof(Struct<int, int>.Name)
-        ));
-        structModel.Fields.At(1).Is(new FieldModel(
-            new NullableRef(new BaseTypeRef(BaseType.String)),
-            nameof(Struct<int, int>.Comment)
-        ));
-        structModel.Fields.At(2).Is(new FieldModel(
-            new ArrayRef(new GenericParameterRef("T2")),
-            nameof(Struct<int, int>.Data)
-        ));
-        structModel.Fields.At(3).Is(new FieldModel(
-            new RecordRef(new BaseTypeRef(BaseType.String), new GenericParameterRef("T1")),
-            nameof(Struct<int, int>.Values)
-        ));
-        structModel.Fields.At(4).Is(new FieldModel(
-            new NullableRef(new BaseTypeRef(BaseType.Int)),
-            nameof(Struct<int, int>.Ttl)
-        ));
-        structModel.Fields.At(5).Is(new FieldModel(
-            new ArrayRef(
-                new StructRef(
-                    typeof(Struct<,>).GetNamespace().ToString(),
-                    nameof(Struct<object, object>),
-                    new GenericParameterRef("T1"),
-                    new GenericParameterRef("T2")
+        structModel.Interfaces
+            .At(0)
+            .Is(
+                new InterfaceRef(
+                    typeof(IMulti<,>).GetNamespace().ToString(),
+                    nameof(IMulti<object, object>),
+                    new GenericParameterRef("T2"),
+                    new GenericParameterRef("T1")
                 )
-            ),
-            nameof(Struct<int, int>.Items)
-        ));
-        structModel.Fields.At(6).Is(new FieldModel(
-            new NullableRef(new StructRef(typeof(EmptyStruct).GetNamespace().ToString(), nameof(EmptyStruct))),
-            nameof(Struct<int, int>.Option)
-        ));
-        structModel.Fields.At(7).Is(new FieldModel(
-            new ArrayRef(new StructRef(typeof(EmptyRecord).GetNamespace().ToString(), nameof(EmptyRecord))),
-            nameof(Struct<int, int>.Records)
-        ));
+            );
+        structModel.Interfaces
+            .At(1)
+            .Is(
+                new InterfaceRef(
+                    typeof(Struct<,>).GetNamespace().ToString(),
+                    nameof(IUno<object>),
+                    new StructRef(
+                        typeof(Struct<,>).GetNamespace().ToString(),
+                        nameof(Struct<object, object>),
+                        new GenericParameterRef("T1"),
+                        new GenericParameterRef("T2")
+                    )
+                )
+            );
+        structModel.Fields.Has(8);
+        structModel.Fields.At(0).Is(new FieldModel(new BaseTypeRef(BaseType.String), nameof(Struct<int, int>.Name)));
+        structModel.Fields
+            .At(1)
+            .Is(new FieldModel(new NullableRef(new BaseTypeRef(BaseType.String)), nameof(Struct<int, int>.Comment)));
+        structModel.Fields
+            .At(2)
+            .Is(new FieldModel(new ArrayRef(new GenericParameterRef("T2")), nameof(Struct<int, int>.Data)));
+        structModel.Fields
+            .At(3)
+            .Is(
+                new FieldModel(
+                    new RecordRef(new BaseTypeRef(BaseType.String), new GenericParameterRef("T1")),
+                    nameof(Struct<int, int>.Values)
+                )
+            );
+        structModel.Fields
+            .At(4)
+            .Is(new FieldModel(new NullableRef(new BaseTypeRef(BaseType.Int)), nameof(Struct<int, int>.Ttl)));
+        structModel.Fields
+            .At(5)
+            .Is(
+                new FieldModel(
+                    new ArrayRef(
+                        new StructRef(
+                            typeof(Struct<,>).GetNamespace().ToString(),
+                            nameof(Struct<object, object>),
+                            new GenericParameterRef("T1"),
+                            new GenericParameterRef("T2")
+                        )
+                    ),
+                    nameof(Struct<int, int>.Items)
+                )
+            );
+        structModel.Fields
+            .At(6)
+            .Is(
+                new FieldModel(
+                    new NullableRef(new StructRef(typeof(EmptyStruct).GetNamespace().ToString(), nameof(EmptyStruct))),
+                    nameof(Struct<int, int>.Option)
+                )
+            );
+        structModel.Fields
+            .At(7)
+            .Is(
+                new FieldModel(
+                    new ArrayRef(new StructRef(typeof(EmptyRecord).GetNamespace().ToString(), nameof(EmptyRecord))),
+                    nameof(Struct<int, int>.Records)
+                )
+            );
 
         var multi = Models.At(1).As<InterfaceModel>();
         multi.Namespace.Is(typeof(IMulti<,>).GetNamespace());
@@ -135,22 +146,21 @@ public abstract class MapperStructTestsBase : TestBase
         multi.Args.At(1).Is(new GenericParameterRef("T2"));
         multi.Interfaces.IsEmpty();
         multi.Fields.Has(4);
-        multi.Fields.At(0).Is(new FieldModel(
-            new BaseTypeRef(BaseType.String),
-            nameof(IMulti<int, int>.Name)
-        ));
-        multi.Fields.At(1).Is(new FieldModel(
-            new NullableRef(new BaseTypeRef(BaseType.String)),
-            nameof(IMulti<int, int>.Comment)
-        ));
-        multi.Fields.At(2).Is(new FieldModel(
-            new ArrayRef(new GenericParameterRef("T1")),
-            nameof(IMulti<int, int>.Data)
-        ));
-        multi.Fields.At(3).Is(new FieldModel(
-            new RecordRef(new BaseTypeRef(BaseType.String), new GenericParameterRef("T2")),
-            nameof(IMulti<int, int>.Values)
-        ));
+        multi.Fields.At(0).Is(new FieldModel(new BaseTypeRef(BaseType.String), nameof(IMulti<int, int>.Name)));
+        multi.Fields
+            .At(1)
+            .Is(new FieldModel(new NullableRef(new BaseTypeRef(BaseType.String)), nameof(IMulti<int, int>.Comment)));
+        multi.Fields
+            .At(2)
+            .Is(new FieldModel(new ArrayRef(new GenericParameterRef("T1")), nameof(IMulti<int, int>.Data)));
+        multi.Fields
+            .At(3)
+            .Is(
+                new FieldModel(
+                    new RecordRef(new BaseTypeRef(BaseType.String), new GenericParameterRef("T2")),
+                    nameof(IMulti<int, int>.Values)
+                )
+            );
 
         var uno = Models.At(2).As<InterfaceModel>();
         uno.Namespace.Is(typeof(IUno<>).GetNamespace());
@@ -159,16 +169,8 @@ public abstract class MapperStructTestsBase : TestBase
         uno.Args.At(0).Is(new GenericParameterRef("T"));
         uno.Interfaces.IsEmpty();
         uno.Fields.Has(2);
-        uno.Fields.At(0).Is(new FieldModel(
-            new NullableRef(new BaseTypeRef(BaseType.Int)),
-            nameof(IUno<int>.Ttl)
-        ));
-        uno.Fields.At(1).Is(new FieldModel(
-            new ArrayRef(
-                new GenericParameterRef("T")
-            ),
-            nameof(IUno<int>.Items)
-        ));
+        uno.Fields.At(0).Is(new FieldModel(new NullableRef(new BaseTypeRef(BaseType.Int)), nameof(IUno<int>.Ttl)));
+        uno.Fields.At(1).Is(new FieldModel(new ArrayRef(new GenericParameterRef("T")), nameof(IUno<int>.Items)));
 
         var emptyStruct = Models.At(3).As<StructModel>();
         emptyStruct.Namespace.Is(typeof(EmptyStruct).GetNamespace());
@@ -186,9 +188,7 @@ public abstract class MapperStructTestsBase : TestBase
     }
 }
 
-file struct EmptyStruct
-{
-}
+file struct EmptyStruct { }
 
 file record EmptyRecord;
 

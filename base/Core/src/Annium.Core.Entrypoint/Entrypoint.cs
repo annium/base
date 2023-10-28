@@ -12,8 +12,9 @@ public class Entrypoint
 
     private bool _isAlreadyBuilt;
 
-    private readonly IServiceProviderBuilder _serviceProviderBuilder =
-        new ServiceProviderFactory().CreateBuilder(new ServiceCollection());
+    private readonly IServiceProviderBuilder _serviceProviderBuilder = new ServiceProviderFactory().CreateBuilder(
+        new ServiceCollection()
+    );
 
     public Entrypoint UseServicePack<TServicePack>()
         where TServicePack : ServicePackBase, new()

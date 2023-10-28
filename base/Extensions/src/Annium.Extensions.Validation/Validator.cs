@@ -15,9 +15,7 @@ public abstract class Validator<TValue> : IValidationContainer<TValue>
     private readonly IDictionary<PropertyInfo, IRuleContainer<TValue>> _rules =
         new Dictionary<PropertyInfo, IRuleContainer<TValue>>();
 
-    protected IRuleBuilder<TValue, TField> Field<TField>(
-        Expression<Func<TValue, TField>> accessor
-    )
+    protected IRuleBuilder<TValue, TField> Field<TField>(Expression<Func<TValue, TField>> accessor)
     {
         var property = TypeHelper.ResolveProperty(accessor);
         var rule = new RuleContainer<TValue, TField>(accessor.Compile());

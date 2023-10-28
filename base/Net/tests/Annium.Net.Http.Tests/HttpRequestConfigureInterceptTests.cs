@@ -14,7 +14,8 @@ public class HttpRequestConfigureInterceptTests : TestBase
 {
     private readonly IHttpRequestFactory _httpRequestFactory;
 
-    public HttpRequestConfigureInterceptTests(ITestOutputHelper outputHelper) : base(outputHelper)
+    public HttpRequestConfigureInterceptTests(ITestOutputHelper outputHelper)
+        : base(outputHelper)
     {
         Register(container =>
         {
@@ -30,16 +31,19 @@ public class HttpRequestConfigureInterceptTests : TestBase
         this.Trace("start");
 
         // arrange
-        await using var _ = RunServer(async (request, response) =>
-        {
-            var data = Encoding.UTF8.GetBytes(request.Url.NotNull().Query);
-            await response.OutputStream.WriteAsync(data);
-            response.Ok();
-        });
+        await using var _ = RunServer(
+            async (request, response) =>
+            {
+                var data = Encoding.UTF8.GetBytes(request.Url.NotNull().Query);
+                await response.OutputStream.WriteAsync(data);
+                response.Ok();
+            }
+        );
 
         // act
         this.Trace("send");
-        var response = await _httpRequestFactory.New(ServerUri)
+        var response = await _httpRequestFactory
+            .New(ServerUri)
             .Get("/")
             .Configure(req => req.Param("x", "a"))
             .RunAsync();
@@ -62,15 +66,18 @@ public class HttpRequestConfigureInterceptTests : TestBase
         // arrange
         var message = "demo";
         var log = new List<string>();
-        await using var _ = RunServer(async (request, response) =>
-        {
-            await request.InputStream.CopyToAsync(response.OutputStream);
-            response.Ok();
-        });
+        await using var _ = RunServer(
+            async (request, response) =>
+            {
+                await request.InputStream.CopyToAsync(response.OutputStream);
+                response.Ok();
+            }
+        );
 
         // act
         this.Trace("send");
-        var response = await _httpRequestFactory.New(ServerUri)
+        var response = await _httpRequestFactory
+            .New(ServerUri)
             .Get("/")
             .Intercept(async next =>
             {
@@ -102,24 +109,29 @@ public class HttpRequestConfigureInterceptTests : TestBase
         // arrange
         var message = "demo";
         var log = new List<string>();
-        await using var _ = RunServer(async (request, response) =>
-        {
-            await request.InputStream.CopyToAsync(response.OutputStream);
-            response.Ok();
-        });
+        await using var _ = RunServer(
+            async (request, response) =>
+            {
+                await request.InputStream.CopyToAsync(response.OutputStream);
+                response.Ok();
+            }
+        );
 
         // act
         this.Trace("send");
-        var response = await _httpRequestFactory.New(ServerUri)
+        var response = await _httpRequestFactory
+            .New(ServerUri)
             .Get("/")
-            .Intercept(async (next, req) =>
-            {
-                log.Add($"before {req.Params["x"]}");
-                var response = await next();
-                log.Add($"after {req.Params["x"]}");
+            .Intercept(
+                async (next, req) =>
+                {
+                    log.Add($"before {req.Params["x"]}");
+                    var response = await next();
+                    log.Add($"after {req.Params["x"]}");
 
-                return response;
-            })
+                    return response;
+                }
+            )
             .Param("x", 1)
             .StringContent(message)
             .RunAsync();

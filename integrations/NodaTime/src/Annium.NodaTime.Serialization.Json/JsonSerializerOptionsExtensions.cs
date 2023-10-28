@@ -11,9 +11,7 @@ namespace Annium.Core.DependencyInjection;
 
 public static class JsonSerializerOptionsExtensions
 {
-    public static JsonSerializerOptions ConfigureForNodaTime(
-        this JsonSerializerOptions options
-    )
+    public static JsonSerializerOptions ConfigureForNodaTime(this JsonSerializerOptions options)
     {
         options.Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
         options.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
@@ -49,10 +47,7 @@ public static class JsonSerializerOptionsExtensions
         return options;
     }
 
-    private static void AddDefaultConverters(
-        IList<JsonConverter> converters,
-        IDateTimeZoneProvider provider
-    )
+    private static void AddDefaultConverters(IList<JsonConverter> converters, IDateTimeZoneProvider provider)
     {
         converters.Insert(0, Converters.InstantConverter);
         converters.Insert(0, Converters.IntervalConverter);

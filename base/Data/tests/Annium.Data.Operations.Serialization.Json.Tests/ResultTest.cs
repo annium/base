@@ -9,7 +9,8 @@ namespace Annium.Data.Operations.Serialization.Json.Tests;
 
 public class ResultTest : ResultTestBase
 {
-    public ResultTest(ITestOutputHelper outputHelper) : base(outputHelper)
+    public ResultTest(ITestOutputHelper outputHelper)
+        : base(outputHelper)
     {
         Register(container => container.AddSerializers().WithJson(opts => opts.ConfigureForOperations(), true));
     }

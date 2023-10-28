@@ -22,8 +22,11 @@ public static class SerializationConfigurationBuilderExtensions
         static MessagePackSerializerOptions Configure(IServiceProvider sp) =>
             MessagePackSerializerOptions.Standard.WithCompression(MessagePackCompression.Lz4BlockArray);
 
-        return builder
-            .Register<ReadOnlyMemory<byte>, ReadOnlyMemoryByteSerializer>(Constants.MediaType, isDefault, ResolveSerializer(builder.Key, Configure, CreateReadOnlyMemoryByte));
+        return builder.Register<ReadOnlyMemory<byte>, ReadOnlyMemoryByteSerializer>(
+            Constants.MediaType,
+            isDefault,
+            ResolveSerializer(builder.Key, Configure, CreateReadOnlyMemoryByte)
+        );
     }
 
     public static ISerializationConfigurationBuilder WithMessagePack(
@@ -34,8 +37,11 @@ public static class SerializationConfigurationBuilderExtensions
     {
         MessagePackSerializerOptions Configure(IServiceProvider sp) => configure();
 
-        return builder
-            .Register<ReadOnlyMemory<byte>, ReadOnlyMemoryByteSerializer>(Constants.MediaType, isDefault, ResolveSerializer(builder.Key, Configure, CreateReadOnlyMemoryByte));
+        return builder.Register<ReadOnlyMemory<byte>, ReadOnlyMemoryByteSerializer>(
+            Constants.MediaType,
+            isDefault,
+            ResolveSerializer(builder.Key, Configure, CreateReadOnlyMemoryByte)
+        );
     }
 
     public static ISerializationConfigurationBuilder WithMessagePack(
@@ -44,23 +50,29 @@ public static class SerializationConfigurationBuilderExtensions
         bool isDefault = false
     )
     {
-        return builder
-            .Register<ReadOnlyMemory<byte>, ReadOnlyMemoryByteSerializer>(Constants.MediaType, isDefault, ResolveSerializer(builder.Key, configure, CreateReadOnlyMemoryByte));
+        return builder.Register<ReadOnlyMemory<byte>, ReadOnlyMemoryByteSerializer>(
+            Constants.MediaType,
+            isDefault,
+            ResolveSerializer(builder.Key, configure, CreateReadOnlyMemoryByte)
+        );
     }
 
     private static Func<IServiceProvider, TSerializer> ResolveSerializer<TSerializer>(
         string key,
         ConfigureSerializer configure,
         Func<MessagePackSerializerOptions, TSerializer> factory
-    ) => sp =>
-    {
-        var optionsKey = new OptionsKey(SerializerKey.Create(key, Constants.MediaType), configure);
-        var options = Options.GetOrAdd(optionsKey, static (key, sp) => key.Configure(sp), sp);
+    ) =>
+        sp =>
+        {
+            var optionsKey = new OptionsKey(SerializerKey.Create(key, Constants.MediaType), configure);
+            var options = Options.GetOrAdd(optionsKey, static (key, sp) => key.Configure(sp), sp);
 
-        return factory(options);
-    };
+            return factory(options);
+        };
 
-    private static ReadOnlyMemoryByteSerializer CreateReadOnlyMemoryByte(MessagePackSerializerOptions opts) => new(opts);
+    private static ReadOnlyMemoryByteSerializer CreateReadOnlyMemoryByte(MessagePackSerializerOptions opts) =>
+        new(opts);
+
     //
 
     private record OptionsKey(SerializerKey SerializerKey, ConfigureSerializer Configure);

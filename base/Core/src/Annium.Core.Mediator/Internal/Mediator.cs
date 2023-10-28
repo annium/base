@@ -14,19 +14,13 @@ internal class Mediator : IMediator
     private readonly IDictionary<ValueTuple<Type, Type>, IReadOnlyList<ChainElement>> _chainCache =
         new Dictionary<ValueTuple<Type, Type>, IReadOnlyList<ChainElement>>();
 
-    public Mediator(
-        ChainBuilder chainBuilder,
-        IServiceProvider provider
-    )
+    public Mediator(ChainBuilder chainBuilder, IServiceProvider provider)
     {
         _chainBuilder = chainBuilder;
         _provider = provider;
     }
 
-    public async Task<TResponse> SendAsync<TResponse>(
-        object request,
-        CancellationToken ct = default
-    )
+    public async Task<TResponse> SendAsync<TResponse>(object request, CancellationToken ct = default)
     {
         // get execution chain with last item, being final one
         var chain = GetChain(request.GetType(), typeof(TResponse));

@@ -17,7 +17,11 @@ public class NodaIntervalConverterTest
         var startInstant = Instant.FromUtc(2012, 1, 2, 3, 4, 5) + Duration.FromMilliseconds(670);
         var endInstant = Instant.FromUtc(2013, 6, 7, 8, 9, 10) + Duration.FromNanoseconds(123456789);
         var interval = new Interval(startInstant, endInstant);
-        AssertConversions(interval, "{\"start\":\"2012-01-02T03:04:05.67Z\",\"end\":\"2013-06-07T08:09:10.123456789Z\"}", _converters);
+        AssertConversions(
+            interval,
+            "{\"start\":\"2012-01-02T03:04:05.67Z\",\"end\":\"2013-06-07T08:09:10.123456789Z\"}",
+            _converters
+        );
     }
 
     [Fact]

@@ -15,7 +15,8 @@ internal abstract class BackgroundExecutorBase : IBackgroundExecutor, ILogSubjec
     {
         get
         {
-            lock (_locker) return _state <= State.Started;
+            lock (_locker)
+                return _state <= State.Started;
         }
     }
 
@@ -31,12 +32,14 @@ internal abstract class BackgroundExecutorBase : IBackgroundExecutor, ILogSubjec
     protected BackgroundExecutorBase(ILogger logger)
     {
         Logger = logger;
-        var taskChannel = Channel.CreateUnbounded<Delegate>(new UnboundedChannelOptions
-        {
-            AllowSynchronousContinuations = true,
-            SingleWriter = false,
-            SingleReader = true
-        });
+        var taskChannel = Channel.CreateUnbounded<Delegate>(
+            new UnboundedChannelOptions
+            {
+                AllowSynchronousContinuations = true,
+                SingleWriter = false,
+                SingleReader = true
+            }
+        );
         _taskWriter = taskChannel.Writer;
         _taskReader = taskChannel.Reader;
     }
@@ -218,7 +221,6 @@ internal abstract class BackgroundExecutorBase : IBackgroundExecutor, ILogSubjec
         {
             if (!_taskReader.TryRead(out var task))
                 break;
-
 
             this.Trace("run task {id} ({num})", task.GetFullId(), Interlocked.Increment(ref _taskCounter));
             await RunTask(task);

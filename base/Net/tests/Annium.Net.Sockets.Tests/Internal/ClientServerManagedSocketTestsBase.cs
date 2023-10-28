@@ -16,9 +16,8 @@ public abstract class ClientServerManagedSocketTestsBase : TestBase, IAsyncLifet
     private IClientManagedSocket _clientSocket = default!;
     private readonly List<byte> _stream = new();
 
-    protected ClientServerManagedSocketTestsBase(ITestOutputHelper outputHelper) : base(outputHelper)
-    {
-    }
+    protected ClientServerManagedSocketTestsBase(ITestOutputHelper outputHelper)
+        : base(outputHelper) { }
 
     protected async Task Send_NotConnected_Base()
     {
@@ -98,17 +97,24 @@ public abstract class ClientServerManagedSocketTestsBase : TestBase, IAsyncLifet
         var serverTcs = new TaskCompletionSource();
 
         this.Trace("run server");
-        await using var _ = RunServer(async (serverSocket, _) =>
-        {
-            this.Trace("disconnect server socket");
-            await serverSocket.DisconnectAsync();
-
-            Task.Delay(50, CancellationToken.None).ContinueWith(_ =>
+        await using var _ = RunServer(
+            async (serverSocket, _) =>
             {
-                this.Trace("send signal to client");
-                serverTcs.SetResult();
-            }, CancellationToken.None).GetAwaiter();
-        });
+                this.Trace("disconnect server socket");
+                await serverSocket.DisconnectAsync();
+
+                Task.Delay(50, CancellationToken.None)
+                    .ContinueWith(
+                        _ =>
+                        {
+                            this.Trace("send signal to client");
+                            serverTcs.SetResult();
+                        },
+                        CancellationToken.None
+                    )
+                    .GetAwaiter();
+            }
+        );
 
         this.Trace("connect");
         await ConnectAsync();
@@ -137,26 +143,31 @@ public abstract class ClientServerManagedSocketTestsBase : TestBase, IAsyncLifet
         var serverTcs = new TaskCompletionSource();
 
         this.Trace("run server");
-        await using var _ = RunServer(async (serverSocket, _) =>
-        {
-            this.Trace("subscribe to messages");
-            serverSocket.OnReceived += x => serverSocket
-                .SendAsync(x.ToArray(), CancellationToken.None)
-                .GetAwaiter()
-                .GetResult();
-            this.Trace("server subscribed to messages");
-
-            Task.Delay(10, CancellationToken.None).ContinueWith(_ =>
+        await using var _ = RunServer(
+            async (serverSocket, _) =>
             {
-                this.Trace("send signal to client");
-                serverTcs.SetResult();
-            }, CancellationToken.None).GetAwaiter();
+                this.Trace("subscribe to messages");
+                serverSocket.OnReceived += x =>
+                    serverSocket.SendAsync(x.ToArray(), CancellationToken.None).GetAwaiter().GetResult();
+                this.Trace("server subscribed to messages");
 
-            this.Trace("listen server socket");
-            await serverSocket.IsClosed;
+                Task.Delay(10, CancellationToken.None)
+                    .ContinueWith(
+                        _ =>
+                        {
+                            this.Trace("send signal to client");
+                            serverTcs.SetResult();
+                        },
+                        CancellationToken.None
+                    )
+                    .GetAwaiter();
 
-            this.Trace("server socket closed");
-        });
+                this.Trace("listen server socket");
+                await serverSocket.IsClosed;
+
+                this.Trace("server socket closed");
+            }
+        );
 
         this.Trace("connect");
         await ConnectAsync();
@@ -188,23 +199,23 @@ public abstract class ClientServerManagedSocketTestsBase : TestBase, IAsyncLifet
         var serverConnectionTcs = new TaskCompletionSource();
 
         this.Trace("run server");
-        await using var _ = RunServer(async (serverSocket, _) =>
-        {
-            this.Trace("subscribe to messages");
-            serverSocket.OnReceived += x => serverSocket
-                .SendAsync(x.ToArray(), CancellationToken.None)
-                .GetAwaiter()
-                .GetResult();
-            this.Trace("server subscribed to messages");
+        await using var _ = RunServer(
+            async (serverSocket, _) =>
+            {
+                this.Trace("subscribe to messages");
+                serverSocket.OnReceived += x =>
+                    serverSocket.SendAsync(x.ToArray(), CancellationToken.None).GetAwaiter().GetResult();
+                this.Trace("server subscribed to messages");
 
-            this.Trace("send signal to client");
-            serverConnectionTcs.TrySetResult();
+                this.Trace("send signal to client");
+                serverConnectionTcs.TrySetResult();
 
-            this.Trace("await server socket closed");
-            await serverSocket.IsClosed;
+                this.Trace("await server socket closed");
+                await serverSocket.IsClosed;
 
-            this.Trace("server socket closed");
-        });
+                this.Trace("server socket closed");
+            }
+        );
 
         // act - send
         this.Trace("connect");
@@ -331,23 +342,25 @@ public abstract class ClientServerManagedSocketTestsBase : TestBase, IAsyncLifet
 
         this.Trace("run server");
         var clientTcs = new TaskCompletionSource();
-        await using var _ = RunServer(async (serverSocket, _) =>
-        {
-            this.Trace("start sending chunks");
-
-            var i = 0;
-            foreach (var chunk in chunks)
+        await using var _ = RunServer(
+            async (serverSocket, _) =>
             {
-                this.Trace("send chunk#{num}", ++i);
-                await serverSocket.SendAsync(chunk, CancellationToken.None);
-                await Task.Delay(1, CancellationToken.None);
+                this.Trace("start sending chunks");
+
+                var i = 0;
+                foreach (var chunk in chunks)
+                {
+                    this.Trace("send chunk#{num}", ++i);
+                    await serverSocket.SendAsync(chunk, CancellationToken.None);
+                    await Task.Delay(1, CancellationToken.None);
+                }
+
+                this.Trace("sending chunks complete");
+
+                this.Trace("await client signal");
+                await clientTcs.Task;
             }
-
-            this.Trace("sending chunks complete");
-
-            this.Trace("await client signal");
-            await clientTcs.Task;
-        });
+        );
 
         // act
         this.Trace("connect");
@@ -373,23 +386,25 @@ public abstract class ClientServerManagedSocketTestsBase : TestBase, IAsyncLifet
 
         this.Trace("run server");
         var clientTcs = new TaskCompletionSource();
-        await using var _ = RunServer(async (serverSocket, ct) =>
-        {
-            this.Trace("start sending chunks");
-
-            var i = 0;
-            foreach (var chunk in chunks)
+        await using var _ = RunServer(
+            async (serverSocket, ct) =>
             {
-                this.Trace("send chunk#{num}", ++i);
-                await serverSocket.SendAsync(chunk, ct);
-                await Task.Delay(1, CancellationToken.None);
+                this.Trace("start sending chunks");
+
+                var i = 0;
+                foreach (var chunk in chunks)
+                {
+                    this.Trace("send chunk#{num}", ++i);
+                    await serverSocket.SendAsync(chunk, ct);
+                    await Task.Delay(1, CancellationToken.None);
+                }
+
+                this.Trace("sending chunks complete");
+
+                this.Trace("await client signal");
+                await clientTcs.Task;
             }
-
-            this.Trace("sending chunks complete");
-
-            this.Trace("await client signal");
-            await clientTcs.Task;
-        });
+        );
 
         // act
         this.Trace("connect");

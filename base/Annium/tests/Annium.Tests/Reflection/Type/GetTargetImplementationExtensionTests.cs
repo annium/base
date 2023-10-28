@@ -51,9 +51,11 @@ public class GetTargetImplementationExtensionTests
     public void GetTargetImplementation_ClassOfClass_ImplementingTargetGenericDefinition_GenericDefinitionTarget_ReturnsImplementation()
     {
         // assert
-        typeof(ParentOne<long, bool>).GetTargetImplementation(typeof(Base<,,,>))
+        typeof(ParentOne<long, bool>)
+            .GetTargetImplementation(typeof(Base<,,,>))
             .Is(typeof(Base<List<bool>, long, int, IEnumerable<List<bool>>>));
-        typeof(ParentTwo<long, Array>).GetTargetImplementation(typeof(ParentOne<,>).BaseType!)
+        typeof(ParentTwo<long, Array>)
+            .GetTargetImplementation(typeof(ParentOne<,>).BaseType!)
             .Is(typeof(Base<List<IReadOnlyList<Array>>, long, int, IEnumerable<List<IReadOnlyList<Array>>>>));
     }
 
@@ -75,9 +77,11 @@ public class GetTargetImplementationExtensionTests
     public void GetTargetImplementation_ClassOfInterface_ImplementingTargetGenericDefinition_GenericDefinitionTarget_ReturnsImplementation()
     {
         // assert
-        typeof(ParentOne<long, bool>).GetTargetImplementation(typeof(IBase<,,,>))
+        typeof(ParentOne<long, bool>)
+            .GetTargetImplementation(typeof(IBase<,,,>))
             .Is(typeof(IBase<List<bool>, long, int, IEnumerable<List<bool>>>));
-        typeof(ParentTwo<long, Array>).GetTargetImplementation(typeof(IParentOne<,>).GetInterface("IBase`4")!)
+        typeof(ParentTwo<long, Array>)
+            .GetTargetImplementation(typeof(IParentOne<,>).GetInterface("IBase`4")!)
             .Is(typeof(IBase<List<IReadOnlyList<Array>>, long, int, IEnumerable<List<IReadOnlyList<Array>>>>));
     }
 
@@ -85,7 +89,9 @@ public class GetTargetImplementationExtensionTests
     public void GetTargetImplementation_ClassOfInterface_ImplementingTargetGenericDefinition_MixedTarget_UnresolvedArg_ReturnsNull()
     {
         // assert
-        typeof(ParentOther<int, int>).GetTargetImplementation(typeof(IParentOne<,>).GetInterface("IBase`4")!).IsDefault();
+        typeof(ParentOther<int, int>)
+            .GetTargetImplementation(typeof(IParentOne<,>).GetInterface("IBase`4")!)
+            .IsDefault();
     }
 
     [Fact]
@@ -113,7 +119,9 @@ public class GetTargetImplementationExtensionTests
     public void GetTargetImplementation_ClassOfParam_ConstraintSucceed_ReturnsImplementation()
     {
         // assert
-        typeof(Array).GetTargetImplementation(typeof(IParameterConstraint<>).GetGenericArguments()[0]).Is(typeof(Array));
+        typeof(Array)
+            .GetTargetImplementation(typeof(IParameterConstraint<>).GetGenericArguments()[0])
+            .Is(typeof(Array));
     }
 
     [Fact]
@@ -127,7 +135,8 @@ public class GetTargetImplementationExtensionTests
     public void GetTargetImplementation_StructOfStruct_ImplementingTargetGenericDefinition_GenericDefinitionTarget_ReturnsImplementation()
     {
         // assert
-        typeof(ValueTuple<long, bool>).GetTargetImplementation(typeof(ValueTuple<,>))
+        typeof(ValueTuple<long, bool>)
+            .GetTargetImplementation(typeof(ValueTuple<,>))
             .Is(typeof(ValueTuple<long, bool>));
     }
 
@@ -142,7 +151,8 @@ public class GetTargetImplementationExtensionTests
     public void GetTargetImplementation_StructOfInterface_ImplementingTargetGenericDefinition_GenericDefinitionTarget_ReturnsImplementation()
     {
         // assert
-        typeof(BaseStruct<string, bool, int, IEnumerable<string>>).GetTargetImplementation(typeof(IBase<,,,>))
+        typeof(BaseStruct<string, bool, int, IEnumerable<string>>)
+            .GetTargetImplementation(typeof(IBase<,,,>))
             .Is(typeof(IBase<string, bool, int, IEnumerable<string>>));
     }
 
@@ -157,8 +167,12 @@ public class GetTargetImplementationExtensionTests
     public void GetTargetImplementation_StructOfParam_DefaultConstructorRequired_ReturnsNull()
     {
         // assert
-        typeof(StructParamatered).GetTargetImplementation(typeof(INewConstraint<>).GetGenericArguments()[0]).IsDefault();
-        typeof(StructParamaterless).GetTargetImplementation(typeof(INewConstraint<>).GetGenericArguments()[0]).Is(typeof(StructParamaterless));
+        typeof(StructParamatered)
+            .GetTargetImplementation(typeof(INewConstraint<>).GetGenericArguments()[0])
+            .IsDefault();
+        typeof(StructParamaterless)
+            .GetTargetImplementation(typeof(INewConstraint<>).GetGenericArguments()[0])
+            .Is(typeof(StructParamaterless));
     }
 
     [Fact]
@@ -172,14 +186,18 @@ public class GetTargetImplementationExtensionTests
     public void GetTargetImplementation_StructOfParam_ConstraintFails_ReturnsNull()
     {
         // assert
-        typeof(ValueTuple).GetTargetImplementation(typeof(IParameterConstraint<>).GetGenericArguments()[0]).IsDefault();
+        typeof(ValueTuple)
+            .GetTargetImplementation(typeof(IParameterConstraint<>).GetGenericArguments()[0])
+            .IsDefault();
     }
 
     [Fact]
     public void GetTargetImplementation_StructOfParam_ConstraintSucceed_ReturnsImplementation()
     {
         // assert
-        typeof(StructEnumerable).GetTargetImplementation(typeof(IParameterConstraint<>).GetGenericArguments()[0]).Is(typeof(StructEnumerable));
+        typeof(StructEnumerable)
+            .GetTargetImplementation(typeof(IParameterConstraint<>).GetGenericArguments()[0])
+            .Is(typeof(StructEnumerable));
     }
 
     [Fact]
@@ -193,7 +211,8 @@ public class GetTargetImplementationExtensionTests
     public void GetTargetImplementation_InterfaceOfInterface_ImplementingTargetGenericDefinition_GenericDefinitionTarget_ReturnsImplementation()
     {
         // assert
-        typeof(IDictionary<long, bool>).GetTargetImplementation(typeof(IDictionary<,>))
+        typeof(IDictionary<long, bool>)
+            .GetTargetImplementation(typeof(IDictionary<,>))
             .Is(typeof(IDictionary<long, bool>));
     }
 
@@ -215,13 +234,17 @@ public class GetTargetImplementationExtensionTests
     public void GetTargetImplementation_InterfaceOfParam_ConstraintFails_ReturnsNull()
     {
         // assert
-        typeof(IDisposable).GetTargetImplementation(typeof(IParameterConstraint<>).GetGenericArguments()[0]).IsDefault();
+        typeof(IDisposable)
+            .GetTargetImplementation(typeof(IParameterConstraint<>).GetGenericArguments()[0])
+            .IsDefault();
     }
 
     [Fact]
     public void GetTargetImplementation_InterfaceOfParam_ConstraintSucceed_ReturnsImplementation()
     {
         // assert
-        typeof(IEnumerable<int>).GetTargetImplementation(typeof(IParameterConstraint<>).GetGenericArguments()[0]).Is(typeof(IEnumerable<int>));
+        typeof(IEnumerable<int>)
+            .GetTargetImplementation(typeof(IParameterConstraint<>).GetGenericArguments()[0])
+            .Is(typeof(IEnumerable<int>));
     }
 }

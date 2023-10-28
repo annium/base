@@ -10,7 +10,8 @@ namespace Annium.Core.Mapper.Tests.Resolvers;
 
 public class DictionaryAssignmentMapResolverTest : TestBase
 {
-    public DictionaryAssignmentMapResolverTest(ITestOutputHelper outputHelper) : base(outputHelper)
+    public DictionaryAssignmentMapResolverTest(ITestOutputHelper outputHelper)
+        : base(outputHelper)
     {
         Register(c => c.AddMapper(autoload: false).AddProfile(ConfigureProfile));
     }
@@ -36,10 +37,7 @@ public class DictionaryAssignmentMapResolverTest : TestBase
             .Ignore(x => new { x.IgnoredA, x.IgnoredB })
             .For(
                 x => new { x.Name, x.Age },
-                x => JsonSerializer.Deserialize<Info>(
-                    x["Serialized"].ToString()!,
-                    default(JsonSerializerOptions)
-                )
+                x => JsonSerializer.Deserialize<Info>(x["Serialized"].ToString()!, default(JsonSerializerOptions))
             );
     }
 

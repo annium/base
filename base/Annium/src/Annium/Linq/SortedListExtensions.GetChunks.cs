@@ -86,7 +86,6 @@ public static class SortedListGetChunksExtensions
             // if chunk matches full range
             if (compare(inChunkStart, start) == 0)
                 result[(inChunkStart, end)] = source.GetRange(inChunkStart, end);
-
             // if chunk size is enough
             else if (size >= chunkSize)
             {

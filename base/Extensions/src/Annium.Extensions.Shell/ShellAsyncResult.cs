@@ -10,12 +10,7 @@ public class ShellAsyncResult
     public StreamReader Error { get; }
     public Task<ShellResult> Result { get; }
 
-    public ShellAsyncResult(
-        StreamWriter input,
-        StreamReader output,
-        StreamReader error,
-        Task<ShellResult> result
-    )
+    public ShellAsyncResult(StreamWriter input, StreamReader output, StreamReader error, Task<ShellResult> result)
     {
         Input = input;
         Output = output;

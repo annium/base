@@ -21,9 +21,7 @@ internal class ValidationExecutor<TValue> : IValidator<TValue>
 
     private readonly ILocalizer<TValue> _localizer;
 
-    public ValidationExecutor(
-        IServiceProvider serviceProvider
-    )
+    public ValidationExecutor(IServiceProvider serviceProvider)
     {
         _validators = ValidatorSets
             .Select(s => (IEnumerable<IValidationContainer<TValue>>)serviceProvider.Resolve(s))
@@ -52,7 +50,12 @@ internal class ValidationExecutor<TValue> : IValidator<TValue>
 
             foreach (var validator in _validators)
             {
-                var (validatorResult, hasRun) = await validator.ValidateAsync(value, label ?? string.Empty, stage, _localizer);
+                var (validatorResult, hasRun) = await validator.ValidateAsync(
+                    value,
+                    label ?? string.Empty,
+                    stage,
+                    _localizer
+                );
 
                 result.Join(validatorResult);
                 ranStage = hasRun || ranStage;
@@ -64,8 +67,7 @@ internal class ValidationExecutor<TValue> : IValidator<TValue>
 
             // go next stage, if there was any run on current
             stage++;
-        }
-        while (ranStage);
+        } while (ranStage);
 
         return result;
     }

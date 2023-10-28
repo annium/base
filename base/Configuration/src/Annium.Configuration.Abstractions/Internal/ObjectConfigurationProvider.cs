@@ -73,7 +73,9 @@ internal class ObjectConfigurationProvider : ConfigurationProviderBase
     private void ProcessDictionary(string[] prefix, Action<string[], string> addValue, object value)
     {
         var type = value.GetType();
-        var dictionaryType = type.GetTargetImplementation(typeof(IDictionary<,>)) ?? type.GetTargetImplementation(typeof(IReadOnlyDictionary<,>));
+        var dictionaryType =
+            type.GetTargetImplementation(typeof(IDictionary<,>))
+            ?? type.GetTargetImplementation(typeof(IReadOnlyDictionary<,>));
         var keyType = dictionaryType!.GetGenericArguments()[0];
         var valueType = dictionaryType.GetGenericArguments()[1];
         var keyValueType = typeof(KeyValuePair<,>).MakeGenericType(keyType, valueType);
@@ -159,7 +161,10 @@ file static class Helper
         if (type.IsNullableValueType())
             return TypeVariant.Nullable;
 
-        if (type.GetTargetImplementation(typeof(IDictionary<,>)) is not null || type.GetTargetImplementation(typeof(IReadOnlyDictionary<,>)) is not null)
+        if (
+            type.GetTargetImplementation(typeof(IDictionary<,>)) is not null
+            || type.GetTargetImplementation(typeof(IReadOnlyDictionary<,>)) is not null
+        )
             return TypeVariant.Dictionary;
 
         if (type.IsEnumerable())
@@ -173,7 +178,8 @@ file static class Helper
 
     private static IReadOnlyCollection<MemberInfo> ResolveMembers(Type type)
     {
-        return type.GetAllProperties(BindingFlags.Public | BindingFlags.Instance).Where(x => x.CanRead && x.GetMethod?.GetParameters().Length == 0)
+        return type.GetAllProperties(BindingFlags.Public | BindingFlags.Instance)
+            .Where(x => x.CanRead && x.GetMethod?.GetParameters().Length == 0)
             .Concat(type.GetAllFields(BindingFlags.Public | BindingFlags.Instance).OfType<MemberInfo>())
             .ToArray();
     }

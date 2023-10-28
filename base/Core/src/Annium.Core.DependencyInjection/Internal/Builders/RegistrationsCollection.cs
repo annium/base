@@ -14,6 +14,7 @@ internal class RegistrationsCollection : IReadOnlyCollection<IRegistration>
     public void Init() => _isInitiated = true;
 
     public void Add(IRegistration registration) => _registrations.Add(registration);
+
     public void AddRange(IEnumerable<IRegistration> registrations) => _registrations.AddRange(registrations);
 
     public IEnumerator<IRegistration> GetEnumerator() => _registrations.GetEnumerator();

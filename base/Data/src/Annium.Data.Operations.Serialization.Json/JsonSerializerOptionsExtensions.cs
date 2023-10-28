@@ -9,9 +9,7 @@ namespace Annium.Core.DependencyInjection;
 
 public static class JsonSerializerOptionsExtensions
 {
-    public static JsonSerializerOptions ConfigureForOperations(
-        this JsonSerializerOptions options
-    )
+    public static JsonSerializerOptions ConfigureForOperations(this JsonSerializerOptions options)
     {
         options.Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
         options.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;

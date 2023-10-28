@@ -28,7 +28,6 @@ public class TryMakeGenericTypeExtensionTests
         result.Is(typeof(Demo<object>));
     }
 
-    private class Demo<T> where T : class
-    {
-    }
+    private class Demo<T>
+        where T : class { }
 }

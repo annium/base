@@ -6,9 +6,7 @@ internal class TableFactory : ITableFactory
 {
     private readonly ILogger _logger;
 
-    public TableFactory(
-        ILogger logger
-    )
+    public TableFactory(ILogger logger)
     {
         _logger = logger;
     }

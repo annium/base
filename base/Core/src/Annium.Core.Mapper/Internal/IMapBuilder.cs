@@ -6,7 +6,8 @@ public interface IMapBuilder
 {
     IMapBuilder AddProfile(Action<Profile> configure);
 
-    IMapBuilder AddProfile<T>() where T : Profile;
+    IMapBuilder AddProfile<T>()
+        where T : Profile;
 
     IMapBuilder AddProfile(Type profileType);
 

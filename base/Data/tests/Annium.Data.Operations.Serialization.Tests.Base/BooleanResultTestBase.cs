@@ -4,11 +4,10 @@ using Xunit.Abstractions;
 
 namespace Annium.Data.Operations.Serialization.Tests.Base;
 
-public abstract class BooleanResultTestBase: TestBase
+public abstract class BooleanResultTestBase : TestBase
 {
-    protected BooleanResultTestBase(ITestOutputHelper outputHelper) : base(outputHelper)
-    {
-    }
+    protected BooleanResultTestBase(ITestOutputHelper outputHelper)
+        : base(outputHelper) { }
 
     public void Simple_Base<T>()
     {

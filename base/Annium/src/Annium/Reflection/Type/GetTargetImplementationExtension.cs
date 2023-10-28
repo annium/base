@@ -81,7 +81,11 @@ public static class GetTargetImplementationExtension
         throw GetException(type, target);
     }
 
-    private static Type? GetInterfaceImplementationOfTarget(this Type type, Type target, HashSet<Type> genericParameters)
+    private static Type? GetInterfaceImplementationOfTarget(
+        this Type type,
+        Type target,
+        HashSet<Type> genericParameters
+    )
     {
         if (target.IsGenericParameter)
             return type.GetInterfaceImplementationOfGenericParameter(target, genericParameters);
@@ -95,7 +99,11 @@ public static class GetTargetImplementationExtension
         throw GetException(type, target);
     }
 
-    private static Type? GetClassImplementationOfGenericParameter(this Type type, Type target, HashSet<Type> genericParameters)
+    private static Type? GetClassImplementationOfGenericParameter(
+        this Type type,
+        Type target,
+        HashSet<Type> genericParameters
+    )
     {
         genericParameters.Add(target);
 
@@ -109,7 +117,8 @@ public static class GetTargetImplementationExtension
         if (attrs.HasFlag(GenericParameterAttributes.DefaultConstructorConstraint) && !type.HasDefaultConstructor())
             return null;
 
-        var meetsConstraints = target.GetGenericParameterConstraints()
+        var meetsConstraints = target
+            .GetGenericParameterConstraints()
             .All(constraint => type.GetTargetImplementation(constraint, genericParameters) != null);
 
         return meetsConstraints ? type : null;
@@ -123,7 +132,8 @@ public static class GetTargetImplementationExtension
             if (!type.IsArray)
                 return null;
 
-            var elementImplementation = type.GetElementType()!.GetTargetImplementation(target.GetElementType()!, genericParameters);
+            var elementImplementation = type.GetElementType()!
+                .GetTargetImplementation(target.GetElementType()!, genericParameters);
 
             return elementImplementation?.MakeArrayType();
         }
@@ -158,7 +168,11 @@ public static class GetTargetImplementationExtension
         return BuildImplementation(implementation, target, genericParameters);
     }
 
-    private static Type? GetStructImplementationOfGenericParameter(this Type type, Type target, HashSet<Type> genericParameters)
+    private static Type? GetStructImplementationOfGenericParameter(
+        this Type type,
+        Type target,
+        HashSet<Type> genericParameters
+    )
     {
         genericParameters.Add(target);
 
@@ -176,7 +190,8 @@ public static class GetTargetImplementationExtension
         if (attrs.HasFlag(GenericParameterAttributes.NotNullableValueTypeConstraint) && type.IsNullableValueType())
             return null;
 
-        var meetsConstraints = target.GetGenericParameterConstraints()
+        var meetsConstraints = target
+            .GetGenericParameterConstraints()
             .All(constraint => type.GetTargetImplementation(constraint, genericParameters) != null);
 
         return meetsConstraints ? type : null;
@@ -190,7 +205,11 @@ public static class GetTargetImplementationExtension
         return BuildImplementation(type, target, genericParameters);
     }
 
-    private static Type? GetStructImplementationOfInterface(this Type type, Type target, HashSet<Type> genericParameters)
+    private static Type? GetStructImplementationOfInterface(
+        this Type type,
+        Type target,
+        HashSet<Type> genericParameters
+    )
     {
         var targetBase = target.GetGenericTypeDefinition();
         var implementation = type.GetInterfaces()
@@ -202,7 +221,11 @@ public static class GetTargetImplementationExtension
         return BuildImplementation(implementation, target, genericParameters);
     }
 
-    private static Type? GetInterfaceImplementationOfGenericParameter(this Type type, Type target, HashSet<Type> genericParameters)
+    private static Type? GetInterfaceImplementationOfGenericParameter(
+        this Type type,
+        Type target,
+        HashSet<Type> genericParameters
+    )
     {
         genericParameters.Add(target);
 
@@ -216,16 +239,22 @@ public static class GetTargetImplementationExtension
         if (attrs.HasFlag(GenericParameterAttributes.NotNullableValueTypeConstraint))
             return null;
 
-        var meetsConstraints = target.GetGenericParameterConstraints()
+        var meetsConstraints = target
+            .GetGenericParameterConstraints()
             .All(constraint => type.GetTargetImplementation(constraint, genericParameters) != null);
 
         return meetsConstraints ? type : null;
     }
 
-    private static Type? GetInterfaceImplementationOfInterface(this Type type, Type target, HashSet<Type> genericParameters)
+    private static Type? GetInterfaceImplementationOfInterface(
+        this Type type,
+        Type target,
+        HashSet<Type> genericParameters
+    )
     {
         var targetBase = target.GetGenericTypeDefinition();
-        var implementation = type.GetInterfaces().Append(type)
+        var implementation = type.GetInterfaces()
+            .Append(type)
             .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == targetBase);
 
         if (implementation is null)
@@ -255,14 +284,19 @@ public static class GetTargetImplementationExtension
         var implementationArgs = implementation.GetGenericArguments();
         var targetArgs = target.GenericTypeArguments;
         var args = targetArgs
-            .Zip(implementationArgs, (targetArg, implementationArg) =>
-            {
-                // special case to avoid recursion
-                if (genericParameters.Contains(targetArg))
-                    return implementationArg;
-                // if targetArg is generic parameter, or contains those - go resolve deeper
-                return targetArg.ContainsGenericParameters ? implementationArg.GetTargetImplementation(targetArg) : targetArg;
-            })
+            .Zip(
+                implementationArgs,
+                (targetArg, implementationArg) =>
+                {
+                    // special case to avoid recursion
+                    if (genericParameters.Contains(targetArg))
+                        return implementationArg;
+                    // if targetArg is generic parameter, or contains those - go resolve deeper
+                    return targetArg.ContainsGenericParameters
+                        ? implementationArg.GetTargetImplementation(targetArg)
+                        : targetArg;
+                }
+            )
             .ToArray();
         if (args.Any(arg => arg is null))
             return null;

@@ -89,11 +89,17 @@ public static partial class ResolveGenericArgumentsByImplementationExtension
             return false;
 
         // check not nullable value type constraint
-        if (parameterAttrs.HasFlag(GenericParameterAttributes.NotNullableValueTypeConstraint) && !type.IsNotNullableValueType())
+        if (
+            parameterAttrs.HasFlag(GenericParameterAttributes.NotNullableValueTypeConstraint)
+            && !type.IsNotNullableValueType()
+        )
             return false;
 
         // check default parameter constraint
-        if (parameterAttrs.HasFlag(GenericParameterAttributes.DefaultConstructorConstraint) && !(type.IsConstructable() && type.HasDefaultConstructor()))
+        if (
+            parameterAttrs.HasFlag(GenericParameterAttributes.DefaultConstructorConstraint)
+            && !(type.IsConstructable() && type.HasDefaultConstructor())
+        )
             return false;
 
         var constraints = parameter.GetGenericParameterConstraints();

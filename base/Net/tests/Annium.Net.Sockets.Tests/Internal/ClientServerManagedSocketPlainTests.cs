@@ -12,9 +12,8 @@ namespace Annium.Net.Sockets.Tests.Internal;
 
 public class ClientServerManagedSocketPlainTests : ClientServerManagedSocketTestsBase
 {
-    public ClientServerManagedSocketPlainTests(ITestOutputHelper outputHelper) : base(outputHelper)
-    {
-    }
+    public ClientServerManagedSocketPlainTests(ITestOutputHelper outputHelper)
+        : base(outputHelper) { }
 
     [Fact]
     public async Task Send_NotConnected()
@@ -137,23 +136,25 @@ public class ClientServerManagedSocketPlainTests : ClientServerManagedSocketTest
 
     internal override IAsyncDisposable RunServer(Func<IServerManagedSocket, CancellationToken, Task> handleSocket)
     {
-        return RunServerBase(async (sp, raw, ct) =>
-        {
-            this.Trace("start");
+        return RunServerBase(
+            async (sp, raw, ct) =>
+            {
+                this.Trace("start");
 
-            this.Trace<string>("wrap {raw} into network stream", raw.GetFullId());
-            await using var stream = new NetworkStream(raw);
+                this.Trace<string>("wrap {raw} into network stream", raw.GetFullId());
+                await using var stream = new NetworkStream(raw);
 
-            this.Trace("create managed socket");
-            var socket = new ServerManagedSocket(stream, SocketMode.Raw, sp.Resolve<ILogger>(), ct);
+                this.Trace("create managed socket");
+                var socket = new ServerManagedSocket(stream, SocketMode.Raw, sp.Resolve<ILogger>(), ct);
 
-            this.Trace<string>("handle {socket}", socket.GetFullId());
-            await handleSocket(socket, ct);
+                this.Trace<string>("handle {socket}", socket.GetFullId());
+                await handleSocket(socket, ct);
 
-            this.Trace("await for a while before disconnecting");
-            await Task.Delay(10, CancellationToken.None);
+                this.Trace("await for a while before disconnecting");
+                await Task.Delay(10, CancellationToken.None);
 
-            this.Trace("done");
-        });
+                this.Trace("done");
+            }
+        );
     }
 }

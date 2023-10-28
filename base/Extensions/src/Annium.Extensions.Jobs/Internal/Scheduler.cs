@@ -17,11 +17,7 @@ internal class Scheduler : IScheduler, IAsyncDisposable, ILogSubject
     private bool _isDisposed;
     private readonly IBackgroundExecutor _executor;
 
-    public Scheduler(
-        ITimeProvider timeProvider,
-        IIntervalParser intervalParser,
-        ILogger logger
-    )
+    public Scheduler(ITimeProvider timeProvider, IIntervalParser intervalParser, ILogger logger)
     {
         Logger = logger;
         _timeProvider = timeProvider;

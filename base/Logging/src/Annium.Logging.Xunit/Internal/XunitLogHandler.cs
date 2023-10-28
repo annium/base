@@ -10,10 +10,7 @@ internal class XunitLogHandler<TContext> : ILogHandler<TContext>
     private readonly ITestOutputHelper _outputHelper;
     private readonly Func<LogMessage<TContext>, string> _format;
 
-    public XunitLogHandler(
-        ITestOutputHelper outputHelper,
-        Func<LogMessage<TContext>, string> format
-    )
+    public XunitLogHandler(ITestOutputHelper outputHelper, Func<LogMessage<TContext>, string> format)
     {
         _outputHelper = outputHelper;
         _format = format;

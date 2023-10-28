@@ -22,11 +22,17 @@ internal class ReadOnlyMemoryByteSerializer : ISerializer<ReadOnlyMemory<byte>>
         }
         catch (MessagePackSerializationException e)
         {
-            throw new Exception($"Failed to deserialize {Encoding.UTF8.GetString(value.ToArray())} as {typeof(T).FriendlyName()}", e);
+            throw new Exception(
+                $"Failed to deserialize {Encoding.UTF8.GetString(value.ToArray())} as {typeof(T).FriendlyName()}",
+                e
+            );
         }
         catch (Exception e)
         {
-            throw new Exception($"Failed to deserialize {Encoding.UTF8.GetString(value.ToArray())} as {typeof(T).FriendlyName()}", e);
+            throw new Exception(
+                $"Failed to deserialize {Encoding.UTF8.GetString(value.ToArray())} as {typeof(T).FriendlyName()}",
+                e
+            );
         }
     }
 
@@ -38,11 +44,17 @@ internal class ReadOnlyMemoryByteSerializer : ISerializer<ReadOnlyMemory<byte>>
         }
         catch (MessagePackSerializationException e)
         {
-            throw new Exception($"Failed to deserialize {Encoding.UTF8.GetString(value.ToArray())} as {type.FriendlyName()}", e);
+            throw new Exception(
+                $"Failed to deserialize {Encoding.UTF8.GetString(value.ToArray())} as {type.FriendlyName()}",
+                e
+            );
         }
         catch (Exception e)
         {
-            throw new Exception($"Failed to deserialize {Encoding.UTF8.GetString(value.ToArray())} as {type.FriendlyName()}", e);
+            throw new Exception(
+                $"Failed to deserialize {Encoding.UTF8.GetString(value.ToArray())} as {type.FriendlyName()}",
+                e
+            );
         }
     }
 
@@ -54,7 +66,10 @@ internal class ReadOnlyMemoryByteSerializer : ISerializer<ReadOnlyMemory<byte>>
         }
         catch (MessagePackSerializationException e)
         {
-            throw new MessagePackSerializationException($"Failed to serialize {value} as {typeof(T).FriendlyName()}", e);
+            throw new MessagePackSerializationException(
+                $"Failed to serialize {value} as {typeof(T).FriendlyName()}",
+                e
+            );
         }
         catch (Exception e)
         {
@@ -70,11 +85,17 @@ internal class ReadOnlyMemoryByteSerializer : ISerializer<ReadOnlyMemory<byte>>
         }
         catch (MessagePackSerializationException e)
         {
-            throw new MessagePackSerializationException($"Failed to serialize {value} as {value?.GetType().FriendlyName() ?? (object)"null"}", e);
+            throw new MessagePackSerializationException(
+                $"Failed to serialize {value} as {value?.GetType().FriendlyName() ?? (object)"null"}",
+                e
+            );
         }
         catch (Exception e)
         {
-            throw new Exception($"Failed to serialize {value} as {value?.GetType().FriendlyName() ?? (object)"null"}", e);
+            throw new Exception(
+                $"Failed to serialize {value} as {value?.GetType().FriendlyName() ?? (object)"null"}",
+                e
+            );
         }
     }
 }

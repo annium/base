@@ -19,9 +19,7 @@ internal class AssembliesCollector : ILogSubject
         Logger = logger;
     }
 
-    public IReadOnlyCollection<Assembly> Collect(
-        Assembly assembly
-    )
+    public IReadOnlyCollection<Assembly> Collect(Assembly assembly)
     {
         this.Trace("start");
 
@@ -35,19 +33,18 @@ internal class AssembliesCollector : ILogSubject
         foreach (var domainAssembly in AppDomain.CurrentDomain.GetAssemblies())
             if (domainAssembly.FullName != null! && !allAssemblies.ContainsKey(domainAssembly.FullName))
             {
-                this.Trace<string, string>("{domainAssemblyName} - register with {domainAssemblyFullName}", domainAssembly.FriendlyName(), domainAssembly.FullName);
+                this.Trace<string, string>(
+                    "{domainAssemblyName} - register with {domainAssemblyFullName}",
+                    domainAssembly.FriendlyName(),
+                    domainAssembly.FullName
+                );
                 allAssemblies[domainAssembly.FullName] = domainAssembly;
             }
 
         var resolveAssembly = LoadAssembly(allAssemblies);
 
         this.Trace("collect {assembly} dependencies", assembly);
-        Collect(
-            assembly.GetName(),
-            resolveAssembly,
-            processedAssemblies.Add,
-            asm => matchedAssemblies.Add(asm)
-        );
+        Collect(assembly.GetName(), resolveAssembly, processedAssemblies.Add, asm => matchedAssemblies.Add(asm));
 
         this.Trace("done");
 
@@ -71,7 +68,8 @@ internal class AssembliesCollector : ILogSubject
         if (!registerAssembly(assembly))
             return;
 
-        var autoScanned = assembly.GetCustomAttributes()
+        var autoScanned = assembly
+            .GetCustomAttributes()
             .SingleOrDefault(x => x.GetType().GetTypeId() == AutoScannedTypeId);
         if (autoScanned is null)
             this.Trace<string?>("{name} - not marked as auto-scanned", name.Name);
@@ -79,9 +77,8 @@ internal class AssembliesCollector : ILogSubject
         {
             this.Trace<string?>("{name} - matched", name.Name);
             addMatchedAssembly(assembly);
-            var dependencies = (Assembly[])autoScanned.GetType()
-                .GetProperty(nameof(AutoScannedAttribute.Dependencies))!
-                .GetValue(autoScanned)!;
+            var dependencies = (Assembly[])
+                autoScanned.GetType().GetProperty(nameof(AutoScannedAttribute.Dependencies))!.GetValue(autoScanned)!;
             foreach (var dependency in dependencies)
             {
                 this.Trace<string?, string>("{name} - add dependency {dependency}", name.Name, dependency.ShortName());
@@ -94,12 +91,13 @@ internal class AssembliesCollector : ILogSubject
             Collect(assemblyName, resolveAssembly, registerAssembly, addMatchedAssembly);
     }
 
-    private Func<AssemblyName, Assembly?> LoadAssembly(IDictionary<string, Assembly> assemblies) => name =>
-    {
-        if (assemblies.TryGetValue(name.FullName, out var asm))
-            return asm;
+    private Func<AssemblyName, Assembly?> LoadAssembly(IDictionary<string, Assembly> assemblies) =>
+        name =>
+        {
+            if (assemblies.TryGetValue(name.FullName, out var asm))
+                return asm;
 
-        this.Trace("load {name}", name);
-        return assemblies[name.FullName] = AppDomain.CurrentDomain.Load(name);
-    };
+            this.Trace("load {name}", name);
+            return assemblies[name.FullName] = AppDomain.CurrentDomain.Load(name);
+        };
 }

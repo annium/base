@@ -108,11 +108,20 @@ public class ValueRangeTest
         // TS SS SE TE -> []
         (range - ValueRange.Create(1, 4)).IsEmpty();
         // TS SS TE SE-> TE SE
-        (range - ValueRange.Create(1, 2)).Has(1).At(0).Is(ValueRange.Create(2, 4));
+        (range - ValueRange.Create(1, 2))
+            .Has(1)
+            .At(0)
+            .Is(ValueRange.Create(2, 4));
         // SS TS SE TE -> SS TS
-        (range - ValueRange.Create(3, 4)).Has(1).At(0).Is(ValueRange.Create(1, 3));
+        (range - ValueRange.Create(3, 4))
+            .Has(1)
+            .At(0)
+            .Is(ValueRange.Create(1, 3));
         // SS SE TS TE -> SS SE
-        (range - ValueRange.Create(0, 1)).Has(1).At(0).Is(ValueRange.Create(1, 4));
+        (range - ValueRange.Create(0, 1))
+            .Has(1)
+            .At(0)
+            .Is(ValueRange.Create(1, 4));
         (range - ValueRange.Create(4, 5)).Has(1).At(0).Is(ValueRange.Create(1, 4));
     }
 }

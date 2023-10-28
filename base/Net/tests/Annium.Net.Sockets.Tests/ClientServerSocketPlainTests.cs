@@ -11,9 +11,8 @@ namespace Annium.Net.Sockets.Tests;
 
 public class ClientServerSocketPlainTests : ClientServerSocketTestsBase
 {
-    public ClientServerSocketPlainTests(ITestOutputHelper outputHelper) : base(outputHelper)
-    {
-    }
+    public ClientServerSocketPlainTests(ITestOutputHelper outputHelper)
+        : base(outputHelper) { }
 
     [Fact]
     public async Task Send_NotConnected()
@@ -116,23 +115,25 @@ public class ClientServerSocketPlainTests : ClientServerSocketTestsBase
 
     protected override IAsyncDisposable RunServer(Func<IServerSocket, CancellationToken, Task> handleSocket)
     {
-        return RunServerBase(async (sp, raw, ct) =>
-        {
-            this.Trace("start");
+        return RunServerBase(
+            async (sp, raw, ct) =>
+            {
+                this.Trace("start");
 
-            this.Trace<string>("wrap {raw} into network stream", raw.GetFullId());
-            await using var stream = new NetworkStream(raw, true);
+                this.Trace<string>("wrap {raw} into network stream", raw.GetFullId());
+                await using var stream = new NetworkStream(raw, true);
 
-            this.Trace("create managed socket");
-            var socket = new ServerSocket(stream, sp.Resolve<ILogger>(), ct);
+                this.Trace("create managed socket");
+                var socket = new ServerSocket(stream, sp.Resolve<ILogger>(), ct);
 
-            this.Trace<string>("handle {socket}", socket.GetFullId());
-            await handleSocket(socket, ct);
+                this.Trace<string>("handle {socket}", socket.GetFullId());
+                await handleSocket(socket, ct);
 
-            this.Trace<string>("disconnect {socket}", socket.GetFullId());
-            socket.Disconnect();
+                this.Trace<string>("disconnect {socket}", socket.GetFullId());
+                socket.Disconnect();
 
-            this.Trace("done");
-        });
+                this.Trace("done");
+            }
+        );
     }
 }

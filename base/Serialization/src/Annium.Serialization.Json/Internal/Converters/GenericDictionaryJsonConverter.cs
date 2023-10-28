@@ -40,11 +40,7 @@ internal class GenericDictionaryJsonConverter<TKey, TValue> : JsonConverter<Dict
         throw new JsonException();
     }
 
-    public override void Write(
-        Utf8JsonWriter writer,
-        Dictionary<TKey, TValue> value,
-        JsonSerializerOptions options
-    )
+    public override void Write(Utf8JsonWriter writer, Dictionary<TKey, TValue> value, JsonSerializerOptions options)
     {
         writer.WriteStartObject();
 

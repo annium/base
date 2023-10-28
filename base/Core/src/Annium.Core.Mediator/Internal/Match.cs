@@ -8,16 +8,13 @@ internal record Match
     public Type ExpectedType { get; }
     public Type ResolvedType { get; }
 
-    internal Match(
-        Type requestedType,
-        Type expectedType,
-        Type resolvedType
-    )
+    internal Match(Type requestedType, Type expectedType, Type resolvedType)
     {
         RequestedType = requestedType;
         ExpectedType = expectedType;
         ResolvedType = resolvedType;
     }
 
-    public override string ToString() => $"{RequestedType.FriendlyName()} -> {ResolvedType.FriendlyName()} ({ExpectedType.FriendlyName()})";
+    public override string ToString() =>
+        $"{RequestedType.FriendlyName()} -> {ResolvedType.FriendlyName()} ({ExpectedType.FriendlyName()})";
 }

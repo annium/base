@@ -17,6 +17,8 @@ public static class IndexExtensions
         where TKey : notnull
         where TElement : notnull
     {
-        return new Index<TKey, TElement>(src.Select(x => new KeyValue<TKey, TElement>(keySelector(x), () => elementSelector(x))));
+        return new Index<TKey, TElement>(
+            src.Select(x => new KeyValue<TKey, TElement>(keySelector(x), () => elementSelector(x)))
+        );
     }
 }

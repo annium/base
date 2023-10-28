@@ -6,13 +6,13 @@ using Annium.Logging;
 
 namespace Annium.Architecture.Mediator.Internal.PipeHandlers;
 
-internal class LoggingPipeHandler<TRequest, TResponse> : IPipeRequestHandler<TRequest, TRequest, TResponse, TResponse>, ILogSubject
+internal class LoggingPipeHandler<TRequest, TResponse>
+    : IPipeRequestHandler<TRequest, TRequest, TResponse, TResponse>,
+        ILogSubject
 {
     public ILogger Logger { get; }
 
-    public LoggingPipeHandler(
-        ILogger logger
-    )
+    public LoggingPipeHandler(ILogger logger)
     {
         Logger = logger;
     }

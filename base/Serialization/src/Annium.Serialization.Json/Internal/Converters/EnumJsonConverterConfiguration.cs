@@ -6,10 +6,7 @@ internal class EnumJsonConverterConfiguration<T>
     public string ValueSeparator { get; }
     public T? DefaultValue { get; }
 
-    public EnumJsonConverterConfiguration(
-        string valueSeparator,
-        T? defaultValue
-    )
+    public EnumJsonConverterConfiguration(string valueSeparator, T? defaultValue)
     {
         ValueSeparator = valueSeparator;
         DefaultValue = defaultValue;

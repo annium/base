@@ -40,36 +40,41 @@ public static partial class IsShallowEqualExtensions
         expressions.Add(Expression.Assign(enumeratorAVar, Expression.Call(a, getEnumerator)));
         expressions.Add(Expression.Assign(enumeratorBVar, Expression.Call(b, getEnumerator)));
 
-        var comparerMethod = typeof(IsShallowEqualExtensions).GetMethods()
+        var comparerMethod = typeof(IsShallowEqualExtensions)
+            .GetMethods()
             .Single(x => x.GetParameters().Length == 3)
             .MakeGenericMethod(typeof(object), typeof(object));
 
         var breakLabel = Expression.Label(typeof(void));
-        expressions.Add(Expression.Loop(
-            Expression.Block(
-                // no next element in a - break
-                Expression.IfThen(
-                    Expression.Not(Expression.Call(enumeratorAVar, moveNext)),
-                    Expression.Break(breakLabel)
+        expressions.Add(
+            Expression.Loop(
+                Expression.Block(
+                    // no next element in a - break
+                    Expression.IfThen(
+                        Expression.Not(Expression.Call(enumeratorAVar, moveNext)),
+                        Expression.Break(breakLabel)
+                    ),
+                    // no next element in b - different count, return false
+                    Expression.IfThen(
+                        Expression.Not(Expression.Call(enumeratorBVar, moveNext)),
+                        Expression.Return(returnTarget, Expression.Constant(false))
+                    ),
+                    Expression.IfThen(
+                        Expression.Not(
+                            Expression.Call(
+                                null,
+                                comparerMethod,
+                                Expression.Property(enumeratorAVar, current),
+                                Expression.Property(enumeratorBVar, current),
+                                m
+                            )
+                        ),
+                        Expression.Return(returnTarget, Expression.Constant(false))
+                    )
                 ),
-                // no next element in b - different count, return false
-                Expression.IfThen(
-                    Expression.Not(Expression.Call(enumeratorBVar, moveNext)),
-                    Expression.Return(returnTarget, Expression.Constant(false))
-                ),
-                Expression.IfThen(
-                    Expression.Not(Expression.Call(
-                        null,
-                        comparerMethod,
-                        Expression.Property(enumeratorAVar, current),
-                        Expression.Property(enumeratorBVar, current),
-                        m
-                    )),
-                    Expression.Return(returnTarget, Expression.Constant(false))
-                )
-            ),
-            breakLabel
-        ));
+                breakLabel
+            )
+        );
 
         // return true, if no next element in b (means same count)
         expressions.Add(Expression.Label(returnTarget, Expression.Not(Expression.Call(enumeratorBVar, moveNext))));

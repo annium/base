@@ -8,7 +8,8 @@ namespace Annium.Core.Mapper.Tests.Resolvers;
 
 public class EnumTest : TestBase
 {
-    public EnumTest(ITestOutputHelper outputHelper) : base(outputHelper)
+    public EnumTest(ITestOutputHelper outputHelper)
+        : base(outputHelper)
     {
         Register(c => c.AddMapper(autoload: false));
     }

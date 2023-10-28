@@ -18,7 +18,8 @@ public abstract class TestBase : Testing.TestBase
     private readonly int _port;
     private readonly Random _random = new();
 
-    protected TestBase(ITestOutputHelper outputHelper) : base(outputHelper)
+    protected TestBase(ITestOutputHelper outputHelper)
+        : base(outputHelper)
     {
         _port = Interlocked.Increment(ref _basePort);
         EndPoint = new IPEndPoint(IPAddress.Loopback, _port);
@@ -98,10 +99,7 @@ file class Handler : IHandler
     private readonly IServiceProvider _sp;
     private readonly Func<IServiceProvider, Socket, CancellationToken, Task> _handle;
 
-    public Handler(
-        IServiceProvider sp,
-        Func<IServiceProvider, Socket, CancellationToken, Task> handle
-    )
+    public Handler(IServiceProvider sp, Func<IServiceProvider, Socket, CancellationToken, Task> handle)
     {
         _sp = sp;
         _handle = handle;

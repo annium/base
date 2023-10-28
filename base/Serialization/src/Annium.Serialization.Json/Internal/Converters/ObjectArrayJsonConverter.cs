@@ -15,19 +15,21 @@ internal class ObjectArrayJsonConverter<T> : JsonConverter<T>
 
     static ObjectArrayJsonConverter()
     {
-        var raw = typeof(T).GetMembers()
-            .Where(x => x switch
-            {
-                PropertyInfo p => p is { CanRead: true, CanWrite: true },
-                FieldInfo f    => !f.IsInitOnly,
-                _              => false
-            })
+        var raw = typeof(T)
+            .GetMembers()
+            .Where(
+                x =>
+                    x switch
+                    {
+                        PropertyInfo p => p is { CanRead: true, CanWrite: true },
+                        FieldInfo f => !f.IsInitOnly,
+                        _ => false
+                    }
+            )
             .Select(x => (order: x.GetCustomAttribute<JsonPropertyOrderAttribute>()?.Order, member: x))
             .ToArray();
 
-        Members = raw.All(x => x.order is null)
-            ? GetAllMembersList(raw)
-            : GetMembersWithPlaceholdersList(raw);
+        Members = raw.All(x => x.order is null) ? GetAllMembersList(raw) : GetMembersWithPlaceholdersList(raw);
     }
 
     private static IReadOnlyList<MemberInfo> GetAllMembersList(IReadOnlyCollection<(int? order, MemberInfo member)> raw)
@@ -35,11 +37,14 @@ internal class ObjectArrayJsonConverter<T> : JsonConverter<T>
         return raw.OrderBy(x => x.member.Name).Select(x => x.member).ToArray();
     }
 
-    private static IReadOnlyList<object?> GetMembersWithPlaceholdersList(IReadOnlyCollection<(int? order, MemberInfo member)> raw)
+    private static IReadOnlyList<object?> GetMembersWithPlaceholdersList(
+        IReadOnlyCollection<(int? order, MemberInfo member)> raw
+    )
     {
         var result = new List<object?>();
 
-        var items = typeof(T).GetCustomAttributes<JsonArrayPlaceholderAttribute>()
+        var items = typeof(T)
+            .GetCustomAttributes<JsonArrayPlaceholderAttribute>()
             .Select(x => (x.Order as int?, x.Value))
             .Concat(raw.Select<(int? order, MemberInfo member), (int?, object?)>(x => (x.order, x.member)));
 
@@ -61,7 +66,9 @@ internal class ObjectArrayJsonConverter<T> : JsonConverter<T>
 
             // ensure null before setting
             if (result[order.Value] != null)
-                throw new InvalidOperationException($"Failed to setup {typeof(ObjectArrayJsonConverter<T>).FriendlyName()}: multiple members at order {order}");
+                throw new InvalidOperationException(
+                    $"Failed to setup {typeof(ObjectArrayJsonConverter<T>).FriendlyName()}: multiple members at order {order}"
+                );
 
             result[order.Value] = value;
         }
@@ -111,7 +118,12 @@ internal class ObjectArrayJsonConverter<T> : JsonConverter<T>
                     JsonSerializer.Serialize(writer, f.GetValue(value), f.FieldType, options);
                     break;
                 default:
-                    JsonSerializer.Serialize(writer, member, member is null ? typeof(object) : member.GetType(), options);
+                    JsonSerializer.Serialize(
+                        writer,
+                        member,
+                        member is null ? typeof(object) : member.GetType(),
+                        options
+                    );
                     break;
             }
 

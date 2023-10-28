@@ -17,13 +17,15 @@ var serverTask = WorkloadServer.RunAsync(cts.Token);
 var config = new ManualConfig()
     .AddExporter(MarkdownExporter.Default)
     .AddDiagnoser(MemoryDiagnoser.Default)
-    .AddJob(Job.Default
-        .WithWarmupCount(2)
-        .WithLaunchCount(3)
-        .WithIterationCount(5)
-        .WithStrategy(RunStrategy.Throughput)
-        .WithPlatform(Platform.X64)
-        .WithRuntime(CoreRuntime.Core70))
+    .AddJob(
+        Job.Default
+            .WithWarmupCount(2)
+            .WithLaunchCount(3)
+            .WithIterationCount(5)
+            .WithStrategy(RunStrategy.Throughput)
+            .WithPlatform(Platform.X64)
+            .WithRuntime(CoreRuntime.Core70)
+    )
     .AddValidator(JitOptimizationsValidator.DontFailOnError)
     .AddLogger(ConsoleLogger.Default)
     .AddColumnProvider(DefaultColumnProviders.Instance);

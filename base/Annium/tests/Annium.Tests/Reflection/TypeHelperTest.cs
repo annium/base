@@ -11,7 +11,11 @@ public class TypeHelperTest
     public void GetAccessExpressions_Multiple_Works()
     {
         // arrange
-        var data = new B { InnerOne = new A { One = "a", Two = "b" }, InnerTwo = new A { One = "c", Two = "d" } };
+        var data = new B
+        {
+            InnerOne = new A { One = "a", Two = "b" },
+            InnerTwo = new A { One = "c", Two = "d" }
+        };
 
         // act
         var expressions = TypeHelper.GetAccessExpressions<B>(x => new { x.InnerOne.One, x.InnerTwo });
@@ -30,7 +34,11 @@ public class TypeHelperTest
     public void GetAccessExpressions_Single_Works()
     {
         // arrange
-        var data = new B { InnerOne = new A { One = "a", Two = "b" }, InnerTwo = new A { One = "c", Two = "d" } };
+        var data = new B
+        {
+            InnerOne = new A { One = "a", Two = "b" },
+            InnerTwo = new A { One = "c", Two = "d" }
+        };
 
         // act
         var expressions = TypeHelper.GetAccessExpressions<B>(x => x.InnerOne.One);

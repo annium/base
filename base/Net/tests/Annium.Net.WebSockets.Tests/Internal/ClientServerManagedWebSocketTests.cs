@@ -19,9 +19,8 @@ public class ClientServerManagedWebSocketTests : TestBase, IAsyncLifetime
     private readonly ConcurrentQueue<string> _texts = new();
     private readonly ConcurrentQueue<byte[]> _binaries = new();
 
-    public ClientServerManagedWebSocketTests(ITestOutputHelper outputHelper) : base(outputHelper)
-    {
-    }
+    public ClientServerManagedWebSocketTests(ITestOutputHelper outputHelper)
+        : base(outputHelper) { }
 
     [Fact]
     public async Task Send_NotConnected()
@@ -110,11 +109,16 @@ public class ClientServerManagedWebSocketTests : TestBase, IAsyncLifetime
             this.Trace("disconnect server socket");
             await serverSocket.DisconnectAsync();
 
-            Task.Delay(10, CancellationToken.None).ContinueWith(_ =>
-            {
-                this.Trace("send signal to client");
-                serverTcs.SetResult();
-            }, CancellationToken.None).GetAwaiter();
+            Task.Delay(10, CancellationToken.None)
+                .ContinueWith(
+                    _ =>
+                    {
+                        this.Trace("send signal to client");
+                        serverTcs.SetResult();
+                    },
+                    CancellationToken.None
+                )
+                .GetAwaiter();
         });
 
         this.Trace("connect");
@@ -149,24 +153,25 @@ public class ClientServerManagedWebSocketTests : TestBase, IAsyncLifetime
         await using var _ = RunServer(async serverSocket =>
         {
             this.Trace("subscribe to text messages");
-            serverSocket.OnTextReceived += x => serverSocket
-                .SendTextAsync(x.ToArray(), CancellationToken.None)
-                .GetAwaiter()
-                .GetResult();
+            serverSocket.OnTextReceived += x =>
+                serverSocket.SendTextAsync(x.ToArray(), CancellationToken.None).GetAwaiter().GetResult();
             this.Trace("server subscribed to text");
 
             this.Trace("subscribe to binary messages");
-            serverSocket.OnBinaryReceived += x => serverSocket
-                .SendBinaryAsync(x.ToArray(), CancellationToken.None)
-                .GetAwaiter()
-                .GetResult();
+            serverSocket.OnBinaryReceived += x =>
+                serverSocket.SendBinaryAsync(x.ToArray(), CancellationToken.None).GetAwaiter().GetResult();
             this.Trace("server subscribed to binary");
 
-            Task.Delay(10, CancellationToken.None).ContinueWith(_ =>
-            {
-                this.Trace("send signal to client");
-                serverTcs.SetResult();
-            }, CancellationToken.None).GetAwaiter();
+            Task.Delay(10, CancellationToken.None)
+                .ContinueWith(
+                    _ =>
+                    {
+                        this.Trace("send signal to client");
+                        serverTcs.SetResult();
+                    },
+                    CancellationToken.None
+                )
+                .GetAwaiter();
 
             this.Trace("listen server socket");
             await serverSocket.IsClosed;
@@ -220,17 +225,13 @@ public class ClientServerManagedWebSocketTests : TestBase, IAsyncLifetime
         await using var _ = RunServer(async serverSocket =>
         {
             this.Trace("subscribe to text messages");
-            serverSocket.OnTextReceived += x => serverSocket
-                .SendTextAsync(x.ToArray(), CancellationToken.None)
-                .GetAwaiter()
-                .GetResult();
+            serverSocket.OnTextReceived += x =>
+                serverSocket.SendTextAsync(x.ToArray(), CancellationToken.None).GetAwaiter().GetResult();
             this.Trace("server subscribed to text");
 
             this.Trace("subscribe to binary messages");
-            serverSocket.OnBinaryReceived += x => serverSocket
-                .SendBinaryAsync(x.ToArray(), CancellationToken.None)
-                .GetAwaiter()
-                .GetResult();
+            serverSocket.OnBinaryReceived += x =>
+                serverSocket.SendBinaryAsync(x.ToArray(), CancellationToken.None).GetAwaiter().GetResult();
             this.Trace("server subscribed to binary");
 
             this.Trace("send signal to client");
@@ -367,9 +368,7 @@ public class ClientServerManagedWebSocketTests : TestBase, IAsyncLifetime
         this.Trace("start");
 
         // arrange
-        var messages = Enumerable.Range(0, 3)
-            .Select(x => $"msg {x}")
-            .ToArray();
+        var messages = Enumerable.Range(0, 3).Select(x => $"msg {x}").ToArray();
 
         this.Trace("run server");
         await using var _ = RunServer(async serverSocket =>
@@ -403,9 +402,7 @@ public class ClientServerManagedWebSocketTests : TestBase, IAsyncLifetime
 
         // arrange
         this.Trace("generate messages");
-        var messages = Enumerable.Range(0, 3)
-            .Select(x => new string((char)x, 1_000_000))
-            .ToArray();
+        var messages = Enumerable.Range(0, 3).Select(x => new string((char)x, 1_000_000)).ToArray();
 
         this.Trace("run server");
         await using var _ = RunServer(async serverSocket =>
@@ -446,12 +443,8 @@ public class ClientServerManagedWebSocketTests : TestBase, IAsyncLifetime
 
         // arrange
         this.Trace("generate messages");
-        var texts = Enumerable.Range(0, 3)
-            .Select(x => new string((char)x, 10))
-            .ToArray();
-        var binaries = texts
-            .Select(Encoding.UTF8.GetBytes)
-            .ToArray();
+        var texts = Enumerable.Range(0, 3).Select(x => new string((char)x, 10)).ToArray();
+        var binaries = texts.Select(Encoding.UTF8.GetBytes).ToArray();
 
         this.Trace("run server");
         await using var _ = RunServer(async serverSocket =>
@@ -525,20 +518,22 @@ public class ClientServerManagedWebSocketTests : TestBase, IAsyncLifetime
 
     private IAsyncDisposable RunServer(Func<IServerManagedWebSocket, Task> handleWebSocket)
     {
-        return RunServerBase(async (sp, ctx, ct) =>
-        {
-            this.Trace("start");
+        return RunServerBase(
+            async (sp, ctx, ct) =>
+            {
+                this.Trace("start");
 
-            var socket = new ServerManagedWebSocket(ctx.WebSocket, sp.Resolve<ILogger>(), ct);
+                var socket = new ServerManagedWebSocket(ctx.WebSocket, sp.Resolve<ILogger>(), ct);
 
-            this.Trace<string>("handle {socket}", socket.GetFullId());
-            await handleWebSocket(socket);
+                this.Trace<string>("handle {socket}", socket.GetFullId());
+                await handleWebSocket(socket);
 
-            this.Trace<string>("disconnect {socket}", socket.GetFullId());
-            await socket.DisconnectAsync();
+                this.Trace<string>("disconnect {socket}", socket.GetFullId());
+                await socket.DisconnectAsync();
 
-            this.Trace("done");
-        });
+                this.Trace("done");
+            }
+        );
     }
 
     private async Task ConnectAsync(CancellationToken ct = default)

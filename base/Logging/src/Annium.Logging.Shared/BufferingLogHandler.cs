@@ -10,9 +10,7 @@ public abstract class BufferingLogHandler<TContext> : IAsyncLogHandler<TContext>
     private readonly LogRouteConfiguration _cfg;
     private readonly Queue<LogMessage<TContext>> _eventsBuffer = new();
 
-    protected BufferingLogHandler(
-        LogRouteConfiguration cfg
-    )
+    protected BufferingLogHandler(LogRouteConfiguration cfg)
     {
         _cfg = cfg;
     }

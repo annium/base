@@ -40,11 +40,15 @@ public class ObjectCacheTests
         var (cache, logs) = CreateCache();
 
         // act
-        await Task.WhenAll(Enumerable.Range(0, 30).Select(async i =>
-        {
-            await using var reference = await cache.GetAsync((uint)i % 2);
-            await Task.Delay(20);
-        }));
+        await Task.WhenAll(
+            Enumerable
+                .Range(0, 30)
+                .Select(async i =>
+                {
+                    await using var reference = await cache.GetAsync((uint)i % 2);
+                    await Task.Delay(20);
+                })
+        );
         var references = await Task.WhenAll(Enumerable.Range(0, 20).Select(i => cache.GetAsync((uint)i % 2)));
         await cache.DisposeAsync();
 
@@ -68,14 +72,19 @@ public class ObjectCacheTests
 
         void Log(string message)
         {
-            lock (logs) logs.Add(message);
+            lock (logs)
+                logs.Add(message);
         }
 
         var sp = new ServiceContainer()
-            .AddTime().WithManagedTime().SetDefault()
+            .AddTime()
+            .WithManagedTime()
+            .SetDefault()
             .AddLogging()
             .AddObjectCache<uint, Item, ItemProvider>(ServiceLifetime.Singleton)
-            .Add<Action<string>>(Log).AsSelf().Singleton()
+            .Add<Action<string>>(Log)
+            .AsSelf()
+            .Singleton()
             .BuildServiceProvider()
             .UseLogging(route => route.UseInMemory());
         var cache = sp.Resolve<IObjectCache<uint, Item>>();
@@ -89,9 +98,7 @@ public class ObjectCacheTests
         public override bool HasCreate => true;
         public override bool HasExternalCreate => false;
 
-        public ItemProvider(
-            Action<string> log
-        )
+        public ItemProvider(Action<string> log)
         {
             _log = log;
         }
@@ -103,6 +110,7 @@ public class ObjectCacheTests
         }
 
         public override Task SuspendAsync(Item value) => value.Suspend();
+
         public override Task ResumeAsync(Item value) => value.Resume();
     }
 
@@ -111,10 +119,7 @@ public class ObjectCacheTests
         private readonly uint _id;
         private readonly Action<string> _log;
 
-        public Item(
-            uint id,
-            Action<string> log
-        )
+        public Item(uint id, Action<string> log)
         {
             _id = id;
             _log = log;

@@ -13,7 +13,12 @@ public static class WorkerManagerExtensions
             manager.Stop(key);
     }
 
-    public static void SetStateWithKeyUpdate<TData>(this IWorkerManager<TData> manager, TData oldKey, TData newKey, bool isActive)
+    public static void SetStateWithKeyUpdate<TData>(
+        this IWorkerManager<TData> manager,
+        TData oldKey,
+        TData newKey,
+        bool isActive
+    )
         where TData : IEquatable<TData>
     {
         if (newKey.Equals(oldKey))

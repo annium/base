@@ -11,10 +11,7 @@ public class LogRoute<TContext>
     private readonly IServiceProvider _sp;
     private readonly Action<LogRoute<TContext>> _registerRoute;
 
-    internal LogRoute(
-        IServiceProvider sp,
-        Action<LogRoute<TContext>> registerRoute
-    )
+    internal LogRoute(IServiceProvider sp, Action<LogRoute<TContext>> registerRoute)
     {
         _sp = sp;
         _registerRoute = registerRoute;
@@ -26,20 +23,16 @@ public class LogRoute<TContext>
         new(_sp, _registerRoute) { Filter = filter };
 
     public LogRoute<TContext> UseInstance<T>(T instance, LogRouteConfiguration configuration)
-        where T : class, ILogHandler<TContext>
-        => Use(instance, configuration);
+        where T : class, ILogHandler<TContext> => Use(instance, configuration);
 
     public LogRoute<TContext> UseFactory<T>(Func<IServiceProvider, T> factory, LogRouteConfiguration configuration)
-        where T : class, ILogHandler<TContext>
-        => Use(factory(_sp), configuration);
+        where T : class, ILogHandler<TContext> => Use(factory(_sp), configuration);
 
     public LogRoute<TContext> UseAsyncInstance<T>(T instance, LogRouteConfiguration configuration)
-        where T : class, IAsyncLogHandler<TContext>
-        => Use(instance, configuration);
+        where T : class, IAsyncLogHandler<TContext> => Use(instance, configuration);
 
     public LogRoute<TContext> UseAsyncFactory<T>(Func<IServiceProvider, T> factory, LogRouteConfiguration configuration)
-        where T : class, IAsyncLogHandler<TContext>
-        => Use(factory(_sp), configuration);
+        where T : class, IAsyncLogHandler<TContext> => Use(factory(_sp), configuration);
 
     private LogRoute<TContext> Use(object handler, LogRouteConfiguration configuration)
     {
