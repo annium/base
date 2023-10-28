@@ -1,8 +1,10 @@
 format:
 	xs format -sc -ic
+	dotnet csharpier .
 
 setup:
 	xs remote restore -user $(user) -password $(pass)
+	dotnet tool restore
 
 update:
 	xs update all -sc -ic
