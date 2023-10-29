@@ -14,6 +14,15 @@ namespace Annium.Core.DependencyInjection;
 
 public static class JsonSerializerOptionsExtensions
 {
+    private static readonly IReadOnlyCollection<PropertyInfo> CloneableProperties = typeof(JsonSerializerOptions)
+        .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+        .Where(
+            x =>
+                x.PropertyType.GetTargetImplementation(typeof(IEnumerable<>)) is null
+                && x is { CanRead: true, CanWrite: true }
+        )
+        .ToArray();
+
     public static JsonSerializerOptions ConfigureDefault(this JsonSerializerOptions options, ITypeManager typeManager)
     {
         options.Converters.Insert(0, new EnumJsonConverterFactory());
@@ -32,28 +41,20 @@ public static class JsonSerializerOptionsExtensions
         return options;
     }
 
+    public static JsonSerializerOptions RemoveConverter<T>(this JsonSerializerOptions opts)
+        where T : JsonConverter
+    {
+        var factory = opts.Converters.Single(x => x.GetType() == typeof(T));
+        opts.Converters.Remove(factory);
+
+        return opts;
+    }
+
     public static JsonSerializerOptions UseDefaultNamingPolicy(this JsonSerializerOptions options) =>
         options.UseNamingPolicy(new DefaultJsonNamingPolicy());
 
     public static JsonSerializerOptions UseCamelCaseNamingPolicy(this JsonSerializerOptions options) =>
         options.UseNamingPolicy(JsonNamingPolicy.CamelCase);
-
-    private static JsonSerializerOptions UseNamingPolicy(this JsonSerializerOptions options, JsonNamingPolicy policy)
-    {
-        options.DictionaryKeyPolicy = policy;
-        options.PropertyNamingPolicy = policy;
-
-        return options;
-    }
-
-    private static readonly IReadOnlyCollection<PropertyInfo> CloneableProperties = typeof(JsonSerializerOptions)
-        .GetProperties(BindingFlags.Public | BindingFlags.Instance)
-        .Where(
-            x =>
-                x.PropertyType.GetTargetImplementation(typeof(IEnumerable<>)) is null
-                && x is { CanRead: true, CanWrite: true }
-        )
-        .ToArray();
 
     public static JsonSerializerOptions Clone(this JsonSerializerOptions opts)
     {
@@ -68,15 +69,6 @@ public static class JsonSerializerOptionsExtensions
         return clone;
     }
 
-    public static JsonSerializerOptions RemoveConverter<T>(this JsonSerializerOptions opts)
-        where T : JsonConverter
-    {
-        var factory = opts.Converters.Single(x => x.GetType() == typeof(T));
-        opts.Converters.Remove(factory);
-
-        return opts;
-    }
-
     public static JsonSerializerOptions Indented(this JsonSerializerOptions opts)
     {
         opts.WriteIndented = true;
@@ -89,5 +81,13 @@ public static class JsonSerializerOptionsExtensions
         opts.WriteIndented = false;
 
         return opts;
+    }
+
+    private static JsonSerializerOptions UseNamingPolicy(this JsonSerializerOptions options, JsonNamingPolicy policy)
+    {
+        options.DictionaryKeyPolicy = policy;
+        options.PropertyNamingPolicy = policy;
+
+        return options;
     }
 }
