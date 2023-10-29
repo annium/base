@@ -135,5 +135,8 @@ public static class DecimalExtensions
     public static int Decimals(this decimal value) => decimal.GetBits(value)[3] >> 16;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Decimal Normalize(this Decimal value) => value / 1.000000000000000M;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static decimal DiffFromInternal(this decimal value, decimal from) => Math.Abs((value - from) / from);
 }
