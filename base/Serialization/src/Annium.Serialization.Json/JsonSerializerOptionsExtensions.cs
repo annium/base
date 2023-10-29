@@ -25,18 +25,74 @@ public static class JsonSerializerOptionsExtensions
 
     public static JsonSerializerOptions ConfigureDefault(this JsonSerializerOptions options, ITypeManager typeManager)
     {
-        options.Converters.Insert(0, new EnumJsonConverterFactory());
-        options.Converters.Insert(1, new JsonStringEnumConverter());
-        options.Converters.Insert(2, new MaterializableJsonConverterFactory());
-        options.Converters.Insert(3, new JsonNotIndentedJsonConverterFactory());
-        options.Converters.Insert(4, new ObjectArrayJsonConverterFactory());
-        options.Converters.Insert(5, new AbstractJsonConverterFactory(typeManager));
-        options.Converters.Insert(6, new ConstructorJsonConverterFactory());
-        options.Converters.Insert(7, new GenericDictionaryJsonConverterFactory());
+        options.InsertConverter(0, new EnumJsonConverterFactory());
+        options.InsertConverter(1, new JsonStringEnumConverter());
+        options.InsertConverter(2, new MaterializableJsonConverterFactory());
+        options.InsertConverter(3, new JsonNotIndentedJsonConverterFactory());
+        options.InsertConverter(4, new ObjectArrayJsonConverterFactory());
+        options.InsertConverter(5, new AbstractJsonConverterFactory(typeManager));
+        options.InsertConverter(6, new ConstructorJsonConverterFactory());
+        options.InsertConverter(7, new GenericDictionaryJsonConverterFactory());
 
         options.Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
         options.UseDefaultNamingPolicy();
         options.IncludeFields = true;
+
+        return options;
+    }
+
+    public static JsonSerializerOptions ResetConverters(this JsonSerializerOptions options)
+    {
+        options.Converters.Clear();
+
+        return options;
+    }
+
+    public static JsonSerializerOptions WithNumberHandling(
+        this JsonSerializerOptions options,
+        JsonNumberHandling numberHandling
+    )
+    {
+        options.NumberHandling = numberHandling;
+
+        return options;
+    }
+
+    public static JsonSerializerOptions InsertConverter<TConverter>(this JsonSerializerOptions options, int index)
+        where TConverter : JsonConverter, new()
+    {
+        options.Converters.Insert(index, new TConverter());
+
+        return options;
+    }
+
+    public static JsonSerializerOptions InsertConverter<TConverter>(
+        this JsonSerializerOptions options,
+        int index,
+        TConverter converter
+    )
+        where TConverter : JsonConverter
+    {
+        options.Converters.Insert(index, converter);
+
+        return options;
+    }
+
+    public static JsonSerializerOptions AddConverter<TConverter>(this JsonSerializerOptions options)
+        where TConverter : JsonConverter, new()
+    {
+        options.Converters.Add(new TConverter());
+
+        return options;
+    }
+
+    public static JsonSerializerOptions AddConverter<TConverter>(
+        this JsonSerializerOptions options,
+        TConverter converter
+    )
+        where TConverter : JsonConverter
+    {
+        options.Converters.Add(converter);
 
         return options;
     }
