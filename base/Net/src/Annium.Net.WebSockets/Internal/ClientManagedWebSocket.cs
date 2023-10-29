@@ -35,7 +35,7 @@ internal class ClientManagedWebSocket : IClientManagedWebSocket, ILogSubject
         if (_nativeSocket is not null || _managedSocket is not null)
             throw new InvalidOperationException("Socket is already connected");
 
-        _nativeSocket = new NativeWebSocket()
+        _nativeSocket = new NativeWebSocket
         {
             Options = { KeepAliveInterval = TimeSpan.FromMilliseconds(_keepAliveInterval) }
         };

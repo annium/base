@@ -16,13 +16,13 @@ public class Resolver : IFormatterResolver
     private static readonly IReadOnlyDictionary<Type, IMessagePackFormatter> FormatterInstances = new Dictionary<
         Type,
         IMessagePackFormatter
-    >()
+    >
     {
         { typeof(IResult), ResultFormatter.Instance },
         { typeof(IBooleanResult), BooleanResultFormatter.Instance },
     };
 
-    private static readonly IReadOnlyDictionary<Type, Type> FormatterInstanceTypes = new Dictionary<Type, Type>()
+    private static readonly IReadOnlyDictionary<Type, Type> FormatterInstanceTypes = new Dictionary<Type, Type>
     {
         { typeof(IResult<>), typeof(ResultDataFormatter<>) },
         { typeof(IBooleanResult<>), typeof(BooleanResultDataFormatter<>) },

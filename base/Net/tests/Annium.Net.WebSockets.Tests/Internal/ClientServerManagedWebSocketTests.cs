@@ -82,7 +82,7 @@ public class ClientServerManagedWebSocketTests : TestBase, IAsyncLifetime
 
         // act
         this.Trace("disconnect client socket");
-        _clientSocket.DisconnectAsync().GetAwaiter();
+        await _clientSocket.DisconnectAsync();
 
         this.Trace("send message");
         var result = await SendTextAsync(message);
