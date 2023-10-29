@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace Annium.Linq;
 
@@ -42,5 +43,19 @@ public static class DictionaryExtensions
             values[key] = value;
 
         return values;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static TValue MapValue<TValue>(this IReadOnlyDictionary<string, TValue> dictionary, string? key)
+    {
+        return key is not null && dictionary.TryGetValue(key, out var value)
+            ? value
+            : throw new ArgumentOutOfRangeException(nameof(key));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static TValue? TryMapValue<TValue>(this IReadOnlyDictionary<string, TValue> dictionary, string? key)
+    {
+        return key is not null && dictionary.TryGetValue(key, out var value) ? value : default;
     }
 }
