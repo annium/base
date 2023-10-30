@@ -374,7 +374,7 @@ public abstract class MessagingManagedSocketTestsBase : TestBase, IAsyncLifetime
         _clientStream = await CreateClientStreamAsync(_clientSocket);
 
         this.Trace("create managed socket");
-        _managedSocket = new MessagingManagedSocket(_clientStream, Logger);
+        _managedSocket = new MessagingManagedSocket(_clientStream, ManagedSocketOptionsBase.Default, Logger);
         this.Trace<string, string>(
             "created pair of {clientSocket} and {managedSocket}",
             _clientSocket.GetFullId(),

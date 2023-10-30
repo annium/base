@@ -435,7 +435,7 @@ public abstract class ClientServerManagedSocketTestsBase : TestBase, IAsyncLifet
     {
         this.Trace("start");
 
-        _clientSocket = new ClientManagedSocket(SocketMode, Logger);
+        _clientSocket = new ClientManagedSocket(ManagedSocketOptions.Default with { Mode = SocketMode }, Logger);
         _clientSocket.OnReceived += x => _stream.AddRange(x.ToArray());
 
         await Task.CompletedTask;

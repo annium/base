@@ -129,7 +129,7 @@ public class RawManagedSocketSslTests : RawManagedSocketTestsBase
                 );
 
                 this.Trace("create managed socket");
-                var socket = new RawManagedSocket(sslStream, sp.Resolve<ILogger>());
+                var socket = new RawManagedSocket(sslStream, ManagedSocketOptionsBase.Default, sp.Resolve<ILogger>());
 
                 this.Trace<string>("handle {socket}", socket.GetFullId());
                 await handleSocket(socket, ct);

@@ -12,15 +12,16 @@ internal class RawManagedSocket : IManagedSocket, ILogSubject
 {
     public ILogger Logger { get; }
     public event Action<ReadOnlyMemory<byte>> OnReceived = delegate { };
-    private const int BufferSize = 65_536;
     private readonly Stream _stream;
+    private readonly ManagedSocketOptionsBase _options;
     private long _sendCounter;
     private long _recvCounter;
 
-    public RawManagedSocket(Stream socket, ILogger logger)
+    public RawManagedSocket(Stream socket, ManagedSocketOptionsBase options, ILogger logger)
     {
         Logger = logger;
         _stream = socket;
+        _options = options;
     }
 
     public async ValueTask<SocketSendStatus> SendAsync(ReadOnlyMemory<byte> data, CancellationToken ct = default)
@@ -64,7 +65,7 @@ internal class RawManagedSocket : IManagedSocket, ILogSubject
 
     public async Task<SocketCloseResult> ListenAsync(CancellationToken ct)
     {
-        using var buffer = new RawBuffer(BufferSize);
+        using var buffer = new RawBuffer(_options.BufferSize);
 
         this.Trace("start");
 

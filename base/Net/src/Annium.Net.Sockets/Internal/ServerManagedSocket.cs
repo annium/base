@@ -14,11 +14,11 @@ internal class ServerManagedSocket : IServerManagedSocket, ILogSubject
     private readonly Stream _stream;
     private readonly IManagedSocket _socket;
 
-    public ServerManagedSocket(Stream stream, SocketMode socketMode, ILogger logger, CancellationToken ct)
+    public ServerManagedSocket(Stream stream, ManagedSocketOptions options, ILogger logger, CancellationToken ct)
     {
         Logger = logger;
         _stream = stream;
-        _socket = Helper.GetManagedSocket(socketMode, stream, logger);
+        _socket = Helper.GetManagedSocket(stream, options, logger);
         this.Trace<string, string>(
             "paired with {nativeSocket} / {managedSocket}",
             _stream.GetFullId(),

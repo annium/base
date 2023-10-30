@@ -161,8 +161,9 @@ public class ClientServerManagedSocketSslTests : ClientServerManagedSocketTestsB
                 );
 
                 this.Trace("create managed socket");
+                var options = ManagedSocketOptions.Default with { Mode = SocketMode };
                 var logger = sp.Resolve<ILogger>();
-                var socket = new ServerManagedSocket(sslStream, SocketMode, logger, ct);
+                var socket = new ServerManagedSocket(sslStream, options, logger, ct);
 
                 this.Trace<string>("handle {socket}", socket.GetFullId());
                 await handleSocket(socket, ct);

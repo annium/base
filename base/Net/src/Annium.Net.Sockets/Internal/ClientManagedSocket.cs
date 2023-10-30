@@ -14,7 +14,7 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
     public ILogger Logger { get; }
     public event Action<ReadOnlyMemory<byte>> OnReceived = delegate { };
     public Task<SocketCloseResult> IsClosed => _listenTask;
-    private readonly SocketMode _socketMode;
+    private readonly ManagedSocketOptions _options;
     private Stream? _stream;
     private IManagedSocket? _socket;
     private CancellationTokenSource _listenCts = new();
@@ -22,9 +22,9 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
         new SocketCloseResult(SocketCloseStatus.ClosedLocal, null)
     );
 
-    public ClientManagedSocket(SocketMode socketMode, ILogger logger)
+    public ClientManagedSocket(ManagedSocketOptions options, ILogger logger)
     {
-        _socketMode = socketMode;
+        _options = options;
         Logger = logger;
     }
 
@@ -72,7 +72,7 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
             }
 
             this.Trace("wrap to managed socket");
-            _socket = Helper.GetManagedSocket(_socketMode, _stream, Logger);
+            _socket = Helper.GetManagedSocket(_stream, _options, Logger);
             this.Trace<string, string>(
                 "paired with {nativeSocket} / {managedSocket}",
                 _stream.GetFullId(),

@@ -12,17 +12,18 @@ internal class MessagingManagedSocket : IManagedSocket, ILogSubject
 {
     public ILogger Logger { get; }
     public event Action<ReadOnlyMemory<byte>> OnReceived = delegate { };
-    private const int BufferSize = 65_536;
     private readonly Stream _stream;
+    private readonly ManagedSocketOptionsBase _options;
     private readonly SemaphoreSlim _gate = new(1, 1);
     private bool _isDisposed;
     private long _sendCounter;
     private long _recvCounter;
 
-    public MessagingManagedSocket(Stream stream, ILogger logger)
+    public MessagingManagedSocket(Stream stream, ManagedSocketOptionsBase options, ILogger logger)
     {
         Logger = logger;
         _stream = stream;
+        _options = options;
     }
 
     public async ValueTask<SocketSendStatus> SendAsync(ReadOnlyMemory<byte> data, CancellationToken ct = default)
@@ -95,7 +96,7 @@ internal class MessagingManagedSocket : IManagedSocket, ILogSubject
             return new SocketCloseResult(SocketCloseStatus.ClosedLocal, null);
         }
 
-        using var buffer = new MessagingBuffer(BufferSize, BufferSize);
+        using var buffer = new MessagingBuffer(_options.BufferSize, _options.ExtremeMessageSize);
 
         this.Trace("start");
 
@@ -163,8 +164,20 @@ internal class MessagingManagedSocket : IManagedSocket, ILogSubject
         this.Trace("track received data size: {size}", receiveResult.Count);
         buffer.TrackData(receiveResult.Count);
 
-        while (buffer.ContainsFullMessage)
+        while (true)
         {
+            if (buffer.ExtremeMessageExpected)
+            {
+                this.Trace("buffer {buffer} has extreme message expected, close with error", buffer);
+                return (
+                    true,
+                    new SocketCloseResult(SocketCloseStatus.Error, new Exception("Extreme message expected in buffer"))
+                );
+            }
+
+            if (!buffer.ContainsFullMessage)
+                break;
+
             this.Trace("buffer {buffer} contains full message, fire message received", buffer);
             OnReceived(buffer.Message);
 

@@ -31,7 +31,13 @@ public class ClientSocket : IClientSocket
     {
         Logger = logger;
         this.Trace("start monitor");
-        _socket = new ClientManagedSocket(options.Mode, logger);
+        var managedOptions = new ManagedSocketOptions
+        {
+            Mode = options.Mode,
+            BufferSize = options.BufferSize,
+            ExtremeMessageSize = options.ExtremeMessageSize
+        };
+        _socket = new ClientManagedSocket(managedOptions, logger);
         _socket.OnReceived += HandleOnReceived;
         this.Trace<string>("paired with {socket}", _socket.GetFullId());
 

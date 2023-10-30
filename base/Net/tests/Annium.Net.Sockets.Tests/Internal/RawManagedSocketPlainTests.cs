@@ -124,7 +124,7 @@ public class RawManagedSocketPlainTests : RawManagedSocketTestsBase
                 await using var stream = new NetworkStream(raw);
 
                 this.Trace("create managed socket");
-                var socket = new RawManagedSocket(stream, sp.Resolve<ILogger>());
+                var socket = new RawManagedSocket(stream, ManagedSocketOptionsBase.Default, sp.Resolve<ILogger>());
 
                 this.Trace<string>("handle {socket}", socket.GetFullId());
                 await handleSocket(socket, ct);

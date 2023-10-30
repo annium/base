@@ -23,7 +23,13 @@ public class ServerSocket : IServerSocket
     {
         Logger = logger;
         this.Trace("start");
-        _socket = new ServerManagedSocket(stream, options.Mode, logger, ct);
+        var managedOptions = new ManagedSocketOptions
+        {
+            Mode = options.Mode,
+            BufferSize = options.BufferSize,
+            ExtremeMessageSize = options.ExtremeMessageSize
+        };
+        _socket = new ServerManagedSocket(stream, managedOptions, logger, ct);
         _socket.OnReceived += HandleOnReceived;
         this.Trace<string>("paired with {socket}", _socket.GetFullId());
 
