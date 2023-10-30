@@ -484,7 +484,7 @@ public abstract class ClientServerSocketTestsBase : TestBase, IAsyncLifetime
         void HandleDisconnected(SocketCloseStatus status)
         {
             _clientSocket.Trace("set {tcs} to signaled state with status {status}", tcs.GetFullId(), status);
-            tcs.SetResult();
+            tcs.TrySetResult();
             _clientSocket.OnDisconnected -= HandleDisconnected;
         }
 
