@@ -12,6 +12,7 @@ namespace Annium.Net.Sockets.Tests;
 
 public abstract class ClientServerSocketTestsBase : TestBase, IAsyncLifetime
 {
+    protected const SocketMode SocketMode = Sockets.SocketMode.Messaging;
     private ClientSocket _clientSocket = default!;
     private readonly List<byte> _stream = new();
 
@@ -423,7 +424,8 @@ public abstract class ClientServerSocketTestsBase : TestBase, IAsyncLifetime
     {
         this.Trace("start");
 
-        _clientSocket = new ClientSocket(ClientSocketOptions.Default with { ReconnectDelay = 1 }, Logger);
+        var options = ClientSocketOptions.Default with { Mode = SocketMode, ReconnectDelay = 1 };
+        _clientSocket = new ClientSocket(options, Logger);
         _clientSocket.OnReceived += x => _stream.AddRange(x.ToArray());
 
         _clientSocket.OnConnected += () => this.Trace("STATE: Connected");

@@ -13,6 +13,7 @@ namespace Annium.Net.Sockets.Tests.Internal;
 
 public abstract class ClientServerManagedSocketTestsBase : TestBase, IAsyncLifetime
 {
+    protected const SocketMode SocketMode = Sockets.SocketMode.Messaging;
     private IClientManagedSocket _clientSocket = default!;
     private readonly List<byte> _stream = new();
 
@@ -434,7 +435,7 @@ public abstract class ClientServerManagedSocketTestsBase : TestBase, IAsyncLifet
     {
         this.Trace("start");
 
-        _clientSocket = new ClientManagedSocket(SocketMode.Raw, Logger);
+        _clientSocket = new ClientManagedSocket(SocketMode, Logger);
         _clientSocket.OnReceived += x => _stream.AddRange(x.ToArray());
 
         await Task.CompletedTask;

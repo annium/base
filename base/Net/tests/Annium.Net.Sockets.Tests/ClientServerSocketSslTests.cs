@@ -140,7 +140,9 @@ public class ClientServerSocketSslTests : ClientServerSocketTestsBase
                 );
 
                 this.Trace("create managed socket");
-                var socket = new ServerSocket(sslStream, sp.Resolve<ILogger>(), ct);
+                var options = ServerSocketOptions.Default with { Mode = SocketMode };
+                var logger = sp.Resolve<ILogger>();
+                var socket = new ServerSocket(sslStream, options, logger, ct);
 
                 this.Trace<string>("handle {socket}", socket.GetFullId());
                 await handleSocket(socket, ct);

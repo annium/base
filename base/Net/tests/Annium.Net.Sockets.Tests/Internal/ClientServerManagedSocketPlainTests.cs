@@ -145,7 +145,8 @@ public class ClientServerManagedSocketPlainTests : ClientServerManagedSocketTest
                 await using var stream = new NetworkStream(raw);
 
                 this.Trace("create managed socket");
-                var socket = new ServerManagedSocket(stream, SocketMode.Raw, sp.Resolve<ILogger>(), ct);
+                var logger = sp.Resolve<ILogger>();
+                var socket = new ServerManagedSocket(stream, SocketMode, logger, ct);
 
                 this.Trace<string>("handle {socket}", socket.GetFullId());
                 await handleSocket(socket, ct);

@@ -124,7 +124,9 @@ public class ClientServerSocketPlainTests : ClientServerSocketTestsBase
                 await using var stream = new NetworkStream(raw, true);
 
                 this.Trace("create managed socket");
-                var socket = new ServerSocket(stream, sp.Resolve<ILogger>(), ct);
+                var options = ServerSocketOptions.Default with { Mode = SocketMode };
+                var logger = sp.Resolve<ILogger>();
+                var socket = new ServerSocket(stream, options, logger, ct);
 
                 this.Trace<string>("handle {socket}", socket.GetFullId());
                 await handleSocket(socket, ct);
