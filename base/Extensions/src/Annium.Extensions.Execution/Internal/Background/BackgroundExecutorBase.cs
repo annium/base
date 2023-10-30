@@ -157,15 +157,8 @@ internal abstract class BackgroundExecutorBase : IBackgroundExecutor, ILogSubjec
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void ScheduleTask(Delegate task)
     {
-        lock (_locker)
-        {
-            if (_state is not (State.Created or State.Started))
-                throw new InvalidOperationException($"Executor is already {_state}");
-        }
-
-        this.Trace<string>("schedule task {id}", task.GetFullId());
-        if (!_taskWriter.TryWrite(task))
-            throw new InvalidOperationException("Task must have been scheduled");
+        if (!TryScheduleTask(task))
+            throw new InvalidOperationException("Task schedule failed");
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -181,10 +174,12 @@ internal abstract class BackgroundExecutorBase : IBackgroundExecutor, ILogSubjec
         }
 
         this.Trace<string>("schedule task {id}", task.GetFullId());
-        if (!_taskWriter.TryWrite(task))
-            throw new InvalidOperationException("Task must have been scheduled");
+        if (_taskWriter.TryWrite(task))
+            return true;
 
-        return true;
+        this.Trace<string>("schedule task {id} failed - writer is already complete", task.GetFullId());
+
+        return false;
     }
 
     private async Task Run()
