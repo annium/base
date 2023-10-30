@@ -1,9 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net.Security;
 using System.Net.Sockets;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
+using Annium.Core.DependencyInjection;
 using Annium.Logging;
 using Annium.Net.Sockets.Internal;
 using Annium.Testing;
@@ -12,25 +15,38 @@ using Xunit.Abstractions;
 
 namespace Annium.Net.Sockets.Tests.Internal;
 
-public abstract class MessagingManagedSocketTestsBase : TestBase, IAsyncLifetime
+public class MessagingManagedSocketTests : TestBase, IAsyncLifetime
 {
     private Socket _clientSocket = default!;
     private Stream _clientStream = default!;
     private IManagedSocket _managedSocket = default!;
     private readonly List<byte[]> _messages = new();
+    private Func<Socket, Task<Stream>> _createClientStreamAsync = delegate
+    {
+        throw new NotImplementedException();
+    };
+    private Func<Func<IManagedSocket, CancellationToken, Task>, IAsyncDisposable> _runServer = delegate
+    {
+        throw new NotImplementedException();
+    };
 
-    protected MessagingManagedSocketTestsBase(ITestOutputHelper outputHelper)
+    public MessagingManagedSocketTests(ITestOutputHelper outputHelper)
         : base(outputHelper) { }
 
-    protected async Task Send_Canceled_Base()
+    [Theory]
+    [InlineData(StreamType.Plain)]
+    [InlineData(StreamType.Ssl)]
+    public async Task Send_Canceled(StreamType streamType)
     {
         this.Trace("start");
+
+        Configure(streamType);
 
         // arrange
         var message = "demo"u8.ToArray();
 
         this.Trace("run server");
-        await using var _ = RunServer(async (serverSocket, ct) => await serverSocket.ListenAsync(ct));
+        await using var _ = _runServer(async (serverSocket, ct) => await serverSocket.ListenAsync(ct));
 
         this.Trace("connect and start listening");
         await ConnectAndStartListenAsync();
@@ -46,15 +62,20 @@ public abstract class MessagingManagedSocketTestsBase : TestBase, IAsyncLifetime
         this.Trace("done");
     }
 
-    protected async Task Send_ClientClosed_Base()
+    [Theory]
+    [InlineData(StreamType.Plain)]
+    [InlineData(StreamType.Ssl)]
+    public async Task Send_ClientClosed(StreamType streamType)
     {
         this.Trace("start");
+
+        Configure(streamType);
 
         // arrange
         var message = "demo"u8.ToArray();
 
         this.Trace("run server");
-        await using var _ = RunServer(async (serverSocket, ct) => await serverSocket.ListenAsync(ct));
+        await using var _ = _runServer(async (serverSocket, ct) => await serverSocket.ListenAsync(ct));
 
         this.Trace("connect and start listening");
         await ConnectAndStartListenAsync();
@@ -73,10 +94,13 @@ public abstract class MessagingManagedSocketTestsBase : TestBase, IAsyncLifetime
         this.Trace("done");
     }
 
-    protected async Task Send_ServerClosed_Base()
+    [Theory]
+    [InlineData(StreamType.Plain)]
+    public async Task Send_ServerClosed(StreamType streamType)
     {
-        // arrange
         this.Trace("start");
+
+        Configure(streamType);
 
         var message = "demo"u8.ToArray();
         var serverTcs = new TaskCompletionSource();
@@ -110,16 +134,20 @@ public abstract class MessagingManagedSocketTestsBase : TestBase, IAsyncLifetime
         this.Trace("done");
     }
 
-    protected async Task Send_Normal_Base()
+    [Theory]
+    [InlineData(StreamType.Plain)]
+    [InlineData(StreamType.Ssl)]
+    public async Task Send_Normal(StreamType streamType)
     {
-        // arrange
         this.Trace("start");
+
+        Configure(streamType);
 
         var message = "demo"u8.ToArray();
         var serverTcs = new TaskCompletionSource();
 
         this.Trace("run server");
-        await using var _ = RunServer(
+        await using var _ = _runServer(
             async (serverSocket, ct) =>
             {
                 serverSocket.OnReceived += x =>
@@ -160,13 +188,17 @@ public abstract class MessagingManagedSocketTestsBase : TestBase, IAsyncLifetime
         this.Trace("done");
     }
 
-    protected async Task Listen_Canceled_Base()
+    [Theory]
+    [InlineData(StreamType.Plain)]
+    [InlineData(StreamType.Ssl)]
+    public async Task Listen_Canceled(StreamType streamType)
     {
-        // arrange
         this.Trace("start");
 
+        Configure(streamType);
+
         this.Trace("run server");
-        await using var _ = RunServer(async (serverSocket, ct) => await serverSocket.ListenAsync(ct));
+        await using var _ = _runServer(async (serverSocket, ct) => await serverSocket.ListenAsync(ct));
 
         this.Trace("connect");
         await ConnectAsync();
@@ -183,13 +215,17 @@ public abstract class MessagingManagedSocketTestsBase : TestBase, IAsyncLifetime
         this.Trace("done");
     }
 
-    protected async Task Listen_ClientClosed_Base()
+    [Theory]
+    [InlineData(StreamType.Plain)]
+    [InlineData(StreamType.Ssl)]
+    public async Task Listen_ClientClosed(StreamType streamType)
     {
-        // arrange
         this.Trace("start");
 
+        Configure(streamType);
+
         this.Trace("run server");
-        await using var _ = RunServer(async (serverSocket, ct) => await serverSocket.ListenAsync(ct));
+        await using var _ = _runServer(async (serverSocket, ct) => await serverSocket.ListenAsync(ct));
 
         this.Trace("connect");
         await ConnectAsync();
@@ -209,10 +245,13 @@ public abstract class MessagingManagedSocketTestsBase : TestBase, IAsyncLifetime
         this.Trace("done");
     }
 
-    protected async Task Listen_ServerClosed_Base()
+    [Theory]
+    [InlineData(StreamType.Plain)]
+    public async Task Listen_ServerClosed(StreamType streamType)
     {
-        // arrange
         this.Trace("start");
+
+        Configure(streamType);
 
         this.Trace("run server");
         await using var _ = RunServerBase(
@@ -239,16 +278,20 @@ public abstract class MessagingManagedSocketTestsBase : TestBase, IAsyncLifetime
         this.Trace("done");
     }
 
-    protected async Task Listen_Normal_Base()
+    [Theory]
+    [InlineData(StreamType.Plain)]
+    [InlineData(StreamType.Ssl)]
+    public async Task Listen_Normal(StreamType streamType)
     {
-        // arrange
         this.Trace("start");
+
+        Configure(streamType);
 
         this.Trace("generate messages");
         var messages = GenerateMessages(10, 100);
 
         this.Trace("run server");
-        await using var _ = RunServer(
+        await using var _ = _runServer(
             async (serverSocket, ct) =>
             {
                 this.Trace("start sending chunks");
@@ -283,16 +326,20 @@ public abstract class MessagingManagedSocketTestsBase : TestBase, IAsyncLifetime
         this.Trace("done");
     }
 
-    protected async Task Listen_SmallBuffer_Base()
+    [Theory]
+    [InlineData(StreamType.Plain)]
+    [InlineData(StreamType.Ssl)]
+    public async Task Listen_SmallBuffer(StreamType streamType)
     {
-        // arrange
         this.Trace("start");
+
+        Configure(streamType);
 
         this.Trace("generate messages");
         var messages = GenerateMessages(10, 100_000);
 
         this.Trace("run server");
-        await using var _ = RunServer(
+        await using var _ = _runServer(
             async (serverSocket, ct) =>
             {
                 this.Trace("start sending chunks");
@@ -348,8 +395,106 @@ public abstract class MessagingManagedSocketTestsBase : TestBase, IAsyncLifetime
         this.Trace("done");
     }
 
-    protected abstract Task<Stream> CreateClientStreamAsync(Socket socket);
-    internal abstract IAsyncDisposable RunServer(Func<IManagedSocket, CancellationToken, Task> handleSocket);
+    private void Configure(StreamType streamType)
+    {
+        this.Trace("start");
+        switch (streamType)
+        {
+            case StreamType.Plain:
+                _createClientStreamAsync = async socket =>
+                {
+                    await Task.CompletedTask;
+
+                    return new NetworkStream(socket);
+                };
+
+                _runServer = handleSocket =>
+                {
+                    return RunServerBase(
+                        async (sp, raw, ct) =>
+                        {
+                            this.Trace("start");
+
+                            this.Trace<string>("wrap {raw} into network stream", raw.GetFullId());
+                            await using var stream = new NetworkStream(raw);
+
+                            this.Trace("create managed socket");
+                            var socket = new MessagingManagedSocket(
+                                stream,
+                                ManagedSocketOptionsBase.Default,
+                                sp.Resolve<ILogger>()
+                            );
+
+                            this.Trace<string>("handle {socket}", socket.GetFullId());
+                            await handleSocket(socket, ct);
+
+                            this.Trace("done");
+                        }
+                    );
+                };
+                break;
+            case StreamType.Ssl:
+                _createClientStreamAsync = async socket =>
+                {
+                    var networkStream = new NetworkStream(socket);
+                    var sslStream = new SslStream(networkStream, false, ValidateServerCertificate, null);
+
+                    await sslStream.AuthenticateAsClientAsync(string.Empty);
+
+                    return sslStream;
+
+                    bool ValidateServerCertificate(
+                        object sender,
+                        X509Certificate? certificate,
+                        X509Chain? chain,
+                        SslPolicyErrors sslPolicyErrors
+                    )
+                    {
+                        // by design, no ssl verification in tests (cause it will require valid SSL certificate)
+                        return true;
+                    }
+                };
+
+                _runServer = handleSocket =>
+                {
+                    var cert = X509Certificate.CreateFromCertFile("keys/ecdsa_cert.pfx");
+
+                    return RunServerBase(
+                        async (sp, raw, ct) =>
+                        {
+                            this.Trace("start");
+
+                            this.Trace<string>("wrap {raw} into ssl stream", raw.GetFullId());
+                            await using var sslStream = new SslStream(new NetworkStream(raw), false);
+
+                            this.Trace("authenticate as server");
+                            await sslStream.AuthenticateAsServerAsync(
+                                cert,
+                                clientCertificateRequired: false,
+                                checkCertificateRevocation: true
+                            );
+
+                            this.Trace("create managed socket");
+                            var socket = new MessagingManagedSocket(
+                                sslStream,
+                                ManagedSocketOptionsBase.Default,
+                                sp.Resolve<ILogger>()
+                            );
+
+                            this.Trace<string>("handle {socket}", socket.GetFullId());
+                            await handleSocket(socket, ct);
+
+                            this.Trace("done");
+                        }
+                    );
+                };
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(streamType), streamType, null);
+        }
+
+        this.Trace("done");
+    }
 
     private async Task ConnectAndStartListenAsync(CancellationToken ct = default)
     {
@@ -371,7 +516,7 @@ public abstract class MessagingManagedSocketTestsBase : TestBase, IAsyncLifetime
         await _clientSocket.ConnectAsync(EndPoint, ct);
 
         this.Trace("create client stream");
-        _clientStream = await CreateClientStreamAsync(_clientSocket);
+        _clientStream = await _createClientStreamAsync(_clientSocket);
 
         this.Trace("create managed socket");
         _managedSocket = new MessagingManagedSocket(_clientStream, ManagedSocketOptionsBase.Default, Logger);
