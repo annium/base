@@ -6,11 +6,6 @@ namespace Annium.Net.Sockets.Internal;
 internal class MessagingBuffer : IDisposable
 {
     public const int HeaderSize = sizeof(int);
-    private int _dataStart;
-    private int _dataLength;
-    private int _messageSize;
-    private byte[] _buffer;
-    private bool _isDisposed;
 
     /// <summary>
     /// Wrap buffer free space as Memory
@@ -47,6 +42,20 @@ internal class MessagingBuffer : IDisposable
     }
 
     /// <summary>
+    /// Returns whether buffer contains full message
+    /// </summary>
+    /// <returns>Whether buffer contains full message</returns>
+    public bool ExtremeMessageExpected
+    {
+        get
+        {
+            EnsureNotDisposed();
+
+            return _messageSize >= _maxMessageSize;
+        }
+    }
+
+    /// <summary>
     /// Wrap buffer message as ReadOnlyMemory
     /// </summary>
     /// <returns>Buffer data as ReadOnlyMemory</returns>
@@ -63,9 +72,16 @@ internal class MessagingBuffer : IDisposable
     }
 
     private int DataEnd => _dataStart + _dataLength;
+    private readonly int _maxMessageSize;
+    private int _dataStart;
+    private int _dataLength;
+    private int _messageSize;
+    private byte[] _buffer;
+    private bool _isDisposed;
 
-    public MessagingBuffer(int size)
+    public MessagingBuffer(int size, int maxMessageSize)
     {
+        _maxMessageSize = maxMessageSize;
         _buffer = ArrayPool<byte>.Shared.Rent(HeaderSize + size);
     }
 

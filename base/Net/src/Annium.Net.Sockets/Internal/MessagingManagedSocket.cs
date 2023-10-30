@@ -19,10 +19,10 @@ internal class MessagingManagedSocket : IManagedSocket, ILogSubject
     private long _sendCounter;
     private long _recvCounter;
 
-    public MessagingManagedSocket(Stream socket, ILogger logger)
+    public MessagingManagedSocket(Stream stream, ILogger logger)
     {
         Logger = logger;
-        _stream = socket;
+        _stream = stream;
     }
 
     public async ValueTask<SocketSendStatus> SendAsync(ReadOnlyMemory<byte> data, CancellationToken ct = default)
@@ -95,7 +95,7 @@ internal class MessagingManagedSocket : IManagedSocket, ILogSubject
             return new SocketCloseResult(SocketCloseStatus.ClosedLocal, null);
         }
 
-        using var buffer = new MessagingBuffer(BufferSize);
+        using var buffer = new MessagingBuffer(BufferSize, BufferSize);
 
         this.Trace("start");
 

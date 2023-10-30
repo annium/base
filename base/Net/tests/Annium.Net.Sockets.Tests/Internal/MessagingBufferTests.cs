@@ -12,11 +12,11 @@ public class MessagingBufferTests
     [Fact]
     public void No_Data()
     {
-        using var buffer = new MessagingBuffer(2);
+        using var buffer = new MessagingBuffer(2, 10);
         var freeSpace = buffer.FreeSpace.Length;
 
         // assert
-        buffer.Assert(false, false, freeSpace, Array.Empty<byte>());
+        buffer.Assert(false, false, false, freeSpace, Array.Empty<byte>());
 
         // reset
         buffer.Reset();
@@ -25,17 +25,17 @@ public class MessagingBufferTests
     [Fact]
     public void Partial_Header()
     {
-        using var buffer = new MessagingBuffer(2);
+        using var buffer = new MessagingBuffer(2, 10);
         var freeSpace = buffer.FreeSpace.Length;
 
         // assert
-        buffer.Assert(false, false, freeSpace, Array.Empty<byte>());
+        buffer.Assert(false, false, false, freeSpace, Array.Empty<byte>());
 
         // write header partially
         buffer.Write(new byte[] { 1, 2 });
 
         // assert
-        buffer.Assert(false, false, freeSpace - 2, Array.Empty<byte>());
+        buffer.Assert(false, false, false, freeSpace - 2, Array.Empty<byte>());
 
         // reset
         buffer.Reset();
@@ -44,17 +44,17 @@ public class MessagingBufferTests
     [Fact]
     public void Full_Header()
     {
-        using var buffer = new MessagingBuffer(10);
+        using var buffer = new MessagingBuffer(10, 10);
         var freeSpace = buffer.FreeSpace.Length;
 
         // assert
-        buffer.Assert(false, false, freeSpace, Array.Empty<byte>());
+        buffer.Assert(false, false, false, freeSpace, Array.Empty<byte>());
 
         // write header full
         buffer.WriteMessageSize(2);
 
         // assert
-        buffer.Assert(false, false, freeSpace - HeaderSize, Array.Empty<byte>());
+        buffer.Assert(false, false, false, freeSpace - HeaderSize, Array.Empty<byte>());
 
         // reset
         buffer.Reset();
@@ -63,18 +63,18 @@ public class MessagingBufferTests
     [Fact]
     public void Partial_Data()
     {
-        using var buffer = new MessagingBuffer(10);
+        using var buffer = new MessagingBuffer(10, 10);
         var freeSpace = buffer.FreeSpace.Length;
 
         // assert
-        buffer.Assert(false, false, freeSpace, Array.Empty<byte>());
+        buffer.Assert(false, false, false, freeSpace, Array.Empty<byte>());
 
         // write header and partially data
         buffer.WriteMessageSize(2);
         buffer.Write(new byte[] { 1 });
 
         // assert
-        buffer.Assert(false, false, freeSpace - HeaderSize - 1, Array.Empty<byte>());
+        buffer.Assert(false, false, false, freeSpace - HeaderSize - 1, Array.Empty<byte>());
 
         // reset
         buffer.Reset();
@@ -83,34 +83,34 @@ public class MessagingBufferTests
     [Fact]
     public void Exact_Data()
     {
-        using var buffer = new MessagingBuffer(10);
+        using var buffer = new MessagingBuffer(10, 10);
         var freeSpace = buffer.FreeSpace.Length;
 
         // assert
-        buffer.Assert(false, false, freeSpace, Array.Empty<byte>());
+        buffer.Assert(false, false, false, freeSpace, Array.Empty<byte>());
 
         // write single message
         var message = new byte[] { 1, 3 };
         buffer.WriteMessage(message);
 
         // assert
-        buffer.Assert(false, true, freeSpace - HeaderSize - message.Length, message);
+        buffer.Assert(false, true, false, freeSpace - HeaderSize - message.Length, message);
 
         // reset
         buffer.Reset();
 
         // assert
-        buffer.Assert(false, false, freeSpace, Array.Empty<byte>());
+        buffer.Assert(false, false, false, freeSpace, Array.Empty<byte>());
     }
 
     [Fact]
     public void Extra_Data()
     {
-        using var buffer = new MessagingBuffer(10);
+        using var buffer = new MessagingBuffer(10, 10);
         var freeSpace = buffer.FreeSpace.Length;
 
         // assert
-        buffer.Assert(false, false, freeSpace, Array.Empty<byte>());
+        buffer.Assert(false, false, false, freeSpace, Array.Empty<byte>());
 
         // write full messageA
         var messageA = new byte[] { 1, 3 };
@@ -122,35 +122,35 @@ public class MessagingBufferTests
         buffer.Write(messageB.AsSpan(0, 1));
 
         // assert - free space in end of buffer
-        buffer.Assert(false, true, freeSpace - HeaderSize - messageA.Length - HeaderSize - 1, messageA);
+        buffer.Assert(false, true, false, freeSpace - HeaderSize - messageA.Length - HeaderSize - 1, messageA);
 
         // reset - drops message, moves data to start, cause no more messages in buffer
         buffer.Reset();
 
         // assert - free space still in end of buffer (despite pointer moved in the buffer start)
-        buffer.Assert(false, false, freeSpace - HeaderSize - 1, Array.Empty<byte>());
+        buffer.Assert(false, false, false, freeSpace - HeaderSize - 1, Array.Empty<byte>());
 
         // write messageB left body
         buffer.Write(messageB.AsSpan(1));
 
         // assert
-        buffer.Assert(false, true, freeSpace - HeaderSize - messageB.Length, messageB);
+        buffer.Assert(false, true, false, freeSpace - HeaderSize - messageB.Length, messageB);
 
         // reset
         buffer.Reset();
 
         // assert
-        buffer.Assert(false, false, freeSpace, Array.Empty<byte>());
+        buffer.Assert(false, false, false, freeSpace, Array.Empty<byte>());
     }
 
     [Fact]
     public void MultiMessage_Data()
     {
-        using var buffer = new MessagingBuffer(20);
+        using var buffer = new MessagingBuffer(20, 10);
         var freeSpace = buffer.FreeSpace.Length;
 
         // assert
-        buffer.Assert(false, false, freeSpace, Array.Empty<byte>());
+        buffer.Assert(false, false, false, freeSpace, Array.Empty<byte>());
 
         // write full messageA
         var messageA = new byte[] { 1, 3 };
@@ -167,19 +167,19 @@ public class MessagingBufferTests
         buffer.Write(messageC.AsSpan(0, messageCBytes));
 
         // assert - full buffer with messageA
-        buffer.Assert(true, true, 0, messageA);
+        buffer.Assert(true, true, false, 0, messageA);
 
         // reset - drops messageA
         buffer.Reset();
 
         // assert - full buffer with messageB
-        buffer.Assert(true, true, 0, messageB);
+        buffer.Assert(true, true, false, 0, messageB);
 
         // reset - drops messageB, moves data to internal buffer start
         buffer.Reset();
 
         // assert - free space available, no message
-        buffer.Assert(false, false, freeSpace - HeaderSize - messageCBytes, Array.Empty<byte>());
+        buffer.Assert(false, false, true, freeSpace - HeaderSize - messageCBytes, Array.Empty<byte>());
 
         // write messageC left body
         while (messageCBytes < messageC.Length)
@@ -195,14 +195,14 @@ public class MessagingBufferTests
 
         // assert - free space is available, messageC is detected
         var freeSpaceBeforeReset = buffer.FreeSpace.Length;
-        buffer.Assert(false, true, freeSpaceBeforeReset, messageC);
+        buffer.Assert(false, true, true, freeSpaceBeforeReset, messageC);
 
         // reset - drops messageC and resets buffer
         buffer.Reset();
 
         // assert
         var newFreeSpace = buffer.FreeSpace.Length;
-        buffer.Assert(false, false, newFreeSpace, Array.Empty<byte>());
+        buffer.Assert(false, false, false, newFreeSpace, Array.Empty<byte>());
         newFreeSpace.IsGreater(freeSpaceBeforeReset);
         newFreeSpace.IsGreater(freeSpace);
     }
@@ -234,12 +234,14 @@ file static class BufferExtensions
         this MessagingBuffer buffer,
         bool isFull,
         bool containsFullMessage,
+        bool extremeMessageExpected,
         int freeSpace,
         byte[] message
     )
     {
         buffer.IsFull.Is(isFull);
         buffer.ContainsFullMessage.Is(containsFullMessage);
+        buffer.ExtremeMessageExpected.Is(extremeMessageExpected);
         buffer.FreeSpace.Length.Is(freeSpace);
 
         var bufferMessage = buffer.Message.ToArray();
