@@ -24,6 +24,11 @@ internal class MessagingManagedSocket : IManagedSocket, ILogSubject
         Logger = logger;
         _stream = stream;
         _options = options;
+        this.Trace(
+            "buffer size: {bufferSize}, extreme message size: {extremeMessageSize}",
+            options.BufferSize,
+            options.ExtremeMessageSize
+        );
     }
 
     public async ValueTask<SocketSendStatus> SendAsync(ReadOnlyMemory<byte> data, CancellationToken ct = default)

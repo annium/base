@@ -137,6 +137,70 @@ public class MessagingManagedSocketTests : TestBase, IAsyncLifetime
     [Theory]
     [InlineData(StreamType.Plain)]
     [InlineData(StreamType.Ssl)]
+    public async Task Send_ExtremeMessage(StreamType streamType)
+    {
+        this.Trace("start");
+
+        Configure(
+            streamType,
+            ManagedSocketOptionsBase.Default with
+            {
+                BufferSize = 16_384,
+                ExtremeMessageSize = 65_536
+            }
+        );
+
+        var message = GenerateMessages(1, 262_144)[0];
+        var serverTcs = new TaskCompletionSource();
+
+        this.Trace("run server");
+        await using var _ = _runServer(
+            async (serverSocket, ct) =>
+            {
+                serverSocket.OnReceived += x =>
+                {
+                    serverSocket.SendAsync(x.ToArray(), CancellationToken.None).GetAwaiter();
+                };
+
+                Task.Delay(10, CancellationToken.None)
+                    .ContinueWith(_ => serverTcs.SetResult(), CancellationToken.None)
+                    .GetAwaiter();
+
+                await serverSocket.ListenAsync(ct);
+            }
+        );
+
+        this.Trace("connect");
+        await ConnectAsync();
+
+        this.Trace("start listening");
+        var listenTask = ListenAsync();
+
+        // delay to let server setup connection
+        this.Trace("await server signal");
+        await serverTcs.Task;
+
+        // act
+        this.Trace("send message");
+        await _managedSocket.SendAsync(message);
+
+        // assert
+        this.Trace("await listen result");
+        var listenResult = await listenTask;
+
+        this.Trace("assert closed with error");
+        listenResult.Status.Is(SocketCloseStatus.ClosedRemote);
+        listenResult.Exception.IsDefault();
+
+        this.Trace("assert data not arrived");
+        _messages.IsEmpty();
+
+        this.Trace("done");
+    }
+
+    [Theory]
+    [InlineData(StreamType.Plain)]
+    [InlineData(StreamType.Ssl)]
     public async Task Send_Normal(StreamType streamType)
     {
         this.Trace("start");
@@ -166,7 +230,7 @@ public class MessagingManagedSocketTests : TestBase, IAsyncLifetime
         this.Trace("connect and start listening");
         await ConnectAndStartListenAsync();
 
-        // delay to let server close connection
+        // delay to let server setup connection
         this.Trace("await server signal");
         await serverTcs.Task;
 
@@ -274,6 +338,60 @@ public class MessagingManagedSocketTests : TestBase, IAsyncLifetime
         this.Trace("assert closed remote with no exception");
         result.Status.Is(SocketCloseStatus.ClosedRemote);
         result.Exception.IsDefault();
+
+        this.Trace("done");
+    }
+
+    [Theory]
+    [InlineData(StreamType.Plain)]
+    [InlineData(StreamType.Ssl)]
+    public async Task Listen_ExtremeMessage(StreamType streamType)
+    {
+        this.Trace("start");
+
+        Configure(streamType);
+
+        this.Trace("generate messages");
+        var messages = GenerateMessages(1, 500);
+
+        this.Trace("run server");
+        await using var _ = _runServer(
+            async (serverSocket, ct) =>
+            {
+                this.Trace("start sending chunks");
+
+                var i = 0;
+                foreach (var message in messages)
+                {
+                    this.Trace("send message#{num}", ++i);
+                    await serverSocket.SendAsync(message, ct);
+                    await Task.Delay(1, CancellationToken.None);
+                }
+
+                this.Trace("sending chunks complete");
+            }
+        );
+
+        // act
+        this.Trace("connect");
+        await ConnectAsync(
+            options: ManagedSocketOptionsBase.Default with
+            {
+                BufferSize = 10,
+                ExtremeMessageSize = 100
+            }
+        );
+
+        this.Trace("await listen result");
+        var listenResult = await ListenAsync();
+
+        // assert
+        this.Trace("assert closed with error");
+        listenResult.Status.Is(SocketCloseStatus.Error);
+        listenResult.Exception.IsNotDefault().Reports("Extreme message expected");
+
+        this.Trace("assert data not arrived");
+        _messages.IsEmpty();
 
         this.Trace("done");
     }
@@ -395,7 +513,7 @@ public class MessagingManagedSocketTests : TestBase, IAsyncLifetime
         this.Trace("done");
     }
 
-    private void Configure(StreamType streamType)
+    private void Configure(StreamType streamType, ManagedSocketOptionsBase? serverSocketOptions = null)
     {
         this.Trace("start");
         switch (streamType)
@@ -421,7 +539,7 @@ public class MessagingManagedSocketTests : TestBase, IAsyncLifetime
                             this.Trace("create managed socket");
                             var socket = new MessagingManagedSocket(
                                 stream,
-                                ManagedSocketOptionsBase.Default,
+                                serverSocketOptions ?? ManagedSocketOptionsBase.Default,
                                 sp.Resolve<ILogger>()
                             );
 
@@ -477,7 +595,7 @@ public class MessagingManagedSocketTests : TestBase, IAsyncLifetime
                             this.Trace("create managed socket");
                             var socket = new MessagingManagedSocket(
                                 sslStream,
-                                ManagedSocketOptionsBase.Default,
+                                serverSocketOptions ?? ManagedSocketOptionsBase.Default,
                                 sp.Resolve<ILogger>()
                             );
 
@@ -506,7 +624,7 @@ public class MessagingManagedSocketTests : TestBase, IAsyncLifetime
         this.Trace("done");
     }
 
-    private async Task ConnectAsync(CancellationToken ct = default)
+    private async Task ConnectAsync(CancellationToken ct = default, ManagedSocketOptionsBase? options = null)
     {
         this.Trace("start");
 
@@ -519,7 +637,7 @@ public class MessagingManagedSocketTests : TestBase, IAsyncLifetime
         _clientStream = await _createClientStreamAsync(_clientSocket);
 
         this.Trace("create managed socket");
-        _managedSocket = new MessagingManagedSocket(_clientStream, ManagedSocketOptionsBase.Default, Logger);
+        _managedSocket = new MessagingManagedSocket(_clientStream, options ?? ManagedSocketOptionsBase.Default, Logger);
         this.Trace<string, string>(
             "created pair of {clientSocket} and {managedSocket}",
             _clientSocket.GetFullId(),

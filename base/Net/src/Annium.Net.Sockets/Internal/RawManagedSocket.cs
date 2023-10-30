@@ -22,6 +22,7 @@ internal class RawManagedSocket : IManagedSocket, ILogSubject
         Logger = logger;
         _stream = socket;
         _options = options;
+        this.Trace("buffer size: {bufferSize}", options.BufferSize);
     }
 
     public async ValueTask<SocketSendStatus> SendAsync(ReadOnlyMemory<byte> data, CancellationToken ct = default)

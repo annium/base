@@ -169,7 +169,7 @@ internal class MessagingBuffer : IDisposable
     }
 
     public override string ToString() =>
-        $"{_dataStart}->{_dataLength} [{(_messageSize > 0 ? HeaderSize + _messageSize : 0)} | {_buffer.Length}]";
+        $"{_dataStart}->{_dataLength} [{(_messageSize > 0 ? HeaderSize + _messageSize : 0)} | {_buffer.Length}] {{max:{_maxMessageSize}}}";
 
     private void TryResolveMessageSize()
     {
