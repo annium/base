@@ -46,7 +46,7 @@ public class ChannelTests : TestBase
         await Expect.To(() => log.Has(data.Length));
 
         this.Trace("assert log matches data and dispose callback is not called");
-        log.IsEqual(data);
+        log.SequenceEqual(data).IsTrue();
         disposeCounter.Is(0);
 
         this.Trace("dispose and verify dispose callback is called");

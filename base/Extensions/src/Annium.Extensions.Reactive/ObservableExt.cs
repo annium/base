@@ -47,8 +47,11 @@ public static class ObservableExt
                 {
                     while (!ct.IsCancellationRequested)
                     {
-                        var data = await reader.ReadAsync(ct);
-                        observer.OnNext(data);
+                        while (await reader.WaitToReadAsync(ct))
+                        {
+                            var data = await reader.ReadAsync(ct);
+                            observer.OnNext(data);
+                        }
                     }
                 }
                 catch (OperationCanceledException) { }
