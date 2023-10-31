@@ -28,6 +28,30 @@ public static class Expect
         validate();
     }
 
+    public static async Task To(Func<ValueTask> validate, CancellationToken ct, int pollDelay = 25)
+    {
+        await Wait.UntilAsync(
+            async () =>
+            {
+                try
+                {
+                    await validate();
+                    return true;
+                }
+                catch
+                {
+                    return false;
+                }
+            },
+            ct,
+            pollDelay
+        );
+        await validate();
+    }
+
     public static Task To(Action validate, int ms = 10_000, int pollDelay = 25) =>
+        To(validate, new CancellationTokenSource(ms).Token, pollDelay);
+
+    public static Task To(Func<ValueTask> validate, int ms = 10_000, int pollDelay = 25) =>
         To(validate, new CancellationTokenSource(ms).Token, pollDelay);
 }
