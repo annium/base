@@ -66,14 +66,25 @@ public static class JsonSerializerOptionsExtensions
         return options;
     }
 
-    public static JsonSerializerOptions InsertConverter<TConverter>(
+    public static JsonSerializerOptions InsertConverter(
         this JsonSerializerOptions options,
         int index,
-        TConverter converter
+        JsonConverter converter
     )
-        where TConverter : JsonConverter
     {
         options.Converters.Insert(index, converter);
+
+        return options;
+    }
+
+    public static JsonSerializerOptions InsertConverters(
+        this JsonSerializerOptions options,
+        int index,
+        params JsonConverter[] converters
+    )
+    {
+        for (var i = converters.Length - 1; i >= 0; i--)
+            options.Converters.Insert(index, converters[i]);
 
         return options;
     }
@@ -86,13 +97,20 @@ public static class JsonSerializerOptionsExtensions
         return options;
     }
 
-    public static JsonSerializerOptions AddConverter<TConverter>(
-        this JsonSerializerOptions options,
-        TConverter converter
-    )
-        where TConverter : JsonConverter
+    public static JsonSerializerOptions AddConverter(this JsonSerializerOptions options, JsonConverter converter)
     {
         options.Converters.Add(converter);
+
+        return options;
+    }
+
+    public static JsonSerializerOptions AddConverters(
+        this JsonSerializerOptions options,
+        params JsonConverter[] converters
+    )
+    {
+        foreach (var converter in converters)
+            options.Converters.Add(converter);
 
         return options;
     }
