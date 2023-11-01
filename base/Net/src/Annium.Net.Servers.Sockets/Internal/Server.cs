@@ -20,6 +20,7 @@ internal class Server : IServer, ILogSubject
     {
         Logger = logger;
         _listener = new TcpListener(IPAddress.Any, port);
+        _listener.Server.NoDelay = true;
         _executor = Executor.Background.Parallel<Server>(Logger);
         _handler = handler;
     }
@@ -44,6 +45,8 @@ internal class Server : IServer, ILogSubject
             {
                 // await for connection
                 socket = await _listener.AcceptSocketAsync(ct);
+                socket.NoDelay = true;
+                socket.LingerState = new LingerOption(true, 0);
                 this.Trace("socket accepted");
             }
             catch (OperationCanceledException)

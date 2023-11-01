@@ -110,7 +110,6 @@ public class RawManagedSocketTests : TestBase, IAsyncLifetime
         await using var _ = RunServerBase(
             async (_, socket, _) =>
             {
-                socket.LingerState = new LingerOption(true, 0);
                 socket.Close();
                 await Task.Delay(10, CancellationToken.None);
                 serverTcs.SetResult();
