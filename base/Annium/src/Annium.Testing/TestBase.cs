@@ -25,35 +25,35 @@ public abstract class TestBase : ILogSubject
         _logger = new Lazy<ILogger>(Get<ILogger>, true);
     }
 
-    protected void AddServicePack<T>()
+    public void AddServicePack<T>()
         where T : ServicePackBase, new()
     {
         _builder.UseServicePack<T>();
     }
 
-    protected void RegisterMapper()
+    public void RegisterMapper()
     {
         Register(container => container.AddMapper(autoload: false));
     }
 
-    protected void Register(Action<IServiceContainer> register)
+    public void Register(Action<IServiceContainer> register)
     {
         EnsureNotBuilt();
         _builder.UseServicePack(new DynamicServicePack().Register((c, _) => register(c)));
     }
 
-    protected void Setup(Action<IServiceProvider> setup)
+    public void Setup(Action<IServiceProvider> setup)
     {
         EnsureNotBuilt();
         _builder.UseServicePack(new DynamicServicePack().Setup(setup));
     }
 
-    protected IAsyncServiceScope CreateAsyncScope() => _sp.Value.CreateAsyncScope();
+    public IAsyncServiceScope CreateAsyncScope() => _sp.Value.CreateAsyncScope();
 
-    protected T Get<T>()
+    public T Get<T>()
         where T : notnull => _sp.Value.Resolve<T>();
 
-    protected T GetKeyed<TKey, T>(TKey key)
+    public T GetKeyed<TKey, T>(TKey key)
         where TKey : notnull
         where T : notnull => _sp.Value.ResolveKeyed<TKey, T>(key);
 
