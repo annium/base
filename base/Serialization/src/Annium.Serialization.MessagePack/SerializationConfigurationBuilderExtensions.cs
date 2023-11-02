@@ -70,6 +70,24 @@ public static class SerializationConfigurationBuilderExtensions
             return factory(options);
         };
 
+    public static ISerializationConfigurationBuilder WithMessagePack(
+        this ISerializationConfigurationBuilder builder,
+        MessagePackSerializerOptions opts,
+        bool isDefault = false
+    )
+    {
+        return builder.Register<ReadOnlyMemory<byte>, ReadOnlyMemoryByteSerializer>(
+            Constants.MediaType,
+            isDefault,
+            ResolveSerializer(opts, CreateReadOnlyMemoryByte)
+        );
+    }
+
+    private static Func<IServiceProvider, TSerializer> ResolveSerializer<TSerializer>(
+        MessagePackSerializerOptions options,
+        Func<MessagePackSerializerOptions, TSerializer> factory
+    ) => _ => factory(options);
+
     private static ReadOnlyMemoryByteSerializer CreateReadOnlyMemoryByte(MessagePackSerializerOptions opts) =>
         new(opts);
 

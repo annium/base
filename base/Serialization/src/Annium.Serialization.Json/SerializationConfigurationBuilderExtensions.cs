@@ -23,27 +23,7 @@ public static class SerializationConfigurationBuilderExtensions
     {
         static void Configure(IServiceProvider sp, JsonSerializerOptions opts) { }
 
-        return builder
-            .Register<byte[], ByteArraySerializer>(
-                Constants.MediaType,
-                isDefault,
-                ResolveSerializer(builder.Key, Configure, CreateByteArray)
-            )
-            .Register<ReadOnlyMemory<byte>, ReadOnlyMemoryByteSerializer>(
-                Constants.MediaType,
-                isDefault,
-                ResolveSerializer(builder.Key, Configure, CreateReadOnlyMemoryByte)
-            )
-            .Register<string, StringSerializer>(
-                Constants.MediaType,
-                isDefault,
-                ResolveSerializer(builder.Key, Configure, CreateString)
-            )
-            .Register<Stream, StreamSerializer>(
-                Constants.MediaType,
-                isDefault,
-                ResolveSerializer(builder.Key, Configure, CreateStream)
-            );
+        return builder.WithJson(Configure, isDefault);
     }
 
     public static ISerializationConfigurationBuilder WithJson(
@@ -54,27 +34,7 @@ public static class SerializationConfigurationBuilderExtensions
     {
         void Configure(IServiceProvider sp, JsonSerializerOptions opts) => configure(opts);
 
-        return builder
-            .Register<byte[], ByteArraySerializer>(
-                Constants.MediaType,
-                isDefault,
-                ResolveSerializer(builder.Key, Configure, CreateByteArray)
-            )
-            .Register<ReadOnlyMemory<byte>, ReadOnlyMemoryByteSerializer>(
-                Constants.MediaType,
-                isDefault,
-                ResolveSerializer(builder.Key, Configure, CreateReadOnlyMemoryByte)
-            )
-            .Register<string, StringSerializer>(
-                Constants.MediaType,
-                isDefault,
-                ResolveSerializer(builder.Key, Configure, CreateString)
-            )
-            .Register<Stream, StreamSerializer>(
-                Constants.MediaType,
-                isDefault,
-                ResolveSerializer(builder.Key, Configure, CreateStream)
-            );
+        return builder.WithJson(Configure, isDefault);
     }
 
     public static ISerializationConfigurationBuilder WithJson(
@@ -106,6 +66,27 @@ public static class SerializationConfigurationBuilderExtensions
             );
     }
 
+    public static ISerializationConfigurationBuilder WithJson(
+        this ISerializationConfigurationBuilder builder,
+        JsonSerializerOptions opts,
+        bool isDefault = false
+    )
+    {
+        return builder
+            .Register<byte[], ByteArraySerializer>(
+                Constants.MediaType,
+                isDefault,
+                ResolveSerializer(opts, CreateByteArray)
+            )
+            .Register<ReadOnlyMemory<byte>, ReadOnlyMemoryByteSerializer>(
+                Constants.MediaType,
+                isDefault,
+                ResolveSerializer(opts, CreateReadOnlyMemoryByte)
+            )
+            .Register<string, StringSerializer>(Constants.MediaType, isDefault, ResolveSerializer(opts, CreateString))
+            .Register<Stream, StreamSerializer>(Constants.MediaType, isDefault, ResolveSerializer(opts, CreateStream));
+    }
+
     private static Func<IServiceProvider, TSerializer> ResolveSerializer<TSerializer>(
         string key,
         ConfigureSerializer configure,
@@ -130,6 +111,11 @@ public static class SerializationConfigurationBuilderExtensions
 
             return factory(options);
         };
+
+    private static Func<IServiceProvider, TSerializer> ResolveSerializer<TSerializer>(
+        JsonSerializerOptions options,
+        Func<JsonSerializerOptions, TSerializer> factory
+    ) => _ => factory(options);
 
     private static ByteArraySerializer CreateByteArray(JsonSerializerOptions opts) => new(opts);
 
