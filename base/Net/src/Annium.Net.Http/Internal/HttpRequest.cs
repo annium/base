@@ -40,7 +40,7 @@ internal class HttpRequest : IHttpRequest
         : this(httpContentSerializer, logger)
     {
         Logger = logger;
-        _baseUri = baseUri;
+        _baseUri = baseUri.NotNull();
     }
 
     internal HttpRequest(Serializer httpContentSerializer, ILogger logger)
@@ -53,7 +53,7 @@ internal class HttpRequest : IHttpRequest
 
     public IHttpRequest Base(Uri baseUri)
     {
-        _baseUri = baseUri;
+        _baseUri = baseUri.NotNull();
 
         return this;
     }
@@ -62,7 +62,7 @@ internal class HttpRequest : IHttpRequest
 
     public IHttpRequest UseClient(HttpClient client)
     {
-        _client = client;
+        _client = client.NotNull();
 
         return this;
     }
@@ -72,35 +72,35 @@ internal class HttpRequest : IHttpRequest
     public IHttpRequest With(HttpMethod method, string uri)
     {
         Method = method;
-        _uri = uri;
+        _uri = uri.NotNull();
 
         return this;
     }
 
     public IHttpRequest Header(string name, string value)
     {
-        Headers.Add(name, value);
+        Headers.Add(name.NotNull(), value.NotNull());
 
         return this;
     }
 
     public IHttpRequest Header(string name, IEnumerable<string> values)
     {
-        Headers.Add(name, values);
+        Headers.Add(name.NotNull(), values.NotNull());
 
         return this;
     }
 
     public IHttpRequest Authorization(AuthenticationHeaderValue value)
     {
-        Headers.Authorization = value;
+        Headers.Authorization = value.NotNull();
 
         return this;
     }
 
     public IHttpRequest Param<T>(string key, T value)
     {
-        _parameters[key] = value?.ToString() ?? string.Empty;
+        _parameters[key.NotNull()] = value?.ToString() ?? string.Empty;
 
         return this;
     }
@@ -134,14 +134,14 @@ internal class HttpRequest : IHttpRequest
     {
         var parameters = (from value in values where value is not null select value.ToString()).ToArray();
 
-        _parameters[key] = new StringValues(parameters);
+        _parameters[key.NotNull()] = new StringValues(parameters);
 
         return this;
     }
 
     public IHttpRequest Attach(HttpContent content)
     {
-        Content = content;
+        Content = content.NotNull();
 
         return this;
     }
