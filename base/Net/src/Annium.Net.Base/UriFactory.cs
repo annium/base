@@ -20,6 +20,8 @@ public class UriFactory
 
     private UriFactory(Uri? baseUri, string? uri, UriQuery query)
     {
+        ArgumentNullException.ThrowIfNull(query);
+
         if (baseUri != null)
             EnsureAbsolute(baseUri);
 
@@ -30,6 +32,8 @@ public class UriFactory
 
     private UriFactory(Uri baseUri)
     {
+        ArgumentNullException.ThrowIfNull(baseUri);
+
         EnsureAbsolute(baseUri);
 
         _baseUri = baseUri;
@@ -39,6 +43,8 @@ public class UriFactory
 
     public UriFactory Path(string uri)
     {
+        ArgumentNullException.ThrowIfNull(uri);
+
         _uri = uri.Trim();
 
         return this;
@@ -56,6 +62,9 @@ public class UriFactory
 
     public UriFactory Param<T>(string key, IEnumerable<T> values)
     {
+        ArgumentNullException.ThrowIfNull(key);
+        ArgumentNullException.ThrowIfNull(values);
+
         _query[key] = new StringValues(values.Where(x => x is not null).Select(x => x!.ToString()).ToArray());
 
         return this;
@@ -63,6 +72,8 @@ public class UriFactory
 
     public UriFactory Param<T>(string key, T value)
     {
+        ArgumentNullException.ThrowIfNull(key);
+
         _query[key] = value?.ToString() ?? string.Empty;
 
         return this;
@@ -80,6 +91,9 @@ public class UriFactory
 
     public UriFactory Param(string key, StringValues value)
     {
+        ArgumentNullException.ThrowIfNull(key);
+        ArgumentNullException.ThrowIfNull(value);
+
         _query[key] = value;
 
         return this;

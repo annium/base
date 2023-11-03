@@ -45,8 +45,8 @@ internal struct KeyValueAccumulator
                     var list = new List<string>(8);
                     var array = values.ToArray();
 
-                    list.Add(array[0] ?? string.Empty);
-                    list.Add(array[1] ?? string.Empty);
+                    list.Add(array?[0] ?? string.Empty);
+                    list.Add(array?[1] ?? string.Empty);
                     list.Add(value);
 
                     _expandingAccumulator[key] = list;
