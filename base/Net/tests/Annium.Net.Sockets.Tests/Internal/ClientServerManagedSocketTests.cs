@@ -16,7 +16,8 @@ namespace Annium.Net.Sockets.Tests.Internal;
 
 public class ClientServerManagedSocketTests : TestBase, IAsyncLifetime
 {
-    private IClientManagedSocket _clientSocket = default!;
+    private IClientManagedSocket ClientSocket => _clientSocket.NotNull();
+    private IClientManagedSocket? _clientSocket;
     private readonly List<byte[]> _messages = new();
     private Func<IClientManagedSocket, CancellationToken, Task> _handleConnectAsync = delegate
     {
@@ -102,7 +103,7 @@ public class ClientServerManagedSocketTests : TestBase, IAsyncLifetime
 
         // act
         this.Trace("disconnect client socket");
-        _clientSocket.DisconnectAsync().GetAwaiter();
+        ClientSocket.DisconnectAsync().GetAwaiter();
 
         this.Trace("send message");
         var result = await SendAsync(message);
@@ -281,7 +282,7 @@ public class ClientServerManagedSocketTests : TestBase, IAsyncLifetime
         });
 
         this.Trace("disconnect");
-        await _clientSocket.DisconnectAsync();
+        await ClientSocket.DisconnectAsync();
 
         // act - send
         _messages.Clear();
@@ -304,7 +305,7 @@ public class ClientServerManagedSocketTests : TestBase, IAsyncLifetime
         });
 
         this.Trace("disconnect");
-        await _clientSocket.DisconnectAsync();
+        await ClientSocket.DisconnectAsync();
 
         this.Trace("done");
     }
@@ -327,11 +328,11 @@ public class ClientServerManagedSocketTests : TestBase, IAsyncLifetime
         await ConnectAsync(cts.Token);
 
         this.Trace("disconnect");
-        await _clientSocket.DisconnectAsync();
+        await ClientSocket.DisconnectAsync();
 
         // act
         this.Trace("await closed state");
-        var result = await _clientSocket.IsClosed;
+        var result = await ClientSocket.IsClosed;
 
         // assert
         this.Trace("assert closed local and no exception");
@@ -358,11 +359,11 @@ public class ClientServerManagedSocketTests : TestBase, IAsyncLifetime
         await ConnectAsync();
 
         this.Trace("disconnect client socket");
-        await _clientSocket.DisconnectAsync();
+        await ClientSocket.DisconnectAsync();
 
         // act
         this.Trace("await closed state");
-        var result = await _clientSocket.IsClosed;
+        var result = await ClientSocket.IsClosed;
 
         // assert
         this.Trace("assert closed local and no exception");
@@ -390,7 +391,7 @@ public class ClientServerManagedSocketTests : TestBase, IAsyncLifetime
 
         // act
         this.Trace("await closed state");
-        var result = await _clientSocket.IsClosed;
+        var result = await ClientSocket.IsClosed;
 
         // assert
         this.Trace("assert closed remote and no exception");
@@ -507,7 +508,7 @@ public class ClientServerManagedSocketTests : TestBase, IAsyncLifetime
         clientTcs.SetResult();
 
         this.Trace("await closed state");
-        var result = await _clientSocket.IsClosed;
+        var result = await ClientSocket.IsClosed;
 
         this.Trace("assert closed remote and no exception");
         result.Status.Is(SocketCloseStatus.ClosedRemote);
@@ -522,7 +523,7 @@ public class ClientServerManagedSocketTests : TestBase, IAsyncLifetime
 
         var options = ManagedSocketOptions.Default with { Mode = SocketMode.Messaging };
         _clientSocket = new ClientManagedSocket(options, Logger);
-        _clientSocket.OnReceived += x => _messages.Add(x.ToArray());
+        ClientSocket.OnReceived += x => _messages.Add(x.ToArray());
 
         await Task.CompletedTask;
 
@@ -533,7 +534,8 @@ public class ClientServerManagedSocketTests : TestBase, IAsyncLifetime
     {
         this.Trace("start");
 
-        await _clientSocket.DisconnectAsync();
+        if (_clientSocket is not null)
+            await _clientSocket.DisconnectAsync();
 
         this.Trace("done");
     }
@@ -637,7 +639,7 @@ public class ClientServerManagedSocketTests : TestBase, IAsyncLifetime
     {
         this.Trace("start");
 
-        await _handleConnectAsync(_clientSocket, ct);
+        await _handleConnectAsync(ClientSocket, ct);
 
         this.Trace("done");
     }
@@ -646,7 +648,7 @@ public class ClientServerManagedSocketTests : TestBase, IAsyncLifetime
     {
         this.Trace("start");
 
-        var result = await _clientSocket.SendAsync(data, ct);
+        var result = await ClientSocket.SendAsync(data, ct);
 
         this.Trace("done");
 

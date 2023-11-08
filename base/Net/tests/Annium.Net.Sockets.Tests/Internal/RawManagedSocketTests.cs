@@ -18,9 +18,12 @@ namespace Annium.Net.Sockets.Tests.Internal;
 
 public class RawManagedSocketTests : TestBase, IAsyncLifetime
 {
-    private Socket _clientSocket = default!;
-    private Stream _clientStream = default!;
-    private IManagedSocket _managedSocket = default!;
+    private Socket ClientSocket => _clientSocket.NotNull();
+    private Stream ClientStream => _clientStream.NotNull();
+    private IManagedSocket ManagedSocket => _managedSocket.NotNull();
+    private Socket? _clientSocket;
+    private Stream? _clientStream;
+    private IManagedSocket? _managedSocket;
     private readonly List<byte> _stream = new();
     private Func<Socket, Task<Stream>> _createClientStreamAsync = delegate
     {
@@ -54,7 +57,7 @@ public class RawManagedSocketTests : TestBase, IAsyncLifetime
 
         // act
         this.Trace("send message with canceled flag");
-        var result = await _managedSocket.SendAsync(message, new CancellationToken(true));
+        var result = await ManagedSocket.SendAsync(message, new CancellationToken(true));
 
         // assert
         this.Trace("assert canceled is received");
@@ -83,10 +86,10 @@ public class RawManagedSocketTests : TestBase, IAsyncLifetime
 
         // act
         this.Trace("close client socket");
-        _clientSocket.Close();
+        ClientSocket.Close();
 
         this.Trace("send message");
-        var result = await _managedSocket.SendAsync(message);
+        var result = await ManagedSocket.SendAsync(message);
 
         // assert
         this.Trace("assert close is received");
@@ -125,7 +128,7 @@ public class RawManagedSocketTests : TestBase, IAsyncLifetime
 
         // act
         this.Trace("send message");
-        var result = await _managedSocket.SendAsync(message);
+        var result = await ManagedSocket.SendAsync(message);
 
         // assert
         this.Trace("assert close is received");
@@ -172,7 +175,7 @@ public class RawManagedSocketTests : TestBase, IAsyncLifetime
 
         // act
         this.Trace("send message");
-        var messageResult = await _managedSocket.SendAsync(message);
+        var messageResult = await ManagedSocket.SendAsync(message);
 
         // assert
         this.Trace("assert ok is received");
@@ -227,7 +230,7 @@ public class RawManagedSocketTests : TestBase, IAsyncLifetime
         await ConnectAsync();
 
         this.Trace("close client socket");
-        _clientSocket.Close();
+        ClientSocket.Close();
 
         // act
         this.Trace("listen");
@@ -381,7 +384,8 @@ public class RawManagedSocketTests : TestBase, IAsyncLifetime
     {
         this.Trace("start");
 
-        await _clientStream.DisposeAsync();
+        if (_clientStream is not null)
+            await _clientStream.DisposeAsync();
 
         this.Trace("done");
     }
@@ -504,20 +508,20 @@ public class RawManagedSocketTests : TestBase, IAsyncLifetime
         _clientSocket = new Socket(SocketType.Stream, ProtocolType.Tcp) { NoDelay = true };
 
         this.Trace("connect");
-        await _clientSocket.ConnectAsync(EndPoint, ct);
+        await ClientSocket.ConnectAsync(EndPoint, ct);
 
         this.Trace("create client stream");
-        _clientStream = await _createClientStreamAsync(_clientSocket);
+        _clientStream = await _createClientStreamAsync(ClientSocket);
 
         this.Trace("create managed socket");
-        _managedSocket = new RawManagedSocket(_clientStream, ManagedSocketOptionsBase.Default, Logger);
+        _managedSocket = new RawManagedSocket(ClientStream, ManagedSocketOptionsBase.Default, Logger);
         this.Trace<string, string>(
             "created pair of {clientSocket} and {managedSocket}",
-            _clientSocket.GetFullId(),
-            _managedSocket.GetFullId()
+            ClientSocket.GetFullId(),
+            ManagedSocket.GetFullId()
         );
 
-        _managedSocket.OnReceived += x => _stream.AddRange(x.ToArray());
+        ManagedSocket.OnReceived += x => _stream.AddRange(x.ToArray());
 
         await Task.CompletedTask;
 
@@ -528,7 +532,7 @@ public class RawManagedSocketTests : TestBase, IAsyncLifetime
     {
         this.Trace("start");
 
-        var result = await _managedSocket.ListenAsync(ct);
+        var result = await ManagedSocket.ListenAsync(ct);
 
         this.Trace("done");
 
