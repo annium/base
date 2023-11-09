@@ -530,14 +530,16 @@ public class ClientServerManagedSocketTests : TestBase, IAsyncLifetime
         this.Trace("done");
     }
 
-    public async Task DisposeAsync()
+    public Task DisposeAsync()
     {
         this.Trace("start");
 
         if (_clientSocket is not null)
-            await _clientSocket.DisconnectAsync();
+            _clientSocket.Dispose();
 
         this.Trace("done");
+
+        return Task.CompletedTask;
     }
 
     private void Configure(StreamType streamType)

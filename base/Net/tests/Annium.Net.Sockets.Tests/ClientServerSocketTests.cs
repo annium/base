@@ -518,8 +518,7 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
     {
         this.Trace("start");
 
-        if (_clientSocket is not null)
-            _clientSocket.Disconnect();
+        _clientSocket?.Disconnect();
 
         this.Trace("done");
 

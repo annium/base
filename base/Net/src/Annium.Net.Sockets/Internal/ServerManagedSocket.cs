@@ -31,6 +31,15 @@ internal class ServerManagedSocket : IServerManagedSocket, ILogSubject
         IsClosed = _socket.ListenAsync(ct).ContinueWith(HandleClosed);
     }
 
+    public void Dispose()
+    {
+        this.Trace("start, dispose socket");
+
+        _socket.Dispose();
+
+        this.Trace("done");
+    }
+
     public Task DisconnectAsync()
     {
         this.Trace("start");

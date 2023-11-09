@@ -15,8 +15,7 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
     public event Action<ReadOnlyMemory<byte>> OnReceived = delegate { };
     public Task<SocketCloseResult> IsClosed => _listenTask;
     private readonly ManagedSocketOptions _options;
-    private Stream? _stream;
-    private IManagedSocket? _socket;
+    private Connection? _cn;
     private CancellationTokenSource _listenCts = new();
     private Task<SocketCloseResult> _listenTask = Task.FromResult(
         new SocketCloseResult(SocketCloseStatus.ClosedLocal, null)
@@ -28,6 +27,38 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
         Logger = logger;
     }
 
+    public void Dispose()
+    {
+        this.Trace("start");
+
+        var cn = Interlocked.Exchange(ref _cn, null);
+        if (cn is null)
+        {
+            this.Trace("skip - not connected");
+            return;
+        }
+
+        this.Trace("unbind events");
+        cn.Socket.OnReceived -= HandleOnReceived;
+
+        this.Trace("cancel listen cts");
+        _listenCts.Cancel();
+        _listenCts.Dispose();
+
+        try
+        {
+            this.Trace("dispose socket");
+            cn.Socket.Dispose();
+
+            this.Trace("close stream");
+            cn.Stream.Close();
+        }
+        catch (Exception e)
+        {
+            this.Trace("failed: {e}", e);
+        }
+    }
+
     public async Task<Exception?> ConnectAsync(
         IPEndPoint endpoint,
         SslClientAuthenticationOptions? authOptions,
@@ -37,9 +68,11 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
         this.Trace("start");
 
         // only sockets are checked, because after disconnect listen task can still be awaited
-        if (_stream is not null || _socket is not null)
+        if (_cn is not null)
             throw new InvalidOperationException("Socket is already connected");
 
+        Stream? stream = null;
+        IManagedSocket? socket = null;
         try
         {
             this.Trace("create native socket");
@@ -60,7 +93,7 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
                     authOptions.RemoteCertificateValidationCallback,
                     null
                 );
-                _stream = sslStream;
+                stream = sslStream;
 
                 this.Trace("authenticate client");
                 await sslStream.AuthenticateAsClientAsync(authOptions, ct);
@@ -68,67 +101,66 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
             else
             {
                 this.Trace("wrap native socket with network stream");
-                _stream = new NetworkStream(nativeSocket, true);
+                stream = new NetworkStream(nativeSocket, true);
             }
 
             this.Trace("wrap to managed socket");
-            _socket = Helper.GetManagedSocket(_stream, _options, Logger);
+            socket = Helper.GetManagedSocket(stream, _options, Logger);
             this.Trace<string, string>(
                 "paired with {nativeSocket} / {managedSocket}",
-                _stream.GetFullId(),
-                _socket.GetFullId()
+                stream.GetFullId(),
+                socket.GetFullId()
             );
 
             this.Trace("bind events");
-            _socket.OnReceived += HandleOnReceived;
+            socket.OnReceived += HandleOnReceived;
+
+            this.Trace("create listen cts");
+            _listenCts = new CancellationTokenSource();
+
+            this.Trace("create listen task");
+            _listenTask = socket.ListenAsync(_listenCts.Token).ContinueWith(HandleClosed, CancellationToken.None);
+
+            this.Trace("save connection");
+            _cn = new Connection(stream, socket);
+
+            this.Trace("done (connected)");
+
+            return null;
         }
         catch (Exception e)
         {
             this.Error("failed: {e}", e);
 
             this.Trace("dispose native socket");
-            if (_stream is not null)
-            {
-                _stream.Close();
-                _stream = null;
-            }
+            stream?.Close();
 
             this.Trace("unbind events");
-            if (_socket is not null)
+            if (socket is not null)
             {
-                _socket.OnReceived -= HandleOnReceived;
-                _socket.Dispose();
-                _socket = null;
+                socket.OnReceived -= HandleOnReceived;
+                socket.Dispose();
             }
 
             this.Trace("done (not connected)");
 
             return e;
         }
-
-        this.Trace("create listen cts");
-        _listenCts = new CancellationTokenSource();
-
-        this.Trace("create listen task");
-        _listenTask = _socket.ListenAsync(_listenCts.Token).ContinueWith(HandleClosed, CancellationToken.None);
-
-        this.Trace("done (connected)");
-
-        return null;
     }
 
     public async Task DisconnectAsync()
     {
         this.Trace("start");
 
-        if (_stream is null || _socket is null)
+        var cn = Interlocked.Exchange(ref _cn, null);
+        if (cn is null)
         {
             this.Trace("skip - not connected");
             return;
         }
 
         this.Trace("unbind events");
-        _socket.OnReceived -= HandleOnReceived;
+        cn.Socket.OnReceived -= HandleOnReceived;
 
         this.Trace("cancel listen cts");
         _listenCts.Cancel();
@@ -137,10 +169,10 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
         try
         {
             this.Trace("dispose socket");
-            _socket.Dispose();
+            cn.Socket.Dispose();
 
             this.Trace("close stream");
-            _stream.Close();
+            cn.Stream.Close();
         }
         catch (Exception e)
         {
@@ -150,10 +182,6 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
         this.Trace("await listen task");
         await _listenTask;
 
-        this.Trace("reset socket references to null");
-        _stream = null;
-        _socket = null;
-
         this.Trace("done");
     }
 
@@ -161,7 +189,7 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
     {
         this.Trace("send");
 
-        return _socket?.SendAsync(data, ct) ?? ValueTask.FromResult(SocketSendStatus.Closed);
+        return _cn?.Socket.SendAsync(data, ct) ?? ValueTask.FromResult(SocketSendStatus.Closed);
     }
 
     private SocketCloseResult HandleClosed(Task<SocketCloseResult> task)
@@ -171,18 +199,18 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
         if (task.Exception is not null)
             this.Error(task.Exception);
 
-        if (_socket is not null)
+        var cn = Interlocked.Exchange(ref _cn, null);
+        if (cn is null)
         {
-            this.Trace("start, unsubscribe from managed socket");
-            _socket.OnReceived -= HandleOnReceived;
+            this.Trace("already not connected");
+            return task.Result;
         }
 
-        this.Trace("reset socket references to null");
-        _stream?.Close();
-        _stream = null;
-        _socket = null;
+        this.Trace("unsubscribe from managed socket");
+        cn.Socket.OnReceived -= HandleOnReceived;
 
-        this.Trace("done");
+        this.Trace("close stream");
+        cn.Stream.Close();
 
         return task.Result;
     }
@@ -192,4 +220,6 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
         this.Trace("trigger binary received");
         OnReceived(data);
     }
+
+    private sealed record Connection(Stream Stream, IManagedSocket Socket);
 }
