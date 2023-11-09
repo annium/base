@@ -108,19 +108,19 @@ public class ObjectCacheTests : TestBase
             return item;
         }
 
-        public override async Task SuspendAsync(Item value)
+        public override async Task SuspendAsync(uint id, Item value)
         {
             await value.Suspend();
             _log.Add($"{value} {Suspended}");
         }
 
-        public override async Task ResumeAsync(Item value)
+        public override async Task ResumeAsync(uint id, Item value)
         {
             await value.Resume();
             _log.Add($"{value} {Resumed}");
         }
 
-        public override Task DisposeAsync(Item value)
+        public override Task DisposeAsync(uint id, Item value)
         {
             value.Dispose();
             _log.Add($"{value} {Disposed}");

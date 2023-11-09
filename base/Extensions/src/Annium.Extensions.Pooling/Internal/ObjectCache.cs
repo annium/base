@@ -59,7 +59,7 @@ internal sealed class ObjectCache<TKey, TValue> : IObjectCache<TKey, TValue>, IL
         if (!isInitializing && !entry.HasReferences)
         {
             this.Trace("Get by {key}: resume entry", key);
-            await _provider.ResumeAsync(entry.Value);
+            await _provider.ResumeAsync(key, entry.Value);
         }
 
         // create reference, incrementing reference counter
@@ -82,7 +82,7 @@ internal sealed class ObjectCache<TKey, TValue> : IObjectCache<TKey, TValue>, IL
         if (!entry.HasReferences)
         {
             this.Trace("Release by {key}: suspend entry", key);
-            await _provider.SuspendAsync(entry.Value);
+            await _provider.SuspendAsync(key, entry.Value);
         }
 
         entry.Release();
@@ -97,11 +97,11 @@ internal sealed class ObjectCache<TKey, TValue> : IObjectCache<TKey, TValue>, IL
 
         this.Trace("dispose {count} entries", cacheEntries.Length);
 
-        foreach (var (_, entry) in cacheEntries)
+        foreach (var (key, entry) in cacheEntries)
         {
             this.Trace("dispose {entry}", entry);
             entry.Dispose();
-            await _provider.DisposeAsync(entry.Value);
+            await _provider.DisposeAsync(key, entry.Value);
         }
 
         this.Trace("done");
