@@ -64,27 +64,31 @@ internal class RawManagedSocket : IManagedSocket, ILogSubject
         }
     }
 
-    public async Task<SocketCloseResult> ListenAsync(CancellationToken ct)
-    {
-        using var buffer = new RawBuffer(_options.BufferSize);
-
-        this.Trace("start");
-
-        while (true)
-        {
-            this.Trace("next");
-            var (isClosed, result) = await ReceiveAsync(buffer, ct);
-            if (isClosed)
+    public Task<SocketCloseResult> ListenAsync(CancellationToken ct) =>
+        Task.Run(
+            async () =>
             {
-                this.Trace(
-                    result.Exception is not null
-                        ? $"stop with {result.Status}: {result.Exception}"
-                        : $"stop with {result.Status}"
-                );
-                return result;
-            }
-        }
-    }
+                using var buffer = new RawBuffer(_options.BufferSize);
+
+                this.Trace("start");
+
+                while (true)
+                {
+                    this.Trace("next");
+                    var (isClosed, result) = await ReceiveAsync(buffer, ct);
+                    if (isClosed)
+                    {
+                        this.Trace(
+                            result.Exception is not null
+                                ? $"stop with {result.Status}: {result.Exception}"
+                                : $"stop with {result.Status}"
+                        );
+                        return result;
+                    }
+                }
+            },
+            CancellationToken.None
+        );
 
     public void Dispose()
     {

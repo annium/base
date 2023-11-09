@@ -93,33 +93,37 @@ internal class MessagingManagedSocket : IManagedSocket, ILogSubject
         }
     }
 
-    public async Task<SocketCloseResult> ListenAsync(CancellationToken ct)
-    {
-        if (_isDisposed)
-        {
-            this.Trace("disposed, return closed local");
-            return new SocketCloseResult(SocketCloseStatus.ClosedLocal, null);
-        }
-
-        using var buffer = new MessagingBuffer(_options.BufferSize, _options.ExtremeMessageSize);
-
-        this.Trace("start");
-
-        while (true)
-        {
-            this.Trace("next");
-            var (isClosed, result) = await ReceiveAsync(buffer, ct);
-            if (isClosed)
+    public Task<SocketCloseResult> ListenAsync(CancellationToken ct) =>
+        Task.Run(
+            async () =>
             {
-                this.Trace(
-                    result.Exception is not null
-                        ? $"stop with {result.Status}: {result.Exception}"
-                        : $"stop with {result.Status}"
-                );
-                return result;
-            }
-        }
-    }
+                if (_isDisposed)
+                {
+                    this.Trace("disposed, return closed local");
+                    return new SocketCloseResult(SocketCloseStatus.ClosedLocal, null);
+                }
+
+                using var buffer = new MessagingBuffer(_options.BufferSize, _options.ExtremeMessageSize);
+
+                this.Trace("start");
+
+                while (true)
+                {
+                    this.Trace("next");
+                    var (isClosed, result) = await ReceiveAsync(buffer, ct);
+                    if (isClosed)
+                    {
+                        this.Trace(
+                            result.Exception is not null
+                                ? $"stop with {result.Status}: {result.Exception}"
+                                : $"stop with {result.Status}"
+                        );
+                        return result;
+                    }
+                }
+            },
+            CancellationToken.None
+        );
 
     public void Dispose()
     {
