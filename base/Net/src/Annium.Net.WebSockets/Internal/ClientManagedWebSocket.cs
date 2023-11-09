@@ -14,8 +14,7 @@ internal class ClientManagedWebSocket : IClientManagedWebSocket, ILogSubject
     public event Action<ReadOnlyMemory<byte>> OnBinaryReceived = delegate { };
     public Task<WebSocketCloseResult> IsClosed => _listenTask;
     private readonly int _keepAliveInterval;
-    private NativeWebSocket? _nativeSocket;
-    private ManagedWebSocket? _managedSocket;
+    private Connection? _cn;
     private CancellationTokenSource _listenCts = new();
     private Task<WebSocketCloseResult> _listenTask = Task.FromResult(
         new WebSocketCloseResult(WebSocketCloseStatus.ClosedLocal, null)
@@ -27,82 +26,120 @@ internal class ClientManagedWebSocket : IClientManagedWebSocket, ILogSubject
         Logger = logger;
     }
 
-    public async Task<Exception?> ConnectAsync(Uri uri, CancellationToken ct = default)
+    public void Dispose()
     {
         this.Trace("start");
 
-        // only sockets are checked, because after disconnect listen task can still be awaited
-        if (_nativeSocket is not null || _managedSocket is not null)
-            throw new InvalidOperationException("Socket is already connected");
-
-        _nativeSocket = new NativeWebSocket
-        {
-            Options = { KeepAliveInterval = TimeSpan.FromMilliseconds(_keepAliveInterval) }
-        };
-        _managedSocket = new ManagedWebSocket(_nativeSocket, Logger);
-        this.Trace<string, string>(
-            "paired with {nativeSocket} / {managedSocket}",
-            _nativeSocket.GetFullId(),
-            _managedSocket.GetFullId()
-        );
-
-        this.Trace("bind events");
-        _managedSocket.OnTextReceived += HandleOnTextReceived;
-        _managedSocket.OnBinaryReceived += HandleOnBinaryReceived;
-
-        try
-        {
-            this.Trace("connect native socket to {uri}", uri);
-            await _nativeSocket.ConnectAsync(uri, ct);
-        }
-        catch (Exception e)
-        {
-            this.Trace("failed: {e}", e);
-
-            this.Trace("dispose native socket");
-            _nativeSocket.Dispose();
-            _nativeSocket = null;
-
-            this.Trace("unbind events");
-            _managedSocket.OnTextReceived -= HandleOnTextReceived;
-            _managedSocket.OnBinaryReceived -= HandleOnBinaryReceived;
-            _managedSocket = null;
-
-            this.Trace("done (not connected)");
-
-            return e;
-        }
-
-        this.Trace("create listen cts");
-        _listenCts = new CancellationTokenSource();
-
-        this.Trace("create listen task");
-        _listenTask = _managedSocket.ListenAsync(_listenCts.Token).ContinueWith(HandleClosed, CancellationToken.None);
-
-        this.Trace("done (connected)");
-
-        return null;
-    }
-
-    public async Task DisconnectAsync()
-    {
-        this.Trace("start");
-
-        if (_nativeSocket is null || _managedSocket is null)
+        var cn = Interlocked.Exchange(ref _cn, null);
+        if (cn is null)
         {
             this.Trace("skip - not connected");
             return;
         }
 
         this.Trace("unbind events");
-        _managedSocket.OnTextReceived -= HandleOnTextReceived;
-        _managedSocket.OnBinaryReceived -= HandleOnBinaryReceived;
+        cn.Managed.OnBinaryReceived -= HandleOnBinaryReceived;
+        cn.Managed.OnTextReceived -= HandleOnTextReceived;
+
+        this.Trace("cancel listen cts");
+        _listenCts.Cancel();
+        _listenCts.Dispose();
+
+        try
+        {
+            this.Trace("dispose native socket");
+            cn.Native.Dispose();
+        }
+        catch (Exception e)
+        {
+            this.Trace("failed: {e}", e);
+        }
+    }
+
+    public async Task<Exception?> ConnectAsync(Uri uri, CancellationToken ct = default)
+    {
+        this.Trace("start");
+
+        // only sockets are checked, because after disconnect listen task can still be awaited
+        if (_cn is not null)
+            throw new InvalidOperationException("Socket is already connected");
+
+        var nativeSocket = new NativeWebSocket
+        {
+            Options = { KeepAliveInterval = TimeSpan.FromMilliseconds(_keepAliveInterval) }
+        };
+        var managedSocket = new ManagedWebSocket(nativeSocket, Logger);
+        this.Trace<string, string>(
+            "paired with {nativeSocket} / {managedSocket}",
+            nativeSocket.GetFullId(),
+            managedSocket.GetFullId()
+        );
+
+        this.Trace("bind events");
+        managedSocket.OnTextReceived += HandleOnTextReceived;
+        managedSocket.OnBinaryReceived += HandleOnBinaryReceived;
+
+        try
+        {
+            this.Trace("connect native socket to {uri}", uri);
+            await nativeSocket.ConnectAsync(uri, ct);
+
+            this.Trace("create listen cts");
+            _listenCts = new CancellationTokenSource();
+
+            this.Trace("create listen task");
+            _listenTask = managedSocket
+                .ListenAsync(_listenCts.Token)
+                .ContinueWith(HandleClosed, CancellationToken.None);
+
+            this.Trace("save connection");
+            _cn = new Connection(nativeSocket, managedSocket);
+
+            this.Trace("done (connected)");
+
+            return null;
+        }
+        catch (Exception e)
+        {
+            this.Trace("failed: {e}", e);
+
+            this.Trace("dispose native socket");
+            nativeSocket.Dispose();
+
+            this.Trace("unbind events");
+            managedSocket.OnTextReceived -= HandleOnTextReceived;
+            managedSocket.OnBinaryReceived -= HandleOnBinaryReceived;
+
+            this.Trace("done (not connected)");
+
+            return e;
+        }
+    }
+
+    public async Task DisconnectAsync()
+    {
+        this.Trace("start");
+
+        var cn = Interlocked.Exchange(ref _cn, null);
+        if (cn is null)
+        {
+            this.Trace("skip - not connected");
+            return;
+        }
+
+        this.Trace("unbind events");
+        cn.Managed.OnTextReceived -= HandleOnTextReceived;
+        cn.Managed.OnBinaryReceived -= HandleOnBinaryReceived;
+
+        this.Trace("cancel listen cts");
+        _listenCts.Cancel();
+        _listenCts.Dispose();
 
         try
         {
             this.Trace("close output");
-            if (_nativeSocket.State is WebSocketState.Open or WebSocketState.CloseReceived)
-                await _nativeSocket.CloseOutputAsync(
+            if (cn.Native.State is WebSocketState.Open or WebSocketState.CloseReceived)
+                await cn.Native.CloseOutputAsync(
                     System.Net.WebSockets.WebSocketCloseStatus.NormalClosure,
                     string.Empty,
                     CancellationToken.None
@@ -113,16 +150,8 @@ internal class ClientManagedWebSocket : IClientManagedWebSocket, ILogSubject
             this.Trace("failed: {e}", e);
         }
 
-        this.Trace("cancel listen cts");
-        _listenCts.Cancel();
-        _listenCts.Dispose();
-
         this.Trace("await listen task");
         await _listenTask;
-
-        this.Trace("reset socket references to null");
-        _nativeSocket = null;
-        _managedSocket = null;
 
         this.Trace("done");
     }
@@ -131,14 +160,14 @@ internal class ClientManagedWebSocket : IClientManagedWebSocket, ILogSubject
     {
         this.Trace("send text");
 
-        return _managedSocket?.SendTextAsync(text, ct) ?? ValueTask.FromResult(WebSocketSendStatus.Closed);
+        return _cn?.Managed.SendTextAsync(text, ct) ?? ValueTask.FromResult(WebSocketSendStatus.Closed);
     }
 
     public ValueTask<WebSocketSendStatus> SendBinaryAsync(ReadOnlyMemory<byte> data, CancellationToken ct = default)
     {
         this.Trace("send binary");
 
-        return _managedSocket?.SendBinaryAsync(data, ct) ?? ValueTask.FromResult(WebSocketSendStatus.Closed);
+        return _cn?.Managed.SendBinaryAsync(data, ct) ?? ValueTask.FromResult(WebSocketSendStatus.Closed);
     }
 
     private WebSocketCloseResult HandleClosed(Task<WebSocketCloseResult> task)
@@ -148,16 +177,16 @@ internal class ClientManagedWebSocket : IClientManagedWebSocket, ILogSubject
         if (task.Exception is not null)
             this.Error(task.Exception);
 
-        if (_managedSocket is not null)
+        var cn = Interlocked.Exchange(ref _cn, null);
+        if (cn is null)
         {
-            this.Trace("start, unsubscribe from managed socket");
-            _managedSocket.OnTextReceived -= HandleOnTextReceived;
-            _managedSocket.OnBinaryReceived -= HandleOnBinaryReceived;
+            this.Trace("already not connected");
+            return task.Result;
         }
 
-        this.Trace("reset socket references to null");
-        _nativeSocket = null;
-        _managedSocket = null;
+        this.Trace("start, unsubscribe from managed socket");
+        cn.Managed.OnTextReceived -= HandleOnTextReceived;
+        cn.Managed.OnBinaryReceived -= HandleOnBinaryReceived;
 
         this.Trace("done");
 
@@ -175,4 +204,6 @@ internal class ClientManagedWebSocket : IClientManagedWebSocket, ILogSubject
         this.Trace("trigger binary received");
         OnBinaryReceived(data);
     }
+
+    private sealed record Connection(NativeWebSocket Native, ManagedWebSocket Managed);
 }

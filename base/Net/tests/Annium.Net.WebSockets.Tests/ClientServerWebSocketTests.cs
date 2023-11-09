@@ -14,7 +14,8 @@ namespace Annium.Net.WebSockets.Tests;
 
 public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
 {
-    private ClientWebSocket _clientSocket = default!;
+    private IClientWebSocket ClientSocket => _clientSocket.NotNull();
+    private IClientWebSocket? _clientSocket;
     private readonly ConcurrentQueue<string> _texts = new();
     private readonly ConcurrentQueue<byte[]> _binaries = new();
 
@@ -121,7 +122,7 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
         });
 
         this.Trace("connect");
-        var disconnectionTask = _clientSocket.WhenDisconnected();
+        var disconnectionTask = ClientSocket.WhenDisconnected();
         await ConnectAsync();
 
         this.Trace("await until disconnected");
@@ -338,7 +339,7 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
 
         // act
         this.Trace("connect");
-        var disconnectionTask = _clientSocket.WhenDisconnected();
+        var disconnectionTask = ClientSocket.WhenDisconnected();
         await ConnectAsync();
 
         // assert
@@ -389,7 +390,7 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
 
         // act
         this.Trace("connect");
-        var disconnectionTask = _clientSocket.WhenDisconnected();
+        var disconnectionTask = ClientSocket.WhenDisconnected();
         await ConnectAsync();
 
         // assert
@@ -466,7 +467,7 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
         });
 
         this.Trace("set disconnect handler");
-        _clientSocket.OnDisconnected += _ =>
+        ClientSocket.OnDisconnected += _ =>
         {
             this.Trace("disconnected, clear stream");
             _texts.Clear();
@@ -493,20 +494,20 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
         this.Trace("start");
 
         _clientSocket = new ClientWebSocket(ClientWebSocketOptions.Default with { ReconnectDelay = 1 }, Logger);
-        _clientSocket.OnTextReceived += x =>
+        ClientSocket.OnTextReceived += x =>
         {
             var message = Encoding.UTF8.GetString(x.Span);
             _texts.Enqueue(message);
         };
-        _clientSocket.OnBinaryReceived += x =>
+        ClientSocket.OnBinaryReceived += x =>
         {
             var message = x.ToArray();
             _binaries.Enqueue(message);
         };
 
-        _clientSocket.OnConnected += () => this.Trace("STATE: Connected");
-        _clientSocket.OnDisconnected += status => this.Trace("STATE: Disconnected: {status}", status);
-        _clientSocket.OnError += e => Assert.Fail($"Exception occured: {e}");
+        ClientSocket.OnConnected += () => this.Trace("STATE: Connected");
+        ClientSocket.OnDisconnected += status => this.Trace("STATE: Disconnected: {status}", status);
+        ClientSocket.OnError += e => Assert.Fail($"Exception occured: {e}");
 
         this.Trace("done");
 
@@ -517,7 +518,7 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
     {
         this.Trace("start");
 
-        _clientSocket.Disconnect();
+        _clientSocket?.Disconnect();
 
         this.Trace("done");
 
@@ -550,18 +551,18 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
 
         var tcs = new TaskCompletionSource();
 
-        _clientSocket.Trace<string>("subscribe {tcs} to OnConnected", tcs.GetFullId());
+        ClientSocket.Trace<string>("subscribe {tcs} to OnConnected", tcs.GetFullId());
 
         void HandleConnected()
         {
-            _clientSocket.Trace<string>("set {tcs} to signaled state", tcs.GetFullId());
+            ClientSocket.Trace<string>("set {tcs} to signaled state", tcs.GetFullId());
             tcs.SetResult();
-            _clientSocket.OnConnected -= HandleConnected;
+            ClientSocket.OnConnected -= HandleConnected;
         }
 
-        _clientSocket.OnConnected += HandleConnected;
+        ClientSocket.OnConnected += HandleConnected;
 
-        _clientSocket.Connect(ServerUri);
+        ClientSocket.Connect(ServerUri);
 
         await tcs.Task.WaitAsync(TimeSpan.FromSeconds(1));
 
@@ -574,18 +575,18 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
 
         var tcs = new TaskCompletionSource();
 
-        _clientSocket.Trace<string>("subscribe {tcs} to OnConnected", tcs.GetFullId());
+        ClientSocket.Trace<string>("subscribe {tcs} to OnConnected", tcs.GetFullId());
 
         void HandleDisconnected(WebSocketCloseStatus status)
         {
-            _clientSocket.Trace("set {tcs} to signaled state with status {status}", tcs.GetFullId(), status);
+            ClientSocket.Trace("set {tcs} to signaled state with status {status}", tcs.GetFullId(), status);
             tcs.SetResult();
-            _clientSocket.OnDisconnected -= HandleDisconnected;
+            ClientSocket.OnDisconnected -= HandleDisconnected;
         }
 
-        _clientSocket.OnDisconnected += HandleDisconnected;
+        ClientSocket.OnDisconnected += HandleDisconnected;
 
-        _clientSocket.Disconnect();
+        ClientSocket.Disconnect();
 
         await tcs.Task;
 
@@ -596,7 +597,7 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
     {
         this.Trace("start");
 
-        var result = await _clientSocket.SendTextAsync(Encoding.UTF8.GetBytes(text), ct);
+        var result = await ClientSocket.SendTextAsync(Encoding.UTF8.GetBytes(text), ct);
 
         this.Trace("done");
 
@@ -607,49 +608,10 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
     {
         this.Trace("start");
 
-        var result = await _clientSocket.SendBinaryAsync(data, ct);
+        var result = await ClientSocket.SendBinaryAsync(data, ct);
 
         this.Trace("done");
 
         return result;
-    }
-}
-
-file static class WebSocketExtensions
-{
-    public static Task<WebSocketCloseStatus> WhenDisconnected(this ClientWebSocket socket)
-    {
-        var tcs = new TaskCompletionSource<WebSocketCloseStatus>();
-
-        socket.Trace<string>("subscribe {tcs} to OnDisconnected", tcs.GetFullId());
-
-        void HandleDisconnected(WebSocketCloseStatus status)
-        {
-            socket.Trace("set {tcs} to signaled state with status {status}", tcs.GetFullId(), status);
-            tcs.SetResult(status);
-            socket.OnDisconnected -= HandleDisconnected;
-        }
-
-        socket.OnDisconnected += HandleDisconnected;
-
-        return tcs.Task;
-    }
-
-    public static Task<WebSocketCloseStatus> WhenDisconnected(this ServerWebSocket socket)
-    {
-        var tcs = new TaskCompletionSource<WebSocketCloseStatus>();
-
-        socket.Trace<string>("subscribe {tcs} to OnDisconnected", tcs.GetFullId());
-
-        void HandleDisconnected(WebSocketCloseStatus status)
-        {
-            socket.Trace("set {tcs} to signaled state with status {status}", tcs.GetFullId(), status);
-            tcs.SetResult(status);
-            socket.OnDisconnected -= HandleDisconnected;
-        }
-
-        socket.OnDisconnected += HandleDisconnected;
-
-        return tcs.Task;
     }
 }

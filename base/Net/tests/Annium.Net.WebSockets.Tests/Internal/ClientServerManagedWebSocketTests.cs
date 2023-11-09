@@ -15,7 +15,8 @@ namespace Annium.Net.WebSockets.Tests.Internal;
 
 public class ClientServerManagedWebSocketTests : TestBase, IAsyncLifetime
 {
-    private IClientManagedWebSocket _clientSocket = default!;
+    private IClientManagedWebSocket ClientSocket => _clientSocket.NotNull();
+    private IClientManagedWebSocket? _clientSocket;
     private readonly ConcurrentQueue<string> _texts = new();
     private readonly ConcurrentQueue<byte[]> _binaries = new();
 
@@ -82,7 +83,7 @@ public class ClientServerManagedWebSocketTests : TestBase, IAsyncLifetime
 
         // act
         this.Trace("disconnect client socket");
-        await _clientSocket.DisconnectAsync();
+        await ClientSocket.DisconnectAsync();
 
         this.Trace("send message");
         var result = await SendTextAsync(message);
@@ -259,7 +260,7 @@ public class ClientServerManagedWebSocketTests : TestBase, IAsyncLifetime
         await Expect.To(() => _texts.IsEqual(expectedTexts));
 
         this.Trace("disconnect");
-        await _clientSocket.DisconnectAsync();
+        await ClientSocket.DisconnectAsync();
 
         // act - send binary
         this.Trace("connect");
@@ -278,7 +279,7 @@ public class ClientServerManagedWebSocketTests : TestBase, IAsyncLifetime
         await Expect.To(() => _binaries.IsEqual(expectedBinaries));
 
         this.Trace("disconnect");
-        await _clientSocket.DisconnectAsync();
+        await ClientSocket.DisconnectAsync();
 
         this.Trace("done");
     }
@@ -297,11 +298,11 @@ public class ClientServerManagedWebSocketTests : TestBase, IAsyncLifetime
         await ConnectAsync(cts.Token);
 
         this.Trace("disconnect");
-        await _clientSocket.DisconnectAsync();
+        await ClientSocket.DisconnectAsync();
 
         // act
         this.Trace("await closed state");
-        var result = await _clientSocket.IsClosed;
+        var result = await ClientSocket.IsClosed;
 
         // assert
         this.Trace("assert closed local and no exception");
@@ -324,11 +325,11 @@ public class ClientServerManagedWebSocketTests : TestBase, IAsyncLifetime
         await ConnectAsync();
 
         this.Trace("disconnect client socket");
-        await _clientSocket.DisconnectAsync();
+        await ClientSocket.DisconnectAsync();
 
         // act
         this.Trace("await closed state");
-        var result = await _clientSocket.IsClosed;
+        var result = await ClientSocket.IsClosed;
 
         // assert
         this.Trace("assert closed local and no exception");
@@ -352,7 +353,7 @@ public class ClientServerManagedWebSocketTests : TestBase, IAsyncLifetime
 
         // act
         this.Trace("await closed state");
-        var result = await _clientSocket.IsClosed;
+        var result = await ClientSocket.IsClosed;
 
         // assert
         this.Trace("assert closed remote and no exception");
@@ -427,7 +428,7 @@ public class ClientServerManagedWebSocketTests : TestBase, IAsyncLifetime
         await Expect.To(() => _texts.IsEqual(messages), 1000);
 
         this.Trace("await closed state");
-        var result = await _clientSocket.IsClosed;
+        var result = await ClientSocket.IsClosed;
 
         this.Trace("assert closed remote and no exception");
         result.Status.Is(WebSocketCloseStatus.ClosedRemote);
@@ -477,7 +478,7 @@ public class ClientServerManagedWebSocketTests : TestBase, IAsyncLifetime
         await Expect.To(() => _binaries.IsEqual(binaries), 1000);
 
         this.Trace("await closed state");
-        var result = await _clientSocket.IsClosed;
+        var result = await ClientSocket.IsClosed;
 
         this.Trace("assert closed remote and no exception");
         result.Status.Is(WebSocketCloseStatus.ClosedRemote);
@@ -491,12 +492,12 @@ public class ClientServerManagedWebSocketTests : TestBase, IAsyncLifetime
         this.Trace("start");
 
         _clientSocket = new ClientManagedWebSocket(1_000, Logger);
-        _clientSocket.OnTextReceived += x =>
+        ClientSocket.OnTextReceived += x =>
         {
             var message = Encoding.UTF8.GetString(x.Span);
             _texts.Enqueue(message);
         };
-        _clientSocket.OnBinaryReceived += x =>
+        ClientSocket.OnBinaryReceived += x =>
         {
             var message = x.ToArray();
             _binaries.Enqueue(message);
@@ -511,7 +512,8 @@ public class ClientServerManagedWebSocketTests : TestBase, IAsyncLifetime
     {
         this.Trace("start");
 
-        await _clientSocket.DisconnectAsync();
+        if (_clientSocket is not null)
+            await _clientSocket.DisconnectAsync();
 
         this.Trace("done");
     }
@@ -540,7 +542,7 @@ public class ClientServerManagedWebSocketTests : TestBase, IAsyncLifetime
     {
         this.Trace("start");
 
-        await _clientSocket.ConnectAsync(ServerUri, ct);
+        await ClientSocket.ConnectAsync(ServerUri, ct);
 
         this.Trace("done");
     }
@@ -549,7 +551,7 @@ public class ClientServerManagedWebSocketTests : TestBase, IAsyncLifetime
     {
         this.Trace("start");
 
-        var result = await _clientSocket.SendTextAsync(Encoding.UTF8.GetBytes(text), ct);
+        var result = await ClientSocket.SendTextAsync(Encoding.UTF8.GetBytes(text), ct);
 
         this.Trace("done");
 
@@ -560,7 +562,7 @@ public class ClientServerManagedWebSocketTests : TestBase, IAsyncLifetime
     {
         this.Trace("start");
 
-        var result = await _clientSocket.SendBinaryAsync(data, ct);
+        var result = await ClientSocket.SendBinaryAsync(data, ct);
 
         this.Trace("done");
 

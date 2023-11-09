@@ -34,6 +34,11 @@ internal class ServerManagedWebSocket : IServerManagedWebSocket, ILogSubject
         IsClosed = _managedSocket.ListenAsync(ct).ContinueWith(HandleClosed);
     }
 
+    public void Dispose()
+    {
+        this.Trace("done");
+    }
+
     public async Task DisconnectAsync()
     {
         this.Trace("start");

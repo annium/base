@@ -16,8 +16,10 @@ namespace Annium.Net.WebSockets.Tests.Internal;
 
 public class ManagedWebSocketTests : TestBase, IAsyncLifetime
 {
-    private NativeClientWebSocket _clientSocket = default!;
-    private ManagedWebSocket _managedSocket = default!;
+    private NativeClientWebSocket ClientSocket => _clientSocket.NotNull();
+    private ManagedWebSocket ManagedSocket => _managedSocket.NotNull();
+    private NativeClientWebSocket? _clientSocket;
+    private ManagedWebSocket? _managedSocket;
     private readonly ConcurrentQueue<string> _texts = new();
     private readonly ConcurrentQueue<byte[]> _binaries = new();
 
@@ -84,7 +86,7 @@ public class ManagedWebSocketTests : TestBase, IAsyncLifetime
 
         // act
         this.Trace("close output");
-        _clientSocket
+        ClientSocket
             .CloseOutputAsync(System.Net.WebSockets.WebSocketCloseStatus.Empty, string.Empty, CancellationToken.None)
             .GetAwaiter();
 
@@ -156,7 +158,7 @@ public class ManagedWebSocketTests : TestBase, IAsyncLifetime
 
         // act
         this.Trace("abort client socket");
-        _clientSocket.Abort();
+        ClientSocket.Abort();
 
         this.Trace("send message");
         var result = await SendTextAsync(message);
@@ -326,7 +328,7 @@ public class ManagedWebSocketTests : TestBase, IAsyncLifetime
         await ConnectAsync();
 
         this.Trace("close client socket");
-        await _clientSocket.CloseOutputAsync(
+        await ClientSocket.CloseOutputAsync(
             System.Net.WebSockets.WebSocketCloseStatus.NormalClosure,
             string.Empty,
             default
@@ -392,7 +394,7 @@ public class ManagedWebSocketTests : TestBase, IAsyncLifetime
 
         // act
         this.Trace("abort client socket");
-        _clientSocket.Abort();
+        ClientSocket.Abort();
 
         this.Trace("await listen task");
         var result = await listenTask;
@@ -604,19 +606,19 @@ public class ManagedWebSocketTests : TestBase, IAsyncLifetime
         this.Trace("start");
 
         _clientSocket = new NativeClientWebSocket();
-        _managedSocket = new ManagedWebSocket(_clientSocket, Logger);
+        _managedSocket = new ManagedWebSocket(ClientSocket, Logger);
         this.Trace<string, string>(
             "created pair of {clientSocket} and {managedSocket}",
-            _clientSocket.GetFullId(),
-            _managedSocket.GetFullId()
+            ClientSocket.GetFullId(),
+            ManagedSocket.GetFullId()
         );
 
-        _managedSocket.OnTextReceived += x =>
+        ManagedSocket.OnTextReceived += x =>
         {
             var message = Encoding.UTF8.GetString(x.Span);
             _texts.Enqueue(message);
         };
-        _managedSocket.OnBinaryReceived += x =>
+        ManagedSocket.OnBinaryReceived += x =>
         {
             var message = x.ToArray();
             _binaries.Enqueue(message);
@@ -663,7 +665,7 @@ public class ManagedWebSocketTests : TestBase, IAsyncLifetime
     {
         this.Trace("start");
 
-        await _clientSocket.ConnectAsync(ServerUri, ct);
+        await ClientSocket.ConnectAsync(ServerUri, ct);
 
         this.Trace("done");
     }
@@ -672,7 +674,7 @@ public class ManagedWebSocketTests : TestBase, IAsyncLifetime
     {
         this.Trace("start");
 
-        var result = await _managedSocket.ListenAsync(ct);
+        var result = await ManagedSocket.ListenAsync(ct);
 
         this.Trace("done");
 
@@ -683,7 +685,7 @@ public class ManagedWebSocketTests : TestBase, IAsyncLifetime
     {
         this.Trace("start");
 
-        var result = await _managedSocket.SendTextAsync(Encoding.UTF8.GetBytes(text), ct);
+        var result = await ManagedSocket.SendTextAsync(Encoding.UTF8.GetBytes(text), ct);
 
         this.Trace("done");
 
@@ -694,7 +696,7 @@ public class ManagedWebSocketTests : TestBase, IAsyncLifetime
     {
         this.Trace("start");
 
-        var result = await _managedSocket.SendBinaryAsync(data, ct);
+        var result = await ManagedSocket.SendBinaryAsync(data, ct);
 
         this.Trace("done");
 
