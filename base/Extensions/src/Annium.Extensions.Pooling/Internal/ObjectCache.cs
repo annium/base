@@ -43,15 +43,15 @@ internal sealed class ObjectCache<TKey, TValue> : IObjectCache<TKey, TValue>, IL
         if (isInitializing)
         {
             this.Trace("Get by {key}: initialize entry", key);
-            if (_provider.HasCreate)
-                entry.SetValue(await _provider.CreateAsync(key, ct));
-            else if (_provider.HasExternalCreate)
-            {
-                reference = await _provider.ExternalCreateAsync(key, ct);
-                entry.SetValue(reference.Value);
-            }
-            else
-                throw new NotImplementedException("Neither base not external factory is implemented");
+            var value = await _provider.CreateAsync(key, ct);
+            value.Switch(
+                x => entry.SetValue(x),
+                x =>
+                {
+                    reference = x;
+                    entry.SetValue(x.Value);
+                }
+            );
 
             this.Trace("Get by {key}: entry ready", key);
         }
@@ -109,14 +109,15 @@ internal sealed class ObjectCache<TKey, TValue> : IObjectCache<TKey, TValue>, IL
 
         foreach (var (_, entry) in cacheEntries)
         {
-            this.Trace("dispose {entry} entries", entry);
-            await entry.DisposeAsync();
+            this.Trace("dispose {entry}", entry);
+            entry.Dispose();
+            await _provider.DisposeAsync(entry.Value);
         }
 
         this.Trace("done");
     }
 
-    private sealed record CacheEntry : IAsyncDisposable
+    private sealed record CacheEntry : IDisposable
     {
         public TValue Value => _value ?? throw new InvalidOperationException("Value is not set");
         public bool HasReferences => _references != 0;
@@ -143,20 +144,10 @@ internal sealed class ObjectCache<TKey, TValue> : IObjectCache<TKey, TValue>, IL
 
         public override string ToString() => $"{Value} [{_references}]";
 
-        public async ValueTask DisposeAsync()
+        public void Dispose()
         {
             _gate.Reset();
             _gate.Dispose();
-
-            switch (Value)
-            {
-                case IAsyncDisposable asyncDisposable:
-                    await asyncDisposable.DisposeAsync();
-                    break;
-                case IDisposable disposable:
-                    disposable.Dispose();
-                    break;
-            }
         }
     }
 }

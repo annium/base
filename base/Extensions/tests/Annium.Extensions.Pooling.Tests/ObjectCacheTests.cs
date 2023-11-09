@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Annium.Core.DependencyInjection;
 using Annium.Testing;
+using OneOf;
 using Xunit;
 
 namespace Annium.Extensions.Pooling.Tests;
@@ -95,52 +96,64 @@ public class ObjectCacheTests
     private class ItemProvider : ObjectCacheProvider<uint, Item>
     {
         private readonly Action<string> _log;
-        public override bool HasCreate => true;
-        public override bool HasExternalCreate => false;
 
         public ItemProvider(Action<string> log)
         {
             _log = log;
         }
 
-        public override async Task<Item> CreateAsync(uint id, CancellationToken ct)
+        public override async Task<OneOf<Item, IDisposableReference<Item>>> CreateAsync(uint id, CancellationToken ct)
         {
             await Task.Delay(10);
-            return new Item(id, _log);
+
+            var item = new Item(id);
+            _log($"{item} {Created}");
+
+            return item;
         }
 
-        public override Task SuspendAsync(Item value) => value.Suspend();
+        public override async Task SuspendAsync(Item value)
+        {
+            await value.Suspend();
+            _log($"{value} {Suspended}");
+        }
 
-        public override Task ResumeAsync(Item value) => value.Resume();
+        public override async Task ResumeAsync(Item value)
+        {
+            await value.Resume();
+            _log($"{value} {Resumed}");
+        }
+
+        public override Task DisposeAsync(Item value)
+        {
+            value.Dispose();
+            _log($"{value} {Disposed}");
+
+            return Task.CompletedTask;
+        }
     }
 
     private class Item : IDisposable
     {
         private readonly uint _id;
-        private readonly Action<string> _log;
 
-        public Item(uint id, Action<string> log)
+        public Item(uint id)
         {
             _id = id;
-            _log = log;
-            log($"{id} {Created}");
         }
 
         public async Task Suspend()
         {
             await Task.Delay(10);
-            _log($"{_id} {Suspended}");
         }
 
         public async Task Resume()
         {
             await Task.Delay(10);
-            _log($"{_id} {Resumed}");
         }
 
-        public void Dispose()
-        {
-            _log($"{_id} {Disposed}");
-        }
+        public void Dispose() { }
+
+        public override string ToString() => _id.ToString();
     }
 }
