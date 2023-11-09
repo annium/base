@@ -10,7 +10,12 @@ public static class Utf8JsonWriterExtensions
     private const int MaximumFormatDecimalLength = 33; // default 31 (i.e. 'G') + 2 bytes for quotes
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void WriteProperty<T>(this Utf8JsonWriter writer, ReadOnlySpan<char> propertyName, T value, JsonSerializerOptions options)
+    public static void WriteProperty<T>(
+        this Utf8JsonWriter writer,
+        ReadOnlySpan<char> propertyName,
+        T value,
+        JsonSerializerOptions options
+    )
     {
         writer.WritePropertyName(propertyName);
         JsonSerializer.Serialize(writer, value, options);
