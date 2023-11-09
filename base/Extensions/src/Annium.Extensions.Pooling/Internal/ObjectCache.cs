@@ -1,6 +1,5 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 using Annium.Logging;
@@ -13,7 +12,7 @@ internal sealed class ObjectCache<TKey, TValue> : IObjectCache<TKey, TValue>, IL
 {
     private readonly ObjectCacheProvider<TKey, TValue> _provider;
     public ILogger Logger { get; }
-    private readonly IDictionary<TKey, CacheEntry> _entries = new Dictionary<TKey, CacheEntry>();
+    private readonly ConcurrentDictionary<TKey, CacheEntry> _entries = new();
 
     public ObjectCache(ObjectCacheProvider<TKey, TValue> provider, ILogger logger)
     {
@@ -24,19 +23,15 @@ internal sealed class ObjectCache<TKey, TValue> : IObjectCache<TKey, TValue>, IL
     public async Task<IDisposableReference<TValue>> GetAsync(TKey key, CancellationToken ct = default)
     {
         // get or create CacheEntry
-        CacheEntry entry;
-        var isInitializing = false;
-        lock (_entries)
-        {
-            if (_entries.TryGetValue(key, out entry!))
-                this.Trace("Get by {key}: entry already exists", key);
-            else
-            {
-                this.Trace("Get by {key}: entry missed, creating", key);
-                entry = _entries[key] = new CacheEntry();
-                isInitializing = true;
-            }
-        }
+        var ctx = new FactoryContext();
+        var entry = _entries.GetOrAdd(key, Factory, ctx);
+        var isInitializing = ctx.IsCreated;
+
+        this.Trace<TKey, string>(
+            "Get by {key}: {operation}",
+            key,
+            isInitializing ? "new value created" : "existing value used"
+        );
 
         // creator - immediately creates value, others - wait for access
         IDisposableReference<TValue>? reference = null;
@@ -98,12 +93,8 @@ internal sealed class ObjectCache<TKey, TValue> : IObjectCache<TKey, TValue>, IL
     {
         this.Trace("start");
 
-        KeyValuePair<TKey, CacheEntry>[] cacheEntries;
-        lock (_entries)
-        {
-            cacheEntries = _entries.ToArray();
-            _entries.Clear();
-        }
+        var cacheEntries = _entries.ToArray();
+        _entries.Clear();
 
         this.Trace("dispose {count} entries", cacheEntries.Length);
 
@@ -115,6 +106,18 @@ internal sealed class ObjectCache<TKey, TValue> : IObjectCache<TKey, TValue>, IL
         }
 
         this.Trace("done");
+    }
+
+    private static CacheEntry Factory(TKey key, FactoryContext ctx)
+    {
+        ctx.IsCreated = true;
+
+        return new CacheEntry();
+    }
+
+    private struct FactoryContext
+    {
+        public bool IsCreated;
     }
 
     private sealed record CacheEntry : IDisposable
