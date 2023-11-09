@@ -1,44 +1,66 @@
 using System;
+using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Annium.Core.DependencyInjection;
+using Annium.Logging;
 using Annium.Testing;
 using OneOf;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Annium.Extensions.Pooling.Tests;
 
-public class ObjectCacheTests
+public class ObjectCacheTests : TestBase
 {
     private const string Created = "Created";
     private const string Suspended = "Suspended";
     private const string Resumed = "Resumed";
     private const string Disposed = "Disposed";
 
+    public ObjectCacheTests(ITestOutputHelper outputHelper)
+        : base(outputHelper)
+    {
+        Register(container =>
+        {
+            container.AddObjectCache<uint, Item, ItemProvider>(ServiceLifetime.Singleton);
+            container.Add<Log>().AsSelf().Singleton();
+        });
+    }
+
     [Fact]
     public async Task ObjectCache_Create_Works()
     {
+        this.Trace("start");
+
         // arrange
-        var (cache, logs) = CreateCache();
+        await using var cache = Get<IObjectCache<uint, Item>>();
+        var log = Get<Log>();
 
         // act
+        this.Trace("get multiple references");
         var references = await Task.WhenAll(Enumerable.Range(0, 10).Select(_ => cache.GetAsync(0)));
 
         // assert
+        this.Trace("assert references validity");
         references.Has(10);
         references.All(x => x.Value != default!).IsTrue();
         references.GroupBy(x => x.Value).Has(1);
-        logs.Has(1);
-        logs.ElementAt(0).Is($"0 {Created}");
+        log.Has(1);
+        log.ElementAt(0).Is($"0 {Created}");
+
+        this.Trace("assert references validity");
     }
 
     [Fact]
     public async Task ObjectCache_Suspend_Works()
     {
         // arrange
-        var (cache, logs) = CreateCache();
+        var cache = Get<IObjectCache<uint, Item>>();
+        var log = Get<Log>();
 
         // act
         await Task.WhenAll(
@@ -56,48 +78,22 @@ public class ObjectCacheTests
         // assert
         references.Has(20);
         references.GroupBy(x => x.Value).Has(2);
-        logs.Count.IsNotDefault();
-        Enumerable.Range(0, 2).Select(x => $"{x} {Created}").All(logs.Contains).IsTrue();
+        log.Count.IsNotDefault();
+        Enumerable.Range(0, 2).Select(x => $"{x} {Created}").All(log.Contains).IsTrue();
         foreach (var i in Enumerable.Range(0, 2))
         {
-            logs.Contains($"{i} {Suspended}").IsTrue();
-            logs.Contains($"{i} {Resumed}").IsTrue();
+            log.Contains($"{i} {Suspended}").IsTrue();
+            log.Contains($"{i} {Resumed}").IsTrue();
         }
 
-        Enumerable.Range(0, 2).Select(x => $"{x} {Disposed}").All(logs.Contains).IsTrue();
-    }
-
-    private (IObjectCache<uint, Item>, IReadOnlyCollection<string>) CreateCache()
-    {
-        var logs = new List<string>();
-
-        void Log(string message)
-        {
-            lock (logs)
-                logs.Add(message);
-        }
-
-        var sp = new ServiceContainer()
-            .AddTime()
-            .WithManagedTime()
-            .SetDefault()
-            .AddLogging()
-            .AddObjectCache<uint, Item, ItemProvider>(ServiceLifetime.Singleton)
-            .Add<Action<string>>(Log)
-            .AsSelf()
-            .Singleton()
-            .BuildServiceProvider()
-            .UseLogging(route => route.UseInMemory());
-        var cache = sp.Resolve<IObjectCache<uint, Item>>();
-
-        return (cache, logs);
+        Enumerable.Range(0, 2).Select(x => $"{x} {Disposed}").All(log.Contains).IsTrue();
     }
 
     private class ItemProvider : ObjectCacheProvider<uint, Item>
     {
-        private readonly Action<string> _log;
+        private readonly Log _log;
 
-        public ItemProvider(Action<string> log)
+        public ItemProvider(Log log)
         {
             _log = log;
         }
@@ -107,7 +103,7 @@ public class ObjectCacheTests
             await Task.Delay(10);
 
             var item = new Item(id);
-            _log($"{item} {Created}");
+            _log.Add($"{item} {Created}");
 
             return item;
         }
@@ -115,19 +111,19 @@ public class ObjectCacheTests
         public override async Task SuspendAsync(Item value)
         {
             await value.Suspend();
-            _log($"{value} {Suspended}");
+            _log.Add($"{value} {Suspended}");
         }
 
         public override async Task ResumeAsync(Item value)
         {
             await value.Resume();
-            _log($"{value} {Resumed}");
+            _log.Add($"{value} {Resumed}");
         }
 
         public override Task DisposeAsync(Item value)
         {
             value.Dispose();
-            _log($"{value} {Disposed}");
+            _log.Add($"{value} {Disposed}");
 
             return Task.CompletedTask;
         }
@@ -155,5 +151,18 @@ public class ObjectCacheTests
         public void Dispose() { }
 
         public override string ToString() => _id.ToString();
+    }
+
+    private class Log : IReadOnlyCollection<string>
+    {
+        private readonly ConcurrentQueue<string> _entries = new();
+
+        public int Count => _entries.Count;
+
+        public void Add(string message) => _entries.Enqueue(message);
+
+        public IEnumerator<string> GetEnumerator() => _entries.GetEnumerator();
+
+        IEnumerator IEnumerable.GetEnumerator() => _entries.GetEnumerator();
     }
 }

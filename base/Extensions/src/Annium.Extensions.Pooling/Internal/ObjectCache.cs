@@ -22,16 +22,15 @@ internal sealed class ObjectCache<TKey, TValue> : IObjectCache<TKey, TValue>, IL
 
     public async Task<IDisposableReference<TValue>> GetAsync(TKey key, CancellationToken ct = default)
     {
+        this.Trace("start");
+
         // get or create CacheEntry
         var ctx = new FactoryContext();
         var entry = _entries.GetOrAdd(key, Factory, ctx);
         var isInitializing = ctx.IsCreated;
 
-        this.Trace<TKey, string>(
-            "Get by {key}: {operation}",
-            key,
-            isInitializing ? "new value created" : "existing value used"
-        );
+        var operation = isInitializing ? "new value created" : "existing value used";
+        this.Trace<TKey, string>("Get by {key}: {operation}", key, operation);
 
         // creator - immediately creates value, others - wait for access
         IDisposableReference<TValue>? reference = null;
@@ -115,7 +114,7 @@ internal sealed class ObjectCache<TKey, TValue> : IObjectCache<TKey, TValue>, IL
         return new CacheEntry();
     }
 
-    private struct FactoryContext
+    private record FactoryContext
     {
         public bool IsCreated;
     }
