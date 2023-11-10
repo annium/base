@@ -178,15 +178,13 @@ internal class HttpRequest : IHttpRequest
     {
         this.Trace("start");
 
-        var cts = CancellationTokenSource.CreateLinkedTokenSource(new CancellationTokenSource(_timeout).Token, ct);
-
         foreach (var configure in _configurations)
             configure(this);
 
         var response =
             _middlewares.Count > 0
-                ? await InternalRunAsync(0, cts.Token).ConfigureAwait(false)
-                : await InternalRunAsync(cts.Token).ConfigureAwait(false);
+                ? await InternalRunAsync(0, ct).ConfigureAwait(false)
+                : await InternalRunAsync(ct).ConfigureAwait(false);
 
         this.Trace("done");
 
@@ -226,6 +224,11 @@ internal class HttpRequest : IHttpRequest
             return new HttpResponse(Uri, HttpStatusCode.RequestTimeout, "Request canceled", string.Empty);
         }
 
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(
+            new CancellationTokenSource(_timeout).Token,
+            ct
+        );
+
         var uri = Uri;
         var requestMessage = new HttpRequestMessage { Method = Method, RequestUri = uri };
 
@@ -237,7 +240,7 @@ internal class HttpRequest : IHttpRequest
         try
         {
             this.Trace("send request");
-            var responseMessage = await _client.SendAsync(requestMessage, ct).ConfigureAwait(false);
+            var responseMessage = await _client.SendAsync(requestMessage, cts.Token).ConfigureAwait(false);
 
             this.Trace("prepare response");
             var response = new HttpResponse(uri, responseMessage);
