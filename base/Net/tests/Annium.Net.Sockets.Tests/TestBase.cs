@@ -14,6 +14,7 @@ namespace Annium.Net.Sockets.Tests;
 public abstract class TestBase : Testing.TestBase
 {
     private static int _basePort = 10000;
+    protected readonly Uri ServerUri;
     protected readonly IPEndPoint EndPoint;
     private readonly int _port;
     private readonly Random _random = new();
@@ -22,6 +23,7 @@ public abstract class TestBase : Testing.TestBase
         : base(outputHelper)
     {
         _port = Interlocked.Increment(ref _basePort);
+        ServerUri = new Uri($"ws://127.0.0.1:{_port}");
         EndPoint = new IPEndPoint(IPAddress.Loopback, _port);
     }
 

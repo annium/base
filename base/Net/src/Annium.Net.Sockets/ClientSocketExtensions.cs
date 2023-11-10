@@ -1,3 +1,7 @@
+using System;
+using System.Linq;
+using System.Net;
+using System.Net.Security;
 using System.Threading;
 using System.Threading.Tasks;
 using Annium.Logging;
@@ -6,6 +10,15 @@ namespace Annium.Net.Sockets;
 
 public static class ClientSocketExtensions
 {
+    public static void Connect(this IClientSocket socket, Uri uri, SslClientAuthenticationOptions? authOptions = null)
+    {
+        uri.EnsureAbsolute();
+        var entry = Dns.GetHostEntry(uri.Host).NotNull();
+
+        var endpoint = new IPEndPoint(entry.AddressList.First(), uri.Port);
+        socket.Connect(endpoint, authOptions);
+    }
+
     public static Task WhenConnected(this IClientSocket socket, CancellationToken ct = default)
     {
         var tcs = new TaskCompletionSource();

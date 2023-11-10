@@ -535,7 +535,7 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
                 {
                     this.Trace("start");
 
-                    socket.Connect(EndPoint);
+                    socket.Connect(ServerUri);
 
                     this.Trace("done");
                 };
@@ -576,7 +576,7 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
                         RemoteCertificateValidationCallback = (_, _, _, _) => true,
                     };
 
-                    socket.Connect(EndPoint, authOptions);
+                    socket.Connect(ServerUri, authOptions);
 
                     this.Trace("done");
                 };
