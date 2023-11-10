@@ -178,9 +178,6 @@ internal class HttpRequest : IHttpRequest
     {
         this.Trace("start");
 
-        foreach (var configure in _configurations)
-            configure(this);
-
         var response =
             _middlewares.Count > 0
                 ? await InternalRunAsync(0, ct).ConfigureAwait(false)
@@ -228,6 +225,9 @@ internal class HttpRequest : IHttpRequest
             new CancellationTokenSource(_timeout).Token,
             ct
         );
+
+        foreach (var configure in _configurations)
+            configure(this);
 
         var uri = Uri;
         var requestMessage = new HttpRequestMessage { Method = Method, RequestUri = uri };
