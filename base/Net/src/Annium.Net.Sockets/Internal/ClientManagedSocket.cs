@@ -15,6 +15,7 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
     public event Action<ReadOnlyMemory<byte>> OnReceived = delegate { };
     public Task<SocketCloseResult> IsClosed => _listenTask;
     private readonly ManagedSocketOptions _options;
+    private readonly object _locker = new();
     private Connection? _cn;
     private CancellationTokenSource _listenCts = new();
     private Task<SocketCloseResult> _listenTask = Task.FromResult(
@@ -31,32 +32,27 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
     {
         this.Trace("start");
 
-        var cn = Interlocked.Exchange(ref _cn, null);
-        if (cn is null)
+        lock (_locker)
         {
-            this.Trace("skip - not connected");
-            return;
+            var cn = Interlocked.Exchange(ref _cn, null);
+            if (cn is null)
+            {
+                this.Trace("skip - not connected");
+                return;
+            }
+
+            this.Trace("unbind events");
+            cn.Socket.OnReceived -= HandleOnReceived;
+
+            this.Trace("cancel listen cts");
+            _listenCts.Cancel();
+            _listenCts.Dispose();
+
+            this.Trace("dispose connection");
+            cn.Dispose();
         }
 
-        this.Trace("unbind events");
-        cn.Socket.OnReceived -= HandleOnReceived;
-
-        this.Trace("cancel listen cts");
-        _listenCts.Cancel();
-        _listenCts.Dispose();
-
-        try
-        {
-            this.Trace("dispose socket");
-            cn.Socket.Dispose();
-
-            this.Trace("close stream");
-            cn.Stream.Close();
-        }
-        catch (Exception e)
-        {
-            this.Trace("failed: {e}", e);
-        }
+        this.Trace("done");
     }
 
     public async Task<Exception?> ConnectAsync(
@@ -67,7 +63,7 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
     {
         this.Trace("start");
 
-        // only sockets are checked, because after disconnect listen task can still be awaited
+        // only connection is checked, because after disconnect listen task can still be awaited
         if (_cn is not null)
             throw new InvalidOperationException("Socket is already connected");
 
@@ -115,14 +111,27 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
             this.Trace("bind events");
             socket.OnReceived += HandleOnReceived;
 
-            this.Trace("create listen cts");
-            _listenCts = new CancellationTokenSource();
+            var cn = new Connection(stream, socket, Logger);
 
-            this.Trace("create listen task");
-            _listenTask = socket.ListenAsync(_listenCts.Token).ContinueWith(HandleClosed, CancellationToken.None);
+            lock (_locker)
+            {
+                if (ct.IsCancellationRequested)
+                {
+                    this.Trace("connection canceled, dispose");
+                    cn.Dispose();
 
-            this.Trace("save connection");
-            _cn = new Connection(stream, socket);
+                    return null;
+                }
+
+                this.Trace("save connection");
+                _cn = cn;
+
+                this.Trace("create listen cts");
+                _listenCts = new CancellationTokenSource();
+
+                this.Trace("create listen task");
+                _listenTask = socket.ListenAsync(_listenCts.Token).ContinueWith(HandleClosed, CancellationToken.None);
+            }
 
             this.Trace("done (connected)");
 
@@ -132,15 +141,7 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
         {
             this.Error("failed: {e}", e);
 
-            this.Trace("dispose native socket");
-            stream?.Close();
-
-            this.Trace("unbind events");
-            if (socket is not null)
-            {
-                socket.OnReceived -= HandleOnReceived;
-                socket.Dispose();
-            }
+            Cleanup(stream, socket);
 
             this.Trace("done (not connected)");
 
@@ -152,31 +153,24 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
     {
         this.Trace("start");
 
-        var cn = Interlocked.Exchange(ref _cn, null);
-        if (cn is null)
+        lock (_locker)
         {
-            this.Trace("skip - not connected");
-            return;
-        }
+            var cn = Interlocked.Exchange(ref _cn, null);
+            if (cn is null)
+            {
+                this.Trace("skip - not connected");
+                return;
+            }
 
-        this.Trace("unbind events");
-        cn.Socket.OnReceived -= HandleOnReceived;
+            this.Trace("unbind events");
+            cn.Socket.OnReceived -= HandleOnReceived;
 
-        this.Trace("cancel listen cts");
-        _listenCts.Cancel();
-        _listenCts.Dispose();
+            this.Trace("cancel listen cts");
+            _listenCts.Cancel();
+            _listenCts.Dispose();
 
-        try
-        {
-            this.Trace("dispose socket");
-            cn.Socket.Dispose();
-
-            this.Trace("close stream");
-            cn.Stream.Close();
-        }
-        catch (Exception e)
-        {
-            this.Trace("failed: {e}", e);
+            this.Trace("dispose connection");
+            cn.Dispose();
         }
 
         this.Trace("await listen task");
@@ -199,18 +193,23 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
         if (task.Exception is not null)
             this.Error(task.Exception);
 
-        var cn = Interlocked.Exchange(ref _cn, null);
-        if (cn is null)
+        lock (_locker)
         {
-            this.Trace("already not connected");
-            return task.Result;
+            var cn = Interlocked.Exchange(ref _cn, null);
+            if (cn is null)
+            {
+                this.Trace("skip - not connected");
+                return task.Result;
+            }
+
+            this.Trace("unbind events");
+            cn.Socket.OnReceived -= HandleOnReceived;
+
+            this.Trace("dispose connection");
+            cn.Dispose();
         }
 
-        this.Trace("unsubscribe from managed socket");
-        cn.Socket.OnReceived -= HandleOnReceived;
-
-        this.Trace("close stream");
-        cn.Stream.Close();
+        this.Trace("done");
 
         return task.Result;
     }
@@ -221,5 +220,42 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
         OnReceived(data);
     }
 
-    private sealed record Connection(Stream Stream, IManagedSocket Socket);
+    private void Cleanup(Stream? stream, IManagedSocket? socket)
+    {
+        this.Trace("start");
+
+        if (stream is not null)
+        {
+            this.Trace("dispose native socket");
+            stream.Close();
+        }
+
+        if (socket is not null)
+        {
+            this.Trace("unbind events and dispose socket");
+            socket.OnReceived -= HandleOnReceived;
+            socket.Dispose();
+        }
+
+        this.Trace("done");
+    }
+
+    private sealed record Connection(Stream Stream, IManagedSocket Socket, ILogger Logger) : IDisposable, ILogSubject
+    {
+        public void Dispose()
+        {
+            try
+            {
+                this.Trace("dispose socket");
+                Socket.Dispose();
+
+                this.Trace("close stream");
+                Stream.Close();
+            }
+            catch (Exception e)
+            {
+                this.Trace("failed: {e}", e);
+            }
+        }
+    }
 }
