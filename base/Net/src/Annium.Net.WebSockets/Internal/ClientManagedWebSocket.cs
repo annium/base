@@ -14,6 +14,7 @@ internal class ClientManagedWebSocket : IClientManagedWebSocket, ILogSubject
     public event Action<ReadOnlyMemory<byte>> OnBinaryReceived = delegate { };
     public Task<WebSocketCloseResult> IsClosed => _listenTask;
     private readonly int _keepAliveInterval;
+    private readonly object _locker = new();
     private Connection? _cn;
     private CancellationTokenSource _listenCts = new();
     private Task<WebSocketCloseResult> _listenTask = Task.FromResult(
@@ -30,29 +31,25 @@ internal class ClientManagedWebSocket : IClientManagedWebSocket, ILogSubject
     {
         this.Trace("start");
 
-        var cn = Interlocked.Exchange(ref _cn, null);
-        if (cn is null)
+        lock (_locker)
         {
-            this.Trace("skip - not connected");
-            return;
-        }
+            var cn = Interlocked.Exchange(ref _cn, null);
+            if (cn is null)
+            {
+                this.Trace("skip - not connected");
+                return;
+            }
 
-        this.Trace("unbind events");
-        cn.Managed.OnBinaryReceived -= HandleOnBinaryReceived;
-        cn.Managed.OnTextReceived -= HandleOnTextReceived;
+            this.Trace("unbind events");
+            cn.Managed.OnBinaryReceived -= HandleOnBinaryReceived;
+            cn.Managed.OnTextReceived -= HandleOnTextReceived;
 
-        this.Trace("cancel listen cts");
-        _listenCts.Cancel();
-        _listenCts.Dispose();
+            this.Trace("cancel listen cts");
+            _listenCts.Cancel();
+            _listenCts.Dispose();
 
-        try
-        {
-            this.Trace("dispose native socket");
-            cn.Native.Dispose();
-        }
-        catch (Exception e)
-        {
-            this.Trace("failed: {e}", e);
+            this.Trace("dispose connection");
+            cn.Dispose();
         }
     }
 
@@ -60,7 +57,7 @@ internal class ClientManagedWebSocket : IClientManagedWebSocket, ILogSubject
     {
         this.Trace("start");
 
-        // only sockets are checked, because after disconnect listen task can still be awaited
+        // only connection is checked, because after disconnect listen task can still be awaited
         if (_cn is not null)
             throw new InvalidOperationException("Socket is already connected");
 
@@ -84,16 +81,29 @@ internal class ClientManagedWebSocket : IClientManagedWebSocket, ILogSubject
             this.Trace("connect native socket to {uri}", uri);
             await nativeSocket.ConnectAsync(uri, ct);
 
-            this.Trace("create listen cts");
-            _listenCts = new CancellationTokenSource();
+            var cn = new Connection(nativeSocket, managedSocket, Logger);
 
-            this.Trace("create listen task");
-            _listenTask = managedSocket
-                .ListenAsync(_listenCts.Token)
-                .ContinueWith(HandleClosed, CancellationToken.None);
+            lock (_locker)
+            {
+                if (ct.IsCancellationRequested)
+                {
+                    this.Trace("connection canceled, dispose");
+                    cn.Dispose();
 
-            this.Trace("save connection");
-            _cn = new Connection(nativeSocket, managedSocket);
+                    return null;
+                }
+
+                this.Trace("save connection");
+                _cn = cn;
+
+                this.Trace("create listen cts");
+                _listenCts = new CancellationTokenSource();
+
+                this.Trace("create listen task");
+                _listenTask = managedSocket
+                    .ListenAsync(_listenCts.Token)
+                    .ContinueWith(HandleClosed, CancellationToken.None);
+            }
 
             this.Trace("done (connected)");
 
@@ -103,12 +113,7 @@ internal class ClientManagedWebSocket : IClientManagedWebSocket, ILogSubject
         {
             this.Trace("failed: {e}", e);
 
-            this.Trace("dispose native socket");
-            nativeSocket.Dispose();
-
-            this.Trace("unbind events");
-            managedSocket.OnTextReceived -= HandleOnTextReceived;
-            managedSocket.OnBinaryReceived -= HandleOnBinaryReceived;
+            Cleanup(nativeSocket, managedSocket);
 
             this.Trace("done (not connected)");
 
@@ -120,20 +125,24 @@ internal class ClientManagedWebSocket : IClientManagedWebSocket, ILogSubject
     {
         this.Trace("start");
 
-        var cn = Interlocked.Exchange(ref _cn, null);
-        if (cn is null)
+        Connection? cn;
+        lock (_locker)
         {
-            this.Trace("skip - not connected");
-            return;
+            cn = Interlocked.Exchange(ref _cn, null);
+            if (cn is null)
+            {
+                this.Trace("skip - not connected");
+                return;
+            }
+
+            this.Trace("unbind events");
+            cn.Managed.OnTextReceived -= HandleOnTextReceived;
+            cn.Managed.OnBinaryReceived -= HandleOnBinaryReceived;
+
+            this.Trace("cancel listen cts");
+            _listenCts.Cancel();
+            _listenCts.Dispose();
         }
-
-        this.Trace("unbind events");
-        cn.Managed.OnTextReceived -= HandleOnTextReceived;
-        cn.Managed.OnBinaryReceived -= HandleOnBinaryReceived;
-
-        this.Trace("cancel listen cts");
-        _listenCts.Cancel();
-        _listenCts.Dispose();
 
         try
         {
@@ -177,16 +186,19 @@ internal class ClientManagedWebSocket : IClientManagedWebSocket, ILogSubject
         if (task.Exception is not null)
             this.Error(task.Exception);
 
-        var cn = Interlocked.Exchange(ref _cn, null);
-        if (cn is null)
+        lock (_locker)
         {
-            this.Trace("already not connected");
-            return task.Result;
-        }
+            var cn = Interlocked.Exchange(ref _cn, null);
+            if (cn is null)
+            {
+                this.Trace("already not connected");
+                return task.Result;
+            }
 
-        this.Trace("start, unsubscribe from managed socket");
-        cn.Managed.OnTextReceived -= HandleOnTextReceived;
-        cn.Managed.OnBinaryReceived -= HandleOnBinaryReceived;
+            this.Trace("start, unsubscribe from managed socket");
+            cn.Managed.OnTextReceived -= HandleOnTextReceived;
+            cn.Managed.OnBinaryReceived -= HandleOnBinaryReceived;
+        }
 
         this.Trace("done");
 
@@ -205,5 +217,33 @@ internal class ClientManagedWebSocket : IClientManagedWebSocket, ILogSubject
         OnBinaryReceived(data);
     }
 
-    private sealed record Connection(NativeWebSocket Native, ManagedWebSocket Managed);
+    private void Cleanup(NativeWebSocket nativeSocket, ManagedWebSocket managedSocket)
+    {
+        this.Trace("start, dispose native socket");
+        nativeSocket.Dispose();
+
+        this.Trace("unbind events");
+        managedSocket.OnTextReceived -= HandleOnTextReceived;
+        managedSocket.OnBinaryReceived -= HandleOnBinaryReceived;
+
+        this.Trace("done");
+    }
+
+    private sealed record Connection(NativeWebSocket Native, ManagedWebSocket Managed, ILogger Logger)
+        : IDisposable,
+            ILogSubject
+    {
+        public void Dispose()
+        {
+            try
+            {
+                this.Trace("dispose native socket");
+                Native.Dispose();
+            }
+            catch (Exception e)
+            {
+                this.Trace("failed: {e}", e);
+            }
+        }
+    }
 }
