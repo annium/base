@@ -33,6 +33,9 @@ public class ChannelTests : TestBase
         var log = new List<int>();
         var disposeCounter = 0;
 
+        this.Trace("await");
+        await Task.Delay(50);
+
         this.Trace("create observable from channel");
         var observable = ObservableExt.FromChannel(channel.Reader, Disposed);
         var disposable = Disposable.Box(logger);
@@ -51,7 +54,7 @@ public class ChannelTests : TestBase
 
         this.Trace("dispose and verify dispose callback is called");
         disposable.Dispose();
-        disposeCounter.Is(0);
+        await Expect.To(() => disposeCounter.Is(1));
 
         this.Trace("done");
         return;
