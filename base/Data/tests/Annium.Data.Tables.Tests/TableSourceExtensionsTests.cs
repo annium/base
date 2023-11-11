@@ -23,7 +23,7 @@ public class TableSourceExtensionsTests : TestBase
         var source = Get<ITableFactory>().New<Raw>().Allow(TablePermission.All).Key(x => x.Key).Build();
         source.Init(new[] { new Raw(1, 2), new Raw(2, 3) });
         var target = Get<ITableFactory>().New<Sample>().Allow(TablePermission.All).Key(x => x.Key).Build();
-        var log = new List<IChangeEvent<Sample>>();
+        var log = new TestLog<IChangeEvent<Sample>>();
 
         // arrange - prepare log
         target.Subscribe(log.Add);

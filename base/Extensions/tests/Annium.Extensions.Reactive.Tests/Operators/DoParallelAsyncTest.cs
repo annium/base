@@ -1,30 +1,36 @@
 using System;
-using System.Collections.Concurrent;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Annium.Testing;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Annium.Extensions.Reactive.Tests.Operators;
 
-public class DoParallelAsyncTest
+public class DoParallelAsyncTest : TestBase
 {
+    public DoParallelAsyncTest(ITestOutputHelper outputHelper)
+        : base(outputHelper)
+    {
+        RegisterTestLogs();
+    }
+
     [Fact]
     public async Task DoParallelAsync_WorksCorrectly()
     {
         // arrange
-        var log = new ConcurrentQueue<string>();
+        var log = Get<TestLog<string>>();
         var tcs = new TaskCompletionSource();
         using var observable = Observable
             .Range(1, 5)
             .DoParallelAsync(async x =>
             {
-                log.Enqueue($"start: {x}");
+                log.Add($"start: {x}");
                 await Task.Delay(100);
-                log.Enqueue($"end: {x}");
+                log.Add($"end: {x}");
             })
-            .Subscribe(x => { }, tcs.SetResult);
+            .Subscribe(_ => { }, tcs.SetResult);
 
         await tcs.Task;
 

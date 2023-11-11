@@ -1,7 +1,4 @@
 using System;
-using System.Collections;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -27,8 +24,8 @@ public class ObjectCacheTests : TestBase
         Register(container =>
         {
             container.AddObjectCache<uint, Item, ItemProvider>(ServiceLifetime.Singleton);
-            container.Add<Log>().AsSelf().Singleton();
         });
+        RegisterTestLogs();
     }
 
     [Fact]
@@ -38,7 +35,7 @@ public class ObjectCacheTests : TestBase
 
         // arrange
         await using var cache = Get<IObjectCache<uint, Item>>();
-        var log = Get<Log>();
+        var log = Get<TestLog<string>>();
 
         // act
         this.Trace("get multiple references");
@@ -60,7 +57,7 @@ public class ObjectCacheTests : TestBase
     {
         // arrange
         var cache = Get<IObjectCache<uint, Item>>();
-        var log = Get<Log>();
+        var log = Get<TestLog<string>>();
 
         // act
         await Task.WhenAll(
@@ -91,9 +88,9 @@ public class ObjectCacheTests : TestBase
 
     private class ItemProvider : ObjectCacheProvider<uint, Item>
     {
-        private readonly Log _log;
+        private readonly TestLog<string> _log;
 
-        public ItemProvider(Log log)
+        public ItemProvider(TestLog<string> log)
         {
             _log = log;
         }
@@ -151,18 +148,5 @@ public class ObjectCacheTests : TestBase
         public void Dispose() { }
 
         public override string ToString() => _id.ToString();
-    }
-
-    private class Log : IReadOnlyCollection<string>
-    {
-        private readonly ConcurrentQueue<string> _entries = new();
-
-        public int Count => _entries.Count;
-
-        public void Add(string message) => _entries.Enqueue(message);
-
-        public IEnumerator<string> GetEnumerator() => _entries.GetEnumerator();
-
-        IEnumerator IEnumerable.GetEnumerator() => _entries.GetEnumerator();
     }
 }

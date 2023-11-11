@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Concurrent;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -16,8 +15,8 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
 {
     private IClientWebSocket ClientSocket => _clientSocket.NotNull();
     private IClientWebSocket? _clientSocket;
-    private readonly ConcurrentQueue<string> _texts = new();
-    private readonly ConcurrentQueue<byte[]> _binaries = new();
+    private readonly TestLog<string> _texts = new();
+    private readonly TestLog<byte[]> _binaries = new();
 
     public ClientServerWebSocketTests(ITestOutputHelper outputHelper)
         : base(outputHelper) { }
@@ -497,12 +496,12 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
         ClientSocket.OnTextReceived += x =>
         {
             var message = Encoding.UTF8.GetString(x.Span);
-            _texts.Enqueue(message);
+            _texts.Add(message);
         };
         ClientSocket.OnBinaryReceived += x =>
         {
             var message = x.ToArray();
-            _binaries.Enqueue(message);
+            _binaries.Add(message);
         };
 
         ClientSocket.OnConnected += () => this.Trace("STATE: Connected");

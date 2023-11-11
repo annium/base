@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
@@ -14,7 +13,7 @@ public class DoSequentialAsyncTest
     public async Task DoSequentialAsync_WorksCorrectly()
     {
         // arrange
-        var log = new List<string>();
+        var log = new TestLog<string>();
         var tcs = new TaskCompletionSource();
         using var observable = Observable
             .Range(1, 5)

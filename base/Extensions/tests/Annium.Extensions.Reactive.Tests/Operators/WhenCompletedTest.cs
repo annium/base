@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Annium.Logging;
@@ -18,7 +17,7 @@ public class WhenCompletedTest : TestBase
     public async Task SubscribeAsync_OnErrorWorksCorrectly()
     {
         // arrange
-        var log = new List<long>();
+        var log = new TestLog<long>();
 
         // act
         await Observable.Interval(TimeSpan.FromMilliseconds(20)).Take(5).Do(log.Add).WhenCompleted(Get<ILogger>());

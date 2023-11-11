@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
@@ -65,7 +64,7 @@ public class HttpRequestConfigureInterceptTests : TestBase
 
         // arrange
         var message = "demo";
-        var log = new List<string>();
+        var log = new TestLog<string>();
         await using var _ = RunServer(
             async (request, response) =>
             {
@@ -108,7 +107,7 @@ public class HttpRequestConfigureInterceptTests : TestBase
 
         // arrange
         var message = "demo";
-        var log = new List<string>();
+        var log = new TestLog<string>();
         await using var _ = RunServer(
             async (request, response) =>
             {

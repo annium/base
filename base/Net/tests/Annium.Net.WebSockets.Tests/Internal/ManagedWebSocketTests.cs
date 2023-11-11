@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Concurrent;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -20,8 +19,8 @@ public class ManagedWebSocketTests : TestBase, IAsyncLifetime
     private ManagedWebSocket ManagedSocket => _managedSocket.NotNull();
     private NativeClientWebSocket? _clientSocket;
     private ManagedWebSocket? _managedSocket;
-    private readonly ConcurrentQueue<string> _texts = new();
-    private readonly ConcurrentQueue<byte[]> _binaries = new();
+    private readonly TestLog<string> _texts = new();
+    private readonly TestLog<byte[]> _binaries = new();
 
     public ManagedWebSocketTests(ITestOutputHelper outputHelper)
         : base(outputHelper) { }
@@ -616,12 +615,12 @@ public class ManagedWebSocketTests : TestBase, IAsyncLifetime
         ManagedSocket.OnTextReceived += x =>
         {
             var message = Encoding.UTF8.GetString(x.Span);
-            _texts.Enqueue(message);
+            _texts.Add(message);
         };
         ManagedSocket.OnBinaryReceived += x =>
         {
             var message = x.ToArray();
-            _binaries.Enqueue(message);
+            _binaries.Add(message);
         };
 
         await Task.CompletedTask;

@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Threading;
@@ -30,7 +29,7 @@ public class ChannelTests : TestBase
 
         this.Trace("write to channel");
         Observable.Range(0, dataSize).WriteToChannel(channel.Writer, CancellationToken.None);
-        var log = new List<int>();
+        var log = new TestLog<int>();
         var disposeCounter = 0;
 
         this.Trace("await");

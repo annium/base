@@ -36,6 +36,11 @@ public abstract class TestBase : ILogSubject
         Register(container => container.AddMapper(autoload: false));
     }
 
+    public void RegisterTestLogs(ServiceLifetime lifetime = ServiceLifetime.Singleton)
+    {
+        Register(container => container.Add(typeof(TestLog<>)).AsSelf().In(lifetime));
+    }
+
     public void Register(Action<IServiceContainer> register)
     {
         EnsureNotBuilt();

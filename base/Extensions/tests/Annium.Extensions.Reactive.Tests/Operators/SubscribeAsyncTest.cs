@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Annium.Testing;
@@ -13,7 +12,7 @@ public class SubscribeAsyncTest
     public async Task SubscribeAsync_OnErrorWorksCorrectly()
     {
         // arrange
-        var log = new List<string>();
+        var log = new TestLog<string>();
         var tcs = new TaskCompletionSource();
         using var observable = Observable
             .Range(1, 5)
@@ -46,7 +45,7 @@ public class SubscribeAsyncTest
     public async Task SubscribeAsync_OnCompletedWorksCorrectly()
     {
         // arrange
-        var log = new List<string>();
+        var log = new TestLog<string>();
         var tcs = new TaskCompletionSource();
         using var observable = Observable
             .Range(1, 5)

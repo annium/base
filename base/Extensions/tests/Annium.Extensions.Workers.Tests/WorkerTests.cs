@@ -101,11 +101,11 @@ file class Worker : IWorker<WorkerData>, ILogSubject
 
 file class SharedLog
 {
-    private readonly ConcurrentDictionary<WorkerData, ConcurrentQueue<string>> _log = new();
+    private readonly ConcurrentDictionary<WorkerData, TestLog<string>> _log = new();
 
     public void Track(WorkerData workerData, string message)
     {
-        _log.GetOrAdd(workerData, _ => new ConcurrentQueue<string>()).Enqueue(message);
+        _log.GetOrAdd(workerData, _ => new TestLog<string>()).Add(message);
     }
 
     public IReadOnlyCollection<string> GetLog(WorkerData workerData)
