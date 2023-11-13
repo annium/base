@@ -2,7 +2,7 @@ using System;
 using System.Threading.Tasks;
 using Annium.Data.Operations;
 
-namespace Annium.Extensions.Execution;
+namespace Annium.Execution.Flow;
 
 public interface IBatchExecutor
 {

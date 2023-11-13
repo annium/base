@@ -3,7 +3,7 @@ using System.Net;
 using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
-using Annium.Extensions.Execution;
+using Annium.Execution.Background;
 using Annium.Logging;
 
 namespace Annium.Net.Servers.Web.Internal;
@@ -15,7 +15,7 @@ internal class Server : IServer, ILogSubject
     private readonly Func<HttpListenerContext, CancellationToken, Task> _handleHttpRequest;
     private readonly Func<HttpListenerContext, CancellationToken, Task> _handleWebSocketRequest;
     private readonly Func<HttpListenerWebSocketContext, CancellationToken, Task> _handleWebSocket;
-    private readonly IBackgroundExecutor _executor;
+    private readonly IExecutor _executor;
 
     public Server(int port, IHttpHandler? httpHandler, IWebSocketHandler? webSocketHandler, ILogger logger)
     {
@@ -34,7 +34,7 @@ internal class Server : IServer, ILogSubject
             _handleWebSocket = IgnoreWebSocket;
         }
 
-        _executor = Executor.Background.Parallel<Server>(logger);
+        _executor = Executor.Parallel<Server>(logger);
     }
 
     public async Task RunAsync(CancellationToken ct = default)

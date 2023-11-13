@@ -8,13 +8,13 @@ using Annium.Logging;
 using Annium.Testing;
 using Xunit.Abstractions;
 
-namespace Annium.Extensions.Execution.Tests.Background;
+namespace Annium.Execution.Background.Tests;
 
 public abstract class BackgroundExecutorTestBase : TestBase
 {
-    private readonly IBackgroundExecutor _executor;
+    private readonly IExecutor _executor;
 
-    protected BackgroundExecutorTestBase(Func<ILogger, IBackgroundExecutor> getExecutor, ITestOutputHelper outputHelper)
+    protected BackgroundExecutorTestBase(Func<ILogger, IExecutor> getExecutor, ITestOutputHelper outputHelper)
         : base(outputHelper)
     {
         _executor = getExecutor(Get<ILogger>());

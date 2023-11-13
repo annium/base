@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Annium.Extensions.Execution.Internal.Background;
+namespace Annium.Execution.Background.Internal;
 
 internal static class Helper
 {

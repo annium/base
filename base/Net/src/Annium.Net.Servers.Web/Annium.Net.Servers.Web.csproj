@@ -12,6 +12,7 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
     <ItemGroup>
-        <ProjectReference Include="../../../Extensions/src/Annium.Extensions.Execution/Annium.Extensions.Execution.csproj" />
+        <ProjectReference Include="../../../Core/src/Annium.Core.DependencyInjection/Annium.Core.DependencyInjection.csproj" />
+        <ProjectReference Include="../../../Execution/src/Annium.Execution.Background/Annium.Execution.Background.csproj" />
     </ItemGroup>
 </Project>

@@ -1,7 +1,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Annium.Extensions.Execution.Tests;
+namespace Annium.Execution.Background.Tests;
 
 internal static class Helper
 {

@@ -5,9 +5,9 @@ using System.Threading.Channels;
 using System.Threading.Tasks;
 using Annium.Logging;
 
-namespace Annium.Extensions.Execution.Internal.Background;
+namespace Annium.Execution.Background.Internal;
 
-internal abstract class BackgroundExecutorBase : IBackgroundExecutor, ILogSubject
+internal abstract class ExecutorBase : IExecutor, ILogSubject
 {
     public ILogger Logger { get; }
 
@@ -29,7 +29,7 @@ internal abstract class BackgroundExecutorBase : IBackgroundExecutor, ILogSubjec
     private State _state = State.Created;
     private int _taskCounter;
 
-    protected BackgroundExecutorBase(ILogger logger)
+    protected ExecutorBase(ILogger logger)
     {
         Logger = logger;
         var taskChannel = Channel.CreateUnbounded<Delegate>(

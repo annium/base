@@ -2,9 +2,9 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Annium.Extensions.Execution;
+namespace Annium.Execution.Background;
 
-public interface IBackgroundExecutor : IAsyncDisposable
+public interface IExecutor : IAsyncDisposable
 {
     bool IsAvailable { get; }
     void Schedule(Action task);

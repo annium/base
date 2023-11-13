@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Annium.Core.DependencyInjection;
-using Annium.Extensions.Execution;
+using Annium.Execution.Background;
 using Annium.Logging;
 
 namespace Annium.Extensions.Workers.Internal;
@@ -14,14 +14,14 @@ internal sealed class WorkerManager<TData> : IWorkerManager<TData>, IAsyncDispos
     public ILogger Logger { get; }
     private readonly Dictionary<TData, Entry> _entries = new();
     private readonly IServiceProvider _sp;
-    private readonly IBackgroundExecutor _executor;
+    private readonly IExecutor _executor;
     private bool _isDisposed;
 
     public WorkerManager(IServiceProvider sp, ILogger logger)
     {
         Logger = logger;
         _sp = sp;
-        _executor = Executor.Background.Concurrent<WorkerManager<TData>>(logger);
+        _executor = Executor.Concurrent<WorkerManager<TData>>(logger);
         _executor.Start();
     }
 

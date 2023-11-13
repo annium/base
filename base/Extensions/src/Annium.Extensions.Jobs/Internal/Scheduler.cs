@@ -1,7 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Annium.Extensions.Execution;
+using Annium.Execution.Background;
 using Annium.Logging;
 using Annium.NodaTime.Extensions;
 using NodaTime;
@@ -15,7 +15,7 @@ internal class Scheduler : IScheduler, IAsyncDisposable, ILogSubject
     private readonly IIntervalParser _intervalParser;
     private readonly CancellationTokenSource _cts = new();
     private bool _isDisposed;
-    private readonly IBackgroundExecutor _executor;
+    private readonly IExecutor _executor;
 
     public Scheduler(ITimeProvider timeProvider, IIntervalParser intervalParser, ILogger logger)
     {
@@ -23,7 +23,7 @@ internal class Scheduler : IScheduler, IAsyncDisposable, ILogSubject
         _timeProvider = timeProvider;
         _intervalParser = intervalParser;
 
-        _executor = Executor.Background.Parallel<Scheduler>(logger);
+        _executor = Executor.Parallel<Scheduler>(logger);
         _executor.Start();
     }
 

@@ -6,12 +6,12 @@ using Annium.Testing;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace Annium.Extensions.Execution.Tests.Background;
+namespace Annium.Execution.Background.Tests;
 
-public class ParallelBackgroundExecutorTests : BackgroundExecutorTestBase
+public class ConcurrentBackgroundExecutorTests : BackgroundExecutorTestBase
 {
-    public ParallelBackgroundExecutorTests(ITestOutputHelper outputHelper)
-        : base(Executor.Background.Parallel<ParallelBackgroundExecutorTests>, outputHelper) { }
+    public ConcurrentBackgroundExecutorTests(ITestOutputHelper outputHelper)
+        : base(x => Executor.Concurrent<ConcurrentBackgroundExecutorTests>(x), outputHelper) { }
 
     [Fact]
     public async Task Works()

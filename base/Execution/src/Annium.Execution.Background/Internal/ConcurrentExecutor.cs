@@ -3,14 +3,14 @@ using System.Threading;
 using System.Threading.Tasks;
 using Annium.Logging;
 
-namespace Annium.Extensions.Execution.Internal.Background;
+namespace Annium.Execution.Background.Internal;
 
 // ReSharper disable once UnusedTypeParameter
-internal class ConcurrentBackgroundExecutor<TSource> : BackgroundExecutorBase
+internal class ConcurrentExecutor<TSource> : ExecutorBase
 {
     private readonly SemaphoreSlim _gate;
 
-    public ConcurrentBackgroundExecutor(int parallelism, ILogger logger)
+    public ConcurrentExecutor(int parallelism, ILogger logger)
         : base(logger)
     {
         _gate = new SemaphoreSlim(parallelism, parallelism);

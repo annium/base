@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Annium.Data.Operations;
 
-namespace Annium.Extensions.Execution.Internal;
+namespace Annium.Execution.Flow.Internal;
 
 internal class BatchExecutor : IBatchExecutor
 {

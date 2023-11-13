@@ -3,7 +3,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
-using Annium.Extensions.Execution;
+using Annium.Execution.Background;
 using Annium.Logging;
 
 namespace Annium.Net.Servers.Sockets.Internal;
@@ -12,7 +12,7 @@ internal class Server : IServer, ILogSubject
 {
     public ILogger Logger { get; }
     private readonly TcpListener _listener;
-    private readonly IBackgroundExecutor _executor;
+    private readonly IExecutor _executor;
     private readonly IHandler _handler;
     private int _isListening;
 
@@ -21,7 +21,7 @@ internal class Server : IServer, ILogSubject
         Logger = logger;
         _listener = new TcpListener(IPAddress.Any, port);
         _listener.Server.NoDelay = true;
-        _executor = Executor.Background.Parallel<Server>(Logger);
+        _executor = Executor.Parallel<Server>(Logger);
         _handler = handler;
     }
 

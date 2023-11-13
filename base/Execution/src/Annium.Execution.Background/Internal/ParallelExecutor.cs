@@ -2,12 +2,12 @@ using System;
 using System.Threading.Tasks;
 using Annium.Logging;
 
-namespace Annium.Extensions.Execution.Internal.Background;
+namespace Annium.Execution.Background.Internal;
 
 // ReSharper disable once UnusedTypeParameter
-internal class ParallelBackgroundExecutor<TSource> : BackgroundExecutorBase
+internal class ParallelExecutor<TSource> : ExecutorBase
 {
-    public ParallelBackgroundExecutor(ILogger logger)
+    public ParallelExecutor(ILogger logger)
         : base(logger) { }
 
     protected override Task RunTask(Delegate task)

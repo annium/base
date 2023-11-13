@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <PackageId>Annium.Extensions.Execution.Tests</PackageId>
+        <PackageId>Annium.Execution.Background.Tests</PackageId>
         <PackageVersion>0.1.0</PackageVersion>
-        <Description>Annium.Extensions.Execution.Tests</Description>
+        <Description>Annium.Execution.Background.Tests</Description>
         <TargetFramework>net7.0</TargetFramework>
         <OutputType>Library</OutputType>
         <DebugType>portable</DebugType>
@@ -14,7 +14,7 @@
     </PropertyGroup>
     <ItemGroup>
         <ProjectReference Include="../../../Annium/src/Annium.Testing/Annium.Testing.csproj" />
-        <ProjectReference Include="../../src/Annium.Extensions.Execution/Annium.Extensions.Execution.csproj" />
+        <ProjectReference Include="../../src/Annium.Execution.Background/Annium.Execution.Background.csproj" />
     </ItemGroup>
     <ItemGroup>
         <PackageReference Include="coverlet.collector" Version="6.0.0" />
