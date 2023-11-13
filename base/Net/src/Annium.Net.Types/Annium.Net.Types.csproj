@@ -15,6 +15,6 @@
         <ProjectReference Include="../../../Core/src/Annium.Core.Runtime/Annium.Core.Runtime.csproj" />
     </ItemGroup>
     <ItemGroup>
-        <PackageReference Include="Namotion.Reflection" Version="3.0.0" />
+        <PackageReference Include="Namotion.Reflection" Version="3.1.0" />
     </ItemGroup>
 </Project>
