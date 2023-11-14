@@ -1,21 +1,35 @@
-using System;
+using System.Threading;
 using Annium.Logging;
 
 namespace Annium.Net.Sockets.Internal;
 
-internal class DefaultConnectionMonitor : IConnectionMonitor, ILogSubject
+internal class DefaultConnectionMonitor : ConnectionMonitorBase
 {
-    public ILogger Logger { get; }
-    public event Action OnConnectionLost = delegate { };
     private readonly ISendingReceivingSocket _socket;
+    private CancellationTokenSource _cts = default!;
 
     public DefaultConnectionMonitor(ISendingReceivingSocket socket, ILogger logger)
+        : base(logger)
     {
-        Logger = logger;
         _socket = socket;
     }
 
-    public void Start() { }
+    protected override void HandleStart()
+    {
+        this.Trace("start");
 
-    public void Stop() { }
+        _cts = new CancellationTokenSource();
+
+        this.Trace("done");
+    }
+
+    protected override void HandleStop()
+    {
+        this.Trace("start");
+
+        _cts.Cancel();
+        _cts.Dispose();
+
+        this.Trace("done");
+    }
 }

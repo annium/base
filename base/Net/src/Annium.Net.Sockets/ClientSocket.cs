@@ -20,7 +20,7 @@ public class ClientSocket : IClientSocket
         _connectionConfig ?? throw new InvalidOperationException("Connection config is not set");
     private readonly object _locker = new();
     private readonly IClientManagedSocket _socket;
-    private readonly IConnectionMonitor _connectionMonitor;
+    private readonly ConnectionMonitorBase _connectionMonitor;
     private readonly int _connectTimeout;
     private readonly int _reconnectDelay;
     private ConnectionConfig? _connectionConfig;

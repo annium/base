@@ -16,7 +16,7 @@ public class ServerSocket : IServerSocket
     public event Action<Exception> OnError = delegate { };
     private readonly object _locker = new();
     private readonly IServerManagedSocket _socket;
-    private readonly IConnectionMonitor _connectionMonitor;
+    private readonly ConnectionMonitorBase _connectionMonitor;
     private Status _status = Status.Connected;
 
     public ServerSocket(Stream stream, ServerSocketOptions options, ILogger logger, CancellationToken ct = default)
