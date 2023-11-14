@@ -497,11 +497,66 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
         this.Trace("done");
     }
 
+    [Theory]
+    [InlineData(StreamType.Plain)]
+    [InlineData(StreamType.Ssl)]
+    public async Task Listen_ConnectionLost(StreamType streamType)
+    {
+        this.Trace("start");
+
+        var serverOptions = ServerSocketOptions.Default with
+        {
+            Mode = SocketMode.Messaging,
+            ConnectionMonitor = new ConnectionMonitorOptions { PingInterval = 60_000, MaxPingDelay = 300_000 }
+        };
+        Configure(streamType, serverOptions);
+
+        // arrange
+        this.Trace("generate messages");
+        var disconnectCounter = 0;
+
+        this.Trace("run server");
+        await using var _ = _runServer(
+            async (serverSocket, ct) =>
+            {
+                this.Trace("start, await until disconnected");
+
+                await serverSocket.WhenDisconnected(ct);
+
+                this.Trace("done, disconnected");
+            }
+        );
+
+        this.Trace("set disconnect handler");
+        ClientSocket.OnDisconnected += _ =>
+        {
+            this.Trace("disconnected");
+            Interlocked.Increment(ref disconnectCounter);
+        };
+
+        this.Trace("connect");
+        await ConnectAsync();
+
+        this.Trace("wait");
+        await Task.Delay(700);
+
+        // assert
+        this.Trace("assert disconnected");
+        disconnectCounter.Is(1);
+
+        this.Trace("done");
+    }
+
     public Task InitializeAsync()
     {
         this.Trace("start");
 
-        var options = ClientSocketOptions.Default with { Mode = SocketMode.Messaging, ReconnectDelay = 1 };
+        var options = ClientSocketOptions.Default with
+        {
+            Mode = SocketMode.Messaging,
+            ReconnectDelay = 1,
+            ConnectionMonitor = new ConnectionMonitorOptions { PingInterval = 100, MaxPingDelay = 500 }
+        };
         _clientSocket = new ClientSocket(options, Logger);
         ClientSocket.OnReceived += x => _messages.Add(x.ToArray());
 
@@ -525,7 +580,7 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
         return Task.CompletedTask;
     }
 
-    private void Configure(StreamType streamType)
+    private void Configure(StreamType streamType, ServerSocketOptions? socketOptions = null)
     {
         this.Trace("start");
         switch (streamType)
@@ -551,7 +606,8 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
                             await using var stream = new NetworkStream(raw, true);
 
                             this.Trace("create managed socket");
-                            var options = ServerSocketOptions.Default with { Mode = SocketMode.Messaging };
+                            var options =
+                                socketOptions ?? ServerSocketOptions.Default with { Mode = SocketMode.Messaging };
                             var logger = sp.Resolve<ILogger>();
                             var socket = new ServerSocket(stream, options, logger, ct);
 

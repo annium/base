@@ -229,7 +229,8 @@ public class ClientSocket : IClientSocket
             SetStatus(Status.Connecting);
         }
 
-        ReconnectPrivate(Config, new SocketCloseResult(SocketCloseStatus.ClosedRemote, null));
+        this.Trace("disconnect managed socket");
+        _socket.DisconnectAsync();
 
         this.Trace("done");
     }
