@@ -31,7 +31,7 @@ internal class DefaultConnectionMonitor : ConnectionMonitorBase
         _timer = AsyncTimer.Create(HandlePingPong, _options.PingInterval, _options.PingInterval);
 
         this.Trace("start stopwatch");
-        _stopwatch.Start();
+        _stopwatch.Restart();
 
         this.Trace("done");
     }

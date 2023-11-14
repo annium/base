@@ -247,11 +247,10 @@ public class MessagingManagedSocketTests : TestBase, IAsyncLifetime
         messageResult.Is(SocketSendStatus.Ok);
 
         this.Trace("assert message is echoed back");
-        await Expect.To(() =>
-        {
-            _messages.Has(1);
-            _messages.At(0).IsEqual(message);
-        });
+        await Expect.To(() => _messages.Has(1));
+
+        this.Trace("verify stream to be equal to message");
+        _messages.At(0).IsEqual(message);
 
         this.Trace("done");
     }
@@ -439,11 +438,10 @@ public class MessagingManagedSocketTests : TestBase, IAsyncLifetime
 
         // assert
         this.Trace("assert data arrived");
-        await Expect.To(() =>
-        {
-            _messages.Has(messages.Count);
-            _messages.IsEqual(messages);
-        });
+        await Expect.To(() => _messages.Has(messages.Count));
+
+        this.Trace("verify messages are valid");
+        _messages.IsEqual(messages);
 
         this.Trace("done");
     }
@@ -487,11 +485,10 @@ public class MessagingManagedSocketTests : TestBase, IAsyncLifetime
 
         // assert
         this.Trace("assert data arrived");
-        await Expect.To(() =>
-        {
-            _messages.Has(messages.Count);
-            _messages.IsEqual(messages);
-        });
+        await Expect.To(() => _messages.Has(messages.Count));
+
+        this.Trace("verify messages are valid");
+        _messages.IsEqual(messages);
 
         this.Trace("await listen completion");
         var result = await listenTask;

@@ -184,7 +184,10 @@ public class RawManagedSocketTests : TestBase, IAsyncLifetime
         messageResult.Is(SocketSendStatus.Ok);
 
         this.Trace("assert message is echoed back");
-        await Expect.To(() => _stream.IsEqual(message));
+        await Expect.To(() => _stream.Has(message.Length));
+
+        this.Trace("verify stream to be equal to message");
+        _stream.IsEqual(message);
 
         this.Trace("done");
     }
@@ -318,7 +321,10 @@ public class RawManagedSocketTests : TestBase, IAsyncLifetime
 
         // assert
         this.Trace("assert data arrived");
-        await Expect.To(() => _stream.IsEqual(message), 1000);
+        await Expect.To(() => _stream.Has(message.Length), 1000);
+
+        this.Trace("verify stream to be equal to message");
+        _stream.IsEqual(message);
 
         this.Trace("done");
     }

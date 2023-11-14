@@ -222,11 +222,10 @@ public class ClientServerManagedSocketTests : TestBase, IAsyncLifetime
         textResult.Is(SocketSendStatus.Ok);
 
         this.Trace("assert message is echoed back");
-        await Expect.To(() =>
-        {
-            _messages.Has(1);
-            _messages.At(0).IsEqual(message);
-        });
+        await Expect.To(() => _messages.Has(1));
+
+        this.Trace("verify messages are valid");
+        _messages.At(0).IsEqual(message);
 
         this.Trace("done");
     }
@@ -275,11 +274,10 @@ public class ClientServerManagedSocketTests : TestBase, IAsyncLifetime
         result.Is(SocketSendStatus.Ok);
 
         this.Trace("assert message arrived");
-        await Expect.To(() =>
-        {
-            _messages.Has(1);
-            _messages.At(0).IsEqual(message);
-        });
+        await Expect.To(() => _messages.Has(1));
+
+        this.Trace("verify messages are valid");
+        _messages.At(0).IsEqual(message);
 
         this.Trace("disconnect");
         await ClientSocket.DisconnectAsync();
@@ -298,11 +296,10 @@ public class ClientServerManagedSocketTests : TestBase, IAsyncLifetime
         result.Is(SocketSendStatus.Ok);
 
         this.Trace("assert message arrived");
-        await Expect.To(() =>
-        {
-            _messages.Has(1);
-            _messages.At(0).IsEqual(message);
-        });
+        await Expect.To(() => _messages.Has(1));
+
+        this.Trace("verify messages are valid");
+        _messages.At(0).IsEqual(message);
 
         this.Trace("disconnect");
         await ClientSocket.DisconnectAsync();
@@ -442,14 +439,10 @@ public class ClientServerManagedSocketTests : TestBase, IAsyncLifetime
 
         // assert
         this.Trace("assert data arrived");
-        await Expect.To(
-            () =>
-            {
-                _messages.Has(messages.Count);
-                _messages.IsEqual(messages);
-            },
-            1000
-        );
+        await Expect.To(() => _messages.Has(messages.Count), 1000);
+
+        this.Trace("verify messages are valid");
+        _messages.IsEqual(messages);
 
         this.Trace("send signal to server");
         clientTcs.SetResult();

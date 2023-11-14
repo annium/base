@@ -212,11 +212,10 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
         binaryResult.Is(SocketSendStatus.Ok);
 
         this.Trace("assert message is echoed back");
-        await Expect.To(() =>
-        {
-            _messages.Has(1);
-            _messages.At(0).IsEqual(message);
-        });
+        await Expect.To(() => _messages.Has(1));
+
+        this.Trace("verify messages are valid");
+        _messages.At(0).IsEqual(message);
 
         this.Trace("done");
     }
@@ -266,11 +265,10 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
         result.Is(SocketSendStatus.Ok);
 
         this.Trace("assert message arrived");
-        await Expect.To(() =>
-        {
-            _messages.Has(1);
-            _messages.At(0).IsEqual(message);
-        });
+        await Expect.To(() => _messages.Has(1));
+
+        this.Trace("verify messages are valid");
+        _messages.At(0).IsEqual(message);
 
         this.Trace("disconnect");
         await DisconnectAsync();
@@ -291,11 +289,10 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
         result.Is(SocketSendStatus.Ok);
 
         this.Trace("assert message arrived");
-        await Expect.To(() =>
-        {
-            _messages.Has(1);
-            _messages.At(0).IsEqual(message);
-        });
+        await Expect.To(() => _messages.Has(1));
+
+        this.Trace("verify messages are valid");
+        _messages.At(0).IsEqual(message);
 
         this.Trace("disconnect");
         await DisconnectAsync();
@@ -343,14 +340,12 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
 
         // assert
         this.Trace("assert data arrived");
-        await Expect.To(
-            () =>
-            {
-                _messages.Has(messages.Count);
-                _messages.IsEqual(messages);
-            },
-            1000
-        );
+        await Expect.To(() => _messages.Has(messages.Count));
+
+        this.Trace("verify messages are valid");
+        _messages.IsEqual(messages);
+
+        this.Trace("set client tcs");
         clientTcs.SetResult();
 
         this.Trace("done");
@@ -396,11 +391,10 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
 
         // assert
         this.Trace("assert data arrived");
-        await Expect.To(() =>
-        {
-            _messages.Has(messages.Count);
-            _messages.IsEqual(messages);
-        });
+        await Expect.To(() => _messages.Has(messages.Count));
+
+        this.Trace("verify messages are valid");
+        _messages.IsEqual(messages);
 
         this.Trace("disconnect");
         clientTcs.SetResult();
@@ -482,11 +476,10 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
 
         // assert
         this.Trace("assert data arrived");
-        await Expect.To(() =>
-        {
-            _messages.Has(messages.Count);
-            _messages.IsEqual(messages);
-        });
+        await Expect.To(() => _messages.Has(messages.Count));
+
+        this.Trace("verify messages are valid");
+        _messages.IsEqual(messages);
 
         this.Trace("send signal to stop server");
         clientTcs.SetResult();
