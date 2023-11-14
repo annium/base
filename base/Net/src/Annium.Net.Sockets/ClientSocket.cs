@@ -43,7 +43,8 @@ public class ClientSocket : IClientSocket
 
         this.Trace("init monitor");
         _connectionMonitor =
-            options.ConnectionMonitorFactory?.Create(this) ?? new DefaultConnectionMonitor(this, Logger);
+            options.ConnectionMonitor.Factory?.Create(this)
+            ?? new DefaultConnectionMonitor(options.ConnectionMonitor, this, Logger);
 
         _connectTimeout = options.ConnectTimeout;
         _reconnectDelay = options.ReconnectDelay;
@@ -265,6 +266,12 @@ public class ClientSocket : IClientSocket
 
     private void HandleOnReceived(ReadOnlyMemory<byte> data)
     {
+        if (data.Span.SequenceEqual(ProtocolFrames.Ping.Span))
+        {
+            this.Trace("skip ping frame");
+            return;
+        }
+
         this.Trace("trigger binary received");
         OnReceived(data);
     }

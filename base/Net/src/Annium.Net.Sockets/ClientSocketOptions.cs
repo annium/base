@@ -4,7 +4,7 @@ public record ClientSocketOptions
 {
     public static ClientSocketOptions Default { get; } = new();
     public SocketMode Mode { get; init; } = SocketMode.Raw;
-    public IConnectionMonitorFactory? ConnectionMonitorFactory { get; init; }
+    public ConnectionMonitorOptions ConnectionMonitor { get; init; } = new();
     public int ConnectTimeout { get; init; } = 5_000;
     public int ReconnectDelay { get; init; }
     public int BufferSize { get; init; } = 65_536;

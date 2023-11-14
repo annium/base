@@ -45,6 +45,11 @@ public abstract class ConnectionMonitorBase : ILogSubject
         this.Trace("done");
     }
 
+    protected void FireConnectionLost()
+    {
+        OnConnectionLost();
+    }
+
     protected abstract void HandleStart();
     protected abstract void HandleStop();
 }

@@ -38,7 +38,8 @@ public class ServerSocket : IServerSocket
 
         this.Trace("init monitor");
         _connectionMonitor =
-            options.ConnectionMonitorFactory?.Create(this) ?? new DefaultConnectionMonitor(this, Logger);
+            options.ConnectionMonitor.Factory?.Create(this)
+            ?? new DefaultConnectionMonitor(options.ConnectionMonitor, this, Logger);
 
         this.Trace("start monitor");
         _connectionMonitor.Start();
@@ -131,6 +132,12 @@ public class ServerSocket : IServerSocket
 
     private void HandleOnReceived(ReadOnlyMemory<byte> data)
     {
+        if (data.Span.SequenceEqual(ProtocolFrames.Ping.Span))
+        {
+            this.Trace("skip ping frame");
+            return;
+        }
+
         this.Trace("trigger binary received");
         OnReceived(data);
     }
