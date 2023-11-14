@@ -37,8 +37,8 @@ public class ServerSocket : IServerSocket
         _socket.IsClosed.ContinueWith(HandleClosed, CancellationToken.None);
 
         this.Trace("init monitor");
-        _connectionMonitor = options.ConnectionMonitor;
-        _connectionMonitor.Init(this);
+        _connectionMonitor =
+            options.ConnectionMonitorFactory?.Create(this) ?? new DefaultConnectionMonitor(this, Logger);
 
         this.Trace("start monitor");
         _connectionMonitor.Start();
