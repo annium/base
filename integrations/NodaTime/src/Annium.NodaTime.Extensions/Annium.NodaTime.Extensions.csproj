@@ -3,7 +3,7 @@
         <PackageId>Annium.NodaTime.Extensions</PackageId>
         <PackageVersion>0.1.0</PackageVersion>
         <Description>Annium.NodaTime.Extensions</Description>
-        <TargetFramework>net7.0</TargetFramework>
+        <TargetFramework>net8.0</TargetFramework>
         <OutputType>Library</OutputType>
         <DebugType>portable</DebugType>
         <LangVersion>11.0</LangVersion>
