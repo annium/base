@@ -43,8 +43,8 @@ public class ClientSocket : IClientSocket
 
         this.Trace("init monitor");
         _connectionMonitor =
-            options.ConnectionMonitor.Factory?.Create(this)
-            ?? new DefaultConnectionMonitor(options.ConnectionMonitor, this, Logger);
+            options.ConnectionMonitor.Factory?.Create(_socket)
+            ?? new DefaultConnectionMonitor(options.ConnectionMonitor, _socket, Logger);
 
         _connectTimeout = options.ConnectTimeout;
         _reconnectDelay = options.ReconnectDelay;

@@ -18,6 +18,7 @@ internal class DefaultConnectionMonitor : ConnectionMonitorBase
     {
         _options = options;
         _socket = socket;
+        this.Trace("options: {options}", options);
     }
 
     protected override void HandleStart()
