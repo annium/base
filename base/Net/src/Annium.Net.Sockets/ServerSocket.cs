@@ -70,10 +70,13 @@ public class ServerSocket : IServerSocket
         _connectionMonitor.Stop();
 
         this.Trace("disconnect managed socket");
-        _socket.DisconnectAsync();
-
-        this.Trace("fire disconnected");
-        OnDisconnected(SocketCloseStatus.ClosedLocal);
+        _socket
+            .DisconnectAsync()
+            .ContinueWith(_ =>
+            {
+                this.Trace("fire disconnected");
+                OnDisconnected(SocketCloseStatus.ClosedLocal);
+            });
 
         this.Trace("done");
     }
