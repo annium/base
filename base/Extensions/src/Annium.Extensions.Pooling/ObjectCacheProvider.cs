@@ -1,4 +1,3 @@
-using System;
 using System.Threading;
 using System.Threading.Tasks;
 using OneOf;
@@ -9,8 +8,7 @@ public abstract class ObjectCacheProvider<TKey, TValue>
     where TKey : notnull
     where TValue : notnull
 {
-    public virtual Task<OneOf<TValue, IDisposableReference<TValue>>> CreateAsync(TKey key, CancellationToken ct) =>
-        throw new NotImplementedException();
+    public abstract Task<OneOf<TValue, IDisposableReference<TValue>>> CreateAsync(TKey key, CancellationToken ct);
 
     public virtual Task SuspendAsync(TKey key, TValue value) => Task.CompletedTask;
 
