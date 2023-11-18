@@ -23,8 +23,7 @@ internal class Scheduler : IScheduler, IAsyncDisposable, ILogSubject
         _timeProvider = timeProvider;
         _intervalParser = intervalParser;
 
-        _executor = Executor.Parallel<Scheduler>(logger);
-        _executor.Start();
+        _executor = Executor.Parallel<Scheduler>(logger).Start();
     }
 
     public IDisposable Schedule(Func<Task> handler, string interval)

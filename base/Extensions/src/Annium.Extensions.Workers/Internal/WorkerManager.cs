@@ -21,8 +21,7 @@ internal sealed class WorkerManager<TData> : IWorkerManager<TData>, IAsyncDispos
     {
         Logger = logger;
         _sp = sp;
-        _executor = Executor.Concurrent<WorkerManager<TData>>(logger);
-        _executor.Start();
+        _executor = Executor.Concurrent<WorkerManager<TData>>(logger).Start();
     }
 
     public void Start(TData key)

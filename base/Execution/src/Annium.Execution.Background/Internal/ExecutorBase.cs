@@ -84,7 +84,7 @@ internal abstract class ExecutorBase : IExecutor, ILogSubject
         return TryScheduleTask(task);
     }
 
-    public void Start(CancellationToken ct = default)
+    public IExecutor Start(CancellationToken ct = default)
     {
         this.Trace("start");
 
@@ -106,6 +106,8 @@ internal abstract class ExecutorBase : IExecutor, ILogSubject
         _runTask = Task.Run(Run, CancellationToken.None).ConfigureAwait(false);
 
         this.Trace("done");
+
+        return this;
     }
 
     public async ValueTask DisposeAsync()

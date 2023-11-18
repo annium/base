@@ -15,5 +15,5 @@ public interface IExecutor : IAsyncDisposable
     bool TrySchedule(Action<CancellationToken> task);
     bool TrySchedule(Func<ValueTask> task);
     bool TrySchedule(Func<CancellationToken, ValueTask> task);
-    void Start(CancellationToken ct = default);
+    IExecutor Start(CancellationToken ct = default);
 }
