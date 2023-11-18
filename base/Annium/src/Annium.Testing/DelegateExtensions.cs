@@ -1,7 +1,7 @@
 using System;
+using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using Annium.Threading.Tasks;
 
 namespace Annium.Testing;
 
@@ -13,12 +13,12 @@ public static class DelegateExtensions
         try
         {
             var result = value.Delegate.DynamicInvoke();
-            if (result is Task task)
-                task.Await();
+            if (result is Task { Exception: not null } task)
+                return task.Exception.InnerExceptions.Single().Is<TException>();
         }
         catch (TargetInvocationException exception)
         {
-            return exception.InnerException!.Is<TException>();
+            return exception.InnerException.NotNull().Is<TException>();
         }
 
         throw new AssertionFailedException($"{value.DelegateEx} has not thrown {typeof(TException).FriendlyName()}");

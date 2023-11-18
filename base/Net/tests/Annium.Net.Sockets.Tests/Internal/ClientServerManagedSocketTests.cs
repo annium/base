@@ -9,6 +9,7 @@ using Annium.Core.DependencyInjection;
 using Annium.Logging;
 using Annium.Net.Sockets.Internal;
 using Annium.Testing;
+using Annium.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -185,7 +186,7 @@ public class ClientServerManagedSocketTests : TestBase, IAsyncLifetime
             {
                 this.Trace("subscribe to messages");
                 serverSocket.OnReceived += x =>
-                    serverSocket.SendAsync(x.ToArray(), CancellationToken.None).GetAwaiter().GetResult();
+                    serverSocket.SendAsync(x.ToArray(), CancellationToken.None).Await();
                 this.Trace("server subscribed to messages");
 
                 Task.Delay(10, CancellationToken.None)
@@ -249,7 +250,7 @@ public class ClientServerManagedSocketTests : TestBase, IAsyncLifetime
             {
                 this.Trace("subscribe to messages");
                 serverSocket.OnReceived += x =>
-                    serverSocket.SendAsync(x.ToArray(), CancellationToken.None).GetAwaiter().GetResult();
+                    serverSocket.SendAsync(x.ToArray(), CancellationToken.None).Await();
                 this.Trace("server subscribed to messages");
 
                 this.Trace("send signal to client");

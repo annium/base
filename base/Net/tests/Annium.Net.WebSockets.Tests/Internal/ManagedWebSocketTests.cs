@@ -7,6 +7,7 @@ using Annium.Core.DependencyInjection;
 using Annium.Logging;
 using Annium.Net.WebSockets.Internal;
 using Annium.Testing;
+using Annium.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
 using NativeClientWebSocket = System.Net.WebSockets.ClientWebSocket;
@@ -234,11 +235,11 @@ public class ManagedWebSocketTests : TestBase, IAsyncLifetime
             {
                 this.Trace("subscribe to text messages");
                 serverSocket.OnTextReceived += x =>
-                    serverSocket.SendTextAsync(x.ToArray(), CancellationToken.None).GetAwaiter().GetResult();
+                    serverSocket.SendTextAsync(x.ToArray(), CancellationToken.None).Await();
 
                 this.Trace("subscribe to binary messages");
                 serverSocket.OnBinaryReceived += x =>
-                    serverSocket.SendBinaryAsync(x.ToArray(), CancellationToken.None).GetAwaiter().GetResult();
+                    serverSocket.SendBinaryAsync(x.ToArray(), CancellationToken.None).Await();
 
                 Task.Delay(10, CancellationToken.None)
                     .ContinueWith(

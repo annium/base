@@ -176,6 +176,7 @@ public static class EnumExtensions
 
     # region helpers
 
+#pragma warning disable CA2021
     [SuppressMessage("ReSharper", "SuspiciousTypeConversion.Global")]
     private static T CastValues<T>(IReadOnlyCollection<T> values)
         where T : struct, Enum
@@ -193,6 +194,7 @@ public static class EnumExtensions
             _ => throw new ArgumentException($"'{typeCode}' based Flags Enum is not supported"),
         };
     }
+#pragma warning restore CA2021
 
     #endregion
 }

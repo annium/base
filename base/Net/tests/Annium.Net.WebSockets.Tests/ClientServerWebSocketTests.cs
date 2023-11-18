@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Annium.Core.DependencyInjection;
 using Annium.Logging;
 using Annium.Testing;
+using Annium.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -153,12 +154,12 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
         {
             this.Trace("subscribe to text messages");
             serverSocket.OnTextReceived += x =>
-                serverSocket.SendTextAsync(x.ToArray(), CancellationToken.None).GetAwaiter().GetResult();
+                serverSocket.SendTextAsync(x.ToArray(), CancellationToken.None).Await();
             this.Trace("server subscribed to text");
 
             this.Trace("subscribe to binary messages");
             serverSocket.OnBinaryReceived += x =>
-                serverSocket.SendBinaryAsync(x.ToArray(), CancellationToken.None).GetAwaiter().GetResult();
+                serverSocket.SendBinaryAsync(x.ToArray(), CancellationToken.None).Await();
             this.Trace("server subscribed to binary");
 
             this.Trace("send signal to client");
@@ -214,12 +215,12 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
         {
             this.Trace("subscribe to text messages");
             serverSocket.OnTextReceived += x =>
-                serverSocket.SendTextAsync(x.ToArray(), CancellationToken.None).GetAwaiter().GetResult();
+                serverSocket.SendTextAsync(x.ToArray(), CancellationToken.None).Await();
             this.Trace("server subscribed to text");
 
             this.Trace("subscribe to binary messages");
             serverSocket.OnBinaryReceived += x =>
-                serverSocket.SendBinaryAsync(x.ToArray(), CancellationToken.None).GetAwaiter().GetResult();
+                serverSocket.SendBinaryAsync(x.ToArray(), CancellationToken.None).Await();
             this.Trace("server subscribed to binary");
 
             this.Trace("send signal to client");

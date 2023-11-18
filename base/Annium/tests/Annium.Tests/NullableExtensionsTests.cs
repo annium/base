@@ -58,18 +58,7 @@ public class NullableExtensionsTests
         var validValue = Task.FromResult<string?>("data");
 
         // assert
-        Wrap.It(() =>
-            {
-                try
-                {
-                    var failedValue = nullValue.NotNull().Result;
-                    return new string(failedValue);
-                }
-                catch (AggregateException ex)
-                {
-                    throw ex.InnerExceptions.Single();
-                }
-            })
+        Wrap.It(async () => await nullValue.NotNull())
             .Throws<NullReferenceException>()
             .Reports($"{nameof(nullValue)} is null");
 
@@ -85,11 +74,11 @@ public class NullableExtensionsTests
         var validValue = Task.FromResult<bool?>(true);
 
         // assert
-        Wrap.It(() =>
+        Wrap.It(async () =>
             {
                 try
                 {
-                    var failedValue = nullValue.NotNull().Result;
+                    var failedValue = await nullValue.NotNull();
                     return failedValue;
                 }
                 catch (AggregateException ex)
