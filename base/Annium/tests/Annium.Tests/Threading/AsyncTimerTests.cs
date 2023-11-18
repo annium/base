@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -16,7 +15,7 @@ public class AsyncTimerTests
     {
         // arrange
         var state = new State();
-        using var timer = AsyncTimer.Create(
+        using var timer = Timers.Async(
             state,
             static async state =>
             {
@@ -24,13 +23,13 @@ public class AsyncTimerTests
                 await Task.Delay(3);
                 state.Push();
             },
-            TimeSpan.Zero,
-            TimeSpan.FromMilliseconds(1)
+            0,
+            1
         );
 
         // act
         await Task.Delay(50);
-        timer.Change(Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
+        timer.Change(Timeout.Infinite, Timeout.Infinite);
 
         // assert
         await EnsureValid(state);
@@ -41,7 +40,7 @@ public class AsyncTimerTests
     {
         // arrange
         var state = new State();
-        using var timer = AsyncTimer.Create(
+        using var timer = Timers.Async(
             state,
             static async state =>
             {
@@ -49,14 +48,14 @@ public class AsyncTimerTests
                 await Task.Delay(3);
                 state.Push();
             },
-            TimeSpan.Zero,
-            TimeSpan.FromMilliseconds(1)
+            0,
+            2
         );
-        timer.Change(TimeSpan.Zero, TimeSpan.FromTicks(500));
+        timer.Change(0, 1);
 
         // act
         await Task.Delay(50);
-        timer.Change(Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
+        timer.Change(Timeout.Infinite, Timeout.Infinite);
 
         // assert
         await EnsureValid(state);
@@ -67,20 +66,20 @@ public class AsyncTimerTests
     {
         // arrange
         var state = new State();
-        using var timer = AsyncTimer.Create(
+        using var timer = Timers.Async(
             async () =>
             {
                 state.Push();
                 await Task.Delay(3);
                 state.Push();
             },
-            TimeSpan.Zero,
-            TimeSpan.FromMilliseconds(1)
+            0,
+            1
         );
 
         // act
         await Task.Delay(50);
-        timer.Change(Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
+        timer.Change(Timeout.Infinite, Timeout.Infinite);
 
         // assert
         await EnsureValid(state);
@@ -91,21 +90,21 @@ public class AsyncTimerTests
     {
         // arrange
         var state = new State();
-        using AsyncTimer timer = AsyncTimer.Create(
+        using var timer = Timers.Async(
             async () =>
             {
                 state.Push();
                 await Task.Delay(3);
                 state.Push();
             },
-            TimeSpan.Zero,
-            TimeSpan.FromMilliseconds(1)
+            0,
+            2
         );
-        timer.Change(TimeSpan.Zero, TimeSpan.FromTicks(500));
+        timer.Change(0, 1);
 
         // act
         await Task.Delay(50);
-        timer.Change(Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
+        timer.Change(Timeout.Infinite, Timeout.Infinite);
 
         // assert
         await EnsureValid(state);

@@ -11,7 +11,7 @@ internal class DefaultConnectionMonitor : ConnectionMonitorBase
     private readonly ConnectionMonitorOptions _options;
     private readonly ISendingReceivingSocket _socket;
     private readonly Stopwatch _stopwatch = new();
-    private AsyncTimer? _timer;
+    private IAsyncTimer? _timer;
 
     public DefaultConnectionMonitor(ConnectionMonitorOptions options, ISendingReceivingSocket socket, ILogger logger)
         : base(logger)
@@ -29,7 +29,7 @@ internal class DefaultConnectionMonitor : ConnectionMonitorBase
         _socket.OnReceived += HandleOnReceived;
 
         this.Trace("start timer");
-        _timer = AsyncTimer.Create(HandlePingPong, _options.PingInterval, _options.PingInterval);
+        _timer = Timers.Async(HandlePingPong, _options.PingInterval, _options.PingInterval);
 
         this.Trace("start stopwatch");
         _stopwatch.Restart();
