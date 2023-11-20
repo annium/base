@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.Runtime.CompilerServices;
 
 namespace Annium;
@@ -135,7 +136,11 @@ public static class DecimalExtensions
     public static int Decimals(this decimal value) => decimal.GetBits(value)[3] >> 16;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Decimal Normalize(this Decimal value) => value / 1.000000000000000M;
+    public static decimal Normalize(this decimal value) => value / 1.000000000000000M;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static string ToGeneralInvariantString(this decimal value) =>
+        value.ToString("G", CultureInfo.InvariantCulture);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static decimal DiffFromInternal(this decimal value, decimal from) => Math.Abs((value - from) / from);
