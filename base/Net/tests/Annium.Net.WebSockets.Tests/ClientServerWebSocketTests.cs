@@ -153,8 +153,7 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
         await using var _ = RunServer(async serverSocket =>
         {
             this.Trace("subscribe to text messages");
-            serverSocket.OnTextReceived += x =>
-                serverSocket.SendTextAsync(x.ToArray(), CancellationToken.None).Await();
+            serverSocket.OnTextReceived += x => serverSocket.SendTextAsync(x.ToArray(), CancellationToken.None).Await();
             this.Trace("server subscribed to text");
 
             this.Trace("subscribe to binary messages");
@@ -214,8 +213,7 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
         await using var _ = RunServer(async serverSocket =>
         {
             this.Trace("subscribe to text messages");
-            serverSocket.OnTextReceived += x =>
-                serverSocket.SendTextAsync(x.ToArray(), CancellationToken.None).Await();
+            serverSocket.OnTextReceived += x => serverSocket.SendTextAsync(x.ToArray(), CancellationToken.None).Await();
             this.Trace("server subscribed to text");
 
             this.Trace("subscribe to binary messages");
