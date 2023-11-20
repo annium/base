@@ -138,21 +138,26 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
 
         // arrange
         var message = "demo"u8.ToArray();
+        var clientConnectionTcs = new TaskCompletionSource();
 
         this.Trace("run server");
         await using var _ = _runServer(
-            (serverSocket, _) =>
+            async (serverSocket, _) =>
             {
+                this.Trace("wait until client connected");
+                await clientConnectionTcs.Task;
+
                 this.Trace("disconnect server socket");
                 serverSocket.Disconnect();
-
-                return Task.CompletedTask;
             }
         );
 
         this.Trace("connect");
         var disconnectionTask = ClientSocket.WhenDisconnected();
         await ConnectAsync();
+
+        this.Trace("set client connection tcs");
+        clientConnectionTcs.SetResult();
 
         this.Trace("await until disconnected");
         await disconnectionTask;
