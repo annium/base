@@ -33,6 +33,7 @@ public interface IHttpRequest : ILogSubject
     IHttpRequest Param<T>(string key, IReadOnlyCollection<T> values);
     IHttpRequest Param<T>(string key, T[] values);
     IHttpRequest Param<T>(string key, IEnumerable<T> values);
+    IHttpRequest NoParam(string key);
     IHttpRequest Attach(HttpContent content);
     IHttpRequest Timeout(TimeSpan timeout);
     IHttpRequest Configure(Action<IHttpRequest> configure);

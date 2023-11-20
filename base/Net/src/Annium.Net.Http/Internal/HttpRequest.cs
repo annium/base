@@ -139,6 +139,13 @@ internal class HttpRequest : IHttpRequest
         return this;
     }
 
+    public IHttpRequest NoParam(string key)
+    {
+        _parameters.Remove(key.NotNull());
+
+        return this;
+    }
+
     public IHttpRequest Attach(HttpContent content)
     {
         Content = content.NotNull();
