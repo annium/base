@@ -31,7 +31,7 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
     public ClientServerSocketTests(ITestOutputHelper outputHelper)
         : base(outputHelper)
     {
-        Register(container => container.AddDefaultConnectionMonitorFactory());
+        Register(container => container.AddSocketsDefaultConnectionMonitorFactory());
     }
 
     [Theory]

@@ -6,7 +6,7 @@ namespace Annium.Core.DependencyInjection;
 
 public static class ServiceContainerExtensions
 {
-    public static IServiceContainer AddDefaultConnectionMonitorFactory(this IServiceContainer container)
+    public static IServiceContainer AddWebSocketsDefaultConnectionMonitorFactory(this IServiceContainer container)
     {
         container.Add<IConnectionMonitorFactory, DefaultConnectionMonitorFactory>().Singleton();
 
