@@ -554,7 +554,7 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
         void HandleConnected()
         {
             ClientSocket.Trace<string>("set {tcs} to signaled state", tcs.GetFullId());
-            tcs.SetResult();
+            tcs.TrySetResult();
             ClientSocket.OnConnected -= HandleConnected;
         }
 
@@ -578,7 +578,7 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
         void HandleDisconnected(WebSocketCloseStatus status)
         {
             ClientSocket.Trace("set {tcs} to signaled state with status {status}", tcs.GetFullId(), status);
-            tcs.SetResult();
+            tcs.TrySetResult();
             ClientSocket.OnDisconnected -= HandleDisconnected;
         }
 
