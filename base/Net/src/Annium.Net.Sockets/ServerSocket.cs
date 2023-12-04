@@ -38,8 +38,8 @@ public class ServerSocket : IServerSocket
 
         this.Trace("init monitor");
         _connectionMonitor =
-            options.ConnectionMonitor.Factory?.Create(_socket)
-            ?? new DefaultConnectionMonitor(options.ConnectionMonitor, _socket, Logger);
+            options.ConnectionMonitor.Factory?.Create(_socket, options.ConnectionMonitor)
+            ?? new DefaultConnectionMonitor(_socket, options.ConnectionMonitor, Logger);
 
         this.Trace("start monitor");
         _connectionMonitor.Start();

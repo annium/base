@@ -8,16 +8,16 @@ namespace Annium.Net.Sockets.Internal;
 
 internal class DefaultConnectionMonitor : ConnectionMonitorBase
 {
-    private readonly ConnectionMonitorOptions _options;
     private readonly ISendingReceivingSocket _socket;
+    private readonly ConnectionMonitorOptions _options;
     private readonly Stopwatch _stopwatch = new();
     private IAsyncTimer? _timer;
 
-    public DefaultConnectionMonitor(ConnectionMonitorOptions options, ISendingReceivingSocket socket, ILogger logger)
+    public DefaultConnectionMonitor(ISendingReceivingSocket socket, ConnectionMonitorOptions options, ILogger logger)
         : base(logger)
     {
-        _options = options;
         _socket = socket;
+        _options = options;
         this.Trace("options: {options}", options);
     }
 
