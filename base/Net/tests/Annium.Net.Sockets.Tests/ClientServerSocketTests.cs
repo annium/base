@@ -29,7 +29,10 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
     };
 
     public ClientServerSocketTests(ITestOutputHelper outputHelper)
-        : base(outputHelper) { }
+        : base(outputHelper)
+    {
+        Register(container => container.AddDefaultConnectionMonitorFactory());
+    }
 
     [Theory]
     [InlineData(StreamType.Plain)]
@@ -504,7 +507,12 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
         var serverOptions = ServerSocketOptions.Default with
         {
             Mode = SocketMode.Messaging,
-            ConnectionMonitor = new ConnectionMonitorOptions { PingInterval = 60_000, MaxPingDelay = 300_000 }
+            ConnectionMonitor = new ConnectionMonitorOptions
+            {
+                Factory = Get<IConnectionMonitorFactory>(),
+                PingInterval = 60_000,
+                MaxPingDelay = 300_000
+            }
         };
         Configure(streamType, serverOptions);
 
@@ -552,7 +560,12 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
         {
             Mode = SocketMode.Messaging,
             ReconnectDelay = 1,
-            ConnectionMonitor = new ConnectionMonitorOptions { PingInterval = 100, MaxPingDelay = 500 }
+            ConnectionMonitor = new ConnectionMonitorOptions
+            {
+                Factory = Get<IConnectionMonitorFactory>(),
+                PingInterval = 100,
+                MaxPingDelay = 500
+            }
         };
         _clientSocket = new ClientSocket(options, Logger);
         ClientSocket.OnReceived += x => _messages.Add(x.ToArray());
@@ -604,7 +617,15 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
 
                             this.Trace("create managed socket");
                             var options =
-                                socketOptions ?? ServerSocketOptions.Default with { Mode = SocketMode.Messaging };
+                                socketOptions
+                                ?? ServerSocketOptions.Default with
+                                {
+                                    Mode = SocketMode.Messaging,
+                                    ConnectionMonitor = new ConnectionMonitorOptions
+                                    {
+                                        Factory = Get<IConnectionMonitorFactory>(),
+                                    }
+                                };
                             var logger = sp.Resolve<ILogger>();
                             var socket = new ServerSocket(stream, options, logger, ct);
 
@@ -654,7 +675,14 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
                             );
 
                             this.Trace("create server socket");
-                            var options = ServerSocketOptions.Default with { Mode = SocketMode.Messaging };
+                            var options = ServerSocketOptions.Default with
+                            {
+                                Mode = SocketMode.Messaging,
+                                ConnectionMonitor = new ConnectionMonitorOptions
+                                {
+                                    Factory = Get<IConnectionMonitorFactory>(),
+                                }
+                            };
                             var logger = sp.Resolve<ILogger>();
                             var socket = new ServerSocket(sslStream, options, logger, ct);
 
