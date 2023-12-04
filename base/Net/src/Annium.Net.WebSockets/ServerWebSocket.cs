@@ -40,7 +40,7 @@ public class ServerWebSocket : IServerWebSocket
         this.Trace("init monitor");
         _connectionMonitor =
             options.ConnectionMonitor.Factory?.Create(_socket, options.ConnectionMonitor)
-            ?? new DefaultConnectionMonitor(_socket, options.ConnectionMonitor, Logger);
+            ?? new NoneConnectionMonitor(Logger);
 
         this.Trace("start monitor");
         _connectionMonitor.Start();
