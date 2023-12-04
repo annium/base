@@ -1,4 +1,4 @@
-namespace Annium.Net.WebSockets.Internal;
+namespace Annium.Net.WebSockets;
 
 public record ConnectionMonitorOptions
 {
