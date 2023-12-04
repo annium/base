@@ -1,7 +1,9 @@
+using Annium.Net.WebSockets.Internal;
+
 namespace Annium.Net.WebSockets;
 
 public record ServerWebSocketOptions
 {
     public static ServerWebSocketOptions Default { get; } = new();
-    public IConnectionMonitor ConnectionMonitor { get; init; } = WebSockets.ConnectionMonitor.None;
+    public ConnectionMonitorOptions ConnectionMonitor { get; init; } = new();
 }

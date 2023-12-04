@@ -18,7 +18,7 @@ public class ClientWebSocket : IClientWebSocket
     private Uri Uri => _uri ?? throw new InvalidOperationException("Uri is not set");
     private readonly object _locker = new();
     private readonly IClientManagedWebSocket _socket;
-    private readonly IConnectionMonitor _connectionMonitor;
+    private readonly ConnectionMonitorBase _connectionMonitor;
     private readonly int _connectTimeout;
     private readonly int _reconnectDelay;
     private Uri? _uri;
@@ -35,8 +35,9 @@ public class ClientWebSocket : IClientWebSocket
         this.Trace<string>("paired with {socket}", _socket.GetFullId());
 
         this.Trace("init monitor");
-        _connectionMonitor = options.ConnectionMonitor;
-        _connectionMonitor.Init(this);
+        _connectionMonitor =
+            options.ConnectionMonitor.Factory?.Create(_socket, options.ConnectionMonitor)
+            ?? new DefaultConnectionMonitor(_socket, options.ConnectionMonitor, Logger);
 
         _connectTimeout = options.ConnectTimeout;
         _reconnectDelay = options.ReconnectDelay;

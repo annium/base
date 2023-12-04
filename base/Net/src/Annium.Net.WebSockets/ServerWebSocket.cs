@@ -17,7 +17,7 @@ public class ServerWebSocket : IServerWebSocket
     public event Action<Exception> OnError = delegate { };
     private readonly object _locker = new();
     private readonly IServerManagedWebSocket _socket;
-    private readonly IConnectionMonitor _connectionMonitor;
+    private readonly ConnectionMonitorBase _connectionMonitor;
     private Status _status = Status.Connected;
 
     public ServerWebSocket(
@@ -38,8 +38,9 @@ public class ServerWebSocket : IServerWebSocket
         _socket.IsClosed.ContinueWith(HandleClosed, CancellationToken.None);
 
         this.Trace("init monitor");
-        _connectionMonitor = options.ConnectionMonitor;
-        _connectionMonitor.Init(this);
+        _connectionMonitor =
+            options.ConnectionMonitor.Factory?.Create(_socket, options.ConnectionMonitor)
+            ?? new DefaultConnectionMonitor(_socket, options.ConnectionMonitor, Logger);
 
         this.Trace("start monitor");
         _connectionMonitor.Start();
