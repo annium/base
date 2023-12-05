@@ -18,6 +18,13 @@ internal class XunitLogHandler<TContext> : ILogHandler<TContext>
 
     public void Handle(LogMessage<TContext> msg)
     {
-        _outputHelper.WriteLine(_format(msg));
+        try
+        {
+            _outputHelper.WriteLine(_format(msg));
+        }
+        catch
+        {
+            // ignored
+        }
     }
 }
