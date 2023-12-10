@@ -222,7 +222,8 @@ public class ClientWebSocket : IClientWebSocket
             SetStatus(Status.Connecting);
         }
 
-        ReconnectPrivate(Uri, new WebSocketCloseResult(WebSocketCloseStatus.ClosedRemote, null));
+        this.Trace("disconnect managed socket");
+        _socket.DisconnectAsync();
 
         this.Trace("done");
     }
