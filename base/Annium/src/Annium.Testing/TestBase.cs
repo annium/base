@@ -2,6 +2,7 @@ using System;
 using Annium.Core.DependencyInjection;
 using Annium.Logging;
 using Xunit.Abstractions;
+using AsyncServiceScope = Microsoft.Extensions.DependencyInjection.AsyncServiceScope;
 
 namespace Annium.Testing;
 
@@ -53,7 +54,7 @@ public abstract class TestBase : ILogSubject
         _builder.UseServicePack(new DynamicServicePack().Setup(setup));
     }
 
-    public IAsyncServiceScope CreateAsyncScope() => _sp.Value.CreateAsyncScope();
+    public AsyncServiceScope CreateAsyncScope() => _sp.Value.CreateAsyncScope();
 
     public T Get<T>()
         where T : notnull => _sp.Value.Resolve<T>();

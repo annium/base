@@ -1,6 +1,5 @@
 using System;
 using Microsoft.Extensions.DependencyInjection;
-using AsyncServiceScope = Annium.Core.DependencyInjection.Internal.Container.AsyncServiceScope;
 
 // ReSharper disable once CheckNamespace
 namespace Annium.Core.DependencyInjection;
@@ -16,6 +15,6 @@ public static class ServiceProviderExtensions
         where TKey : notnull
         where T : notnull => provider.GetRequiredService<IIndex<TKey, T>>()[key];
 
-    public static IAsyncServiceScope CreateAsyncScope(this IServiceProvider provider) =>
+    public static AsyncServiceScope CreateAsyncScope(this IServiceProvider provider) =>
         new AsyncServiceScope(provider.CreateScope());
 }
