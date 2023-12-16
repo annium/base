@@ -20,12 +20,12 @@ internal static class TableHelper
             .MakeGenericMethod(expressions.Select(x => x.ReturnType).ToArray());
         var body = Expression.Call(null!, method, expressions.Select(x => x.Body).ToArray());
 
-        var lambda = Expression.Lambda(body, getKeyExpression.Parameters);
+        var lambda = Expression.Lambda<Func<T, int>>(body, getKeyExpression.Parameters);
 
-        return (Func<T, int>)lambda.Compile();
+        return lambda.Compile();
     }
 
-    public static Action<T, T> BuildUpdate<T>(TablePermission permissions)
+    public static Update<T> BuildUpdate<T>(TablePermission permissions)
     {
         if (!permissions.HasFlag(TablePermission.Update))
             return (_, _) => { };
@@ -54,7 +54,7 @@ internal static class TableHelper
             })
             .ToArray();
 
-        var lambda = Expression.Lambda<Action<T, T>>(Expression.Block(expressions), row, upd);
+        var lambda = Expression.Lambda<Update<T>>(Expression.Block(expressions), row, upd);
 
         return lambda.Compile();
     }

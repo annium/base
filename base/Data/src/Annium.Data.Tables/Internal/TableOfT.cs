@@ -29,15 +29,15 @@ internal sealed class Table<T> : TableBase<T>, ITable<T>
 
     private readonly Dictionary<int, T> _table = new();
     private readonly Func<T, int> _getKey;
-    private readonly Func<T, T, bool> _hasChanged;
-    private readonly Action<T, T> _update;
+    private readonly HasChanged<T> _hasChanged;
+    private readonly Update<T> _update;
     private readonly Func<T, bool> _isActive;
 
     public Table(
         TablePermission permissions,
         Func<T, int> getKey,
-        Func<T, T, bool> hasChanged,
-        Action<T, T> update,
+        HasChanged<T> hasChanged,
+        Update<T> update,
         Func<T, bool> isActive,
         ILogger logger
     )
@@ -59,7 +59,7 @@ internal sealed class Table<T> : TableBase<T>, ITable<T>
         {
             _table.Clear();
 
-            foreach (var entry in entries.Where(_isActive))
+            foreach (var entry in entries.Where(x => _isActive(x)))
             {
                 var key = _getKey(entry);
                 _table[key] = entry;

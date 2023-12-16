@@ -9,8 +9,8 @@ internal class TableBuilder<T> : ITableBuilder<T>
 {
     private TablePermission _permissions;
     private Expression<Func<T, object>>? _getKey;
-    private Func<T, T, bool>? _hasChanged;
-    private Action<T, T>? _update;
+    private HasChanged<T>? _hasChanged;
+    private Update<T>? _update;
     private Func<T, bool>? _isActive;
     private readonly ILogger _logger;
 
@@ -33,7 +33,7 @@ internal class TableBuilder<T> : ITableBuilder<T>
         return this;
     }
 
-    public ITableBuilder<T> UpdateWith(Func<T, T, bool> hasChanged, Action<T, T> update)
+    public ITableBuilder<T> UpdateWith(HasChanged<T> hasChanged, Update<T> update)
     {
         _hasChanged = hasChanged;
         _update = update;
