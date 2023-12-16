@@ -36,7 +36,7 @@ public class ChannelTests : TestBase
         await Task.Delay(50);
 
         this.Trace("create observable from channel");
-        var observable = ObservableExt.FromChannel(channel.Reader, Disposed);
+        var observable = channel.Reader.AsObservable(HandleDisposed);
         var disposable = Disposable.Box(logger);
 
         // act
@@ -58,7 +58,7 @@ public class ChannelTests : TestBase
         this.Trace("done");
         return;
 
-        void Disposed()
+        void HandleDisposed()
         {
             this.Trace("disposed");
             disposeCounter++;
