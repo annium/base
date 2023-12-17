@@ -16,17 +16,17 @@ internal class TimeProvider : ITimeProviderSwitcher, ITimeProvider
     public long UnixSecondsNow => _provider.UnixSecondsNow;
 
     private IInternalTimeProvider _provider;
-    private readonly IIndex<TimeType, IInternalTimeProvider> _timeProviders;
+    private readonly IServiceProvider _sp;
 
-    public TimeProvider(IIndex<TimeType, IInternalTimeProvider> timeProviders, TimeType defaultType)
+    public TimeProvider(IServiceProvider sp, TimeType defaultType)
     {
-        _provider = timeProviders[defaultType];
-        _timeProviders = timeProviders;
+        _sp = sp;
+        _provider = _sp.ResolveKeyed<IInternalTimeProvider>(defaultType);
     }
 
-    public void UseRealTime() => _provider = _timeProviders[TimeType.Real];
+    public void UseRealTime() => _provider = _sp.ResolveKeyed<IInternalTimeProvider>(TimeType.Real);
 
-    public void UseRelativeTime() => _provider = _timeProviders[TimeType.Relative];
+    public void UseRelativeTime() => _provider = _sp.ResolveKeyed<IInternalTimeProvider>(TimeType.Relative);
 
-    public void UseManagedTime() => _provider = _timeProviders[TimeType.Managed];
+    public void UseManagedTime() => _provider = _sp.ResolveKeyed<IInternalTimeProvider>(TimeType.Managed);
 }
