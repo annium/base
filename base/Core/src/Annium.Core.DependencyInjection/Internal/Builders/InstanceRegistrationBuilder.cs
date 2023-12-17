@@ -29,12 +29,12 @@ internal class InstanceRegistrationBuilder : IInstanceRegistrationBuilderBase
     public IInstanceRegistrationBuilderBase AsInterfaces() =>
         WithRegistrations(_type.GetInterfaces().Select(x => new InstanceRegistration(x, _instance)));
 
-    public IInstanceRegistrationBuilderBase AsKeyedSelf<TKey>(TKey key)
-        where TKey : notnull => WithRegistration(new InstanceKeyedRegistration(_type, _instance, typeof(TKey), key));
+    public IInstanceRegistrationBuilderBase AsKeyedSelf(object key)
+        => WithRegistration(new KeyedInstanceRegistration(_type, key, _instance));
 
-    public IInstanceRegistrationBuilderBase AsKeyed<TKey>(Type serviceType, TKey key)
-        where TKey : notnull =>
-        WithRegistration(new InstanceKeyedRegistration(serviceType, _instance, typeof(TKey), key));
+    public IInstanceRegistrationBuilderBase AsKeyed(Type serviceType, object key)
+        =>
+        WithRegistration(new KeyedInstanceRegistration(serviceType, key, _instance));
 
     public IInstanceRegistrationBuilderBase AsSelfFactory() =>
         WithRegistration(new InstanceFactoryRegistration(_type, _instance));
@@ -42,13 +42,13 @@ internal class InstanceRegistrationBuilder : IInstanceRegistrationBuilderBase
     public IInstanceRegistrationBuilderBase AsFactory(Type serviceType) =>
         WithRegistration(new InstanceFactoryRegistration(serviceType, _instance));
 
-    public IInstanceRegistrationBuilderBase AsKeyedSelfFactory<TKey>(TKey key)
-        where TKey : notnull =>
-        WithRegistration(new InstanceKeyedFactoryRegistration(_type, _instance, typeof(TKey), key));
+    public IInstanceRegistrationBuilderBase AsKeyedSelfFactory(object key)
+        =>
+        WithRegistration(new KeyedInstanceFactoryRegistration(_type, key, _instance));
 
-    public IInstanceRegistrationBuilderBase AsKeyedFactory<TKey>(Type serviceType, TKey key)
-        where TKey : notnull =>
-        WithRegistration(new InstanceKeyedFactoryRegistration(serviceType, _instance, typeof(TKey), key));
+    public IInstanceRegistrationBuilderBase AsKeyedFactory(Type serviceType, object key)
+        =>
+        WithRegistration(new KeyedInstanceFactoryRegistration(serviceType, key, _instance));
 
     public IServiceContainer Singleton()
     {

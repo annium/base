@@ -5,18 +5,18 @@ using Annium.Core.DependencyInjection.Internal.Builders.Registrations;
 
 namespace Annium.Core.DependencyInjection.Internal.Builders;
 
-internal class FactoryRegistrationBuilder : IFactoryRegistrationBuilderBase
+internal class KeyedFactoryRegistrationBuilder : IKeyedFactoryRegistrationBuilderBase
 {
     private readonly IServiceContainer _container;
     private readonly Type _type;
-    private readonly Func<IServiceProvider, object> _factory;
+    private readonly Func<IServiceProvider, object, object> _factory;
     private readonly Registrar _registrar;
     private readonly RegistrationsCollection _registrations = new();
 
-    public FactoryRegistrationBuilder(
+    public KeyedFactoryRegistrationBuilder(
         IServiceContainer container,
         Type type,
-        Func<IServiceProvider, object> factory,
+        Func<IServiceProvider, object, object> factory,
         Registrar registrar
     )
     {
@@ -26,13 +26,14 @@ internal class FactoryRegistrationBuilder : IFactoryRegistrationBuilderBase
         _registrar = registrar;
     }
 
-    public IFactoryRegistrationBuilderBase AsSelf() => WithRegistration(new FactoryRegistration(_type, _factory));
+    public IKeyedFactoryRegistrationBuilderBase AsKeyedSelf(object key) =>
+        WithRegistration(new KeyedFactoryRegistration(_type, key, _factory));
 
-    public IFactoryRegistrationBuilderBase As(Type serviceType) =>
-        WithRegistration(new FactoryRegistration(serviceType, _factory));
+    public IKeyedFactoryRegistrationBuilderBase AsKeyed(Type serviceType, object key) =>
+        WithRegistration(new KeyedFactoryRegistration(serviceType, key, _factory));
 
-    public IFactoryRegistrationBuilderBase AsInterfaces() =>
-        WithRegistrations(_type.GetInterfaces().Select(x => new FactoryRegistration(x, _factory)));
+    public IKeyedFactoryRegistrationBuilderBase AsKeyedInterfaces(object key) =>
+        WithRegistrations(_type.GetInterfaces().Select(x => new KeyedFactoryRegistration(x, key, _factory)));
 
     public IServiceContainer In(ServiceLifetime lifetime)
     {
@@ -47,7 +48,7 @@ internal class FactoryRegistrationBuilder : IFactoryRegistrationBuilderBase
 
     public IServiceContainer Transient() => In(ServiceLifetime.Transient);
 
-    private IFactoryRegistrationBuilderBase WithRegistrations(IEnumerable<IRegistration> registrations)
+    private IKeyedFactoryRegistrationBuilderBase WithRegistrations(IEnumerable<IRegistration> registrations)
     {
         _registrations.Init();
         _registrations.AddRange(registrations);
@@ -55,7 +56,7 @@ internal class FactoryRegistrationBuilder : IFactoryRegistrationBuilderBase
         return this;
     }
 
-    private IFactoryRegistrationBuilderBase WithRegistration(IRegistration registration)
+    private IKeyedFactoryRegistrationBuilderBase WithRegistration(IRegistration registration)
     {
         _registrations.Init();
         _registrations.Add(registration);

@@ -26,35 +26,50 @@ internal class BulkRegistrationBuilder : IBulkRegistrationBuilderBase
         return this;
     }
 
-    public IBulkRegistrationBuilderTarget AsSelf() => WithRegistration(type => new TypeRegistration(type, type));
+    public IBulkRegistrationBuilderTarget AsSelf()
+    {
+        return WithRegistration(type => new TypeRegistration(type, type));
+    }
 
-    public IBulkRegistrationBuilderTarget As(Type serviceType) =>
-        WithRegistration(type => new TypeRegistration(serviceType, type));
+    public IBulkRegistrationBuilderTarget As(Type serviceType)
+    {
+        return WithRegistration(type => new TypeRegistration(serviceType, type));
+    }
 
-    public IBulkRegistrationBuilderTarget AsInterfaces() =>
-        WithRegistrations(type => type.GetInterfaces().Select(x => new TypeRegistration(x, type)));
+    public IBulkRegistrationBuilderTarget AsInterfaces()
+    {
+        return WithRegistrations(type => type.GetInterfaces().Select(x => new TypeRegistration(x, type)));
+    }
 
-    public IBulkRegistrationBuilderTarget AsKeyedSelf<TKey>(Func<Type, TKey> getKey)
-        where TKey : notnull =>
-        WithRegistration(type => new TypeKeyedRegistration(type, type, typeof(TKey), getKey(type)));
+    public IBulkRegistrationBuilderTarget AsKeyedSelf(Func<Type, object> getKey)
+    {
+        return WithRegistration(type => new KeyedTypeRegistration(type, getKey(type), type));
+    }
 
-    public IBulkRegistrationBuilderTarget AsKeyed<TKey>(Type serviceType, Func<Type, TKey> getKey)
-        where TKey : notnull =>
-        WithRegistration(type => new TypeKeyedRegistration(serviceType, type, typeof(TKey), getKey(type)));
+    public IBulkRegistrationBuilderTarget AsKeyed(Type serviceType, Func<Type, object> getKey)
+    {
+        return WithRegistration(type => new KeyedTypeRegistration(serviceType, getKey(type), type));
+    }
 
-    public IBulkRegistrationBuilderTarget AsSelfFactory() =>
-        WithRegistration(type => new TypeFactoryRegistration(type, type));
+    public IBulkRegistrationBuilderTarget AsSelfFactory()
+    {
+        return WithRegistration(type => new TypeFactoryRegistration(type, type));
+    }
 
-    public IBulkRegistrationBuilderTarget AsFactory(Type serviceType) =>
-        WithRegistration(type => new TypeFactoryRegistration(serviceType, type));
+    public IBulkRegistrationBuilderTarget AsFactory(Type serviceType)
+    {
+        return WithRegistration(type => new TypeFactoryRegistration(serviceType, type));
+    }
 
-    public IBulkRegistrationBuilderTarget AsKeyedSelfFactory<TKey>(Func<Type, TKey> getKey)
-        where TKey : notnull =>
-        WithRegistration(type => new TypeKeyedFactoryRegistration(type, type, typeof(TKey), getKey(type)));
+    public IBulkRegistrationBuilderTarget AsKeyedSelfFactory(Func<Type, object> getKey)
+    {
+        return WithRegistration(type => new KeyedTypeFactoryRegistration(type, getKey(type), type));
+    }
 
-    public IBulkRegistrationBuilderTarget AsKeyedFactory<TKey>(Type serviceType, Func<Type, TKey> getKey)
-        where TKey : notnull =>
-        WithRegistration(type => new TypeKeyedFactoryRegistration(serviceType, type, typeof(TKey), getKey(type)));
+    public IBulkRegistrationBuilderTarget AsKeyedFactory(Type serviceType, Func<Type, object> getKey)
+    {
+        return WithRegistration(type => new KeyedTypeFactoryRegistration(serviceType, getKey(type), type));
+    }
 
     public IServiceContainer In(ServiceLifetime lifetime)
     {

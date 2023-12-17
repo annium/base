@@ -19,32 +19,50 @@ internal class SingleRegistrationBuilder : ISingleRegistrationBuilderBase
         _registrar = registrar;
     }
 
-    public ISingleRegistrationBuilderBase AsSelf() => WithRegistration(new TypeRegistration(_type, _type));
+    public ISingleRegistrationBuilderBase AsSelf()
+    {
+        return WithRegistration(new TypeRegistration(_type, _type));
+    }
 
-    public ISingleRegistrationBuilderBase As(Type serviceType) =>
-        WithRegistration(new TypeRegistration(serviceType, _type));
+    public ISingleRegistrationBuilderBase As(Type serviceType)
+    {
+        return WithRegistration(new TypeRegistration(serviceType, _type));
+    }
 
-    public ISingleRegistrationBuilderBase AsInterfaces() =>
-        WithRegistrations(_type.GetInterfaces().Select(x => new TypeRegistration(x, _type)));
+    public ISingleRegistrationBuilderBase AsInterfaces()
+    {
+        return WithRegistrations(_type.GetInterfaces().Select(x => new TypeRegistration(x, _type)));
+    }
 
-    public ISingleRegistrationBuilderBase AsKeyedSelf<TKey>(TKey key)
-        where TKey : notnull => WithRegistration(new TypeKeyedRegistration(_type, _type, typeof(TKey), key));
+    public ISingleRegistrationBuilderBase AsKeyedSelf(object key)
+    {
+        return WithRegistration(new KeyedTypeRegistration(_type, key, _type));
+    }
 
-    public ISingleRegistrationBuilderBase AsKeyed<TKey>(Type serviceType, TKey key)
-        where TKey : notnull => WithRegistration(new TypeKeyedRegistration(serviceType, _type, typeof(TKey), key));
+    public ISingleRegistrationBuilderBase AsKeyed(Type serviceType, object key)
+    {
+        return WithRegistration(new KeyedTypeRegistration(serviceType, key, _type));
+    }
 
-    public ISingleRegistrationBuilderBase AsSelfFactory() =>
-        WithRegistration(new TypeFactoryRegistration(_type, _type));
+    public ISingleRegistrationBuilderBase AsSelfFactory()
+    {
+        return WithRegistration(new TypeFactoryRegistration(_type, _type));
+    }
 
-    public ISingleRegistrationBuilderBase AsFactory(Type serviceType) =>
-        WithRegistration(new TypeFactoryRegistration(serviceType, _type));
+    public ISingleRegistrationBuilderBase AsFactory(Type serviceType)
+    {
+        return WithRegistration(new TypeFactoryRegistration(serviceType, _type));
+    }
 
-    public ISingleRegistrationBuilderBase AsKeyedSelfFactory<TKey>(TKey key)
-        where TKey : notnull => WithRegistration(new TypeKeyedFactoryRegistration(_type, _type, typeof(TKey), key));
+    public ISingleRegistrationBuilderBase AsKeyedSelfFactory(object key)
+    {
+        return WithRegistration(new KeyedTypeFactoryRegistration(_type, key, _type));
+    }
 
-    public ISingleRegistrationBuilderBase AsKeyedFactory<TKey>(Type serviceType, TKey key)
-        where TKey : notnull =>
-        WithRegistration(new TypeKeyedFactoryRegistration(serviceType, _type, typeof(TKey), key));
+    public ISingleRegistrationBuilderBase AsKeyedFactory(Type serviceType, object key)
+    {
+        return WithRegistration(new KeyedTypeFactoryRegistration(serviceType, key, _type));
+    }
 
     public IServiceContainer In(ServiceLifetime lifetime)
     {
