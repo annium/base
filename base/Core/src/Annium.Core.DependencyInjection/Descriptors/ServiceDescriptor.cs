@@ -12,7 +12,7 @@ public static class ServiceDescriptor
         if (descriptor.ServiceKey is not null)
         {
             if (descriptor.KeyedImplementationType is not null)
-                return Type(
+                return KeyedType(
                     descriptor.ServiceType,
                     descriptor.ServiceKey,
                     descriptor.KeyedImplementationType,
@@ -20,7 +20,7 @@ public static class ServiceDescriptor
                 );
 
             if (descriptor.KeyedImplementationFactory is not null)
-                return Factory(
+                return KeyedFactory(
                     descriptor.ServiceType,
                     descriptor.ServiceKey,
                     descriptor.KeyedImplementationFactory,
@@ -28,7 +28,7 @@ public static class ServiceDescriptor
                 );
 
             if (descriptor.KeyedImplementationInstance is not null)
-                return Instance(
+                return KeyedInstance(
                     descriptor.ServiceType,
                     descriptor.ServiceKey,
                     descriptor.KeyedImplementationInstance,
@@ -67,7 +67,7 @@ public static class ServiceDescriptor
         };
     }
 
-    public static IKeyedTypeServiceDescriptor Type<TService, TImplementation>(object key, ServiceLifetime lifetime)
+    public static IKeyedTypeServiceDescriptor KeyedType<TService, TImplementation>(object key, ServiceLifetime lifetime)
         where TImplementation : TService
     {
         return new KeyedTypeServiceDescriptor
@@ -89,7 +89,7 @@ public static class ServiceDescriptor
         };
     }
 
-    public static IKeyedTypeServiceDescriptor Type(
+    public static IKeyedTypeServiceDescriptor KeyedType(
         Type serviceType,
         object key,
         Type implementationType,
@@ -119,7 +119,7 @@ public static class ServiceDescriptor
         };
     }
 
-    public static IKeyedFactoryServiceDescriptor Factory<T>(
+    public static IKeyedFactoryServiceDescriptor KeyedFactory<T>(
         object key,
         Func<IServiceProvider, object, T> implementationFactory,
         ServiceLifetime lifetime
@@ -149,7 +149,7 @@ public static class ServiceDescriptor
         };
     }
 
-    public static IKeyedFactoryServiceDescriptor Factory(
+    public static IKeyedFactoryServiceDescriptor KeyedFactory(
         Type serviceType,
         object key,
         Func<IServiceProvider, object, object> implementationFactory,
@@ -176,7 +176,7 @@ public static class ServiceDescriptor
         };
     }
 
-    public static IKeyedInstanceServiceDescriptor Instance<T>(
+    public static IKeyedInstanceServiceDescriptor KeyedInstance<T>(
         object key,
         T implementationInstance,
         ServiceLifetime lifetime
@@ -206,7 +206,7 @@ public static class ServiceDescriptor
         };
     }
 
-    public static IKeyedInstanceServiceDescriptor Instance(
+    public static IKeyedInstanceServiceDescriptor KeyedInstance(
         Type serviceType,
         object key,
         object implementationInstance,

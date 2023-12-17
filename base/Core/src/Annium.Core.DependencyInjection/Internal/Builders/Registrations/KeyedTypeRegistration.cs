@@ -20,7 +20,7 @@ internal class KeyedTypeRegistration : IRegistration
     public IEnumerable<IServiceDescriptor> ResolveServiceDescriptors(ServiceLifetime lifetime)
     {
         if (_implementationType == _serviceType || _implementationType.ContainsGenericParameters)
-            yield return ServiceDescriptor.Type(_serviceType, _key, _implementationType, lifetime);
+            yield return ServiceDescriptor.KeyedType(_serviceType, _key, _implementationType, lifetime);
         else
             yield return Factory(_serviceType, _key, (sp, key) => Resolve(sp, key, _implementationType), lifetime);
 
