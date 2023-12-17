@@ -28,27 +28,25 @@ public static class ServiceProviderExtensions
         return provider.GetService(type);
     }
 
-    public static T ResolveKeyed<T>(this IKeyedServiceProvider provider, object key)
+    public static T ResolveKeyed<T>(this IServiceProvider provider, object key)
         where T : notnull
     {
-        return (T)provider.GetRequiredKeyedService(typeof(T), key);
+        return provider.GetRequiredKeyedService<T>(key);
     }
 
-    public static T? TryResolveKeyed<T>(this IKeyedServiceProvider provider, object key)
+    public static T? TryResolveKeyed<T>(this IServiceProvider provider, object key)
         where T : notnull
     {
-        var service = provider.GetKeyedService(typeof(T), key);
-
-        return service is not null ? (T)service : default;
+        return provider.GetKeyedService<T>(key);
     }
 
-    public static object ResolveKeyed(this IKeyedServiceProvider provider, Type type, object key)
+    public static object ResolveKeyed(this IServiceProvider provider, Type type, object key)
     {
         return provider.GetRequiredKeyedService(type, key);
     }
 
-    public static object? TryResolveKeyed(this IKeyedServiceProvider provider, Type type, object key)
+    public static object? TryResolveKeyed(this IServiceProvider provider, Type type, object key)
     {
-        return provider.GetKeyedService(type, key);
+        return provider.CastTo<IKeyedServiceProvider>().GetKeyedService(type, key);
     }
 }
