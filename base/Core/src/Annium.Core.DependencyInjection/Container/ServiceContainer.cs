@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Annium.Core.DependencyInjection.Internal.Builders;
-using Annium.Core.DependencyInjection.Internal.Container;
 using Microsoft.Extensions.DependencyInjection;
 
 // ReSharper disable once CheckNamespace
@@ -21,7 +20,6 @@ public class ServiceContainer : IServiceContainer
     public ServiceContainer(IServiceCollection collection)
     {
         Collection = collection;
-        AddInternalTypes();
     }
 
     public IServiceContainer Add(IServiceDescriptor descriptor)
@@ -37,19 +35,14 @@ public class ServiceContainer : IServiceContainer
     public IFactoryRegistrationBuilderBase Add(Type type, Func<IServiceProvider, object> factory) =>
         new FactoryRegistrationBuilder(this, type, factory, new Registrar(Register));
 
+    public IKeyedFactoryRegistrationBuilderBase Add(Type type, Func<IServiceProvider, object, object> factory) =>
+        new KeyedFactoryRegistrationBuilder(this, type, factory, new Registrar(Register));
+
     public IInstanceRegistrationBuilderBase Add<T>(T instance)
         where T : class => new InstanceRegistrationBuilder(this, typeof(T), instance, new Registrar(Register));
 
     public ISingleRegistrationBuilderBase Add(Type type) =>
         new SingleRegistrationBuilder(this, type, new Registrar(Register));
-
-    public IFactoryRegistrationBuilderBase Add<T>(Func<IServiceProvider, T> factory)
-        where T : class => Add(typeof(T), factory);
-
-    public ISingleRegistrationBuilderBase Add<TService, TImplementation>()
-        where TImplementation : TService => Add(typeof(TImplementation)).As<TService>();
-
-    public ISingleRegistrationBuilderBase Add<TImplementationType>() => Add(typeof(TImplementationType));
 
     public IServiceContainer Clone()
     {
@@ -89,6 +82,31 @@ public class ServiceContainer : IServiceContainer
                         && x.ServiceType == d.ServiceType
                         && x.ImplementationInstance == d.ImplementationInstance
                 ),
+            IKeyedTypeServiceDescriptor d
+                => Collection.Any(
+                    x =>
+                        x.Lifetime == lifetime
+                        && x.ServiceType == d.ServiceType
+                        && x.ServiceKey == d.Key
+                        && x.KeyedImplementationType == d.ImplementationType
+                ),
+            IKeyedFactoryServiceDescriptor d
+                => Collection.Any(
+                    x =>
+                        x.Lifetime == lifetime
+                        && x.ServiceType == d.ServiceType
+                        && x.ServiceKey == d.Key
+                        && x.KeyedImplementationFactory?.Method == d.ImplementationFactory.Method
+                        && x.KeyedImplementationFactory?.Target == d.ImplementationFactory.Target
+                ),
+            IKeyedInstanceServiceDescriptor d
+                => Collection.Any(
+                    x =>
+                        x.Lifetime == lifetime
+                        && x.ServiceType == d.ServiceType
+                        && x.ServiceKey == d.Key
+                        && x.KeyedImplementationInstance == d.ImplementationInstance
+                ),
             _ => throw new NotSupportedException($"{descriptor.GetType().FriendlyName()} is not supported")
         };
     }
@@ -116,10 +134,5 @@ public class ServiceContainer : IServiceContainer
 
         // this.Trace("add {item}", item.ToReadableString());
         Collection.Add(item.ToMicrosoft());
-    }
-
-    private void AddInternalTypes()
-    {
-        Register(ServiceDescriptor.Type(typeof(IIndex<,>), typeof(Index<,>), ServiceLifetime.Transient));
     }
 }
