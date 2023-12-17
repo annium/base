@@ -8,23 +8,22 @@ namespace Annium.Core.DependencyInjection.Internal.Builders.Registrations;
 internal class KeyedInstanceFactoryRegistration : IRegistration
 {
     private readonly Type _serviceType;
-    private readonly object _instance;
-    private readonly Type _keyType;
     private readonly object _key;
+    private readonly object _instance;
 
-    public KeyedInstanceFactoryRegistration(Type serviceType, object instance, Type keyType, object key)
+    public KeyedInstanceFactoryRegistration(Type serviceType, object key, object instance)
     {
         _serviceType = serviceType;
-        _instance = instance;
-        _keyType = keyType;
         _key = key;
+        _instance = instance;
     }
 
     public IEnumerable<IServiceDescriptor> ResolveServiceDescriptors(ServiceLifetime lifetime)
     {
         yield return Factory(
-            KeyValueType(_keyType, FactoryType(_serviceType)),
-            _ => KeyValue(_keyType, FactoryType(_serviceType), _key, Expression.Lambda(Expression.Constant(_instance))),
+            FactoryType(_serviceType),
+            _key,
+            (_, _) => Expression.Lambda(Expression.Constant(_instance)),
             lifetime
         );
     }

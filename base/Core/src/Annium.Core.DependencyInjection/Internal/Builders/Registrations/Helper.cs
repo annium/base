@@ -38,10 +38,29 @@ namespace Annium.Core.DependencyInjection.Internal.Builders.Registrations;
  */
 internal static class Helper
 {
+    private static readonly MethodInfo GetRequiredServiceMethod = typeof(ServiceProviderServiceExtensions)
+        .GetMethods()
+        .Single(
+            x =>
+                x.Name == nameof(ServiceProviderServiceExtensions.GetRequiredService)
+                && x.GetParameters().Length == 1
+                && x.GetParameters()[0].ParameterType == typeof(IServiceProvider)
+        );
+
+    private static readonly MethodInfo GetRequiredKeyedServiceMethod = typeof(ServiceProviderServiceExtensions)
+        .GetMethods()
+        .Single(
+            x =>
+                x.Name == nameof(ServiceProviderKeyedServiceExtensions.GetRequiredKeyedService)
+                && x.GetParameters().Length == 2
+                && x.GetParameters()[0].ParameterType == typeof(IServiceProvider)
+                && x.GetParameters()[1].ParameterType == typeof(object)
+        );
+
     public static Type FactoryType(Type type) => typeof(Func<>).MakeGenericType(type);
 
-    public static Type KeyValueType(Type keyType, Type valueType) =>
-        typeof(KeyValue<,>).MakeGenericType(keyType, valueType);
+    // public static Type KeyValueType(Type keyType, Type valueType) =>
+    //     typeof(KeyValue<,>).MakeGenericType(keyType, valueType);
 
     public static IServiceDescriptor Factory(
         Type serviceType,
@@ -49,15 +68,30 @@ internal static class Helper
         ServiceLifetime lifetime
     )
     {
-        var sp = Expression.Parameter(typeof(IServiceProvider));
-        var body = getBody(sp);
-        var function = Expression.Lambda(body, sp).Compile();
+        var spEx = Expression.Parameter(typeof(IServiceProvider));
+        var body = getBody(spEx);
+        var function = Expression.Lambda(body, spEx).Compile();
 
         return ServiceDescriptor.Factory(serviceType, (Func<IServiceProvider, object>)function, lifetime);
     }
 
-    public static Expression KeyValue(Type keyType, Type valueType, object key, Expression value) =>
-        Expression.New(KeyValueConstructor(keyType, valueType), Expression.Constant(key), Expression.Lambda(value));
+    public static IServiceDescriptor Factory(
+        Type serviceType,
+        object key,
+        Func<ParameterExpression, ParameterExpression, Expression> getBody,
+        ServiceLifetime lifetime
+    )
+    {
+        var spEx = Expression.Parameter(typeof(IServiceProvider));
+        var keyEx = Expression.Parameter(typeof(object));
+        var body = getBody(spEx, keyEx);
+        var function = Expression.Lambda(body, spEx, keyEx).Compile();
+
+        return ServiceDescriptor.Factory(serviceType, key, (Func<IServiceProvider, object, object>)function, lifetime);
+    }
+
+    // public static Expression KeyValue(Type keyType, Type valueType, object key, Expression value) =>
+    //     Expression.New(KeyValueConstructor(keyType, valueType), Expression.Constant(key), Expression.Lambda(value));
 
     public static Expression Resolve(ParameterExpression sp, Type type)
     {
@@ -66,22 +100,23 @@ internal static class Helper
         return Expression.Call(null, getRequiredService, sp);
     }
 
-    private static readonly MethodInfo GetRequiredServiceMethod = typeof(ServiceProviderServiceExtensions)
-        .GetMethods()
-        .Single(
-            x =>
-                x.Name == nameof(ServiceProviderServiceExtensions.GetRequiredService)
-                && x.GetParameters().Length == 1
-                && x.GetParameters().Single().ParameterType == typeof(IServiceProvider)
-        );
+    public static Expression Resolve(ParameterExpression sp, ParameterExpression key, Type type)
+    {
+        var getRequiredService = GetRequiredKeyedService(type);
+
+        return Expression.Call(null, getRequiredService, sp, key);
+    }
 
     private static MethodInfo GetRequiredService(Type type) => GetRequiredServiceMethod.MakeGenericMethod(type);
 
-    private static ConstructorInfo KeyValueConstructor(Type keyType, Type valueType)
-    {
-        var type = typeof(KeyValue<,>).MakeGenericType(keyType, valueType);
-
-        return type.GetConstructor(new[] { keyType, typeof(Func<>).MakeGenericType(valueType) })
-            ?? throw new MissingMethodException($"Failed to find {type.FriendlyName()} constructor");
-    }
+    private static MethodInfo GetRequiredKeyedService(Type type) =>
+        GetRequiredKeyedServiceMethod.MakeGenericMethod(type);
+    //
+    // private static ConstructorInfo KeyValueConstructor(Type keyType, Type valueType)
+    // {
+    //     var type = typeof(KeyValue<,>).MakeGenericType(keyType, valueType);
+    //
+    //     return type.GetConstructor(new[] { keyType, typeof(Func<>).MakeGenericType(valueType) })
+    //         ?? throw new MissingMethodException($"Failed to find {type.FriendlyName()} constructor");
+    // }
 }
