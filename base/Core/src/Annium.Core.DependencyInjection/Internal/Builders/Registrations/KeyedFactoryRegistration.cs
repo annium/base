@@ -5,16 +5,16 @@ using static Annium.Core.DependencyInjection.Internal.Builders.Registrations.Hel
 
 namespace Annium.Core.DependencyInjection.Internal.Builders.Registrations;
 
-internal class FactoryKeyedRegistration : IRegistration
+internal class KeyedFactoryRegistration : IRegistration
 {
-    public Type ServiceType { get; }
+    private readonly Type _serviceType;
     private readonly Func<IServiceProvider, object> _factory;
     private readonly Type _keyType;
     private readonly object _key;
 
-    public FactoryKeyedRegistration(Type serviceType, Func<IServiceProvider, object> factory, Type keyType, object key)
+    public KeyedFactoryRegistration(Type serviceType, Func<IServiceProvider, object> factory, Type keyType, object key)
     {
-        ServiceType = serviceType;
+        _serviceType = serviceType;
         _factory = factory;
         _keyType = keyType;
         _key = key;
@@ -23,8 +23,8 @@ internal class FactoryKeyedRegistration : IRegistration
     public IEnumerable<IServiceDescriptor> ResolveServiceDescriptors(ServiceLifetime lifetime)
     {
         yield return Factory(
-            KeyValueType(_keyType, ServiceType),
-            sp => KeyValue(_keyType, ServiceType, _key, Expression.Invoke(Expression.Constant(_factory), sp)),
+            KeyValueType(_keyType, _serviceType),
+            sp => KeyValue(_keyType, _serviceType, _key, Expression.Invoke(Expression.Constant(_factory), sp)),
             lifetime
         );
     }

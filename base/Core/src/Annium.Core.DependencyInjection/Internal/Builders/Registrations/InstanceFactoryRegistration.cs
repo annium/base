@@ -7,19 +7,19 @@ namespace Annium.Core.DependencyInjection.Internal.Builders.Registrations;
 
 internal class InstanceFactoryRegistration : IRegistration
 {
-    public Type ServiceType { get; }
+    private readonly Type _serviceType;
     private readonly object _instance;
 
     public InstanceFactoryRegistration(Type serviceType, object instance)
     {
-        ServiceType = serviceType;
+        _serviceType = serviceType;
         _instance = instance;
     }
 
     public IEnumerable<IServiceDescriptor> ResolveServiceDescriptors(ServiceLifetime lifetime)
     {
         yield return Factory(
-            FactoryType(ServiceType),
+            FactoryType(_serviceType),
             _ => Expression.Lambda(Expression.Constant(_instance)),
             lifetime
         );

@@ -1,20 +1,21 @@
 using System;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 using static Annium.Core.DependencyInjection.Internal.Builders.Registrations.Helper;
 
 namespace Annium.Core.DependencyInjection.Internal.Builders.Registrations;
 
-internal class TypeKeyedRegistration : IRegistration
+internal class KeyedInstanceRegistration : IRegistration
 {
-    public Type ServiceType { get; }
-    private readonly Type _implementationType;
+    private readonly Type _serviceType;
+    private readonly object _instance;
     private readonly Type _keyType;
     private readonly object _key;
 
-    public TypeKeyedRegistration(Type serviceType, Type implementationType, Type keyType, object key)
+    public KeyedInstanceRegistration(Type serviceType, object instance, Type keyType, object key)
     {
-        ServiceType = serviceType;
-        _implementationType = implementationType;
+        _serviceType = serviceType;
+        _instance = instance;
         _keyType = keyType;
         _key = key;
     }
@@ -22,8 +23,8 @@ internal class TypeKeyedRegistration : IRegistration
     public IEnumerable<IServiceDescriptor> ResolveServiceDescriptors(ServiceLifetime lifetime)
     {
         yield return Factory(
-            KeyValueType(_keyType, ServiceType),
-            sp => KeyValue(_keyType, ServiceType, _key, Resolve(sp, _implementationType)),
+            KeyValueType(_keyType, _serviceType),
+            _ => KeyValue(_keyType, _serviceType, _key, Expression.Constant(_instance)),
             lifetime
         );
     }

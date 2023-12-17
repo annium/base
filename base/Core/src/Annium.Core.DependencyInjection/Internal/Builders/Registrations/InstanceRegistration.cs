@@ -5,17 +5,17 @@ namespace Annium.Core.DependencyInjection.Internal.Builders.Registrations;
 
 internal class InstanceRegistration : IRegistration
 {
-    public Type ServiceType { get; }
+    private readonly Type _serviceType;
     private readonly object _instance;
 
     public InstanceRegistration(Type serviceType, object instance)
     {
-        ServiceType = serviceType;
+        _serviceType = serviceType;
         _instance = instance;
     }
 
     public IEnumerable<IServiceDescriptor> ResolveServiceDescriptors(ServiceLifetime lifetime)
     {
-        yield return ServiceDescriptor.Instance(ServiceType, _instance, lifetime);
+        yield return ServiceDescriptor.Instance(_serviceType, _instance, lifetime);
     }
 }
