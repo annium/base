@@ -11,27 +11,27 @@ public static class ServiceDescriptor
     {
         if (descriptor.ServiceKey is not null)
         {
-            if (descriptor.ImplementationType is not null)
+            if (descriptor.KeyedImplementationType is not null)
                 return Type(
                     descriptor.ServiceType,
                     descriptor.ServiceKey,
-                    descriptor.ImplementationType,
+                    descriptor.KeyedImplementationType,
                     (ServiceLifetime)descriptor.Lifetime
                 );
 
-            if (descriptor.ImplementationFactory is not null)
+            if (descriptor.KeyedImplementationFactory is not null)
                 return Factory(
                     descriptor.ServiceType,
                     descriptor.ServiceKey,
-                    descriptor.ImplementationFactory,
+                    descriptor.KeyedImplementationFactory,
                     (ServiceLifetime)descriptor.Lifetime
                 );
 
-            if (descriptor.ImplementationInstance is not null)
+            if (descriptor.KeyedImplementationInstance is not null)
                 return Instance(
                     descriptor.ServiceType,
                     descriptor.ServiceKey,
-                    descriptor.ImplementationInstance,
+                    descriptor.KeyedImplementationInstance,
                     (ServiceLifetime)descriptor.Lifetime
                 );
         }
@@ -121,7 +121,7 @@ public static class ServiceDescriptor
 
     public static IKeyedFactoryServiceDescriptor Factory<T>(
         object key,
-        Func<IServiceProvider, T> implementationFactory,
+        Func<IServiceProvider, object, T> implementationFactory,
         ServiceLifetime lifetime
     )
         where T : class
@@ -152,7 +152,7 @@ public static class ServiceDescriptor
     public static IKeyedFactoryServiceDescriptor Factory(
         Type serviceType,
         object key,
-        Func<IServiceProvider, object> implementationFactory,
+        Func<IServiceProvider, object, object> implementationFactory,
         ServiceLifetime lifetime
     )
     {
