@@ -10,8 +10,9 @@ public class KeyedFactoryRegistrationTest : TestBase
     public void AsKeyedSelf_Works()
     {
         // arrange
+        D.Reset();
         D? instance = null;
-        Container.Add((_, key) => new D(key.ToString().NotNull())).AsKeyedSelf("x").Singleton();
+        Container.Add((_, key) => instance = new D(key.ToString().NotNull())).AsKeyedSelf("x").Singleton();
 
         // act
         Build();
@@ -27,8 +28,9 @@ public class KeyedFactoryRegistrationTest : TestBase
     public void AsKeyed_Works()
     {
         // arrange
+        D.Reset();
         D? instance = null;
-        Container.Add((_, key) => new D(key.ToString().NotNull())).AsKeyed<C>("x").Singleton();
+        Container.Add((_, key) => instance = new D(key.ToString().NotNull())).AsKeyed<C>("x").Singleton();
 
         // act
         Build();
@@ -44,8 +46,9 @@ public class KeyedFactoryRegistrationTest : TestBase
     public void AsKeyedInterfaces_Works()
     {
         // arrange
+        D.Reset();
         D? instance = null;
-        Container.Add((_, key) => new D(key.ToString().NotNull())).AsKeyedInterfaces("x").Singleton();
+        Container.Add((_, key) => instance = new D(key.ToString().NotNull())).AsKeyedInterfaces("x").Singleton();
 
         // act
         Build();
@@ -60,12 +63,15 @@ public class KeyedFactoryRegistrationTest : TestBase
     private sealed class D : C, IX
     {
         private static int _count;
+
+        public static void Reset() => _count = 0;
+
         public string Key { get; }
 
         public D(string key)
         {
             Key = key;
-            if (_count++ > 1)
+            if (++_count > 1)
                 throw new Exception("singleton failed");
         }
     }
