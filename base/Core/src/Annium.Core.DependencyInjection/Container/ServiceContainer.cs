@@ -35,8 +35,20 @@ public class ServiceContainer : IServiceContainer
     public IFactoryRegistrationBuilderBase Add(Type type, Func<IServiceProvider, object> factory) =>
         new FactoryRegistrationBuilder(this, type, factory, new Registrar(Register));
 
+    public IFactoryRegistrationBuilderBase Add<T>(Func<IServiceProvider, T> factory)
+        where T : class
+    {
+        return Add(typeof(T), factory);
+    }
+
     public IKeyedFactoryRegistrationBuilderBase Add(Type type, Func<IServiceProvider, object, object> factory) =>
         new KeyedFactoryRegistrationBuilder(this, type, factory, new Registrar(Register));
+
+    public IKeyedFactoryRegistrationBuilderBase Add<T>(Func<IServiceProvider, object, T> factory)
+        where T : class
+    {
+        return Add(typeof(T), factory);
+    }
 
     public IInstanceRegistrationBuilderBase Add<T>(T instance)
         where T : class => new InstanceRegistrationBuilder(this, typeof(T), instance, new Registrar(Register));

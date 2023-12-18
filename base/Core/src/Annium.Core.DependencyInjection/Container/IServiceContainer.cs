@@ -34,12 +34,30 @@ public interface IServiceContainer : IEnumerable<IServiceDescriptor>
     IFactoryRegistrationBuilderBase Add(Type type, Func<IServiceProvider, object> factory);
 
     /// <summary>
+    /// Register type factory
+    /// </summary>
+    /// <param name="factory"></param>
+    /// <typeparam name="T">type</typeparam>
+    /// <returns>factory registration builder</returns>
+    IFactoryRegistrationBuilderBase Add<T>(Func<IServiceProvider, T> factory)
+        where T : class;
+
+    /// <summary>
     /// Register keyed type factory
     /// </summary>
     /// <param name="type">type</param>
     /// <param name="factory">factory</param>
     /// <returns>keyed factory registration builder</returns>
     IKeyedFactoryRegistrationBuilderBase Add(Type type, Func<IServiceProvider, object, object> factory);
+
+    /// <summary>
+    /// Register keyed type factory
+    /// </summary>
+    /// <param name="factory">factory</param>
+    /// <typeparam name="T">type</typeparam>
+    /// <returns>keyed factory registration builder</returns>
+    IKeyedFactoryRegistrationBuilderBase Add<T>(Func<IServiceProvider, object, T> factory)
+        where T : class;
 
     /// <summary>
     /// Register instance

@@ -52,7 +52,7 @@ internal class SerializationConfigurationBuilder : ISerializationConfigurationBu
         var key = SerializerKey.Create(Key, mediaType);
 
         // add serializer via resolver
-        _container.Add(resolveSerializer).AsKeyed<TISerializer>(key).Singleton();
+        _container.Add((sp, _) => resolveSerializer(sp)).AsKeyed<TISerializer>(key).Singleton();
 
         // register defaults
         if (key.IsDefault)
