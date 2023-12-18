@@ -1,8 +1,10 @@
 using System;
 using Annium.Core.DependencyInjection;
 using Annium.Logging;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit.Abstractions;
 using AsyncServiceScope = Microsoft.Extensions.DependencyInjection.AsyncServiceScope;
+using ServiceLifetime = Annium.Core.DependencyInjection.ServiceLifetime;
 
 namespace Annium.Testing;
 
@@ -11,7 +13,7 @@ public abstract class TestBase : ILogSubject
     public ILogger Logger => _logger.Value;
     private bool _isBuilt;
     private readonly IServiceProviderBuilder _builder;
-    private readonly Lazy<IServiceProvider> _sp;
+    private readonly Lazy<IKeyedServiceProvider> _sp;
     private readonly Lazy<ILogger> _logger;
 
     protected TestBase(ITestOutputHelper outputHelper)
@@ -22,7 +24,7 @@ public abstract class TestBase : ILogSubject
         Register(SharedRegister);
         Setup(SharedSetup);
 
-        _sp = new Lazy<IServiceProvider>(BuildServiceProvider, true);
+        _sp = new Lazy<IKeyedServiceProvider>(BuildServiceProvider, true);
         _logger = new Lazy<ILogger>(Get<ILogger>, true);
     }
 
@@ -54,14 +56,17 @@ public abstract class TestBase : ILogSubject
         _builder.UseServicePack(new DynamicServicePack().Setup(setup));
     }
 
-    public AsyncServiceScope CreateAsyncScope() => _sp.Value.CreateAsyncScope();
+    public AsyncServiceScope CreateAsyncScope()
+    {
+        return _sp.Value.CreateAsyncScope();
+    }
 
     public T Get<T>()
         where T : notnull => _sp.Value.Resolve<T>();
 
     public T GetKeyed<TKey, T>(TKey key)
         where TKey : notnull
-        where T : notnull => _sp.Value.ResolveKeyed<TKey, T>(key);
+        where T : notnull => _sp.Value.ResolveKeyed<T>(key);
 
     private void SharedRegister(IServiceContainer container)
     {
@@ -75,7 +80,7 @@ public abstract class TestBase : ILogSubject
         sp.UseLogging(x => x.UseTestOutput());
     }
 
-    private IServiceProvider BuildServiceProvider()
+    private IKeyedServiceProvider BuildServiceProvider()
     {
         EnsureNotBuilt();
         _isBuilt = true;

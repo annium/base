@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Annium.Core.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Annium.Core.Mediator.Internal;
 
