@@ -1,3 +1,4 @@
+using System;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 
@@ -15,13 +16,9 @@ internal static class HelperExtensions
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static string Stringify<T>(this T value)
     {
-        try
-        {
-            return JsonSerializer.Serialize(value);
-        }
-        catch
-        {
-            return value?.ToString() ?? "null";
-        }
+        if (typeof(T) == typeof(Type))
+            return typeof(T).FriendlyName();
+
+        return value?.ToString() ?? "null";
     }
 }
