@@ -389,7 +389,11 @@ public class ClientServerManagedWebSocketTests : TestBase, IAsyncLifetime
 
         // assert
         this.Trace("assert text messages arrive");
-        await Expect.To(() => _texts.IsEqual(messages), 1000);
+        await Expect.To(() =>
+        {
+            _texts.Has(messages.Length);
+            _texts.IsEqual(messages);
+        }, 1000);
 
         this.Trace("done");
     }
