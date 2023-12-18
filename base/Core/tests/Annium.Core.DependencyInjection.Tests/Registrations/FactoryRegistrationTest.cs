@@ -52,34 +52,6 @@ public class FactoryRegistrationTest : TestBase
         Get<IX>().Is(instance);
     }
 
-    [Fact]
-    public void AsKeyedSelf_Works()
-    {
-        // arrange
-        var instance = new D(new A());
-        Container.Add(_ => instance).AsKeyedSelf(nameof(D)).Singleton();
-
-        // act
-        Build();
-
-        // assert
-        Get<IIndex<string, D>>()[nameof(D)].Is(instance);
-    }
-
-    [Fact]
-    public void AsKeyed_Works()
-    {
-        // arrange
-        var instance = new D(new A());
-        Container.Add(_ => instance).AsKeyed<C, string>(nameof(C)).Singleton();
-
-        // act
-        Build();
-
-        // assert
-        Get<IIndex<string, C>>()[nameof(C)].Is(instance);
-    }
-
     private sealed class D : C, IX
     {
         public D(A x)
@@ -96,7 +68,7 @@ public class FactoryRegistrationTest : TestBase
         }
     }
 
-    private class A { }
+    private class A;
 
-    private interface IX { }
+    private interface IX;
 }

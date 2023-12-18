@@ -61,7 +61,8 @@ public class InstanceRegistrationTest : TestBase
         Build();
 
         // assert
-        Get<IIndex<string, D>>()[nameof(D)].Is(instance);
+        GetKeyed<D>(nameof(D))
+            .Is(instance);
     }
 
     [Fact]
@@ -69,13 +70,14 @@ public class InstanceRegistrationTest : TestBase
     {
         // arrange
         var instance = new D(new A());
-        Container.Add(instance).AsKeyed<C, string>(nameof(D)).Singleton();
+        Container.Add(instance).AsKeyed<C>(nameof(D)).Singleton();
 
         // act
         Build();
 
         // assert
-        Get<IIndex<string, C>>()[nameof(D)].Is(instance);
+        GetKeyed<C>(nameof(D))
+            .Is(instance);
     }
 
     [Fact]
@@ -119,7 +121,8 @@ public class InstanceRegistrationTest : TestBase
         Build();
 
         // assert
-        Get<IIndex<string, Func<D>>>()[nameof(D)]().Is(instance);
+        GetKeyed<Func<D>>(nameof(D))()
+            .Is(instance);
     }
 
     [Fact]
@@ -127,13 +130,14 @@ public class InstanceRegistrationTest : TestBase
     {
         // arrange
         var instance = new D(new A());
-        Container.Add(instance).AsKeyedFactory<C, string>(nameof(C)).Singleton();
+        Container.Add(instance).AsKeyedFactory<C>(nameof(C)).Singleton();
 
         // act
         Build();
 
         // assert
-        Get<IIndex<string, Func<C>>>()[nameof(C)]().Is(instance);
+        GetKeyed<Func<C>>(nameof(C))()
+            .Is(instance);
     }
 
     private sealed class D : C, ID
@@ -148,9 +152,9 @@ public class InstanceRegistrationTest : TestBase
         protected C(A _) { }
     }
 
-    private interface ID : IC { }
+    private interface ID : IC;
 
-    private interface IC { }
+    private interface IC;
 
-    private class A { }
+    private class A;
 }

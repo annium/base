@@ -17,4 +17,10 @@ public class TestBase
     {
         return _provider.Resolve<T>();
     }
+
+    protected T GetKeyed<T>(object key)
+        where T : notnull
+    {
+        return _provider.ResolveKeyed<T>(key);
+    }
 }

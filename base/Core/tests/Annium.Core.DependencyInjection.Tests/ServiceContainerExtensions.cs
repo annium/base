@@ -20,48 +20,157 @@ internal static class ServiceContainerExtensions
         );
     }
 
-    public static void HasScoped(this IServiceContainer container, Type serviceType, Type implementationType) =>
-        container.Has(serviceType, implementationType, ServiceLifetime.Scoped);
+    public static void HasSingleton(this IServiceContainer container, Type serviceType, Type implementationType)
+    {
+        container.Has(serviceType, null, implementationType, ServiceLifetime.Singleton);
+    }
 
-    public static void HasSingleton(this IServiceContainer container, Type serviceType, Type implementationType) =>
-        container.Has(serviceType, implementationType, ServiceLifetime.Singleton);
+    public static void HasSingleton(
+        this IServiceContainer container,
+        Type serviceType,
+        object key,
+        Type implementationType
+    )
+    {
+        container.Has(serviceType, key, implementationType, ServiceLifetime.Singleton);
+    }
 
-    public static void HasTransient(this IServiceContainer container, Type serviceType, Type implementationType) =>
-        container.Has(serviceType, implementationType, ServiceLifetime.Transient);
+    public static void HasScoped(this IServiceContainer container, Type serviceType, Type implementationType)
+    {
+        container.Has(serviceType, null, implementationType, ServiceLifetime.Scoped);
+    }
 
-    public static void HasScopedTypeFactory(this IServiceContainer container, Type serviceType, int count = 1) =>
-        container.HasTypeFactory(serviceType, ServiceLifetime.Scoped, count);
+    public static void HasScoped(
+        this IServiceContainer container,
+        Type serviceType,
+        object key,
+        Type implementationType
+    )
+    {
+        container.Has(serviceType, key, implementationType, ServiceLifetime.Scoped);
+    }
 
-    public static void HasSingletonTypeFactory(this IServiceContainer container, Type serviceType, int count = 1) =>
-        container.HasTypeFactory(serviceType, ServiceLifetime.Singleton, count);
+    public static void HasTransient(this IServiceContainer container, Type serviceType, Type implementationType)
+    {
+        container.Has(serviceType, null, implementationType, ServiceLifetime.Transient);
+    }
 
-    public static void HasTransientTypeFactory(this IServiceContainer container, Type serviceType, int count = 1) =>
-        container.HasTypeFactory(serviceType, ServiceLifetime.Transient, count);
+    public static void HasTransient(
+        this IServiceContainer container,
+        Type serviceType,
+        object key,
+        Type implementationType
+    )
+    {
+        container.Has(serviceType, key, implementationType, ServiceLifetime.Transient);
+    }
 
-    public static void HasScopedFuncFactory(this IServiceContainer container, Type serviceType, int count = 1) =>
-        container.HasFuncFactory(serviceType, ServiceLifetime.Scoped, count);
+    public static void HasSingletonTypeFactory(this IServiceContainer container, Type serviceType, int count = 1)
+    {
+        container.HasTypeFactory(serviceType, null, ServiceLifetime.Singleton, count);
+    }
 
-    public static void HasSingletonFuncFactory(this IServiceContainer container, Type serviceType, int count = 1) =>
-        container.HasFuncFactory(serviceType, ServiceLifetime.Singleton, count);
+    public static void HasSingletonTypeFactory(
+        this IServiceContainer container,
+        Type serviceType,
+        object key,
+        int count = 1
+    )
+    {
+        container.HasTypeFactory(serviceType, key, ServiceLifetime.Singleton, count);
+    }
 
-    public static void HasTransientFuncFactory(this IServiceContainer container, Type serviceType, int count = 1) =>
-        container.HasFuncFactory(serviceType, ServiceLifetime.Transient, count);
+    public static void HasScopedTypeFactory(this IServiceContainer container, Type serviceType, int count = 1)
+    {
+        container.HasTypeFactory(serviceType, null, ServiceLifetime.Scoped, count);
+    }
+
+    public static void HasScopedTypeFactory(
+        this IServiceContainer container,
+        Type serviceType,
+        object key,
+        int count = 1
+    )
+    {
+        container.HasTypeFactory(serviceType, key, ServiceLifetime.Scoped, count);
+    }
+
+    public static void HasTransientTypeFactory(this IServiceContainer container, Type serviceType, int count = 1)
+    {
+        container.HasTypeFactory(serviceType, null, ServiceLifetime.Transient, count);
+    }
+
+    public static void HasTransientTypeFactory(
+        this IServiceContainer container,
+        Type serviceType,
+        object key,
+        int count = 1
+    )
+    {
+        container.HasTypeFactory(serviceType, key, ServiceLifetime.Transient, count);
+    }
+
+    public static void HasSingletonFuncFactory(this IServiceContainer container, Type serviceType, int count = 1)
+    {
+        container.HasFuncFactory(serviceType, null, ServiceLifetime.Singleton, count);
+    }
+
+    public static void HasSingletonFuncFactory(
+        this IServiceContainer container,
+        Type serviceType,
+        object key,
+        int count = 1
+    )
+    {
+        container.HasFuncFactory(serviceType, key, ServiceLifetime.Singleton, count);
+    }
+
+    public static void HasScopedFuncFactory(this IServiceContainer container, Type serviceType, int count = 1)
+    {
+        container.HasFuncFactory(serviceType, null, ServiceLifetime.Scoped, count);
+    }
+
+    public static void HasScopedFuncFactory(
+        this IServiceContainer container,
+        Type serviceType,
+        object key,
+        int count = 1
+    )
+    {
+        container.HasFuncFactory(serviceType, key, ServiceLifetime.Scoped, count);
+    }
+
+    public static void HasTransientFuncFactory(this IServiceContainer container, Type serviceType, int count = 1)
+    {
+        container.HasFuncFactory(serviceType, null, ServiceLifetime.Transient, count);
+    }
+
+    public static void HasTransientFuncFactory(
+        this IServiceContainer container,
+        Type serviceType,
+        object key,
+        int count = 1
+    )
+    {
+        container.HasFuncFactory(serviceType, key, ServiceLifetime.Transient, count);
+    }
 
     private static void Has(
         this IServiceContainer container,
         Type serviceType,
+        object? key,
         Type implementationType,
         ServiceLifetime lifetime
     )
     {
         var descriptor = container
-            .GetDescriptors(serviceType)
+            .GetDescriptors(serviceType, key)
             .OfType<ITypeServiceDescriptor>()
             .SingleOrDefault(x => x.ImplementationType == implementationType);
         descriptor.IsNotDefault(
             $"Not found {serviceType.FriendlyName()} -> {implementationType.FriendlyName()} descriptor"
         );
-        descriptor!.Lifetime.Is(
+        descriptor.Lifetime.Is(
             lifetime,
             $"Descriptor {descriptor.ToReadableString()} is {descriptor.Lifetime}, but {lifetime} expected."
         );
@@ -70,11 +179,12 @@ internal static class ServiceContainerExtensions
     private static void HasTypeFactory(
         this IServiceContainer container,
         Type serviceType,
+        object? key,
         ServiceLifetime lifetime,
         int count
     )
     {
-        var descriptors = container.GetDescriptors(serviceType).OfType<IFactoryServiceDescriptor>().ToArray();
+        var descriptors = container.GetDescriptors(serviceType, key).OfType<IFactoryServiceDescriptor>().ToArray();
         descriptors.Length.Is(
             count,
             $"Expected {count} {serviceType.FriendlyName()} descriptors, but found {descriptors.Length}"
@@ -89,12 +199,13 @@ internal static class ServiceContainerExtensions
     private static void HasFuncFactory(
         this IServiceContainer container,
         Type serviceType,
+        object? key,
         ServiceLifetime lifetime,
         int count
     )
     {
         var descriptors = container
-            .GetDescriptors(typeof(Func<>).MakeGenericType(serviceType))
+            .GetDescriptors(typeof(Func<>).MakeGenericType(serviceType), key)
             .OfType<IFactoryServiceDescriptor>()
             .ToArray();
         descriptors.Length.Is(
@@ -108,9 +219,12 @@ internal static class ServiceContainerExtensions
             );
     }
 
-    private static IServiceDescriptor[] GetDescriptors(this IServiceContainer container, Type serviceType)
+    private static IServiceDescriptor[] GetDescriptors(this IServiceContainer container, Type serviceType, object? key)
     {
-        var descriptors = container.Where(x => x.ServiceType == serviceType).ToArray();
+        var descriptors = key is null
+            ? container.Where(x => x.ServiceType == serviceType).ToArray()
+            : container.Where(x => x.ServiceType == serviceType && x.Key == key).ToArray();
+
         descriptors.Length.IsNotDefault($"No {serviceType.FriendlyName()} based descriptors found");
 
         return descriptors;

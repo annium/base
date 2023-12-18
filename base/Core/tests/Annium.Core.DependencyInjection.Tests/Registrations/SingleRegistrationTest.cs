@@ -60,9 +60,8 @@ public class SingleRegistrationTest : TestBase
         Build();
 
         // assert
-        var index = Get<IIndex<string, B>>();
         B.InstancesCount.Is(0);
-        index[nameof(B)].Is(Get<B>());
+        GetKeyed<B>(nameof(B)).Is(Get<B>());
         B.InstancesCount.Is(1);
     }
 
@@ -77,9 +76,8 @@ public class SingleRegistrationTest : TestBase
         Build();
 
         // assert
-        var index = Get<IIndex<string, A>>();
         B.InstancesCount.Is(0);
-        index[nameof(B)].Is(Get<B>());
+        GetKeyed<A>(nameof(B)).Is(Get<B>());
         B.InstancesCount.Is(1);
     }
 
@@ -121,7 +119,7 @@ public class SingleRegistrationTest : TestBase
         Build();
 
         // assert
-        Get<IIndex<string, Func<B>>>()[nameof(B)]().Is(Get<B>());
+        GetKeyed<Func<B>>(nameof(B))().Is(Get<B>());
     }
 
     [Fact]
@@ -134,7 +132,7 @@ public class SingleRegistrationTest : TestBase
         Build();
 
         // assert
-        Get<IIndex<string, Func<A>>>()[nameof(B)]().Is(Get<B>());
+        GetKeyed<Func<A>>(nameof(B))().Is(Get<B>());
     }
 
     private sealed class B : A, IB
@@ -152,9 +150,9 @@ public class SingleRegistrationTest : TestBase
         }
     }
 
-    private class A : IA { }
+    private class A : IA;
 
-    private interface IB : IA { }
+    private interface IB : IA;
 
-    private interface IA { }
+    private interface IA;
 }

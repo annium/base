@@ -85,8 +85,8 @@ public class BulkRegistrationTest : TestBase
         Container.HasSingleton(typeof(B), typeof(B));
         Get<A>().AsExact<A>();
         Get<B>().AsExact<B>();
-        Get<IIndex<string, A>>()[nameof(A)].Is(Get<A>());
-        Get<IIndex<string, B>>()[nameof(B)].Is(Get<B>());
+        GetKeyed<A>(nameof(A)).Is(Get<A>());
+        GetKeyed<B>(nameof(B)).Is(Get<B>());
     }
 
     [Fact]
@@ -99,9 +99,9 @@ public class BulkRegistrationTest : TestBase
         Build();
 
         // assert
-        var index = Get<IIndex<string, A>>();
-        index[nameof(A)].AsExact<A>();
-        index[nameof(B)].AsExact<B>();
+        GetKeyed<A>(nameof(A))
+            .AsExact<A>();
+        GetKeyed<A>(nameof(B)).AsExact<B>();
     }
 
     [Fact]
@@ -151,8 +151,8 @@ public class BulkRegistrationTest : TestBase
         // assert
         Container.HasSingleton(typeof(A), typeof(A));
         Container.HasSingleton(typeof(B), typeof(B));
-        Get<IIndex<string, Func<A>>>()[nameof(A)]().AsExact<A>();
-        Get<IIndex<string, Func<B>>>()[nameof(B)]().AsExact<B>();
+        GetKeyed<Func<A>>(nameof(A))().AsExact<A>();
+        GetKeyed<Func<B>>(nameof(B))().AsExact<B>();
     }
 
     [Fact]
@@ -170,9 +170,8 @@ public class BulkRegistrationTest : TestBase
         // assert
         Container.HasSingleton(typeof(A), typeof(A));
         Container.HasSingleton(typeof(B), typeof(B));
-        var index = Get<IIndex<string, Func<A>>>();
-        index[nameof(A)]().AsExact<A>();
-        index[nameof(B)]().AsExact<B>();
+        GetKeyed<Func<A>>(nameof(A))().AsExact<A>();
+        GetKeyed<Func<A>>(nameof(B))().AsExact<B>();
     }
 
     private sealed class B : A, IB
@@ -190,9 +189,9 @@ public class BulkRegistrationTest : TestBase
         }
     }
 
-    private class A : IA { }
+    private class A : IA;
 
-    private interface IB : IA { }
+    private interface IB : IA;
 
-    private interface IA { }
+    private interface IA;
 }
