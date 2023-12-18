@@ -221,9 +221,7 @@ internal static class ServiceContainerExtensions
 
     private static IServiceDescriptor[] GetDescriptors(this IServiceContainer container, Type serviceType, object? key)
     {
-        var descriptors = key is null
-            ? container.Where(x => x.ServiceType == serviceType).ToArray()
-            : container.Where(x => x.ServiceType == serviceType && x.Key == key).ToArray();
+        var descriptors = container.Where(x => x.ServiceType == serviceType && x.Key == key).ToArray();
 
         descriptors.Length.IsNotDefault($"No {serviceType.FriendlyName()} based descriptors found");
 

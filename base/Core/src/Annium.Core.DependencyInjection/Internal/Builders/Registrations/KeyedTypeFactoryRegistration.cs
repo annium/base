@@ -23,7 +23,7 @@ internal class KeyedTypeFactoryRegistration : IRegistration
         yield return Factory(
             FactoryType(_serviceType),
             _key,
-            (sp, key) => Expression.Lambda(Resolve(sp, key, _implementationType)),
+            (sp, _) => Expression.Lambda(Resolve(sp, _implementationType)),
             lifetime
         );
 

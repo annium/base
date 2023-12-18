@@ -75,14 +75,16 @@ public class ServiceContainer : IServiceContainer
             ITypeServiceDescriptor d
                 => Collection.Any(
                     x =>
-                        x.Lifetime == lifetime
+                        !x.IsKeyedService
+                        && x.Lifetime == lifetime
                         && x.ServiceType == d.ServiceType
                         && x.ImplementationType == d.ImplementationType
                 ),
             IFactoryServiceDescriptor d
                 => Collection.Any(
                     x =>
-                        x.Lifetime == lifetime
+                        !x.IsKeyedService
+                        && x.Lifetime == lifetime
                         && x.ServiceType == d.ServiceType
                         && x.ImplementationFactory?.Method == d.ImplementationFactory.Method
                         && x.ImplementationFactory?.Target == d.ImplementationFactory.Target
@@ -90,14 +92,16 @@ public class ServiceContainer : IServiceContainer
             IInstanceServiceDescriptor d
                 => Collection.Any(
                     x =>
-                        x.Lifetime == lifetime
+                        !x.IsKeyedService
+                        && x.Lifetime == lifetime
                         && x.ServiceType == d.ServiceType
                         && x.ImplementationInstance == d.ImplementationInstance
                 ),
             IKeyedTypeServiceDescriptor d
                 => Collection.Any(
                     x =>
-                        x.Lifetime == lifetime
+                        x.IsKeyedService
+                        && x.Lifetime == lifetime
                         && x.ServiceType == d.ServiceType
                         && x.ServiceKey == d.Key
                         && x.KeyedImplementationType == d.ImplementationType
@@ -105,7 +109,8 @@ public class ServiceContainer : IServiceContainer
             IKeyedFactoryServiceDescriptor d
                 => Collection.Any(
                     x =>
-                        x.Lifetime == lifetime
+                        x.IsKeyedService
+                        && x.Lifetime == lifetime
                         && x.ServiceType == d.ServiceType
                         && x.ServiceKey == d.Key
                         && x.KeyedImplementationFactory?.Method == d.ImplementationFactory.Method
@@ -114,7 +119,8 @@ public class ServiceContainer : IServiceContainer
             IKeyedInstanceServiceDescriptor d
                 => Collection.Any(
                     x =>
-                        x.Lifetime == lifetime
+                        x.IsKeyedService
+                        && x.Lifetime == lifetime
                         && x.ServiceType == d.ServiceType
                         && x.ServiceKey == d.Key
                         && x.KeyedImplementationInstance == d.ImplementationInstance

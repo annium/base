@@ -47,7 +47,7 @@ internal static class Helper
                 && x.GetParameters()[0].ParameterType == typeof(IServiceProvider)
         );
 
-    private static readonly MethodInfo GetRequiredKeyedServiceMethod = typeof(ServiceProviderServiceExtensions)
+    private static readonly MethodInfo GetRequiredKeyedServiceMethod = typeof(ServiceProviderKeyedServiceExtensions)
         .GetMethods()
         .Single(
             x =>

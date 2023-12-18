@@ -39,6 +39,7 @@ public static class ServiceDescriptorExtensions
             IKeyedTypeServiceDescriptor x
                 => new MicrosoftServiceDescriptor(
                     x.ServiceType,
+                    x.Key,
                     x.ImplementationType,
                     (MicrosoftServiceLifetime)x.Lifetime
                 ),
@@ -51,11 +52,13 @@ public static class ServiceDescriptorExtensions
             IKeyedFactoryServiceDescriptor x
                 => new MicrosoftServiceDescriptor(
                     x.ServiceType,
-                    x.ImplementationFactory,
+                    x.Key,
+                    x.ImplementationFactory!,
                     (MicrosoftServiceLifetime)x.Lifetime
                 ),
             IInstanceServiceDescriptor x => new MicrosoftServiceDescriptor(x.ServiceType, x.ImplementationInstance),
-            IKeyedInstanceServiceDescriptor x => new MicrosoftServiceDescriptor(x.ServiceType, x.ImplementationInstance),
+            IKeyedInstanceServiceDescriptor x
+                => new MicrosoftServiceDescriptor(x.ServiceType, x.Key, x.ImplementationInstance),
             _ => throw new NotSupportedException($"{descriptor.GetType().FriendlyName()} is not supported")
         };
 }
