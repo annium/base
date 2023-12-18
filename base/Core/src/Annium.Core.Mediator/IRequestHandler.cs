@@ -20,6 +20,6 @@ public interface IFinalRequestHandler<TRequest, TResponse> : IRequestHandlerInpu
     Task<TResponse> HandleAsync(TRequest request, CancellationToken ct);
 }
 
-public interface IRequestHandlerInput<TRequestIn, TResponseOut> { }
+public interface IRequestHandlerInput<TRequestIn, TResponseOut>;
 
-public interface IRequestHandlerOutput<TRequestOut, TResponseIn> { }
+public interface IRequestHandlerOutput<TRequestOut, TResponseIn>;

@@ -18,4 +18,4 @@ public class MapperInterfaceTests : MapperInterfaceTestsBase
     }
 }
 
-file interface IEmptyInterface { }
+file interface IEmptyInterface;

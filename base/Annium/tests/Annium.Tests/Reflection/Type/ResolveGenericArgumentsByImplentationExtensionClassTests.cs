@@ -181,10 +181,10 @@ public class ResolveGenericArgumentsByImplementationExtensionClassTests
     }
 
     private class ParentDictionary<T1, T2> : CustomDictionary<T2, T1>
-        where T2 : notnull { }
+        where T2 : notnull;
 
     private class CustomDictionary<T1, T2> : Dictionary<T1, T2>
-        where T1 : notnull { }
+        where T1 : notnull;
 
     private class ClassParametrized<T> : ClassBase
     {
@@ -196,16 +196,16 @@ public class ResolveGenericArgumentsByImplementationExtensionClassTests
         }
     }
 
-    private class ClassSimple : ClassBase { }
+    private class ClassSimple : ClassBase;
 
     private interface IStructConstraint<T>
-        where T : struct { }
+        where T : struct;
 
     private interface INewConstraint<T>
-        where T : new() { }
+        where T : new();
 
     private interface IClassBaseConstraint<T>
-        where T : ClassBase { }
+        where T : ClassBase;
 
-    private class ClassBase { }
+    private class ClassBase;
 }

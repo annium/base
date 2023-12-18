@@ -1,3 +1,3 @@
 namespace Annium.Architecture.ViewModel;
 
-public interface IResponse<T> { }
+public interface IResponse<T>;

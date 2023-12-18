@@ -25,6 +25,6 @@ public class MapperStructTests : MapperStructTestsBase
     }
 }
 
-file struct EmptyStruct { }
+file struct EmptyStruct;
 
 file record EmptyRecord;

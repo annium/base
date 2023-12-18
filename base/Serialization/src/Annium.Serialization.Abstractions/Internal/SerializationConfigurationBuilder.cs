@@ -52,7 +52,7 @@ internal class SerializationConfigurationBuilder : ISerializationConfigurationBu
         var key = SerializerKey.Create(Key, mediaType);
 
         // add serializer via resolver
-        _container.Add(resolveSerializer).AsKeyed<TISerializer, SerializerKey>(key).Singleton();
+        _container.Add(resolveSerializer).AsKeyed<TISerializer>(key).Singleton();
 
         // register defaults
         if (key.IsDefault)
@@ -71,7 +71,7 @@ internal class SerializationConfigurationBuilder : ISerializationConfigurationBu
         var key = SerializerKey.Create(Key, mediaType);
 
         // add serializer via type registration
-        _container.Add<TSerializer>().AsKeyed<TISerializer, SerializerKey>(key).Singleton();
+        _container.Add<TSerializer>().AsKeyed<TISerializer>(key).Singleton();
 
         // register defaults
         if (key.IsDefault)
@@ -85,15 +85,12 @@ internal class SerializationConfigurationBuilder : ISerializationConfigurationBu
     {
         // for default key - configure as default for media type
         _container
-            .Add<TISerializer>(sp => sp.Resolve<IIndex<SerializerKey, TISerializer>>()[key])
-            .AsKeyed<TISerializer, string>(key.MediaType)
+            .Add<TISerializer>(static (sp, key) => sp.ResolveKeyed<TISerializer>(key))
+            .AsKeyed<TISerializer>(key.MediaType)
             .Singleton();
 
         // if default media type - configure as default
         if (isDefault)
-            _container
-                .Add<TISerializer>(sp => sp.Resolve<IIndex<SerializerKey, TISerializer>>()[key])
-                .As<TISerializer>()
-                .Singleton();
+            _container.Add<TISerializer>(sp => sp.ResolveKeyed<TISerializer>(key)).As<TISerializer>().Singleton();
     }
 }

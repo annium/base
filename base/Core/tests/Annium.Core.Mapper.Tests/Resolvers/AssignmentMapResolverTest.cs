@@ -51,5 +51,5 @@ public class AssignmentMapResolverTest : TestBase
         public string? Name { get; set; }
     }
 
-    private class C { }
+    private class C;
 }

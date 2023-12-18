@@ -175,7 +175,7 @@ public class TypeManagerTests : TestBase
     }
 }
 
-file class A { }
+file class A;
 
 file class B : A
 {
@@ -226,7 +226,7 @@ file class H
     public string Type => GetType().GetIdString();
 }
 
-file class K : H { }
+file class K : H;
 
 file record L
 {
@@ -234,20 +234,20 @@ file record L
     public string Type { get; set; } = string.Empty;
 }
 
-file interface IGenericInterface<T1, T2> { }
+file interface IGenericInterface<T1, T2>;
 
 file record struct GenericStruct<T> : IGenericInterface<T, string>;
 
-file class GenericInterfaceDemoA<T> : IGenericInterface<T, int> { }
+file class GenericInterfaceDemoA<T> : IGenericInterface<T, int>;
 
-file class GenericInterfaceDemoB<T> : IGenericInterface<T, long> { }
+file class GenericInterfaceDemoB<T> : IGenericInterface<T, long>;
 
-file class GenericInterfaceDemoC : IGenericInterface<string, bool> { }
+file class GenericInterfaceDemoC : IGenericInterface<string, bool>;
 
-file class GenericClass<T1, T2> { }
+file class GenericClass<T1, T2>;
 
-file class GenericClassDemoA<T> : GenericClass<T, int> { }
+file class GenericClassDemoA<T> : GenericClass<T, int>;
 
-file class GenericClassDemoB<T> : GenericClass<T, long> { }
+file class GenericClassDemoB<T> : GenericClass<T, long>;
 
-file class GenericClassDemoC : GenericClass<string, bool> { }
+file class GenericClassDemoC : GenericClass<string, bool>;

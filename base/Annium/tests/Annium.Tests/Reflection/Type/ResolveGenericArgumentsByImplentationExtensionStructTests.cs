@@ -127,12 +127,12 @@ public class ResolveGenericArgumentsByImplementationExtensionStructTests
     public struct BaseStruct<T1, T2, T3, T4> : IBase<T1, T2, T3, T4>
         where T1 : class
         where T2 : struct
-        where T4 : IEnumerable<T1> { }
+        where T4 : IEnumerable<T1>;
 
     private interface IBase<T1, T2, T3, T4>
         where T1 : class
         where T2 : struct
-        where T4 : IEnumerable<T1> { }
+        where T4 : IEnumerable<T1>;
 
     private struct StructEnumerable : IEnumerable
     {
@@ -143,11 +143,11 @@ public class ResolveGenericArgumentsByImplementationExtensionStructTests
     }
 
     private interface IClassConstraint<T>
-        where T : class { }
+        where T : class;
 
     private interface INewConstraint<T>
-        where T : new() { }
+        where T : new();
 
     private interface IEnumerableConstraint<T>
-        where T : IEnumerable { }
+        where T : IEnumerable;
 }

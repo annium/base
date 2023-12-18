@@ -27,5 +27,5 @@ public class InstanceOfMapResolverTest : TestBase
         result.Is(value);
     }
 
-    private class Payload { }
+    private class Payload;
 }

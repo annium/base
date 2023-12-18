@@ -1,3 +1,3 @@
 namespace Annium.Logging.Shared;
 
-public interface ILogContext { }
+public interface ILogContext;

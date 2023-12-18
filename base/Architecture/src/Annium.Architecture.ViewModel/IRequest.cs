@@ -1,3 +1,3 @@
 namespace Annium.Architecture.ViewModel;
 
-public interface IRequest<T> { }
+public interface IRequest<T>;

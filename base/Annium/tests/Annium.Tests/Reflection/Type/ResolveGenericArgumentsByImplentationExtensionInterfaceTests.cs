@@ -80,30 +80,30 @@ public class ResolveGenericArgumentsByImplementationExtensionInterfaceTests
     }
 
     private interface IParentOther<T1, T2> : IBase<T1[], T2, bool, IEnumerable<T1[]>>
-        where T2 : struct { }
+        where T2 : struct;
 
     private interface IBase<T1, T2, T3, T4>
         where T1 : class
         where T2 : struct
-        where T4 : IEnumerable<T1> { }
+        where T4 : IEnumerable<T1>;
 
     private interface IClassConstraint<T>
-        where T : class { }
+        where T : class;
 
     private interface IStructConstraint<T>
-        where T : struct { }
+        where T : struct;
 
     private interface INewConstraint<T>
-        where T : new() { }
+        where T : new();
 
     private interface IClassBaseConstraint<T>
-        where T : ClassBase { }
+        where T : ClassBase;
 
     private interface IEnumerableConstraint<T>
-        where T : IEnumerable { }
+        where T : IEnumerable;
 
     private interface IEquatableConstraint<T>
-        where T : IEquatable<T> { }
+        where T : IEquatable<T>;
 
-    private class ClassBase { }
+    private class ClassBase;
 }

@@ -188,7 +188,7 @@ public abstract class MapperStructTestsBase : TestBase
     }
 }
 
-file struct EmptyStruct { }
+file struct EmptyStruct;
 
 file record EmptyRecord;
 

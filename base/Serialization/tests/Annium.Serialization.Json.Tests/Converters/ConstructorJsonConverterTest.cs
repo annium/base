@@ -270,7 +270,7 @@ public class ConstructorJsonConverterTest : TestBase
         private ForceDefault() { }
     }
 
-    public interface IX { }
+    public interface IX;
 
     public record InfoMessage(string Message) : MessageBase;
 

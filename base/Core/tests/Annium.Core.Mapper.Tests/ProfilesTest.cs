@@ -46,7 +46,7 @@ public class ProfilesTest : TestBase
         p.Map<Instant, DateTime>(i => i.ToDateTimeUtc());
     }
 
-    private abstract class Payload { }
+    private abstract class Payload;
 
     private class ImagePayload : Payload
     {
@@ -68,7 +68,7 @@ public class ProfilesTest : TestBase
         public Instant Created { get; set; }
     }
 
-    private abstract class Model { }
+    private abstract class Model;
 
     private class ImageModel : Model
     {

@@ -175,7 +175,7 @@ public class MediatorTest : TestBase
         }
     }
 
-    private interface IResponse { }
+    private interface IResponse;
 
     private class ValidationHandler<TRequest, TResponse>
         : IPipeRequestHandler<TRequest, TRequest, TResponse, IBooleanResult<TResponse>>,

@@ -6,4 +6,4 @@ namespace Annium.Core.Runtime.Types;
 /// Property, marked by this attribute, must contain Type.GetIdString() string value
 /// </summary>
 [AttributeUsage(AttributeTargets.Property)]
-public class ResolutionIdAttribute : Attribute { }
+public class ResolutionIdAttribute : Attribute;

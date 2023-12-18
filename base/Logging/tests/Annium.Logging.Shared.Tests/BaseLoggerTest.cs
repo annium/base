@@ -172,5 +172,5 @@ public class BaseLoggerTest : TestBase
         }
     }
 
-    private class Context : ILogContext { }
+    private class Context : ILogContext;
 }

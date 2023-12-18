@@ -6,4 +6,4 @@ namespace Annium.Architecture.CQRS.Queries;
 
 public interface IQueryHandler<TRequest, TResponse>
     : IFinalRequestHandler<TRequest, IStatusResult<OperationStatus, TResponse>>
-    where TRequest : IQuery { }
+    where TRequest : IQuery;

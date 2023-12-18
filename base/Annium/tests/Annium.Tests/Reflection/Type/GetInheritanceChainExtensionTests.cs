@@ -80,11 +80,11 @@ public class GetInheritanceChainExtensionTests
         typeof(IFace).GetInheritanceChain().IsEmpty();
     }
 
-    private class Derived : Sample { }
+    private class Derived : Sample;
 
-    private class Sample { }
+    private class Sample;
 
-    private struct Point { }
+    private struct Point;
 
-    private interface IFace { }
+    private interface IFace;
 }

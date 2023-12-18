@@ -55,7 +55,7 @@ public class ResolutionMapResolverTest : TestBase
         result.At(1).As<LinkMod>().Data.Is("lnk");
     }
 
-    private abstract class Payload { }
+    private abstract class Payload;
 
     private class ImagePayload : Payload
     {
@@ -72,7 +72,7 @@ public class ResolutionMapResolverTest : TestBase
         public string Link { get; set; } = string.Empty;
     }
 
-    private abstract class Model { }
+    private abstract class Model;
 
     private class ImageModel : Model
     {

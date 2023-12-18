@@ -295,7 +295,7 @@ public class AbstractJsonConverterTest : TestBase
         }
     }
 
-    public abstract class Base { }
+    public abstract class Base;
 
     public class ChildA : Base
     {
@@ -351,7 +351,7 @@ public class AbstractJsonConverterTest : TestBase
         }
     }
 
-    public abstract class BaseContainer<T> { }
+    public abstract class BaseContainer<T>;
 
     public class DataContainer<T> : BaseContainer<T>
     {
@@ -365,5 +365,5 @@ public class AbstractJsonConverterTest : TestBase
 
     public record struct SomeValue(int X) : IValue;
 
-    public interface IValue { }
+    public interface IValue;
 }

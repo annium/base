@@ -29,5 +29,5 @@ public class TryMakeGenericTypeExtensionTests
     }
 
     private class Demo<T>
-        where T : class { }
+        where T : class;
 }

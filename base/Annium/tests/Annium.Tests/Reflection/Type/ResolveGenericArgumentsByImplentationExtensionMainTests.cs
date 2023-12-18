@@ -41,9 +41,9 @@ public class ResolveGenericArgumentsByImplementationExtensionMainTests
 
     private class ConstrainedComplex<T1, T2, T3, T4> : IGeneric<T1>
         where T1 : IGeneric<T2, T3>
-        where T3 : IGeneric<T2, T4> { }
+        where T3 : IGeneric<T2, T4>;
 
-    private interface IGeneric<T> { }
+    private interface IGeneric<T>;
 
-    private interface IGeneric<T1, T2> { }
+    private interface IGeneric<T1, T2>;
 }

@@ -125,6 +125,6 @@ public class ModelRefExtensionsTest
 
 file record struct Task<T>;
 
-file interface IEnumerable<T> { }
+file interface IEnumerable<T>;
 
-file enum UriKind { }
+file enum UriKind;

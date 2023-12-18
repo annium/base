@@ -25,5 +25,5 @@ public class IsCuriouslyRecurringGenericParameterExtensionTests
     }
 
     private class Demo<T>
-        where T : Demo<T> { }
+        where T : Demo<T>;
 }

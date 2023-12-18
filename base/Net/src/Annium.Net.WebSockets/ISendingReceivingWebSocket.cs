@@ -1,3 +1,3 @@
 namespace Annium.Net.WebSockets;
 
-public interface ISendingReceivingWebSocket : ISendingWebSocket, IReceivingWebSocket { }
+public interface ISendingReceivingWebSocket : ISendingWebSocket, IReceivingWebSocket;

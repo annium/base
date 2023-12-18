@@ -8,4 +8,4 @@ namespace Annium.Core.Mapper.Attributes;
 /// inside <see cref="ServiceContainerExtensions.ResolveProfiles"/> method to resolve only really needed generic profile types and register them
 /// </summary>
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Interface | AttributeTargets.Enum)]
-public class AutoMappedAttribute : Attribute { }
+public class AutoMappedAttribute : Attribute;
