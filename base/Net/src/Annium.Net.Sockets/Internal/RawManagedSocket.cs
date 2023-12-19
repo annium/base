@@ -62,6 +62,11 @@ internal class RawManagedSocket : IManagedSocket, ILogSubject
             this.Trace("{dataLength} - closed with IOException(SocketException)", data.Length);
             return SocketSendStatus.Closed;
         }
+        catch (Exception e)
+        {
+            this.Error("{dataLength} - closed with {error}", data.Length, e);
+            return SocketSendStatus.Closed;
+        }
     }
 
     public Task<SocketCloseResult> ListenAsync(CancellationToken ct) =>

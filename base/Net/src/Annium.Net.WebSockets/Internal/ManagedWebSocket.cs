@@ -1,4 +1,5 @@
 using System;
+using System.Net.Sockets;
 using System.Net.WebSockets;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -107,6 +108,26 @@ internal class ManagedWebSocket : ISendingReceivingWebSocket, ILogSubject
         {
             this.Trace(
                 "{messageType} ({dataLength}) - closed with WebSocketException: {e}",
+                messageType,
+                data.Length,
+                e
+            );
+            return WebSocketSendStatus.Closed;
+        }
+        catch (SocketException e)
+        {
+            this.Trace(
+                "{messageType} ({dataLength}) - closed with SocketException: {e}",
+                messageType,
+                data.Length,
+                e
+            );
+            return WebSocketSendStatus.Closed;
+        }
+        catch (Exception e)
+        {
+            this.Error(
+                "{messageType} ({dataLength}) - closed with Exception: {e}",
                 messageType,
                 data.Length,
                 e
