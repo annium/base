@@ -64,8 +64,7 @@ public abstract class TestBase : ILogSubject
     public T Get<T>()
         where T : notnull => _sp.Value.Resolve<T>();
 
-    public T GetKeyed<TKey, T>(TKey key)
-        where TKey : notnull
+    public T GetKeyed<T>(object key)
         where T : notnull => _sp.Value.ResolveKeyed<T>(key);
 
     private void SharedRegister(IServiceContainer container)
