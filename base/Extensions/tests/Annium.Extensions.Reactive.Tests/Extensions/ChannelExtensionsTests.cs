@@ -9,11 +9,11 @@ using Annium.Testing;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace Annium.Extensions.Reactive.Tests.Creation;
+namespace Annium.Extensions.Reactive.Tests.Extensions;
 
-public class ChannelTests : TestBase
+public class ChannelExtensionsTests : TestBase
 {
-    public ChannelTests(ITestOutputHelper outputHelper)
+    public ChannelExtensionsTests(ITestOutputHelper outputHelper)
         : base(outputHelper) { }
 
     [Fact]
@@ -45,7 +45,7 @@ public class ChannelTests : TestBase
 
         // assert
         this.Trace("assert log is complete");
-        await Expect.To(() => log.Has(data.Length));
+        log.Has(data.Length);
 
         this.Trace("assert log matches data and dispose callback is not called");
         log.SequenceEqual(data).IsTrue();
