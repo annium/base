@@ -2,6 +2,7 @@ using System;
 using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
+using Annium.Logging;
 using Annium.Net.Servers.Web;
 using Xunit.Abstractions;
 
@@ -34,10 +35,18 @@ public abstract class TestBase : Testing.TestBase
 
         return Disposable.Create(async () =>
         {
+            this.Trace("start");
+
             // await before cancellation for a while
             await Task.Delay(5, CancellationToken.None);
+
+            this.Trace("cancel server run");
             cts.Cancel();
+
+            this.Trace("await server task");
             await serverTask;
+
+            this.Trace("done");
         });
     }
 }

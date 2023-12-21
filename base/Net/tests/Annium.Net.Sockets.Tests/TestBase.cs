@@ -53,7 +53,7 @@ public abstract class TestBase : Testing.TestBase
             this.Trace("await server task");
             await serverTask;
 
-            this.Trace("cancel");
+            this.Trace("done");
         });
     }
 
