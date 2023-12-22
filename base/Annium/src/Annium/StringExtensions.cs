@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -10,13 +11,13 @@ namespace Annium;
 public static class StringExtensions
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsFilled(this string? value) => !string.IsNullOrWhiteSpace(value);
+    public static bool IsFilled([NotNullWhen(true)] this string? value) => !string.IsNullOrWhiteSpace(value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsNullOrEmpty(this string? value) => string.IsNullOrEmpty(value);
+    public static bool IsNullOrEmpty([NotNullWhen(false)] this string? value) => string.IsNullOrEmpty(value);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsNullOrWhiteSpace(this string? value) => string.IsNullOrWhiteSpace(value);
+    public static bool IsNullOrWhiteSpace([NotNullWhen(false)] this string? value) => string.IsNullOrWhiteSpace(value);
 
     public static string UpperFirst(this string value)
     {
