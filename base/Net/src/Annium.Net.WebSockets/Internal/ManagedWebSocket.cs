@@ -116,22 +116,12 @@ internal class ManagedWebSocket : ISendingReceivingWebSocket, ILogSubject
         }
         catch (SocketException e)
         {
-            this.Trace(
-                "{messageType} ({dataLength}) - closed with SocketException: {e}",
-                messageType,
-                data.Length,
-                e
-            );
+            this.Trace("{messageType} ({dataLength}) - closed with SocketException: {e}", messageType, data.Length, e);
             return WebSocketSendStatus.Closed;
         }
         catch (Exception e)
         {
-            this.Error(
-                "{messageType} ({dataLength}) - closed with Exception: {e}",
-                messageType,
-                data.Length,
-                e
-            );
+            this.Error("{messageType} ({dataLength}) - closed with Exception: {e}", messageType, data.Length, e);
             return WebSocketSendStatus.Closed;
         }
     }

@@ -119,7 +119,8 @@ public class SingleRegistrationTest : TestBase
         Build();
 
         // assert
-        GetKeyed<Func<B>>(nameof(B))().Is(Get<B>());
+        GetKeyed<Func<B>>(nameof(B))()
+            .Is(Get<B>());
     }
 
     [Fact]
@@ -132,7 +133,8 @@ public class SingleRegistrationTest : TestBase
         Build();
 
         // assert
-        GetKeyed<Func<A>>(nameof(B))().Is(Get<B>());
+        GetKeyed<Func<A>>(nameof(B))()
+            .Is(Get<B>());
     }
 
     private sealed class B : A, IB

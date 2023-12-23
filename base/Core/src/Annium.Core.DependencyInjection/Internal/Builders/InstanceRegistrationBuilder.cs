@@ -29,11 +29,10 @@ internal class InstanceRegistrationBuilder : IInstanceRegistrationBuilderBase
     public IInstanceRegistrationBuilderBase AsInterfaces() =>
         WithRegistrations(_type.GetInterfaces().Select(x => new InstanceRegistration(x, _instance)));
 
-    public IInstanceRegistrationBuilderBase AsKeyedSelf(object key)
-        => WithRegistration(new KeyedInstanceRegistration(_type, key, _instance));
+    public IInstanceRegistrationBuilderBase AsKeyedSelf(object key) =>
+        WithRegistration(new KeyedInstanceRegistration(_type, key, _instance));
 
-    public IInstanceRegistrationBuilderBase AsKeyed(Type serviceType, object key)
-        =>
+    public IInstanceRegistrationBuilderBase AsKeyed(Type serviceType, object key) =>
         WithRegistration(new KeyedInstanceRegistration(serviceType, key, _instance));
 
     public IInstanceRegistrationBuilderBase AsSelfFactory() =>
@@ -42,12 +41,10 @@ internal class InstanceRegistrationBuilder : IInstanceRegistrationBuilderBase
     public IInstanceRegistrationBuilderBase AsFactory(Type serviceType) =>
         WithRegistration(new InstanceFactoryRegistration(serviceType, _instance));
 
-    public IInstanceRegistrationBuilderBase AsKeyedSelfFactory(object key)
-        =>
+    public IInstanceRegistrationBuilderBase AsKeyedSelfFactory(object key) =>
         WithRegistration(new KeyedInstanceFactoryRegistration(_type, key, _instance));
 
-    public IInstanceRegistrationBuilderBase AsKeyedFactory(Type serviceType, object key)
-        =>
+    public IInstanceRegistrationBuilderBase AsKeyedFactory(Type serviceType, object key) =>
         WithRegistration(new KeyedInstanceFactoryRegistration(serviceType, key, _instance));
 
     public IServiceContainer Singleton()
