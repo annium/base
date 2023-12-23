@@ -1,5 +1,4 @@
 using System;
-using System.Linq.Expressions;
 using Annium.Logging;
 
 namespace Annium.Data.Tables.Internal;
@@ -8,7 +7,7 @@ internal class TableBuilder<T> : ITableBuilder<T>
     where T : notnull
 {
     private TablePermission _permissions;
-    private Expression<Func<T, object>>? _getKey;
+    private GetKey<T>? _getKey;
     private HasChanged<T>? _hasChanged;
     private Update<T>? _update;
     private Func<T, bool>? _isActive;
@@ -26,7 +25,7 @@ internal class TableBuilder<T> : ITableBuilder<T>
         return this;
     }
 
-    public ITableBuilder<T> Key(Expression<Func<T, object>> getKey)
+    public ITableBuilder<T> Key(GetKey<T> getKey)
     {
         _getKey = getKey;
 
@@ -53,9 +52,9 @@ internal class TableBuilder<T> : ITableBuilder<T>
         if (_getKey is null)
             throw new InvalidOperationException($"Table<{typeof(T).Name},{typeof(T).Name}> must have key");
 
-        var getKey = TableHelper.BuildGetKey(_getKey);
+        var getKey = _getKey ?? throw new InvalidOperationException("Key resolution function not specified");
         var hasChanged = _hasChanged ?? ((_, _) => true);
-        var update = _update ?? TableHelper.BuildUpdate<T>(_permissions);
+        var update = _update ?? throw new InvalidOperationException("Update function not specified");
         var isActive = _isActive ?? (_ => true);
 
         return new Table<T>(_permissions, getKey, hasChanged, update, isActive, _logger);

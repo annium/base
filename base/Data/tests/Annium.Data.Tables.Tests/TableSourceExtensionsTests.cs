@@ -20,9 +20,19 @@ public class TableSourceExtensionsTests : TestBase
     public void MapWriteTo_Works()
     {
         // arrange - init
-        var source = Get<ITableFactory>().New<Raw>().Allow(TablePermission.All).Key(x => x.Key).Build();
+        var source = Get<ITableFactory>()
+            .New<Raw>()
+            .Allow(TablePermission.All)
+            .Key(x => x.Key)
+            .UpdateWith((a, b) => a.Stamp != b.Stamp, (s, v) => s.Update(v.Stamp))
+            .Build();
         source.Init(new[] { new Raw(1, 2), new Raw(2, 3) });
-        var target = Get<ITableFactory>().New<Sample>().Allow(TablePermission.All).Key(x => x.Key).Build();
+        var target = Get<ITableFactory>()
+            .New<Sample>()
+            .Allow(TablePermission.All)
+            .Key(x => x.Key)
+            .UpdateWith((a, b) => a.Data != b.Data, (s, v) => s.Update(v.Data))
+            .Build();
         var log = new TestLog<IChangeEvent<Sample>>();
 
         // arrange - prepare log
@@ -52,9 +62,19 @@ public class TableSourceExtensionsTests : TestBase
     public void MapAppendTo_Works()
     {
         // arrange - init
-        var source = Get<ITableFactory>().New<Raw>().Allow(TablePermission.All).Key(x => x.Key).Build();
+        var source = Get<ITableFactory>()
+            .New<Raw>()
+            .Allow(TablePermission.All)
+            .Key(x => x.Key)
+            .UpdateWith((a, b) => a.Stamp != b.Stamp, (s, v) => s.Update(v.Stamp))
+            .Build();
         source.Init(new[] { new Raw(1, 2), new Raw(2, 3) });
-        var target = Get<ITableFactory>().New<Sample>().Allow(TablePermission.All).Key(x => x.Key).Build();
+        var target = Get<ITableFactory>()
+            .New<Sample>()
+            .Allow(TablePermission.All)
+            .Key(x => x.Key)
+            .UpdateWith((a, b) => a.Data != b.Data, (s, v) => s.Update(v.Data))
+            .Build();
         var log = new List<IChangeEvent<Sample>>();
 
         // arrange - prepare log
@@ -86,7 +106,12 @@ public class TableSourceExtensionsTests : TestBase
     public async Task SyncAddRemove_Works()
     {
         // arrange
-        var table = Get<ITableFactory>().New<Sample>().Allow(TablePermission.All).Key(x => x.Key).Build();
+        var table = Get<ITableFactory>()
+            .New<Sample>()
+            .Allow(TablePermission.All)
+            .Key(x => x.Key)
+            .UpdateWith((a, b) => a.Data != b.Data, (s, v) => s.Update(v.Data))
+            .Build();
         var initValues = new[] { new Sample(1, "a"), new Sample(2, "b") };
         table.Init(initValues);
         var log = new List<IChangeEvent<Sample>>();
@@ -109,7 +134,12 @@ public class TableSourceExtensionsTests : TestBase
     public async Task SyncAddUpdateRemove_Works()
     {
         // arrange
-        var table = Get<ITableFactory>().New<Sample>().Allow(TablePermission.All).Key(x => x.Key).Build();
+        var table = Get<ITableFactory>()
+            .New<Sample>()
+            .Allow(TablePermission.All)
+            .Key(x => x.Key)
+            .UpdateWith((a, b) => a.Data != b.Data, (s, v) => s.Update(v.Data))
+            .Build();
         var initValues = new[] { new Sample(1, "a"), new Sample(2, "b") };
         table.Init(initValues);
         var log = new List<IChangeEvent<Sample>>();
@@ -132,10 +162,24 @@ public class TableSourceExtensionsTests : TestBase
 
 file sealed record Sample(int Key, string Data) : ICopyable<Sample>
 {
+    public string Data { get; private set; } = Data;
+
+    public void Update(string data)
+    {
+        Data = data;
+    }
+
     public Sample Copy() => this with { };
 }
 
 file sealed record Raw(int Key, long Stamp) : ICopyable<Raw>
 {
+    public long Stamp { get; private set; } = Stamp;
+
+    public void Update(long stamp)
+    {
+        Stamp = stamp;
+    }
+
     public Raw Copy() => this with { };
 }

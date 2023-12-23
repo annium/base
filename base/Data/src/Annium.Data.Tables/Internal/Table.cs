@@ -33,7 +33,7 @@ internal sealed class Table<T> : ITable<T>, ILogSubject
     }
 
     private readonly Dictionary<int, T> _table = new();
-    private readonly Func<T, int> _getKey;
+    private readonly GetKey<T> _getKey;
     private readonly HasChanged<T> _hasChanged;
     private readonly Update<T> _update;
     private readonly Func<T, bool> _isActive;
@@ -46,7 +46,7 @@ internal sealed class Table<T> : ITable<T>, ILogSubject
 
     public Table(
         TablePermission permissions,
-        Func<T, int> getKey,
+        GetKey<T> getKey,
         HasChanged<T> hasChanged,
         Update<T> update,
         Func<T, bool> isActive,

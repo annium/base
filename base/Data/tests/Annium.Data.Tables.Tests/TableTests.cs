@@ -25,6 +25,7 @@ public class TableTests : TestBase
             .Allow(TablePermission.All)
             .Key(x => x.Key)
             .Keep(x => x.IsAlive)
+            .UpdateWith((a, b) => a.IsAlive != b.IsAlive, (s, v) => s.Update(v.IsAlive))
             .Build();
         var log1 = new List<IChangeEvent<Sample>>();
         var log2 = new List<IChangeEvent<Sample>>();
@@ -44,9 +45,16 @@ public class TableTests : TestBase
         log1.At(1).IsEqual(ChangeEvent.Init(initValues));
         log2.At(1).Is(log1.At(1));
     }
+}
 
-    private record Sample(int Key, bool IsAlive) : ICopyable<Sample>
+file record Sample(int Key, bool IsAlive) : ICopyable<Sample>
+{
+    public bool IsAlive { get; private set; } = IsAlive;
+
+    public void Update(bool isAlive)
     {
-        public Sample Copy() => this with { };
+        IsAlive = isAlive;
     }
+
+    public Sample Copy() => this with { };
 }
