@@ -8,9 +8,9 @@ using Xunit.Abstractions;
 
 namespace Annium.Data.Tables.Tests;
 
-public class TableOfTTests : TestBase
+public class TableTests : TestBase
 {
-    public TableOfTTests(ITestOutputHelper outputHelper)
+    public TableTests(ITestOutputHelper outputHelper)
         : base(outputHelper)
     {
         Register(x => x.AddTables());
