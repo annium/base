@@ -1,19 +1,24 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Linq;
+using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using Annium.Logging;
 
 namespace Annium.Data.Tables.Internal;
 
-internal sealed class Table<T> : TableBase<T>, ITable<T>
+internal sealed class Table<T> : ITable<T>, ILogSubject
     where T : notnull
 {
-    public override int Count
+    public ILogger Logger { get; }
+    public int Count
     {
         get
         {
-            lock (DataLocker)
+            lock (_dataLocker)
                 return _table.Count;
         }
     }
@@ -22,7 +27,7 @@ internal sealed class Table<T> : TableBase<T>, ITable<T>
     {
         get
         {
-            lock (DataLocker)
+            lock (_dataLocker)
                 return _table.ToDictionary();
         }
     }
@@ -32,6 +37,12 @@ internal sealed class Table<T> : TableBase<T>, ITable<T>
     private readonly HasChanged<T> _hasChanged;
     private readonly Update<T> _update;
     private readonly Func<T, bool> _isActive;
+    private readonly object _dataLocker = new();
+    private readonly CancellationTokenSource _observableCts = new();
+    private readonly IObservable<IChangeEvent<T>> _observable;
+    private readonly TablePermission _permissions;
+    private readonly ChannelWriter<IChangeEvent<T>> _eventWriter;
+    private readonly ChannelReader<IChangeEvent<T>> _eventReader;
 
     public Table(
         TablePermission permissions,
@@ -41,12 +52,52 @@ internal sealed class Table<T> : TableBase<T>, ITable<T>
         Func<T, bool> isActive,
         ILogger logger
     )
-        : base(permissions, logger)
     {
+        Logger = logger;
         _getKey = getKey;
         _hasChanged = hasChanged;
         _update = update;
         _isActive = isActive;
+        _permissions = permissions;
+
+        var taskChannel = Channel.CreateUnbounded<IChangeEvent<T>>(
+            new UnboundedChannelOptions
+            {
+                AllowSynchronousContinuations = true,
+                SingleWriter = false,
+                SingleReader = true
+            }
+        );
+        _eventWriter = taskChannel.Writer;
+        _eventReader = taskChannel.Reader;
+
+        _observable = CreateObservable(_observableCts.Token, logger).TrackCompletion(logger);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        this.Trace("start, complete writer");
+        _eventWriter.Complete();
+
+        this.Trace("cancel observable");
+        await _observableCts.CancelAsync();
+
+        this.Trace("await observable completion");
+        await _observable.WhenCompleted(Logger);
+
+        this.Trace("clear table");
+        lock (_dataLocker)
+            _table.Clear();
+
+        this.Trace("done");
+    }
+
+    public IDisposable Subscribe(IObserver<IChangeEvent<T>> observer)
+    {
+        var init = ChangeEvent.Init(Get());
+        observer.OnNext(init);
+
+        return _observable.Subscribe(observer);
     }
 
     public int GetKey(T value) => _getKey(value);
@@ -55,7 +106,7 @@ internal sealed class Table<T> : TableBase<T>, ITable<T>
     {
         EnsurePermission(TablePermission.Init);
 
-        lock (DataLocker)
+        lock (_dataLocker)
         {
             _table.Clear();
 
@@ -73,7 +124,7 @@ internal sealed class Table<T> : TableBase<T>, ITable<T>
     {
         var key = _getKey(entry);
 
-        lock (DataLocker)
+        lock (_dataLocker)
         {
             var exists = _table.ContainsKey(key);
             if (exists)
@@ -104,7 +155,7 @@ internal sealed class Table<T> : TableBase<T>, ITable<T>
         EnsurePermission(TablePermission.Delete);
         var key = _getKey(entry);
 
-        lock (DataLocker)
+        lock (_dataLocker)
         {
             if (_table.Remove(key, out var item))
                 AddEvent(ChangeEvent.Delete(item));
@@ -113,9 +164,28 @@ internal sealed class Table<T> : TableBase<T>, ITable<T>
         }
     }
 
-    protected override IReadOnlyCollection<T> Get()
+    private void AddEvents(IReadOnlyCollection<IChangeEvent<T>> events)
     {
-        lock (DataLocker)
+        foreach (var @event in events)
+            if (!_eventWriter.TryWrite(@event))
+                throw new InvalidOperationException("Event must have been sent.");
+    }
+
+    private void AddEvent(IChangeEvent<T> @event)
+    {
+        if (!_eventWriter.TryWrite(@event))
+            throw new InvalidOperationException("Event must have been sent.");
+    }
+
+    private void EnsurePermission(TablePermission permission)
+    {
+        if (!_permissions.HasFlag(permission))
+            throw new InvalidOperationException($"Table {GetType().FriendlyName()} has no {permission} permission.");
+    }
+
+    private IReadOnlyCollection<T> Get()
+    {
+        lock (_dataLocker)
             return _table.Values.ToArray();
     }
 
@@ -134,11 +204,34 @@ internal sealed class Table<T> : TableBase<T>, ITable<T>
         AddEvents(removed.Select(ChangeEvent.Delete).ToArray());
     }
 
-    public override async ValueTask DisposeAsync()
-    {
-        await base.DisposeAsync();
+    private IObservable<IChangeEvent<T>> CreateObservable(CancellationToken ct, ILogger logger) =>
+        ObservableExt.StaticSyncInstance<IChangeEvent<T>>(
+            async ctx =>
+            {
+                try
+                {
+                    while (!ctx.Ct.IsCancellationRequested)
+                    {
+                        var message = await _eventReader.ReadAsync(ctx.Ct);
 
-        lock (DataLocker)
-            _table.Clear();
-    }
+                        ctx.OnNext(message);
+                    }
+                }
+                // token was canceled
+                catch (OperationCanceledException) { }
+                catch (ChannelClosedException) { }
+                catch (Exception e)
+                {
+                    ctx.OnError(e);
+                }
+
+                return () => Task.CompletedTask;
+            },
+            ct,
+            logger
+        );
+
+    public IEnumerator<T> GetEnumerator() => Get().GetEnumerator();
+
+    IEnumerator IEnumerable.GetEnumerator() => Get().GetEnumerator();
 }
