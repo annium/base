@@ -32,7 +32,7 @@ internal class TableBuilder<T> : ITableBuilder<T>
         return this;
     }
 
-    public ITableBuilder<T> UpdateWith(HasChanged<T> hasChanged, Update<T> update)
+    public ITableBuilder<T> Set(HasChanged<T> hasChanged, Update<T> update)
     {
         _hasChanged = hasChanged;
         _update = update;

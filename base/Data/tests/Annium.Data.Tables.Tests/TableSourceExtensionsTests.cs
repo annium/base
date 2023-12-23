@@ -24,14 +24,14 @@ public class TableSourceExtensionsTests : TestBase
             .New<Raw>()
             .Allow(TablePermission.All)
             .Key(x => x.Key)
-            .UpdateWith((a, b) => a.Stamp != b.Stamp, (s, v) => s.Update(v.Stamp))
+            .Set((a, b) => a.Stamp != b.Stamp, (s, v) => s.Update(v.Stamp))
             .Build();
         source.Init(new[] { new Raw(1, 2), new Raw(2, 3) });
         var target = Get<ITableFactory>()
             .New<Sample>()
             .Allow(TablePermission.All)
             .Key(x => x.Key)
-            .UpdateWith((a, b) => a.Data != b.Data, (s, v) => s.Update(v.Data))
+            .Set((a, b) => a.Data != b.Data, (s, v) => s.Update(v.Data))
             .Build();
         var log = new TestLog<IChangeEvent<Sample>>();
 
@@ -66,14 +66,14 @@ public class TableSourceExtensionsTests : TestBase
             .New<Raw>()
             .Allow(TablePermission.All)
             .Key(x => x.Key)
-            .UpdateWith((a, b) => a.Stamp != b.Stamp, (s, v) => s.Update(v.Stamp))
+            .Set((a, b) => a.Stamp != b.Stamp, (s, v) => s.Update(v.Stamp))
             .Build();
         source.Init(new[] { new Raw(1, 2), new Raw(2, 3) });
         var target = Get<ITableFactory>()
             .New<Sample>()
             .Allow(TablePermission.All)
             .Key(x => x.Key)
-            .UpdateWith((a, b) => a.Data != b.Data, (s, v) => s.Update(v.Data))
+            .Set((a, b) => a.Data != b.Data, (s, v) => s.Update(v.Data))
             .Build();
         var log = new List<IChangeEvent<Sample>>();
 
@@ -110,7 +110,7 @@ public class TableSourceExtensionsTests : TestBase
             .New<Sample>()
             .Allow(TablePermission.All)
             .Key(x => x.Key)
-            .UpdateWith((a, b) => a.Data != b.Data, (s, v) => s.Update(v.Data))
+            .Set((a, b) => a.Data != b.Data, (s, v) => s.Update(v.Data))
             .Build();
         var initValues = new[] { new Sample(1, "a"), new Sample(2, "b") };
         table.Init(initValues);
@@ -138,7 +138,7 @@ public class TableSourceExtensionsTests : TestBase
             .New<Sample>()
             .Allow(TablePermission.All)
             .Key(x => x.Key)
-            .UpdateWith((a, b) => a.Data != b.Data, (s, v) => s.Update(v.Data))
+            .Set((a, b) => a.Data != b.Data, (s, v) => s.Update(v.Data))
             .Build();
         var initValues = new[] { new Sample(1, "a"), new Sample(2, "b") };
         table.Init(initValues);

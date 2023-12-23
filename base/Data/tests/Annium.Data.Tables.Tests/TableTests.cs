@@ -25,7 +25,7 @@ public class TableTests : TestBase
             .Allow(TablePermission.All)
             .Key(x => x.Key)
             .Keep(x => x.IsAlive)
-            .UpdateWith((a, b) => a.IsAlive != b.IsAlive, (s, v) => s.Update(v.IsAlive))
+            .Set((a, b) => a.IsAlive != b.IsAlive, (s, v) => s.Update(v.IsAlive))
             .Build();
         var log1 = new List<IChangeEvent<Sample>>();
         var log2 = new List<IChangeEvent<Sample>>();
