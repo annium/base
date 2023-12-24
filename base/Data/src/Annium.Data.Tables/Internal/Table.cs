@@ -34,8 +34,8 @@ internal sealed class Table<T> : ITable<T>, ILogSubject
 
     private readonly Dictionary<int, T> _table = new();
     private readonly GetKey<T> _getKey;
-    private readonly HasChanged<T> _hasChanged;
-    private readonly Update<T> _update;
+    private readonly HasChanged<T, T> _hasChanged;
+    private readonly Update<T, T> _update;
     private readonly Func<T, bool> _isActive;
     private readonly object _dataLocker = new();
     private readonly CancellationTokenSource _observableCts = new();
@@ -47,8 +47,8 @@ internal sealed class Table<T> : ITable<T>, ILogSubject
     public Table(
         TablePermission permissions,
         GetKey<T> getKey,
-        HasChanged<T> hasChanged,
-        Update<T> update,
+        HasChanged<T, T> hasChanged,
+        Update<T, T> update,
         Func<T, bool> isActive,
         ILogger logger
     )

@@ -7,7 +7,7 @@ public interface ITableBuilder<T>
 {
     ITableBuilder<T> Allow(TablePermission permissions);
     ITableBuilder<T> Key(GetKey<T> getKey);
-    ITableBuilder<T> Set(HasChanged<T> hasChanged, Update<T> update);
+    ITableBuilder<T> Set(HasChanged<T, T> hasChanged, Update<T, T> update);
     ITableBuilder<T> Keep(Func<T, bool> isActive);
     ITable<T> Build();
 }

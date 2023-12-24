@@ -8,8 +8,8 @@ internal class TableBuilder<T> : ITableBuilder<T>
 {
     private TablePermission _permissions;
     private GetKey<T>? _getKey;
-    private HasChanged<T>? _hasChanged;
-    private Update<T>? _update;
+    private HasChanged<T, T>? _hasChanged;
+    private Update<T, T>? _update;
     private Func<T, bool>? _isActive;
     private readonly ILogger _logger;
 
@@ -32,7 +32,7 @@ internal class TableBuilder<T> : ITableBuilder<T>
         return this;
     }
 
-    public ITableBuilder<T> Set(HasChanged<T> hasChanged, Update<T> update)
+    public ITableBuilder<T> Set(HasChanged<T, T> hasChanged, Update<T, T> update)
     {
         _hasChanged = hasChanged;
         _update = update;
