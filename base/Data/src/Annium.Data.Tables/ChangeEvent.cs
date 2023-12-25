@@ -1,73 +1,87 @@
+using System;
 using System.Collections.Generic;
-using Annium.Core.Runtime.Types;
+using System.Linq;
 
 namespace Annium.Data.Tables;
 
 public static class ChangeEvent
 {
-    public static IChangeEvent<T> Init<T>(IReadOnlyCollection<T> values) => new InitEvent<T>(values);
-
-    public static IChangeEvent<T> Add<T>(T value) => new AddEvent<T>(value);
-
-    public static IChangeEvent<T> Update<T>(T value) => new UpdateEvent<T>(value);
-
-    public static IChangeEvent<T> Delete<T>(T value) => new DeleteEvent<T>(value);
-}
-
-public class InitEvent<T> : IChangeEvent<T>
-{
-    public string Tid => GetType().GetIdString();
-    public IReadOnlyCollection<T> Values { get; }
-
-    internal InitEvent(IReadOnlyCollection<T> values)
+    public static ChangeEvent<T> Init<T>(IReadOnlyCollection<T> values)
+        where T : notnull
     {
-        Values = values;
+        return new ChangeEvent<T>(values);
     }
 
-    public override string ToString() => $"Init {typeof(T).Name} with {Values.Count} value(s)";
-}
-
-public class AddEvent<T> : IChangeEvent<T>
-{
-    public string Tid => GetType().GetIdString();
-    public T Value { get; }
-
-    internal AddEvent(T value)
+    public static ChangeEvent<T> Set<T>(T value)
+        where T : notnull
     {
-        Value = value;
+        return new ChangeEvent<T>(ChangeEventType.Set, value);
     }
 
-    public override string ToString() => $"Add {typeof(T).Name} {Value}";
+    public static ChangeEvent<T> Delete<T>(T value)
+        where T : notnull
+    {
+        return new ChangeEvent<T>(ChangeEventType.Delete, value);
+    }
 }
 
-public class UpdateEvent<T> : IChangeEvent<T>
+public readonly struct ChangeEvent<T>
+    where T : notnull
 {
-    public string Tid => GetType().GetIdString();
-    public T Value { get; }
-
-    internal UpdateEvent(T value)
+    public readonly ChangeEventType Type;
+    public T Item
     {
-        Value = value;
+        get
+        {
+            if (Type is not (ChangeEventType.Set or ChangeEventType.Delete))
+                throw new InvalidOperationException($"this {typeof(T).FriendlyName()} is {Type}");
+
+            return _item!;
+        }
     }
 
-    public override string ToString() => $"Update {typeof(T).Name} {Value}";
-}
-
-public class DeleteEvent<T> : IChangeEvent<T>
-{
-    public string Tid => GetType().GetIdString();
-    public T Value { get; }
-
-    internal DeleteEvent(T value)
+    public IReadOnlyCollection<T> Items
     {
-        Value = value;
+        get
+        {
+            if (Type is not ChangeEventType.Init)
+                throw new InvalidOperationException($"this {typeof(T).FriendlyName()} is {Type}");
+
+            return _items!;
+        }
     }
 
-    public override string ToString() => $"Delete {typeof(T).Name} {Value}";
-}
+    private readonly T? _item;
+    private readonly IReadOnlyCollection<T>? _items;
 
-public interface IChangeEvent<out T>
-{
-    [ResolutionId]
-    public string Tid { get; }
+    public ChangeEvent(ChangeEventType type, T item)
+    {
+        Type = type;
+        _item = item;
+    }
+
+    internal ChangeEvent(IReadOnlyCollection<T> items)
+    {
+        Type = ChangeEventType.Init;
+        _items = items;
+    }
+
+    public bool Equals(ChangeEvent<T>? other)
+    {
+        if (other is null || Type != other.Value.Type)
+            return false;
+
+        if (Type is ChangeEventType.Init)
+            return Items.SequenceEqual(other.Value.Items);
+
+        return Item.Equals(other.Value.Item);
+    }
+
+    public override string ToString()
+    {
+        if (Type is ChangeEventType.Init)
+            return $"{Type}: {typeof(T).FriendlyName()}[{Items.Count}]";
+
+        return $"{Type}: {typeof(T).FriendlyName()}";
+    }
 }

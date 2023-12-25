@@ -39,10 +39,10 @@ internal sealed class Table<T> : ITable<T>, ILogSubject
     private readonly Func<T, bool> _isActive;
     private readonly object _dataLocker = new();
     private readonly CancellationTokenSource _observableCts = new();
-    private readonly IObservable<IChangeEvent<T>> _observable;
+    private readonly IObservable<ChangeEvent<T>> _observable;
     private readonly TablePermission _permissions;
-    private readonly ChannelWriter<IChangeEvent<T>> _eventWriter;
-    private readonly ChannelReader<IChangeEvent<T>> _eventReader;
+    private readonly ChannelWriter<ChangeEvent<T>> _eventWriter;
+    private readonly ChannelReader<ChangeEvent<T>> _eventReader;
 
     public Table(
         TablePermission permissions,
@@ -60,7 +60,7 @@ internal sealed class Table<T> : ITable<T>, ILogSubject
         _isActive = isActive;
         _permissions = permissions;
 
-        var taskChannel = Channel.CreateUnbounded<IChangeEvent<T>>(
+        var taskChannel = Channel.CreateUnbounded<ChangeEvent<T>>(
             new UnboundedChannelOptions
             {
                 AllowSynchronousContinuations = true,
@@ -92,7 +92,7 @@ internal sealed class Table<T> : ITable<T>, ILogSubject
         this.Trace("done");
     }
 
-    public IDisposable Subscribe(IObserver<IChangeEvent<T>> observer)
+    public IDisposable Subscribe(IObserver<ChangeEvent<T>> observer)
     {
         var init = ChangeEvent.Init(Get());
         observer.OnNext(init);
@@ -136,14 +136,14 @@ internal sealed class Table<T> : ITable<T>, ILogSubject
                 {
                     _update(value, entry);
                     if (_isActive(value))
-                        AddEvent(ChangeEvent.Update(value));
+                        AddEvent(ChangeEvent.Set(value));
                 }
             }
             else
             {
                 EnsurePermission(TablePermission.Add);
                 var value = _table[key] = entry;
-                AddEvent(ChangeEvent.Add(value));
+                AddEvent(ChangeEvent.Set(value));
             }
 
             Cleanup();
@@ -164,14 +164,14 @@ internal sealed class Table<T> : ITable<T>, ILogSubject
         }
     }
 
-    private void AddEvents(IReadOnlyCollection<IChangeEvent<T>> events)
+    private void AddEvents(IReadOnlyCollection<ChangeEvent<T>> events)
     {
         foreach (var @event in events)
             if (!_eventWriter.TryWrite(@event))
                 throw new InvalidOperationException("Event must have been sent.");
     }
 
-    private void AddEvent(IChangeEvent<T> @event)
+    private void AddEvent(ChangeEvent<T> @event)
     {
         if (!_eventWriter.TryWrite(@event))
             throw new InvalidOperationException("Event must have been sent.");
@@ -204,8 +204,8 @@ internal sealed class Table<T> : ITable<T>, ILogSubject
         AddEvents(removed.Select(ChangeEvent.Delete).ToArray());
     }
 
-    private IObservable<IChangeEvent<T>> CreateObservable(CancellationToken ct, ILogger logger) =>
-        ObservableExt.StaticSyncInstance<IChangeEvent<T>>(
+    private IObservable<ChangeEvent<T>> CreateObservable(CancellationToken ct, ILogger logger) =>
+        ObservableExt.StaticSyncInstance<ChangeEvent<T>>(
             async ctx =>
             {
                 try

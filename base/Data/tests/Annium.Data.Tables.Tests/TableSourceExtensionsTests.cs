@@ -33,12 +33,12 @@ public class TableSourceExtensionsTests : TestBase
             .Key(x => x.Key)
             .Set((a, b) => a.Data != b.Data, (s, v) => s.Update(v.Data))
             .Build();
-        var log = new TestLog<IChangeEvent<Sample>>();
+        var log = new TestLog<ChangeEvent<Sample>>();
 
         // arrange - prepare log
         target.Subscribe(log.Add);
         log.Has(1);
-        log.At(0).As<InitEvent<Sample>>().Values.IsEqual(Array.Empty<Sample>());
+        log.At(0).Items.Is(Array.Empty<Sample>());
 
         // setup map
         source.MapWriteTo(target, x => new Sample(x.Key, x.Stamp.ToString()));
@@ -50,12 +50,12 @@ public class TableSourceExtensionsTests : TestBase
         // assert
         log.Has(6);
         // appears when map is set up
-        log.At(1).As<InitEvent<Sample>>().Values.IsEqual(new[] { new Sample(1, "2"), new Sample(2, "3") });
+        log.At(1).Items.IsEqual(new[] { new Sample(1, "2"), new Sample(2, "3") });
         // appears when init is run on source
-        log.At(2).As<InitEvent<Sample>>().Values.IsEqual(new[] { new Sample(1, "3"), new Sample(2, "4") });
-        log.At(3).As<AddEvent<Sample>>().Value.IsEqual(new Sample(3, "6")); // 6, not 5, because added entity is passed by reference
-        log.At(4).As<UpdateEvent<Sample>>().Value.IsEqual(new Sample(3, "6"));
-        log.At(5).As<DeleteEvent<Sample>>().Value.IsEqual(new Sample(3, "6"));
+        log.At(2).Items.IsEqual(new[] { new Sample(1, "3"), new Sample(2, "4") });
+        log.At(3).Item.Is(new Sample(3, "6")); // 6, not 5, because added entity is passed by reference
+        log.At(4).Item.Is(new Sample(3, "6"));
+        log.At(5).Item.Is(new Sample(3, "6"));
     }
 
     [Fact]
@@ -75,12 +75,12 @@ public class TableSourceExtensionsTests : TestBase
             .Key(x => x.Key)
             .Set((a, b) => a.Data != b.Data, (s, v) => s.Update(v.Data))
             .Build();
-        var log = new List<IChangeEvent<Sample>>();
+        var log = new List<ChangeEvent<Sample>>();
 
         // arrange - prepare log
-        target.Subscribe(log.Add);
+        target.Subscribe(x => log.Add(x));
         log.Has(1);
-        log.At(0).As<InitEvent<Sample>>().Values.IsEqual(Array.Empty<Sample>());
+        log.At(0).Items.IsEqual(Array.Empty<Sample>());
 
         // setup map
         source.MapAppendTo(target, x => new Sample(x.Key, x.Stamp.ToString()));
@@ -92,14 +92,14 @@ public class TableSourceExtensionsTests : TestBase
         // assert
         log.Has(8);
         // appears when map is set up
-        log.At(1).As<AddEvent<Sample>>().Value.IsEqual(new Sample(1, "3")); // 3, not 2, because added entity is passed by reference
-        log.At(2).As<AddEvent<Sample>>().Value.IsEqual(new Sample(2, "4")); // 4, not 3, because added entity is passed by reference
+        log.At(1).Item.IsEqual(new Sample(1, "3")); // 3, not 2, because added entity is passed by reference
+        log.At(2).Item.IsEqual(new Sample(2, "4")); // 4, not 3, because added entity is passed by reference
         // appears when init is run on source
-        log.At(3).As<UpdateEvent<Sample>>().Value.IsEqual(new Sample(1, "3"));
-        log.At(4).As<UpdateEvent<Sample>>().Value.IsEqual(new Sample(2, "4"));
-        log.At(5).As<AddEvent<Sample>>().Value.IsEqual(new Sample(3, "6")); // 6, not 5, because added entity is passed by reference
-        log.At(6).As<UpdateEvent<Sample>>().Value.IsEqual(new Sample(3, "6"));
-        log.At(7).As<DeleteEvent<Sample>>().Value.IsEqual(new Sample(3, "6"));
+        log.At(3).Item.IsEqual(new Sample(1, "3"));
+        log.At(4).Item.IsEqual(new Sample(2, "4"));
+        log.At(5).Item.IsEqual(new Sample(3, "6")); // 6, not 5, because added entity is passed by reference
+        log.At(6).Item.IsEqual(new Sample(3, "6"));
+        log.At(7).Item.IsEqual(new Sample(3, "6"));
     }
 
     [Fact]
@@ -114,20 +114,20 @@ public class TableSourceExtensionsTests : TestBase
             .Build();
         var initValues = new[] { new Sample(1, "a"), new Sample(2, "b") };
         table.Init(initValues);
-        var log = new List<IChangeEvent<Sample>>();
+        var log = new List<ChangeEvent<Sample>>();
 
         // subscribe will emit init events
         table.Subscribe(log.Add);
         log.Has(1);
-        log.At(0).IsEqual(ChangeEvent.Init(initValues));
+        log.At(0).Equals(ChangeEvent.Init(initValues)).IsTrue();
 
         // sync with some data
         var syncValues = new[] { new Sample(1, "a"), new Sample(3, "c") };
         table.SyncAddDelete(syncValues);
         await Task.Delay(100);
         log.Has(3);
-        log.At(1).IsEqual(ChangeEvent.Delete(initValues[1]));
-        log.At(2).IsEqual(ChangeEvent.Add(syncValues[1]));
+        log.At(1).Equals(ChangeEvent.Delete(initValues[1])).IsTrue();
+        log.At(2).Equals(ChangeEvent.Set(syncValues[1])).IsTrue();
     }
 
     [Fact]
@@ -142,21 +142,21 @@ public class TableSourceExtensionsTests : TestBase
             .Build();
         var initValues = new[] { new Sample(1, "a"), new Sample(2, "b") };
         table.Init(initValues);
-        var log = new List<IChangeEvent<Sample>>();
+        var log = new List<ChangeEvent<Sample>>();
 
         // subscribe will emit init events
         table.Subscribe(log.Add);
         log.Has(1);
-        log.At(0).IsEqual(ChangeEvent.Init(initValues));
+        log.At(0).Equals(ChangeEvent.Init(initValues)).IsTrue();
 
         // sync with some data
         var syncValues = new[] { new Sample(1, "z"), new Sample(3, "c") };
         table.SyncAddUpdateDelete(syncValues);
         await Task.Delay(100);
         log.Has(4);
-        log.At(1).IsEqual(ChangeEvent.Delete(initValues[1]));
-        log.At(2).IsEqual(ChangeEvent.Update(syncValues[0]));
-        log.At(3).IsEqual(ChangeEvent.Add(syncValues[1]));
+        log.At(1).Equals(ChangeEvent.Delete(initValues[1])).IsTrue();
+        log.At(2).Equals(ChangeEvent.Set(syncValues[0])).IsTrue();
+        log.At(3).Equals(ChangeEvent.Set(syncValues[1])).IsTrue();
     }
 }
 

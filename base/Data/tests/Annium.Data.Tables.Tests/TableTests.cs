@@ -27,22 +27,22 @@ public class TableTests : TestBase
             .Keep(x => x.IsAlive)
             .Set((a, b) => a.IsAlive != b.IsAlive, (s, v) => s.Update(v.IsAlive))
             .Build();
-        var log1 = new List<IChangeEvent<Sample>>();
-        var log2 = new List<IChangeEvent<Sample>>();
+        var log1 = new List<ChangeEvent<Sample>>();
+        var log2 = new List<ChangeEvent<Sample>>();
 
         // subscribe will emit init events
         table.Subscribe(log1.Add);
         table.Subscribe(log2.Add);
         log1.Has(1);
-        log1.At(0).IsEqual(ChangeEvent.Init(Array.Empty<Sample>()));
-        log2.At(0).IsEqual(log1.At(0));
+        log1.At(0).Is(ChangeEvent.Init(Array.Empty<Sample>()));
+        log2.At(0).Is(log1.At(0));
 
         // init with some data
         var initValues = new[] { new Sample(1, true) };
         table.Init(initValues);
         await Expect.To(() => log1.Count.IsGreater(1));
         log1.Has(2);
-        log1.At(1).IsEqual(ChangeEvent.Init(initValues));
+        log1.At(1).Equals(ChangeEvent.Init(initValues)).IsTrue();
         log2.At(1).Is(log1.At(1));
     }
 }

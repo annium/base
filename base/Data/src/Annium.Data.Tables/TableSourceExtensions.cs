@@ -7,73 +7,85 @@ namespace Annium.Data.Tables;
 public static class TableSourceExtensions
 {
     public static IDisposable MapWriteTo<TS, TD>(
-        this IObservable<IChangeEvent<TS>> source,
+        this IObservable<ChangeEvent<TS>> source,
         ITableSource<TD> target,
         Func<TS, TD?> map
     )
-        where TD : notnull => source.Subscribe(e => target.MapWrite(e, map));
-
-    public static IDisposable MapAppendTo<TS, TD>(
-        this IObservable<IChangeEvent<TS>> source,
-        ITableSource<TD> target,
-        Func<TS, TD?> map
-    )
-        where TD : notnull => source.Subscribe(e => target.MapAppend(e, map));
-
-    private static void MapWrite<TS, TD>(this ITableSource<TD> target, IChangeEvent<TS> e, Func<TS, TD?> map)
+        where TS : notnull
         where TD : notnull
     {
-        switch (e)
+        return source.Subscribe(e => target.MapWrite(e, map));
+    }
+
+    public static IDisposable MapAppendTo<TS, TD>(
+        this IObservable<ChangeEvent<TS>> source,
+        ITableSource<TD> target,
+        Func<TS, TD?> map
+    )
+        where TS : notnull
+        where TD : notnull
+    {
+        return source.Subscribe(e => target.MapAppend(e, map));
+    }
+
+    private static void MapWrite<TS, TD>(this ITableSource<TD> target, ChangeEvent<TS> e, Func<TS, TD?> map)
+        where TS : notnull
+        where TD : notnull
+    {
+        switch (e.Type)
         {
-            case InitEvent<TS> init:
-                target.Init(init.Values.Select(map).OfType<TD>().ToArray());
+            case ChangeEventType.Init:
+                target.Init(e.Items.Select(map).OfType<TD>().ToArray());
                 break;
-            case AddEvent<TS> add:
-                var addValue = map(add.Value);
-                if (addValue is not null)
-                    target.Set(addValue);
+            case ChangeEventType.Set:
+
+                {
+                    var item = map(e.Item);
+                    if (item is not null)
+                        target.Set(item);
+                }
                 break;
-            case UpdateEvent<TS> update:
-                var updateValue = map(update.Value);
-                if (updateValue is not null)
-                    target.Set(updateValue);
-                break;
-            case DeleteEvent<TS> delete:
-                var deleteValue = map(delete.Value);
-                if (deleteValue is not null)
-                    target.Delete(deleteValue);
+            case ChangeEventType.Delete:
+
+                {
+                    var item = map(e.Item);
+                    if (item is not null)
+                        target.Delete(item);
+                }
                 break;
         }
     }
 
-    private static void MapAppend<TS, TD>(this ITableSource<TD> target, IChangeEvent<TS> e, Func<TS, TD?> map)
+    private static void MapAppend<TS, TD>(this ITableSource<TD> target, ChangeEvent<TS> e, Func<TS, TD?> map)
+        where TS : notnull
         where TD : notnull
     {
-        switch (e)
+        switch (e.Type)
         {
-            case InitEvent<TS> init:
-                foreach (var value in init.Values)
+            case ChangeEventType.Init:
+                foreach (var i in e.Items)
                 {
-                    var initValue = map(value);
-                    if (initValue is not null)
-                        target.Set(initValue);
+                    var item = map(i);
+                    if (item is not null)
+                        target.Set(item);
                 }
 
                 break;
-            case AddEvent<TS> add:
-                var addValue = map(add.Value);
-                if (addValue is not null)
-                    target.Set(addValue);
+            case ChangeEventType.Set:
+
+                {
+                    var item = map(e.Item);
+                    if (item is not null)
+                        target.Set(item);
+                }
                 break;
-            case UpdateEvent<TS> update:
-                var updateValue = map(update.Value);
-                if (updateValue is not null)
-                    target.Set(updateValue);
-                break;
-            case DeleteEvent<TS> delete:
-                var deleteValue = map(delete.Value);
-                if (deleteValue is not null)
-                    target.Delete(deleteValue);
+            case ChangeEventType.Delete:
+
+                {
+                    var item = map(e.Item);
+                    if (item is not null)
+                        target.Delete(item);
+                }
                 break;
         }
     }
