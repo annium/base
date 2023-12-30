@@ -50,42 +50,42 @@ public static class AsResponseExtensions
         }
     }
 
-    public static async Task<IHttpResponse<OneOf<TSuccess?, TFailure>>> AsResponseAsync<TSuccess, TFailure>(
+    public static async Task<IHttpResponse<OneOf<TSuccess, TFailure?>>> AsResponseAsync<TSuccess, TFailure>(
         this IHttpRequest request,
         CancellationToken ct = default
     )
     {
         var response = await request.RunAsync(ct);
         if (response.IsAbort)
-            return new HttpResponse<OneOf<TSuccess?, TFailure>>(response, default(TSuccess));
+            return new HttpResponse<OneOf<TSuccess, TFailure?>>(response, default(TFailure));
 
         try
         {
             var success = await ContentParser.ParseAsync<TSuccess>(request.Serializer, response.Content);
             if (!Equals(success, default(TSuccess)))
-                return new HttpResponse<OneOf<TSuccess?, TFailure>>(response, success);
+                return new HttpResponse<OneOf<TSuccess, TFailure?>>(response, success);
 
             var failure = await ContentParser.ParseAsync<TFailure>(request.Serializer, response.Content);
             if (!Equals(failure, default(TFailure)))
-                return new HttpResponse<OneOf<TSuccess?, TFailure>>(response, failure);
+                return new HttpResponse<OneOf<TSuccess, TFailure?>>(response, failure);
 
-            return new HttpResponse<OneOf<TSuccess?, TFailure>>(response, default(TSuccess));
+            return new HttpResponse<OneOf<TSuccess, TFailure?>>(response, default(TFailure));
         }
         catch
         {
-            return new HttpResponse<OneOf<TSuccess?, TFailure>>(response, default(TSuccess));
+            return new HttpResponse<OneOf<TSuccess, TFailure?>>(response, default(TFailure));
         }
     }
 
     public static async Task<IHttpResponse<OneOf<TSuccess, TFailure>>> AsResponseAsync<TSuccess, TFailure>(
         this IHttpRequest request,
-        TSuccess defaultData,
+        TFailure defaultFailure,
         CancellationToken ct = default
     )
     {
         var response = await request.RunAsync(ct);
         if (response.IsAbort)
-            return new HttpResponse<OneOf<TSuccess, TFailure>>(response, defaultData);
+            return new HttpResponse<OneOf<TSuccess, TFailure>>(response, defaultFailure);
 
         try
         {
@@ -97,11 +97,11 @@ public static class AsResponseExtensions
             if (!Equals(failure, default(TFailure)))
                 return new HttpResponse<OneOf<TSuccess, TFailure>>(response, failure);
 
-            return new HttpResponse<OneOf<TSuccess, TFailure>>(response, defaultData);
+            return new HttpResponse<OneOf<TSuccess, TFailure>>(response, defaultFailure);
         }
         catch
         {
-            return new HttpResponse<OneOf<TSuccess, TFailure>>(response, defaultData);
+            return new HttpResponse<OneOf<TSuccess, TFailure>>(response, defaultFailure);
         }
     }
 }

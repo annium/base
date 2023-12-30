@@ -202,7 +202,7 @@ public class AsResponseExtensionsTests : TestBase
 
         // arrange
         var data = new Data(5);
-        var defaultData = new Data(7);
+        var defaultFailure = new Error("default");
         await using var _ = RunServer(
             async (_, response) =>
             {
@@ -213,7 +213,7 @@ public class AsResponseExtensionsTests : TestBase
 
         // act
         this.Trace("send");
-        var response = await _httpRequestFactory.New(ServerUri).Get("/").AsResponseAsync<Data, Error>(defaultData);
+        var response = await _httpRequestFactory.New(ServerUri).Get("/").AsResponseAsync<Data, Error>(defaultFailure);
 
         // assert
         response.Data.IsT0.IsTrue();
@@ -230,7 +230,7 @@ public class AsResponseExtensionsTests : TestBase
 
         // arrange
         var error = new Error("failure");
-        var defaultData = new Data(7);
+        var defaultFailure = new Error("default");
         await using var _ = RunServer(
             async (_, response) =>
             {
@@ -241,7 +241,7 @@ public class AsResponseExtensionsTests : TestBase
 
         // act
         this.Trace("send");
-        var response = await _httpRequestFactory.New(ServerUri).Get("/").AsResponseAsync<Data, Error>(defaultData);
+        var response = await _httpRequestFactory.New(ServerUri).Get("/").AsResponseAsync<Data, Error>(defaultFailure);
 
         // assert
         response.Data.IsT1.IsTrue();
@@ -257,7 +257,7 @@ public class AsResponseExtensionsTests : TestBase
         this.Trace("start");
 
         // arrange
-        var defaultData = new Data(7);
+        var defaultFailure = new Error("default");
         await using var _ = RunServer(
             async (_, response) =>
             {
@@ -268,12 +268,12 @@ public class AsResponseExtensionsTests : TestBase
 
         // act
         this.Trace("send");
-        var response = await _httpRequestFactory.New(ServerUri).Get("/").AsResponseAsync<Data, Error>(defaultData);
+        var response = await _httpRequestFactory.New(ServerUri).Get("/").AsResponseAsync<Data, Error>(defaultFailure);
 
         // assert
-        response.Data.IsT0.IsTrue();
-        response.Data.AsT0.IsNotDefault();
-        response.Data.AsT0.IsEqual(defaultData);
+        response.Data.IsT1.IsTrue();
+        response.Data.AsT1.IsNotDefault();
+        response.Data.AsT1.IsEqual(defaultFailure);
 
         this.Trace("done");
     }

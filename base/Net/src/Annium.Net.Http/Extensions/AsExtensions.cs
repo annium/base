@@ -44,14 +44,14 @@ public static class AsExtensions
         }
     }
 
-    public static async Task<OneOf<TSuccess?, TFailure>> AsAsync<TSuccess, TFailure>(
+    public static async Task<OneOf<TSuccess, TFailure?>> AsAsync<TSuccess, TFailure>(
         this IHttpRequest request,
         CancellationToken ct = default
     )
     {
         var response = await request.RunAsync(ct);
         if (response.IsAbort)
-            return default(TSuccess);
+            return default(TFailure);
 
         try
         {
@@ -63,23 +63,23 @@ public static class AsExtensions
             if (!Equals(failure, default(TFailure)))
                 return failure;
 
-            return default(TSuccess);
+            return default(TFailure);
         }
         catch
         {
-            return default(TSuccess);
+            return default(TFailure);
         }
     }
 
     public static async Task<OneOf<TSuccess, TFailure>> AsAsync<TSuccess, TFailure>(
         this IHttpRequest request,
-        TSuccess defaultData,
+        TFailure defaultFailure,
         CancellationToken ct = default
     )
     {
         var response = await request.RunAsync(ct);
         if (response.IsAbort)
-            return defaultData;
+            return defaultFailure;
 
         try
         {
@@ -91,11 +91,11 @@ public static class AsExtensions
             if (!Equals(failure, default(TFailure)))
                 return failure;
 
-            return defaultData;
+            return defaultFailure;
         }
         catch
         {
-            return defaultData;
+            return defaultFailure;
         }
     }
 }

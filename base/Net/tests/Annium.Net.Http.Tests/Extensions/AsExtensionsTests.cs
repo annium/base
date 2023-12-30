@@ -202,7 +202,7 @@ public class AsExtensionsTests : TestBase
 
         // arrange
         var data = new Data(5);
-        var defaultData = new Data(7);
+        var defaultFailure = new Error("default");
         await using var _ = RunServer(
             async (_, response) =>
             {
@@ -213,7 +213,7 @@ public class AsExtensionsTests : TestBase
 
         // act
         this.Trace("send");
-        var response = await _httpRequestFactory.New(ServerUri).Get("/").AsAsync<Data, Error>(defaultData);
+        var response = await _httpRequestFactory.New(ServerUri).Get("/").AsAsync<Data, Error>(defaultFailure);
 
         // assert
         response.IsT0.IsTrue();
@@ -230,7 +230,7 @@ public class AsExtensionsTests : TestBase
 
         // arrange
         var error = new Error("failure");
-        var defaultData = new Data(7);
+        var defaultFailure = new Error("default");
         await using var _ = RunServer(
             async (_, response) =>
             {
@@ -241,7 +241,7 @@ public class AsExtensionsTests : TestBase
 
         // act
         this.Trace("send");
-        var response = await _httpRequestFactory.New(ServerUri).Get("/").AsAsync<Data, Error>(defaultData);
+        var response = await _httpRequestFactory.New(ServerUri).Get("/").AsAsync<Data, Error>(defaultFailure);
 
         // assert
         response.IsT1.IsTrue();
@@ -257,7 +257,7 @@ public class AsExtensionsTests : TestBase
         this.Trace("start");
 
         // arrange
-        var defaultData = new Data(7);
+        var defaultFailure = new Error("default");
         await using var _ = RunServer(
             async (_, response) =>
             {
@@ -268,12 +268,12 @@ public class AsExtensionsTests : TestBase
 
         // act
         this.Trace("send");
-        var response = await _httpRequestFactory.New(ServerUri).Get("/").AsAsync<Data, Error>(defaultData);
+        var response = await _httpRequestFactory.New(ServerUri).Get("/").AsAsync<Data, Error>(defaultFailure);
 
         // assert
-        response.IsT0.IsTrue();
-        response.AsT0.IsNotDefault();
-        response.AsT0.IsEqual(defaultData);
+        response.IsT1.IsTrue();
+        response.AsT1.IsNotDefault();
+        response.AsT1.IsEqual(defaultFailure);
 
         this.Trace("done");
     }
