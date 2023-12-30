@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using Annium.Core.DependencyInjection;
 using Annium.Net.Http.Benchmark.Internal;
 using BenchmarkDotNet.Attributes;
-using NativeClientWebSocket = System.Net.WebSockets.ClientWebSocket;
 
 namespace Annium.Net.Http.Benchmark;
 

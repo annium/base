@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using System.Threading.Tasks;
 using Annium.Core.DependencyInjection;
 using Annium.Logging.Shared;
 using Annium.Testing;
@@ -44,11 +43,13 @@ public class LoggerTests : TestBase
         var subject = GetSubject();
 
         // act
-        subject.Info("sample");
+        subject.Info("one");
+        subject.Info("two");
 
         // assert
         var log = GetLog();
-        log.Contains("sample").IsTrue();
+        log.Contains("one").IsTrue();
+        log.Contains("two").IsTrue();
     }
 
     [Fact]
