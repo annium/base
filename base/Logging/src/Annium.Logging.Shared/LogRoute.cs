@@ -1,12 +1,14 @@
 using System;
+using OneOf;
 
 namespace Annium.Logging.Shared;
 
 public class LogRoute<TContext>
     where TContext : class, ILogContext
 {
-    internal Func<LogMessage<TContext>, bool> Filter { get; private set; } = _ => true;
-    internal object? Handler { get; private set; }
+    private static readonly Func<LogMessage<TContext>, bool> LogAll = _ => true;
+    internal Func<LogMessage<TContext>, bool> Filter { get; private set; } = LogAll;
+    internal OneOf<ILogHandler<TContext>, IAsyncLogHandler<TContext>>? Handler { get; private set; }
     internal LogRouteConfiguration? Configuration { get; private set; }
     private readonly IServiceProvider _sp;
     private readonly Action<LogRoute<TContext>> _registerRoute;
@@ -18,6 +20,8 @@ public class LogRoute<TContext>
 
         registerRoute(this);
     }
+
+    public LogRoute<TContext> ForAll() => new(_sp, _registerRoute) { Filter = LogAll };
 
     public LogRoute<TContext> For(Func<LogMessage<TContext>, bool> filter) =>
         new(_sp, _registerRoute) { Filter = filter };
@@ -34,7 +38,10 @@ public class LogRoute<TContext>
     public LogRoute<TContext> UseAsyncFactory<T>(Func<IServiceProvider, T> factory, LogRouteConfiguration configuration)
         where T : class, IAsyncLogHandler<TContext> => Use(factory(_sp), configuration);
 
-    private LogRoute<TContext> Use(object handler, LogRouteConfiguration configuration)
+    private LogRoute<TContext> Use(
+        OneOf<ILogHandler<TContext>, IAsyncLogHandler<TContext>> handler,
+        LogRouteConfiguration configuration
+    )
     {
         Handler = handler;
         Configuration = configuration;

@@ -67,20 +67,19 @@ public static class ServiceProviderExtensions
             if (route.Handler is null)
                 continue;
 
-            var handler = route.Handler;
-            var cfg = route.Configuration!;
+            var handler = route.Handler.NotNull();
+            var cfg = route.Configuration.NotNull();
 
-            switch (handler)
-            {
-                case ILogHandler<TContext> syncHandler:
-                    schedulers.Add(new ImmediateLogScheduler<TContext>(route.Filter, syncHandler));
-                    break;
-                case IAsyncLogHandler<TContext> asyncHandler:
-                    schedulers.Add(new BackgroundLogScheduler<TContext>(route.Filter, asyncHandler, cfg));
-                    break;
-                default:
-                    throw new Exception($"Unsupported log handler: {handler.GetType().FriendlyName()}");
-            }
+            handler.Switch(
+                x =>
+                {
+                    schedulers.Add(new ImmediateLogScheduler<TContext>(route.Filter, x));
+                },
+                x =>
+                {
+                    schedulers.Add(new BackgroundLogScheduler<TContext>(route.Filter, x, cfg));
+                }
+            );
         }
 
         return provider;
