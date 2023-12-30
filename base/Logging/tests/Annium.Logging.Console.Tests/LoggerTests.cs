@@ -6,9 +6,9 @@ using Xunit.Abstractions;
 
 namespace Annium.Logging.Console.Tests;
 
-public class ConsoleLoggerTest : TestBase
+public class LoggerTests : TestBase
 {
-    public ConsoleLoggerTest(ITestOutputHelper outputHelper)
+    public LoggerTests(ITestOutputHelper outputHelper)
         : base(outputHelper) { }
 
     [Fact]

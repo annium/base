@@ -26,7 +26,7 @@ internal class BackgroundLogScheduler<TContext> : ILogScheduler<TContext>, ILogS
         LogRouteConfiguration configuration
     )
     {
-        if (configuration.BufferTime == TimeSpan.Zero)
+        if (configuration.BufferTime < TimeSpan.Zero)
             throw new ArgumentOutOfRangeException(
                 nameof(configuration.BufferTime),
                 "Buffer time is expected to be non-zero"
