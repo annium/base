@@ -23,14 +23,14 @@ internal static class QueryHelpers
             return new Dictionary<string, StringValues>();
         }
 
-        int scanIndex = 0;
+        var scanIndex = 0;
         if (queryString[0] == '?')
         {
             scanIndex = 1;
         }
 
-        int textLength = queryString.Length;
-        int equalIndex = queryString.IndexOf('=');
+        var textLength = queryString.Length;
+        var equalIndex = queryString.IndexOf('=');
         if (equalIndex == -1)
         {
             equalIndex = textLength;
@@ -38,7 +38,7 @@ internal static class QueryHelpers
 
         while (scanIndex < textLength)
         {
-            int delimiterIndex = queryString.IndexOf('&', scanIndex);
+            var delimiterIndex = queryString.IndexOf('&', scanIndex);
             if (delimiterIndex == -1)
             {
                 delimiterIndex = textLength;
@@ -51,8 +51,8 @@ internal static class QueryHelpers
                     ++scanIndex;
                 }
 
-                string name = queryString.Substring(scanIndex, equalIndex - scanIndex);
-                string value = queryString.Substring(equalIndex + 1, delimiterIndex - equalIndex - 1);
+                var name = queryString.Substring(scanIndex, equalIndex - scanIndex);
+                var value = queryString.Substring(equalIndex + 1, delimiterIndex - equalIndex - 1);
                 accumulator.Append(
                     Uri.UnescapeDataString(name.Replace('+', ' ')),
                     Uri.UnescapeDataString(value.Replace('+', ' '))

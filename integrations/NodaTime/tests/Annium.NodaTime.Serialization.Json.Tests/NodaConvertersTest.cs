@@ -16,7 +16,7 @@ public class ConvertersTest
     public void OffsetConverter()
     {
         var value = Offset.FromHoursAndMinutes(5, 30);
-        string json = "\"+05:30\"";
+        var json = "\"+05:30\"";
         AssertConversions(value, json, Converters.OffsetConverter);
     }
 
@@ -24,7 +24,7 @@ public class ConvertersTest
     public void InstantConverter()
     {
         var value = Instant.FromUtc(2012, 1, 2, 3, 4, 5);
-        string json = "\"2012-01-02T03:04:05Z\"";
+        var json = "\"2012-01-02T03:04:05Z\"";
         AssertConversions(value, json, Converters.InstantConverter);
     }
 
@@ -32,7 +32,7 @@ public class ConvertersTest
     public void LocalDateConverter()
     {
         var value = new LocalDate(2012, 1, 2, CalendarSystem.Iso);
-        string json = "\"2012-01-02\"";
+        var json = "\"2012-01-02\"";
         AssertConversions(value, json, Converters.LocalDateConverter);
     }
 
@@ -74,7 +74,7 @@ public class ConvertersTest
     public void RoundtripPeriodConverter()
     {
         var value = Period.FromDays(2) + Period.FromHours(3) + Period.FromMinutes(90);
-        string json = "\"P2DT3H90M\"";
+        var json = "\"P2DT3H90M\"";
         AssertConversions(value, json, Converters.RoundtripPeriodConverter);
     }
 
@@ -92,7 +92,7 @@ public class ConvertersTest
     {
         // This time we're okay as it's already a normalized value.
         var value = Period.FromDays(2) + Period.FromHours(4) + Period.FromMinutes(30);
-        string json = "\"P2DT4H30M\"";
+        var json = "\"P2DT4H30M\"";
         AssertConversions(value, json, Converters.NormalizingIsoPeriodConverter);
     }
 
@@ -103,8 +103,8 @@ public class ConvertersTest
         var zone = DateTimeZoneProviders.Tzdb["Europe/London"];
         var earlierValue = new ZonedDateTime(new LocalDateTime(2012, 10, 28, 1, 30), zone, Offset.FromHours(1));
         var laterValue = new ZonedDateTime(new LocalDateTime(2012, 10, 28, 1, 30), zone, Offset.FromHours(0));
-        string earlierJson = "\"2012-10-28T01:30:00+01 Europe/London\"";
-        string laterJson = "\"2012-10-28T01:30:00Z Europe/London\"";
+        var earlierJson = "\"2012-10-28T01:30:00+01 Europe/London\"";
+        var laterJson = "\"2012-10-28T01:30:00Z Europe/London\"";
         var converter = Converters.CreateZonedDateTimeConverter(DateTimeZoneProviders.Tzdb);
 
         AssertConversions(earlierValue, earlierJson, converter);
@@ -117,7 +117,7 @@ public class ConvertersTest
         var value = new LocalDateTime(2012, 1, 2, 3, 4, 5)
             .PlusNanoseconds(123456789)
             .WithOffset(Offset.FromHoursAndMinutes(-1, -30));
-        string json = "\"2012-01-02T03:04:05.123456789-01:30\"";
+        var json = "\"2012-01-02T03:04:05.123456789-01:30\"";
         AssertConversions(value, json, Converters.OffsetDateTimeConverter);
     }
 
@@ -127,7 +127,7 @@ public class ConvertersTest
         // Redundantly specify the minutes, so that Javascript can parse it and it's RFC3339-compliant.
         // See issue 284 for details.
         var value = new LocalDateTime(2012, 1, 2, 3, 4, 5).PlusNanoseconds(123456789).WithOffset(Offset.FromHours(5));
-        string json = "\"2012-01-02T03:04:05.123456789+05:00\"";
+        var json = "\"2012-01-02T03:04:05.123456789+05:00\"";
         AssertConversions(value, json, Converters.OffsetDateTimeConverter);
     }
 
@@ -137,7 +137,7 @@ public class ConvertersTest
         // Redundantly specify the minutes, so that Javascript can parse it and it's RFC3339-compliant.
         // See issue 284 for details.
         var value = new LocalDateTime(2012, 1, 2, 3, 4, 5).PlusNanoseconds(123456789).WithOffset(Offset.Zero);
-        string json = "\"2012-01-02T03:04:05.123456789Z\"";
+        var json = "\"2012-01-02T03:04:05.123456789Z\"";
         AssertConversions(value, json, Converters.OffsetDateTimeConverter);
     }
 
@@ -202,7 +202,7 @@ public class ConvertersTest
     public void OffsetDateConverter()
     {
         var value = new LocalDate(2012, 1, 2).WithOffset(Offset.FromHoursAndMinutes(-1, -30));
-        string json = "\"2012-01-02-01:30\"";
+        var json = "\"2012-01-02-01:30\"";
         AssertConversions(value, json, Converters.OffsetDateConverter);
     }
 
@@ -210,7 +210,7 @@ public class ConvertersTest
     public void OffsetTimeConverter()
     {
         var value = new LocalTime(3, 4, 5).PlusNanoseconds(123456789).WithOffset(Offset.FromHoursAndMinutes(-1, -30));
-        string json = "\"03:04:05.123456789-01:30\"";
+        var json = "\"03:04:05.123456789-01:30\"";
         AssertConversions(value, json, Converters.OffsetTimeConverter);
     }
 
@@ -218,7 +218,7 @@ public class ConvertersTest
     public void YearMonthConverter()
     {
         var value = new YearMonth(2000, 2, CalendarSystem.Iso);
-        string json = "\"2000-02\"";
+        var json = "\"2000-02\"";
         AssertConversions(value, json, Converters.YearMonthConverter);
     }
 

@@ -224,7 +224,7 @@ file static class BufferExtensions
     public static void Write(this MessagingBuffer buffer, ReadOnlySpan<byte> data)
     {
         var freeSpace = buffer.FreeSpace.Span;
-        for (int i = 0; i < data.Length; i++)
+        for (var i = 0; i < data.Length; i++)
             freeSpace[i] = data[i];
 
         buffer.TrackData(data.Length);

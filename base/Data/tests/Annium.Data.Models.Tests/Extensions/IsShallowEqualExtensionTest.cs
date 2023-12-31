@@ -71,11 +71,11 @@ public class IsShallowEqualExtensionTest
     {
         // arrange
         var now = DateTimeOffset.Now;
-        Sample a = new Sample { Date = now, Point = new Point(2, 1) };
-        Sample b = new Sample { Date = now, Point = new Point(2, 1) };
-        Sample c = new Sample { Date = now + TimeSpan.FromSeconds(1), Point = new Point(2, 1) };
+        var a = new Sample { Date = now, Point = new Point(2, 1) };
+        var b = new Sample { Date = now, Point = new Point(2, 1) };
+        var c = new Sample { Date = now + TimeSpan.FromSeconds(1), Point = new Point(2, 1) };
         Sample d = default;
-        Sample e = a;
+        var e = a;
 
         // assert
         a.IsShallowEqual(b).IsTrue();
@@ -102,7 +102,7 @@ public class IsShallowEqualExtensionTest
             new() { Date = now + TimeSpan.FromSeconds(1), Point = new Point(2, 1) }
         };
         Sample[] d = { default };
-        Sample[] e = a;
+        var e = a;
 
         // assert
         a.IsShallowEqual(b).IsTrue();
@@ -129,7 +129,7 @@ public class IsShallowEqualExtensionTest
             new() { Date = now + TimeSpan.FromSeconds(1), Point = new Point(2, 1) }
         };
         IList<Sample> d = new List<Sample> { default };
-        IList<Sample> e = a;
+        var e = a;
 
         // assert
         a.IsShallowEqual(b).IsTrue();

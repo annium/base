@@ -22,7 +22,7 @@ public class NodaDateTimeZoneConverterTest
     [Fact]
     public void Deserialize()
     {
-        string json = "\"America/Los_Angeles\"";
+        var json = "\"America/Los_Angeles\"";
         var dateTimeZone = JsonSerializer.Deserialize<DateTimeZone>(json, With(_converter));
         var expectedDateTimeZone = DateTimeZoneProviders.Tzdb["America/Los_Angeles"];
         dateTimeZone.Is(expectedDateTimeZone);
@@ -31,7 +31,7 @@ public class NodaDateTimeZoneConverterTest
     [Fact]
     public void Deserialize_TimeZoneNotFound()
     {
-        string json = "\"America/DOES_NOT_EXIST\"";
+        var json = "\"America/DOES_NOT_EXIST\"";
         Wrap.It(() => JsonSerializer.Deserialize<DateTimeZone>(json, With(_converter))).Throws<JsonException>();
     }
 }

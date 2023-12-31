@@ -139,7 +139,7 @@ public static class GetTargetImplementationExtension
         }
 
         var targetBase = target.GetGenericTypeDefinition();
-        Type? implementation = type;
+        var implementation = type;
 
         // go deep in inheritance, until targetBase implementation found
         while (implementation != null)

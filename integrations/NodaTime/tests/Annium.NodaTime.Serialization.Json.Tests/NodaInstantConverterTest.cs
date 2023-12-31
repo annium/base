@@ -35,7 +35,7 @@ public class NodaInstantConverterTest
     [Fact]
     public void Deserialize_ToNonNullableType()
     {
-        string json = "\"2012-01-02T03:04:05Z\"";
+        var json = "\"2012-01-02T03:04:05Z\"";
         var instant = JsonSerializer.Deserialize<Instant>(json, With(Converters.InstantConverter));
         instant.Is(Instant.FromUtc(2012, 1, 2, 3, 4, 5));
     }

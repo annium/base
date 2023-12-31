@@ -43,7 +43,7 @@ public class NodaIsoDateIntervalConverterTest
     [Fact]
     public void Deserialize_InObject()
     {
-        string json = "{\"interval\":\"2012-01-02/2013-06-07\"}";
+        var json = "{\"interval\":\"2012-01-02/2013-06-07\"}";
 
         var testObject = JsonSerializer.Deserialize<TestObject>(json, With(_converters))!;
 

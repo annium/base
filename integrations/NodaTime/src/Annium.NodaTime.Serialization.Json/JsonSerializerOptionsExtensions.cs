@@ -68,7 +68,7 @@ public static class JsonSerializerOptionsExtensions
 
     private static void ReplaceExistingConverters<T>(IList<JsonConverter> converters, JsonConverter newConverter)
     {
-        for (int i = converters.Count - 1; i >= 0; i--)
+        for (var i = converters.Count - 1; i >= 0; i--)
             if (converters[i].CanConvert(typeof(T)))
                 converters.RemoveAt(i);
 

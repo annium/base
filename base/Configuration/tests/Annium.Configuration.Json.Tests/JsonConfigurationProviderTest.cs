@@ -47,7 +47,7 @@ public class JsonConfigurationProviderTest : TestBase
             Tuple = ("demo|", 11),
         };
 
-        string jsonFile = string.Empty;
+        var jsonFile = string.Empty;
         try
         {
             jsonFile = Path.GetTempFileName();

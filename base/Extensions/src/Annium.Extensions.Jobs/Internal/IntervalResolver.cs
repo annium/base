@@ -67,7 +67,7 @@ internal class IntervalResolver : IIntervalResolver
             .OfType<Expression>()
             .ToArray();
 
-        Expression match = parts.Length == 0 ? Expression.Constant(true) : parts[0];
+        var match = parts.Length == 0 ? Expression.Constant(true) : parts[0];
         foreach (var part in parts.Skip(1))
             match = Expression.And(match, part);
 

@@ -62,7 +62,7 @@ public class NodaIntervalConverterTest
     [Fact]
     public void Deserialize_InObject()
     {
-        string json = "{\"interval\":{\"start\":\"2012-01-02T03:04:05Z\",\"end\":\"2013-06-07T08:09:10Z\"}}";
+        var json = "{\"interval\":{\"start\":\"2012-01-02T03:04:05Z\",\"end\":\"2013-06-07T08:09:10Z\"}}";
 
         var testObject = JsonSerializer.Deserialize<TestObject>(json, With(_converters))!;
 
@@ -77,7 +77,7 @@ public class NodaIntervalConverterTest
     [Fact]
     public void Deserialize_InObject_CamelCase()
     {
-        string json = "{\"interval\":{\"start\":\"2012-01-02T03:04:05Z\",\"end\":\"2013-06-07T08:09:10Z\"}}";
+        var json = "{\"interval\":{\"start\":\"2012-01-02T03:04:05Z\",\"end\":\"2013-06-07T08:09:10Z\"}}";
 
         var testObject = JsonSerializer.Deserialize<TestObject>(json, With(_converters))!;
 

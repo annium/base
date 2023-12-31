@@ -29,7 +29,7 @@ public class ConfigurationContainer : IConfigurationContainer
                 return false;
 
             // check, that all elements are equal case independently
-            for (int i = 0; i < x.Length; i++)
+            for (var i = 0; i < x.Length; i++)
                 if (x[i].CamelCase() != y[i].CamelCase())
                     return false;
 
@@ -41,7 +41,7 @@ public class ConfigurationContainer : IConfigurationContainer
         {
             unchecked
             {
-                int hash = 17;
+                var hash = 17;
 
                 // get hash code for all items in array
                 foreach (var item in obj)

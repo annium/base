@@ -46,7 +46,7 @@ public class YamlConfigurationProviderTest : TestBase
             Abstract = new ConfigTwo { Value = 10 },
         };
 
-        string yamlFile = string.Empty;
+        var yamlFile = string.Empty;
         try
         {
             yamlFile = Path.GetTempFileName();

@@ -36,7 +36,7 @@ public class NodaIsoIntervalConverterTest
     public void DeserializeComma()
     {
         // Comma is deliberate, to show that we can parse a comma decimal separator too.
-        string json = "\"2012-01-02T03:04:05.670Z/2013-06-07T08:09:10,1234567Z\"";
+        var json = "\"2012-01-02T03:04:05.670Z/2013-06-07T08:09:10,1234567Z\"";
 
         var interval = JsonSerializer.Deserialize<Interval>(json, With(_converters));
 
@@ -62,7 +62,7 @@ public class NodaIsoIntervalConverterTest
     [Fact]
     public void Deserialize_InObject()
     {
-        string json = "{\"interval\":\"2012-01-02T03:04:05Z/2013-06-07T08:09:10Z\"}";
+        var json = "{\"interval\":\"2012-01-02T03:04:05Z/2013-06-07T08:09:10Z\"}";
 
         var testObject = JsonSerializer.Deserialize<TestObject>(json, With(_converters))!;
 

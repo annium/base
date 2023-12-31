@@ -28,7 +28,7 @@ public class StaticObservableInstanceTest : TestBase
             .StaticAsyncInstance<Sample>(
                 async ctx =>
                 {
-                    for (int i = 0; i < 5; i++)
+                    for (var i = 0; i < 5; i++)
                     {
                         await Task.Delay(100);
                         ctx.OnNext(new Sample(i));

@@ -18,7 +18,7 @@ public class TryMakeGenericTypeExtensionTests
     public void ITryMakeGenericType_Works()
     {
         // assert
-        typeof(Demo<>).TryMakeGenericType(out System.Type? result).IsFalse();
+        typeof(Demo<>).TryMakeGenericType(out var result).IsFalse();
         result.IsDefault();
 
         typeof(Demo<>).TryMakeGenericType(out result, typeof(bool)).IsFalse();

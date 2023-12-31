@@ -30,7 +30,7 @@ public static class ByteExtensions
     {
         var result = new char[512];
 
-        for (int i = 0; i < 256; i++)
+        for (var i = 0; i < 256; i++)
         {
             var s = i.ToString("X2");
             result[2 * i] = s[0];
