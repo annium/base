@@ -2,17 +2,24 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Annium.Logging;
 using Annium.Testing;
 using Annium.Threading;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Annium.Tests.Threading;
 
-public class AsyncTimerTests
+public class AsyncTimerTests : TestBase
 {
+    public AsyncTimerTests(ITestOutputHelper outputHelper)
+        : base(outputHelper) { }
+
     [Fact]
     public async Task Stateful_Overlapping()
     {
+        this.Trace("start");
+
         // arrange
         var state = new State();
         using var timer = Timers.Async(
@@ -24,7 +31,8 @@ public class AsyncTimerTests
                 state.Push();
             },
             0,
-            1
+            1,
+            Logger
         );
 
         // act
@@ -32,12 +40,17 @@ public class AsyncTimerTests
         timer.Change(Timeout.Infinite, Timeout.Infinite);
 
         // assert
+        this.Trace("ensure state is valid");
         await EnsureValid(state);
+
+        this.Trace("done");
     }
 
     [Fact]
     public async Task Stateful_ConcurrentStart()
     {
+        this.Trace("start");
+
         // arrange
         var state = new State();
         using var timer = Timers.Async(
@@ -49,7 +62,8 @@ public class AsyncTimerTests
                 state.Push();
             },
             0,
-            2
+            2,
+            Logger
         );
         timer.Change(0, 1);
 
@@ -58,12 +72,17 @@ public class AsyncTimerTests
         timer.Change(Timeout.Infinite, Timeout.Infinite);
 
         // assert
+        this.Trace("ensure state is valid");
         await EnsureValid(state);
+
+        this.Trace("done");
     }
 
     [Fact]
     public async Task Stateless_Overlapping()
     {
+        this.Trace("start");
+
         // arrange
         var state = new State();
         using var timer = Timers.Async(
@@ -74,7 +93,8 @@ public class AsyncTimerTests
                 state.Push();
             },
             0,
-            1
+            1,
+            Logger
         );
 
         // act
@@ -82,12 +102,17 @@ public class AsyncTimerTests
         timer.Change(Timeout.Infinite, Timeout.Infinite);
 
         // assert
+        this.Trace("ensure state is valid");
         await EnsureValid(state);
+
+        this.Trace("done");
     }
 
     [Fact]
     public async Task Stateless_ConcurrentStart()
     {
+        this.Trace("start");
+
         // arrange
         var state = new State();
         using var timer = Timers.Async(
@@ -98,7 +123,8 @@ public class AsyncTimerTests
                 state.Push();
             },
             0,
-            2
+            2,
+            Logger
         );
         timer.Change(0, 1);
 
@@ -107,7 +133,10 @@ public class AsyncTimerTests
         timer.Change(Timeout.Infinite, Timeout.Infinite);
 
         // assert
+        this.Trace("ensure state is valid");
         await EnsureValid(state);
+
+        this.Trace("done");
     }
 
     private async Task EnsureValid(State state)

@@ -29,7 +29,7 @@ internal class DefaultConnectionMonitor : ConnectionMonitorBase
         _socket.OnReceived += HandleOnReceived;
 
         this.Trace("start timer");
-        _timer = Timers.Async(HandlePingPong, _options.PingInterval, _options.PingInterval);
+        _timer = Timers.Async(HandlePingPong, _options.PingInterval, _options.PingInterval, Logger);
 
         this.Trace("start stopwatch");
         _stopwatch.Restart();

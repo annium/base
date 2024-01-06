@@ -31,7 +31,8 @@ public class DebounceTimerTests : TestBase
 
                 return ValueTask.CompletedTask;
             },
-            20
+            20,
+            Logger
         );
 
         // act
@@ -73,7 +74,8 @@ public class DebounceTimerTests : TestBase
 
                 return ValueTask.CompletedTask;
             },
-            20
+            20,
+            Logger
         );
 
         // act

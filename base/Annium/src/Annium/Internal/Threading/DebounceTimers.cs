@@ -1,23 +1,26 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Annium.Logging;
 using Annium.Threading;
 
 namespace Annium.Internal.Threading;
 
 internal class DebounceTimer<T> : DebounceTimerBase
 {
+    private readonly T _state;
     private readonly Func<T, ValueTask> _handler;
 
-    public DebounceTimer(T state, Func<T, ValueTask> handler, int period)
-        : base(state, period)
+    public DebounceTimer(T state, Func<T, ValueTask> handler, int period, ILogger logger)
+        : base(period, logger)
     {
+        _state = state;
         _handler = handler;
     }
 
-    protected override ValueTask Handle(object? state)
+    protected override ValueTask Handle()
     {
-        return _handler((T)state.NotNull());
+        return _handler(_state);
     }
 }
 
@@ -25,28 +28,30 @@ internal class DebounceTimer : DebounceTimerBase
 {
     private readonly Func<ValueTask> _handler;
 
-    public DebounceTimer(Func<ValueTask> handler, int period)
-        : base(null, period)
+    public DebounceTimer(Func<ValueTask> handler, int period, ILogger logger)
+        : base(period, logger)
     {
         _handler = handler;
     }
 
-    protected override ValueTask Handle(object? state)
+    protected override ValueTask Handle()
     {
         return _handler();
     }
 }
 
-internal abstract class DebounceTimerBase : IDebounceTimer
+internal abstract class DebounceTimerBase : IDebounceTimer, ILogSubject
 {
+    public ILogger Logger { get; }
     private readonly Timer _timer;
     private int _period;
     private volatile int _isRequested;
     private volatile int _isHandling;
 
-    protected DebounceTimerBase(object? state, int period)
+    protected DebounceTimerBase(int period, ILogger logger)
     {
-        _timer = new Timer(Callback, state, Timeout.Infinite, Timeout.Infinite);
+        Logger = logger;
+        _timer = new Timer(Callback, null, Timeout.Infinite, Timeout.Infinite);
         _period = period;
     }
 
@@ -66,20 +71,29 @@ internal abstract class DebounceTimerBase : IDebounceTimer
         _timer.Dispose();
     }
 
-    protected abstract ValueTask Handle(object? state);
+    protected abstract ValueTask Handle();
 
-    private async void Callback(object? state)
+    private async void Callback(object? _)
     {
         if (Interlocked.CompareExchange(ref _isHandling, 1, 0) == 1)
             return;
 
         _isRequested = 0;
 
-        await Handle(state);
+        try
+        {
+            await Handle();
+        }
+        catch (Exception e)
+        {
+            this.Error(e);
+        }
+        finally
+        {
+            _isHandling = 0;
 
-        _isHandling = 0;
-
-        if (_isRequested == 1)
-            Request();
+            if (_isRequested == 1)
+                Request();
+        }
     }
 }
