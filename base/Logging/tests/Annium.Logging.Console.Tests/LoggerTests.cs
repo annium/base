@@ -1,5 +1,6 @@
 using System;
 using Annium.Core.DependencyInjection;
+using Annium.Logging.Shared;
 using Annium.Testing;
 using Xunit;
 using Xunit.Abstractions;
@@ -72,6 +73,6 @@ public class LoggerTests : TestBase
         var provider = container.BuildServiceProvider();
         provider.UseLogging(route => route.For(m => m.Level >= minLogLevel).UseConsole());
 
-        return provider.Resolve<ILogSubject>();
+        return provider.Resolve<ILogBridgeFactory>().Get("test");
     }
 }

@@ -22,38 +22,17 @@ internal class Logger : ILogger
         IReadOnlyList<object?> data
     )
     {
-        _sentryBridge.Register(
-            subject.GetType().FriendlyName(),
-            subject.GetId(),
-            file,
-            member,
-            line,
-            level,
-            message,
-            null,
-            data
-        );
+        var subjectType = subject is ILogBridge bridge ? bridge.Type : subject.GetType().FriendlyName();
+        var subjectId = subject.GetId();
+
+        _sentryBridge.Register(subjectType, subjectId, file, member, line, level, message, null, data);
     }
 
-    public void Error(
-        object subject,
-        string file,
-        string member,
-        int line,
-        Exception exception,
-        IReadOnlyList<object?> data
-    )
+    public void Error(object subject, string file, string member, int line, Exception ex, IReadOnlyList<object?> data)
     {
-        _sentryBridge.Register(
-            subject.GetType().FriendlyName(),
-            subject.GetId(),
-            file,
-            member,
-            line,
-            LogLevel.Error,
-            exception.Message,
-            exception,
-            data
-        );
+        var subjectType = subject is ILogBridge bridge ? bridge.Type : subject.GetType().FriendlyName();
+        var subjectId = subject.GetId();
+
+        _sentryBridge.Register(subjectType, subjectId, file, member, line, LogLevel.Error, ex.Message, ex, data);
     }
 }

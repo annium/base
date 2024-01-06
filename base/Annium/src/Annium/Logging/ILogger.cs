@@ -14,5 +14,5 @@ public interface ILogger
         string message,
         IReadOnlyList<object?> data
     );
-    void Error(object subject, string file, string member, int line, Exception exception, IReadOnlyList<object?> data);
+    void Error(object subject, string file, string member, int line, Exception ex, IReadOnlyList<object?> data);
 }

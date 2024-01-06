@@ -24,7 +24,7 @@ public class VoidLogger : ILogger
         string file,
         string member,
         int line,
-        Exception exception,
+        Exception ex,
         IReadOnlyList<object?> data
     ) { }
 }

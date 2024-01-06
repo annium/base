@@ -88,7 +88,7 @@ public class LoggerTests : TestBase
         log.Contains("xxx").IsTrue();
     }
 
-    private ILogSubject GetSubject() => Get<ILogSubject>();
+    private ILogSubject GetSubject() => Get<ILogBridgeFactory>().Get("test");
 
     private string GetLog() => System.IO.File.ReadAllText(_logFile);
 }

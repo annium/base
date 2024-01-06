@@ -28,12 +28,12 @@ public static class ServiceContainerExtensions
             .As<IReadOnlyCollection<ILogScheduler<TContext>>>()
             .Singleton();
 
-        container.Add<TContext>().AsSelf().In(ServiceLifetime.Scoped);
-        container.Add<ILogger, Logger>().In(ServiceLifetime.Scoped);
-        container.Add<ILogSubject, LogSubject>().In(ServiceLifetime.Scoped);
+        container.Add<TContext>().AsSelf().Scoped();
+        container.Add<ILogger, Logger>().Scoped();
+        container.Add<ILogBridgeFactory, LogBridgeFactory>().Scoped();
         container.Add<LogRouter<TContext>>().AsSelf().Singleton();
         container.Add<ILogSentry<TContext>, LogSentry<TContext>>().Singleton();
-        container.Add<ILogSentryBridge, LogSentryBridge<TContext>>().In(ServiceLifetime.Scoped);
+        container.Add<ILogSentryBridge, LogSentryBridge<TContext>>().Scoped();
         container.AddProfile(p =>
         {
             p.Map<LogLevel, string>(x => x.ToString());

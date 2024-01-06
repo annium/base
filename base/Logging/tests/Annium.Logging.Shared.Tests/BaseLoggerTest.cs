@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using Annium.Core.DependencyInjection;
-using Annium.Logging.Shared.Internal;
 using Annium.Testing;
 using Xunit;
 using Xunit.Abstractions;
@@ -20,7 +19,7 @@ public class BaseLoggerTest : TestBase
     {
         // arrange
         var provider = GetProvider();
-        var subject = provider.Resolve<ILogSubject>();
+        var subject = provider.GetSubject();
         var timeProvider = provider.Resolve<ITimeProvider>();
 
         // act
@@ -30,7 +29,7 @@ public class BaseLoggerTest : TestBase
         _messages.Has(1);
         _messages.At(0).Instant.Is(timeProvider.Now);
         _messages.At(0).Level.Is(LogLevel.Info);
-        _messages.At(0).SubjectType.Is(typeof(LogSubject).FriendlyName());
+        _messages.At(0).SubjectType.Is("test");
         _messages.At(0).SubjectId.IsNullOrWhiteSpace().IsFalse();
         _messages.At(0).Message.Is("sample");
     }
@@ -40,7 +39,7 @@ public class BaseLoggerTest : TestBase
     {
         // arrange
         var provider = GetProvider(LogLevel.Warn);
-        var subject = provider.Resolve<ILogSubject>();
+        var subject = provider.GetSubject();
 
         // act
         subject.Info("sample");
@@ -54,7 +53,7 @@ public class BaseLoggerTest : TestBase
     {
         // arrange
         var provider = GetProvider();
-        var subject = provider.Resolve<ILogSubject>();
+        var subject = provider.GetSubject();
 
         // act
         subject.Info("sample");
@@ -68,7 +67,7 @@ public class BaseLoggerTest : TestBase
     {
         // arrange
         var provider = GetProvider();
-        var subject = provider.Resolve<ILogSubject>();
+        var subject = provider.GetSubject();
 
         // act
         subject.Warn("sample");
@@ -82,7 +81,7 @@ public class BaseLoggerTest : TestBase
     {
         // arrange
         var provider = GetProvider();
-        var subject = provider.Resolve<ILogSubject>();
+        var subject = provider.GetSubject();
 
         // act
         subject.Info("sample");
@@ -96,7 +95,7 @@ public class BaseLoggerTest : TestBase
     {
         // arrange
         var provider = GetProvider();
-        var subject = provider.Resolve<ILogSubject>();
+        var subject = provider.GetSubject();
 
         // act
         subject.Warn("sample");
@@ -110,7 +109,7 @@ public class BaseLoggerTest : TestBase
     {
         // arrange
         var provider = GetProvider();
-        var subject = provider.Resolve<ILogSubject>();
+        var subject = provider.GetSubject();
         var exception = new Exception("sample");
 
         // act
@@ -127,7 +126,7 @@ public class BaseLoggerTest : TestBase
     {
         // arrange
         var provider = GetProvider();
-        var subject = provider.Resolve<ILogSubject>();
+        var subject = provider.GetSubject();
 
         // act
         subject.Error("sample");
@@ -173,4 +172,12 @@ public class BaseLoggerTest : TestBase
     }
 
     private class Context : ILogContext;
+}
+
+file static class ServiceProviderExtensions
+{
+    public static ILogSubject GetSubject(this IServiceProvider sp)
+    {
+        return sp.Resolve<ILogBridgeFactory>().Get("test");
+    }
 }
