@@ -1,53 +1,52 @@
 using System;
 using System.Threading;
-using System.Threading.Tasks;
 using Annium.Logging;
 using Annium.Threading;
 
 namespace Annium.Internal.Threading;
 
-internal class AsyncTimer<T> : AsyncTimerBase
+internal class SyncTimer<T> : SyncTimerBase
     where T : class
 {
     private readonly T _state;
-    private readonly Func<T, ValueTask> _handler;
+    private readonly Action<T> _handler;
 
-    public AsyncTimer(T state, Func<T, ValueTask> handler, int dueTime, int period, ILogger logger)
+    public SyncTimer(T state, Action<T> handler, int dueTime, int period, ILogger logger)
         : base(dueTime, period, logger)
     {
         _state = state;
         _handler = handler;
     }
 
-    protected override ValueTask Handle()
+    protected override void Handle()
     {
-        return _handler(_state);
+        _handler(_state);
     }
 }
 
-internal class AsyncTimer : AsyncTimerBase
+internal class SyncTimer : SyncTimerBase
 {
-    private readonly Func<ValueTask> _handler;
+    private readonly Action _handler;
 
-    public AsyncTimer(Func<ValueTask> handler, int dueTime, int period, ILogger logger)
+    public SyncTimer(Action handler, int dueTime, int period, ILogger logger)
         : base(dueTime, period, logger)
     {
         _handler = handler;
     }
 
-    protected override ValueTask Handle()
+    protected override void Handle()
     {
-        return _handler();
+        _handler();
     }
 }
 
-internal abstract class AsyncTimerBase : ISequentialTimer, ILogSubject
+internal abstract class SyncTimerBase : ISequentialTimer, ILogSubject
 {
     public ILogger Logger { get; }
     private readonly Timer _timer;
     private volatile int _isHandling;
 
-    protected AsyncTimerBase(int dueTime, int period, ILogger logger)
+    protected SyncTimerBase(int dueTime, int period, ILogger logger)
     {
         Logger = logger;
         _timer = new Timer(Callback, null, dueTime, period);
@@ -69,9 +68,9 @@ internal abstract class AsyncTimerBase : ISequentialTimer, ILogSubject
         return _timer.Change(dueTime, period);
     }
 
-    protected abstract ValueTask Handle();
+    protected abstract void Handle();
 
-    private async void Callback(object? _)
+    private void Callback(object? _)
     {
         if (Interlocked.CompareExchange(ref _isHandling, 1, 0) == 1)
         {
@@ -80,7 +79,7 @@ internal abstract class AsyncTimerBase : ISequentialTimer, ILogSubject
 
         try
         {
-            await Handle();
+            Handle();
         }
         catch (Exception e)
         {

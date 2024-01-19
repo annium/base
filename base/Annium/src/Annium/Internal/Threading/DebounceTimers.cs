@@ -55,6 +55,20 @@ internal abstract class DebounceTimerBase : IDebounceTimer, ILogSubject
         _period = period;
     }
 
+    public void Dispose()
+    {
+        _timer.Dispose();
+        GC.SuppressFinalize(this);
+    }
+
+    public ValueTask DisposeAsync()
+    {
+        _timer.Dispose();
+        GC.SuppressFinalize(this);
+
+        return ValueTask.CompletedTask;
+    }
+
     public void Change(int period)
     {
         _period = period;
@@ -64,11 +78,6 @@ internal abstract class DebounceTimerBase : IDebounceTimer, ILogSubject
     {
         _timer.Change(_period, Timeout.Infinite);
         _isRequested = 1;
-    }
-
-    public void Dispose()
-    {
-        _timer.Dispose();
     }
 
     protected abstract ValueTask Handle();

@@ -11,7 +11,7 @@ internal class DefaultConnectionMonitor : ConnectionMonitorBase
     private readonly ISendingReceivingSocket _socket;
     private readonly ConnectionMonitorOptions _options;
     private readonly Stopwatch _stopwatch = new();
-    private IAsyncTimer? _timer;
+    private ISequentialTimer? _timer;
 
     public DefaultConnectionMonitor(ISendingReceivingSocket socket, ConnectionMonitorOptions options, ILogger logger)
         : base(logger)
