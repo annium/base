@@ -16,6 +16,6 @@
         <ProjectReference Include="../../src/Annium.Net.Servers.Web/Annium.Net.Servers.Web.csproj" />
     </ItemGroup>
     <ItemGroup>
-        <PackageReference Include="BenchmarkDotNet" Version="0.13.10" />
+        <PackageReference Include="BenchmarkDotNet" Version="0.13.12" />
     </ItemGroup>
 </Project>

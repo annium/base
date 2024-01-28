@@ -14,6 +14,6 @@
         <ProjectReference Include="../../../../base/Core/src/Annium.Core.Runtime/Annium.Core.Runtime.csproj" />
     </ItemGroup>
     <ItemGroup>
-        <PackageReference Include="System.Text.Json" Version="8.0.0" />
+        <PackageReference Include="System.Text.Json" Version="8.0.1" />
     </ItemGroup>
 </Project>
