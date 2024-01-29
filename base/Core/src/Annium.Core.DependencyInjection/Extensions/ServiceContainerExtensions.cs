@@ -13,4 +13,9 @@ public static class ServiceContainerExtensions
     {
         return container.Add(typeof(TImplementation));
     }
+
+    public static IServiceContainer AddInjectables(this IServiceContainer container)
+    {
+        return container.Add(typeof(Injected<>)).AsSelf().Scoped();
+    }
 }
