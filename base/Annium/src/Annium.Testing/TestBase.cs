@@ -67,8 +67,15 @@ public abstract class TestBase : ILogSubject
     public T GetKeyed<T>(object key)
         where T : notnull => _sp.Value.ResolveKeyed<T>(key);
 
+    public void Inject<T>(T value)
+        where T : class
+    {
+        Get<Injected<T>>().Init(value);
+    }
+
     private void SharedRegister(IServiceContainer container)
     {
+        container.AddInjectables();
         container.AddRuntime(GetType().Assembly);
         container.AddTime().WithManagedTime().WithRelativeTime().SetDefault();
         container.AddLogging();
