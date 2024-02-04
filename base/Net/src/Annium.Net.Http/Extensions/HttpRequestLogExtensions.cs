@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using Annium.Logging;
@@ -8,7 +10,12 @@ namespace Annium.Net.Http;
 
 public static class HttpRequestLogExtensions
 {
-    public static IHttpRequest WithLogFrom<T>(this IHttpRequest request, T subject, LogData log = default)
+    public static IHttpRequest WithLogFrom<T>(
+        this IHttpRequest request,
+        T subject,
+        LogData log = default,
+        string[]? headerMasks = null
+    )
         where T : ILogSubject =>
         request.Intercept(async next =>
         {
@@ -20,7 +27,12 @@ public static class HttpRequestLogExtensions
 
                 if (log.HasFlag(LogData.Headers))
                 {
-                    foreach (var (name, values) in request.Headers)
+                    IEnumerable<KeyValuePair<string, IEnumerable<string>>> headers = headerMasks is null
+                        ? request.Headers
+                        : request.Headers.Where(
+                            x => headerMasks.Any(m => x.Key.Contains(m, StringComparison.InvariantCultureIgnoreCase))
+                        );
+                    foreach (var (name, values) in headers)
                         subject.Trace<string, string>(
                             "- {headerName}: {headerValues}",
                             name,
@@ -52,7 +64,12 @@ public static class HttpRequestLogExtensions
 
                     if (log.HasFlag(LogData.Headers))
                     {
-                        foreach (var (name, values) in response.Headers)
+                        IEnumerable<KeyValuePair<string, IEnumerable<string>>> headers = headerMasks is null
+                            ? response.Headers
+                            : response.Headers.Where(
+                                x => headerMasks.Any(m => x.Key.Contains(m, StringComparison.InvariantCultureIgnoreCase))
+                            );
+                        foreach (var (name, values) in headers)
                             subject.Trace<string, string>(
                                 "- {headerName}: {headerValues}",
                                 name,
