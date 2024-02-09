@@ -23,7 +23,7 @@ public class ObjectCacheTests : TestBase
     {
         Register(container =>
         {
-            container.AddObjectCache<uint, Item, ItemProvider>(ServiceLifetime.Singleton);
+            container.AddObjectCache<ItemKey, Item, ItemProvider>(ServiceLifetime.Singleton);
         });
         RegisterTestLogs();
     }
@@ -34,12 +34,14 @@ public class ObjectCacheTests : TestBase
         this.Trace("start");
 
         // arrange
-        await using var cache = Get<IObjectCache<uint, Item>>();
+        await using var cache = Get<IObjectCache<ItemKey, Item>>();
         var log = Get<TestLog<string>>();
 
         // act
         this.Trace("get multiple references");
-        var references = await Task.WhenAll(Enumerable.Range(0, 10).Select(_ => cache.GetAsync(0)));
+        var references = await Task.WhenAll(
+            Enumerable.Range(0, 10).Select(_ => Task.Run(() => cache.GetAsync(new ItemKey { Value = 0 })))
+        );
 
         // assert
         this.Trace("assert references validity");
@@ -56,7 +58,7 @@ public class ObjectCacheTests : TestBase
     public async Task ObjectCache_Suspend_Works()
     {
         // arrange
-        var cache = Get<IObjectCache<uint, Item>>();
+        var cache = Get<IObjectCache<ItemKey, Item>>();
         var log = Get<TestLog<string>>();
 
         // act
@@ -65,11 +67,13 @@ public class ObjectCacheTests : TestBase
                 .Range(0, 30)
                 .Select(async i =>
                 {
-                    await using var reference = await cache.GetAsync((uint)i % 2);
+                    await using var reference = await cache.GetAsync(new ItemKey { Value = i % 2 });
                     await Task.Delay(20);
                 })
         );
-        var references = await Task.WhenAll(Enumerable.Range(0, 20).Select(i => cache.GetAsync((uint)i % 2)));
+        var references = await Task.WhenAll(
+            Enumerable.Range(0, 20).Select(i => Task.Run(() => cache.GetAsync(new ItemKey { Value = i % 2 })))
+        );
         await cache.DisposeAsync();
 
         // assert
@@ -86,7 +90,7 @@ public class ObjectCacheTests : TestBase
         Enumerable.Range(0, 2).Select(x => $"{x} {Disposed}").All(log.Contains).IsTrue();
     }
 
-    private class ItemProvider : ObjectCacheProvider<uint, Item>
+    private class ItemProvider : ObjectCacheProvider<ItemKey, Item>
     {
         private readonly TestLog<string> _log;
 
@@ -95,7 +99,10 @@ public class ObjectCacheTests : TestBase
             _log = log;
         }
 
-        public override async Task<OneOf<Item, IDisposableReference<Item>>> CreateAsync(uint id, CancellationToken ct)
+        public override async Task<OneOf<Item, IDisposableReference<Item>>> CreateAsync(
+            ItemKey id,
+            CancellationToken ct
+        )
         {
             await Task.Delay(10);
 
@@ -105,19 +112,19 @@ public class ObjectCacheTests : TestBase
             return item;
         }
 
-        public override async Task SuspendAsync(uint id, Item value)
+        public override async Task SuspendAsync(ItemKey id, Item value)
         {
             await value.Suspend();
             _log.Add($"{value} {Suspended}");
         }
 
-        public override async Task ResumeAsync(uint id, Item value)
+        public override async Task ResumeAsync(ItemKey id, Item value)
         {
             await value.Resume();
             _log.Add($"{value} {Resumed}");
         }
 
-        public override Task DisposeAsync(uint id, Item value)
+        public override Task DisposeAsync(ItemKey id, Item value)
         {
             value.Dispose();
             _log.Add($"{value} {Disposed}");
@@ -128,9 +135,9 @@ public class ObjectCacheTests : TestBase
 
     private class Item : IDisposable
     {
-        private readonly uint _id;
+        private readonly ItemKey _id;
 
-        public Item(uint id)
+        public Item(ItemKey id)
         {
             _id = id;
         }
@@ -149,4 +156,11 @@ public class ObjectCacheTests : TestBase
 
         public override string ToString() => _id.ToString();
     }
+}
+
+public sealed record ItemKey
+{
+    public required int Value { get; init; }
+
+    public override string ToString() => Value.ToString();
 }

@@ -27,14 +27,14 @@ internal sealed class ObjectCache<TKey, TValue> : IObjectCache<TKey, TValue>, IL
         // get or create CacheEntry
         var ctx = new FactoryContext();
         var entry = _entries.GetOrAdd(key, Factory, ctx);
-        var isInitializing = ctx.IsCreated;
+        var isNew = ReferenceEquals(ctx.Entry, entry);
 
-        var operation = isInitializing ? "new entry created" : "existing entry used";
+        var operation = isNew ? "new entry created" : "existing entry used";
         this.Trace("Get by {key}: {operation} {entry}", key, operation, entry);
 
         // creator - immediately creates value, others - wait for access
         IDisposableReference<TValue>? reference = null;
-        if (isInitializing)
+        if (isNew)
         {
             this.Trace("Get by {key}: initialize entry {entry}", key, entry);
             var value = await _provider.CreateAsync(key, ct);
@@ -56,7 +56,7 @@ internal sealed class ObjectCache<TKey, TValue> : IObjectCache<TKey, TValue>, IL
         }
 
         // if not initializing and entry has no references - it is suspended, need to resume
-        if (!isInitializing && !entry.HasReferences)
+        if (!isNew && !entry.HasReferences)
         {
             this.Trace("Get by {key}: resume entry {entry}", key, entry);
             await _provider.ResumeAsync(key, entry.Value);
@@ -109,16 +109,11 @@ internal sealed class ObjectCache<TKey, TValue> : IObjectCache<TKey, TValue>, IL
         this.Trace("done");
     }
 
-    private static CacheEntry Factory(TKey key, FactoryContext ctx)
-    {
-        ctx.IsCreated = true;
-
-        return new CacheEntry();
-    }
+    private static CacheEntry Factory(TKey key, FactoryContext ctx) => ctx.Entry = new CacheEntry();
 
     private record FactoryContext
     {
-        public bool IsCreated;
+        public CacheEntry? Entry;
     }
 
     private sealed record CacheEntry : IDisposable
@@ -146,7 +141,7 @@ internal sealed class ObjectCache<TKey, TValue> : IObjectCache<TKey, TValue>, IL
 
         public void RemoveReference() => --_references;
 
-        public override string ToString() => $"#{this.GetFullId()} {_value?.ToString() ?? "null"} [{_references}]";
+        public override string ToString() => $"{this.GetFullId()} {_value?.ToString() ?? "null"} [{_references}]";
 
         public void Dispose()
         {
