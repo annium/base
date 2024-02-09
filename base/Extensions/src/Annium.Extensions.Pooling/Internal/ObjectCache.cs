@@ -29,14 +29,14 @@ internal sealed class ObjectCache<TKey, TValue> : IObjectCache<TKey, TValue>, IL
         var entry = _entries.GetOrAdd(key, Factory, ctx);
         var isInitializing = ctx.IsCreated;
 
-        var operation = isInitializing ? "new value created" : "existing value used";
-        this.Trace<TKey, string>("Get by {key}: {operation}", key, operation);
+        var operation = isInitializing ? "new entry created" : "existing entry used";
+        this.Trace("Get by {key}: {operation} {entry}", key, operation, entry);
 
         // creator - immediately creates value, others - wait for access
         IDisposableReference<TValue>? reference = null;
         if (isInitializing)
         {
-            this.Trace("Get by {key}: initialize entry", key);
+            this.Trace("Get by {key}: initialize entry {entry}", key, entry);
             var value = await _provider.CreateAsync(key, ct);
             value.Switch(
                 x => entry.SetValue(x),
@@ -47,23 +47,23 @@ internal sealed class ObjectCache<TKey, TValue> : IObjectCache<TKey, TValue>, IL
                 }
             );
 
-            this.Trace("Get by {key}: entry ready", key);
+            this.Trace("Get by {key}: entry {entry} ready", key, entry);
         }
         else
         {
-            this.Trace("Get by {key}: wait entry", key);
+            this.Trace("Get by {key}: wait entry {entry}", key, entry);
             await entry.WaitAsync();
         }
 
         // if not initializing and entry has no references - it is suspended, need to resume
         if (!isInitializing && !entry.HasReferences)
         {
-            this.Trace("Get by {key}: resume entry", key);
+            this.Trace("Get by {key}: resume entry {entry}", key, entry);
             await _provider.ResumeAsync(key, entry.Value);
         }
 
         // create reference, incrementing reference counter
-        this.Trace("Get by {key}: add entry reference", key);
+        this.Trace("Get by {key}: add entry {entry} reference", key, entry);
         entry.AddReference();
         reference ??= Disposable.Reference(entry.Value, () => Release(key, entry));
 
@@ -74,14 +74,14 @@ internal sealed class ObjectCache<TKey, TValue> : IObjectCache<TKey, TValue>, IL
 
     private async Task Release(TKey key, CacheEntry entry)
     {
-        this.Trace("Release by {key}: wait entry", key);
+        this.Trace("Release by {key}: wait entry {entry}", key, entry);
         await entry.WaitAsync();
 
-        this.Trace("Release by {key}: remove reference", key);
+        this.Trace("Release by {key}: remove reference from entry {entry}", key, entry);
         entry.RemoveReference();
         if (!entry.HasReferences)
         {
-            this.Trace("Release by {key}: suspend entry", key);
+            this.Trace("Release by {key}: suspend entry {entry}", key, entry);
             await _provider.SuspendAsync(key, entry.Value);
         }
 
@@ -146,7 +146,7 @@ internal sealed class ObjectCache<TKey, TValue> : IObjectCache<TKey, TValue>, IL
 
         public void RemoveReference() => --_references;
 
-        public override string ToString() => $"{Value} [{_references}]";
+        public override string ToString() => $"#{this.GetFullId()} {_value?.ToString() ?? "null"} [{_references}]";
 
         public void Dispose()
         {
