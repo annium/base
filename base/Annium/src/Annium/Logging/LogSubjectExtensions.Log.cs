@@ -5,6 +5,8 @@ namespace Annium.Logging;
 
 public static class LogSubjectLogExtensions
 {
+    private static bool IsEnabled(LogLevel level) => LogConfig.Level <= level;
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void Log(
         this ILogSubject subject,
@@ -15,7 +17,8 @@ public static class LogSubjectLogExtensions
         [CallerLineNumber] int line = 0
     )
     {
-        subject.Logger.Log(subject, file, member, line, level, message, Array.Empty<object>());
+        if (IsEnabled(level))
+            subject.Logger.Log(subject, file, member, line, level, message, Array.Empty<object>());
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -29,7 +32,8 @@ public static class LogSubjectLogExtensions
         [CallerLineNumber] int line = 0
     )
     {
-        subject.Logger.Log(subject, file, member, line, level, message, new object?[] { x1 });
+        if (IsEnabled(level))
+            subject.Logger.Log(subject, file, member, line, level, message, new object?[] { x1 });
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -44,7 +48,8 @@ public static class LogSubjectLogExtensions
         [CallerLineNumber] int line = 0
     )
     {
-        subject.Logger.Log(subject, file, member, line, level, message, new object?[] { x1, x2 });
+        if (IsEnabled(level))
+            subject.Logger.Log(subject, file, member, line, level, message, new object?[] { x1, x2 });
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -60,7 +65,8 @@ public static class LogSubjectLogExtensions
         [CallerLineNumber] int line = 0
     )
     {
-        subject.Logger.Log(subject, file, member, line, level, message, new object?[] { x1, x2, x3 });
+        if (IsEnabled(level))
+            subject.Logger.Log(subject, file, member, line, level, message, new object?[] { x1, x2, x3 });
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -77,7 +83,8 @@ public static class LogSubjectLogExtensions
         [CallerLineNumber] int line = 0
     )
     {
-        subject.Logger.Log(subject, file, member, line, level, message, new object?[] { x1, x2, x3, x4 });
+        if (IsEnabled(level))
+            subject.Logger.Log(subject, file, member, line, level, message, new object?[] { x1, x2, x3, x4 });
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -95,7 +102,8 @@ public static class LogSubjectLogExtensions
         [CallerLineNumber] int line = 0
     )
     {
-        subject.Logger.Log(subject, file, member, line, level, message, new object?[] { x1, x2, x3, x4, x5 });
+        if (IsEnabled(level))
+            subject.Logger.Log(subject, file, member, line, level, message, new object?[] { x1, x2, x3, x4, x5 });
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -114,7 +122,8 @@ public static class LogSubjectLogExtensions
         [CallerLineNumber] int line = 0
     )
     {
-        subject.Logger.Log(subject, file, member, line, level, message, new object?[] { x1, x2, x3, x4, x5, x6 });
+        if (IsEnabled(level))
+            subject.Logger.Log(subject, file, member, line, level, message, new object?[] { x1, x2, x3, x4, x5, x6 });
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -134,7 +143,16 @@ public static class LogSubjectLogExtensions
         [CallerLineNumber] int line = 0
     )
     {
-        subject.Logger.Log(subject, file, member, line, level, message, new object?[] { x1, x2, x3, x4, x5, x6, x7 });
+        if (IsEnabled(level))
+            subject.Logger.Log(
+                subject,
+                file,
+                member,
+                line,
+                level,
+                message,
+                new object?[] { x1, x2, x3, x4, x5, x6, x7 }
+            );
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -155,14 +173,15 @@ public static class LogSubjectLogExtensions
         [CallerLineNumber] int line = 0
     )
     {
-        subject.Logger.Log(
-            subject,
-            file,
-            member,
-            line,
-            level,
-            message,
-            new object?[] { x1, x2, x3, x4, x5, x6, x7, x8 }
-        );
+        if (IsEnabled(level))
+            subject.Logger.Log(
+                subject,
+                file,
+                member,
+                line,
+                level,
+                message,
+                new object?[] { x1, x2, x3, x4, x5, x6, x7, x8 }
+            );
     }
 }
