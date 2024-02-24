@@ -1,12 +1,10 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
 using Annium.Core.DependencyInjection;
 using Annium.Logging;
 using Annium.Testing;
-using Annium.Threading;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -25,7 +23,22 @@ public class WorkerTests : TestBase
     }
 
     [Fact]
-    public async Task Worker_Normal_Control()
+    public async Task Worker_Sequential_Control()
+    {
+        // arrange
+        var log = Get<SharedLog>();
+        var keyA = new WorkerData("A");
+        var manager = Get<IWorkerManager<WorkerData>>();
+
+        // act & assert
+        await manager.StartAsync(keyA);
+        log.GetLog(keyA).IsEqual(new[] { "start A" });
+        await manager.StopAsync(keyA);
+        log.GetLog(keyA).IsEqual(new[] { "start A", "done A" });
+    }
+
+    [Fact]
+    public async Task Worker_Concurrent_Control()
     {
         // arrange
         var log = Get<SharedLog>();
@@ -34,11 +47,9 @@ public class WorkerTests : TestBase
         var manager = Get<IWorkerManager<WorkerData>>();
 
         // act
-        manager.Start(keyA);
-        manager.Start(keyB);
+        await Task.WhenAll(Task.Run(() => manager.StartAsync(keyA)), Task.Run(() => manager.StartAsync(keyB)));
         await Task.Delay(100);
-        manager.Stop(keyA);
-        manager.Stop(keyB);
+        await Task.WhenAll(Task.Run(() => manager.StopAsync(keyA)), Task.Run(() => manager.StopAsync(keyB)));
 
         // assert
         await Expect.To(() =>
@@ -58,14 +69,18 @@ public class WorkerTests : TestBase
         var manager = Get<IWorkerManager<WorkerData>>();
 
         // act
-        manager.Start(keyA);
-        manager.Start(keyB);
-        manager.Start(keyA);
-        manager.Start(keyB);
-        manager.Stop(keyA);
-        manager.Stop(keyB);
-        manager.Stop(keyA);
-        manager.Stop(keyB);
+        await Task.WhenAll(
+            Task.Run(() => manager.StartAsync(keyA)),
+            Task.Run(() => manager.StartAsync(keyB)),
+            Task.Run(() => manager.StartAsync(keyA)),
+            Task.Run(() => manager.StartAsync(keyB))
+        );
+        await Task.WhenAll(
+            Task.Run(() => manager.StopAsync(keyA)),
+            Task.Run(() => manager.StopAsync(keyB)),
+            Task.Run(() => manager.StopAsync(keyA)),
+            Task.Run(() => manager.StopAsync(keyB))
+        );
 
         // assert
         await Expect.To(() =>
@@ -82,6 +97,7 @@ file class Worker : IWorker<WorkerData>, ILogSubject
 {
     public ILogger Logger { get; }
     private readonly SharedLog _log;
+    private WorkerData _key = default!;
 
     public Worker(SharedLog log, ILogger logger)
     {
@@ -89,13 +105,22 @@ file class Worker : IWorker<WorkerData>, ILogSubject
         _log = log;
     }
 
-    public async ValueTask RunAsync(WorkerData key, CancellationToken ct)
+    public async ValueTask InitAsync(WorkerData key)
     {
+        await Task.Delay(10);
+
+        _key = key;
+
         this.Trace<string>("start {id}", key.Id);
         _log.Track(key, $"start {key.Id}");
-        await ct;
-        _log.Track(key, $"done {key.Id}");
-        this.Trace<string>("done {id}", key.Id);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await Task.Delay(10);
+
+        _log.Track(_key, $"done {_key.Id}");
+        this.Trace<string>("done {id}", _key.Id);
     }
 }
 

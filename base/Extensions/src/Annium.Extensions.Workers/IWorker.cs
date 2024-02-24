@@ -1,11 +1,10 @@
 using System;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Annium.Extensions.Workers;
 
-public interface IWorker<TData>
-    where TData : IEquatable<TData>
+public interface IWorker<TKey> : IAsyncDisposable
+    where TKey : IEquatable<TKey>
 {
-    ValueTask RunAsync(TData key, CancellationToken ct);
+    ValueTask InitAsync(TKey key);
 }
