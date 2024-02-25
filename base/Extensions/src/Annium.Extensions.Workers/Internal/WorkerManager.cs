@@ -39,11 +39,11 @@ internal sealed class WorkerManager<TKey> : IWorkerManager<TKey>, IAsyncDisposab
             else
             {
                 this.Trace("create and schedule init of entry {entry} for {key}", entry.GetFullId(), key);
-                _entries[key] = entry = new Entry(_sp.Resolve<IWorker<TKey>>());
+                _entries[key] = entry = new Entry(_sp.Resolve<WorkerBase<TKey>>());
                 _executor.Schedule(async () =>
                 {
                     this.Trace("await init of entry {entry} for {key}", entry.GetFullId(), key);
-                    await entry.Worker.InitAsync(key);
+                    await entry.WorkerBase.InitAsync(key);
 
                     this.Trace("mark started entry {entry} for {key}", entry.GetFullId(), key);
                     entry.SetStarted();
@@ -81,7 +81,7 @@ internal sealed class WorkerManager<TKey> : IWorkerManager<TKey>, IAsyncDisposab
                 _executor.Schedule(async () =>
                 {
                     this.Trace("await disposal of entry {entry} for {key}", entry.GetFullId(), key);
-                    await entry.Worker.DisposeAsync();
+                    await entry.WorkerBase.DisposeAsync();
 
                     this.Trace("remove entry of entry {entry} for {key}", entry.GetFullId(), key);
                     lock (_entries)
@@ -121,7 +121,7 @@ internal sealed class WorkerManager<TKey> : IWorkerManager<TKey>, IAsyncDisposab
             throw new ObjectDisposedException(nameof(WorkerManager<TKey>));
     }
 
-    private record Entry(IWorker<TKey> Worker)
+    private record Entry(WorkerBase<TKey> WorkerBase)
     {
         public Task WhenStarted => _startedTcs.Task;
         public bool IsStopping { get; private set; }

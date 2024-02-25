@@ -18,7 +18,7 @@ public class WorkerTests : TestBase
         Register(container =>
         {
             container.Add<SharedLog>().AsSelf().Singleton();
-            container.AddWorkers<WorkerData, Worker>();
+            container.AddWorkers<WorkerData, WorkerBase>();
         });
     }
 
@@ -93,34 +93,31 @@ public class WorkerTests : TestBase
 
 file record WorkerData(string Id);
 
-file class Worker : IWorker<WorkerData>, ILogSubject
+file class WorkerBase : WorkerBase<WorkerData>, ILogSubject
 {
     public ILogger Logger { get; }
     private readonly SharedLog _log;
-    private WorkerData _key = default!;
 
-    public Worker(SharedLog log, ILogger logger)
+    public WorkerBase(SharedLog log, ILogger logger)
     {
         Logger = logger;
         _log = log;
     }
 
-    public async ValueTask InitAsync(WorkerData key)
+    public override async ValueTask InitAsync()
     {
         await Task.Delay(10);
 
-        _key = key;
-
-        this.Trace<string>("start {id}", key.Id);
-        _log.Track(key, $"start {key.Id}");
+        this.Trace<string>("start {id}", Key.Id);
+        _log.Track(Key, $"start {Key.Id}");
     }
 
-    public async ValueTask DisposeAsync()
+    public override async ValueTask DisposeAsync()
     {
         await Task.Delay(10);
 
-        _log.Track(_key, $"done {_key.Id}");
-        this.Trace<string>("done {id}", _key.Id);
+        _log.Track(Key, $"done {Key.Id}");
+        this.Trace<string>("done {id}", Key.Id);
     }
 }
 

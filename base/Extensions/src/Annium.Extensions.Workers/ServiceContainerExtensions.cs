@@ -12,10 +12,10 @@ public static class ServiceContainerExtensions
         ServiceLifetime lifetime = ServiceLifetime.Scoped
     )
         where TData : IEquatable<TData>
-        where TWorker : IWorker<TData>
+        where TWorker : WorkerBase<TData>
     {
         container.Add<IWorkerManager<TData>, WorkerManager<TData>>().In(lifetime);
-        container.Add<IWorker<TData>, TWorker>().Transient();
+        container.Add<WorkerBase<TData>, TWorker>().Transient();
 
         return container;
     }
