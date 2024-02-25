@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Annium.Core.DependencyInjection;
 using Annium.Logging;
@@ -104,15 +105,15 @@ file class WorkerBase : WorkerBase<WorkerData>, ILogSubject
         _log = log;
     }
 
-    public override async ValueTask InitAsync()
+    protected override async ValueTask StartAsync(CancellationToken ct)
     {
-        await Task.Delay(10);
+        await Task.Delay(10, ct);
 
         this.Trace<string>("start {id}", Key.Id);
         _log.Track(Key, $"start {Key.Id}");
     }
 
-    public override async ValueTask DisposeAsync()
+    protected override async ValueTask StopAsync()
     {
         await Task.Delay(10);
 
