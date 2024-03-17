@@ -3,6 +3,7 @@
         <PackageId>Annium.Core.DependencyInjection</PackageId>
         <PackageVersion>0.1.0</PackageVersion>
         <Description>Annium.Core.DependencyInjection.Abstractions</Description>
+        <Solutions>Annium.Base</Solutions>
         <TargetFramework>net8.0</TargetFramework>
         <OutputType>Library</OutputType>
         <DebugType>portable</DebugType>

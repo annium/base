@@ -13,9 +13,7 @@ namespace Annium.Tests.Threading;
 public class SyncTimerTests : TestBase
 {
     public SyncTimerTests(ITestOutputHelper outputHelper)
-        : base(outputHelper)
-    {
-    }
+        : base(outputHelper) { }
 
     [Fact]
     public async Task Stateful_Overlapping()
@@ -87,7 +85,8 @@ public class SyncTimerTests : TestBase
 
         // arrange
         var state = new State();
-        using var timer = Timers.Sync(() =>
+        using var timer = Timers.Sync(
+            () =>
             {
                 state.Push();
                 Thread.Sleep(3);
@@ -116,7 +115,8 @@ public class SyncTimerTests : TestBase
 
         // arrange
         var state = new State();
-        using var timer = Timers.Sync(() =>
+        using var timer = Timers.Sync(
+            () =>
             {
                 state.Push();
                 Thread.Sleep(3);
@@ -145,8 +145,7 @@ public class SyncTimerTests : TestBase
         do
         {
             await Task.Delay(5);
-        }
-        while (state.Data.Count % 2 > 0);
+        } while (state.Data.Count % 2 > 0);
 
         var expectedData = Enumerable.Range(0, state.Data.Count).ToArray();
         state.Data.SequenceEqual(expectedData).IsTrue();

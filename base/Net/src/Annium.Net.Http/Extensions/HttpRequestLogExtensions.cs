@@ -67,7 +67,8 @@ public static class HttpRequestLogExtensions
                         IEnumerable<KeyValuePair<string, IEnumerable<string>>> headers = headerMasks is null
                             ? response.Headers
                             : response.Headers.Where(
-                                x => headerMasks.Any(m => x.Key.Contains(m, StringComparison.InvariantCultureIgnoreCase))
+                                x =>
+                                    headerMasks.Any(m => x.Key.Contains(m, StringComparison.InvariantCultureIgnoreCase))
                             );
                         foreach (var (name, values) in headers)
                             subject.Trace<string, string>(

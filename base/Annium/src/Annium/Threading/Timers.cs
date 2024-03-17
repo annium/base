@@ -23,7 +23,13 @@ public static class Timers
         return new AsyncTimer(handler, dueTime, period, logger);
     }
 
-    public static ISequentialTimer Async<T>(T state, Func<T, ValueTask> handler, int dueTime, int period, ILogger logger)
+    public static ISequentialTimer Async<T>(
+        T state,
+        Func<T, ValueTask> handler,
+        int dueTime,
+        int period,
+        ILogger logger
+    )
         where T : class
     {
         return new AsyncTimer<T>(state, handler, dueTime, period, logger);
