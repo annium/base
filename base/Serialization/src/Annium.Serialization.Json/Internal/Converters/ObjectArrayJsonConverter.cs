@@ -17,14 +17,13 @@ internal class ObjectArrayJsonConverter<T> : JsonConverter<T>
     {
         var raw = typeof(T)
             .GetMembers()
-            .Where(
-                x =>
-                    x switch
-                    {
-                        PropertyInfo p => p is { CanRead: true, CanWrite: true },
-                        FieldInfo f => !f.IsInitOnly,
-                        _ => false
-                    }
+            .Where(x =>
+                x switch
+                {
+                    PropertyInfo p => p is { CanRead: true, CanWrite: true },
+                    FieldInfo f => !f.IsInitOnly,
+                    _ => false
+                }
             )
             .Select(x => (order: x.GetCustomAttribute<JsonPropertyOrderAttribute>()?.Order, member: x))
             .ToArray();

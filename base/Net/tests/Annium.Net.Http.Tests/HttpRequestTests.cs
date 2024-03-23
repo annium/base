@@ -147,8 +147,8 @@ public class HttpRequestTests : TestBase
         await using var _ = RunServer(
             (request, response) =>
             {
-                var targetHeaders = request.Headers.AllKeys
-                    .OfType<string>()
+                var targetHeaders = request
+                    .Headers.AllKeys.OfType<string>()
                     .Where(x => x.StartsWith(headerPrefix))
                     .ToArray();
 

@@ -18,8 +18,7 @@ var config = new ManualConfig()
     .AddExporter(MarkdownExporter.Default)
     .AddDiagnoser(MemoryDiagnoser.Default)
     .AddJob(
-        Job.Default
-            .WithWarmupCount(1)
+        Job.Default.WithWarmupCount(1)
             .WithLaunchCount(3)
             .WithIterationCount(5)
             .WithStrategy(RunStrategy.Throughput)

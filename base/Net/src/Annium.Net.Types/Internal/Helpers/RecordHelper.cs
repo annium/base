@@ -14,8 +14,8 @@ internal static class RecordHelper
             type.Type.IsGenericType && type.Type.GetGenericTypeDefinition() == MapperConfig.BaseArrayType
                 ? type
                 : type.GetInterfaces()
-                    .SingleOrDefault(
-                        x => x.Type.IsGenericType && x.Type.GetGenericTypeDefinition() == MapperConfig.BaseArrayType
+                    .SingleOrDefault(x =>
+                        x.Type.IsGenericType && x.Type.GetGenericTypeDefinition() == MapperConfig.BaseArrayType
                     );
         if (arrayImplementation is null)
             throw new InvalidOperationException(

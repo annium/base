@@ -65,13 +65,12 @@ public class RepackerTest
     public void Ternary_Works()
     {
         // act
-        var result = Repack<string, string>(
-            v =>
-                v == "1"
-                    ? "one"
-                    : v == "2"
-                        ? "two"
-                        : "other"
+        var result = Repack<string, string>(v =>
+            v == "1"
+                ? "one"
+                : v == "2"
+                    ? "two"
+                    : "other"
         );
 
         // assert

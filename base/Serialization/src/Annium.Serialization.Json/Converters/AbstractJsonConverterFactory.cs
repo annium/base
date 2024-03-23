@@ -28,10 +28,8 @@ public class AbstractJsonConverterFactory : JsonConverterFactory
         if (
             objectType
                 .GetInterfaces()
-                .Any(
-                    x =>
-                        x == typeof(IEnumerable)
-                        || x.IsGenericType && x.GetGenericTypeDefinition() == typeof(IEnumerable<>)
+                .Any(x =>
+                    x == typeof(IEnumerable) || x.IsGenericType && x.GetGenericTypeDefinition() == typeof(IEnumerable<>)
                 )
         )
             return false;

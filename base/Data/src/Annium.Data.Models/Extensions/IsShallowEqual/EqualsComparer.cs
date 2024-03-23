@@ -19,8 +19,8 @@ public static partial class IsShallowEqualExtensions
         if (equals != null)
             return equals;
 
-        return methods.SingleOrDefault(
-            x => x.DeclaringType == type && x.GetParameters()[0].ParameterType == typeof(object)
+        return methods.SingleOrDefault(x =>
+            x.DeclaringType == type && x.GetParameters()[0].ParameterType == typeof(object)
         );
     }
 

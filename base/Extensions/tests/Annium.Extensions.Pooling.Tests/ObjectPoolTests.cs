@@ -85,14 +85,13 @@ public class ObjectPoolTests
         await Task.WhenAll(
             Enumerable
                 .Range(0, Jobs)
-                .Select(
-                    i =>
-                        Task.Run(() =>
-                        {
-                            var item = pool.Get();
-                            item.ExecuteAction(i);
-                            pool.Return(item);
-                        })
+                .Select(i =>
+                    Task.Run(() =>
+                    {
+                        var item = pool.Get();
+                        item.ExecuteAction(i);
+                        pool.Return(item);
+                    })
                 )
         );
     }

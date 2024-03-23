@@ -47,14 +47,12 @@ internal class DictionaryAssignmentMapResolver : IMapResolver
             // exclude target properties, that are configured to be ignored or have configured mapping, from basic assignment mapping
             var excludedMembers = cfg.MemberMaps.Keys.Concat(cfg.IgnoredMembers).ToArray();
             targets = targets
-                .Where(
-                    target =>
-                        !excludedMembers.Any(
-                            x =>
-                                x.DeclaringType == target.DeclaringType
-                                && x.PropertyType == target.PropertyType
-                                && x.Name == target.Name
-                        )
+                .Where(target =>
+                    !excludedMembers.Any(x =>
+                        x.DeclaringType == target.DeclaringType
+                        && x.PropertyType == target.PropertyType
+                        && x.Name == target.Name
+                    )
                 )
                 // ignore interface implementations
                 .Where(x => !x.Name.Contains('.'))

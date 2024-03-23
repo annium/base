@@ -22,8 +22,8 @@ public static class GetInheritedInterfacesExtension
                 interfaces.Add(x);
 
         foreach (var @interface in type.GetInterfaces())
-            foreach (var x in @interface.GetInterfaces())
-                interfaces.Add(x);
+        foreach (var x in @interface.GetInterfaces())
+            interfaces.Add(x);
 
         return interfaces.ToArray();
     }

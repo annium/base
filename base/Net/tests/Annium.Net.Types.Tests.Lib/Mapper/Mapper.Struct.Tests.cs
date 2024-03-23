@@ -63,8 +63,8 @@ public abstract class MapperStructTestsBase : TestBase
         structModel.Args.At(1).Is(new GenericParameterRef("T2"));
         structModel.Base.IsDefault();
         structModel.Interfaces.Has(2);
-        structModel.Interfaces
-            .At(0)
+        structModel
+            .Interfaces.At(0)
             .Is(
                 new InterfaceRef(
                     typeof(IMulti<,>).GetNamespace().ToString(),
@@ -73,8 +73,8 @@ public abstract class MapperStructTestsBase : TestBase
                     new GenericParameterRef("T1")
                 )
             );
-        structModel.Interfaces
-            .At(1)
+        structModel
+            .Interfaces.At(1)
             .Is(
                 new InterfaceRef(
                     typeof(Struct<,>).GetNamespace().ToString(),
@@ -89,25 +89,25 @@ public abstract class MapperStructTestsBase : TestBase
             );
         structModel.Fields.Has(8);
         structModel.Fields.At(0).Is(new FieldModel(new BaseTypeRef(BaseType.String), nameof(Struct<int, int>.Name)));
-        structModel.Fields
-            .At(1)
+        structModel
+            .Fields.At(1)
             .Is(new FieldModel(new NullableRef(new BaseTypeRef(BaseType.String)), nameof(Struct<int, int>.Comment)));
-        structModel.Fields
-            .At(2)
+        structModel
+            .Fields.At(2)
             .Is(new FieldModel(new ArrayRef(new GenericParameterRef("T2")), nameof(Struct<int, int>.Data)));
-        structModel.Fields
-            .At(3)
+        structModel
+            .Fields.At(3)
             .Is(
                 new FieldModel(
                     new RecordRef(new BaseTypeRef(BaseType.String), new GenericParameterRef("T1")),
                     nameof(Struct<int, int>.Values)
                 )
             );
-        structModel.Fields
-            .At(4)
+        structModel
+            .Fields.At(4)
             .Is(new FieldModel(new NullableRef(new BaseTypeRef(BaseType.Int)), nameof(Struct<int, int>.Ttl)));
-        structModel.Fields
-            .At(5)
+        structModel
+            .Fields.At(5)
             .Is(
                 new FieldModel(
                     new ArrayRef(
@@ -121,16 +121,16 @@ public abstract class MapperStructTestsBase : TestBase
                     nameof(Struct<int, int>.Items)
                 )
             );
-        structModel.Fields
-            .At(6)
+        structModel
+            .Fields.At(6)
             .Is(
                 new FieldModel(
                     new NullableRef(new StructRef(typeof(EmptyStruct).GetNamespace().ToString(), nameof(EmptyStruct))),
                     nameof(Struct<int, int>.Option)
                 )
             );
-        structModel.Fields
-            .At(7)
+        structModel
+            .Fields.At(7)
             .Is(
                 new FieldModel(
                     new ArrayRef(new StructRef(typeof(EmptyRecord).GetNamespace().ToString(), nameof(EmptyRecord))),
@@ -147,14 +147,14 @@ public abstract class MapperStructTestsBase : TestBase
         multi.Interfaces.IsEmpty();
         multi.Fields.Has(4);
         multi.Fields.At(0).Is(new FieldModel(new BaseTypeRef(BaseType.String), nameof(IMulti<int, int>.Name)));
-        multi.Fields
-            .At(1)
+        multi
+            .Fields.At(1)
             .Is(new FieldModel(new NullableRef(new BaseTypeRef(BaseType.String)), nameof(IMulti<int, int>.Comment)));
-        multi.Fields
-            .At(2)
+        multi
+            .Fields.At(2)
             .Is(new FieldModel(new ArrayRef(new GenericParameterRef("T1")), nameof(IMulti<int, int>.Data)));
-        multi.Fields
-            .At(3)
+        multi
+            .Fields.At(3)
             .Is(
                 new FieldModel(
                     new RecordRef(new BaseTypeRef(BaseType.String), new GenericParameterRef("T2")),

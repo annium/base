@@ -73,57 +73,51 @@ public class ServiceContainer : IServiceContainer
         return descriptor switch
         {
             ITypeServiceDescriptor d
-                => Collection.Any(
-                    x =>
-                        !x.IsKeyedService
-                        && x.Lifetime == lifetime
-                        && x.ServiceType == d.ServiceType
-                        && x.ImplementationType == d.ImplementationType
+                => Collection.Any(x =>
+                    !x.IsKeyedService
+                    && x.Lifetime == lifetime
+                    && x.ServiceType == d.ServiceType
+                    && x.ImplementationType == d.ImplementationType
                 ),
             IFactoryServiceDescriptor d
-                => Collection.Any(
-                    x =>
-                        !x.IsKeyedService
-                        && x.Lifetime == lifetime
-                        && x.ServiceType == d.ServiceType
-                        && x.ImplementationFactory?.Method == d.ImplementationFactory.Method
-                        && x.ImplementationFactory?.Target == d.ImplementationFactory.Target
+                => Collection.Any(x =>
+                    !x.IsKeyedService
+                    && x.Lifetime == lifetime
+                    && x.ServiceType == d.ServiceType
+                    && x.ImplementationFactory?.Method == d.ImplementationFactory.Method
+                    && x.ImplementationFactory?.Target == d.ImplementationFactory.Target
                 ),
             IInstanceServiceDescriptor d
-                => Collection.Any(
-                    x =>
-                        !x.IsKeyedService
-                        && x.Lifetime == lifetime
-                        && x.ServiceType == d.ServiceType
-                        && x.ImplementationInstance == d.ImplementationInstance
+                => Collection.Any(x =>
+                    !x.IsKeyedService
+                    && x.Lifetime == lifetime
+                    && x.ServiceType == d.ServiceType
+                    && x.ImplementationInstance == d.ImplementationInstance
                 ),
             IKeyedTypeServiceDescriptor d
-                => Collection.Any(
-                    x =>
-                        x.IsKeyedService
-                        && x.Lifetime == lifetime
-                        && x.ServiceType == d.ServiceType
-                        && x.ServiceKey == d.Key
-                        && x.KeyedImplementationType == d.ImplementationType
+                => Collection.Any(x =>
+                    x.IsKeyedService
+                    && x.Lifetime == lifetime
+                    && x.ServiceType == d.ServiceType
+                    && x.ServiceKey == d.Key
+                    && x.KeyedImplementationType == d.ImplementationType
                 ),
             IKeyedFactoryServiceDescriptor d
-                => Collection.Any(
-                    x =>
-                        x.IsKeyedService
-                        && x.Lifetime == lifetime
-                        && x.ServiceType == d.ServiceType
-                        && x.ServiceKey == d.Key
-                        && x.KeyedImplementationFactory?.Method == d.ImplementationFactory.Method
-                        && x.KeyedImplementationFactory?.Target == d.ImplementationFactory.Target
+                => Collection.Any(x =>
+                    x.IsKeyedService
+                    && x.Lifetime == lifetime
+                    && x.ServiceType == d.ServiceType
+                    && x.ServiceKey == d.Key
+                    && x.KeyedImplementationFactory?.Method == d.ImplementationFactory.Method
+                    && x.KeyedImplementationFactory?.Target == d.ImplementationFactory.Target
                 ),
             IKeyedInstanceServiceDescriptor d
-                => Collection.Any(
-                    x =>
-                        x.IsKeyedService
-                        && x.Lifetime == lifetime
-                        && x.ServiceType == d.ServiceType
-                        && x.ServiceKey == d.Key
-                        && x.KeyedImplementationInstance == d.ImplementationInstance
+                => Collection.Any(x =>
+                    x.IsKeyedService
+                    && x.Lifetime == lifetime
+                    && x.ServiceType == d.ServiceType
+                    && x.ServiceKey == d.Key
+                    && x.KeyedImplementationInstance == d.ImplementationInstance
                 ),
             _ => throw new NotSupportedException($"{descriptor.GetType().FriendlyName()} is not supported")
         };

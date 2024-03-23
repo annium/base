@@ -48,9 +48,7 @@ public class ResolveByImplementationExtensionTests
     public void GenericParameter_ReturnsParameter()
     {
         // assert
-        typeof(List<>).GetGenericArguments()[0]
-            .ResolveByImplementation(typeof(int))
-            .Is(typeof(int));
+        typeof(List<>).GetGenericArguments()[0].ResolveByImplementation(typeof(int)).Is(typeof(int));
     }
 
     [Fact]

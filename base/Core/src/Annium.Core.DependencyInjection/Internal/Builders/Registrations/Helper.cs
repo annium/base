@@ -40,21 +40,19 @@ internal static class Helper
 {
     private static readonly MethodInfo GetRequiredServiceMethod = typeof(ServiceProviderServiceExtensions)
         .GetMethods()
-        .Single(
-            x =>
-                x.Name == nameof(ServiceProviderServiceExtensions.GetRequiredService)
-                && x.GetParameters().Length == 1
-                && x.GetParameters()[0].ParameterType == typeof(IServiceProvider)
+        .Single(x =>
+            x.Name == nameof(ServiceProviderServiceExtensions.GetRequiredService)
+            && x.GetParameters().Length == 1
+            && x.GetParameters()[0].ParameterType == typeof(IServiceProvider)
         );
 
     private static readonly MethodInfo GetRequiredKeyedServiceMethod = typeof(ServiceProviderKeyedServiceExtensions)
         .GetMethods()
-        .Single(
-            x =>
-                x.Name == nameof(ServiceProviderKeyedServiceExtensions.GetRequiredKeyedService)
-                && x.GetParameters().Length == 2
-                && x.GetParameters()[0].ParameterType == typeof(IServiceProvider)
-                && x.GetParameters()[1].ParameterType == typeof(object)
+        .Single(x =>
+            x.Name == nameof(ServiceProviderKeyedServiceExtensions.GetRequiredKeyedService)
+            && x.GetParameters().Length == 2
+            && x.GetParameters()[0].ParameterType == typeof(IServiceProvider)
+            && x.GetParameters()[1].ParameterType == typeof(object)
         );
 
     public static Type FactoryType(Type type) => typeof(Func<>).MakeGenericType(type);

@@ -10,13 +10,12 @@ public static class DoParallelAsyncOperatorExtensions
         this IObservable<TSource> source,
         Func<TSource, Task> handle
     ) =>
-        source.SelectMany(
-            x =>
-                Observable.FromAsync(async () =>
-                {
-                    await handle(x);
-                    return x;
-                })
+        source.SelectMany(x =>
+            Observable.FromAsync(async () =>
+            {
+                await handle(x);
+                return x;
+            })
         );
 
     public static IObservable<TSource> DoParallelAsync<TSource>(

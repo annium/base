@@ -64,11 +64,11 @@ internal class CompositionExecutor<TValue> : IComposer<TValue>
     {
         var duplicates = new Dictionary<PropertyInfo, IList<Type>>();
         foreach (var composer in composers)
-            foreach (var field in composer.Fields)
-                if (duplicates.ContainsKey(field))
-                    duplicates[field].Add(composer.GetType());
-                else
-                    duplicates[field] = new List<Type> { composer.GetType() };
+        foreach (var field in composer.Fields)
+            if (duplicates.ContainsKey(field))
+                duplicates[field].Add(composer.GetType());
+            else
+                duplicates[field] = new List<Type> { composer.GetType() };
 
         return duplicates.Where(p => p.Value.Count > 1).ToDictionary(p => p.Key, p => p.Value);
     }

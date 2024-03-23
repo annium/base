@@ -23,7 +23,9 @@ internal class EnumerableMapResolver : IMapResolver
             {
                 var def = tgt.GetGenericTypeDefinition();
                 if (
-                    def == typeof(ICollection<>) || def == typeof(IReadOnlyCollection<>) || def == typeof(IEnumerable<>)
+                    def == typeof(ICollection<>)
+                    || def == typeof(IReadOnlyCollection<>)
+                    || def == typeof(IEnumerable<>)
                 )
                     tgt = tgtEl.MakeArrayType();
                 if (def == typeof(IList<>) || def == typeof(IReadOnlyList<>))

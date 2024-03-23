@@ -27,7 +27,6 @@ public static class HashCodeSeq
         {
             var hash = 19;
             foreach (var x in seq)
-
                 hash = hash * 31 + x.GetHashCode();
 
             return hash;

@@ -146,8 +146,8 @@ internal class ConfigurationProcessor<T>
         if (path.Length == 0)
             return _config.Keys.Select(k => k.First()).Distinct().ToArray();
 
-        return _config.Keys
-            .Where(k => k.Length > path.Length)
+        return _config
+            .Keys.Where(k => k.Length > path.Length)
             .Where(k => Normalize(k.Take(path.Length)).SequenceEqual(path))
             .Select(k => k.Skip(path.Length).First())
             .Distinct()
@@ -160,8 +160,8 @@ internal class ConfigurationProcessor<T>
         if (path.Length == 0)
             return _config.Keys.Any();
 
-        return _config.Keys
-            .Where(k => k.Length >= path.Length)
+        return _config
+            .Keys.Where(k => k.Length >= path.Length)
             .Select(k => k.Take(path.Length))
             .Any(k => Normalize(k).SequenceEqual(path));
     }

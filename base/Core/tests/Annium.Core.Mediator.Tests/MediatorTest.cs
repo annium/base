@@ -52,11 +52,10 @@ public class MediatorTest : TestBase
     public async Task ChainOfHandlers_WithExpectedParameters_Works()
     {
         // arrange
-        RegisterMediator(
-            cfg =>
-                cfg.AddHandler(typeof(ConversionHandler<,>))
-                    .AddHandler(typeof(ValidationHandler<,>))
-                    .AddHandler(typeof(OpenFinalHandler<,>))
+        RegisterMediator(cfg =>
+            cfg.AddHandler(typeof(ConversionHandler<,>))
+                .AddHandler(typeof(ValidationHandler<,>))
+                .AddHandler(typeof(OpenFinalHandler<,>))
         );
         SetupLogging();
         var mediator = Get<IMediator>();
@@ -75,12 +74,11 @@ public class MediatorTest : TestBase
     public async Task ChainOfHandlers_WithRegisteredResponse_Works()
     {
         // arrange
-        RegisterMediator(
-            cfg =>
-                cfg.AddHandler(typeof(ConversionHandler<,>))
-                    .AddHandler(typeof(ValidationHandler<,>))
-                    .AddHandler(typeof(OpenFinalHandler<,>))
-                    .AddMatch(typeof(Request<Two>), typeof(IResponse), typeof(Response<IBooleanResult<Base>>))
+        RegisterMediator(cfg =>
+            cfg.AddHandler(typeof(ConversionHandler<,>))
+                .AddHandler(typeof(ValidationHandler<,>))
+                .AddHandler(typeof(OpenFinalHandler<,>))
+                .AddMatch(typeof(Request<Two>), typeof(IResponse), typeof(Response<IBooleanResult<Base>>))
         );
         SetupLogging();
         var mediator = Get<IMediator>();
@@ -108,17 +106,15 @@ public class MediatorTest : TestBase
     private void SetupLogging() =>
         Setup(sp =>
         {
-            sp.UseLogging(
-                route =>
-                    route
-                        .For(
-                            m =>
-                                m.SubjectType.StartsWith("ConversionHandler")
-                                || m.SubjectType.StartsWith("ValidationHandler")
-                                || m.SubjectType.StartsWith("OpenFinalHandler")
-                                || m.SubjectType.StartsWith("ClosedFinalHandler")
-                        )
-                        .UseInMemory()
+            sp.UseLogging(route =>
+                route
+                    .For(m =>
+                        m.SubjectType.StartsWith("ConversionHandler")
+                        || m.SubjectType.StartsWith("ValidationHandler")
+                        || m.SubjectType.StartsWith("OpenFinalHandler")
+                        || m.SubjectType.StartsWith("ClosedFinalHandler")
+                    )
+                    .UseInMemory()
             );
         });
 

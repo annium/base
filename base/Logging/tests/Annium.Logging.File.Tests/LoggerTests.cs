@@ -22,16 +22,15 @@ public class LoggerTests : TestBase
 
         Setup(sp =>
         {
-            sp.UseLogging(
-                route =>
-                    route.UseFile(
-                        new FileLoggingConfiguration<DefaultLogContext>
-                        {
-                            BufferTime = TimeSpan.Zero,
-                            BufferCount = 1,
-                            GetFile = _ => _logFile
-                        }
-                    )
+            sp.UseLogging(route =>
+                route.UseFile(
+                    new FileLoggingConfiguration<DefaultLogContext>
+                    {
+                        BufferTime = TimeSpan.Zero,
+                        BufferCount = 1,
+                        GetFile = _ => _logFile
+                    }
+                )
             );
         });
     }

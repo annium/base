@@ -53,8 +53,8 @@ internal class ConstructorJsonConverter<T> : JsonConverter<T>
             }
 
             // try find property
-            var property = _properties.SingleOrDefault(
-                x => x.Name.Equals(prop.Name, StringComparison.OrdinalIgnoreCase)
+            var property = _properties.SingleOrDefault(x =>
+                x.Name.Equals(prop.Name, StringComparison.OrdinalIgnoreCase)
             );
             if (property is null)
                 continue;

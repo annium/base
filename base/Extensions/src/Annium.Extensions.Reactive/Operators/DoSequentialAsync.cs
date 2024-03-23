@@ -11,13 +11,12 @@ public static class DoSequentialAsyncOperatorExtensions
         Func<TSource, Task> handle
     ) =>
         source
-            .Select(
-                x =>
-                    Observable.FromAsync(async () =>
-                    {
-                        await handle(x);
-                        return x;
-                    })
+            .Select(x =>
+                Observable.FromAsync(async () =>
+                {
+                    await handle(x);
+                    return x;
+                })
             )
             .Concat();
 

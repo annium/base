@@ -34,14 +34,12 @@ internal class AssignmentMapResolver : IMapResolver
             // exclude target properties, that are configured to be ignored or have configured mapping, from basic assignment mapping
             var excludedMembers = cfg.MemberMaps.Keys.Concat(cfg.IgnoredMembers).ToArray();
             targets = targets
-                .Where(
-                    target =>
-                        !excludedMembers.Any(
-                            x =>
-                                x.DeclaringType == target.DeclaringType
-                                && x.PropertyType == target.PropertyType
-                                && x.Name == target.Name
-                        )
+                .Where(target =>
+                    !excludedMembers.Any(x =>
+                        x.DeclaringType == target.DeclaringType
+                        && x.PropertyType == target.PropertyType
+                        && x.Name == target.Name
+                    )
                 )
                 // ignore interface implementations
                 .Where(x => !x.Name.Contains('.'))
@@ -83,8 +81,8 @@ internal class AssignmentMapResolver : IMapResolver
                     {
                         // otherwise - target field must match respective source field
                         var prop =
-                            sources.FirstOrDefault(
-                                p => string.Equals(p.Name, target.Name, StringComparison.InvariantCultureIgnoreCase)
+                            sources.FirstOrDefault(p =>
+                                string.Equals(p.Name, target.Name, StringComparison.InvariantCultureIgnoreCase)
                             )
                             ?? throw new MappingException(src, tgt, $"No property found for target property {target}");
 

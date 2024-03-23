@@ -114,10 +114,9 @@ public static class ServiceContainerExtensions
 
         var types = profileTypes
             .SelectMany(x => typeResolver.ResolveType(x.Type))
-            .Where(
-                x =>
-                    !x.IsGenericType
-                    || x.GetGenericArguments().All(a => a.GetCustomAttribute<AutoMappedAttribute>() is not null)
+            .Where(x =>
+                !x.IsGenericType
+                || x.GetGenericArguments().All(a => a.GetCustomAttribute<AutoMappedAttribute>() is not null)
             )
             .ToArray();
 

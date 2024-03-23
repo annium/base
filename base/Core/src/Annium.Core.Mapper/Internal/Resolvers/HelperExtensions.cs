@@ -19,8 +19,8 @@ internal static class HelperExtensions
             return type.GenericTypeArguments[0];
 
         var enumerable = type.GetTypeInfo()
-            .ImplementedInterfaces.FirstOrDefault(
-                i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>)
+            .ImplementedInterfaces.FirstOrDefault(i =>
+                i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>)
             );
 
         return enumerable?.GenericTypeArguments[0];

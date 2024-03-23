@@ -146,11 +146,8 @@ public class BaseLoggerTest : TestBase
 
         var provider = container.BuildServiceProvider();
 
-        provider.UseLogging<Context>(
-            route =>
-                route
-                    .For(m => m.Level >= minLogLevel)
-                    .UseInstance(new LogHandler(_messages), new LogRouteConfiguration())
+        provider.UseLogging<Context>(route =>
+            route.For(m => m.Level >= minLogLevel).UseInstance(new LogHandler(_messages), new LogRouteConfiguration())
         );
 
         return provider;

@@ -98,10 +98,9 @@ public static class ServiceContainerExtensions
 
     private static IReadOnlyCollection<PropertyInfo> GetRegisteredProperties(Type type) =>
         type.GetProperties()
-            .Where(
-                x =>
-                    x is { CanRead: true, PropertyType: { IsEnum: false, IsValueType: false, IsPrimitive: false } }
-                    && !x.PropertyType.IsDerivedFrom(typeof(IEnumerable<>))
+            .Where(x =>
+                x is { CanRead: true, PropertyType: { IsEnum: false, IsValueType: false, IsPrimitive: false } }
+                && !x.PropertyType.IsDerivedFrom(typeof(IEnumerable<>))
             )
             .ToArray();
 }

@@ -32,8 +32,8 @@ internal class TypeResolver : ITypeResolver, ILogSubject
                     $"Can't use generic Profile {type} with unconstrained parameter {argument}"
                 );
 
-            var implementations = _typeManager.Types
-                .Where(x => !x.ContainsGenericParameters)
+            var implementations = _typeManager
+                .Types.Where(x => !x.ContainsGenericParameters)
                 .Select(x => x.GetTargetImplementation(argument))
                 .Where(x => x != null)
                 .ToArray();

@@ -41,13 +41,12 @@ public class ConstructorJsonConverterFactory : JsonConverterFactory
         // select non-default constructors
         var constructors = type.GetConstructors(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
             .Where(IsSuitableConstructor)
-            .Select(
-                x =>
-                    (
-                        constructor: x,
-                        isSelected: x.GetCustomAttribute<DeserializationConstructorAttribute>() != null,
-                        paramsCount: x.GetParameters().Length
-                    )
+            .Select(x =>
+                (
+                    constructor: x,
+                    isSelected: x.GetCustomAttribute<DeserializationConstructorAttribute>() != null,
+                    paramsCount: x.GetParameters().Length
+                )
             )
             .OrderByDescending(x => x.paramsCount)
             .ToArray();

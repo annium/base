@@ -18,8 +18,8 @@ internal static class ArrayHelper
         else
         {
             var arrayImplementation = type.GetInterfaces()
-                .SingleOrDefault(
-                    x => x.Type.IsGenericType && x.Type.GetGenericTypeDefinition() == MapperConfig.BaseArrayType
+                .SingleOrDefault(x =>
+                    x.Type.IsGenericType && x.Type.GetGenericTypeDefinition() == MapperConfig.BaseArrayType
                 );
             elementType = arrayImplementation?.GetGenericArguments()[0];
         }

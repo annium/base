@@ -84,10 +84,10 @@ public sealed record UriQuery
         var code = 0;
 
         foreach (var (key, values) in _data.OrderBy(x => x.Key))
-            foreach (var value in values.OrderBy(x => x))
-            {
-                code = HashCode.Combine(code, key, value);
-            }
+        foreach (var value in values.OrderBy(x => x))
+        {
+            code = HashCode.Combine(code, key, value);
+        }
 
         return code;
     }
