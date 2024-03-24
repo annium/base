@@ -17,10 +17,14 @@ internal class GraylogLogHandler<TContext> : BufferingLogHandler<TContext>
     private readonly ISerializer<string> _serializer;
     private readonly GraylogConfiguration _cfg;
 
-    public GraylogLogHandler(IHttpRequestFactory httpRequestFactory, ISerializer<string> serializer, GraylogConfiguration cfg)
+    public GraylogLogHandler(
+        IHttpRequestFactory httpRequestFactory,
+        ISerializer<string> serializer,
+        GraylogConfiguration cfg
+    )
         : base(cfg)
     {
-        _format = Gelf.CreateFormat<TContext>(cfg.Project);
+        _format = Gelf<TContext>.CreateFormat(cfg.Project);
         _httpRequestFactory = httpRequestFactory;
         _serializer = serializer;
         _cfg = cfg;
@@ -32,11 +36,7 @@ internal class GraylogLogHandler<TContext> : BufferingLogHandler<TContext>
 
         try
         {
-            var response = await _httpRequestFactory
-                .New(_cfg.Endpoint)
-                .Post("gelf")
-                .StringContent(data)
-                .RunAsync();
+            var response = await _httpRequestFactory.New(_cfg.Endpoint).Post("gelf").StringContent(data).RunAsync();
             if (response.IsSuccess)
                 return true;
 

@@ -1,22 +1,21 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
 using Annium.Logging;
 using Annium.Logging.Shared;
 
 namespace Annium.Graylog.Logging.Internal;
 
-internal static class Gelf
+internal static class Gelf<TContext>
+    where TContext : class, ILogContext
 {
-    public static Func<LogMessage<TContext>, IReadOnlyDictionary<string, object?>> CreateFormat<TContext>(
-        string project
-    )
-        where TContext : class, ILogContext =>
+    public static Func<LogMessage<TContext>, IReadOnlyDictionary<string, object?>> CreateFormat(string project) =>
         m =>
         {
             var result = new Dictionary<string, object?>
             {
                 ["host"] = project,
-                ["short_message"] = m.Message,
+                ["short_message"] = BuildMessage(m, m.Message),
                 ["timestamp"] = m.Instant.ToUnixTimeMilliseconds() / 1000m,
                 ["level"] = MapLogLevel(m.Level),
                 ["_subject"] = $"{m.SubjectType}#{m.SubjectId}",
@@ -24,13 +23,22 @@ internal static class Gelf
                 ["_thread"] = m.ThreadId,
             };
             if (m.Exception is not null)
-                result["full_message"] = $"{m.Exception.Message}{m.Exception.StackTrace}";
+                result["full_message"] = BuildMessage(m, $"{m.Exception.Message}{m.Exception.StackTrace}");
 
             foreach (var (key, value) in m.Data)
                 result.TryAdd($"_{key}", value?.ToString());
 
             return result;
         };
+
+    private static string BuildMessage(LogMessage<TContext> m, string text)
+    {
+        var sb = new StringBuilder($"{m.SubjectType}#{m.SubjectId}");
+        if (m.Line != 0)
+            sb.Append($" at {m.Type}.{m.Member}:{m.Line}");
+
+        return $"[{m.ThreadId:D3}] {sb} >> {text}";
+    }
 
     private static int MapLogLevel(LogLevel level) =>
         level switch

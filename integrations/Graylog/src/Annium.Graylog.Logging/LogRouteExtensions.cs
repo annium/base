@@ -1,3 +1,4 @@
+using System.Net.Mime;
 using Annium.Graylog.Logging;
 using Annium.Graylog.Logging.Internal;
 using Annium.Logging.Shared;
@@ -22,7 +23,9 @@ public static class LogRouteExtensions
                 sp =>
                 {
                     var httpRequestFactory = sp.Resolve<IHttpRequestFactory>();
-                    var serializer = sp.Resolve<ISerializer<string>>();
+                    var serializer = sp.ResolveKeyed<ISerializer<string>>(
+                        SerializerKey.CreateDefault(MediaTypeNames.Application.Json)
+                    );
                     return new GraylogLogHandler<TContext>(httpRequestFactory, serializer, configuration);
                 },
                 configuration
