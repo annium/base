@@ -7,7 +7,7 @@ public class LogRoute<TContext>
     where TContext : class, ILogContext
 {
     private static readonly Func<LogMessage<TContext>, bool> LogAll = _ => true;
-    internal Func<LogMessage<TContext>, bool> Filter { get; private set; } = LogAll;
+    public Func<LogMessage<TContext>, bool> Filter { get; private set; } = LogAll;
     internal OneOf<ILogHandler<TContext>, IAsyncLogHandler<TContext>>? Handler { get; private set; }
     internal LogRouteConfiguration? Configuration { get; private set; }
     private readonly IServiceProvider _sp;

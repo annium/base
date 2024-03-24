@@ -7,7 +7,7 @@ using Annium.Logging.Shared;
 using Annium.Net.Http;
 using Annium.Serialization.Abstractions;
 
-namespace Annium.Logging.Seq.Internal;
+namespace Annium.Seq.Logging.Internal;
 
 internal class SeqLogHandler<TContext> : BufferingLogHandler<TContext>
     where TContext : class, ILogContext

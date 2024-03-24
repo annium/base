@@ -1,7 +1,7 @@
 using System;
 using Annium.Logging.Shared;
 
-namespace Annium.Logging.Seq;
+namespace Annium.Seq.Logging;
 
 public record SeqConfiguration : LogRouteConfiguration
 {

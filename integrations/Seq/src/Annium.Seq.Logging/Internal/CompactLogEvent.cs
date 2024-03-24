@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using Annium.Logging.Shared;
 
-namespace Annium.Logging.Seq.Internal;
+namespace Annium.Seq.Logging.Internal;
 
 internal static class CompactLogEvent<TContext>
     where TContext : class, ILogContext
