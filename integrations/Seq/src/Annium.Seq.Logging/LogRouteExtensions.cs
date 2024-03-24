@@ -1,3 +1,4 @@
+using System.Net.Mime;
 using Annium.Logging.Shared;
 using Annium.Net.Http;
 using Annium.Seq.Logging;
@@ -19,7 +20,9 @@ public static class LogRouteExtensions
                 sp =>
                 {
                     var httpRequestFactory = sp.Resolve<IHttpRequestFactory>();
-                    var serializer = sp.Resolve<ISerializer<string>>();
+                    var serializer = sp.ResolveKeyed<ISerializer<string>>(
+                        SerializerKey.CreateDefault(MediaTypeNames.Application.Json)
+                    );
                     return new SeqLogHandler<TContext>(httpRequestFactory, serializer, configuration);
                 },
                 configuration
