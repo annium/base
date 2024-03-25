@@ -19,8 +19,10 @@ internal static class Gelf<TContext>
                 ["timestamp"] = m.Instant.ToUnixTimeMilliseconds() / 1000m,
                 ["level"] = MapLogLevel(m.Level),
                 ["_log_level"] = MapLogLevelText(m.Level),
-                ["_subject"] = $"{m.SubjectType}#{m.SubjectId}",
-                ["_source"] = $"{m.Type}.{m.Member}:{m.Line}",
+                ["_subject"] = m.SubjectType,
+                ["_subject_id"] = m.SubjectId,
+                ["_source_type"] = m.Type,
+                ["_source_member"] = $"{m.Member}:{m.Line}",
                 ["_thread"] = m.ThreadId,
             };
             if (m.Exception is not null)
