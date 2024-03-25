@@ -18,6 +18,7 @@ internal static class Gelf<TContext>
                 ["short_message"] = BuildMessage(m, m.Message),
                 ["timestamp"] = m.Instant.ToUnixTimeMilliseconds() / 1000m,
                 ["level"] = MapLogLevel(m.Level),
+                ["_log_level"] = MapLogLevelText(m.Level),
                 ["_subject"] = $"{m.SubjectType}#{m.SubjectId}",
                 ["_source"] = $"{m.Type}.{m.Member}:{m.Line}",
                 ["_thread"] = m.ThreadId,
@@ -50,4 +51,14 @@ internal static class Gelf<TContext>
             LogLevel.Error => 3,
             _ => 3
         };
-}
+
+    private static string MapLogLevelText(LogLevel level) =>
+        level switch
+        {
+            LogLevel.Trace => nameof(LogLevel.Trace),
+            LogLevel.Debug => nameof(LogLevel.Debug),
+            LogLevel.Info => nameof(LogLevel.Info),
+            LogLevel.Warn => nameof(LogLevel.Warn),
+            LogLevel.Error => nameof(LogLevel.Error),
+            _ => nameof(LogLevel.None)
+        };}
