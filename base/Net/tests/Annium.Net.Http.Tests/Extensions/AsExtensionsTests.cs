@@ -174,7 +174,7 @@ public class AsExtensionsTests : TestBase
         this.Trace("start");
 
         // arrange
-        var error = new Error("failure");
+        var error = new Error(HttpFailureReason.Undefined, "some failure");
         await using var _ = RunServer(
             async (_, response) =>
             {
@@ -202,7 +202,6 @@ public class AsExtensionsTests : TestBase
 
         // arrange
         var data = new Data(5);
-        var defaultFailure = new Error("default");
         await using var _ = RunServer(
             async (_, response) =>
             {
@@ -213,7 +212,10 @@ public class AsExtensionsTests : TestBase
 
         // act
         this.Trace("send");
-        var response = await _httpRequestFactory.New(ServerUri).Get("/").AsAsync<Data, Error>(defaultFailure);
+        var response = await _httpRequestFactory
+            .New(ServerUri)
+            .Get("/")
+            .AsAsync<Data, Error>((r, c, e) => Task.FromResult(new Error(r, e?.Message ?? "failure")));
 
         // assert
         response.IsT0.IsTrue();
@@ -229,8 +231,7 @@ public class AsExtensionsTests : TestBase
         this.Trace("start");
 
         // arrange
-        var error = new Error("failure");
-        var defaultFailure = new Error("default");
+        var error = new Error(HttpFailureReason.Undefined, "some failure");
         await using var _ = RunServer(
             async (_, response) =>
             {
@@ -241,7 +242,10 @@ public class AsExtensionsTests : TestBase
 
         // act
         this.Trace("send");
-        var response = await _httpRequestFactory.New(ServerUri).Get("/").AsAsync<Data, Error>(defaultFailure);
+        var response = await _httpRequestFactory
+            .New(ServerUri)
+            .Get("/")
+            .AsAsync<Data, Error>((r, c, e) => Task.FromResult(new Error(r, e?.Message ?? "failure")));
 
         // assert
         response.IsT1.IsTrue();
@@ -257,7 +261,6 @@ public class AsExtensionsTests : TestBase
         this.Trace("start");
 
         // arrange
-        var defaultFailure = new Error("default");
         await using var _ = RunServer(
             async (_, response) =>
             {
@@ -268,12 +271,15 @@ public class AsExtensionsTests : TestBase
 
         // act
         this.Trace("send");
-        var response = await _httpRequestFactory.New(ServerUri).Get("/").AsAsync<Data, Error>(defaultFailure);
+        var response = await _httpRequestFactory
+            .New(ServerUri)
+            .Get("/")
+            .AsAsync<Data, Error>((r, c, e) => Task.FromResult(new Error(r, e?.Message ?? "failure")));
 
         // assert
         response.IsT1.IsTrue();
         response.AsT1.IsNotDefault();
-        response.AsT1.IsEqual(defaultFailure);
+        response.AsT1.IsEqual(new Error(HttpFailureReason.Parse, "failure"));
 
         this.Trace("done");
     }

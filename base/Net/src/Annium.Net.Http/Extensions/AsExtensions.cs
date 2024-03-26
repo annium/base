@@ -1,3 +1,5 @@
+using System;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Annium.Net.Http.Internal;
@@ -73,13 +75,13 @@ public static class AsExtensions
 
     public static async Task<OneOf<TSuccess, TFailure>> AsAsync<TSuccess, TFailure>(
         this IHttpRequest request,
-        TFailure defaultFailure,
+        Func<HttpFailureReason, HttpContent, Exception?, Task<TFailure>> getFailure,
         CancellationToken ct = default
     )
     {
         var response = await request.RunAsync(ct);
         if (response.IsAbort)
-            return defaultFailure;
+            return await getFailure(HttpFailureReason.Abort, response.Content, null);
 
         try
         {
@@ -91,11 +93,11 @@ public static class AsExtensions
             if (!Equals(failure, default(TFailure)))
                 return failure;
 
-            return defaultFailure;
+            return await getFailure(HttpFailureReason.Parse, response.Content, null);
         }
-        catch
+        catch (Exception e)
         {
-            return defaultFailure;
+            return await getFailure(HttpFailureReason.Exception, response.Content, e);
         }
     }
 }

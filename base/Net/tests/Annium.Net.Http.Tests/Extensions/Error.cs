@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 
 namespace Annium.Net.Http.Tests.Extensions;
 
-internal sealed record Error(string Message);
+internal sealed record Error(HttpFailureReason Reason, string Message);
 
 internal class ErrorConverter : JsonConverter<Error>
 {
@@ -18,13 +18,14 @@ internal class ErrorConverter : JsonConverter<Error>
         var currentDepth = reader.CurrentDepth;
         var canConvert = false;
 
+        var reason = HttpFailureReason.Undefined;
         var message = string.Empty;
 
         while (reader.Read())
         {
             if (reader.TokenType == JsonTokenType.EndObject && reader.CurrentDepth == currentDepth)
             {
-                return canConvert ? new Error(message) : null;
+                return canConvert ? new Error(HttpFailureReason.Undefined, message) : null;
             }
 
             if (reader.TokenType == JsonTokenType.PropertyName)
@@ -35,7 +36,11 @@ internal class ErrorConverter : JsonConverter<Error>
 
                 switch (propertyName)
                 {
-                    case "Message":
+                    case nameof(Error.Reason):
+                        reason = JsonSerializer.Deserialize<HttpFailureReason>(ref reader, options);
+                        canConvert = true;
+                        break;
+                    case nameof(Error.Message):
                         message = reader.GetString() ?? string.Empty;
                         canConvert = true;
                         break;

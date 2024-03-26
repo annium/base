@@ -1,3 +1,5 @@
+using System;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Annium.Net.Http.Internal;
@@ -79,13 +81,16 @@ public static class AsResponseExtensions
 
     public static async Task<IHttpResponse<OneOf<TSuccess, TFailure>>> AsResponseAsync<TSuccess, TFailure>(
         this IHttpRequest request,
-        TFailure defaultFailure,
+        Func<HttpFailureReason, HttpContent, Exception?, Task<TFailure>> getFailure,
         CancellationToken ct = default
     )
     {
         var response = await request.RunAsync(ct);
         if (response.IsAbort)
-            return new HttpResponse<OneOf<TSuccess, TFailure>>(response, defaultFailure);
+            return new HttpResponse<OneOf<TSuccess, TFailure>>(
+                response,
+                await getFailure(HttpFailureReason.Abort, response.Content, null)
+            );
 
         try
         {
@@ -97,11 +102,17 @@ public static class AsResponseExtensions
             if (!Equals(failure, default(TFailure)))
                 return new HttpResponse<OneOf<TSuccess, TFailure>>(response, failure);
 
-            return new HttpResponse<OneOf<TSuccess, TFailure>>(response, defaultFailure);
+            return new HttpResponse<OneOf<TSuccess, TFailure>>(
+                response,
+                await getFailure(HttpFailureReason.Parse, response.Content, null)
+            );
         }
-        catch
+        catch (Exception e)
         {
-            return new HttpResponse<OneOf<TSuccess, TFailure>>(response, defaultFailure);
+            return new HttpResponse<OneOf<TSuccess, TFailure>>(
+                response,
+                await getFailure(HttpFailureReason.Exception, response.Content, e)
+            );
         }
     }
 }
