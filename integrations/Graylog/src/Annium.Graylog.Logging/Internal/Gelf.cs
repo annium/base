@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using System.Text;
 using Annium.Logging;
 using Annium.Logging.Shared;
@@ -9,6 +11,11 @@ namespace Annium.Graylog.Logging.Internal;
 internal static class Gelf<TContext>
     where TContext : class
 {
+    private static readonly IReadOnlyDictionary<string, PropertyInfo> Properties = typeof(TContext)
+        .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+        .Where(x => x.CanRead)
+        .ToDictionary(x => $"_{x.Name.SnakeCase()}");
+
     public static Func<LogMessage<TContext>, IReadOnlyDictionary<string, object?>> CreateFormat(string project) =>
         m =>
         {
@@ -30,6 +37,13 @@ internal static class Gelf<TContext>
 
             foreach (var (key, value) in m.Data)
                 result.TryAdd($"_{key}", value?.ToString());
+
+            foreach (var (name, property) in Properties)
+            {
+                var value = property.GetValue(m.Context);
+                if (value is not null)
+                    result.TryAdd(name, value.ToString());
+            }
 
             return result;
         };
@@ -63,4 +77,5 @@ internal static class Gelf<TContext>
             LogLevel.Warn => nameof(LogLevel.Warn),
             LogLevel.Error => nameof(LogLevel.Error),
             _ => nameof(LogLevel.None)
-        };}
+        };
+}
