@@ -10,7 +10,7 @@ using Annium.Serialization.Abstractions;
 namespace Annium.Graylog.Logging.Internal;
 
 internal class GraylogLogHandler<TContext> : BufferingLogHandler<TContext>
-    where TContext : class, ILogContext
+    where TContext : class
 {
     private readonly Func<LogMessage<TContext>, IReadOnlyDictionary<string, object?>> _format;
     private readonly IHttpRequestFactory _httpRequestFactory;

@@ -10,7 +10,7 @@ using Annium.Serialization.Abstractions;
 namespace Annium.Seq.Logging.Internal;
 
 internal class SeqLogHandler<TContext> : BufferingLogHandler<TContext>
-    where TContext : class, ILogContext
+    where TContext : class
 {
     private readonly Func<LogMessage<TContext>, IReadOnlyDictionary<string, string?>> _format;
     private readonly IHttpRequestFactory _httpRequestFactory;

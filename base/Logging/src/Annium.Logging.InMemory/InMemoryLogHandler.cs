@@ -4,7 +4,7 @@ using Annium.Logging.Shared;
 namespace Annium.Logging.InMemory;
 
 public class InMemoryLogHandler<TContext> : ILogHandler<TContext>
-    where TContext : class, ILogContext
+    where TContext : class
 {
     public IReadOnlyList<LogMessage<TContext>> Logs => _logs;
 

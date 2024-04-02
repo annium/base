@@ -7,7 +7,7 @@ using Annium.Logging.Shared;
 namespace Annium.Graylog.Logging.Internal;
 
 internal static class Gelf<TContext>
-    where TContext : class, ILogContext
+    where TContext : class
 {
     public static Func<LogMessage<TContext>, IReadOnlyDictionary<string, object?>> CreateFormat(string project) =>
         m =>

@@ -13,14 +13,14 @@ public static class LogRouteExtensions
         this LogRoute<TContext> route,
         FileLoggingConfiguration<TContext> cfg
     )
-        where TContext : class, ILogContext => route.UseFile(DefaultFormat<TContext>(LocalTime), cfg);
+        where TContext : class => route.UseFile(DefaultFormat<TContext>(LocalTime), cfg);
 
     public static LogRoute<TContext> UseFile<TContext>(
         this LogRoute<TContext> route,
         Func<LogMessage<TContext>, string> format,
         FileLoggingConfiguration<TContext> cfg
     )
-        where TContext : class, ILogContext
+        where TContext : class
     {
         route.UseAsyncInstance(new FileLogHandler<TContext>(format, cfg), cfg);
 

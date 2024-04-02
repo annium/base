@@ -5,7 +5,7 @@ using NodaTime;
 namespace Annium.Logging.Shared;
 
 public record LogMessage<TContext>
-    where TContext : ILogContext
+    where TContext : class
 {
     public TContext Context { get; }
     public Instant Instant { get; }

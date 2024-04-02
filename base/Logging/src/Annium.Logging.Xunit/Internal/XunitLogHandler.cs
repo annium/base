@@ -5,7 +5,7 @@ using Xunit.Abstractions;
 namespace Annium.Logging.Xunit.Internal;
 
 internal class XunitLogHandler<TContext> : ILogHandler<TContext>
-    where TContext : class, ILogContext
+    where TContext : class
 {
     private readonly ITestOutputHelper _outputHelper;
     private readonly Func<LogMessage<TContext>, string> _format;

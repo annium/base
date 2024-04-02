@@ -4,7 +4,7 @@ using Annium.Logging.Shared;
 namespace Annium.Logging.Console.Internal;
 
 internal class ConsoleLogHandler<TContext> : ILogHandler<TContext>
-    where TContext : class, ILogContext
+    where TContext : class
 {
     private readonly Func<LogMessage<TContext>, string> _format;
     private readonly bool _color;

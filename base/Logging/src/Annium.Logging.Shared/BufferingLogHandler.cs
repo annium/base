@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 namespace Annium.Logging.Shared;
 
 public abstract class BufferingLogHandler<TContext> : IAsyncLogHandler<TContext>
-    where TContext : class, ILogContext
+    where TContext : class
 {
     private readonly LogRouteConfiguration _cfg;
     private readonly Queue<LogMessage<TContext>> _eventsBuffer = new();

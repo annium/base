@@ -6,7 +6,7 @@ using Annium.Logging.Shared;
 namespace Annium.Seq.Logging.Internal;
 
 internal static class CompactLogEvent<TContext>
-    where TContext : class, ILogContext
+    where TContext : class
 {
     public static Func<LogMessage<TContext>, IReadOnlyDictionary<string, string?>> CreateFormat(string project) =>
         m =>

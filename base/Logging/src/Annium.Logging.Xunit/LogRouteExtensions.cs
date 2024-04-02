@@ -10,13 +10,13 @@ namespace Annium.Core.DependencyInjection;
 public static class LogRouteExtensions
 {
     public static LogRoute<TContext> UseTestOutput<TContext>(this LogRoute<TContext> route)
-        where TContext : class, ILogContext => route.UseTestOutput(DefaultFormat<TContext>(UtcTime));
+        where TContext : class => route.UseTestOutput(DefaultFormat<TContext>(UtcTime));
 
     public static LogRoute<TContext> UseTestOutput<TContext>(
         this LogRoute<TContext> route,
         Func<LogMessage<TContext>, string> format
     )
-        where TContext : class, ILogContext
+        where TContext : class
     {
         route.UseFactory(
             sp => new XunitLogHandler<TContext>(sp.Resolve<ITestOutputHelper>(), format),

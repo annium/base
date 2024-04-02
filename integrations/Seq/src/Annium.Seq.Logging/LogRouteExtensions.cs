@@ -11,7 +11,7 @@ namespace Annium.Core.DependencyInjection;
 public static class LogRouteExtensions
 {
     public static LogRoute<TContext> UseSeq<TContext>(this LogRoute<TContext> route, SeqConfiguration configuration)
-        where TContext : class, ILogContext
+        where TContext : class
     {
         var filter = route.Filter;
         route

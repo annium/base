@@ -3,7 +3,7 @@ using System;
 namespace Annium.Logging.Shared;
 
 public interface ILogSentry<TContext>
-    where TContext : class, ILogContext
+    where TContext : class
 {
     void Register(LogMessage<TContext> message);
 

@@ -7,7 +7,7 @@ using System.Threading;
 namespace Annium.Logging.Shared.Internal;
 
 internal class LogSentryBridge<TContext> : ILogSentryBridge
-    where TContext : class, ILogContext
+    where TContext : class
 {
     private readonly ITimeProvider _timeProvider;
     private readonly TContext _context;

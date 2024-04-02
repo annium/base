@@ -9,14 +9,14 @@ namespace Annium.Core.DependencyInjection;
 public static class LogRouteExtensions
 {
     public static LogRoute<TContext> UseConsole<TContext>(this LogRoute<TContext> route, bool color = false)
-        where TContext : class, ILogContext => route.UseConsole(DefaultFormat<TContext>(LocalTime), color);
+        where TContext : class => route.UseConsole(DefaultFormat<TContext>(LocalTime), color);
 
     public static LogRoute<TContext> UseConsole<TContext>(
         this LogRoute<TContext> route,
         Func<LogMessage<TContext>, string> format,
         bool color = false
     )
-        where TContext : class, ILogContext
+        where TContext : class
     {
         route.UseInstance(new ConsoleLogHandler<TContext>(format, color), new LogRouteConfiguration());
 

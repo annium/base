@@ -168,7 +168,7 @@ public class BaseLoggerTest : TestBase
         }
     }
 
-    private class Context : ILogContext;
+    private class Context;
 }
 
 file static class ServiceProviderExtensions

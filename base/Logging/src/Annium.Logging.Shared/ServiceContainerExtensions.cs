@@ -9,7 +9,7 @@ namespace Annium.Core.DependencyInjection;
 public static class ServiceContainerExtensions
 {
     public static IServiceContainer AddLogging<TContext>(this IServiceContainer container)
-        where TContext : class, ILogContext
+        where TContext : class
     {
         return container.AddLoggingBase<TContext>();
     }
@@ -20,7 +20,7 @@ public static class ServiceContainerExtensions
     }
 
     private static IServiceContainer AddLoggingBase<TContext>(this IServiceContainer container)
-        where TContext : class, ILogContext
+        where TContext : class
     {
         container
             .Add(new List<ILogScheduler<TContext>>())

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 namespace Annium.Logging.Shared.Internal;
 
 internal class LogRouter<TContext>
-    where TContext : class, ILogContext
+    where TContext : class
 {
     private readonly IEnumerable<ILogScheduler<TContext>> _schedulers;
 

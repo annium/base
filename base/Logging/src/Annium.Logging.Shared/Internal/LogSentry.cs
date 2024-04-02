@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace Annium.Logging.Shared.Internal;
 
 internal class LogSentry<TContext> : ILogSentry<TContext>
-    where TContext : class, ILogContext
+    where TContext : class
 {
     private readonly IList<LogMessage<TContext>> _messagesBuffer = new List<LogMessage<TContext>>();
     private Action<LogMessage<TContext>> _handler;

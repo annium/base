@@ -9,7 +9,7 @@ using Annium.Logging.Shared;
 namespace Annium.Logging.File.Internal;
 
 internal class FileLogHandler<TContext> : BufferingLogHandler<TContext>
-    where TContext : class, ILogContext
+    where TContext : class
 {
     private readonly AutoResetEvent _gate = new(true);
     private readonly Func<LogMessage<TContext>, string> _format;

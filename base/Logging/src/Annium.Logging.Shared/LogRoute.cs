@@ -4,7 +4,7 @@ using OneOf;
 namespace Annium.Logging.Shared;
 
 public class LogRoute<TContext>
-    where TContext : class, ILogContext
+    where TContext : class
 {
     private static readonly Func<LogMessage<TContext>, bool> LogAll = _ => true;
     public Func<LogMessage<TContext>, bool> Filter { get; private set; } = LogAll;

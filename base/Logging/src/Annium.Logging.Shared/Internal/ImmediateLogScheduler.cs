@@ -3,7 +3,7 @@ using System;
 namespace Annium.Logging.Shared.Internal;
 
 internal class ImmediateLogScheduler<TContext> : ILogScheduler<TContext>
-    where TContext : class, ILogContext
+    where TContext : class
 {
     public Func<LogMessage<TContext>, bool> Filter { get; }
     private readonly ILogHandler<TContext> _handler;

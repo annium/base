@@ -12,7 +12,7 @@ public static class ServiceProviderExtensions
         this IServiceProvider provider,
         Action<LogRoute<TContext>> configure
     )
-        where TContext : class, ILogContext
+        where TContext : class
     {
         var routes = new List<LogRoute<TContext>>();
         configure(new LogRoute<TContext>(provider, routes.Add));
@@ -35,7 +35,7 @@ public static class ServiceProviderExtensions
         this IServiceProvider provider,
         Action<LogRoute<TContext>, IServiceProvider> configure
     )
-        where TContext : class, ILogContext
+        where TContext : class
     {
         var routes = new List<LogRoute<TContext>>();
         configure(new LogRoute<TContext>(provider, routes.Add), provider);
@@ -58,7 +58,7 @@ public static class ServiceProviderExtensions
         this IServiceProvider provider,
         List<LogRoute<TContext>> routes
     )
-        where TContext : class, ILogContext
+        where TContext : class
     {
         var schedulers = provider.Resolve<List<ILogScheduler<TContext>>>();
 

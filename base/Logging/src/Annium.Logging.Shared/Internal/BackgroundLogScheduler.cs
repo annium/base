@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace Annium.Logging.Shared.Internal;
 
 internal class BackgroundLogScheduler<TContext> : ILogScheduler<TContext>, ILogSubject, IAsyncDisposable
-    where TContext : class, ILogContext
+    where TContext : class
 {
     public ILogger Logger { get; }
     public Func<LogMessage<TContext>, bool> Filter { get; }

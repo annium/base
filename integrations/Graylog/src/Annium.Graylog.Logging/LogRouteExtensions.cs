@@ -14,7 +14,7 @@ public static class LogRouteExtensions
         this LogRoute<TContext> route,
         GraylogConfiguration configuration
     )
-        where TContext : class, ILogContext
+        where TContext : class
     {
         var filter = route.Filter;
         route
