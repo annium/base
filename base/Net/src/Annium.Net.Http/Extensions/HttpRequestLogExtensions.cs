@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Text;
 using Annium.Logging;
 
 // ReSharper disable once CheckNamespace
@@ -23,22 +24,27 @@ public static class HttpRequestLogExtensions
             var response = default(IHttpResponse);
             try
             {
-                subject.Trace("request {id}: {method} {uri}", id, request.Method, request.Uri);
-
+                var headers = string.Empty;
                 if (log.HasFlag(LogData.Headers))
                 {
-                    IEnumerable<KeyValuePair<string, IEnumerable<string>>> headers = headerMasks is null
+                    var sb = new StringBuilder($"{Environment.NewLine}Headers:");
+                    IEnumerable<KeyValuePair<string, IEnumerable<string>>> headerPairs = headerMasks is null
                         ? request.Headers
                         : request.Headers.Where(x =>
                             headerMasks.Any(m => x.Key.Contains(m, StringComparison.InvariantCultureIgnoreCase))
                         );
-                    foreach (var (name, values) in headers)
-                        subject.Trace<string, string>(
-                            "- {headerName}: {headerValues}",
-                            name,
-                            string.Join(", ", values)
-                        );
+                    foreach (var (name, values) in headerPairs)
+                        sb.AppendLine($"- {name}: {string.Join(", ", values)}");
+                    headers = sb.ToString();
                 }
+
+                subject.Trace<Guid, HttpMethod, Uri, string>(
+                    "request {id}: {method} {uri}{headers}",
+                    id,
+                    request.Method,
+                    request.Uri,
+                    headers
+                );
 
                 response = await next();
 
@@ -53,29 +59,28 @@ public static class HttpRequestLogExtensions
             {
                 if (response is not null)
                 {
-                    subject.Trace<Guid, HttpMethod, Uri, HttpStatusCode, string>(
-                        "response {id}: {method} {uri} -> {statusCode} ({statusText})",
-                        id,
-                        request.Method,
-                        request.Uri,
-                        response.StatusCode,
-                        response.StatusText
-                    );
-
+                    var headers = string.Empty;
                     if (log.HasFlag(LogData.Headers))
                     {
-                        IEnumerable<KeyValuePair<string, IEnumerable<string>>> headers = headerMasks is null
+                        var sb = new StringBuilder($"{Environment.NewLine}Headers:");
+                        IEnumerable<KeyValuePair<string, IEnumerable<string>>> headerPairs = headerMasks is null
                             ? response.Headers
                             : response.Headers.Where(x =>
                                 headerMasks.Any(m => x.Key.Contains(m, StringComparison.InvariantCultureIgnoreCase))
                             );
-                        foreach (var (name, values) in headers)
-                            subject.Trace<string, string>(
-                                "- {headerName}: {headerValues}",
-                                name,
-                                string.Join(", ", values)
-                            );
+                        foreach (var (name, values) in headerPairs)
+                            sb.AppendLine($"- {name}: {string.Join(", ", values)}");
+                        headers = sb.ToString();
                     }
+                    subject.Trace<Guid, HttpMethod, Uri, HttpStatusCode, string, string>(
+                        "response {id}: {method} {uri} -> {statusCode} ({statusText}){headers}",
+                        id,
+                        request.Method,
+                        request.Uri,
+                        response.StatusCode,
+                        response.StatusText,
+                        headers
+                    );
 
                     if (log.HasFlag(LogData.Response))
                         subject.Trace(await response.Content.ReadAsStringAsync());
