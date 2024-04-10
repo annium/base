@@ -181,21 +181,26 @@ internal class HttpRequest : IHttpRequest
         return this;
     }
 
-    public async Task<IHttpResponse> RunAsync(CancellationToken ct = default)
+    public async Task<IHttpResponse> RunAsync(HttpCompletionOption completionOption, CancellationToken ct = default)
     {
         this.Trace("start");
 
         var response =
             _middlewares.Count > 0
-                ? await InternalRunAsync(0, ct).ConfigureAwait(false)
-                : await InternalRunAsync(ct).ConfigureAwait(false);
+                ? await InternalRunAsync(0, completionOption, ct).ConfigureAwait(false)
+                : await InternalRunAsync(completionOption, ct).ConfigureAwait(false);
 
         this.Trace("done");
 
         return response;
     }
 
-    private async Task<IHttpResponse> InternalRunAsync(int middlewareIndex, CancellationToken ct)
+    public Task<IHttpResponse> RunAsync(CancellationToken ct = default)
+    {
+        return RunAsync(HttpCompletionOption.ResponseContentRead, ct);
+    }
+
+    private async Task<IHttpResponse> InternalRunAsync(int middlewareIndex, HttpCompletionOption completionOption, CancellationToken ct)
     {
         this.Trace("start {index}/{total}", middlewareIndex + 1, _middlewares.Count);
 
@@ -208,8 +213,8 @@ internal class HttpRequest : IHttpRequest
         var middleware = _middlewares[middlewareIndex];
         Func<Task<IHttpResponse>> next =
             middlewareIndex + 1 < _middlewares.Count
-                ? () => InternalRunAsync(middlewareIndex + 1, ct)
-                : () => InternalRunAsync(ct);
+                ? () => InternalRunAsync(middlewareIndex + 1, completionOption, ct)
+                : () => InternalRunAsync(completionOption, ct);
 
         // call configuration before middleware
         foreach (var configure in _configurations)
@@ -222,7 +227,7 @@ internal class HttpRequest : IHttpRequest
         return response;
     }
 
-    private async Task<IHttpResponse> InternalRunAsync(CancellationToken ct)
+    private async Task<IHttpResponse> InternalRunAsync(HttpCompletionOption completionOption, CancellationToken ct)
     {
         this.Trace("start");
 
@@ -252,7 +257,7 @@ internal class HttpRequest : IHttpRequest
             );
 
             this.Trace("send request");
-            var responseMessage = await _client.SendAsync(requestMessage, cts.Token).ConfigureAwait(false);
+            var responseMessage = await _client.SendAsync(requestMessage, completionOption, cts.Token).ConfigureAwait(false);
 
             this.Trace("prepare response");
             var response = new HttpResponse(uri, responseMessage);
