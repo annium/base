@@ -36,12 +36,8 @@ public static class ChannelReaderExtensions
                         }
                     }
                 }
-                catch (OperationCanceledException)
-                {
-                }
-                catch (ChannelClosedException)
-                {
-                }
+                catch (OperationCanceledException) { }
+                catch (ChannelClosedException) { }
                 catch (Exception e)
                 {
                     new LogBridge(nameof(ChannelReaderExtensions), logger).Error(e);

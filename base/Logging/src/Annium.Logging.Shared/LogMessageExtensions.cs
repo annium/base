@@ -35,19 +35,29 @@ public static class LogMessageExtensions
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static string LocalDateTime<TContext>(LogMessage<TContext> m)
-        where TContext : class =>
-        m.Instant.InZone(CurrentTz).LocalDateTime.ToString("dd.MM.yy HH:mm:ss.fff", null);
+        where TContext : class
+    {
+        return m.Instant.InZone(CurrentTz).LocalDateTime.ToString("dd.MM.yy HH:mm:ss.fff", null);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static string LocalTime<TContext>(LogMessage<TContext> m)
-        where TContext : class => m.Instant.InZone(CurrentTz).LocalDateTime.ToString("HH:mm:ss.fff", null);
+        where TContext : class
+    {
+        return m.Instant.InZone(CurrentTz).LocalDateTime.ToString("HH:mm:ss.fff", null);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static string UtcDateTime<TContext>(LogMessage<TContext> m)
-        where TContext : class =>
-        m.Instant.InZone(UtcTz).LocalDateTime.ToString("dd.MM.yy HH:mm:ss.fff", null);
+        where TContext : class
+    {
+        return m.Instant.InZone(UtcTz).LocalDateTime.ToString("dd.MM.yy HH:mm:ss.fff", null);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static string UtcTime<TContext>(LogMessage<TContext> m)
-        where TContext : class => m.Instant.InZone(UtcTz).LocalDateTime.ToString("HH:mm:ss.fff", null);
+        where TContext : class
+    {
+        return m.Instant.InZone(UtcTz).LocalDateTime.ToString("HH:mm:ss.fff", null);
+    }
 }

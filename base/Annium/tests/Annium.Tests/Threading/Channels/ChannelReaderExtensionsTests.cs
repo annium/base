@@ -15,9 +15,7 @@ namespace Annium.Tests.Threading.Channels;
 public class ChannelReaderExtensionsTests : TestBase
 {
     public ChannelReaderExtensionsTests(ITestOutputHelper outputHelper)
-        : base(outputHelper)
-    {
-    }
+        : base(outputHelper) { }
 
     [Fact]
     public async Task Pipe()
