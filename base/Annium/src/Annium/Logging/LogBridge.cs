@@ -1,6 +1,6 @@
-namespace Annium.Logging.Shared.Internal;
+namespace Annium.Logging;
 
-internal class LogBridge : ILogBridge
+public class LogBridge : ILogBridge
 {
     public ILogger Logger { get; }
     public string Type { get; }
