@@ -15,7 +15,9 @@ namespace Annium.Tests.Threading.Channels;
 public class ChannelReaderExtensionsTests : TestBase
 {
     public ChannelReaderExtensionsTests(ITestOutputHelper outputHelper)
-        : base(outputHelper) { }
+        : base(outputHelper)
+    {
+    }
 
     [Fact]
     public async Task Pipe()
@@ -37,7 +39,7 @@ public class ChannelReaderExtensionsTests : TestBase
 
         // act
         this.Trace("pipe");
-        using var pipe = source.Reader.Pipe(target.Writer);
+        using var pipe = source.Reader.Pipe(target.Writer, Logger);
 
         // assert
         this.Trace("assert log is complete");

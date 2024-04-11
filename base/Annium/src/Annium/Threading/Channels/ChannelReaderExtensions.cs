@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using Annium.Logging;
 
 namespace Annium.Threading.Channels;
 
@@ -18,7 +19,7 @@ public static class ChannelReaderExtensions
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static IDisposable Pipe<T>(this ChannelReader<T> reader, ChannelWriter<T> writer)
+    public static IDisposable Pipe<T>(this ChannelReader<T> reader, ChannelWriter<T> writer, ILogger logger)
     {
         var cts = new CancellationTokenSource();
         Task.Run(
@@ -40,6 +41,10 @@ public static class ChannelReaderExtensions
                 }
                 catch (ChannelClosedException)
                 {
+                }
+                catch (Exception e)
+                {
+                    new LogBridge(nameof(ChannelReaderExtensions), logger).Error(e);
                 }
             },
             CancellationToken.None
