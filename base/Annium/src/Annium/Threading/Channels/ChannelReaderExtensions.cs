@@ -24,13 +24,22 @@ public static class ChannelReaderExtensions
         Task.Run(
             async () =>
             {
-                while (!cts.IsCancellationRequested)
+                try
                 {
-                    while (await reader.WaitToReadAsync(cts.Token))
+                    while (!cts.IsCancellationRequested)
                     {
-                        var data = await reader.ReadAsync(cts.Token);
-                        writer.Write(data);
+                        while (await reader.WaitToReadAsync(cts.Token))
+                        {
+                            var data = await reader.ReadAsync(cts.Token);
+                            writer.Write(data);
+                        }
                     }
+                }
+                catch (OperationCanceledException)
+                {
+                }
+                catch (ChannelClosedException)
+                {
                 }
             },
             CancellationToken.None
