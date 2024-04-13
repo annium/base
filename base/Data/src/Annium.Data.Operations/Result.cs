@@ -5,6 +5,8 @@ namespace Annium.Data.Operations;
 
 public static class Result
 {
+    public static IResultBase Empty { get; } = new Internal.Result();
+
     public static IResult Join(params IResultBase[] results) => new Internal.Result().Join(results);
 
     public static IResult Join(IReadOnlyCollection<IResultBase> results) => new Internal.Result().Join(results);
