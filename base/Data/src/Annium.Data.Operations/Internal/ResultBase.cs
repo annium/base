@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using Annium.Linq;
 
 namespace Annium.Data.Operations.Internal;
@@ -123,6 +124,38 @@ internal abstract record ResultBase<T> : IResultBase<T>, IResultBase, ICopyable<
         }
 
         return (this as T)!;
+    }
+
+    public string ErrorState()
+    {
+        lock (_locker)
+        {
+            var sb = new StringBuilder();
+
+            if (_plainErrors.Count > 0)
+            {
+                sb.Append($"{_plainErrors.Count} plain errors:");
+                foreach (var error in _plainErrors)
+                    sb.AppendLine($"- {error}");
+            }
+            else
+                sb.Append("no plain errors");
+
+            if (_labeledErrors.Count > 0)
+            {
+                sb.AppendLine($"{_labeledErrors.Count} labeled errors:");
+                foreach (var (label, errors) in _labeledErrors)
+                {
+                    sb.AppendLine($"- {label}:");
+                    foreach (var error in errors)
+                        sb.AppendLine($"-- {error}");
+                }
+            }
+            else
+                sb.AppendLine("no labeled errors");
+
+            return sb.ToString();
+        }
     }
 
     protected void CloneTo(T clone)

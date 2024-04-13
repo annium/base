@@ -41,4 +41,5 @@ public interface IResultBase
     IReadOnlyDictionary<string, IReadOnlyCollection<string>> LabeledErrors { get; }
     bool IsOk { get; }
     bool HasErrors { get; }
+    string ErrorState();
 }
