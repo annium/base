@@ -313,6 +313,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{0AA3BD61
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Annium.Tests", "base\Annium\tests\Annium.Tests\Annium.Tests.csproj", "{28D3DECE-3BBC-4C06-9D71-6EC8C39B12C1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Annium.Data.Operations.Testing", "base\Data\src\Annium.Data.Operations.Testing\Annium.Data.Operations.Testing.csproj", "{C4B4AC34-3079-4BA3-8C97-E581B4E50501}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -762,6 +764,10 @@ Global
 		{28D3DECE-3BBC-4C06-9D71-6EC8C39B12C1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{28D3DECE-3BBC-4C06-9D71-6EC8C39B12C1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{28D3DECE-3BBC-4C06-9D71-6EC8C39B12C1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C4B4AC34-3079-4BA3-8C97-E581B4E50501}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C4B4AC34-3079-4BA3-8C97-E581B4E50501}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C4B4AC34-3079-4BA3-8C97-E581B4E50501}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C4B4AC34-3079-4BA3-8C97-E581B4E50501}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{0F724045-AB72-4522-987D-82A931AD71AE} = {C08B2C28-D37A-4074-93C8-43AA01960EF4}
@@ -917,5 +923,6 @@ Global
 		{BF015580-DA92-47D8-B1CB-2EB326192C37} = {9279DA9A-07A2-47FE-9FBC-1F99380F4DB1}
 		{0AA3BD61-E91B-4B16-9094-192BB1C768CE} = {0F724045-AB72-4522-987D-82A931AD71AE}
 		{28D3DECE-3BBC-4C06-9D71-6EC8C39B12C1} = {0AA3BD61-E91B-4B16-9094-192BB1C768CE}
+		{C4B4AC34-3079-4BA3-8C97-E581B4E50501} = {228E40A3-5DDB-4319-8399-999C1D66B6C3}
 	EndGlobalSection
 EndGlobal

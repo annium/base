@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <PackageId>Annium.Data.Operations.Testing</PackageId>
+        <PackageVersion>0.1.0</PackageVersion>
+        <Description>Annium.Data.Operations.Testing</Description>
+        <Solutions>Annium.Base</Solutions>
+        <TargetFramework>net8.0</TargetFramework>
+        <OutputType>Library</OutputType>
+        <DebugType>portable</DebugType>
+        <WarningsAsErrors>true</WarningsAsErrors>
+        <IsPackable>true</IsPackable>
+        <IsTestProject>true</IsTestProject>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+    <ItemGroup>
+        <ProjectReference Include="../../../Annium/src/Annium.Testing/Annium.Testing.csproj" />
+        <ProjectReference Include="../Annium.Data.Operations/Annium.Data.Operations.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="coverlet.collector" Version="6.0.0" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+        <PackageReference Include="xunit" Version="2.6.6" />
+        <PackageReference Include="xunit.runner.visualstudio" Version="2.5.6" />
+    </ItemGroup>
+</Project>
