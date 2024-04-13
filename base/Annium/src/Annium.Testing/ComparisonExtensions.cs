@@ -1,6 +1,5 @@
 using System;
 using System.Runtime.CompilerServices;
-using Annium.Testing.Internal;
 
 namespace Annium.Testing;
 
@@ -16,7 +15,9 @@ public static class ComparisonExtensions
         where T : IComparable<T>
     {
         if (value.CompareTo(data) >= 0)
-            throw new AssertionFailedException(message ?? $"{value.Wrap(valueEx)} not < {data.Wrap(dataEx)}");
+            throw new AssertionFailedException(
+                message ?? $"{value.WrapWithExpression(valueEx)} not < {data.WrapWithExpression(dataEx)}"
+            );
     }
 
     public static void IsLessOrEqual<T>(
@@ -29,7 +30,9 @@ public static class ComparisonExtensions
         where T : IComparable<T>
     {
         if (value.CompareTo(data) > 0)
-            throw new AssertionFailedException(message ?? $"{value.Wrap(valueEx)} not <= {data.Wrap(dataEx)}");
+            throw new AssertionFailedException(
+                message ?? $"{value.WrapWithExpression(valueEx)} not <= {data.WrapWithExpression(dataEx)}"
+            );
     }
 
     public static void IsGreater<T>(
@@ -42,7 +45,9 @@ public static class ComparisonExtensions
         where T : IComparable<T>
     {
         if (value.CompareTo(data) <= 0)
-            throw new AssertionFailedException(message ?? $"{value.Wrap(valueEx)} not > {data.Wrap(dataEx)}");
+            throw new AssertionFailedException(
+                message ?? $"{value.WrapWithExpression(valueEx)} not > {data.WrapWithExpression(dataEx)}"
+            );
     }
 
     public static void IsGreaterOrEqual<T>(
@@ -55,6 +60,8 @@ public static class ComparisonExtensions
         where T : IComparable<T>
     {
         if (value.CompareTo(data) < 0)
-            throw new AssertionFailedException(message ?? $"{value.Wrap(valueEx)} not >= {data.Wrap(dataEx)}");
+            throw new AssertionFailedException(
+                message ?? $"{value.WrapWithExpression(valueEx)} not >= {data.WrapWithExpression(dataEx)}"
+            );
     }
 }

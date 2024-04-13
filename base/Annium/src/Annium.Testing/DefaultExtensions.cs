@@ -1,7 +1,6 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
-using Annium.Testing.Internal;
 
 namespace Annium.Testing;
 
@@ -13,7 +12,7 @@ public static class ValueExtensions
         [CallerArgumentExpression("value")] string valueEx = default!
     )
     {
-        value.Is(default, $"{value.Wrap(valueEx)} is not default");
+        value.Is(default, $"{value.WrapWithExpression(valueEx)} is not default");
 
         return value;
     }
@@ -25,7 +24,7 @@ public static class ValueExtensions
         [CallerArgumentExpression("value")] string valueEx = default!
     )
     {
-        value.IsNot(default, $"{value.Wrap(valueEx)} is default");
+        value.IsNot(default, $"{value.WrapWithExpression(valueEx)} is default");
         ArgumentNullException.ThrowIfNull(value);
 
         return value;

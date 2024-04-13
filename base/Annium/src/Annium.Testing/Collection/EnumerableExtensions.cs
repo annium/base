@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using Annium.Testing.Internal;
 
 // ReSharper disable once CheckNamespace
 namespace Annium.Testing;
@@ -16,7 +15,9 @@ public static class EnumerableExtensions
     )
     {
         var val = value.ToArray();
-        (0 <= key && key < val.Length).IsTrue($"{valueEx}[{key.Wrap(keyEx)}] is out of bounds [0,{val.Length - 1}]");
+        (0 <= key && key < val.Length).IsTrue(
+            $"{valueEx}[{key.WrapWithExpression(keyEx)}] is out of bounds [0,{val.Length - 1}]"
+        );
 
         return val[key];
     }
@@ -29,7 +30,7 @@ public static class EnumerableExtensions
     )
     {
         var val = value.ToArray();
-        val.Length.Is(count, $"{valueEx} count `{val.Length}` != `{count.Wrap(countEx)}`");
+        val.Length.Is(count, $"{valueEx} count `{val.Length}` != `{count.WrapWithExpression(countEx)}`");
 
         return val;
     }

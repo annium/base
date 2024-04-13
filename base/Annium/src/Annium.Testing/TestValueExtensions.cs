@@ -1,11 +1,11 @@
 using System;
 using System.Runtime.CompilerServices;
 
-namespace Annium.Testing.Internal;
+namespace Annium.Testing;
 
-internal static class HelperExtensions
+public static class TestValueExtensions
 {
-    public static string Wrap<T>(this T value, string ex)
+    public static string WrapWithExpression<T>(this T value, string ex)
     {
         var v = value.Stringify();
 

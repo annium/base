@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using Annium.Testing.Internal;
 
 namespace Annium.Testing;
 
@@ -15,7 +14,9 @@ public static class EqualityExtensions
     )
     {
         if (!EqualityComparer<T>.Default.Equals(value, data))
-            throw new AssertionFailedException(message ?? $"{value.Wrap(valueEx)} != {data.Wrap(dataEx)}");
+            throw new AssertionFailedException(
+                message ?? $"{value.WrapWithExpression(valueEx)} != {data.WrapWithExpression(dataEx)}"
+            );
     }
 
     public static void IsNot<T>(
@@ -27,6 +28,8 @@ public static class EqualityExtensions
     )
     {
         if (EqualityComparer<T>.Default.Equals(value, data))
-            throw new AssertionFailedException(message ?? $"{value.Wrap(valueEx)} == {data.Wrap(dataEx)}");
+            throw new AssertionFailedException(
+                message ?? $"{value.WrapWithExpression(valueEx)} == {data.WrapWithExpression(dataEx)}"
+            );
     }
 }

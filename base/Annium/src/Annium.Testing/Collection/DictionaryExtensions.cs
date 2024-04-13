@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using Annium.Testing.Internal;
 
 // ReSharper disable once CheckNamespace
 namespace Annium.Testing;
@@ -19,7 +18,7 @@ public static class DictionaryExtensions
         if (value is null)
             throw new ArgumentNullException(nameof(value));
 
-        value.ContainsKey(key).IsTrue($"{valueEx} has no key `{key.Wrap(keyEx)}`");
+        value.ContainsKey(key).IsTrue($"{valueEx} has no key `{key.WrapWithExpression(keyEx)}`");
 
         return value[key];
     }
@@ -35,7 +34,7 @@ public static class DictionaryExtensions
         if (value is null)
             throw new ArgumentNullException(nameof(value));
 
-        value.ContainsKey(key).IsTrue($"{valueEx} has no key `{key.Wrap(keyEx)}`");
+        value.ContainsKey(key).IsTrue($"{valueEx} has no key `{key.WrapWithExpression(keyEx)}`");
 
         return value[key];
     }
@@ -52,7 +51,7 @@ public static class DictionaryExtensions
             throw new ArgumentNullException(nameof(value));
 
         var total = value.Count;
-        total.Is(count, $"{valueEx} count `{total}` != `{count.Wrap(countEx)}`");
+        total.Is(count, $"{valueEx} count `{total}` != `{count.WrapWithExpression(countEx)}`");
 
         return value;
     }
@@ -69,7 +68,7 @@ public static class DictionaryExtensions
             throw new ArgumentNullException(nameof(value));
 
         var total = value.Count;
-        total.Is(count, $"{valueEx} count `{total}` != `{count.Wrap(countEx)}`");
+        total.Is(count, $"{valueEx} count `{total}` != `{count.WrapWithExpression(countEx)}`");
 
         return value;
     }

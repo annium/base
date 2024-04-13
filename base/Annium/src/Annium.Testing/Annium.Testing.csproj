@@ -15,4 +15,7 @@
         <ProjectReference Include="../../../Data/src/Annium.Data.Models/Annium.Data.Models.csproj" />
         <ProjectReference Include="../../../Logging/src/Annium.Logging.Xunit/Annium.Logging.Xunit.csproj" />
     </ItemGroup>
+    <ItemGroup>
+        <Folder Include="Internal\" />
+    </ItemGroup>
 </Project>

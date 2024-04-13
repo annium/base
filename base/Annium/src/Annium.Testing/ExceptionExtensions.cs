@@ -1,7 +1,6 @@
 using System;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using Annium.Testing.Internal;
 
 namespace Annium.Testing;
 
@@ -17,7 +16,7 @@ public static class ExceptionExtensions
     {
         if (!value.Message.Contains(message))
             throw new AssertionFailedException(
-                $"{value.Message.Wrap(valueEx)} expected to report: `{message.Wrap(messageEx)}`"
+                $"{value.Message.WrapWithExpression(valueEx)} expected to report: `{message.WrapWithExpression(messageEx)}`"
             );
 
         return value;
@@ -33,7 +32,7 @@ public static class ExceptionExtensions
     {
         if (!messages.All(value.Message.Contains))
             throw new AssertionFailedException(
-                $"{value.Message.Wrap(valueEx)} expected to report: `{messages.Wrap(messagesEx)}`"
+                $"{value.Message.WrapWithExpression(valueEx)} expected to report: `{messages.WrapWithExpression(messagesEx)}`"
             );
 
         return value;
@@ -47,7 +46,10 @@ public static class ExceptionExtensions
     )
         where T : Exception
     {
-        value.Message.Is(message, $"{value.Message.Wrap(valueEx)} expected to report: `{message.Wrap(messageEx)}`");
+        value.Message.Is(
+            message,
+            $"{value.Message.WrapWithExpression(valueEx)} expected to report: `{message.WrapWithExpression(messageEx)}`"
+        );
 
         return value;
     }
