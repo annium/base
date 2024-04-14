@@ -134,12 +134,12 @@ internal abstract record ResultBase<T> : IResultBase<T>, IResultBase, ICopyable<
 
             if (_plainErrors.Count > 0)
             {
-                sb.Append($"{_plainErrors.Count} plain errors:");
+                sb.AppendLine($"{_plainErrors.Count} plain errors:");
                 foreach (var error in _plainErrors)
                     sb.AppendLine($"- {error}");
             }
             else
-                sb.Append("no plain errors");
+                sb.AppendLine("no plain errors");
 
             if (_labeledErrors.Count > 0)
             {
