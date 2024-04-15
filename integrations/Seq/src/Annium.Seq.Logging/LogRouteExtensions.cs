@@ -13,6 +13,9 @@ public static class LogRouteExtensions
     public static LogRoute<TContext> UseSeq<TContext>(this LogRoute<TContext> route, SeqConfiguration configuration)
         where TContext : class
     {
+        if (!configuration.IsEnabled)
+            return route;
+
         var filter = route.Filter;
         route
             .For(m => m.SubjectType != "HttpRequest" && filter(m))

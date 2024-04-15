@@ -16,6 +16,9 @@ public static class LogRouteExtensions
     )
         where TContext : class
     {
+        if (!configuration.IsEnabled)
+            return route;
+
         var filter = route.Filter;
         route
             .For(m => m.SubjectType != "HttpRequest" && filter(m))
