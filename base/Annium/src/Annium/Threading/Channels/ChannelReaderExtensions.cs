@@ -21,7 +21,9 @@ public static class ChannelReaderExtensions
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static IDisposable Pipe<T>(this ChannelReader<T> reader, ChannelWriter<T> writer, ILogger logger)
     {
+        var bridge = new LogBridge(typeof(ChannelReader<T>).FriendlyName(), logger);
         var cts = new CancellationTokenSource();
+        var gate = new ManualResetEventSlim();
         Task.Run(
             async () =>
             {
@@ -40,7 +42,11 @@ public static class ChannelReaderExtensions
                 catch (ChannelClosedException) { }
                 catch (Exception e)
                 {
-                    new LogBridge(nameof(ChannelReaderExtensions), logger).Error(e);
+                    bridge.Error(e);
+                }
+                finally
+                {
+                    gate.Set();
                 }
             },
             CancellationToken.None
@@ -48,8 +54,13 @@ public static class ChannelReaderExtensions
 
         return Disposable.Create(() =>
         {
+            bridge.Trace("cancel");
             cts.Cancel();
             cts.Dispose();
+            bridge.Trace("wait");
+            gate.Wait(CancellationToken.None);
+            gate.Dispose();
+            bridge.Trace("done");
         });
     }
 
