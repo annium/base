@@ -9,8 +9,8 @@
         <DebugType>portable</DebugType>
         <WarningsAsErrors>true</WarningsAsErrors>
         <IsPackable>true</IsPackable>
-        <IsTestProject>true</IsTestProject>
         <Nullable>enable</Nullable>
+        <IsTestProject>true</IsTestProject>
     </PropertyGroup>
     <ItemGroup>
         <ProjectReference Include="../../../Annium/src/Annium.Testing/Annium.Testing.csproj" />
