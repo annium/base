@@ -13,10 +13,11 @@ internal class AsyncTimer<T> : AsyncTimerBase
     private readonly Func<T, ValueTask> _handler;
 
     public AsyncTimer(T state, Func<T, ValueTask> handler, int dueTime, int period, ILogger logger)
-        : base(dueTime, period, logger)
+        : base(logger)
     {
         _state = state;
         _handler = handler;
+        Timer = new Timer(Callback, null, dueTime, period);
     }
 
     protected override ValueTask Handle()
@@ -30,9 +31,10 @@ internal class AsyncTimer : AsyncTimerBase
     private readonly Func<ValueTask> _handler;
 
     public AsyncTimer(Func<ValueTask> handler, int dueTime, int period, ILogger logger)
-        : base(dueTime, period, logger)
+        : base(logger)
     {
         _handler = handler;
+        Timer = new Timer(Callback, null, dueTime, period);
     }
 
     protected override ValueTask Handle()
@@ -44,34 +46,33 @@ internal class AsyncTimer : AsyncTimerBase
 internal abstract class AsyncTimerBase : ISequentialTimer, ILogSubject
 {
     public ILogger Logger { get; }
-    private readonly Timer _timer;
+    protected Timer Timer { get; init; } = default!;
     private volatile int _isHandling;
 
-    protected AsyncTimerBase(int dueTime, int period, ILogger logger)
+    protected AsyncTimerBase(ILogger logger)
     {
         Logger = logger;
-        _timer = new Timer(Callback, null, dueTime, period);
     }
 
     public void Dispose()
     {
-        _timer.Dispose();
+        Timer.Dispose();
         GC.SuppressFinalize(this);
     }
 
     public void Change(int dueTime, int period)
     {
-        _timer.Change(dueTime, period);
+        Timer.Change(dueTime, period);
     }
 
     public bool Change(TimeSpan dueTime, TimeSpan period)
     {
-        return _timer.Change(dueTime, period);
+        return Timer.Change(dueTime, period);
     }
 
     protected abstract ValueTask Handle();
 
-    private async void Callback(object? _)
+    protected async void Callback(object? _)
     {
         if (Interlocked.CompareExchange(ref _isHandling, 1, 0) == 1)
         {
