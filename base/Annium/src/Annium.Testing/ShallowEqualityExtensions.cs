@@ -7,7 +7,7 @@ namespace Annium.Testing;
 
 public static class ShallowEqualityExtensions
 {
-    public static void IsEqual<T, TD>(
+    public static T IsEqual<T, TD>(
         this T value,
         TD data,
         string? message = null,
@@ -21,9 +21,11 @@ public static class ShallowEqualityExtensions
                 message
                     ?? $"{value.WrapWithExpression(valueEx)} is not shallow equal to {data.WrapWithExpression(dataEx)}"
             );
+
+        return value;
     }
 
-    public static void IsNotEqual<T, TD>(
+    public static T IsNotEqual<T, TD>(
         this T value,
         TD data,
         string? message = null,
@@ -36,5 +38,7 @@ public static class ShallowEqualityExtensions
             throw new AssertionFailedException(
                 message ?? $"{value.WrapWithExpression(valueEx)} is shallow equal to {data.WrapWithExpression(dataEx)}"
             );
+
+        return value;
     }
 }

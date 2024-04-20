@@ -5,7 +5,7 @@ namespace Annium.Testing;
 
 public static class ComparisonExtensions
 {
-    public static void IsLess<T>(
+    public static T IsLess<T>(
         this T value,
         T data,
         string? message = null,
@@ -18,9 +18,11 @@ public static class ComparisonExtensions
             throw new AssertionFailedException(
                 message ?? $"{value.WrapWithExpression(valueEx)} not < {data.WrapWithExpression(dataEx)}"
             );
+
+        return value;
     }
 
-    public static void IsLessOrEqual<T>(
+    public static T IsLessOrEqual<T>(
         this T value,
         T data,
         string? message = null,
@@ -33,9 +35,11 @@ public static class ComparisonExtensions
             throw new AssertionFailedException(
                 message ?? $"{value.WrapWithExpression(valueEx)} not <= {data.WrapWithExpression(dataEx)}"
             );
+
+        return value;
     }
 
-    public static void IsGreater<T>(
+    public static T IsGreater<T>(
         this T value,
         T data,
         string? message = null,
@@ -48,9 +52,11 @@ public static class ComparisonExtensions
             throw new AssertionFailedException(
                 message ?? $"{value.WrapWithExpression(valueEx)} not > {data.WrapWithExpression(dataEx)}"
             );
+
+        return value;
     }
 
-    public static void IsGreaterOrEqual<T>(
+    public static T IsGreaterOrEqual<T>(
         this T value,
         T data,
         string? message = null,
@@ -63,5 +69,7 @@ public static class ComparisonExtensions
             throw new AssertionFailedException(
                 message ?? $"{value.WrapWithExpression(valueEx)} not >= {data.WrapWithExpression(dataEx)}"
             );
+
+        return value;
     }
 }

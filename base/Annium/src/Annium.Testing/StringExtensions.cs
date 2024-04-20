@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 
@@ -6,7 +5,7 @@ namespace Annium.Testing;
 
 public static class StringExtensions
 {
-    public static void IsContaining(
+    public static string IsContaining(
         this string value,
         string data,
         string? message = null,
@@ -18,9 +17,11 @@ public static class StringExtensions
             throw new AssertionFailedException(
                 message ?? $"{value.WrapWithExpression(valueEx)} doesn't contain {data.WrapWithExpression(dataEx)}"
             );
+
+        return value;
     }
 
-    public static void IsContainingAll(
+    public static string IsContainingAll(
         this string value,
         string[] messages,
         [CallerArgumentExpression("value")] string valueEx = default!,
@@ -31,9 +32,11 @@ public static class StringExtensions
             throw new AssertionFailedException(
                 $"{value.WrapWithExpression(valueEx)} expected to contain all: `{messages.WrapWithExpression(messagesEx)}`"
             );
+
+        return value;
     }
 
-    public static void IsNotContaining(
+    public static string IsNotContaining(
         this string value,
         string data,
         string? message = null,
@@ -45,5 +48,6 @@ public static class StringExtensions
             throw new AssertionFailedException(
                 message ?? $"{value.WrapWithExpression(valueEx)} contains {data.WrapWithExpression(dataEx)}"
             );
+        return value;
     }
 }

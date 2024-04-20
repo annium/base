@@ -5,7 +5,7 @@ namespace Annium.Testing;
 
 public static class EqualityExtensions
 {
-    public static void Is<T>(
+    public static T Is<T>(
         this T value,
         T data,
         string? message = null,
@@ -17,9 +17,11 @@ public static class EqualityExtensions
             throw new AssertionFailedException(
                 message ?? $"{value.WrapWithExpression(valueEx)} != {data.WrapWithExpression(dataEx)}"
             );
+
+        return value;
     }
 
-    public static void IsNot<T>(
+    public static T IsNot<T>(
         this T value,
         T data,
         string? message = null,
@@ -31,5 +33,7 @@ public static class EqualityExtensions
             throw new AssertionFailedException(
                 message ?? $"{value.WrapWithExpression(valueEx)} == {data.WrapWithExpression(dataEx)}"
             );
+
+        return value;
     }
 }
