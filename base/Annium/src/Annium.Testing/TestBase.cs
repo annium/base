@@ -11,6 +11,7 @@ namespace Annium.Testing;
 public abstract class TestBase : ILogSubject
 {
     public ILogger Logger => _logger.Value;
+    public IServiceProvider Provider => _sp.Value;
     private bool _isBuilt;
     private readonly IServiceProviderBuilder _builder;
     private readonly Lazy<IKeyedServiceProvider> _sp;
