@@ -56,9 +56,10 @@ public static class ChannelReaderExtensions
         {
             bridge.Trace("cancel");
             cts.Cancel();
-            cts.Dispose();
             bridge.Trace("wait");
             gate.Wait(CancellationToken.None);
+            bridge.Trace("dispose");
+            cts.Dispose();
             gate.Dispose();
             bridge.Trace("done");
         });
