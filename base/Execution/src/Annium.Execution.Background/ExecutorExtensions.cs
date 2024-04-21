@@ -1,20 +1,21 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using OneOf;
 
 namespace Annium.Execution.Background;
 
 public static class ExecutorExtensions
 {
-    public static async ValueTask ExecuteAsync(this IExecutor executor, Action task)
+    public static async ValueTask<bool> ExecuteAsync(this IExecutor executor, Action task)
     {
-        var tcs = new TaskCompletionSource();
-        executor.Schedule(() =>
+        var tcs = new TaskCompletionSource<bool>();
+        var scheduled = executor.Schedule(() =>
         {
             try
             {
                 task();
-                tcs.SetResult();
+                tcs.SetResult(true);
             }
             catch (OperationCanceledException)
             {
@@ -25,19 +26,21 @@ public static class ExecutorExtensions
                 tcs.SetException(e);
             }
         });
+        if (!scheduled)
+            tcs.SetResult(false);
 
-        await tcs.Task.ConfigureAwait(false);
+        return await tcs.Task.ConfigureAwait(false);
     }
 
-    public static async ValueTask ExecuteAsync(this IExecutor executor, Action<CancellationToken> task)
+    public static async ValueTask<bool> ExecuteAsync(this IExecutor executor, Action<CancellationToken> task)
     {
-        var tcs = new TaskCompletionSource();
-        executor.Schedule(ct =>
+        var tcs = new TaskCompletionSource<bool>();
+        var scheduled = executor.Schedule(ct =>
         {
             try
             {
                 task(ct);
-                tcs.SetResult();
+                tcs.SetResult(true);
             }
             catch (OperationCanceledException)
             {
@@ -48,14 +51,16 @@ public static class ExecutorExtensions
                 tcs.SetException(e);
             }
         });
+        if (!scheduled)
+            tcs.SetResult(false);
 
-        await tcs.Task.ConfigureAwait(false);
+        return await tcs.Task.ConfigureAwait(false);
     }
 
-    public static async ValueTask<T> ExecuteAsync<T>(this IExecutor executor, Func<T> task)
+    public static async ValueTask<OneOf<T, None>> ExecuteAsync<T>(this IExecutor executor, Func<T> task)
     {
-        var tcs = new TaskCompletionSource<T>();
-        executor.Schedule(() =>
+        var tcs = new TaskCompletionSource<OneOf<T, None>>();
+        var scheduled = executor.Schedule(() =>
         {
             try
             {
@@ -70,203 +75,19 @@ public static class ExecutorExtensions
                 tcs.SetException(e);
             }
         });
+        if (!scheduled)
+            tcs.SetResult(None.Default);
 
         return await tcs.Task.ConfigureAwait(false);
     }
 
-    public static async ValueTask<T> ExecuteAsync<T>(this IExecutor executor, Func<CancellationToken, T> task)
-    {
-        var tcs = new TaskCompletionSource<T>();
-        executor.Schedule(ct =>
-        {
-            try
-            {
-                tcs.SetResult(task(ct));
-            }
-            catch (OperationCanceledException)
-            {
-                tcs.SetCanceled(ct);
-            }
-            catch (Exception e)
-            {
-                tcs.SetException(e);
-            }
-        });
-
-        return await tcs.Task.ConfigureAwait(false);
-    }
-
-    public static async ValueTask ExecuteAsync(this IExecutor executor, Func<ValueTask> task)
-    {
-        var tcs = new TaskCompletionSource();
-        executor.Schedule(async () =>
-        {
-            try
-            {
-                await task();
-                tcs.SetResult();
-            }
-            catch (OperationCanceledException)
-            {
-                tcs.SetCanceled(CancellationToken.None);
-            }
-            catch (Exception e)
-            {
-                tcs.SetException(e);
-            }
-        });
-
-        await tcs.Task.ConfigureAwait(false);
-    }
-
-    public static async ValueTask ExecuteAsync(this IExecutor executor, Func<CancellationToken, ValueTask> task)
-    {
-        var tcs = new TaskCompletionSource();
-        executor.Schedule(async ct =>
-        {
-            try
-            {
-                await task(ct);
-                tcs.SetResult();
-            }
-            catch (OperationCanceledException)
-            {
-                tcs.SetCanceled(ct);
-            }
-            catch (Exception e)
-            {
-                tcs.SetException(e);
-            }
-        });
-
-        await tcs.Task.ConfigureAwait(false);
-    }
-
-    public static async ValueTask<T> ExecuteAsync<T>(this IExecutor executor, Func<ValueTask<T>> task)
-    {
-        var tcs = new TaskCompletionSource<T>();
-        executor.Schedule(async () =>
-        {
-            try
-            {
-                tcs.SetResult(await task());
-            }
-            catch (OperationCanceledException)
-            {
-                tcs.SetCanceled(CancellationToken.None);
-            }
-            catch (Exception e)
-            {
-                tcs.SetException(e);
-            }
-        });
-
-        return await tcs.Task.ConfigureAwait(false);
-    }
-
-    public static async ValueTask<T> ExecuteAsync<T>(
+    public static async ValueTask<OneOf<T, None>> ExecuteAsync<T>(
         this IExecutor executor,
-        Func<CancellationToken, ValueTask<T>> task
+        Func<CancellationToken, T> task
     )
     {
-        var tcs = new TaskCompletionSource<T>();
-        executor.Schedule(async ct =>
-        {
-            try
-            {
-                tcs.SetResult(await task(ct));
-            }
-            catch (OperationCanceledException)
-            {
-                tcs.SetCanceled(ct);
-            }
-            catch (Exception e)
-            {
-                tcs.SetException(e);
-            }
-        });
-
-        return await tcs.Task.ConfigureAwait(false);
-    }
-
-    public static async ValueTask TryExecuteAsync(this IExecutor executor, Action task)
-    {
-        var tcs = new TaskCompletionSource();
-        var scheduled = executor.TrySchedule(() =>
-        {
-            try
-            {
-                task();
-                tcs.SetResult();
-            }
-            catch (OperationCanceledException)
-            {
-                tcs.SetCanceled(CancellationToken.None);
-            }
-            catch (Exception e)
-            {
-                tcs.SetException(e);
-            }
-        });
-        if (!scheduled)
-            tcs.SetException(UnavailableException());
-
-        await tcs.Task.ConfigureAwait(false);
-    }
-
-    public static async ValueTask TryExecuteAsync(this IExecutor executor, Action<CancellationToken> task)
-    {
-        var tcs = new TaskCompletionSource();
-        var scheduled = executor.TrySchedule(ct =>
-        {
-            try
-            {
-                task(ct);
-                tcs.SetResult();
-            }
-            catch (OperationCanceledException)
-            {
-                tcs.SetCanceled(ct);
-            }
-            catch (Exception e)
-            {
-                tcs.SetException(e);
-            }
-        });
-        if (!scheduled)
-            tcs.SetException(UnavailableException());
-
-        await tcs.Task.ConfigureAwait(false);
-    }
-
-    public static async ValueTask<T> TryExecuteAsync<T>(this IExecutor executor, Func<T> task)
-    {
-        var tcs = new TaskCompletionSource<T>();
-        var scheduled = executor.TrySchedule(() =>
-        {
-            try
-            {
-                tcs.SetResult(task());
-            }
-            catch (OperationCanceledException)
-            {
-                tcs.SetCanceled(CancellationToken.None);
-            }
-            catch (Exception e)
-            {
-                tcs.SetException(e);
-            }
-        });
-        if (!scheduled)
-            tcs.SetException(UnavailableException());
-
-        return await tcs.Task.ConfigureAwait(false);
-    }
-
-    public static async ValueTask<T> TryExecuteAsync<T>(this IExecutor executor, Func<CancellationToken, T> task)
-    {
-        var tcs = new TaskCompletionSource<T>();
-        var scheduled = executor.TrySchedule(ct =>
+        var tcs = new TaskCompletionSource<OneOf<T, None>>();
+        var scheduled = executor.Schedule(ct =>
         {
             try
             {
@@ -282,20 +103,20 @@ public static class ExecutorExtensions
             }
         });
         if (!scheduled)
-            tcs.SetException(UnavailableException());
+            tcs.SetResult(None.Default);
 
         return await tcs.Task.ConfigureAwait(false);
     }
 
-    public static async ValueTask TryExecuteAsync(this IExecutor executor, Func<ValueTask> task)
+    public static async ValueTask<bool> ExecuteAsync(this IExecutor executor, Func<ValueTask> task)
     {
-        var tcs = new TaskCompletionSource();
-        var scheduled = executor.TrySchedule(async () =>
+        var tcs = new TaskCompletionSource<bool>();
+        var scheduled = executor.Schedule(async () =>
         {
             try
             {
                 await task().ConfigureAwait(false);
-                tcs.SetResult();
+                tcs.SetResult(true);
             }
             catch (OperationCanceledException)
             {
@@ -307,20 +128,20 @@ public static class ExecutorExtensions
             }
         });
         if (!scheduled)
-            tcs.SetException(UnavailableException());
+            tcs.SetResult(false);
 
-        await tcs.Task.ConfigureAwait(false);
+        return await tcs.Task.ConfigureAwait(false);
     }
 
-    public static async ValueTask TryExecuteAsync(this IExecutor executor, Func<CancellationToken, ValueTask> task)
+    public static async ValueTask<bool> ExecuteAsync(this IExecutor executor, Func<CancellationToken, ValueTask> task)
     {
-        var tcs = new TaskCompletionSource();
-        var scheduled = executor.TrySchedule(async ct =>
+        var tcs = new TaskCompletionSource<bool>();
+        var scheduled = executor.Schedule(async ct =>
         {
             try
             {
                 await task(ct).ConfigureAwait(false);
-                tcs.SetResult();
+                tcs.SetResult(true);
             }
             catch (OperationCanceledException)
             {
@@ -332,15 +153,15 @@ public static class ExecutorExtensions
             }
         });
         if (!scheduled)
-            tcs.SetException(UnavailableException());
+            tcs.SetResult(false);
 
-        await tcs.Task.ConfigureAwait(false);
+        return await tcs.Task.ConfigureAwait(false);
     }
 
-    public static async ValueTask<T> TryExecuteAsync<T>(this IExecutor executor, Func<ValueTask<T>> task)
+    public static async ValueTask<OneOf<T, None>> ExecuteAsync<T>(this IExecutor executor, Func<ValueTask<T>> task)
     {
-        var tcs = new TaskCompletionSource<T>();
-        var scheduled = executor.TrySchedule(async () =>
+        var tcs = new TaskCompletionSource<OneOf<T, None>>();
+        var scheduled = executor.Schedule(async () =>
         {
             try
             {
@@ -356,18 +177,18 @@ public static class ExecutorExtensions
             }
         });
         if (!scheduled)
-            tcs.SetException(UnavailableException());
+            tcs.SetResult(None.Default);
 
         return await tcs.Task.ConfigureAwait(false);
     }
 
-    public static async ValueTask<T> TryExecuteAsync<T>(
+    public static async ValueTask<OneOf<T, None>> ExecuteAsync<T>(
         this IExecutor executor,
         Func<CancellationToken, ValueTask<T>> task
     )
     {
-        var tcs = new TaskCompletionSource<T>();
-        var scheduled = executor.TrySchedule(async ct =>
+        var tcs = new TaskCompletionSource<OneOf<T, None>>();
+        var scheduled = executor.Schedule(async ct =>
         {
             try
             {
@@ -383,10 +204,8 @@ public static class ExecutorExtensions
             }
         });
         if (!scheduled)
-            tcs.SetException(UnavailableException());
+            tcs.SetResult(None.Default);
 
         return await tcs.Task.ConfigureAwait(false);
     }
-
-    private static InvalidOperationException UnavailableException() => new("Executor is not available already");
 }

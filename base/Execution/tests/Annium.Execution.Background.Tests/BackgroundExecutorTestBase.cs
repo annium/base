@@ -74,9 +74,8 @@ public abstract class BackgroundExecutorTestBase : TestBase
         this.Trace("ensure executor is not available");
         _executor.IsAvailable.IsFalse();
 
-        // throws, as not available already
-        this.Trace("ensure executor schedule throws due to unavailability");
-        Wrap.It(() => _executor.Schedule(() => { })).Throws<InvalidOperationException>();
+        this.Trace("ensure executor fails to schedule when not available");
+        _executor.Schedule(() => { }).IsFalse();
 
         // cleanup
         this.Trace("await disposal");
@@ -153,8 +152,8 @@ public abstract class BackgroundExecutorTestBase : TestBase
         this.Trace("ensure executor is not available");
         _executor.IsAvailable.IsFalse();
 
-        // throws, as not available already
-        Wrap.It(() => _executor.Schedule(() => { })).Throws<InvalidOperationException>();
+        this.Trace("ensure executor fails to schedule when not available");
+        _executor.Schedule(() => { }).IsFalse();
 
         this.Trace("await disposal");
         await disposalTask;

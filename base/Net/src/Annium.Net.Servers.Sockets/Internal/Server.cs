@@ -56,7 +56,7 @@ internal class Server : IServer, ILogSubject
             }
 
             // try schedule socket handling
-            if (_executor.TrySchedule(HandleSocket(socket, ct)))
+            if (_executor.Schedule(HandleSocket(socket, ct)))
             {
                 this.Trace("socket handle scheduled");
                 continue;

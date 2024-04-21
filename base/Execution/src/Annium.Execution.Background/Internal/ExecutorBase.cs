@@ -44,42 +44,22 @@ internal abstract class ExecutorBase : IExecutor, ILogSubject
         _taskReader = taskChannel.Reader;
     }
 
-    public void Schedule(Action task)
-    {
-        ScheduleTask(task);
-    }
-
-    public void Schedule(Action<CancellationToken> task)
-    {
-        ScheduleTask(task);
-    }
-
-    public void Schedule(Func<ValueTask> task)
-    {
-        ScheduleTask(task);
-    }
-
-    public void Schedule(Func<CancellationToken, ValueTask> task)
-    {
-        ScheduleTask(task);
-    }
-
-    public bool TrySchedule(Action task)
+    public bool Schedule(Action task)
     {
         return TryScheduleTask(task);
     }
 
-    public bool TrySchedule(Action<CancellationToken> task)
+    public bool Schedule(Action<CancellationToken> task)
     {
         return TryScheduleTask(task);
     }
 
-    public bool TrySchedule(Func<ValueTask> task)
+    public bool Schedule(Func<ValueTask> task)
     {
         return TryScheduleTask(task);
     }
 
-    public bool TrySchedule(Func<CancellationToken, ValueTask> task)
+    public bool Schedule(Func<CancellationToken, ValueTask> task)
     {
         return TryScheduleTask(task);
     }
@@ -154,13 +134,6 @@ internal abstract class ExecutorBase : IExecutor, ILogSubject
         var taskCounter = Interlocked.Decrement(ref _taskCounter);
         this.Trace("complete task {id} ({num})", task.GetFullId(), taskCounter);
         TryFinish(taskCounter);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void ScheduleTask(Delegate task)
-    {
-        if (!TryScheduleTask(task))
-            throw new InvalidOperationException("Task schedule failed");
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
