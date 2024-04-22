@@ -23,7 +23,7 @@ public class DoParallelAsyncTest : TestBase
         var log = Get<TestLog<string>>();
         var tcs = new TaskCompletionSource();
         using var observable = Observable
-            .Range(1, 5)
+            .Range(1, 100)
             .DoParallelAsync(async x =>
             {
                 log.Add($"start: {x}");
@@ -34,7 +34,7 @@ public class DoParallelAsyncTest : TestBase
 
         await tcs.Task;
 
-        log.Has(10);
+        log.Has(200);
         var starts = log.Select((x, i) => (x, i)).Where(x => x.x.StartsWith("start:")).Select(x => x.i).ToArray();
         var ends = log.Select((x, i) => (x, i)).Where(x => x.x.StartsWith("end:")).Select(x => x.i).ToArray();
 
