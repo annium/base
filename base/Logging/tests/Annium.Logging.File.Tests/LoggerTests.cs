@@ -1,8 +1,10 @@
 using System;
 using System.IO;
+using System.Threading.Tasks;
 using Annium.Core.DependencyInjection;
 using Annium.Logging.Shared;
 using Annium.Testing;
+using Annium.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -36,7 +38,7 @@ public class LoggerTests : TestBase
     }
 
     [Fact]
-    public void LogMessage_WritesLogMessage()
+    public async Task LogMessage_WritesLogMessage()
     {
         // arrange
         var subject = GetSubject();
@@ -46,13 +48,14 @@ public class LoggerTests : TestBase
         subject.Info("two");
 
         // assert
+        await Wait.UntilAsync(() => !string.IsNullOrWhiteSpace(GetLog()));
         var log = GetLog();
         log.Contains("one").IsTrue();
         log.Contains("two").IsTrue();
     }
 
     [Fact]
-    public void LogAggregateException_WritesErrorsCountAndAllErrors()
+    public async Task LogAggregateException_WritesErrorsCountAndAllErrors()
     {
         // arrange
         var subject = GetSubject();
@@ -64,6 +67,7 @@ public class LoggerTests : TestBase
         subject.Error(ex);
 
         // assert
+        await Wait.UntilAsync(() => !string.IsNullOrWhiteSpace(GetLog()));
         var log = GetLog();
         log.Contains("2 error(s) in").IsTrue();
         log.Contains("xxx").IsTrue();
@@ -71,7 +75,7 @@ public class LoggerTests : TestBase
     }
 
     [Fact]
-    public void LogException_WritesException()
+    public async Task LogException_WritesException()
     {
         // arrange
         var subject = GetSubject();
@@ -83,6 +87,7 @@ public class LoggerTests : TestBase
         subject.Error(ex);
 
         // assert
+        await Wait.UntilAsync(() => !string.IsNullOrWhiteSpace(GetLog()));
         var log = GetLog();
         log.Contains("xxx").IsTrue();
     }
