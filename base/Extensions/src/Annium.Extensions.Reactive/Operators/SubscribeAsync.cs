@@ -1,48 +1,127 @@
-using System.Runtime.ExceptionServices;
-using System.Threading;
 using System.Threading.Tasks;
-using Annium.Threading.Tasks;
+using Annium;
+using Annium.Execution.Background;
+using Annium.Logging;
 
 // ReSharper disable once CheckNamespace
 namespace System;
 
 public static class SubscribeAsyncOperatorExtensions
 {
-    public static void SubscribeAsync<T>(
+    public static IAsyncDisposable SubscribeAsync<T>(this IObservable<T> source, Func<Exception, ValueTask> onError)
+    {
+        var executor = Executor.Parallel<IObservable<T>>(VoidLogger.Instance).Start();
+        var subscription = source.Subscribe(Noop, ex => executor.Schedule(() => onError(ex)));
+
+        return Disposable.Create(async () =>
+        {
+            subscription.Dispose();
+            await executor.DisposeAsync();
+        });
+    }
+
+    public static IAsyncDisposable SubscribeAsync<T>(this IObservable<T> source, Func<ValueTask> onCompleted)
+    {
+        var executor = Executor.Parallel<IObservable<T>>(VoidLogger.Instance).Start();
+        var subscription = source.Subscribe(Noop, () => executor.Schedule(onCompleted));
+
+        return Disposable.Create(async () =>
+        {
+            subscription.Dispose();
+            await executor.DisposeAsync();
+        });
+    }
+
+    public static IAsyncDisposable SubscribeAsync<T>(
         this IObservable<T> source,
-        Func<Exception, Task> onError,
-        Func<Task> onCompleted,
-        CancellationToken ct
-    ) => source.Subscribe(Noop, Wrap(onError), Wrap(onCompleted), ct);
+        Func<Exception, ValueTask> onError,
+        Func<ValueTask> onCompleted
+    )
+    {
+        var executor = Executor.Parallel<IObservable<T>>(VoidLogger.Instance).Start();
+        var subscription = source.Subscribe(
+            Noop,
+            ex => executor.Schedule(() => onError(ex)),
+            () => executor.Schedule(onCompleted)
+        );
 
-    public static void SubscribeAsync<T>(
+        return Disposable.Create(async () =>
+        {
+            subscription.Dispose();
+            await executor.DisposeAsync();
+        });
+    }
+
+    public static IAsyncDisposable SubscribeAsync<T>(this IObservable<T> source, Func<T, ValueTask> onNext)
+    {
+        var executor = Executor.Parallel<IObservable<T>>(VoidLogger.Instance).Start();
+        var subscription = source.Subscribe(x => executor.Schedule(() => onNext(x)));
+
+        return Disposable.Create(async () =>
+        {
+            subscription.Dispose();
+            await executor.DisposeAsync();
+        });
+    }
+
+    public static IAsyncDisposable SubscribeAsync<T>(
         this IObservable<T> source,
-        Func<Exception, Task> onError,
-        CancellationToken ct
-    ) => source.Subscribe(Noop, Wrap(onError), Noop, ct);
+        Func<T, ValueTask> onNext,
+        Func<Exception, ValueTask> onError
+    )
+    {
+        var executor = Executor.Parallel<IObservable<T>>(VoidLogger.Instance).Start();
+        var subscription = source.Subscribe(
+            x => executor.Schedule(() => onNext(x)),
+            ex => executor.Schedule(() => onError(ex))
+        );
 
-    public static void SubscribeAsync<T>(this IObservable<T> source, Func<Task> onCompleted, CancellationToken ct) =>
-        source.Subscribe(Noop, Throw, Wrap(onCompleted), ct);
+        return Disposable.Create(async () =>
+        {
+            subscription.Dispose();
+            await executor.DisposeAsync();
+        });
+    }
 
-    public static IDisposable SubscribeAsync<T>(
+    public static IAsyncDisposable SubscribeAsync<T>(
         this IObservable<T> source,
-        Func<Exception, Task> onError,
-        Func<Task> onCompleted
-    ) => source.Subscribe(Noop, Wrap(onError), Wrap(onCompleted));
+        Func<T, ValueTask> onNext,
+        Func<ValueTask> onCompleted
+    )
+    {
+        var executor = Executor.Parallel<IObservable<T>>(VoidLogger.Instance).Start();
+        var subscription = source.Subscribe(
+            x => executor.Schedule(() => onNext(x)),
+            () => executor.Schedule(onCompleted)
+        );
 
-    public static IDisposable SubscribeAsync<T>(this IObservable<T> source, Func<Exception, Task> onError) =>
-        source.Subscribe(Noop, Wrap(onError), Noop);
+        return Disposable.Create(async () =>
+        {
+            subscription.Dispose();
+            await executor.DisposeAsync();
+        });
+    }
 
-    public static IDisposable SubscribeAsync<T>(this IObservable<T> source, Func<Task> onCompleted) =>
-        source.Subscribe(Noop, Throw, Wrap(onCompleted));
+    public static IAsyncDisposable SubscribeAsync<T>(
+        this IObservable<T> source,
+        Func<T, ValueTask> onNext,
+        Func<Exception, ValueTask> onError,
+        Func<ValueTask> onCompleted
+    )
+    {
+        var executor = Executor.Parallel<IObservable<T>>(VoidLogger.Instance).Start();
+        var subscription = source.Subscribe(
+            x => executor.Schedule(() => onNext(x)),
+            ex => executor.Schedule(() => onError(ex)),
+            () => executor.Schedule(onCompleted)
+        );
 
-    private static Action Wrap(Func<Task> handle) => () => handle().Await();
+        return Disposable.Create(async () =>
+        {
+            subscription.Dispose();
+            await executor.DisposeAsync();
+        });
+    }
 
-    private static Action<T> Wrap<T>(Func<T, Task> handle) => x => handle(x).Await();
-
-    private static void Noop<T>(T x) { }
-
-    private static void Noop() { }
-
-    private static void Throw(Exception ex) => ExceptionDispatchInfo.Capture(ex).Throw();
+    private static void Noop<T>(T _) { }
 }

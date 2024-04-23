@@ -14,7 +14,7 @@ public class SubscribeAsyncTest
         // arrange
         var log = new TestLog<string>();
         var tcs = new TaskCompletionSource();
-        using var observable = Observable
+        await using var observable = Observable
             .Range(1, 5)
             .Select(x =>
             {
@@ -47,7 +47,7 @@ public class SubscribeAsyncTest
         // arrange
         var log = new TestLog<string>();
         var tcs = new TaskCompletionSource();
-        using var observable = Observable
+        await using var observable = Observable
             .Range(1, 5)
             .Select(x =>
             {

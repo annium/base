@@ -1,33 +1,27 @@
 using System.Reactive.Linq;
 using System.Threading.Tasks;
+using Annium.Execution.Background;
+using Annium.Logging;
 
 // ReSharper disable once CheckNamespace
 namespace System;
 
 public static class DoParallelAsyncOperatorExtensions
 {
-    public static IObservable<TSource> DoParallelAsync<TSource>(
-        this IObservable<TSource> source,
-        Func<TSource, Task> handle
-    ) =>
-        source.SelectMany(x =>
-            Observable.FromAsync(async () =>
-            {
-                await handle(x);
-                return x;
-            })
-        );
-
-    public static IObservable<TSource> DoParallelAsync<TSource>(
-        this IObservable<TSource> source,
-        Func<TSource, int, Task> selector
-    ) =>
-        source.SelectMany(
-            (x, i) =>
-                Observable.FromAsync(async () =>
-                {
-                    await selector(x, i);
-                    return x;
-                })
-        );
+    public static IObservable<T> DoParallelAsync<T>(this IObservable<T> source, Func<T, Task> handle)
+    {
+        return Observable.Create<T>(observer =>
+        {
+            var executor = Executor.Parallel<IObservable<T>>(VoidLogger.Instance).Start();
+            return source.Subscribe(
+                x =>
+                    executor.Schedule(async () =>
+                    {
+                        await handle(x);
+                        observer.OnNext(x);
+                    }),
+                () => executor.DisposeAsync().AsTask().ContinueWith(_ => observer.OnCompleted())
+            );
+        });
+    }
 }

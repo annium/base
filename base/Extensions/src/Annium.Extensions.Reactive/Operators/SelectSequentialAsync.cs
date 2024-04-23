@@ -1,6 +1,7 @@
-using System.Reactive;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
+using Annium.Execution.Background;
+using Annium.Logging;
 
 // ReSharper disable once CheckNamespace
 namespace System;
@@ -10,20 +11,19 @@ public static class SelectSequentialAsyncOperatorExtensions
     public static IObservable<TResult> SelectSequentialAsync<TSource, TResult>(
         this IObservable<TSource> source,
         Func<TSource, Task<TResult>> selector
-    ) => source.Select(x => Observable.FromAsync(() => selector(x))).Concat();
-
-    public static IObservable<TResult> SelectSequentialAsync<TSource, TResult>(
-        this IObservable<TSource> source,
-        Func<TSource, int, Task<TResult>> selector
-    ) => source.Select((x, i) => Observable.FromAsync(() => selector(x, i))).Concat();
-
-    public static IObservable<Unit> SelectSequentialAsync<TSource>(
-        this IObservable<TSource> source,
-        Func<TSource, Task> selector
-    ) => source.Select(x => Observable.FromAsync(() => selector(x))).Concat();
-
-    public static IObservable<Unit> SelectSequentialAsync<TSource>(
-        this IObservable<TSource> source,
-        Func<TSource, int, Task> selector
-    ) => source.Select((x, i) => Observable.FromAsync(() => selector(x, i))).Concat();
+    )
+    {
+        return Observable.Create<TResult>(observer =>
+        {
+            var executor = Executor.Sequential<IObservable<TSource>>(VoidLogger.Instance).Start();
+            return source.Subscribe(
+                x =>
+                    executor.Schedule(async () =>
+                    {
+                        observer.OnNext(await selector(x));
+                    }),
+                () => executor.DisposeAsync().AsTask().ContinueWith(_ => observer.OnCompleted())
+            );
+        });
+    }
 }

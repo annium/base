@@ -13,6 +13,7 @@
     </PropertyGroup>
     <ItemGroup>
         <ProjectReference Include="../../../Annium/src/Annium/Annium.csproj" />
+        <ProjectReference Include="../../../Execution/src/Annium.Execution.Background/Annium.Execution.Background.csproj" />
     </ItemGroup>
     <ItemGroup>
         <PackageReference Include="System.Reactive" Version="6.0.0" />

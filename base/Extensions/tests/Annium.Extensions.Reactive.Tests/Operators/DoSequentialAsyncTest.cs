@@ -19,17 +19,14 @@ public class DoSequentialAsyncTest
             .Range(1, 100)
             .DoSequentialAsync(async x =>
             {
-                lock (log)
-                    log.Add($"start: {x}");
+                log.Add($"start: {x}");
                 await Task.Delay(10);
-                lock (log)
-                    log.Add($"end: {x}");
+                log.Add($"end: {x}");
             })
             .Subscribe(
                 x =>
                 {
-                    lock (log)
-                        log.Add($"sub: {x}");
+                    log.Add($"sub: {x}");
                 },
                 tcs.SetResult
             );

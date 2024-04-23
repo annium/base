@@ -1,37 +1,27 @@
 using System.Reactive.Linq;
 using System.Threading.Tasks;
+using Annium.Execution.Background;
+using Annium.Logging;
 
 // ReSharper disable once CheckNamespace
 namespace System;
 
 public static class DoSequentialAsyncOperatorExtensions
 {
-    public static IObservable<TSource> DoSequentialAsync<TSource>(
-        this IObservable<TSource> source,
-        Func<TSource, Task> handle
-    ) =>
-        source
-            .Select(x =>
-                Observable.FromAsync(async () =>
-                {
-                    await handle(x);
-                    return x;
-                })
-            )
-            .Concat();
-
-    public static IObservable<TSource> DoSequentialAsync<TSource>(
-        this IObservable<TSource> source,
-        Func<TSource, int, Task> handle
-    ) =>
-        source
-            .Select(
-                (x, i) =>
-                    Observable.FromAsync(async () =>
+    public static IObservable<T> DoSequentialAsync<T>(this IObservable<T> source, Func<T, Task> handle)
+    {
+        return Observable.Create<T>(observer =>
+        {
+            var executor = Executor.Sequential<IObservable<T>>(VoidLogger.Instance).Start();
+            return source.Subscribe(
+                x =>
+                    executor.Schedule(async () =>
                     {
-                        await handle(x, i);
-                        return x;
-                    })
-            )
-            .Concat();
+                        await handle(x);
+                        observer.OnNext(x);
+                    }),
+                () => executor.DisposeAsync().AsTask().ContinueWith(_ => observer.OnCompleted())
+            );
+        });
+    }
 }
