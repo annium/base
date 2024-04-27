@@ -23,6 +23,10 @@ internal class ParallelExecutor<TSource> : ExecutorBase
         {
             await Helper.RunTaskInBackground(task, Cts.Token);
         }
+        catch (OperationCanceledException)
+        {
+            this.Trace("task canceled");
+        }
         catch (Exception e)
         {
             this.Error(e);

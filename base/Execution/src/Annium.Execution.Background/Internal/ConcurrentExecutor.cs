@@ -30,6 +30,10 @@ internal class ConcurrentExecutor<TSource> : ExecutorBase
             await _gate.WaitAsync();
             await Helper.RunTaskInBackground(task, Cts.Token);
         }
+        catch (OperationCanceledException)
+        {
+            this.Trace("task canceled");
+        }
         catch (Exception e)
         {
             this.Error(e);

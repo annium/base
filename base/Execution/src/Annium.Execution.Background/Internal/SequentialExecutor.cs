@@ -16,6 +16,10 @@ internal class SequentialExecutor<TSource> : ExecutorBase
         {
             await Helper.RunTaskInForeground(task, Cts.Token);
         }
+        catch (OperationCanceledException)
+        {
+            this.Trace("task canceled");
+        }
         catch (Exception e)
         {
             this.Error(e);
