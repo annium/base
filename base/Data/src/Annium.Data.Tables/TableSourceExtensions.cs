@@ -38,7 +38,6 @@ public static class TableSourceExtensions
                 target.Init(e.Items.Select(map).OfType<TD>().ToArray());
                 break;
             case ChangeEventType.Set:
-
                 {
                     var item = map(e.Item);
                     if (item is not null)
@@ -46,7 +45,6 @@ public static class TableSourceExtensions
                 }
                 break;
             case ChangeEventType.Delete:
-
                 {
                     var item = map(e.Item);
                     if (item is not null)
@@ -72,7 +70,6 @@ public static class TableSourceExtensions
 
                 break;
             case ChangeEventType.Set:
-
                 {
                     var item = map(e.Item);
                     if (item is not null)
@@ -80,7 +77,6 @@ public static class TableSourceExtensions
                 }
                 break;
             case ChangeEventType.Delete:
-
                 {
                     var item = map(e.Item);
                     if (item is not null)
