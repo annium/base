@@ -1,6 +1,6 @@
 using System;
-using System.Globalization;
 using NodaTime;
+using static System.Globalization.CultureInfo;
 
 namespace Annium.Core.Mapper.Internal.Profiles;
 
@@ -28,41 +28,41 @@ internal class DefaultProfile : Profile
     {
         // from
         Map<string, bool>(x => bool.Parse(x));
-        Map<string, int>(x => int.Parse(x));
-        Map<string, uint>(x => uint.Parse(x));
-        Map<string, long>(x => long.Parse(x));
-        Map<string, ulong>(x => ulong.Parse(x));
-        Map<string, float>(x => float.Parse(x));
-        Map<string, double>(x => double.Parse(x));
-        Map<string, decimal>(x => decimal.Parse(x));
+        Map<string, int>(x => int.Parse(x, InvariantCulture));
+        Map<string, uint>(x => uint.Parse(x, InvariantCulture));
+        Map<string, long>(x => long.Parse(x, InvariantCulture));
+        Map<string, ulong>(x => ulong.Parse(x, InvariantCulture));
+        Map<string, float>(x => float.Parse(x, InvariantCulture));
+        Map<string, double>(x => double.Parse(x, InvariantCulture));
+        Map<string, decimal>(x => decimal.Parse(x, InvariantCulture));
         // generic, commonly used types
-        Map<string, Guid>(x => Guid.Parse(x));
+        Map<string, Guid>(x => Guid.Parse(x, InvariantCulture));
         Map<string, Uri>(x => new Uri(x));
         // date/time built-in types
-        Map<string, DateTime>(x => DateTime.Parse(x));
-        Map<string, DateTimeOffset>(x => DateTimeOffset.Parse(x));
-        Map<string, DateOnly>(x => DateOnly.Parse(x));
-        Map<string, TimeSpan>(x => TimeSpan.Parse(x));
-        Map<string, TimeOnly>(x => TimeOnly.Parse(x));
+        Map<string, DateTime>(x => DateTime.Parse(x, InvariantCulture));
+        Map<string, DateTimeOffset>(x => DateTimeOffset.Parse(x, InvariantCulture));
+        Map<string, DateOnly>(x => DateOnly.Parse(x, InvariantCulture));
+        Map<string, TimeSpan>(x => TimeSpan.Parse(x, InvariantCulture));
+        Map<string, TimeOnly>(x => TimeOnly.Parse(x, InvariantCulture));
 
         // to
-        Map<bool, string>(x => x.ToString());
-        Map<int, string>(x => x.ToString());
-        Map<uint, string>(x => x.ToString());
-        Map<long, string>(x => x.ToString());
-        Map<ulong, string>(x => x.ToString());
-        Map<float, string>(x => x.ToString(CultureInfo.CurrentUICulture));
-        Map<double, string>(x => x.ToString(CultureInfo.CurrentUICulture));
-        Map<decimal, string>(x => x.ToString(CultureInfo.CurrentUICulture));
+        Map<bool, string>(x => x.ToString(CurrentUICulture));
+        Map<int, string>(x => x.ToString(CurrentUICulture));
+        Map<uint, string>(x => x.ToString(CurrentUICulture));
+        Map<long, string>(x => x.ToString(CurrentUICulture));
+        Map<ulong, string>(x => x.ToString(CurrentUICulture));
+        Map<float, string>(x => x.ToString(CurrentUICulture));
+        Map<double, string>(x => x.ToString(CurrentUICulture));
+        Map<decimal, string>(x => x.ToString(CurrentUICulture));
         // generic, commonly used types
         Map<Guid, string>(x => x.ToString());
         Map<Uri, string>(x => x.ToString());
         // date/time built-in types
-        Map<DateTime, string>(x => x.ToString(CultureInfo.CurrentUICulture));
-        Map<DateTimeOffset, string>(x => x.ToString());
-        Map<DateOnly, string>(x => x.ToString());
+        Map<DateTime, string>(x => x.ToString(CurrentUICulture));
+        Map<DateTimeOffset, string>(x => x.ToString(CurrentUICulture));
+        Map<DateOnly, string>(x => x.ToString(CurrentUICulture));
         Map<TimeSpan, string>(x => x.ToString());
-        Map<TimeOnly, string>(x => x.ToString());
+        Map<TimeOnly, string>(x => x.ToString(CurrentUICulture));
     }
 
     private void RegisterByte()
@@ -418,11 +418,12 @@ internal class DefaultProfile : Profile
         // to noda time
 
         // from string
-        Map<string, Instant>(x => Instant.FromUnixTimeMilliseconds(long.Parse(x)));
-        Map<string, Duration>(x => Duration.FromTimeSpan(TimeSpan.Parse(x)));
+        // TODO: it's unexpected that Instant is parsed from milliseconds string
+        Map<string, Instant>(x => Instant.FromUnixTimeMilliseconds(long.Parse(x, InvariantCulture)));
+        Map<string, Duration>(x => Duration.FromTimeSpan(TimeSpan.Parse(x, InvariantCulture)));
         Map<string, IsoDayOfWeek>(x => x.ParseEnum<IsoDayOfWeek>());
-        Map<string, LocalDate>(ctx => x => ctx.Map<LocalDate>(DateOnly.Parse(x)));
-        Map<string, LocalTime>(ctx => x => ctx.Map<LocalTime>(TimeOnly.Parse(x)));
+        Map<string, LocalDate>(ctx => x => ctx.Map<LocalDate>(DateOnly.Parse(x, InvariantCulture)));
+        Map<string, LocalTime>(ctx => x => ctx.Map<LocalTime>(TimeOnly.Parse(x, InvariantCulture)));
         // from built-in date/time types
         Map<DateTime, Instant>(d => Instant.FromDateTimeUtc(d.ToUniversalTime()));
         Map<DateTimeOffset, Instant>(d => Instant.FromDateTimeOffset(d));
