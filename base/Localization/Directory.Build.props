@@ -1,0 +1,5 @@
+<Project>
+    <ItemGroup>
+        <ProjectReference Include="$(MSBuildThisFileDirectory)/../Annium/src/Annium.Analyzers/Annium.Analyzers.csproj" OutputItemType="Analyzer" PrivateAssets="all" />
+    </ItemGroup>
+</Project>
