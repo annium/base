@@ -12,7 +12,7 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
     <ItemGroup>
-        <ProjectReference Include="../Annium.Analyzers/Annium.Analyzers.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
+        <ProjectReference Include="../Annium.Analyzers/Annium.Analyzers.csproj" OutputItemType="Analyzer" />
     </ItemGroup>
     <ItemGroup>
         <PackageReference Include="NodaTime" Version="3.1.10"/>
