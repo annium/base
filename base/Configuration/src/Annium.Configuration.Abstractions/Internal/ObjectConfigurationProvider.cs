@@ -170,7 +170,7 @@ file static class Helper
         if (type.IsEnumerable())
             return TypeVariant.Enumerable;
 
-        if (type.IsPrimitive || type == typeof(string) || type == typeof(decimal) || type.IsEnum)
+        if (type.IsScalar())
             return TypeVariant.Primitive;
 
         return TypeVariant.Object;

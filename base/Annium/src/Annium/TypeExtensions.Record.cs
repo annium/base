@@ -14,7 +14,7 @@ public static class TypeRecordExtensions
         if (type.TryGetRecordElementTypes(out var keyType, out var valueType))
             return (keyType, valueType);
 
-        throw new InvalidOperationException($"Type {type.FriendlyName()} is not array-like type");
+        throw new InvalidOperationException($"Type {type.FriendlyName()} is not record-like type");
     }
 
     public static bool TryGetRecordElementTypes(

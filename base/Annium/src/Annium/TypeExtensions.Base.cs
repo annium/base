@@ -9,4 +9,9 @@ public static class TypeBaseExtensions
     {
         return type.GetTypeInfo().IsValueType ? Activator.CreateInstance(type) : null;
     }
+
+    public static bool IsScalar(this Type type)
+    {
+        return type.IsPrimitive || type == typeof(string) || type == typeof(decimal) || type.IsEnum;
+    }
 }
