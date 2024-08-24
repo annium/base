@@ -40,7 +40,7 @@ public interface IBase<T1, T2, T3, T4>
     where T2 : struct
     where T4 : IEnumerable<T1>;
 
-public struct StructParamatered
+public readonly struct StructParamatered
 {
     public int X { get; }
 

@@ -22,7 +22,7 @@ internal class ResourceLoader : IResourceLoader
             .Where(r => r.StartsWith(prefix))
             .Select(r =>
             {
-                var name = r.Substring(prefix.Length);
+                var name = r[prefix.Length..];
                 using var rs = assembly.GetManifestResourceStream(r)!;
                 rs.Seek(0, SeekOrigin.Begin);
                 using var ms = new MemoryStream();

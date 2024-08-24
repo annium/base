@@ -1,6 +1,6 @@
 namespace Annium.Serialization.Abstractions;
 
-public record struct SerializerKey
+public readonly record struct SerializerKey
 {
     public static SerializerKey Create(string key, string mediaType) => new(key, mediaType);
 

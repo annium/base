@@ -51,7 +51,7 @@ internal static class QueryHelpers
                     ++scanIndex;
                 }
 
-                var name = queryString.Substring(scanIndex, equalIndex - scanIndex);
+                var name = queryString[scanIndex..equalIndex];
                 var value = queryString.Substring(equalIndex + 1, delimiterIndex - equalIndex - 1);
                 accumulator.Append(
                     Uri.UnescapeDataString(name.Replace('+', ' ')),
@@ -67,7 +67,7 @@ internal static class QueryHelpers
             {
                 if (delimiterIndex > scanIndex)
                 {
-                    accumulator.Append(queryString.Substring(scanIndex, delimiterIndex - scanIndex), string.Empty);
+                    accumulator.Append(queryString[scanIndex..delimiterIndex], string.Empty);
                 }
             }
 

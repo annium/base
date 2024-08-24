@@ -9,8 +9,8 @@ public static class ComparisonExtensions
         this T value,
         T data,
         string? message = null,
-        [CallerArgumentExpression("value")] string valueEx = default!,
-        [CallerArgumentExpression("data")] string dataEx = default!
+        [CallerArgumentExpression(nameof(value))] string valueEx = default!,
+        [CallerArgumentExpression(nameof(data))] string dataEx = default!
     )
         where T : IComparable<T>
     {
@@ -26,8 +26,8 @@ public static class ComparisonExtensions
         this T value,
         T data,
         string? message = null,
-        [CallerArgumentExpression("value")] string valueEx = default!,
-        [CallerArgumentExpression("data")] string dataEx = default!
+        [CallerArgumentExpression(nameof(value))] string valueEx = default!,
+        [CallerArgumentExpression(nameof(data))] string dataEx = default!
     )
         where T : IComparable<T>
     {
@@ -43,8 +43,8 @@ public static class ComparisonExtensions
         this T value,
         T data,
         string? message = null,
-        [CallerArgumentExpression("value")] string valueEx = default!,
-        [CallerArgumentExpression("data")] string dataEx = default!
+        [CallerArgumentExpression(nameof(value))] string valueEx = default!,
+        [CallerArgumentExpression(nameof(data))] string dataEx = default!
     )
         where T : IComparable<T>
     {
@@ -60,8 +60,8 @@ public static class ComparisonExtensions
         this T value,
         T data,
         string? message = null,
-        [CallerArgumentExpression("value")] string valueEx = default!,
-        [CallerArgumentExpression("data")] string dataEx = default!
+        [CallerArgumentExpression(nameof(value))] string valueEx = default!,
+        [CallerArgumentExpression(nameof(data))] string dataEx = default!
     )
         where T : IComparable<T>
     {

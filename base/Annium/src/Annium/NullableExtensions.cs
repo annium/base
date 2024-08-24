@@ -9,7 +9,7 @@ public static class NullableExtensions
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     [return: NotNull]
-    public static T NotNull<T>(this T? value, [CallerArgumentExpression("value")] string expression = "")
+    public static T NotNull<T>(this T? value, [CallerArgumentExpression(nameof(value))] string expression = "")
         where T : class
     {
         if (value is not null)
@@ -19,7 +19,7 @@ public static class NullableExtensions
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static T NotNull<T>(this T? value, [CallerArgumentExpression("value")] string expression = "")
+    public static T NotNull<T>(this T? value, [CallerArgumentExpression(nameof(value))] string expression = "")
         where T : struct
     {
         if (value.HasValue)
@@ -31,7 +31,7 @@ public static class NullableExtensions
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static async ValueTask<T> NotNull<T>(
         this ValueTask<T?> task,
-        [CallerArgumentExpression("task")] string expression = ""
+        [CallerArgumentExpression(nameof(task))] string expression = ""
     )
         where T : class
     {
@@ -45,7 +45,7 @@ public static class NullableExtensions
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static async ValueTask<T> NotNull<T>(
         this ValueTask<T?> task,
-        [CallerArgumentExpression("task")] string expression = ""
+        [CallerArgumentExpression(nameof(task))] string expression = ""
     )
         where T : struct
     {
@@ -59,7 +59,7 @@ public static class NullableExtensions
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static async Task<T> NotNull<T>(
         this Task<T?> task,
-        [CallerArgumentExpression("task")] string expression = ""
+        [CallerArgumentExpression(nameof(task))] string expression = ""
     )
         where T : class
     {
@@ -73,7 +73,7 @@ public static class NullableExtensions
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static async Task<T> NotNull<T>(
         this Task<T?> task,
-        [CallerArgumentExpression("task")] string expression = ""
+        [CallerArgumentExpression(nameof(task))] string expression = ""
     )
         where T : struct
     {

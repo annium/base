@@ -17,8 +17,6 @@ internal class ErrorConverter : JsonConverter<Error>
 
         var currentDepth = reader.CurrentDepth;
         var canConvert = false;
-
-        var reason = HttpFailureReason.Undefined;
         var message = string.Empty;
 
         while (reader.Read())
@@ -37,7 +35,7 @@ internal class ErrorConverter : JsonConverter<Error>
                 switch (propertyName)
                 {
                     case nameof(Error.Reason):
-                        reason = JsonSerializer.Deserialize<HttpFailureReason>(ref reader, options);
+                        _ = JsonSerializer.Deserialize<HttpFailureReason>(ref reader, options);
                         canConvert = true;
                         break;
                     case nameof(Error.Message):

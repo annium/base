@@ -12,14 +12,12 @@ internal class ClientManagedWebSocket : IClientManagedWebSocket, ILogSubject
     public ILogger Logger { get; }
     public event Action<ReadOnlyMemory<byte>> OnTextReceived = delegate { };
     public event Action<ReadOnlyMemory<byte>> OnBinaryReceived = delegate { };
-    public Task<WebSocketCloseResult> IsClosed => _listenTask;
+    public Task<WebSocketCloseResult> IsClosed { get; private set; } =
+        Task.FromResult(new WebSocketCloseResult(WebSocketCloseStatus.ClosedLocal, null));
     private readonly int _keepAliveInterval;
     private readonly object _locker = new();
     private Connection? _cn;
     private CancellationTokenSource _listenCts = new();
-    private Task<WebSocketCloseResult> _listenTask = Task.FromResult(
-        new WebSocketCloseResult(WebSocketCloseStatus.ClosedLocal, null)
-    );
 
     public ClientManagedWebSocket(int keepAliveInterval, ILogger logger)
     {
@@ -100,7 +98,7 @@ internal class ClientManagedWebSocket : IClientManagedWebSocket, ILogSubject
                 _listenCts = new CancellationTokenSource();
 
                 this.Trace("create listen task");
-                _listenTask = managedSocket
+                IsClosed = managedSocket
                     .ListenAsync(_listenCts.Token)
                     .ContinueWith(HandleClosed, CancellationToken.None);
             }
@@ -160,7 +158,7 @@ internal class ClientManagedWebSocket : IClientManagedWebSocket, ILogSubject
         }
 
         this.Trace("await listen task");
-        await _listenTask;
+        await IsClosed;
 
         this.Trace("done");
     }

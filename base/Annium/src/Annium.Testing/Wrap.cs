@@ -7,7 +7,7 @@ public static class Wrap
 {
     public static WrappedDelegate It(
         Delegate @delegate,
-        [CallerArgumentExpression("delegate")] string delegateEx = default!
+        [CallerArgumentExpression(nameof(@delegate))] string delegateEx = default!
     ) => new(@delegate, delegateEx);
 }
 

@@ -8,7 +8,7 @@ public static class BooleanResultExtensions
 {
     public static IBooleanResult EnsureSuccess(
         this IBooleanResult result,
-        [CallerArgumentExpression("result")] string resultEx = default!
+        [CallerArgumentExpression(nameof(result))] string resultEx = default!
     )
     {
         if (result.IsFailure)
@@ -19,7 +19,7 @@ public static class BooleanResultExtensions
 
     public static IBooleanResult EnsureFailure(
         this IBooleanResult result,
-        [CallerArgumentExpression("result")] string resultEx = default!
+        [CallerArgumentExpression(nameof(result))] string resultEx = default!
     )
     {
         if (result.IsSuccess)
@@ -30,7 +30,7 @@ public static class BooleanResultExtensions
 
     public static IBooleanResult<T> EnsureSuccess<T>(
         this IBooleanResult<T> result,
-        [CallerArgumentExpression("result")] string resultEx = default!
+        [CallerArgumentExpression(nameof(result))] string resultEx = default!
     )
     {
         if (result.IsFailure)
@@ -41,7 +41,7 @@ public static class BooleanResultExtensions
 
     public static IBooleanResult<T> EnsureFailure<T>(
         this IBooleanResult<T> result,
-        [CallerArgumentExpression("result")] string resultEx = default!
+        [CallerArgumentExpression(nameof(result))] string resultEx = default!
     )
     {
         if (result.IsSuccess)

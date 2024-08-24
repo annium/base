@@ -10,7 +10,7 @@ internal class RuleContainer<TValue, TField> : IRuleBuilder<TValue, TField>, IRu
     private Delegate? _check;
     private Delegate? _load;
     private string _message = string.Empty;
-    private bool _allowDefault;
+    private readonly bool _allowDefault;
 
     public RuleContainer(MethodInfo setTarget, bool allowDefault)
     {

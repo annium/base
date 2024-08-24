@@ -14,7 +14,7 @@ internal class ShellInstance : IShellInstance, ILogSubject
     public ILogger Logger { get; }
     private readonly object _consoleLock = new();
     private readonly string _cmd;
-    private ProcessStartInfo _startInfo;
+    private readonly ProcessStartInfo _startInfo;
     private bool _pipe;
 
     public ShellInstance(string cmd, ILogger logger)

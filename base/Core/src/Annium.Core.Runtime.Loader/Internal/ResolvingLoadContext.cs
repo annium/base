@@ -34,8 +34,8 @@ internal class ResolvingLoadContext : AssemblyLoadContext
         var byteArray = _byteArrayResolvers.Select(x => x(assemblyName)?.Result).FirstOrDefault(x => x != null);
         if (byteArray != null)
         {
-            using (var ms = new MemoryStream(byteArray))
-                return LoadFromStream(ms);
+            using var ms = new MemoryStream(byteArray);
+            return LoadFromStream(ms);
         }
 
         return null;

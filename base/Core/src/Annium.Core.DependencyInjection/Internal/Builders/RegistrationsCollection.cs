@@ -6,12 +6,11 @@ namespace Annium.Core.DependencyInjection.Internal.Builders;
 
 internal class RegistrationsCollection : IReadOnlyCollection<IRegistration>
 {
-    public bool IsInitiated => _isInitiated;
+    public bool IsInitiated { get; private set; }
     public int Count => _registrations.Count;
     private readonly List<IRegistration> _registrations = new();
-    private bool _isInitiated;
 
-    public void Init() => _isInitiated = true;
+    public void Init() => IsInitiated = true;
 
     public void Add(IRegistration registration) => _registrations.Add(registration);
 

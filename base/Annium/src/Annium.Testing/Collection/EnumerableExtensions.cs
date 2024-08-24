@@ -10,8 +10,8 @@ public static class EnumerableExtensions
     public static T At<T>(
         this IEnumerable<T> value,
         int key,
-        [CallerArgumentExpression("value")] string valueEx = default!,
-        [CallerArgumentExpression("key")] string keyEx = default!
+        [CallerArgumentExpression(nameof(value))] string valueEx = default!,
+        [CallerArgumentExpression(nameof(key))] string keyEx = default!
     )
     {
         var val = value.ToArray();
@@ -25,8 +25,8 @@ public static class EnumerableExtensions
     public static IEnumerable<T> Has<T>(
         this IEnumerable<T> value,
         int count,
-        [CallerArgumentExpression("value")] string valueEx = default!,
-        [CallerArgumentExpression("count")] string countEx = default!
+        [CallerArgumentExpression(nameof(value))] string valueEx = default!,
+        [CallerArgumentExpression(nameof(count))] string countEx = default!
     )
     {
         var val = value.ToArray();
@@ -37,7 +37,7 @@ public static class EnumerableExtensions
 
     public static IEnumerable<T> IsEmpty<T>(
         this IEnumerable<T> value,
-        [CallerArgumentExpression("value")] string valueEx = default!
+        [CallerArgumentExpression(nameof(value))] string valueEx = default!
     )
     {
         var val = value.ToArray();
@@ -48,7 +48,7 @@ public static class EnumerableExtensions
 
     public static IEnumerable<T> IsNotEmpty<T>(
         this IEnumerable<T> value,
-        [CallerArgumentExpression("value")] string valueEx = default!
+        [CallerArgumentExpression(nameof(value))] string valueEx = default!
     )
     {
         var val = value.ToArray();

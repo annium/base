@@ -7,7 +7,7 @@ public static class DataResultBaseExtensions
 {
     public static T Unwrap<T>(
         this IDataResultBase<T> result,
-        [CallerArgumentExpression("result")] string resultEx = default!
+        [CallerArgumentExpression(nameof(result))] string resultEx = default!
     )
     {
         result.ThrowIfHasErrors(resultEx);

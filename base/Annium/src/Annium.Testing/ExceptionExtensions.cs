@@ -9,8 +9,8 @@ public static class ExceptionExtensions
     public static T Reports<T>(
         this T value,
         string message,
-        [CallerArgumentExpression("value")] string valueEx = default!,
-        [CallerArgumentExpression("message")] string messageEx = default!
+        [CallerArgumentExpression(nameof(value))] string valueEx = default!,
+        [CallerArgumentExpression(nameof(message))] string messageEx = default!
     )
         where T : Exception
     {
@@ -25,8 +25,8 @@ public static class ExceptionExtensions
     public static T ReportsAll<T>(
         this T value,
         string[] messages,
-        [CallerArgumentExpression("value")] string valueEx = default!,
-        [CallerArgumentExpression("messages")] string messagesEx = default!
+        [CallerArgumentExpression(nameof(value))] string valueEx = default!,
+        [CallerArgumentExpression(nameof(messages))] string messagesEx = default!
     )
         where T : Exception
     {
@@ -41,8 +41,8 @@ public static class ExceptionExtensions
     public static T ReportsExactly<T>(
         this T value,
         string message,
-        [CallerArgumentExpression("value")] string valueEx = default!,
-        [CallerArgumentExpression("message")] string messageEx = default!
+        [CallerArgumentExpression(nameof(value))] string valueEx = default!,
+        [CallerArgumentExpression(nameof(message))] string messageEx = default!
     )
         where T : Exception
     {

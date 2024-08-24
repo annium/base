@@ -13,14 +13,12 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
 {
     public ILogger Logger { get; }
     public event Action<ReadOnlyMemory<byte>> OnReceived = delegate { };
-    public Task<SocketCloseResult> IsClosed => _listenTask;
+    public Task<SocketCloseResult> IsClosed { get; private set; } =
+        Task.FromResult(new SocketCloseResult(SocketCloseStatus.ClosedLocal, null));
     private readonly ManagedSocketOptions _options;
     private readonly object _locker = new();
     private Connection? _cn;
     private CancellationTokenSource _listenCts = new();
-    private Task<SocketCloseResult> _listenTask = Task.FromResult(
-        new SocketCloseResult(SocketCloseStatus.ClosedLocal, null)
-    );
 
     public ClientManagedSocket(ManagedSocketOptions options, ILogger logger)
     {
@@ -130,7 +128,7 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
                 _listenCts = new CancellationTokenSource();
 
                 this.Trace("create listen task");
-                _listenTask = socket.ListenAsync(_listenCts.Token).ContinueWith(HandleClosed, CancellationToken.None);
+                IsClosed = socket.ListenAsync(_listenCts.Token).ContinueWith(HandleClosed, CancellationToken.None);
             }
 
             this.Trace("done (connected)");
@@ -174,7 +172,7 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
         }
 
         this.Trace("await listen task");
-        await _listenTask;
+        await IsClosed;
 
         this.Trace("done");
     }

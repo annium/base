@@ -34,7 +34,7 @@ public sealed record Namespace : IReadOnlyList<string>
 
     public bool Equals(Namespace? other)
     {
-        if (ReferenceEquals(null, other))
+        if (other is null)
             return false;
         if (ReferenceEquals(this, other))
             return true;

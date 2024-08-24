@@ -21,7 +21,7 @@ public static class ServiceContainerExtensions
     )
     {
         container
-            .Add<Serializer>(static (sp, key) => new Serializer(sp, key.ToString().NotNull()))
+            .Add(static (sp, key) => new Serializer(sp, key.ToString().NotNull()))
             .AsKeyed<Serializer>(key)
             .Singleton();
 

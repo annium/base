@@ -8,7 +8,7 @@ public static class ResultBaseExtensions
 {
     public static void ThrowIfHasErrors(
         this IResultBase result,
-        [CallerArgumentExpression("result")] string resultEx = default!
+        [CallerArgumentExpression(nameof(result))] string resultEx = default!
     )
     {
         if (result.HasErrors)

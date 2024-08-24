@@ -9,8 +9,8 @@ public static class EqualityExtensions
         this T value,
         T data,
         string? message = null,
-        [CallerArgumentExpression("value")] string valueEx = default!,
-        [CallerArgumentExpression("data")] string dataEx = default!
+        [CallerArgumentExpression(nameof(value))] string valueEx = default!,
+        [CallerArgumentExpression(nameof(data))] string dataEx = default!
     )
     {
         if (!EqualityComparer<T>.Default.Equals(value, data))
@@ -25,8 +25,8 @@ public static class EqualityExtensions
         this T value,
         T data,
         string? message = null,
-        [CallerArgumentExpression("value")] string valueEx = default!,
-        [CallerArgumentExpression("data")] string dataEx = default!
+        [CallerArgumentExpression(nameof(value))] string valueEx = default!,
+        [CallerArgumentExpression(nameof(data))] string dataEx = default!
     )
     {
         if (EqualityComparer<T>.Default.Equals(value, data))

@@ -9,8 +9,8 @@ public static class ArrayExtensions
     public static T At<T>(
         this T[] value,
         int key,
-        [CallerArgumentExpression("value")] string valueEx = default!,
-        [CallerArgumentExpression("key")] string keyEx = default!
+        [CallerArgumentExpression(nameof(value))] string valueEx = default!,
+        [CallerArgumentExpression(nameof(key))] string keyEx = default!
     )
     {
         if (value is null)
@@ -27,8 +27,8 @@ public static class ArrayExtensions
     public static T[] Has<T>(
         this T[] value,
         int count,
-        [CallerArgumentExpression("value")] string valueEx = default!,
-        [CallerArgumentExpression("count")] string countEx = default!
+        [CallerArgumentExpression(nameof(value))] string valueEx = default!,
+        [CallerArgumentExpression(nameof(count))] string countEx = default!
     )
     {
         if (value is null)
@@ -40,7 +40,7 @@ public static class ArrayExtensions
         return value;
     }
 
-    public static T[] IsEmpty<T>(this T[] value, [CallerArgumentExpression("value")] string valueEx = default!)
+    public static T[] IsEmpty<T>(this T[] value, [CallerArgumentExpression(nameof(value))] string valueEx = default!)
     {
         if (value is null)
             throw new ArgumentNullException(nameof(value));
@@ -51,7 +51,7 @@ public static class ArrayExtensions
         return value;
     }
 
-    public static T[] IsNotEmpty<T>(this T[] value, [CallerArgumentExpression("value")] string valueEx = default!)
+    public static T[] IsNotEmpty<T>(this T[] value, [CallerArgumentExpression(nameof(value))] string valueEx = default!)
     {
         if (value is null)
             throw new ArgumentNullException(nameof(value));

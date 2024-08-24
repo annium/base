@@ -27,8 +27,8 @@ internal sealed class NodaIsoIntervalConverter : ConverterBase<Interval>
         if (slash == -1)
             throw new InvalidNodaDataException("Expected ISO-8601-formatted interval; slash was missing.");
 
-        var startText = text.Substring(0, slash);
-        var endText = text.Substring(slash + 1);
+        var startText = text[..slash];
+        var endText = text[(slash + 1)..];
         var pattern = InstantPattern.ExtendedIso;
         var start = startText == "" ? (Instant?)null : pattern.Parse(startText).Value;
         var end = endText == "" ? (Instant?)null : pattern.Parse(endText).Value;

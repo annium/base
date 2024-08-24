@@ -24,7 +24,7 @@ internal static class WorkloadServer
 
 file class WebSocketHandler : IWebSocketHandler
 {
-    const string WorkloadMessage =
+    private const string WorkloadMessage =
         "{{\"stream\":\"{0}@aggTrade\",\"data\":{{\"e\":\"aggTrade\",\"E\":1689659049498,\"s\":\"{1}\",\"a\":2675370021,\"p\":\"30048.53000000\",\"q\":\"0.00332000\",\"f\":3174123265,\"l\":3174123265,\"T\":1689659049497,\"m\":false,\"M\":true}}}}";
     private readonly ILogger _logger;
 

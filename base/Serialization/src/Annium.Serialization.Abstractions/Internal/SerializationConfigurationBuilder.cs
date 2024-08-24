@@ -85,12 +85,12 @@ internal class SerializationConfigurationBuilder : ISerializationConfigurationBu
     {
         // for default key - configure as default for media type
         _container
-            .Add<TISerializer>(static (sp, key) => sp.ResolveKeyed<TISerializer>(key))
+            .Add(static (sp, key) => sp.ResolveKeyed<TISerializer>(key))
             .AsKeyed<TISerializer>(key.MediaType)
             .Singleton();
 
         // if default media type - configure as default
         if (isDefault)
-            _container.Add<TISerializer>(sp => sp.ResolveKeyed<TISerializer>(key)).As<TISerializer>().Singleton();
+            _container.Add(sp => sp.ResolveKeyed<TISerializer>(key)).As<TISerializer>().Singleton();
     }
 }

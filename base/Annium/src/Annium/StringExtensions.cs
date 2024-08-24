@@ -25,7 +25,7 @@ public static class StringExtensions
         if (string.IsNullOrEmpty(value))
             return value;
 
-        return value.Substring(0, 1).ToUpperInvariant() + value.Substring(1);
+        return value[..1].ToUpperInvariant() + value[1..];
     }
 
     public static string LowerFirst(this string value)
@@ -34,7 +34,7 @@ public static class StringExtensions
         if (string.IsNullOrEmpty(value))
             return value;
 
-        return value.Substring(0, 1).ToLowerInvariant() + value.Substring(1);
+        return value[..1].ToLowerInvariant() + value[1..];
     }
 
     public static string PascalCase(this string value)

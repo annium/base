@@ -20,7 +20,7 @@ internal sealed record ProcessingContext : IMapperProcessingContext
     private readonly Processor _processor;
     private readonly Referrer _referrer;
     private readonly ITypeManager _typeManager;
-    private Lazy<None> _processIncluded;
+    private readonly Lazy<None> _processIncluded;
 
     public ProcessingContext(
         IMapperConfigInternal config,

@@ -26,7 +26,7 @@ internal class Repacker : IRepacker
                 MethodCallExpression call => MethodCall(call)(source),
                 NewExpression @new => New(@new)(source),
                 NewArrayExpression newArray => NewArray(newArray)(source),
-                ParameterExpression _ => source,
+                ParameterExpression => source,
                 UnaryExpression unary => Unary(unary)(source),
                 _ => throw new InvalidOperationException($"Can't repack {ex.NodeType} expression"),
             };

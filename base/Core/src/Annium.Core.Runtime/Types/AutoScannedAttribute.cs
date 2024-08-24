@@ -5,7 +5,7 @@ using System.Reflection;
 namespace Annium.Core.Runtime.Types;
 
 /// <summary>
-/// Includes marked Assembly into scanning process, performed on startup by <see cref="Annium.Core.Runtime.Internal.Types.AssembliesCollector"/>
+/// Includes marked Assembly into scanning process, performed on startup by <see cref="Internal.Types.AssembliesCollector"/>
 /// </summary>
 [AttributeUsage(AttributeTargets.Assembly)]
 public class AutoScannedAttribute : Attribute

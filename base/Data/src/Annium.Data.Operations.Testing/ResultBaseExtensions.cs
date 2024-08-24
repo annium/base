@@ -9,7 +9,7 @@ public static class ResultBaseExtensions
     public static void HasNoErrors(
         this IResultBase value,
         string? message = null,
-        [CallerArgumentExpression("value")] string valueEx = default!
+        [CallerArgumentExpression(nameof(value))] string valueEx = default!
     )
     {
         if (value.HasErrors)
@@ -22,7 +22,7 @@ public static class ResultBaseExtensions
     public static void HasErrors(
         this IResultBase value,
         string? message = null,
-        [CallerArgumentExpression("value")] string valueEx = default!
+        [CallerArgumentExpression(nameof(value))] string valueEx = default!
     )
     {
         if (value.IsOk)

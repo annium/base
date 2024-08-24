@@ -20,7 +20,7 @@ public static class CancellationTokenExtensions
     /// The awaiter for cancellation tokens.
     /// </summary>
     [EditorBrowsable(EditorBrowsableState.Never)]
-    internal struct CancellationTokenAwaiter : IAwaiter
+    internal readonly struct CancellationTokenAwaiter : IAwaiter
     {
         private readonly CancellationToken _cancellationToken;
 

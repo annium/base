@@ -526,8 +526,7 @@ public class ClientServerManagedSocketTests : TestBase, IAsyncLifetime
     {
         this.Trace("start");
 
-        if (_clientSocket is not null)
-            _clientSocket.Dispose();
+        _clientSocket?.Dispose();
 
         this.Trace("done");
 

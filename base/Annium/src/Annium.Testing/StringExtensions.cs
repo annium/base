@@ -9,8 +9,8 @@ public static class StringExtensions
         this string value,
         string data,
         string? message = null,
-        [CallerArgumentExpression("value")] string valueEx = default!,
-        [CallerArgumentExpression("data")] string dataEx = default!
+        [CallerArgumentExpression(nameof(value))] string valueEx = default!,
+        [CallerArgumentExpression(nameof(data))] string dataEx = default!
     )
     {
         if (!value.Contains(data))
@@ -24,8 +24,8 @@ public static class StringExtensions
     public static string IsContainingAll(
         this string value,
         string[] messages,
-        [CallerArgumentExpression("value")] string valueEx = default!,
-        [CallerArgumentExpression("messages")] string messagesEx = default!
+        [CallerArgumentExpression(nameof(value))] string valueEx = default!,
+        [CallerArgumentExpression(nameof(messages))] string messagesEx = default!
     )
     {
         if (!messages.All(value.Contains))
@@ -40,8 +40,8 @@ public static class StringExtensions
         this string value,
         string data,
         string? message = null,
-        [CallerArgumentExpression("value")] string valueEx = default!,
-        [CallerArgumentExpression("data")] string dataEx = default!
+        [CallerArgumentExpression(nameof(value))] string valueEx = default!,
+        [CallerArgumentExpression(nameof(data))] string dataEx = default!
     )
     {
         if (!value.Contains(data))

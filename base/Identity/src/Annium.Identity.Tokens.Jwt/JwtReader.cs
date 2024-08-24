@@ -92,17 +92,17 @@ public static class JwtReader
     {
         return exception switch
         {
-            SecurityTokenDecompressionFailedException _ => (JwtReadStatus.Failed, "Token decompression failed"),
-            SecurityTokenEncryptionKeyNotFoundException _ => (JwtReadStatus.Failed, "Token decryption failed"),
-            SecurityTokenDecryptionFailedException _ => (JwtReadStatus.Failed, "Token decryption failed"),
-            SecurityTokenNoExpirationException _ => (JwtReadStatus.Failed, "Token has no expiration claim"),
-            SecurityTokenExpiredException _ => (JwtReadStatus.Failed, "Token is expired"),
-            SecurityTokenNotYetValidException _ => (JwtReadStatus.Failed, "Token is not yet valid"),
-            SecurityTokenInvalidLifetimeException _ => (JwtReadStatus.Failed, "Token has invalid lifetime"),
-            SecurityTokenInvalidAudienceException _ => (JwtReadStatus.Failed, "Token has invalid audience"),
-            SecurityTokenInvalidIssuerException _ => (JwtReadStatus.Failed, "Token has invalid issuer"),
-            SecurityTokenSignatureKeyNotFoundException _ => (JwtReadStatus.Failed, "Token has invalid signature"),
-            SecurityTokenInvalidSignatureException _ => (JwtReadStatus.Failed, "Token has invalid signature"),
+            SecurityTokenDecompressionFailedException => (JwtReadStatus.Failed, "Token decompression failed"),
+            SecurityTokenEncryptionKeyNotFoundException => (JwtReadStatus.Failed, "Token decryption failed"),
+            SecurityTokenDecryptionFailedException => (JwtReadStatus.Failed, "Token decryption failed"),
+            SecurityTokenNoExpirationException => (JwtReadStatus.Failed, "Token has no expiration claim"),
+            SecurityTokenExpiredException => (JwtReadStatus.Failed, "Token is expired"),
+            SecurityTokenNotYetValidException => (JwtReadStatus.Failed, "Token is not yet valid"),
+            SecurityTokenInvalidLifetimeException => (JwtReadStatus.Failed, "Token has invalid lifetime"),
+            SecurityTokenInvalidAudienceException => (JwtReadStatus.Failed, "Token has invalid audience"),
+            SecurityTokenInvalidIssuerException => (JwtReadStatus.Failed, "Token has invalid issuer"),
+            SecurityTokenSignatureKeyNotFoundException => (JwtReadStatus.Failed, "Token has invalid signature"),
+            SecurityTokenInvalidSignatureException => (JwtReadStatus.Failed, "Token has invalid signature"),
             _ => (JwtReadStatus.BadSource, "Token is invalid"),
         };
     }
