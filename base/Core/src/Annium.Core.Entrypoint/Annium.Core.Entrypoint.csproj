@@ -1,15 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <PackageId>Annium.Core.Entrypoint</PackageId>
-        <PackageVersion>0.1.0</PackageVersion>
-        <Description>Extension library for powering app entrypoint to use best practices DI, etc.</Description>
         <Solutions>Annium.Base</Solutions>
-        <TargetFramework>net8.0</TargetFramework>
         <OutputType>Library</OutputType>
-        <DebugType>portable</DebugType>
-        <WarningsAsErrors>true</WarningsAsErrors>
         <IsPackable>true</IsPackable>
-        <Nullable>enable</Nullable>
     </PropertyGroup>
     <ItemGroup>
         <ProjectReference Include="../Annium.Core.DependencyInjection/Annium.Core.DependencyInjection.csproj" />

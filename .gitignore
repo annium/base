@@ -8,5 +8,4 @@
 # xx ignore patterns
 .xx.ignore
 .xx.credentials
-nuget.config
 lcov.info

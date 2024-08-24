@@ -10,7 +10,7 @@ namespace Annium.Analyzers.Logging;
 public class DynamicLogMessageTemplateAnalyzer : DiagnosticAnalyzer
 {
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } =
-        ImmutableArray.Create(Descriptors.Log0001DynamicLogMessageTemplate);
+        [Descriptors.Log0001DynamicLogMessageTemplate];
 
     public override void Initialize(AnalysisContext context)
     {

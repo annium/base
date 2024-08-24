@@ -10,7 +10,7 @@ namespace Annium.Analyzers;
 public class ExceptionNameAnalyzer : DiagnosticAnalyzer
 {
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } =
-        ImmutableArray.Create(Descriptors.Pg0001ExceptionNameFormat);
+        [Descriptors.Pg0001ExceptionNameFormat];
 
     public override void Initialize(AnalysisContext context)
     {
@@ -22,7 +22,7 @@ public class ExceptionNameAnalyzer : DiagnosticAnalyzer
         context.RegisterSymbolAction(action: AnalyzeNamedType, symbolKinds: SymbolKind.NamedType);
     }
 
-    void AnalyzeNamedType(SymbolAnalysisContext ctx)
+    private void AnalyzeNamedType(SymbolAnalysisContext ctx)
     {
         var symbol = (INamedTypeSymbol)ctx.Symbol;
         if (symbol.TypeKind != TypeKind.Class)
@@ -43,7 +43,7 @@ public class ExceptionNameAnalyzer : DiagnosticAnalyzer
         );
     }
 
-    bool IsException(INamedTypeSymbol classSymbol, INamedTypeSymbol exceptionTypeSymbol)
+    private static bool IsException(INamedTypeSymbol classSymbol, INamedTypeSymbol exceptionTypeSymbol)
     {
         if (classSymbol.Equals(exceptionTypeSymbol, SymbolEqualityComparer.Default))
             return true;

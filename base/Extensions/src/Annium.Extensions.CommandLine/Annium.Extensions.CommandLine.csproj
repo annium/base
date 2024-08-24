@@ -1,15 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <PackageId>Annium.Extensions.CommandLine</PackageId>
-        <PackageVersion>0.1.0</PackageVersion>
-        <Description>Annium.Extensions.CommandLine</Description>
         <Solutions>Annium.Base</Solutions>
-        <TargetFramework>net8.0</TargetFramework>
         <OutputType>Library</OutputType>
-        <DebugType>portable</DebugType>
-        <WarningsAsErrors>true</WarningsAsErrors>
         <IsPackable>true</IsPackable>
-        <Nullable>enable</Nullable>
     </PropertyGroup>
     <ItemGroup>
         <ProjectReference Include="../../../Annium/src/Annium/Annium.csproj" />
