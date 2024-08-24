@@ -18,7 +18,7 @@ public class TrackingWeakReferenceTest
         {
             target = new object();
             reference = TrackingWeakReference.Get(target);
-            reference.Collected += () => counter++;
+            reference.OnCollected += () => counter++;
         });
 
         // act

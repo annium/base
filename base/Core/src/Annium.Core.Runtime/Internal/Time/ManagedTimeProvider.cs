@@ -6,7 +6,7 @@ namespace Annium.Core.Runtime.Internal.Time;
 
 internal class ManagedTimeProvider : ITimeManager, IInternalTimeProvider
 {
-    public event Action<Duration> NowChanged = delegate { };
+    public event Action<Duration> OnNowChanged = delegate { };
     public Instant Now { get; private set; }
     public DateTime DateTimeNow { get; private set; }
     public long UnixMsNow { get; private set; }
@@ -19,6 +19,6 @@ internal class ManagedTimeProvider : ITimeManager, IInternalTimeProvider
         DateTimeNow = now.ToDateTimeUtc();
         UnixMsNow = now.ToUnixTimeMilliseconds();
         UnixSecondsNow = now.ToUnixTimeSeconds();
-        NowChanged(duration);
+        OnNowChanged(duration);
     }
 }

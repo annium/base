@@ -6,7 +6,7 @@ namespace Annium.Linq;
 
 public static class EnumerableExtensions
 {
-    private static readonly Random Random = new();
+    private static readonly Random _random = new();
 
     public static string Join(this IEnumerable<string> src, string separator = "") => string.Join(separator, src);
 
@@ -20,7 +20,7 @@ public static class EnumerableExtensions
 
     public static IEnumerable<T> Shuffle<T>(this IEnumerable<T> src)
     {
-        return src.OrderBy(_ => Random.Next(0, 1) == 1);
+        return src.OrderBy(_ => _random.Next(0, 1) == 1);
     }
 
     public static IEnumerable<T> WhereNot<T>(this IEnumerable<T> src, Func<T, bool> predicate)

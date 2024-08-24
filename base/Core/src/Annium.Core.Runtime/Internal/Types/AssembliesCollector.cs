@@ -10,7 +10,7 @@ namespace Annium.Core.Runtime.Internal.Types;
 
 internal class AssembliesCollector : ILogSubject
 {
-    private static readonly TypeId AutoScannedTypeId = typeof(AutoScannedAttribute).GetTypeId();
+    private static readonly TypeId _autoScannedTypeId = typeof(AutoScannedAttribute).GetTypeId();
 
     public ILogger Logger { get; }
 
@@ -70,7 +70,7 @@ internal class AssembliesCollector : ILogSubject
 
         var autoScanned = assembly
             .GetCustomAttributes()
-            .SingleOrDefault(x => x.GetType().GetTypeId() == AutoScannedTypeId);
+            .SingleOrDefault(x => x.GetType().GetTypeId() == _autoScannedTypeId);
         if (autoScanned is null)
             this.Trace<string?>("{name} - not marked as auto-scanned", name.Name);
         else

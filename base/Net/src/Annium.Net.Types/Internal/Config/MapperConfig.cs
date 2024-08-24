@@ -130,7 +130,7 @@ internal class MapperConfig : IMapperConfigInternal
     #region record
 
     internal static readonly Type BaseRecordValueType = typeof(KeyValuePair<,>);
-    private static readonly Type BaseRecordType = typeof(IEnumerable<>).MakeGenericType(BaseRecordValueType);
+    private static readonly Type _baseRecordType = typeof(IEnumerable<>).MakeGenericType(BaseRecordValueType);
     private readonly HashSet<Type> _recordTypes = new();
 
     public IMapperConfig SetRecord(Type type)
@@ -145,7 +145,7 @@ internal class MapperConfig : IMapperConfigInternal
             || arrayImplementation.GetGenericArguments()[0].GetGenericTypeDefinition() != BaseRecordValueType
         )
             throw new ArgumentException(
-                $"Type {type.FriendlyName()} doesn't implement {BaseRecordType.FriendlyName()}"
+                $"Type {type.FriendlyName()} doesn't implement {_baseRecordType.FriendlyName()}"
             );
 
         if (!_recordTypes.Add(type))

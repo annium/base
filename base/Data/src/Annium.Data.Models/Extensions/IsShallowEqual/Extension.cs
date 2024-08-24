@@ -9,13 +9,14 @@ namespace Annium.Data.Models.Extensions;
 
 public static partial class IsShallowEqualExtensions
 {
-    private static readonly object Locker = new();
+    private static readonly object _locker = new();
 
-    private static readonly HashSet<Type> ComparersInProgress = new();
+    private static readonly HashSet<Type> _comparersInProgress = new();
 
-    private static readonly IDictionary<Type, Delegate> Comparers = new Dictionary<Type, Delegate>();
+    private static readonly IDictionary<Type, Delegate> _comparers = new Dictionary<Type, Delegate>();
 
-    private static readonly IDictionary<Type, LambdaExpression> RawComparers = new Dictionary<Type, LambdaExpression>();
+    private static readonly IDictionary<Type, LambdaExpression> _rawComparers =
+        new Dictionary<Type, LambdaExpression>();
 
     public static bool IsShallowEqual<T, TD>(this T value, TD data)
     {
@@ -53,7 +54,7 @@ public static partial class IsShallowEqualExtensions
 
         var comparable = mapper.Map(value!, type);
 
-        lock (Locker)
+        lock (_locker)
         {
             try
             {
@@ -61,11 +62,11 @@ public static partial class IsShallowEqualExtensions
             }
             finally
             {
-                ComparersInProgress.Clear();
+                _comparersInProgress.Clear();
             }
         }
 
-        var comparer = Comparers[type];
+        var comparer = _comparers[type];
         // var str = RawComparers[type].ToReadableString();
 
         try
@@ -80,16 +81,16 @@ public static partial class IsShallowEqualExtensions
 
     private static LambdaExpression ResolveComparer(Type type, IMapper mapper)
     {
-        if (RawComparers.TryGetValue(type, out var comparer))
+        if (_rawComparers.TryGetValue(type, out var comparer))
             return comparer;
 
-        if (!ComparersInProgress.Add(type))
+        if (!_comparersInProgress.Add(type))
             return BuildExtensionCallComparer(type, mapper);
 
-        comparer = RawComparers[type] = BuildComparer(type, mapper);
-        ComparersInProgress.Remove(type);
+        comparer = _rawComparers[type] = BuildComparer(type, mapper);
+        _comparersInProgress.Remove(type);
 
-        Comparers[type] = comparer.Compile();
+        _comparers[type] = comparer.Compile();
 
         return comparer;
     }

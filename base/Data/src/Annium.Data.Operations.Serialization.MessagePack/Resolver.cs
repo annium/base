@@ -11,9 +11,9 @@ namespace Annium.Data.Operations.Serialization.MessagePack;
 public class Resolver : IFormatterResolver
 {
     public static IFormatterResolver Instance { get; } = new Resolver();
-    private static readonly ConcurrentDictionary<Type, IMessagePackFormatter> Formatters = new();
+    private static readonly ConcurrentDictionary<Type, IMessagePackFormatter> _formatters = new();
 
-    private static readonly IReadOnlyDictionary<Type, IMessagePackFormatter> FormatterInstances = new Dictionary<
+    private static readonly IReadOnlyDictionary<Type, IMessagePackFormatter> _formatterInstances = new Dictionary<
         Type,
         IMessagePackFormatter
     >
@@ -22,7 +22,7 @@ public class Resolver : IFormatterResolver
         { typeof(IBooleanResult), BooleanResultFormatter.Instance },
     };
 
-    private static readonly IReadOnlyDictionary<Type, Type> FormatterInstanceTypes = new Dictionary<Type, Type>
+    private static readonly IReadOnlyDictionary<Type, Type> _formatterInstanceTypes = new Dictionary<Type, Type>
     {
         { typeof(IResult<>), typeof(ResultDataFormatter<>) },
         { typeof(IBooleanResult<>), typeof(BooleanResultDataFormatter<>) },
@@ -41,14 +41,14 @@ public class Resolver : IFormatterResolver
     private IMessagePackFormatter? GetFormatterPrivate<T>()
     {
         var type = typeof(T);
-        if (FormatterInstances.TryGetValue(type, out var formatterInstance))
+        if (_formatterInstances.TryGetValue(type, out var formatterInstance))
             return formatterInstance;
 
         if (
             typeof(T).IsGenericType
-            && FormatterInstanceTypes.TryGetValue(type.GetGenericTypeDefinition(), out var formatterBaseType)
+            && _formatterInstanceTypes.TryGetValue(type.GetGenericTypeDefinition(), out var formatterBaseType)
         )
-            return Formatters.GetOrAdd(type, ResolveInstance, formatterBaseType);
+            return _formatters.GetOrAdd(type, ResolveInstance, formatterBaseType);
 
         return null;
     }

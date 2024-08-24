@@ -12,7 +12,7 @@ public delegate MessagePackSerializerOptions ConfigureSerializer(IServiceProvide
 
 public static class SerializationConfigurationBuilderExtensions
 {
-    private static readonly ConcurrentDictionary<OptionsKey, MessagePackSerializerOptions> Options = new();
+    private static readonly ConcurrentDictionary<OptionsKey, MessagePackSerializerOptions> _options = new();
 
     public static ISerializationConfigurationBuilder WithMessagePack(
         this ISerializationConfigurationBuilder builder,
@@ -65,7 +65,7 @@ public static class SerializationConfigurationBuilderExtensions
         sp =>
         {
             var optionsKey = new OptionsKey(SerializerKey.Create(key, Constants.MediaType), configure);
-            var options = Options.GetOrAdd(optionsKey, static (key, sp) => key.Configure(sp), sp);
+            var options = _options.GetOrAdd(optionsKey, static (key, sp) => key.Configure(sp), sp);
 
             return factory(options);
         };

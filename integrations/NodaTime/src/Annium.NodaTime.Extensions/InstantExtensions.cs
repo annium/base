@@ -5,7 +5,7 @@ namespace Annium.NodaTime.Extensions;
 
 public static class InstantExtensions
 {
-    private static readonly DateTimeZone LocalTz = DateTimeZoneProviders.Tzdb.GetSystemDefault();
+    private static readonly DateTimeZone _localTz = DateTimeZoneProviders.Tzdb.GetSystemDefault();
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Instant FromUnixTimeMinutes(long minutes) => NodaConstants.UnixEpoch + Duration.FromMinutes(minutes);
@@ -19,7 +19,7 @@ public static class InstantExtensions
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static ZonedDateTime InLocal(this Instant m) => m.InZone(LocalTz);
+    public static ZonedDateTime InLocal(this Instant m) => m.InZone(_localTz);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static long ToUnixTimeMinutes(this Instant m) => m.Minus(NodaConstants.UnixEpoch).TotalMinutes.FloorInt64();

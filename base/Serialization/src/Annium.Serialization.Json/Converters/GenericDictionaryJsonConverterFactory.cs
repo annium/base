@@ -10,7 +10,7 @@ namespace Annium.Serialization.Json.Converters;
 
 public class GenericDictionaryJsonConverterFactory : JsonConverterFactory
 {
-    private static readonly ConcurrentDictionary<Type, (Type, Type)?> TypeResolutions = new();
+    private static readonly ConcurrentDictionary<Type, (Type, Type)?> _typeResolutions = new();
 
     public override bool CanConvert(Type objectType)
     {
@@ -25,7 +25,7 @@ public class GenericDictionaryJsonConverterFactory : JsonConverterFactory
             Activator.CreateInstance(typeof(GenericDictionaryJsonConverter<,>).MakeGenericType(key, value))!;
     }
 
-    private static (Type, Type)? GetKeyValueType(Type type) => TypeResolutions.GetOrAdd(type, ResolveKeyValueType);
+    private static (Type, Type)? GetKeyValueType(Type type) => _typeResolutions.GetOrAdd(type, ResolveKeyValueType);
 
     private static (Type, Type)? ResolveKeyValueType(Type type) =>
         type.GetInterfaces()

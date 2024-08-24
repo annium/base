@@ -141,14 +141,14 @@ public static class StringExtensions
 
     #region HexString
 
-    private static readonly IReadOnlyDictionary<char, byte> HexLookup = CreateHexLookup();
+    private static readonly IReadOnlyDictionary<char, byte> _hexLookup = CreateHexLookup();
 
     public static byte[] FromHexStringToByteArray(this string str)
     {
         if (str.Length % 2 != 0)
             throw new FormatException("Hex string must contain even chars count");
 
-        var lookup = HexLookup;
+        var lookup = _hexLookup;
         var byteArray = new byte[str.Length / 2];
         for (var i = 0; i < str.Length; i += 2)
         {
@@ -174,7 +174,7 @@ public static class StringExtensions
         if (string.IsNullOrEmpty(str) || str.Length % 2 != 0)
             return false;
 
-        var lookup = HexLookup;
+        var lookup = _hexLookup;
         var array = new byte[str.Length / 2];
         for (var i = 0; i < str.Length; i += 2)
         {

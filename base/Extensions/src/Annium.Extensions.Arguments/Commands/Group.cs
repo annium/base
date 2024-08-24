@@ -10,7 +10,7 @@ namespace Annium.Extensions.Arguments;
 
 public abstract class Group : CommandBase
 {
-    private static readonly string ConfigurationTypesName = typeof(IConfigurationTypes<>).PureName();
+    private static readonly string _configurationTypesName = typeof(IConfigurationTypes<>).PureName();
     private readonly List<CommandInfo> _commands = new();
 
     public Group Add<T>()
@@ -19,7 +19,7 @@ public abstract class Group : CommandBase
         var configurationTypes =
             typeof(T)
                 .GetInterfaces()
-                .SingleOrDefault(x => x.PureName() == ConfigurationTypesName)
+                .SingleOrDefault(x => x.PureName() == _configurationTypesName)
                 ?.GetGenericArguments() ?? Type.EmptyTypes;
         _commands.Add(new CommandInfo(T.Id, T.Description, typeof(T), configurationTypes));
 

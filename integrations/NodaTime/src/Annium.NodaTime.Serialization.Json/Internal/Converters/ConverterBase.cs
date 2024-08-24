@@ -13,24 +13,24 @@ namespace Annium.NodaTime.Serialization.Json.Internal.Converters;
 internal abstract class ConverterBase<T> : JsonConverter<T>
 {
     // For value types and sealed classes, we can optimize and not call IsAssignableFrom.
-    private static readonly bool CheckAssignableFrom = !(
+    private static readonly bool _checkAssignableFrom = !(
         typeof(T).GetTypeInfo().IsValueType || typeof(T).GetTypeInfo().IsClass && typeof(T).GetTypeInfo().IsSealed
     );
 
-    private static readonly Type NullableT = typeof(T).GetTypeInfo().IsValueType
+    private static readonly Type _nullableT = typeof(T).GetTypeInfo().IsValueType
         ? typeof(Nullable<>).MakeGenericType(typeof(T))
         : typeof(T);
 
     public override bool CanConvert(Type objectType) =>
         objectType == typeof(T)
-        || objectType == NullableT
-        || CheckAssignableFrom && typeof(T).GetTypeInfo().IsAssignableFrom(objectType.GetTypeInfo());
+        || objectType == _nullableT
+        || _checkAssignableFrom && typeof(T).GetTypeInfo().IsAssignableFrom(objectType.GetTypeInfo());
 
     public override T Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         if (reader.TokenType == JsonTokenType.Null)
         {
-            Preconditions.CheckData(typeToConvert == NullableT, $"Cannot convert null value to {typeToConvert}");
+            Preconditions.CheckData(typeToConvert == _nullableT, $"Cannot convert null value to {typeToConvert}");
             return default!;
         }
 
@@ -40,7 +40,7 @@ internal abstract class ConverterBase<T> : JsonConverter<T>
             var value = reader.GetString();
             if (value == string.Empty)
             {
-                Preconditions.CheckData(typeToConvert == NullableT, $"Cannot convert null value to {typeToConvert}");
+                Preconditions.CheckData(typeToConvert == _nullableT, $"Cannot convert null value to {typeToConvert}");
                 return default!;
             }
         }

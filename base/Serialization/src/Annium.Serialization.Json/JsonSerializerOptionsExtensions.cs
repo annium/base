@@ -14,7 +14,7 @@ namespace Annium.Core.DependencyInjection;
 
 public static class JsonSerializerOptionsExtensions
 {
-    private static readonly IReadOnlyCollection<PropertyInfo> CloneableProperties = typeof(JsonSerializerOptions)
+    private static readonly IReadOnlyCollection<PropertyInfo> _cloneableProperties = typeof(JsonSerializerOptions)
         .GetProperties(BindingFlags.Public | BindingFlags.Instance)
         .Where(x =>
             x.PropertyType.GetTargetImplementation(typeof(IEnumerable<>)) is null
@@ -136,7 +136,7 @@ public static class JsonSerializerOptionsExtensions
         foreach (var converter in opts.Converters)
             clone.Converters.Add(converter);
 
-        foreach (var p in CloneableProperties)
+        foreach (var p in _cloneableProperties)
             p.SetValue(clone, p.GetValue(opts));
 
         return clone;

@@ -4,7 +4,7 @@ namespace Annium;
 
 public static class ByteExtensions
 {
-    private static readonly char[] HexLookup = CreateHexLookup();
+    private static readonly char[] _hexLookup = CreateHexLookup();
 
     public static string ToHexString(this byte[] value) => ToHexString(value.AsMemory());
 
@@ -12,7 +12,7 @@ public static class ByteExtensions
 
     public static string ToHexString(this ReadOnlyMemory<byte> value)
     {
-        var lookup = HexLookup;
+        var lookup = _hexLookup;
         var result = new char[value.Length * 2];
 
         var i = 0;

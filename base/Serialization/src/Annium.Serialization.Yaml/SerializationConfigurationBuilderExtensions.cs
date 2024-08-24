@@ -13,7 +13,7 @@ public static class SerializationConfigurationBuilderExtensions
     private static readonly ConcurrentDictionary<
         (SerializerKey, Action<IServiceProvider, SerializerBuilder, DeserializerBuilder>),
         (ISerializer, IDeserializer)
-    > Options = new();
+    > _options = new();
 
     public static ISerializationConfigurationBuilder WithYaml(
         this ISerializationConfigurationBuilder builder,
@@ -65,7 +65,7 @@ public static class SerializationConfigurationBuilderExtensions
     ) =>
         sp =>
         {
-            var (serializer, deserializer) = Options.GetOrAdd(
+            var (serializer, deserializer) = _options.GetOrAdd(
                 (SerializerKey.Create(key, Constants.MediaType), configure),
                 _ =>
                 {

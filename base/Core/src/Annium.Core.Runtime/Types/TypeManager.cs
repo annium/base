@@ -9,18 +9,18 @@ namespace Annium.Core.Runtime.Types;
 
 public static class TypeManager
 {
-    private static readonly ConcurrentDictionary<CacheKey, ITypeManager> Instances = new();
+    private static readonly ConcurrentDictionary<CacheKey, ITypeManager> _instances = new();
 
     public static ITypeManager GetInstance(Assembly assembly, ILogger logger)
     {
         var key = new CacheKey(assembly);
-        return Instances.GetOrAdd(key, k => new TypeManagerInstance(k.Assembly, logger));
+        return _instances.GetOrAdd(key, k => new TypeManagerInstance(k.Assembly, logger));
     }
 
     public static void Release(Assembly assembly)
     {
-        foreach (var key in Instances.Keys.Where(x => x.Assembly == assembly).ToArray())
-            Instances.TryRemove(key, out _);
+        foreach (var key in _instances.Keys.Where(x => x.Assembly == assembly).ToArray())
+            _instances.TryRemove(key, out _);
     }
 
     private record CacheKey(Assembly Assembly)

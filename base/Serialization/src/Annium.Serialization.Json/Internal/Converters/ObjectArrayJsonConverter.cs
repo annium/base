@@ -11,7 +11,7 @@ namespace Annium.Serialization.Json.Internal.Converters;
 internal class ObjectArrayJsonConverter<T> : JsonConverter<T>
 {
     // ReSharper disable once StaticMemberInGenericType
-    private static readonly IReadOnlyList<object?> Members;
+    private static readonly IReadOnlyList<object?> _members;
 
     static ObjectArrayJsonConverter()
     {
@@ -28,7 +28,7 @@ internal class ObjectArrayJsonConverter<T> : JsonConverter<T>
             .Select(x => (order: x.GetCustomAttribute<JsonPropertyOrderAttribute>()?.Order, member: x))
             .ToArray();
 
-        Members = raw.All(x => x.order is null) ? GetAllMembersList(raw) : GetMembersWithPlaceholdersList(raw);
+        _members = raw.All(x => x.order is null) ? GetAllMembersList(raw) : GetMembersWithPlaceholdersList(raw);
     }
 
     private static IReadOnlyList<MemberInfo> GetAllMembersList(IReadOnlyCollection<(int? order, MemberInfo member)> raw)
@@ -83,7 +83,7 @@ internal class ObjectArrayJsonConverter<T> : JsonConverter<T>
         var depth = reader.CurrentDepth;
         var value = Activator.CreateInstance(typeof(T))!;
 
-        foreach (var member in Members)
+        foreach (var member in _members)
         {
             reader.Read();
             if (member is PropertyInfo p)
@@ -107,7 +107,7 @@ internal class ObjectArrayJsonConverter<T> : JsonConverter<T>
     {
         writer.WriteStartArray();
 
-        foreach (var member in Members)
+        foreach (var member in _members)
             switch (member)
             {
                 case PropertyInfo p:

@@ -6,8 +6,8 @@ namespace Annium.Logging.Shared;
 public class LogRoute<TContext>
     where TContext : class
 {
-    private static readonly Func<LogMessage<TContext>, bool> LogAll = _ => true;
-    public Func<LogMessage<TContext>, bool> Filter { get; private set; } = LogAll;
+    private static readonly Func<LogMessage<TContext>, bool> _logAll = _ => true;
+    public Func<LogMessage<TContext>, bool> Filter { get; private set; } = _logAll;
     internal OneOf<ILogHandler<TContext>, IAsyncLogHandler<TContext>>? Handler { get; private set; }
     internal LogRouteConfiguration? Configuration { get; private set; }
     private readonly IServiceProvider _sp;
@@ -21,7 +21,7 @@ public class LogRoute<TContext>
         registerRoute(this);
     }
 
-    public LogRoute<TContext> ForAll() => new(_sp, _registerRoute) { Filter = LogAll };
+    public LogRoute<TContext> ForAll() => new(_sp, _registerRoute) { Filter = _logAll };
 
     public LogRoute<TContext> For(Func<LogMessage<TContext>, bool> filter) =>
         new(_sp, _registerRoute) { Filter = filter };

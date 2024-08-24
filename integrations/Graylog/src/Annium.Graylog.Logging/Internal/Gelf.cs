@@ -11,7 +11,7 @@ namespace Annium.Graylog.Logging.Internal;
 internal static class Gelf<TContext>
     where TContext : class
 {
-    private static readonly IReadOnlyDictionary<string, PropertyInfo> Properties = typeof(TContext)
+    private static readonly IReadOnlyDictionary<string, PropertyInfo> _properties = typeof(TContext)
         .GetProperties(BindingFlags.Public | BindingFlags.Instance)
         .Where(x => x.CanRead)
         .ToDictionary(x => $"_{x.Name.SnakeCase()}");
@@ -38,7 +38,7 @@ internal static class Gelf<TContext>
             foreach (var (key, value) in m.Data)
                 result.TryAdd($"_{key}", value?.ToString());
 
-            foreach (var (name, property) in Properties)
+            foreach (var (name, property) in _properties)
             {
                 var value = property.GetValue(m.Context);
                 if (value is not null)

@@ -89,7 +89,7 @@ public static class EnumExtensions
     public static bool TryParseEnum<T>(this string label, out T value)
         where T : struct, Enum
     {
-        var map = ParseLabelsCache.GetOrAdd(typeof(T), ParseLabels);
+        var map = _parseLabelsCache.GetOrAdd(typeof(T), ParseLabels);
 
         if (map.TryGetValue(label.ToLowerInvariant(), out var val))
         {
@@ -101,7 +101,8 @@ public static class EnumExtensions
         return false;
     }
 
-    private static readonly ConcurrentDictionary<Type, IReadOnlyDictionary<string, ValueType>> ParseLabelsCache = new();
+    private static readonly ConcurrentDictionary<Type, IReadOnlyDictionary<string, ValueType>> _parseLabelsCache =
+        new();
 
     private static IReadOnlyDictionary<string, ValueType> ParseLabels(Type type)
     {
@@ -131,7 +132,7 @@ public static class EnumExtensions
     public static bool TryParseEnum<T>(this ValueType raw, out T value)
         where T : struct, Enum
     {
-        var values = ParseValuesCache.GetOrAdd(typeof(T), ParseValues);
+        var values = _parseValuesCache.GetOrAdd(typeof(T), ParseValues);
 
         var val = (ValueType)Convert.ChangeType(raw, Enum.GetUnderlyingType(typeof(T)));
         if (values.Contains(val))
@@ -144,7 +145,7 @@ public static class EnumExtensions
         return false;
     }
 
-    private static readonly ConcurrentDictionary<Type, HashSet<ValueType>> ParseValuesCache = new();
+    private static readonly ConcurrentDictionary<Type, HashSet<ValueType>> _parseValuesCache = new();
 
     private static HashSet<ValueType> ParseValues(Type type)
     {

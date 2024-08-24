@@ -5,7 +5,7 @@ namespace Annium.Core.Runtime.Time;
 
 public interface ITimeManager
 {
-    event Action<Duration> NowChanged;
+    event Action<Duration> OnNowChanged;
     Instant Now { get; }
     void SetNow(Instant now);
 }

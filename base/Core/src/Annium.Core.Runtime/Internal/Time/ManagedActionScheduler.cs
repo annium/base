@@ -19,18 +19,18 @@ internal class ManagedActionScheduler : IActionScheduler
     {
         var lasting = Duration.Zero;
 
-        _timeManager.NowChanged += CheckTime;
+        _timeManager.OnNowChanged += CheckTime;
 
         void CheckTime(Duration duration)
         {
             lasting += duration;
             if (lasting < timeout)
                 return;
-            _timeManager.NowChanged -= CheckTime;
+            _timeManager.OnNowChanged -= CheckTime;
             handle();
         }
 
-        return () => _timeManager.NowChanged -= CheckTime;
+        return () => _timeManager.OnNowChanged -= CheckTime;
     }
 
     public Action Interval(Action handle, int interval) => Interval(handle, Duration.FromMilliseconds(interval));
@@ -39,7 +39,7 @@ internal class ManagedActionScheduler : IActionScheduler
     {
         var lasting = Duration.Zero;
 
-        _timeManager.NowChanged += CheckTime;
+        _timeManager.OnNowChanged += CheckTime;
 
         void CheckTime(Duration duration)
         {
@@ -51,6 +51,6 @@ internal class ManagedActionScheduler : IActionScheduler
             handle();
         }
 
-        return () => _timeManager.NowChanged -= CheckTime;
+        return () => _timeManager.OnNowChanged -= CheckTime;
     }
 }

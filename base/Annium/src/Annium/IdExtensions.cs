@@ -7,7 +7,7 @@ namespace Annium;
 
 public static class IdExtensions
 {
-    private static readonly ConcurrentDictionary<Type, IdTable> IdTables = new();
+    private static readonly ConcurrentDictionary<Type, IdTable> _idTables = new();
 
     public static string GetFullId<T>(this T obj) =>
         // ReSharper disable once ConditionIsAlwaysTrueOrFalse
@@ -16,7 +16,7 @@ public static class IdExtensions
             : $"{obj.GetType().FriendlyName()}#{obj.GetId()}";
 
     public static string GetId<T>(this T obj) =>
-        obj is null ? "null" : IdTables.GetOrAdd(obj.GetType(), _ => new IdTable()).GetId(obj);
+        obj is null ? "null" : _idTables.GetOrAdd(obj.GetType(), _ => new IdTable()).GetId(obj);
 
     private class IdTable
     {

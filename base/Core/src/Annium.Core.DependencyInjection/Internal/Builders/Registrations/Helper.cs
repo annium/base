@@ -38,7 +38,7 @@ namespace Annium.Core.DependencyInjection.Internal.Builders.Registrations;
  */
 internal static class Helper
 {
-    private static readonly MethodInfo GetRequiredServiceMethod = typeof(ServiceProviderServiceExtensions)
+    private static readonly MethodInfo _getRequiredServiceMethod = typeof(ServiceProviderServiceExtensions)
         .GetMethods()
         .Single(x =>
             x.Name == nameof(ServiceProviderServiceExtensions.GetRequiredService)
@@ -46,7 +46,7 @@ internal static class Helper
             && x.GetParameters()[0].ParameterType == typeof(IServiceProvider)
         );
 
-    private static readonly MethodInfo GetRequiredKeyedServiceMethod = typeof(ServiceProviderKeyedServiceExtensions)
+    private static readonly MethodInfo _getRequiredKeyedServiceMethod = typeof(ServiceProviderKeyedServiceExtensions)
         .GetMethods()
         .Single(x =>
             x.Name == nameof(ServiceProviderKeyedServiceExtensions.GetRequiredKeyedService)
@@ -110,10 +110,10 @@ internal static class Helper
         return Expression.Call(null, getRequiredService, sp, key);
     }
 
-    private static MethodInfo GetRequiredService(Type type) => GetRequiredServiceMethod.MakeGenericMethod(type);
+    private static MethodInfo GetRequiredService(Type type) => _getRequiredServiceMethod.MakeGenericMethod(type);
 
     private static MethodInfo GetRequiredKeyedService(Type type) =>
-        GetRequiredKeyedServiceMethod.MakeGenericMethod(type);
+        _getRequiredKeyedServiceMethod.MakeGenericMethod(type);
     //
     // private static ConstructorInfo KeyValueConstructor(Type keyType, Type valueType)
     // {

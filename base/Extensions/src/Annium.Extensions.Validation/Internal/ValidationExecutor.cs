@@ -11,7 +11,7 @@ namespace Annium.Extensions.Validation.Internal;
 
 internal class ValidationExecutor<TValue> : IValidator<TValue>
 {
-    private static readonly Type[] ValidatorSets = typeof(TValue)
+    private static readonly Type[] _validatorSets = typeof(TValue)
         .GetInheritanceChain(self: true)
         .Concat(typeof(TValue).GetInterfaces())
         .Select(t => typeof(IEnumerable<>).MakeGenericType(typeof(IValidationContainer<>).MakeGenericType(t)))
@@ -23,7 +23,7 @@ internal class ValidationExecutor<TValue> : IValidator<TValue>
 
     public ValidationExecutor(IServiceProvider serviceProvider)
     {
-        _validators = ValidatorSets
+        _validators = _validatorSets
             .Select(s => (IEnumerable<IValidationContainer<TValue>>)serviceProvider.Resolve(s))
             .SelectMany(v => v)
             .ToArray();

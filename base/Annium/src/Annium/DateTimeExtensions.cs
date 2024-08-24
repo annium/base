@@ -4,13 +4,13 @@ namespace Annium;
 
 public static class DateTimeExtensions
 {
-    private static readonly DateTime UnixEpoch = new(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
+    private static readonly DateTime _unixEpoch = new(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
 
-    public static DateTime FromUnixTimeMinutes(long minutes) => UnixEpoch.AddMinutes(minutes);
+    public static DateTime FromUnixTimeMinutes(long minutes) => _unixEpoch.AddMinutes(minutes);
 
-    public static DateTime FromUnixTimeSeconds(long seconds) => UnixEpoch.AddSeconds(seconds);
+    public static DateTime FromUnixTimeSeconds(long seconds) => _unixEpoch.AddSeconds(seconds);
 
-    public static DateTime FromUnixTimeMilliseconds(long milliseconds) => UnixEpoch.AddMilliseconds(milliseconds);
+    public static DateTime FromUnixTimeMilliseconds(long milliseconds) => _unixEpoch.AddMilliseconds(milliseconds);
 
     public static DateTime FloorToSecond(this DateTime m) =>
         DateTime.MinValue + (m - DateTime.MinValue).FloorToSecond();
@@ -48,10 +48,10 @@ public static class DateTimeExtensions
 
     public static DateTime InUtc(this DateTime m) => DateTime.SpecifyKind(m, DateTimeKind.Utc);
 
-    public static long ToUnixTimeMinutes(this DateTime m) => (m.InUtc() - UnixEpoch).TotalMinutes.FloorInt64();
+    public static long ToUnixTimeMinutes(this DateTime m) => (m.InUtc() - _unixEpoch).TotalMinutes.FloorInt64();
 
-    public static long ToUnixTimeSeconds(this DateTime m) => (m.InUtc() - UnixEpoch).TotalSeconds.FloorInt64();
+    public static long ToUnixTimeSeconds(this DateTime m) => (m.InUtc() - _unixEpoch).TotalSeconds.FloorInt64();
 
     public static long ToUnixTimeMilliseconds(this DateTime m) =>
-        (m.InUtc() - UnixEpoch).TotalMilliseconds.FloorInt64();
+        (m.InUtc() - _unixEpoch).TotalMilliseconds.FloorInt64();
 }

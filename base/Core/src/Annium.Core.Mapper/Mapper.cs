@@ -7,10 +7,10 @@ namespace Annium.Core.Mapper;
 
 public static class Mapper
 {
-    private static readonly ConcurrentDictionary<Assembly, IMapper> Mappers = new();
+    private static readonly ConcurrentDictionary<Assembly, IMapper> _mappers = new();
 
     public static IMapper GetFor(Assembly assembly) =>
-        Mappers.GetOrAdd(
+        _mappers.GetOrAdd(
             assembly,
             x =>
             {

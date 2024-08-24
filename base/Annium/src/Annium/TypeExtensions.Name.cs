@@ -8,7 +8,7 @@ namespace Annium;
 
 public static class TypeNameExtensions
 {
-    private static readonly ConcurrentDictionary<Type, string> TypeNames =
+    private static readonly ConcurrentDictionary<Type, string> _typeNames =
         new(
             new Dictionary<Type, string>
             {
@@ -31,11 +31,11 @@ public static class TypeNameExtensions
             }
         );
 
-    private static readonly ConcurrentDictionary<Type, string> TypePureNames = new(TypeNames);
+    private static readonly ConcurrentDictionary<Type, string> _typePureNames = new(_typeNames);
 
-    public static string PureName(this Type value) => TypePureNames.GetOrAdd(value, BuildPureName);
+    public static string PureName(this Type value) => _typePureNames.GetOrAdd(value, BuildPureName);
 
-    public static string FriendlyName(this Type value) => TypeNames.GetOrAdd(value, BuildFriendlyName);
+    public static string FriendlyName(this Type value) => _typeNames.GetOrAdd(value, BuildFriendlyName);
 
     private static string BuildPureName(Type type)
     {

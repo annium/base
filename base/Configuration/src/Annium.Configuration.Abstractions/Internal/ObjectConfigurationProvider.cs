@@ -133,25 +133,25 @@ internal class ObjectConfigurationProvider : ConfigurationProviderBase
 
 file static class Helper
 {
-    private static readonly Dictionary<Type, TypeVariant> Variants = new();
-    private static readonly Dictionary<Type, IReadOnlyCollection<MemberInfo>> Members = new();
+    private static readonly Dictionary<Type, TypeVariant> _variants = new();
+    private static readonly Dictionary<Type, IReadOnlyCollection<MemberInfo>> _members = new();
 
     public static TypeVariant GetVariant(Type type)
     {
-        if (Variants.TryGetValue(type, out var variant))
+        if (_variants.TryGetValue(type, out var variant))
             return variant;
 
-        Variants[type] = variant = ResolveVariant(type);
+        _variants[type] = variant = ResolveVariant(type);
 
         return variant;
     }
 
     public static IReadOnlyCollection<MemberInfo> GetMembers(Type type)
     {
-        if (Members.TryGetValue(type, out var members))
+        if (_members.TryGetValue(type, out var members))
             return members;
 
-        Members[type] = members = ResolveMembers(type);
+        _members[type] = members = ResolveMembers(type);
 
         return members;
     }

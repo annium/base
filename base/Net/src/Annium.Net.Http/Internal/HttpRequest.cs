@@ -18,7 +18,7 @@ internal class HttpRequest : IHttpRequest
 
     private delegate Task<IHttpResponse> Middleware(Func<Task<IHttpResponse>> next, IHttpRequest request);
 
-    private static readonly HttpClient DefaultClient = new();
+    private static readonly HttpClient _defaultClient = new();
 
     public HttpMethod Method { get; private set; } = HttpMethod.Get;
     public Uri Uri => Helper.BuildUri(_client, _baseUri, _uri, _parameters);
@@ -28,7 +28,7 @@ internal class HttpRequest : IHttpRequest
     public HttpContent? Content { get; private set; }
     public Serializer Serializer { get; }
     public ILogger Logger { get; }
-    private HttpClient _client = DefaultClient;
+    private HttpClient _client = _defaultClient;
     private Uri? _baseUri;
     private string? _uri;
     private TimeSpan _timeout = TimeSpan.FromSeconds(30);

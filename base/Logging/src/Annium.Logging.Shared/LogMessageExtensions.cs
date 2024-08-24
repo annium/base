@@ -7,8 +7,8 @@ namespace Annium.Logging.Shared;
 
 public static class LogMessageExtensions
 {
-    private static readonly DateTimeZone CurrentTz = DateTimeZoneProviders.Tzdb.GetSystemDefault();
-    private static readonly DateTimeZone UtcTz = DateTimeZone.Utc;
+    private static readonly DateTimeZone _currentTz = DateTimeZoneProviders.Tzdb.GetSystemDefault();
+    private static readonly DateTimeZone _utcTz = DateTimeZone.Utc;
 
     public static Func<LogMessage<TContext>, string> DefaultFormat<TContext>(Func<LogMessage<TContext>, string> time)
         where TContext : class
@@ -37,27 +37,27 @@ public static class LogMessageExtensions
     public static string LocalDateTime<TContext>(LogMessage<TContext> m)
         where TContext : class
     {
-        return m.Instant.InZone(CurrentTz).LocalDateTime.ToString("dd.MM.yy HH:mm:ss.fff", null);
+        return m.Instant.InZone(_currentTz).LocalDateTime.ToString("dd.MM.yy HH:mm:ss.fff", null);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static string LocalTime<TContext>(LogMessage<TContext> m)
         where TContext : class
     {
-        return m.Instant.InZone(CurrentTz).LocalDateTime.ToString("HH:mm:ss.fff", null);
+        return m.Instant.InZone(_currentTz).LocalDateTime.ToString("HH:mm:ss.fff", null);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static string UtcDateTime<TContext>(LogMessage<TContext> m)
         where TContext : class
     {
-        return m.Instant.InZone(UtcTz).LocalDateTime.ToString("dd.MM.yy HH:mm:ss.fff", null);
+        return m.Instant.InZone(_utcTz).LocalDateTime.ToString("dd.MM.yy HH:mm:ss.fff", null);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static string UtcTime<TContext>(LogMessage<TContext> m)
         where TContext : class
     {
-        return m.Instant.InZone(UtcTz).LocalDateTime.ToString("HH:mm:ss.fff", null);
+        return m.Instant.InZone(_utcTz).LocalDateTime.ToString("HH:mm:ss.fff", null);
     }
 }

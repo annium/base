@@ -8,7 +8,7 @@ internal sealed class TrackingWeakReference<T> : ITrackingWeakReference<T>
 {
     public static readonly ConditionalWeakTable<T, TrackingWeakReference<T>> Registry = new();
 
-    public event Action Collected = delegate { };
+    public event Action OnCollected = delegate { };
     private readonly WeakReference<T> _ref;
 
     public bool IsAlive => TryGetTarget(out _);
@@ -22,6 +22,6 @@ internal sealed class TrackingWeakReference<T> : ITrackingWeakReference<T>
 
     ~TrackingWeakReference()
     {
-        Collected.Invoke();
+        OnCollected.Invoke();
     }
 }

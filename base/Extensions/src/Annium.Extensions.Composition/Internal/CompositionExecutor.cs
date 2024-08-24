@@ -14,7 +14,7 @@ namespace Annium.Extensions.Composition.Internal;
 internal class CompositionExecutor<TValue> : IComposer<TValue>
     where TValue : class
 {
-    private static readonly Type[] ComposerSets = typeof(TValue)
+    private static readonly Type[] _composerSets = typeof(TValue)
         .GetInheritanceChain(self: true)
         .Concat(typeof(TValue).GetInterfaces())
         .Select(t => typeof(IEnumerable<>).MakeGenericType(typeof(ICompositionContainer<>).MakeGenericType(t)))
@@ -26,7 +26,7 @@ internal class CompositionExecutor<TValue> : IComposer<TValue>
 
     public CompositionExecutor(IServiceProvider serviceProvider)
     {
-        _composers = ComposerSets
+        _composers = _composerSets
             .Select(s => (IEnumerable<ICompositionContainer<TValue>>)serviceProvider.Resolve(s))
             .SelectMany(v => v)
             .ToArray();

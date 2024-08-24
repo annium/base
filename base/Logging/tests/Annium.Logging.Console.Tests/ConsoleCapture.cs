@@ -7,7 +7,7 @@ namespace Annium.Logging.Console.Tests;
 
 internal class ConsoleCapture : IDisposable
 {
-    private static readonly object Locker = new();
+    private static readonly object _locker = new();
 
     public static ConsoleCapture Start() => new();
 
@@ -19,7 +19,7 @@ internal class ConsoleCapture : IDisposable
 
     private ConsoleCapture()
     {
-        Monitor.Enter(Locker);
+        Monitor.Enter(_locker);
         _stdout = SysConsole.Out;
         SysConsole.SetOut(_writer);
     }
@@ -28,6 +28,6 @@ internal class ConsoleCapture : IDisposable
     {
         SysConsole.SetOut(_stdout);
         _writer.Dispose();
-        Monitor.Exit(Locker);
+        Monitor.Exit(_locker);
     }
 }

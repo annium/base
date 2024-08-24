@@ -14,7 +14,7 @@ public delegate void ConfigureSerializer(IServiceProvider provider, JsonSerializ
 
 public static class SerializationConfigurationBuilderExtensions
 {
-    private static readonly ConcurrentDictionary<OptionsKey, JsonSerializerOptions> Options = new();
+    private static readonly ConcurrentDictionary<OptionsKey, JsonSerializerOptions> _options = new();
 
     public static ISerializationConfigurationBuilder WithJson(
         this ISerializationConfigurationBuilder builder,
@@ -95,7 +95,7 @@ public static class SerializationConfigurationBuilderExtensions
         sp =>
         {
             var optionsKey = new OptionsKey(SerializerKey.Create(key, Constants.MediaType), configure);
-            var options = Options.GetOrAdd(
+            var options = _options.GetOrAdd(
                 optionsKey,
                 static (key, sp) =>
                 {

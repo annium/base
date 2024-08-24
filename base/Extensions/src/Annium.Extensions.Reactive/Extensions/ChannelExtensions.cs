@@ -27,10 +27,10 @@ public static class ChannelExtensions
                     //
                 }
 
-                return onDisposed ?? OnDisposed;
+                return onDisposed ?? Disposed;
             }
         );
 
-        static void OnDisposed() { }
+        static void Disposed() { }
     }
 }

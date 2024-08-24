@@ -18,12 +18,12 @@ public class HttpResponse<T> : HttpResponse, IHttpResponse<T>
 
 public class HttpResponse : IHttpResponse
 {
-    private static readonly HttpResponseHeaders DefaultHeaders;
+    private static readonly HttpResponseHeaders _defaultHeaders;
 
     static HttpResponse()
     {
         using var message = new HttpResponseMessage();
-        DefaultHeaders = message.Headers;
+        _defaultHeaders = message.Headers;
     }
 
     public bool IsAbort { get; }
@@ -55,7 +55,7 @@ public class HttpResponse : IHttpResponse
         StatusCode = statusCode;
         StatusText = statusText;
         Uri = uri;
-        Headers = DefaultHeaders;
+        Headers = _defaultHeaders;
         Content = new StringContent(message);
     }
 
