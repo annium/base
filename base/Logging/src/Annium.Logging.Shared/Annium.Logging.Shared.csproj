@@ -9,6 +9,6 @@
         <ProjectReference Include="../../../Extensions/src/Annium.Extensions.Reactive/Annium.Extensions.Reactive.csproj" />
     </ItemGroup>
     <ItemGroup>
-        <PackageReference Include="Ben.Demystifier" Version="0.4.1" />
+        <PackageReference Include="Ben.Demystifier" />
     </ItemGroup>
 </Project>

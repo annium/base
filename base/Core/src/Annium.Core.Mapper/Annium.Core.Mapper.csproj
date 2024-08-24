@@ -8,6 +8,6 @@
         <ProjectReference Include="../Annium.Core.Runtime/Annium.Core.Runtime.csproj" />
     </ItemGroup>
     <ItemGroup>
-        <PackageReference Include="AgileObjects.ReadableExpressions" Version="4.1.3" />
+        <PackageReference Include="AgileObjects.ReadableExpressions" />
     </ItemGroup>
 </Project>

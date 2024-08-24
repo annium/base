@@ -8,6 +8,6 @@
         <ProjectReference Include="../Annium.Core.Runtime/Annium.Core.Runtime.csproj" />
     </ItemGroup>
     <ItemGroup>
-        <PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
+        <PackageReference Include="System.Runtime.Loader" />
     </ItemGroup>
 </Project>

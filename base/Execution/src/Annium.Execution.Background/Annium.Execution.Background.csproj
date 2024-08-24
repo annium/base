@@ -8,6 +8,6 @@
         <ProjectReference Include="../../../Annium/src/Annium/Annium.csproj" />
     </ItemGroup>
     <ItemGroup>
-        <PackageReference Include="System.Threading.Channels" Version="8.0.0" />
+        <PackageReference Include="System.Threading.Channels" />
     </ItemGroup>
 </Project>

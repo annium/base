@@ -8,6 +8,6 @@
         <ProjectReference Include="../Annium.Configuration.Abstractions/Annium.Configuration.Abstractions.csproj" />
     </ItemGroup>
     <ItemGroup>
-        <PackageReference Include="YamlDotNet" Version="16.0.0" />
+        <PackageReference Include="YamlDotNet" />
     </ItemGroup>
 </Project>
