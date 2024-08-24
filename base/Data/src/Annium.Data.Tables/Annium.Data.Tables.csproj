@@ -15,7 +15,4 @@
         <ProjectReference Include="../../../Core/src/Annium.Core.Mapper/Annium.Core.Mapper.csproj" />
         <ProjectReference Include="../../../Extensions/src/Annium.Extensions.Reactive/Annium.Extensions.Reactive.csproj" />
     </ItemGroup>
-    <ItemGroup>
-        <PackageReference Include="System.Threading.Channels" Version="8.0.0" />
-    </ItemGroup>
 </Project>
