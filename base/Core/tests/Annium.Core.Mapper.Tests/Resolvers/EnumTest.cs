@@ -29,6 +29,6 @@ public class EnumTest : TestBase
     private enum Sex
     {
         Male,
-        Female
+        Female,
     }
 }

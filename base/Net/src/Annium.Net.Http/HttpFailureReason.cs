@@ -5,5 +5,5 @@ public enum HttpFailureReason
     Undefined,
     Abort,
     Parse,
-    Exception
+    Exception,
 }

@@ -17,7 +17,7 @@ public class MessagePackSerializerTests : TestBase
         {
             FirstName = "Max",
             LastName = "Madness",
-            Tags = new[] { "a", "b" }
+            Tags = new[] { "a", "b" },
         };
 
         // act

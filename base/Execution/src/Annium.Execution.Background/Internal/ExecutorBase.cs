@@ -37,7 +37,7 @@ internal abstract class ExecutorBase : IExecutor, ILogSubject
             {
                 AllowSynchronousContinuations = true,
                 SingleWriter = false,
-                SingleReader = true
+                SingleReader = true,
             }
         );
         _taskWriter = taskChannel.Writer;
@@ -240,6 +240,6 @@ internal abstract class ExecutorBase : IExecutor, ILogSubject
         Created = 0,
         Started = 1,
         Stopped = 2,
-        Disposed = 3
+        Disposed = 3,
     }
 }

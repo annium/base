@@ -46,7 +46,7 @@ internal class BackgroundLogScheduler<TContext> : ILogScheduler<TContext>, ILogS
             {
                 AllowSynchronousContinuations = true,
                 SingleWriter = false,
-                SingleReader = true
+                SingleReader = true,
             }
         );
         _messageWriter = channel.Writer;

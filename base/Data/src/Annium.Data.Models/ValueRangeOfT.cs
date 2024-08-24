@@ -16,7 +16,7 @@ public abstract record ValueRange<T>
             RangeBounds.Start => Start.CompareTo(value) <= 0 && End.CompareTo(value) > 0,
             RangeBounds.End => Start.CompareTo(value) < 0 && End.CompareTo(value) >= 0,
             RangeBounds.Both => Start.CompareTo(value) <= 0 && End.CompareTo(value) >= 0,
-            _ => throw new ArgumentOutOfRangeException(nameof(bounds), bounds, null)
+            _ => throw new ArgumentOutOfRangeException(nameof(bounds), bounds, null),
         };
 
     public bool Contains(ValueRange<T> value, RangeBounds bounds) =>
@@ -26,7 +26,7 @@ public abstract record ValueRange<T>
             RangeBounds.Start => Start.CompareTo(value.Start) <= 0 && End.CompareTo(value.End) > 0,
             RangeBounds.End => Start.CompareTo(value.Start) < 0 && End.CompareTo(value.End) >= 0,
             RangeBounds.Both => Start.CompareTo(value.Start) <= 0 && End.CompareTo(value.End) >= 0,
-            _ => throw new ArgumentOutOfRangeException(nameof(bounds), bounds, null)
+            _ => throw new ArgumentOutOfRangeException(nameof(bounds), bounds, null),
         };
 
     public void Deconstruct(out T start, out T end)

@@ -65,7 +65,7 @@ internal static class Gelf<TContext>
             LogLevel.Info => 5,
             LogLevel.Warn => 4,
             LogLevel.Error => 3,
-            _ => 3
+            _ => 3,
         };
 
     private static string MapLogLevelText(LogLevel level) =>
@@ -76,6 +76,6 @@ internal static class Gelf<TContext>
             LogLevel.Info => nameof(LogLevel.Info),
             LogLevel.Warn => nameof(LogLevel.Warn),
             LogLevel.Error => nameof(LogLevel.Error),
-            _ => nameof(LogLevel.None)
+            _ => nameof(LogLevel.None),
         };
 }

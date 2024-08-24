@@ -85,14 +85,14 @@ public class ComposerTest : TestBase
 
         // assert
         resultWithoutUser.IsOk.IsTrue();
-        personWithoutUser.IsShallowEqual(new Person { Name = nameof(Person.Name), });
+        personWithoutUser.IsShallowEqual(new Person { Name = nameof(Person.Name) });
         resultWithUser.IsOk.IsTrue();
         personWithUser.IsShallowEqual(
             new Person
             {
                 Name = nameof(Person.Name),
                 UserId = personWithUser.UserId,
-                User = new User { Email = nameof(User.Email), Login = nameof(User.Login), }
+                User = new User { Email = nameof(User.Email), Login = nameof(User.Login) },
             }
         );
     }

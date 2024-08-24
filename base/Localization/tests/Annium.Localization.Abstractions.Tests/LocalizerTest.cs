@@ -93,12 +93,12 @@ public class LocalizerTest
         locales[CultureInfo.GetCultureInfo("en")] = new Dictionary<string, string>
         {
             { "test", "demo" },
-            { "test params", "demo {0}" }
+            { "test params", "demo {0}" },
         };
         locales[CultureInfo.GetCultureInfo("ru")] = new Dictionary<string, string>
         {
             { "test", "демо" },
-            { "test params", "демо {0}" }
+            { "test params", "демо {0}" },
         };
 
         container.AddLocalization(opts => configure(opts.UseInMemoryStorage(locales)));

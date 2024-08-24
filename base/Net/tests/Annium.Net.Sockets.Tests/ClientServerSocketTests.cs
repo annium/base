@@ -511,8 +511,8 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
             {
                 Factory = Get<IConnectionMonitorFactory>(),
                 PingInterval = 60_000,
-                MaxPingDelay = 300_000
-            }
+                MaxPingDelay = 300_000,
+            },
         };
         Configure(streamType, serverOptions);
 
@@ -564,8 +564,8 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
             {
                 Factory = Get<IConnectionMonitorFactory>(),
                 PingInterval = 100,
-                MaxPingDelay = 500
-            }
+                MaxPingDelay = 500,
+            },
         };
         _clientSocket = new ClientSocket(options, Logger);
         ClientSocket.OnReceived += x => _messages.Add(x.ToArray());
@@ -624,7 +624,7 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
                                     ConnectionMonitor = new ConnectionMonitorOptions
                                     {
                                         Factory = Get<IConnectionMonitorFactory>(),
-                                    }
+                                    },
                                 };
                             var logger = sp.Resolve<ILogger>();
                             var socket = new ServerSocket(stream, options, logger, ct);
@@ -681,7 +681,7 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
                                 ConnectionMonitor = new ConnectionMonitorOptions
                                 {
                                     Factory = Get<IConnectionMonitorFactory>(),
-                                }
+                                },
                             };
                             var logger = sp.Resolve<ILogger>();
                             var socket = new ServerSocket(sslStream, options, logger, ct);

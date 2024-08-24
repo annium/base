@@ -37,7 +37,7 @@ public class EnumJsonConverterTest : TestBase
     internal enum A
     {
         X,
-        Y
+        Y,
     }
 
     [Flags]
@@ -45,7 +45,7 @@ public class EnumJsonConverterTest : TestBase
     {
         X,
         Y,
-        Z
+        Z,
     }
 
     [Flags]
@@ -54,6 +54,6 @@ public class EnumJsonConverterTest : TestBase
     {
         X,
         Y,
-        Z
+        Z,
     }
 }

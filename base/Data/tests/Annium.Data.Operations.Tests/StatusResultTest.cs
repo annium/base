@@ -81,6 +81,6 @@ public class StatusResultTest
     {
         Allowed,
         Denied,
-        Error
+        Error,
     }
 }

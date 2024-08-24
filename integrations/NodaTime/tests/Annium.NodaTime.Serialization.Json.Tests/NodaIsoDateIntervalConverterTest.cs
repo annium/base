@@ -15,7 +15,7 @@ public class NodaIsoDateIntervalConverterTest
     private readonly JsonConverter[] _converters =
     {
         Converters.IsoDateIntervalConverter,
-        Converters.LocalDateConverter
+        Converters.LocalDateConverter,
     };
 
     [Fact]

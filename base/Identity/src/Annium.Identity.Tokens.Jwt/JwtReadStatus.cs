@@ -4,5 +4,5 @@ public enum JwtReadStatus
 {
     BadSource,
     Failed,
-    Ok
+    Ok,
 }

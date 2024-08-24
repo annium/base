@@ -11,6 +11,6 @@ public static class GetPropertyOrFieldTypeExtension
         {
             PropertyInfo property => property.PropertyType,
             FieldInfo field => field.FieldType,
-            _ => throw new InvalidOperationException($"{member} is neither readable property nor field")
+            _ => throw new InvalidOperationException($"{member} is neither readable property nor field"),
         };
 }

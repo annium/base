@@ -172,7 +172,7 @@ public static class ServiceDescriptor
         {
             ServiceType = typeof(T),
             ImplementationInstance = implementationInstance,
-            Lifetime = lifetime
+            Lifetime = lifetime,
         };
     }
 
@@ -188,7 +188,7 @@ public static class ServiceDescriptor
             ServiceType = typeof(T),
             Key = key,
             ImplementationInstance = implementationInstance,
-            Lifetime = lifetime
+            Lifetime = lifetime,
         };
     }
 
@@ -202,7 +202,7 @@ public static class ServiceDescriptor
         {
             ServiceType = serviceType,
             ImplementationInstance = implementationInstance,
-            Lifetime = lifetime
+            Lifetime = lifetime,
         };
     }
 
@@ -218,7 +218,7 @@ public static class ServiceDescriptor
             ServiceType = serviceType,
             Key = key,
             ImplementationInstance = implementationInstance,
-            Lifetime = lifetime
+            Lifetime = lifetime,
         };
     }
 }

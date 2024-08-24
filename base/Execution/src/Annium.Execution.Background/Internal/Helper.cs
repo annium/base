@@ -13,11 +13,15 @@ internal static class Helper
         {
             Action execute => Task.Run(execute, CancellationToken.None),
             Action<CancellationToken> execute => Task.Run(() => execute(ct), CancellationToken.None),
-            Func<ValueTask> execute
-                => Task.Run(async () => await execute().ConfigureAwait(false), CancellationToken.None),
-            Func<CancellationToken, ValueTask> execute
-                => Task.Run(async () => await execute(ct).ConfigureAwait(false), CancellationToken.None),
-            _ => throw new NotSupportedException()
+            Func<ValueTask> execute => Task.Run(
+                async () => await execute().ConfigureAwait(false),
+                CancellationToken.None
+            ),
+            Func<CancellationToken, ValueTask> execute => Task.Run(
+                async () => await execute(ct).ConfigureAwait(false),
+                CancellationToken.None
+            ),
+            _ => throw new NotSupportedException(),
         };
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

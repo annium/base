@@ -26,7 +26,7 @@ public class ProfilesTest : TestBase
         var value = new Payload[]
         {
             new ImagePayload("img", date),
-            new LinkPayload { Link = "lnk", Created = instant }
+            new LinkPayload { Link = "lnk", Created = instant },
         };
 
         // act

@@ -65,7 +65,7 @@ internal sealed class Table<T> : ITable<T>, ILogSubject
             {
                 AllowSynchronousContinuations = true,
                 SingleWriter = false,
-                SingleReader = true
+                SingleReader = true,
             }
         );
         _eventWriter = taskChannel.Writer;

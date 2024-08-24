@@ -18,7 +18,7 @@ public class CopyableTest
         var z = new Z
         {
             W = 7,
-            Items = new List<Base> { a, b }
+            Items = new List<Base> { a, b },
         };
 
         // act
@@ -49,7 +49,7 @@ public class CopyableTest
         var z = new Z
         {
             W = 7,
-            Items = new List<Base> { a, b }
+            Items = new List<Base> { a, b },
         };
 
         // act
@@ -71,7 +71,7 @@ public class CopyableTest
         // restore inner field
         zx.Items[0] = zx.Items[0] with
         {
-            W = z.Items[0].W
+            W = z.Items[0].W,
         };
         (zx == z).IsTrue();
     }

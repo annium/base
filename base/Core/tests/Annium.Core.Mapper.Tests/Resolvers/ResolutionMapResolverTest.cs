@@ -23,7 +23,7 @@ public class ResolutionMapResolverTest : TestBase
         var value = new Payload[]
         {
             new ImagePayload("img"),
-            new LinkPayload { Link = "lnk" }
+            new LinkPayload { Link = "lnk" },
         };
 
         // act
@@ -43,7 +43,7 @@ public class ResolutionMapResolverTest : TestBase
         var value = new Req[]
         {
             new ImageReq("img"),
-            new LinkReq { Data = "lnk" }
+            new LinkReq { Data = "lnk" },
         };
 
         // act

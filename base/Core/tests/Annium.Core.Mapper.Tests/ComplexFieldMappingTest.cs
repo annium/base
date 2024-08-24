@@ -37,7 +37,7 @@ public class ComplexFieldMappingTest : TestBase
                 Age = 20,
             }
         );
-        restored.IsShallowEqual(new A { SerializedValue = serialized, });
+        restored.IsShallowEqual(new A { SerializedValue = serialized });
     }
 
     [Fact]
@@ -54,7 +54,7 @@ public class ComplexFieldMappingTest : TestBase
 
         // assert
         result.IsShallowEqual(new C(0, 0, "Alex", 20));
-        restored.IsShallowEqual(new A { SerializedValue = serialized, });
+        restored.IsShallowEqual(new A { SerializedValue = serialized });
     }
 
     private void ConfigureProfile(Profile p)

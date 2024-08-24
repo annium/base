@@ -103,7 +103,7 @@ public static class JwtReader
             SecurityTokenInvalidIssuerException _ => (JwtReadStatus.Failed, "Token has invalid issuer"),
             SecurityTokenSignatureKeyNotFoundException _ => (JwtReadStatus.Failed, "Token has invalid signature"),
             SecurityTokenInvalidSignatureException _ => (JwtReadStatus.Failed, "Token has invalid signature"),
-            _ => (JwtReadStatus.BadSource, "Token is invalid")
+            _ => (JwtReadStatus.BadSource, "Token is invalid"),
         };
     }
 

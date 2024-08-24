@@ -31,7 +31,7 @@ file class HttpHandler : IHttpHandler
             "/params" => HandleHttpParamsRequest(ctx),
             "/upload" => HandleHttpUploadRequest(ctx),
             "/download" => HandleHttpDownloadRequest(ctx),
-            _ => Task.CompletedTask
+            _ => Task.CompletedTask,
         };
     }
 

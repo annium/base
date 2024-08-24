@@ -127,7 +127,7 @@ public class ResultTest
             new Dictionary<string, IReadOnlyCollection<string>>
             {
                 { "label", new[] { "plain" } },
-                { "other", new[] { "another" } }
+                { "other", new[] { "another" } },
             }
         );
 

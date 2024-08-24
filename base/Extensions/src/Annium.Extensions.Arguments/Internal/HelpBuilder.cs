@@ -142,11 +142,9 @@ internal class HelpBuilder : IHelpBuilder
                     (
                         e.attribute.Alias?.KebabCase(),
                         e.attribute.IsRequired,
-                        e.property.PropertyType.IsArray
-                            ? OptionType.Multi
-                            : e.property.PropertyType == typeof(bool)
-                                ? OptionType.Flag
-                                : OptionType.Normal
+                        e.property.PropertyType.IsArray ? OptionType.Multi
+                        : e.property.PropertyType == typeof(bool) ? OptionType.Flag
+                        : OptionType.Normal
                     )
             );
 

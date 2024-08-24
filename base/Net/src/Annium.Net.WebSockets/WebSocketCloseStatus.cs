@@ -4,5 +4,5 @@ public enum WebSocketCloseStatus
 {
     ClosedLocal,
     ClosedRemote,
-    Error
+    Error,
 }

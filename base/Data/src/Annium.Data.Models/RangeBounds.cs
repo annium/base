@@ -5,5 +5,5 @@ public enum RangeBounds
     None,
     Start,
     End,
-    Both
+    Both,
 }

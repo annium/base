@@ -258,7 +258,7 @@ public static class StringExtensions
             ['c'] = 12,
             ['d'] = 13,
             ['e'] = 14,
-            ['f'] = 15
+            ['f'] = 15,
         };
     }
 

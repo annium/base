@@ -30,7 +30,7 @@ public class LoggerTests : TestBase
                     {
                         BufferTime = TimeSpan.Zero,
                         BufferCount = 1,
-                        GetFile = _ => _logFile
+                        GetFile = _ => _logFile,
                     }
                 )
             );

@@ -30,7 +30,7 @@ public class JsonNotIndentedJsonConverterTest : TestBase
             new A
             {
                 Normal = 5,
-                NotIndented = new B { Field = 7 }
+                NotIndented = new B { Field = 7 },
             }
         );
 

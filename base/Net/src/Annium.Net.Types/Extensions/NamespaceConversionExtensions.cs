@@ -19,6 +19,6 @@ public static class NamespaceConversionExtensions
         ns switch
         {
             "" => Array.Empty<string>(),
-            _ => ns.Split('.').ToArray().EnsureValidNamespace()
+            _ => ns.Split('.').ToArray().EnsureValidNamespace(),
         };
 }

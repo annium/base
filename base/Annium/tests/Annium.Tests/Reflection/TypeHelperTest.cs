@@ -14,7 +14,7 @@ public class TypeHelperTest
         var data = new B
         {
             InnerOne = new A { One = "a", Two = "b" },
-            InnerTwo = new A { One = "c", Two = "d" }
+            InnerTwo = new A { One = "c", Two = "d" },
         };
 
         // act
@@ -37,7 +37,7 @@ public class TypeHelperTest
         var data = new B
         {
             InnerOne = new A { One = "a", Two = "b" },
-            InnerTwo = new A { One = "c", Two = "d" }
+            InnerTwo = new A { One = "c", Two = "d" },
         };
 
         // act

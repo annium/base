@@ -34,7 +34,7 @@ public class ResolveGenericArgumentsByImplementationExtensionMainTests
                     typeof(IGeneric<bool, IGeneric<bool, int>>),
                     typeof(bool),
                     typeof(IGeneric<bool, int>),
-                    typeof(int)
+                    typeof(int),
                 }
             );
     }

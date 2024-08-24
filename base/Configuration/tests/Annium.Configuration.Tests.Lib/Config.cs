@@ -60,5 +60,5 @@ public sealed record ConfigTwo : SomeConfig
 public enum SomeEnum
 {
     One,
-    Two
+    Two,
 }

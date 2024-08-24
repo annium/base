@@ -4,5 +4,5 @@ public enum SocketSendStatus
 {
     Ok,
     Canceled,
-    Closed
+    Closed,
 }

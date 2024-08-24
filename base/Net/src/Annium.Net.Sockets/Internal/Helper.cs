@@ -11,6 +11,6 @@ internal static class Helper
         {
             SocketMode.Raw => new RawManagedSocket(stream, options, logger),
             SocketMode.Messaging => new MessagingManagedSocket(stream, options, logger),
-            _ => throw new InvalidOperationException($"Unexpected socket mode {options.Mode}")
+            _ => throw new InvalidOperationException($"Unexpected socket mode {options.Mode}"),
         };
 }

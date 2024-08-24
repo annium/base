@@ -4,5 +4,5 @@ public enum ChangeEventType
 {
     Init,
     Set,
-    Delete
+    Delete,
 }

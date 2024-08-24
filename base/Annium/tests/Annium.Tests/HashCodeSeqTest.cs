@@ -17,12 +17,12 @@ public class HashCodeSeqTest
         var x = new Z
         {
             W = 7,
-            Items = new List<Base> { a, b }
+            Items = new List<Base> { a, b },
         };
         var y = new Z
         {
             W = 7,
-            Items = new List<Base> { a, b }
+            Items = new List<Base> { a, b },
         };
 
         // assert

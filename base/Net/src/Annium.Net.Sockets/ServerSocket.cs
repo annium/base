@@ -27,7 +27,7 @@ public class ServerSocket : IServerSocket
         {
             Mode = options.Mode,
             BufferSize = options.BufferSize,
-            ExtremeMessageSize = options.ExtremeMessageSize
+            ExtremeMessageSize = options.ExtremeMessageSize,
         };
         _socket = new ServerManagedSocket(stream, managedOptions, logger, ct);
         _socket.OnReceived += HandleOnReceived;

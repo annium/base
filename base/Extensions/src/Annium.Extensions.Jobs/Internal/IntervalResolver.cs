@@ -62,7 +62,7 @@ internal class IntervalResolver : IIntervalResolver
                     Expression.Property(zonedTime, type.GetProperty(nameof(ZonedDateTime.DayOfWeek))!),
                     typeof(int)
                 )
-            )
+            ),
         }
             .OfType<Expression>()
             .ToArray();

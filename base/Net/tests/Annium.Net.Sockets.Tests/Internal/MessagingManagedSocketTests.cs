@@ -150,7 +150,7 @@ public class MessagingManagedSocketTests : TestBase, IAsyncLifetime
             ManagedSocketOptionsBase.Default with
             {
                 BufferSize = 16_384,
-                ExtremeMessageSize = 65_536
+                ExtremeMessageSize = 65_536,
             }
         );
 
@@ -381,7 +381,7 @@ public class MessagingManagedSocketTests : TestBase, IAsyncLifetime
             options: ManagedSocketOptionsBase.Default with
             {
                 BufferSize = 10,
-                ExtremeMessageSize = 100
+                ExtremeMessageSize = 100,
             }
         );
 

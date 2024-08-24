@@ -22,7 +22,7 @@ internal class ObjectArrayJsonConverter<T> : JsonConverter<T>
                 {
                     PropertyInfo p => p is { CanRead: true, CanWrite: true },
                     FieldInfo f => !f.IsInitOnly,
-                    _ => false
+                    _ => false,
                 }
             )
             .Select(x => (order: x.GetCustomAttribute<JsonPropertyOrderAttribute>()?.Order, member: x))

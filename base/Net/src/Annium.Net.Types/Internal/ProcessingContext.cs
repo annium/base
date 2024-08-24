@@ -58,7 +58,7 @@ internal sealed record ProcessingContext : IMapperProcessingContext
             EnumModel x => new EnumRef(x.Namespace.ToString(), x.Name),
             InterfaceModel x => new InterfaceRef(x.Namespace.ToString(), x.Name, x.Args.ToArray()),
             StructModel x => new StructRef(x.Namespace.ToString(), x.Name, x.Args.ToArray()),
-            _ => throw new ArgumentOutOfRangeException($"Unexpected model {model}")
+            _ => throw new ArgumentOutOfRangeException($"Unexpected model {model}"),
         };
     }
 

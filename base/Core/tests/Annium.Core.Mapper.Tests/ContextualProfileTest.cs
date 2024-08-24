@@ -62,12 +62,12 @@ public class ContextualProfileTest : TestBase
     private enum InnerPayload
     {
         A,
-        B
+        B,
     }
 
     private enum InnerModel
     {
         C,
-        D
+        D,
     }
 }

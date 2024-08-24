@@ -4,5 +4,5 @@ public enum WebSocketSendStatus
 {
     Ok,
     Canceled,
-    Closed
+    Closed,
 }

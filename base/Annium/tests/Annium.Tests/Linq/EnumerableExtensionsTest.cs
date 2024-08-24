@@ -17,6 +17,6 @@ public class EnumerableExtensionsTest
         var result = new[] { a, b }.CartesianProduct();
 
         // assert
-        result.IsEqual(new[] { new[] { 1, 3 }, new[] { 1, 4 }, new[] { 2, 3 }, new[] { 2, 4 }, });
+        result.IsEqual(new[] { new[] { 1, 3 }, new[] { 1, 4 }, new[] { 2, 3 }, new[] { 2, 4 } });
     }
 }

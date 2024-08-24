@@ -36,5 +36,5 @@ public abstract class MapperEnumTestsBase : TestBase
 file enum Sample
 {
     A = 1,
-    B = 3
+    B = 3,
 }

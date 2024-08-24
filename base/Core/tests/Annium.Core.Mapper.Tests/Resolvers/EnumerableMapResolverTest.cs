@@ -58,7 +58,7 @@ public class EnumerableMapResolverTest : TestBase
             {
                 "one",
                 new A { Name = "name" }
-            }
+            },
         };
 
         // act
@@ -94,7 +94,7 @@ public class EnumerableMapResolverTest : TestBase
             {
                 "one",
                 new A { Name = "name" }
-            }
+            },
         };
 
         // act
@@ -115,7 +115,7 @@ public class EnumerableMapResolverTest : TestBase
             {
                 "one",
                 new A { Name = "name" }
-            }
+            },
         };
 
         // act

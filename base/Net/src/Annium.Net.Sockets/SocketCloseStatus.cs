@@ -4,5 +4,5 @@ public enum SocketCloseStatus
 {
     ClosedLocal,
     ClosedRemote,
-    Error
+    Error,
 }

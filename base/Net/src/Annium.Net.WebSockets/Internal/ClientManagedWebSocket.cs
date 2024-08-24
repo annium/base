@@ -63,7 +63,7 @@ internal class ClientManagedWebSocket : IClientManagedWebSocket, ILogSubject
 
         var nativeSocket = new NativeWebSocket
         {
-            Options = { KeepAliveInterval = TimeSpan.FromMilliseconds(_keepAliveInterval) }
+            Options = { KeepAliveInterval = TimeSpan.FromMilliseconds(_keepAliveInterval) },
         };
         var managedSocket = new ManagedWebSocket(nativeSocket, Logger);
         this.Trace<string, string>(

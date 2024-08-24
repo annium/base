@@ -11,7 +11,7 @@ public static class GetPropertyOrFieldValueExtension
         {
             PropertyInfo property => property.GetMethod?.Invoke(target, Array.Empty<object>()),
             FieldInfo field => field.GetValue(target),
-            _ => throw new InvalidOperationException($"{member} is neither readable property nor field")
+            _ => throw new InvalidOperationException($"{member} is neither readable property nor field"),
         };
 
     public static T? GetPropertyOrFieldValue<T>(this MemberInfo member, object? target = null)

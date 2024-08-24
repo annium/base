@@ -35,7 +35,7 @@ public class ClientSocket : IClientSocket
         {
             Mode = options.Mode,
             BufferSize = options.BufferSize,
-            ExtremeMessageSize = options.ExtremeMessageSize
+            ExtremeMessageSize = options.ExtremeMessageSize,
         };
         _socket = new ClientManagedSocket(managedOptions, logger);
         _socket.OnReceived += HandleOnReceived;

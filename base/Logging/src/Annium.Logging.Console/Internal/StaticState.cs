@@ -16,7 +16,7 @@ internal class StaticState
             [LogLevel.Debug] = ConsoleColor.Gray,
             [LogLevel.Info] = ConsoleColor.White,
             [LogLevel.Warn] = ConsoleColor.Yellow,
-            [LogLevel.Error] = ConsoleColor.Red
+            [LogLevel.Error] = ConsoleColor.Red,
         };
         LevelColors = colors;
     }
