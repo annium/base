@@ -5,13 +5,12 @@ using Annium.Logging;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Testing;
-using Microsoft.CodeAnalysis.Testing.Verifiers;
 using Xunit;
 
 namespace Annium.Analyzers.Tests.Logging;
 
 public class DynamicLogMessageTemplateAnalyzerTests
-    : CSharpAnalyzerTest<DynamicLogMessageTemplateAnalyzer, XUnitVerifier>
+    : CSharpAnalyzerTest<DynamicLogMessageTemplateAnalyzer, DefaultVerifier>
 {
     [Fact]
     public async Task ConstantTemplate_Ignores()

@@ -2,35 +2,33 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Testing;
-using Microsoft.CodeAnalysis.Testing.Verifiers;
 using Xunit;
 
-namespace Annium.Analyzers.Tests
+namespace Annium.Analyzers.Tests;
+
+public class ExceptionNameAnalyzerFacts : CSharpAnalyzerTest<ExceptionNameAnalyzer, DefaultVerifier>
 {
-    public class ExceptionNameAnalyzerFacts : CSharpAnalyzerTest<ExceptionNameAnalyzer, XUnitVerifier>
+    [Fact]
+    public async Task WhenCorrectName_Ignores()
     {
-        [Fact]
-        public async Task WhenCorrectName_Ignores()
-        {
-            TestCode = "public class CustomException : System.Exception { }";
+        TestCode = "public class CustomException : System.Exception { }";
 
-            ExpectedDiagnostics.Clear();
+        ExpectedDiagnostics.Clear();
 
-            await RunAsync();
-        }
+        await RunAsync();
+    }
 
-        [Fact]
-        public async Task WhenInconsistentName_ShowsWarning()
-        {
-            TestCode = "public class CustomError : System.Exception { }";
+    [Fact]
+    public async Task WhenInconsistentName_ShowsWarning()
+    {
+        TestCode = "public class CustomError : System.Exception { }";
 
-            ExpectedDiagnostics.Add(
-                new DiagnosticResult(Descriptors.Pg0001ExceptionNameFormat.Id, DiagnosticSeverity.Warning)
-                    .WithMessage("CustomError class name should end with Exception")
-                    .WithSpan(1, 14, 1, 25)
-            );
+        ExpectedDiagnostics.Add(
+            new DiagnosticResult(Descriptors.Pg0001ExceptionNameFormat.Id, DiagnosticSeverity.Warning)
+                .WithMessage("CustomError class name should end with Exception")
+                .WithSpan(1, 14, 1, 25)
+        );
 
-            await RunAsync();
-        }
+        await RunAsync();
     }
 }

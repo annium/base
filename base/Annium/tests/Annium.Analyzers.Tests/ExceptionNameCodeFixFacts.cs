@@ -2,28 +2,26 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Testing;
-using Microsoft.CodeAnalysis.Testing.Verifiers;
 using Xunit;
 
-namespace Annium.Analyzers.Tests
+namespace Annium.Analyzers.Tests;
+
+public class ExceptionNameCodeFixFacts
+    : CSharpCodeFixTest<ExceptionNameAnalyzer, ExceptionNameCodeFix, DefaultVerifier>
 {
-    public class ExceptionNameCodeFixFacts
-        : CSharpCodeFixTest<ExceptionNameAnalyzer, ExceptionNameCodeFix, XUnitVerifier>
+    [Fact]
+    public async Task WhenInconsistentName_AddsExceptionPostfix()
     {
-        [Fact]
-        public async Task WhenInconsistentName_AddsExceptionPostfix()
-        {
-            TestCode = "public class CustomError : System.Exception { }";
+        TestCode = "public class CustomError : System.Exception { }";
 
-            ExpectedDiagnostics.Add(
-                new DiagnosticResult(Descriptors.Pg0001ExceptionNameFormat.Id, DiagnosticSeverity.Warning)
-                    .WithMessage("CustomError class name should end with Exception")
-                    .WithSpan(1, 14, 1, 25)
-            );
+        ExpectedDiagnostics.Add(
+            new DiagnosticResult(Descriptors.Pg0001ExceptionNameFormat.Id, DiagnosticSeverity.Warning)
+                .WithMessage("CustomError class name should end with Exception")
+                .WithSpan(1, 14, 1, 25)
+        );
 
-            FixedCode = "public class CustomErrorException : System.Exception { }";
+        FixedCode = "public class CustomErrorException : System.Exception { }";
 
-            await RunAsync();
-        }
+        await RunAsync();
     }
 }
