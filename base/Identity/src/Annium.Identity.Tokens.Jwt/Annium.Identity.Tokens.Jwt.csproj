@@ -17,6 +17,6 @@
         <ProjectReference Include="../Annium.Identity.Tokens/Annium.Identity.Tokens.csproj" />
     </ItemGroup>
     <ItemGroup>
-        <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.2.0" />
+        <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.0.2" />
     </ItemGroup>
 </Project>

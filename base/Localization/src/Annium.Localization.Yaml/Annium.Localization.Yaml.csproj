@@ -15,6 +15,6 @@
         <ProjectReference Include="../Annium.Localization.Abstractions/Annium.Localization.Abstractions.csproj" />
     </ItemGroup>
     <ItemGroup>
-        <PackageReference Include="YamlDotNet" Version="15.1.0" />
+        <PackageReference Include="YamlDotNet" Version="16.0.0" />
     </ItemGroup>
 </Project>
