@@ -6,6 +6,10 @@ format:
 	xx format -sc -ic
 	dotnet csharpier .
 
+format-full: format
+	dotnet format style
+	dotnet format analyzers
+
 update:
 	xx update all -sc -ic
 
