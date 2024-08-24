@@ -53,7 +53,7 @@ internal class TypeManagerInstance : ITypeManager, ILogSubject
     }
 
     /// <summary>
-    /// Returns all direct implementations of <see cref="baseType"/>.
+    /// Returns all direct implementations of base type
     /// </summary>
     /// <param name="baseType"></param>
     /// <returns></returns>
@@ -257,7 +257,7 @@ internal class TypeManagerInstance : ITypeManager, ILogSubject
     }
 
     /// <summary>
-    /// Returns all direct implementations of <see cref="baseType"/>.
+    /// Returns all direct implementations of base type.
     /// </summary>
     /// <param name="baseType"></param>
     /// <returns></returns>
