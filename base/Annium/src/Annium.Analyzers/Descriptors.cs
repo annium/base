@@ -8,7 +8,7 @@ internal static class Descriptors
         new(
             id: "LOG0001",
             title: "Log message template must be constant string",
-            messageFormat: "Call message template is non-constant: {0}",
+            messageFormat: "Call message template is non-constant",
             category: "Logging",
             defaultSeverity: DiagnosticSeverity.Warning,
             isEnabledByDefault: true

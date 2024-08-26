@@ -207,7 +207,7 @@ internal abstract class ExecutorBase : IExecutor, ILogSubject
         {
             if (_state is State.Stopped or State.Disposed)
             {
-                this.Trace($"Executor is already {_state}");
+                this.Trace("Executor is already {state}", _state);
                 return;
             }
 
