@@ -16,7 +16,7 @@ public class ExceptionNameCodeFix : CodeFixProvider
 
     public override FixAllProvider GetFixAllProvider()
     {
-        return WellKnownFixAllProviders.BatchFixer;
+        return null!;
     }
 
     public override async Task RegisterCodeFixesAsync(CodeFixContext context)

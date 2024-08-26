@@ -6,12 +6,12 @@ using Xunit;
 
 namespace Annium.Analyzers.Tests;
 
-public class ExceptionNameAnalyzerFacts : CSharpAnalyzerTest<ExceptionNameAnalyzer, DefaultVerifier>
+public class ExceptionNameAnalyzerTests : CSharpAnalyzerTest<ExceptionNameAnalyzer, DefaultVerifier>
 {
     [Fact]
     public async Task WhenCorrectName_Ignores()
     {
-        TestCode = "public class CustomException : System.Exception { }";
+        TestState.Sources.Add(("CustomException.cs", "public class CustomException : System.Exception { }"));
 
         ExpectedDiagnostics.Clear();
 
@@ -21,12 +21,12 @@ public class ExceptionNameAnalyzerFacts : CSharpAnalyzerTest<ExceptionNameAnalyz
     [Fact]
     public async Task WhenInconsistentName_ShowsWarning()
     {
-        TestCode = "public class CustomError : System.Exception { }";
+        TestState.Sources.Add(("CustomError.cs", "public class CustomError : System.Exception { }"));
 
         ExpectedDiagnostics.Add(
             new DiagnosticResult(Descriptors.Pg0001ExceptionNameFormat.Id, DiagnosticSeverity.Warning)
                 .WithMessage("CustomError class name should end with Exception")
-                .WithSpan(1, 14, 1, 25)
+                .WithSpan("CustomError.cs", 1, 14, 1, 25)
         );
 
         await RunAsync();
