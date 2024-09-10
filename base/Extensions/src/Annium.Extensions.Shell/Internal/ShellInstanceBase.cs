@@ -1,7 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,24 +9,24 @@ using Annium.Logging;
 
 namespace Annium.Extensions.Shell.Internal;
 
-internal class ShellInstance : IShellInstance, ILogSubject
+internal abstract class ShellInstanceBase : IShellInstance, ILogSubject
 {
     public ILogger Logger { get; }
-    private readonly object _consoleLock = new();
-    private readonly string _cmd;
-    private readonly ProcessStartInfo _startInfo;
+    private static readonly object _consoleLock = new();
+    protected readonly IReadOnlyList<string> Cmd;
+    protected readonly ProcessStartInfo StartInfo;
     private bool _pipe;
 
-    public ShellInstance(string cmd, ILogger logger)
+    protected ShellInstanceBase(IReadOnlyList<string> cmd, ILogger logger)
     {
-        _cmd = cmd;
+        Cmd = cmd;
         Logger = logger;
-        _startInfo = new ProcessStartInfo();
+        StartInfo = new ProcessStartInfo();
     }
 
     public IShellInstance Configure(Action<ProcessStartInfo> configure)
     {
-        configure(_startInfo);
+        configure(StartInfo);
 
         return this;
     }
@@ -64,28 +64,7 @@ internal class ShellInstance : IShellInstance, ILogSubject
         return new ShellAsyncResult(process.StandardInput, process.StandardOutput, process.StandardError, result);
     }
 
-    private Process GetProcess()
-    {
-        var process = new Process { EnableRaisingEvents = true };
-
-        process.StartInfo = _startInfo;
-        process.StartInfo.UseShellExecute = false;
-        process.StartInfo.RedirectStandardInput = true;
-        process.StartInfo.RedirectStandardOutput = true;
-        process.StartInfo.RedirectStandardError = true;
-
-        var args = _cmd.Split(' ');
-        process.StartInfo.FileName = args[0];
-        process.StartInfo.Arguments = string.Join(" ", args.Skip(1));
-
-        this.Trace<string, string>(
-            "shell: {fileName} {arguments}",
-            process.StartInfo.FileName,
-            process.StartInfo.Arguments
-        );
-
-        return process;
-    }
+    protected abstract Process GetProcess();
 
     private TaskCompletionSource<ShellResult> StartProcess(Process process, CancellationToken ct)
     {

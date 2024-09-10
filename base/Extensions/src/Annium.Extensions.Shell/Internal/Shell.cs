@@ -1,23 +1,15 @@
 using System;
-using System.Linq;
-using Annium.Logging;
 
 namespace Annium.Extensions.Shell.Internal;
 
-internal class Shell : IShell
+internal class Shell(Func<string[], IShellInstance> getShellInstance) : IShell
 {
-    private readonly ILogger _logger;
-
-    public Shell(ILogger logger)
+    public IShellInstance Cmd(string command)
     {
-        _logger = logger;
-    }
-
-    public IShellInstance Cmd(params string[] command)
-    {
-        if (command.Any(string.IsNullOrWhiteSpace))
+        var args = command.Split(' ', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+        if (args.Length == 0)
             throw new InvalidOperationException("Shell command must be non-empty");
 
-        return new ShellInstance(string.Join(' ', command), _logger);
+        return getShellInstance(args);
     }
 }
