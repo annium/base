@@ -7,7 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Annium.Logging;
 
-namespace Annium.Extensions.Shell;
+namespace Annium.Extensions.Shell.Internal;
 
 internal class ShellInstance : IShellInstance, ILogSubject
 {

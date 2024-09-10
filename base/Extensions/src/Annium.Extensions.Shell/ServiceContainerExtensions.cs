@@ -1,4 +1,5 @@
 using Annium.Extensions.Shell;
+using Annium.Extensions.Shell.Internal;
 
 // ReSharper disable once CheckNamespace
 namespace Annium.Core.DependencyInjection;

@@ -2,7 +2,7 @@ using System;
 using System.Linq;
 using Annium.Logging;
 
-namespace Annium.Extensions.Shell;
+namespace Annium.Extensions.Shell.Internal;
 
 internal class Shell : IShell
 {
