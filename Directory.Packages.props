@@ -7,7 +7,7 @@
         <PackageVersion Include="Ben.Demystifier" Version="0.4.1" />
         <PackageVersion Include="BenchmarkDotNet" Version="0.14.0" />
         <PackageVersion Include="coverlet.collector" Version="6.0.2" />
-        <PackageVersion Include="MessagePack" Version="2.5.172" />
+        <PackageVersion Include="MessagePack" Version="2.5.187" />
         <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing.XUnit" Version="1.1.2" />
         <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.CodeFix.Testing.XUnit" Version="1.1.2" />
         <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.10.0" />
@@ -27,7 +27,7 @@
         <PackageVersion Include="System.IdentityModel.Tokens.Jwt" Version="8.0.2" />
         <PackageVersion Include="System.Reactive" Version="6.0.1" />
         <PackageVersion Include="System.Runtime.Loader" Version="4.3.0" />
-        <PackageVersion Include="System.Text.Json" Version="8.0.4" />
+        <PackageVersion Include="System.Text.Json" Version="8.0.5" />
         <PackageVersion Include="System.Threading.Channels" Version="8.0.0" />
         <PackageVersion Include="xunit" Version="2.9.0" />
         <PackageVersion Include="xunit.abstractions" Version="2.0.3" />

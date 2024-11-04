@@ -9,18 +9,24 @@ namespace Annium.Core.DependencyInjection;
 
 public static class ServiceContainerExtensions
 {
-    public static IServiceCollection AddShell(this IServiceCollection services)
+    public static IServiceContainer AddShell(this IServiceContainer services)
     {
-        services.AddSingleton<IShell, Shell>();
+        services.Add<IShell, Shell>().Singleton();
 
         if (OperatingSystem.IsWindows())
-            services.AddSingleton<Func<string[], IShellInstance>>(sp =>
-                cmd => new WindowsShellInstance(cmd, sp.GetRequiredService<ILogger>())
-            );
+            services
+                .Add<Func<string[], IShellInstance>>(sp =>
+                    cmd => new WindowsShellInstance(cmd, sp.GetRequiredService<ILogger>())
+                )
+                .AsSelf()
+                .Singleton();
         else
-            services.AddSingleton<Func<string[], IShellInstance>>(sp =>
-                cmd => new UnixShellInstance(cmd, sp.GetRequiredService<ILogger>())
-            );
+            services
+                .Add<Func<string[], IShellInstance>>(sp =>
+                    cmd => new UnixShellInstance(cmd, sp.GetRequiredService<ILogger>())
+                )
+                .AsSelf()
+                .Singleton();
 
         return services;
     }
