@@ -29,7 +29,7 @@ internal class DefaultConnectionMonitor : ConnectionMonitorBase
         _socket.OnBinaryReceived += HandleOnReceived;
 
         this.Trace("start timer");
-        _timer = Timers.Async(HandlePingPong, _options.PingInterval, _options.PingInterval, Logger);
+        _timer = Timers.Async(HandlePingPongAsync, _options.PingInterval, _options.PingInterval, Logger);
 
         this.Trace("start stopwatch");
         _stopwatch.Restart();
@@ -53,7 +53,7 @@ internal class DefaultConnectionMonitor : ConnectionMonitorBase
         this.Trace("done");
     }
 
-    private async ValueTask HandlePingPong()
+    private async ValueTask HandlePingPongAsync()
     {
         this.Trace("start");
 

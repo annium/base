@@ -26,7 +26,7 @@ public static class ConfigurationContainerExtensions
         return container;
     }
 
-    public static async Task<TContainer> AddRemoteYaml<TContainer>(
+    public static async Task<TContainer> AddRemoteYamlAsync<TContainer>(
         this TContainer container,
         string uri,
         bool optional = false

@@ -18,12 +18,16 @@ public static class Timers
         return new SyncTimer<T>(state, handler, dueTime, period, logger);
     }
 
+#pragma warning disable VSTHRD200
     public static ISequentialTimer Async(Func<ValueTask> handler, int dueTime, int period, ILogger logger)
+#pragma warning restore VSTHRD200
     {
         return new AsyncTimer(handler, dueTime, period, logger);
     }
 
+#pragma warning disable VSTHRD200
     public static ISequentialTimer Async<T>(
+#pragma warning restore VSTHRD200
         T state,
         Func<T, ValueTask> handler,
         int dueTime,

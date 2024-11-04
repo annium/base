@@ -64,7 +64,7 @@ internal class Server : IServer, ILogSubject
 
             this.Trace("closed and dispose socket (server is already stopping)");
             socket.Close();
-            socket.Dispose();
+            await socket.DisposeAsync();
         }
 
         // when cancelled - await connections processing and stop listener
@@ -94,7 +94,7 @@ internal class Server : IServer, ILogSubject
                     this.Trace("socket is not connected already");
 
                 this.Trace("dispose socket");
-                socket.Dispose();
+                await socket.DisposeAsync();
             }
         };
 }

@@ -103,7 +103,8 @@ public class ClientSocket : IClientSocket
             {
                 this.Trace("fire disconnected");
                 OnDisconnected(SocketCloseStatus.ClosedLocal);
-            });
+            })
+            .GetAwaiter();
 
         this.Trace("done");
     }
@@ -143,7 +144,8 @@ public class ClientSocket : IClientSocket
                 ConnectPrivate(config);
 
                 this.Trace("done");
-            });
+            })
+            .GetAwaiter();
     }
 
     private void ConnectPrivate(ConnectionConfig config)
@@ -169,7 +171,8 @@ public class ClientSocket : IClientSocket
         _connectionCts = cts;
         _socket
             .ConnectAsync(config.Endpoint, config.AuthOptions, cts.Token)
-            .ContinueWith(HandleConnected, config, CancellationToken.None);
+            .ContinueWith(HandleConnected, config, CancellationToken.None)
+            .GetAwaiter();
 
         this.Trace("done");
     }
@@ -181,6 +184,7 @@ public class ClientSocket : IClientSocket
         if (task.Exception is not null)
             this.Error(task.Exception);
 
+#pragma warning disable VSTHRD002
         lock (_locker)
         {
             if (_status is Status.Connected or Status.Disconnected)
@@ -204,9 +208,10 @@ public class ClientSocket : IClientSocket
             ReconnectPrivate(config, new SocketCloseResult(SocketCloseStatus.Error, task.Result));
             return;
         }
+#pragma warning restore VSTHRD002
 
         this.Trace("subscribe to IsClosed");
-        _socket.IsClosed.ContinueWith(HandleClosed, CancellationToken.None);
+        _socket.IsClosed.ContinueWith(HandleClosed, CancellationToken.None).GetAwaiter();
 
         this.Trace("start monitor");
         _connectionMonitor.Start();
@@ -233,7 +238,7 @@ public class ClientSocket : IClientSocket
         }
 
         this.Trace("disconnect managed socket");
-        _socket.DisconnectAsync();
+        _socket.DisconnectAsync().GetAwaiter();
 
         this.Trace("done");
     }
@@ -256,7 +261,9 @@ public class ClientSocket : IClientSocket
             SetStatus(Status.Connecting);
         }
 
+#pragma warning disable VSTHRD002
         ReconnectPrivate(Config, task.Result);
+#pragma warning restore VSTHRD002
 
         this.Trace("done");
     }

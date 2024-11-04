@@ -25,7 +25,7 @@ public class ObjectPoolTests
 
         // act
         await Run(pool);
-        pool.Dispose();
+        await pool.DisposeAsync();
 
         // assert
         // as eager - all workers Created
@@ -45,7 +45,7 @@ public class ObjectPoolTests
 
         // act
         await Run(pool);
-        pool.Dispose();
+        await pool.DisposeAsync();
 
         // assert
         // all job is done

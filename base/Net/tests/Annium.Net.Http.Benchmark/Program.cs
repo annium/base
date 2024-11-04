@@ -32,4 +32,6 @@ var config = new ManualConfig()
 BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args, config);
 
 cts.Cancel();
+#pragma warning disable VSTHRD003
 await serverTask;
+#pragma warning restore VSTHRD003

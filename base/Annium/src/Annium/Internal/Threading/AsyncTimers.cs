@@ -20,7 +20,7 @@ internal class AsyncTimer<T> : AsyncTimerBase
         Timer = new Timer(Callback, null, dueTime, period);
     }
 
-    protected override ValueTask Handle()
+    protected override ValueTask HandleAsync()
     {
         return _handler(_state);
     }
@@ -37,7 +37,7 @@ internal class AsyncTimer : AsyncTimerBase
         Timer = new Timer(Callback, null, dueTime, period);
     }
 
-    protected override ValueTask Handle()
+    protected override ValueTask HandleAsync()
     {
         return _handler();
     }
@@ -70,9 +70,11 @@ internal abstract class AsyncTimerBase : ISequentialTimer, ILogSubject
         return Timer.Change(dueTime, period);
     }
 
-    protected abstract ValueTask Handle();
+    protected abstract ValueTask HandleAsync();
 
+#pragma warning disable VSTHRD100
     protected async void Callback(object? _)
+#pragma warning restore VSTHRD100
     {
         if (Interlocked.CompareExchange(ref _isHandling, 1, 0) == 1)
         {
@@ -81,7 +83,7 @@ internal abstract class AsyncTimerBase : ISequentialTimer, ILogSubject
 
         try
         {
-            await Handle();
+            await HandleAsync();
         }
         catch (Exception e)
         {

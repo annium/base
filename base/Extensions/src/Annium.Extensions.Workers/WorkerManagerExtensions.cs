@@ -8,9 +8,9 @@ public static class WorkerManagerExtensions
         where TData : IEquatable<TData>
     {
         if (isActive)
-            manager.StartAsync(key);
+            manager.StartAsync(key).GetAwaiter();
         else
-            manager.StopAsync(key);
+            manager.StopAsync(key).GetAwaiter();
     }
 
     public static void SetStateWithKeyUpdate<TData>(
@@ -25,9 +25,9 @@ public static class WorkerManagerExtensions
             manager.SetState(newKey, isActive);
         else
         {
-            manager.StopAsync(oldKey);
+            manager.StopAsync(oldKey).GetAwaiter();
             if (isActive)
-                manager.StartAsync(newKey);
+                manager.StartAsync(newKey).GetAwaiter();
         }
     }
 }

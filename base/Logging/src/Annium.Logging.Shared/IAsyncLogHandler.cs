@@ -6,5 +6,5 @@ namespace Annium.Logging.Shared;
 public interface IAsyncLogHandler<TContext>
     where TContext : class
 {
-    ValueTask Handle(IReadOnlyCollection<LogMessage<TContext>> messages);
+    ValueTask HandleAsync(IReadOnlyCollection<LogMessage<TContext>> messages);
 }

@@ -33,7 +33,7 @@ public class Benchmarks
     }
 
     [Benchmark]
-    public async Task Params()
+    public async Task ParamsAsync()
     {
         for (var i = 0; i < TotalRequests; i++)
         {
@@ -47,7 +47,7 @@ public class Benchmarks
     }
 
     [Benchmark]
-    public async Task Upload()
+    public async Task UploadAsync()
     {
         for (var i = 0; i < TotalRequests; i++)
         {
@@ -62,7 +62,7 @@ public class Benchmarks
     }
 
     [Benchmark]
-    public async Task Download()
+    public async Task DownloadAsync()
     {
         for (var i = 0; i < TotalRequests; i++)
         {

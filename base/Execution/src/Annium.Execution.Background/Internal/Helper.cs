@@ -8,7 +8,7 @@ namespace Annium.Execution.Background.Internal;
 internal static class Helper
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Task RunTaskInBackground(Delegate task, CancellationToken ct) =>
+    public static Task RunTaskInBackgroundAsync(Delegate task, CancellationToken ct) =>
         task switch
         {
             Action execute => Task.Run(execute, CancellationToken.None),
@@ -25,7 +25,7 @@ internal static class Helper
         };
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static async ValueTask RunTaskInForeground(Delegate task, CancellationToken ct)
+    public static async ValueTask RunTaskInForegroundAsync(Delegate task, CancellationToken ct)
     {
         switch (task)
         {

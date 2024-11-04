@@ -26,7 +26,7 @@ public static class ConfigurationContainerExtensions
         return container;
     }
 
-    public static async Task<TContainer> AddRemoteJson<TContainer>(
+    public static async Task<TContainer> AddRemoteJsonAsync<TContainer>(
         this TContainer container,
         string uri,
         bool optional = false

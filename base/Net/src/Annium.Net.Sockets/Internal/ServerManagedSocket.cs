@@ -40,7 +40,7 @@ internal class ServerManagedSocket : IServerManagedSocket, ILogSubject
         this.Trace("done");
     }
 
-    public Task DisconnectAsync()
+    public async Task DisconnectAsync()
     {
         this.Trace("start");
 
@@ -50,7 +50,7 @@ internal class ServerManagedSocket : IServerManagedSocket, ILogSubject
         try
         {
             this.Trace("dispose socket");
-            _socket.Dispose();
+            await _socket.DisposeAsync();
 
             this.Trace("close stream");
             _stream.Close();
@@ -61,8 +61,6 @@ internal class ServerManagedSocket : IServerManagedSocket, ILogSubject
         }
 
         this.Trace("done");
-
-        return Task.CompletedTask;
     }
 
     public ValueTask<SocketSendStatus> SendAsync(ReadOnlyMemory<byte> data, CancellationToken ct = default)
@@ -83,7 +81,9 @@ internal class ServerManagedSocket : IServerManagedSocket, ILogSubject
 
         this.Trace("done");
 
+#pragma warning disable VSTHRD002
         return task.Result;
+#pragma warning restore VSTHRD002
     }
 
     private void HandleOnReceived(ReadOnlyMemory<byte> data)

@@ -70,7 +70,7 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
         var message = "demo"u8.ToArray();
 
         this.Trace("run server");
-        await using var _ = _runServer(async (serverSocket, ct) => await serverSocket.WhenDisconnected(ct));
+        await using var _ = _runServer(async (serverSocket, ct) => await serverSocket.WhenDisconnectedAsync(ct));
 
         this.Trace("connect");
         await ConnectAsync();
@@ -104,7 +104,7 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
             async (serverSocket, ct) =>
             {
                 this.Trace("send signal to client");
-                var disconnectionTask = serverSocket.WhenDisconnected(ct);
+                var disconnectionTask = serverSocket.WhenDisconnectedAsync(ct);
                 serverConnectionTcs.SetResult();
                 await disconnectionTask;
             }
@@ -148,7 +148,9 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
             async (serverSocket, _) =>
             {
                 this.Trace("wait until client connected");
+#pragma warning disable VSTHRD003
                 await clientConnectionTcs.Task;
+#pragma warning restore VSTHRD003
 
                 this.Trace("disconnect server socket");
                 serverSocket.Disconnect();
@@ -156,7 +158,7 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
         );
 
         this.Trace("connect");
-        var disconnectionTask = ClientSocket.WhenDisconnected();
+        var disconnectionTask = ClientSocket.WhenDisconnectedAsync();
         await ConnectAsync();
 
         this.Trace("set client connection tcs");
@@ -198,7 +200,7 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
                 this.Trace("server subscribed to messages");
 
                 this.Trace("send signal to client");
-                var disconnectionTask = serverSocket.WhenDisconnected(ct);
+                var disconnectionTask = serverSocket.WhenDisconnectedAsync(ct);
                 serverConnectionTcs.TrySetResult();
                 await disconnectionTask;
 
@@ -220,7 +222,7 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
         binaryResult.Is(SocketSendStatus.Ok);
 
         this.Trace("assert message is echoed back");
-        await Expect.To(() => _messages.Has(1));
+        await Expect.ToAsync(() => _messages.Has(1));
 
         this.Trace("verify messages are valid");
         _messages.At(0).IsEqual(message);
@@ -250,7 +252,7 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
                 this.Trace("server subscribed to messages");
 
                 this.Trace("send signal to client");
-                var disconnectionTask = serverSocket.WhenDisconnected(ct);
+                var disconnectionTask = serverSocket.WhenDisconnectedAsync(ct);
                 serverConnectionTcs.TrySetResult();
                 await disconnectionTask;
 
@@ -272,7 +274,7 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
         result.Is(SocketSendStatus.Ok);
 
         this.Trace("assert message arrived");
-        await Expect.To(() => _messages.Has(1));
+        await Expect.ToAsync(() => _messages.Has(1));
 
         this.Trace("verify messages are valid");
         _messages.At(0).IsEqual(message);
@@ -296,7 +298,7 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
         result.Is(SocketSendStatus.Ok);
 
         this.Trace("assert message arrived");
-        await Expect.To(() => _messages.Has(1));
+        await Expect.ToAsync(() => _messages.Has(1));
 
         this.Trace("verify messages are valid");
         _messages.At(0).IsEqual(message);
@@ -337,7 +339,9 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
 
                 this.Trace("sending messages complete");
 
+#pragma warning disable VSTHRD003
                 await clientTcs.Task;
+#pragma warning restore VSTHRD003
             }
         );
 
@@ -347,7 +351,7 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
 
         // assert
         this.Trace("assert data arrived");
-        await Expect.To(() => _messages.Has(messages.Count));
+        await Expect.ToAsync(() => _messages.Has(messages.Count));
 
         this.Trace("verify messages are valid");
         _messages.IsEqual(messages);
@@ -387,18 +391,20 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
 
                 this.Trace("sending messages complete");
 
+#pragma warning disable VSTHRD003
                 await clientTcs.Task;
+#pragma warning restore VSTHRD003
             }
         );
 
         // act
         this.Trace("connect");
-        var disconnectionTask = ClientSocket.WhenDisconnected();
+        var disconnectionTask = ClientSocket.WhenDisconnectedAsync();
         await ConnectAsync();
 
         // assert
         this.Trace("assert data arrived");
-        await Expect.To(() => _messages.Has(messages.Count));
+        await Expect.ToAsync(() => _messages.Has(messages.Count));
 
         this.Trace("verify messages are valid");
         _messages.IsEqual(messages);
@@ -467,7 +473,9 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
 
                 // await until 3-rd connection is handled
                 this.Trace("wait for signal from client");
+#pragma warning disable VSTHRD003
                 await clientTcs.Task;
+#pragma warning restore VSTHRD003
             }
         );
 
@@ -483,7 +491,7 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
 
         // assert
         this.Trace("assert data arrived");
-        await Expect.To(() => _messages.Has(messages.Count));
+        await Expect.ToAsync(() => _messages.Has(messages.Count));
 
         this.Trace("verify messages are valid");
         _messages.IsEqual(messages);
@@ -526,7 +534,7 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
             {
                 this.Trace("start, await until disconnected");
 
-                await serverSocket.WhenDisconnected(ct);
+                await serverSocket.WhenDisconnectedAsync(ct);
 
                 this.Trace("done, disconnected");
             }

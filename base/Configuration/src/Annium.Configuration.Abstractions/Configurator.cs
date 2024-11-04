@@ -16,12 +16,12 @@ public static class Configurator
         return Get<T>(container);
     }
 
-    public static async Task<T> Get<T>(Func<IConfigurationContainer, Task> configure)
+    public static async Task<T> GetAsync<T>(Func<IConfigurationContainer, Task> configure)
         where T : class, new()
     {
         var container = GetServices<T>();
 
-        await container.AddConfiguration<T>(configure);
+        await container.AddConfigurationAsync<T>(configure);
 
         return Get<T>(container);
     }

@@ -15,7 +15,7 @@ public abstract class BufferingLogHandler<TContext> : IAsyncLogHandler<TContext>
         _cfg = cfg;
     }
 
-    public async ValueTask Handle(IReadOnlyCollection<LogMessage<TContext>> messages)
+    public async ValueTask HandleAsync(IReadOnlyCollection<LogMessage<TContext>> messages)
     {
         var events = new List<LogMessage<TContext>>(messages);
 

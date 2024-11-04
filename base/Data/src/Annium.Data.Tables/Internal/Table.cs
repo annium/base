@@ -83,7 +83,7 @@ internal sealed class Table<T> : ITable<T>, ILogSubject
         await _observableCts.CancelAsync();
 
         this.Trace("await observable completion");
-        await _observable.WhenCompleted(Logger);
+        await _observable.WhenCompletedAsync(Logger);
 
         this.Trace("clear table");
         lock (_dataLocker)

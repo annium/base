@@ -43,7 +43,7 @@ internal class StaticObservableInstance<T> : ObservableInstanceBase<T>, IObserva
     private void Start()
     {
         if (_isAsync)
-            Task.Run(RunAsync, _ct);
+            Task.Run(RunAsync, _ct).GetAwaiter();
         else
             RunAsync().GetAwaiter();
     }

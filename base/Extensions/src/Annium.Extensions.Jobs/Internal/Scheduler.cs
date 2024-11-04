@@ -60,7 +60,7 @@ internal class Scheduler : IScheduler, IAsyncDisposable, ILogSubject
         _isDisposed = true;
 
         this.Trace("cancel run");
-        _cts.Cancel();
+        await _cts.CancelAsync();
         _cts.Dispose();
 
         this.Trace("await executor");

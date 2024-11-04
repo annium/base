@@ -222,7 +222,7 @@ public class ClientServerManagedSocketTests : TestBase, IAsyncLifetime
         textResult.Is(SocketSendStatus.Ok);
 
         this.Trace("assert message is echoed back");
-        await Expect.To(() => _messages.Has(1));
+        await Expect.ToAsync(() => _messages.Has(1));
 
         this.Trace("verify messages are valid");
         _messages.At(0).IsEqual(message);
@@ -273,7 +273,7 @@ public class ClientServerManagedSocketTests : TestBase, IAsyncLifetime
         result.Is(SocketSendStatus.Ok);
 
         this.Trace("assert message arrived");
-        await Expect.To(() => _messages.Has(1));
+        await Expect.ToAsync(() => _messages.Has(1));
 
         this.Trace("verify messages are valid");
         _messages.At(0).IsEqual(message);
@@ -295,7 +295,7 @@ public class ClientServerManagedSocketTests : TestBase, IAsyncLifetime
         result.Is(SocketSendStatus.Ok);
 
         this.Trace("assert message arrived");
-        await Expect.To(() => _messages.Has(1));
+        await Expect.ToAsync(() => _messages.Has(1));
 
         this.Trace("verify messages are valid");
         _messages.At(0).IsEqual(message);
@@ -328,7 +328,9 @@ public class ClientServerManagedSocketTests : TestBase, IAsyncLifetime
 
         // act
         this.Trace("await closed state");
+#pragma warning disable VSTHRD003
         var result = await ClientSocket.IsClosed;
+#pragma warning restore VSTHRD003
 
         // assert
         this.Trace("assert closed local and no exception");
@@ -359,7 +361,9 @@ public class ClientServerManagedSocketTests : TestBase, IAsyncLifetime
 
         // act
         this.Trace("await closed state");
+#pragma warning disable VSTHRD003
         var result = await ClientSocket.IsClosed;
+#pragma warning restore VSTHRD003
 
         // assert
         this.Trace("assert closed local and no exception");
@@ -387,7 +391,9 @@ public class ClientServerManagedSocketTests : TestBase, IAsyncLifetime
 
         // act
         this.Trace("await closed state");
+#pragma warning disable VSTHRD003
         var result = await ClientSocket.IsClosed;
+#pragma warning restore VSTHRD003
 
         // assert
         this.Trace("assert closed remote and no exception");
@@ -428,7 +434,9 @@ public class ClientServerManagedSocketTests : TestBase, IAsyncLifetime
                 this.Trace("sending messages complete");
 
                 this.Trace("await client signal");
+#pragma warning disable VSTHRD003
                 await clientTcs.Task;
+#pragma warning restore VSTHRD003
             }
         );
 
@@ -438,7 +446,7 @@ public class ClientServerManagedSocketTests : TestBase, IAsyncLifetime
 
         // assert
         this.Trace("assert data arrived");
-        await Expect.To(() => _messages.Has(messages.Count), 1000);
+        await Expect.ToAsync(() => _messages.Has(messages.Count), 1000);
 
         this.Trace("verify messages are valid");
         _messages.IsEqual(messages);
@@ -480,7 +488,9 @@ public class ClientServerManagedSocketTests : TestBase, IAsyncLifetime
                 this.Trace("sending messages complete");
 
                 this.Trace("await client signal");
+#pragma warning disable VSTHRD003
                 await clientTcs.Task;
+#pragma warning restore VSTHRD003
             }
         );
 
@@ -490,7 +500,7 @@ public class ClientServerManagedSocketTests : TestBase, IAsyncLifetime
 
         // assert
         this.Trace("assert data arrived");
-        await Expect.To(() =>
+        await Expect.ToAsync(() =>
         {
             _messages.Has(messages.Count);
             _messages.IsEqual(messages);
@@ -500,7 +510,9 @@ public class ClientServerManagedSocketTests : TestBase, IAsyncLifetime
         clientTcs.SetResult();
 
         this.Trace("await closed state");
+#pragma warning disable VSTHRD003
         var result = await ClientSocket.IsClosed;
+#pragma warning restore VSTHRD003
 
         this.Trace("assert closed remote and no exception");
         result.Status.Is(SocketCloseStatus.ClosedRemote);

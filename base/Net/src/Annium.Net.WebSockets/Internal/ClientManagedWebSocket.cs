@@ -86,7 +86,9 @@ internal class ClientManagedWebSocket : IClientManagedWebSocket, ILogSubject
                 if (ct.IsCancellationRequested)
                 {
                     this.Trace("connection canceled, dispose");
+#pragma warning disable VSTHRD103
                     cn.Dispose();
+#pragma warning restore VSTHRD103
 
                     return null;
                 }
@@ -138,8 +140,10 @@ internal class ClientManagedWebSocket : IClientManagedWebSocket, ILogSubject
             cn.Managed.OnBinaryReceived -= HandleOnBinaryReceived;
 
             this.Trace("cancel listen cts");
+#pragma warning disable VSTHRD103
             _listenCts.Cancel();
             _listenCts.Dispose();
+#pragma warning restore VSTHRD103
         }
 
         try
@@ -158,7 +162,9 @@ internal class ClientManagedWebSocket : IClientManagedWebSocket, ILogSubject
         }
 
         this.Trace("await listen task");
+#pragma warning disable VSTHRD003
         await IsClosed;
+#pragma warning restore VSTHRD003
 
         this.Trace("done");
     }
@@ -184,6 +190,7 @@ internal class ClientManagedWebSocket : IClientManagedWebSocket, ILogSubject
         if (task.Exception is not null)
             this.Error(task.Exception);
 
+#pragma warning disable VSTHRD002
         lock (_locker)
         {
             var cn = Interlocked.Exchange(ref _cn, null);
@@ -201,6 +208,7 @@ internal class ClientManagedWebSocket : IClientManagedWebSocket, ILogSubject
         this.Trace("done");
 
         return task.Result;
+#pragma warning restore VSTHRD002
     }
 
     private void HandleOnTextReceived(ReadOnlyMemory<byte> data)

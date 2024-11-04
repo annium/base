@@ -7,7 +7,9 @@ namespace Annium.Threading.Tasks;
 
 public static class ValueTaskSet
 {
+#pragma warning disable VSTHRD200
     public static async ValueTask<T[]> WhenAll<T>(IReadOnlyList<ValueTask<T>> tasks)
+#pragma warning restore VSTHRD200
     {
         List<Exception>? exceptions = null;
 
@@ -26,7 +28,9 @@ public static class ValueTaskSet
         return exceptions is null ? results : throw new AggregateException(exceptions);
     }
 
+#pragma warning disable VSTHRD200
     public static async ValueTask WhenAll(IReadOnlyList<ValueTask> tasks)
+#pragma warning restore VSTHRD200
     {
         List<Exception>? exceptions = null;
 
@@ -45,9 +49,11 @@ public static class ValueTaskSet
             throw new AggregateException(exceptions);
     }
 
+#pragma warning disable VSTHRD200
     public static ValueTask<T[]> WhenAll<T>(IEnumerable<ValueTask<T>> tasks) => WhenAll(tasks.ToList());
 
     public static ValueTask WhenAll(IEnumerable<ValueTask> tasks) => WhenAll(tasks.ToList());
 
     public static ValueTask WhenAll(params ValueTask[] tasks) => WhenAll(tasks as IReadOnlyList<ValueTask>);
+#pragma warning restore VSTHRD200
 }

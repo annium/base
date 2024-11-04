@@ -108,13 +108,15 @@ internal abstract class ShellInstanceBase : IShellInstance, ILogSubject
                     lock (_consoleLock)
                         PipeOut(process.StandardOutput);
                 })
-                .ConfigureAwait(false);
+                .ConfigureAwait(false)
+                .GetAwaiter();
             Task.Run(() =>
                 {
                     lock (_consoleLock)
                         PipeOut(process.StandardError);
                 })
-                .ConfigureAwait(false);
+                .ConfigureAwait(false)
+                .GetAwaiter();
         }
 
         return tcs;

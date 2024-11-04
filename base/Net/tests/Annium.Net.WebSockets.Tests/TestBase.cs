@@ -41,10 +41,12 @@ public abstract class TestBase : Testing.TestBase
             await Task.Delay(5, CancellationToken.None);
 
             this.Trace("cancel server run");
-            cts.Cancel();
+            await cts.CancelAsync();
 
             this.Trace("await server task");
+#pragma warning disable VSTHRD003
             await serverTask;
+#pragma warning restore VSTHRD003
 
             this.Trace("done");
         });

@@ -50,7 +50,7 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
         const string message = "demo";
 
         this.Trace("run server");
-        await using var _ = RunServer(async serverSocket => await serverSocket.WhenDisconnected());
+        await using var _ = RunServer(async serverSocket => await serverSocket.WhenDisconnectedAsync());
 
         this.Trace("connect");
         await ConnectAsync();
@@ -79,7 +79,7 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
         await using var _ = RunServer(async serverSocket =>
         {
             this.Trace("send signal to client");
-            var disconnectionTask = serverSocket.WhenDisconnected();
+            var disconnectionTask = serverSocket.WhenDisconnectedAsync();
             serverConnectionTcs.SetResult();
             await disconnectionTask;
         });
@@ -122,7 +122,7 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
         });
 
         this.Trace("connect");
-        var disconnectionTask = ClientSocket.WhenDisconnected();
+        var disconnectionTask = ClientSocket.WhenDisconnectedAsync();
         await ConnectAsync();
 
         this.Trace("await until disconnected");
@@ -162,7 +162,7 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
             this.Trace("server subscribed to binary");
 
             this.Trace("send signal to client");
-            var disconnectionTask = serverSocket.WhenDisconnected();
+            var disconnectionTask = serverSocket.WhenDisconnectedAsync();
             serverConnectionTcs.TrySetResult();
             await disconnectionTask;
 
@@ -184,7 +184,7 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
 
         this.Trace("assert text message arrived");
         var expectedTexts = new[] { text };
-        await Expect.To(() => _texts.IsEqual(expectedTexts));
+        await Expect.ToAsync(() => _texts.IsEqual(expectedTexts));
 
         this.Trace("send binary");
         var binaryResult = await SendBinaryAsync(binary);
@@ -194,7 +194,7 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
 
         this.Trace("assert binary message arrived");
         var expectedBinaries = new[] { binary };
-        await Expect.To(() => _binaries.IsEqual(expectedBinaries));
+        await Expect.ToAsync(() => _binaries.IsEqual(expectedBinaries));
 
         this.Trace("done");
     }
@@ -222,7 +222,7 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
             this.Trace("server subscribed to binary");
 
             this.Trace("send signal to client");
-            var disconnectionTask = serverSocket.WhenDisconnected();
+            var disconnectionTask = serverSocket.WhenDisconnectedAsync();
             serverConnectionTcs.TrySetResult();
             await disconnectionTask;
 
@@ -244,7 +244,7 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
 
         this.Trace("assert text message arrived");
         var expectedTexts = new[] { text };
-        await Expect.To(() => _texts.IsEqual(expectedTexts));
+        await Expect.ToAsync(() => _texts.IsEqual(expectedTexts));
 
         this.Trace("disconnect");
         await DisconnectAsync();
@@ -265,7 +265,7 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
 
         this.Trace("assert binary message arrived");
         var expectedBinaries = new[] { binary };
-        await Expect.To(() => _binaries.IsEqual(expectedBinaries));
+        await Expect.ToAsync(() => _binaries.IsEqual(expectedBinaries));
 
         this.Trace("disconnect");
         await DisconnectAsync();
@@ -295,7 +295,9 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
 
             this.Trace("done sending messages");
 
+#pragma warning disable VSTHRD003
             await serverStopTcs.Task;
+#pragma warning restore VSTHRD003
         });
 
         // act
@@ -304,7 +306,7 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
 
         // assert
         this.Trace("assert text message arrived");
-        await Expect.To(() => _texts.IsEqual(messages), 1000);
+        await Expect.ToAsync(() => _texts.IsEqual(messages), 1000);
         serverStopTcs.SetResult();
 
         this.Trace("done");
@@ -332,17 +334,19 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
 
             this.Trace("done sending messages");
 
+#pragma warning disable VSTHRD003
             await serverStopTcs.Task;
+#pragma warning restore VSTHRD003
         });
 
         // act
         this.Trace("connect");
-        var disconnectionTask = ClientSocket.WhenDisconnected();
+        var disconnectionTask = ClientSocket.WhenDisconnectedAsync();
         await ConnectAsync();
 
         // assert
         this.Trace("assert text message arrived");
-        await Expect.To(() => _texts.IsEqual(messages), 1000);
+        await Expect.ToAsync(() => _texts.IsEqual(messages), 1000);
         serverStopTcs.SetResult();
 
         this.Trace("disconnect");
@@ -383,20 +387,22 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
 
             this.Trace("done sending messages");
 
+#pragma warning disable VSTHRD003
             await serverStopTcs.Task;
+#pragma warning restore VSTHRD003
         });
 
         // act
         this.Trace("connect");
-        var disconnectionTask = ClientSocket.WhenDisconnected();
+        var disconnectionTask = ClientSocket.WhenDisconnectedAsync();
         await ConnectAsync();
 
         // assert
         this.Trace("assert text messages arrived");
-        await Expect.To(() => _texts.IsEqual(texts), 1000);
+        await Expect.ToAsync(() => _texts.IsEqual(texts), 1000);
 
         this.Trace("assert binary messages arrived");
-        await Expect.To(() => _binaries.IsEqual(binaries), 1000);
+        await Expect.ToAsync(() => _binaries.IsEqual(binaries), 1000);
         serverStopTcs.SetResult();
 
         this.Trace("disconnect");
@@ -461,7 +467,9 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
 
             // await until 3-rd connection is handled
             this.Trace("wait for signal from client");
+#pragma warning disable VSTHRD003
             await serverStopTcs.Task;
+#pragma warning restore VSTHRD003
         });
 
         this.Trace("set disconnect handler");
@@ -476,7 +484,7 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
 
         // assert
         this.Trace("wait for {messagesCount} messages", messages.Length);
-        await Expect.To(() => _texts.IsEqual(messages), 1000);
+        await Expect.ToAsync(() => _texts.IsEqual(messages), 1000);
 
         this.Trace("send signal to stop server");
         serverStopTcs.SetResult();

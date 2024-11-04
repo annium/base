@@ -52,12 +52,12 @@ internal class BackgroundLogScheduler<TContext> : ILogScheduler<TContext>, ILogS
         _messageWriter = channel.Writer;
         _messageReader = channel.Reader;
         _observable = ObservableExt
-            .StaticSyncInstance<LogMessage<TContext>>(Run, _observableCts.Token, VoidLogger.Instance)
+            .StaticSyncInstance<LogMessage<TContext>>(RunAsync, _observableCts.Token, VoidLogger.Instance)
             .TrackCompletion(VoidLogger.Instance);
         _subscription = _observable
             .Buffer(configuration.BufferTime, configuration.BufferCount)
             .Where(x => x.Count > 0)
-            .DoParallelAsync(async x => await handler.Handle(x.ToArray()))
+            .DoParallelAsync(async x => await handler.HandleAsync(x.ToArray()))
             .Subscribe();
     }
 
@@ -70,7 +70,7 @@ internal class BackgroundLogScheduler<TContext> : ILogScheduler<TContext>, ILogS
                 throw new InvalidOperationException("Message must have been written to channel");
     }
 
-    private async Task<Func<Task>> Run(ObserverContext<LogMessage<TContext>> ctx)
+    private async Task<Func<Task>> RunAsync(ObserverContext<LogMessage<TContext>> ctx)
     {
         this.Trace("start");
 
@@ -115,11 +115,13 @@ internal class BackgroundLogScheduler<TContext> : ILogScheduler<TContext>, ILogS
         lock (_messageWriter)
             _messageWriter.Complete();
         this.Trace("wait for reader completion");
+#pragma warning disable VSTHRD003
         await _messageReader.Completion;
+#pragma warning restore VSTHRD003
         this.Trace("cancel observable cts");
-        _observableCts.Cancel();
+        await _observableCts.CancelAsync();
         this.Trace("await observable");
-        await _observable.WhenCompleted(Logger);
+        await _observable.WhenCompletedAsync(Logger);
         this.Trace("dispose subscription");
         _subscription.Dispose();
         this.Trace("done");

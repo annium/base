@@ -25,32 +25,33 @@ public static class ChannelReaderExtensions
         var cts = new CancellationTokenSource();
         var gate = new ManualResetEventSlim();
         Task.Run(
-            async () =>
-            {
-                try
+                async () =>
                 {
-                    while (!cts.IsCancellationRequested)
+                    try
                     {
-                        while (await reader.WaitToReadAsync(cts.Token))
+                        while (!cts.IsCancellationRequested)
                         {
-                            var data = await reader.ReadAsync(cts.Token);
-                            writer.Write(data);
+                            while (await reader.WaitToReadAsync(cts.Token))
+                            {
+                                var data = await reader.ReadAsync(cts.Token);
+                                writer.Write(data);
+                            }
                         }
                     }
-                }
-                catch (OperationCanceledException) { }
-                catch (ChannelClosedException) { }
-                catch (Exception e)
-                {
-                    bridge.Error(e);
-                }
-                finally
-                {
-                    gate.Set();
-                }
-            },
-            CancellationToken.None
-        );
+                    catch (OperationCanceledException) { }
+                    catch (ChannelClosedException) { }
+                    catch (Exception e)
+                    {
+                        bridge.Error(e);
+                    }
+                    finally
+                    {
+                        gate.Set();
+                    }
+                },
+                CancellationToken.None
+            )
+            .GetAwaiter();
 
         return Disposable.Create(() =>
         {
@@ -66,7 +67,7 @@ public static class ChannelReaderExtensions
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static async Task WhenEmpty<T>(this ChannelReader<T> reader, int delay = 25)
+    public static async Task WhenEmptyAsync<T>(this ChannelReader<T> reader, int delay = 25)
     {
         while (reader.TryPeek(out _))
             await Task.Delay(delay);

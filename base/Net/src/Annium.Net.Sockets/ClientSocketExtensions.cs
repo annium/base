@@ -19,7 +19,7 @@ public static class ClientSocketExtensions
         socket.Connect(endpoint, authOptions);
     }
 
-    public static Task WhenConnected(this IClientSocket socket, CancellationToken ct = default)
+    public static Task WhenConnectedAsync(this IClientSocket socket, CancellationToken ct = default)
     {
         var tcs = new TaskCompletionSource();
 
@@ -37,7 +37,10 @@ public static class ClientSocketExtensions
         return tcs.Task.WaitAsync(ct);
     }
 
-    public static Task<SocketCloseStatus> WhenDisconnected(this IClientSocket socket, CancellationToken ct = default)
+    public static Task<SocketCloseStatus> WhenDisconnectedAsync(
+        this IClientSocket socket,
+        CancellationToken ct = default
+    )
     {
         var tcs = new TaskCompletionSource<SocketCloseStatus>();
 

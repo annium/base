@@ -14,7 +14,7 @@ public abstract class AsyncCommand<T1, T2, T3> : CommandBase
 {
     public abstract Task HandleAsync(T1 cfg1, T2 cfg2, T3 cfg3, CancellationToken ct);
 
-    public override void Process(string id, string description, string[] args, CancellationToken ct)
+    public override async Task ProcessAsync(string id, string description, string[] args, CancellationToken ct)
     {
         if (Root.ConfigurationBuilder.Build<HelpConfiguration>(args).Help)
         {
@@ -25,7 +25,6 @@ public abstract class AsyncCommand<T1, T2, T3> : CommandBase
         var cfg1 = Root.ConfigurationBuilder.Build<T1>(args);
         var cfg2 = Root.ConfigurationBuilder.Build<T2>(args);
         var cfg3 = Root.ConfigurationBuilder.Build<T3>(args);
-
-        HandleAsync(cfg1, cfg2, cfg3, ct).Await();
+        await HandleAsync(cfg1, cfg2, cfg3, ct);
     }
 }

@@ -83,7 +83,7 @@ internal abstract class ExecutorBase : IExecutor, ILogSubject
         ct.Register(Stop);
 
         this.Trace("run");
-        _runTask = Task.Run(Run, CancellationToken.None).ConfigureAwait(false);
+        _runTask = Task.Run(RunAsync, CancellationToken.None).ConfigureAwait(false);
 
         this.Trace("done");
 
@@ -107,7 +107,7 @@ internal abstract class ExecutorBase : IExecutor, ILogSubject
         }
 
         this.Trace("cancel cts");
-        Cts.Cancel();
+        await Cts.CancelAsync();
 
         this.Trace("complete task writer");
         _taskWriter.TryComplete();
@@ -116,18 +116,22 @@ internal abstract class ExecutorBase : IExecutor, ILogSubject
         await _runTask;
 
         this.Trace("wait for reader completion");
+#pragma warning disable VSTHRD003
         await _taskReader.Completion.ConfigureAwait(false);
+#pragma warning restore VSTHRD003
 
         this.Trace("try finish to ensure complete if all tasks already completed");
         TryFinish(_taskCounter);
 
         this.Trace("wait for task(s) to finish");
+#pragma warning disable VSTHRD003
         await _runTcs.Task;
+#pragma warning restore VSTHRD003
 
         this.Trace("done");
     }
 
-    protected abstract Task RunTask(Delegate task);
+    protected abstract Task RunTaskAsync(Delegate task);
 
     protected void CompleteTask(Delegate task)
     {
@@ -157,7 +161,7 @@ internal abstract class ExecutorBase : IExecutor, ILogSubject
         return false;
     }
 
-    private async Task Run()
+    private async Task RunAsync()
     {
         this.Trace("start");
 
@@ -171,7 +175,7 @@ internal abstract class ExecutorBase : IExecutor, ILogSubject
                 var task = await _taskReader.ReadAsync(Cts.Token);
 
                 this.Trace("run task {id} ({num})", task.GetFullId(), Interlocked.Increment(ref _taskCounter));
-                await RunTask(task);
+                await RunTaskAsync(task);
             }
             catch (ChannelClosedException)
             {
@@ -193,7 +197,7 @@ internal abstract class ExecutorBase : IExecutor, ILogSubject
                 break;
 
             this.Trace("run task {id} ({num})", task.GetFullId(), Interlocked.Increment(ref _taskCounter));
-            await RunTask(task);
+            await RunTaskAsync(task);
         }
 
         this.Trace("done");

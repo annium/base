@@ -10,18 +10,18 @@ internal class ParallelExecutor<TSource> : ExecutorBase
     public ParallelExecutor(ILogger logger)
         : base(logger) { }
 
-    protected override Task RunTask(Delegate task)
+    protected override Task RunTaskAsync(Delegate task)
     {
-        StartTask(task).ContinueWith(_ => CompleteTask(task));
+        StartTaskAsync(task).ContinueWith(_ => CompleteTask(task)).GetAwaiter();
 
         return Task.CompletedTask;
     }
 
-    private async Task StartTask(Delegate task)
+    private async Task StartTaskAsync(Delegate task)
     {
         try
         {
-            await Helper.RunTaskInBackground(task, Cts.Token);
+            await Helper.RunTaskInBackgroundAsync(task, Cts.Token);
         }
         catch (OperationCanceledException)
         {

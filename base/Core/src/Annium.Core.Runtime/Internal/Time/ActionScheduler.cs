@@ -17,7 +17,8 @@ internal class ActionScheduler : IActionScheduler
             {
                 if (execute)
                     handle();
-            });
+            })
+            .GetAwaiter();
 
         return () => execute = false;
     }

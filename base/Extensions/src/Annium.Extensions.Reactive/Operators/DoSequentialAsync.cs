@@ -20,7 +20,7 @@ public static class DoSequentialAsyncOperatorExtensions
                         await handle(x);
                         observer.OnNext(x);
                     }),
-                () => executor.DisposeAsync().AsTask().ContinueWith(_ => observer.OnCompleted())
+                () => executor.DisposeAsync().AsTask().ContinueWith(_ => observer.OnCompleted()).GetAwaiter()
             );
         });
     }

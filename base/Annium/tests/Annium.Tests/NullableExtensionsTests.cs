@@ -58,11 +58,13 @@ public class NullableExtensionsTests
         var validValue = Task.FromResult<string?>("data");
 
         // assert
-        Wrap.It(async () => await nullValue.NotNull())
+#pragma warning disable VSTHRD003
+        Wrap.It(async () => await nullValue.NotNullAsync())
+#pragma warning restore VSTHRD003
             .Throws<NullReferenceException>()
             .Reports($"{nameof(nullValue)} is null");
 
-        var verifiedValue = await validValue.NotNull();
+        var verifiedValue = await validValue.NotNullAsync();
         verifiedValue.Is("data");
     }
 
@@ -78,7 +80,9 @@ public class NullableExtensionsTests
             {
                 try
                 {
-                    var failedValue = await nullValue.NotNull();
+#pragma warning disable VSTHRD003
+                    var failedValue = await nullValue.NotNullAsync();
+#pragma warning restore VSTHRD003
                     return failedValue;
                 }
                 catch (AggregateException ex)
@@ -89,7 +93,7 @@ public class NullableExtensionsTests
             .Throws<NullReferenceException>()
             .Reports($"{nameof(nullValue)} is null");
 
-        var verifiedValue = await validValue.NotNull();
+        var verifiedValue = await validValue.NotNullAsync();
         verifiedValue.Is(true);
     }
 }

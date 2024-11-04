@@ -52,8 +52,8 @@ public class ChannelExtensionsTests : TestBase
         disposeCounter.Is(0);
 
         this.Trace("dispose and verify dispose callback is called");
-        disposable.Dispose();
-        await Expect.To(() => disposeCounter.Is(1));
+        await disposable.DisposeAsync();
+        await Expect.ToAsync(() => disposeCounter.Is(1));
 
         this.Trace("done");
         return;

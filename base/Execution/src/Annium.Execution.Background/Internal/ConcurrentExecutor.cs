@@ -16,19 +16,19 @@ internal class ConcurrentExecutor<TSource> : ExecutorBase
         _gate = new SemaphoreSlim(parallelism, parallelism);
     }
 
-    protected override Task RunTask(Delegate task)
+    protected override Task RunTaskAsync(Delegate task)
     {
-        StartTask(task).ContinueWith(_ => CompleteTask(task));
+        StartTaskAsync(task).ContinueWith(_ => CompleteTask(task)).GetAwaiter();
 
         return Task.CompletedTask;
     }
 
-    private async Task StartTask(Delegate task)
+    private async Task StartTaskAsync(Delegate task)
     {
         try
         {
             await _gate.WaitAsync();
-            await Helper.RunTaskInBackground(task, Cts.Token);
+            await Helper.RunTaskInBackgroundAsync(task, Cts.Token);
         }
         catch (OperationCanceledException)
         {

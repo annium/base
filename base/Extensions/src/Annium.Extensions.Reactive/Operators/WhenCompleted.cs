@@ -6,7 +6,7 @@ namespace System;
 
 public static class WhenCompletedExtensions
 {
-    public static async Task WhenCompleted<TSource>(this IObservable<TSource> source, ILogger logger)
+    public static async Task WhenCompletedAsync<TSource>(this IObservable<TSource> source, ILogger logger)
     {
         var ctx = new CompletionContext(logger);
         var tcs = new TaskCompletionSource<object?>();

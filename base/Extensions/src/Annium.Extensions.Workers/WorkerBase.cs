@@ -19,9 +19,9 @@ public abstract class WorkerBase<TKey> : IAsyncDisposable
     protected abstract ValueTask StartAsync(CancellationToken сt);
     protected abstract ValueTask StopAsync();
 
-    public ValueTask DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
-        _cts.Cancel();
-        return StopAsync();
+        await _cts.CancelAsync();
+        await StopAsync();
     }
 }

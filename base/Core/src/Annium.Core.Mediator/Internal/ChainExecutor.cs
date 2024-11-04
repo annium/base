@@ -32,7 +32,9 @@ internal static class ChainExecutor
 
         return result
             .GetType()
+#pragma warning disable VSTHRD103
             .GetProperty(nameof(Task<int>.Result))!
+#pragma warning restore VSTHRD103
             .GetGetMethod()!
             .Invoke(result, Array.Empty<object>())!;
     }

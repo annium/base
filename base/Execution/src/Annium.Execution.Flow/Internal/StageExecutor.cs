@@ -55,7 +55,7 @@ internal class StageExecutor : IStageExecutor
                 // count before stage run to include failed stage
                 i++;
 
-                await Execute(stage.Commit);
+                await ExecuteAsync(stage.Commit);
             }
             catch (Exception exception)
             {
@@ -72,7 +72,7 @@ internal class StageExecutor : IStageExecutor
         {
             try
             {
-                await Execute(stage.Rollback);
+                await ExecuteAsync(stage.Rollback);
             }
             catch (Exception exception)
             {
@@ -81,7 +81,7 @@ internal class StageExecutor : IStageExecutor
         }
     }
 
-    private static async ValueTask Execute(Delegate? task)
+    private static async ValueTask ExecuteAsync(Delegate? task)
     {
         if (task is Func<Task> commitAsync)
             await commitAsync();

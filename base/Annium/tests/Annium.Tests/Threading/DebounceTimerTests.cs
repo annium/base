@@ -104,7 +104,7 @@ public class DebounceTimerTests : TestBase
     private async Task EnsureValid(State state, int min, int max)
     {
         this.Trace("await for {min}-{max} entries in state", min, max);
-        await Expect.To(
+        await Expect.ToAsync(
             () =>
             {
                 state.Data.Count.IsGreaterOrEqual(min);

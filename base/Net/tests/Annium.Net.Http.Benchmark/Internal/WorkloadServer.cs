@@ -28,14 +28,14 @@ file class HttpHandler : IHttpHandler
 
         return path switch
         {
-            "/params" => HandleHttpParamsRequest(ctx),
-            "/upload" => HandleHttpUploadRequest(ctx),
-            "/download" => HandleHttpDownloadRequest(ctx),
+            "/params" => HandleHttpParamsRequestAsync(ctx),
+            "/upload" => HandleHttpUploadRequestAsync(ctx),
+            "/download" => HandleHttpDownloadRequestAsync(ctx),
             _ => Task.CompletedTask,
         };
     }
 
-    private static Task HandleHttpParamsRequest(HttpListenerContext ctx)
+    private static Task HandleHttpParamsRequestAsync(HttpListenerContext ctx)
     {
         ctx.Response.StatusCode = (int)HttpStatusCode.OK;
         ctx.Response.Close();
@@ -43,7 +43,7 @@ file class HttpHandler : IHttpHandler
         return Task.CompletedTask;
     }
 
-    private static Task HandleHttpUploadRequest(HttpListenerContext ctx)
+    private static Task HandleHttpUploadRequestAsync(HttpListenerContext ctx)
     {
         ctx.Response.StatusCode = (int)HttpStatusCode.OK;
         ctx.Response.Close();
@@ -51,7 +51,7 @@ file class HttpHandler : IHttpHandler
         return Task.CompletedTask;
     }
 
-    private static async Task HandleHttpDownloadRequest(HttpListenerContext ctx)
+    private static async Task HandleHttpDownloadRequestAsync(HttpListenerContext ctx)
     {
         var query = UriQuery.Parse(ctx.Request.Url.NotNull().Query);
         var size = int.Parse(query["size"]!, CultureInfo.InvariantCulture);

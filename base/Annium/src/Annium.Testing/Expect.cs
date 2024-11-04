@@ -7,7 +7,7 @@ namespace Annium.Testing;
 
 public static class Expect
 {
-    public static async Task To(Action validate, CancellationToken ct, int pollDelay = 25)
+    public static async Task ToAsync(Action validate, CancellationToken ct, int pollDelay = 25)
     {
         await Wait.UntilAsync(
             () =>
@@ -28,7 +28,7 @@ public static class Expect
         validate();
     }
 
-    public static async Task To(Func<ValueTask> validate, CancellationToken ct, int pollDelay = 25)
+    public static async Task ToAsync(Func<ValueTask> validate, CancellationToken ct, int pollDelay = 25)
     {
         await Wait.UntilAsync(
             async () =>
@@ -49,9 +49,9 @@ public static class Expect
         await validate();
     }
 
-    public static Task To(Action validate, int ms = 10_000, int pollDelay = 25) =>
-        To(validate, new CancellationTokenSource(ms).Token, pollDelay);
+    public static Task ToAsync(Action validate, int ms = 10_000, int pollDelay = 25) =>
+        ToAsync(validate, new CancellationTokenSource(ms).Token, pollDelay);
 
-    public static Task To(Func<ValueTask> validate, int ms = 10_000, int pollDelay = 25) =>
-        To(validate, new CancellationTokenSource(ms).Token, pollDelay);
+    public static Task ToAsync(Func<ValueTask> validate, int ms = 10_000, int pollDelay = 25) =>
+        ToAsync(validate, new CancellationTokenSource(ms).Token, pollDelay);
 }

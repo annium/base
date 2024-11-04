@@ -22,16 +22,16 @@ internal class Server : IServer, ILogSubject
         Logger = logger;
         _listener = new HttpListener();
         _listener.Prefixes.Add($"http://*:{port}/");
-        _handleHttpRequest = httpHandler is not null ? httpHandler.HandleAsync : CloseConnection;
+        _handleHttpRequest = httpHandler is not null ? httpHandler.HandleAsync : CloseConnectionAsync;
         if (webSocketHandler is not null)
         {
-            _handleWebSocketRequest = HandleWebSocketRequest;
+            _handleWebSocketRequest = HandleWebSocketRequestAsync;
             _handleWebSocket = webSocketHandler.HandleAsync;
         }
         else
         {
-            _handleWebSocketRequest = CloseConnection;
-            _handleWebSocket = IgnoreWebSocket;
+            _handleWebSocketRequest = CloseConnectionAsync;
+            _handleWebSocket = IgnoreWebSocketAsync;
         }
 
         _executor = Executor.Parallel<Server>(logger);
@@ -73,7 +73,7 @@ internal class Server : IServer, ILogSubject
             }
 
             this.Trace("closed and dispose socket (server is already stopping)");
-            await CloseConnection(listenerContext, ct);
+            await CloseConnectionAsync(listenerContext, ct);
         }
 
         // when cancelled - await connections processing and stop listener
@@ -99,7 +99,7 @@ internal class Server : IServer, ILogSubject
             }
         };
 
-    private async Task HandleWebSocketRequest(HttpListenerContext ctx, CancellationToken ct)
+    private async Task HandleWebSocketRequestAsync(HttpListenerContext ctx, CancellationToken ct)
     {
         this.Trace("start");
 
@@ -143,7 +143,7 @@ internal class Server : IServer, ILogSubject
         this.Trace("done");
     }
 
-    private Task CloseConnection(HttpListenerContext ctx, CancellationToken ct)
+    private Task CloseConnectionAsync(HttpListenerContext ctx, CancellationToken ct)
     {
         this.Trace("start");
 
@@ -155,7 +155,7 @@ internal class Server : IServer, ILogSubject
         return Task.CompletedTask;
     }
 
-    private Task IgnoreWebSocket(HttpListenerWebSocketContext ctx, CancellationToken ct)
+    private Task IgnoreWebSocketAsync(HttpListenerWebSocketContext ctx, CancellationToken ct)
     {
         this.Trace("done");
 

@@ -35,7 +35,9 @@ public sealed class AsyncLazy<T>
     /// <param name="factory">The delegate that is invoked on a background thread to produce the value when it is needed.</param>
     public AsyncLazy(Func<T> factory)
     {
+#pragma warning disable VSTHRD011
         _instance = new Lazy<Task<T>>(
+#pragma warning restore VSTHRD011
             async () =>
             {
                 var value = await Task.Run(factory).ConfigureAwait(false);
@@ -52,7 +54,9 @@ public sealed class AsyncLazy<T>
     /// <param name="factory">The asynchronous delegate that is invoked on a background thread to produce the value when it is needed.</param>
     public AsyncLazy(Func<Task<T>> factory)
     {
+#pragma warning disable VSTHRD011
         _instance = new Lazy<Task<T>>(
+#pragma warning restore VSTHRD011
             async () =>
             {
                 var value = await Task.Run(factory).ConfigureAwait(false);

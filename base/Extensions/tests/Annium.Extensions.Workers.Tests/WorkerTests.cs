@@ -53,7 +53,7 @@ public class WorkerTests : TestBase
         await Task.WhenAll(Task.Run(() => manager.StopAsync(keyA)), Task.Run(() => manager.StopAsync(keyB)));
 
         // assert
-        await Expect.To(() =>
+        await Expect.ToAsync(() =>
         {
             log.GetLog(keyA).IsEqual(new[] { "start A", "done A" });
             log.GetLog(keyB).IsEqual(new[] { "start B", "done B" });
@@ -84,7 +84,7 @@ public class WorkerTests : TestBase
         );
 
         // assert
-        await Expect.To(() =>
+        await Expect.ToAsync(() =>
         {
             log.GetLog(keyA).IsEqual(new[] { "start A", "done A" });
             log.GetLog(keyB).IsEqual(new[] { "start B", "done B" });

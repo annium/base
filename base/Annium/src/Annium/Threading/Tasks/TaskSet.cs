@@ -2,6 +2,9 @@ using System.Threading.Tasks;
 
 namespace Annium.Threading.Tasks;
 
+#pragma warning disable VSTHRD200
+#pragma warning disable VSTHRD103
+#pragma warning disable VSTHRD003
 public static class TaskSet
 {
     public static async Task<(T1, T2)> WhenAll<T1, T2>(Task<T1> t1, Task<T2> t2)
@@ -88,3 +91,6 @@ public static class TaskSet
         return (t1.Result, t2.Result, t3.Result, t4.Result, t5.Result, t6.Result, t7.Result, t8.Result);
     }
 }
+#pragma warning restore VSTHRD003
+#pragma warning restore VSTHRD103
+#pragma warning restore VSTHRD200

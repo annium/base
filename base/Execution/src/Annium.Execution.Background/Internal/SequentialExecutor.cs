@@ -10,11 +10,11 @@ internal class SequentialExecutor<TSource> : ExecutorBase
     public SequentialExecutor(ILogger logger)
         : base(logger) { }
 
-    protected override async Task RunTask(Delegate task)
+    protected override async Task RunTaskAsync(Delegate task)
     {
         try
         {
-            await Helper.RunTaskInForeground(task, Cts.Token);
+            await Helper.RunTaskInForegroundAsync(task, Cts.Token);
         }
         catch (OperationCanceledException)
         {

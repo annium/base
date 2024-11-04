@@ -26,7 +26,12 @@ public abstract class Group : CommandBase
         return this;
     }
 
-    public override void Process(string id, string description, string[] args, CancellationToken ct)
+    public override async System.Threading.Tasks.Task ProcessAsync(
+        string id,
+        string description,
+        string[] args,
+        CancellationToken ct
+    )
     {
         var (provider, configurationBuilder, helpBuilder) = Root;
         CommandInfo? cmdInfo;
@@ -41,7 +46,7 @@ public abstract class Group : CommandBase
             {
                 var cmd = provider.Resolve(cmdInfo.Type).CastTo<CommandBase>();
                 cmd.SetRoot(Root);
-                cmd.Process($"{id} {childId}".Trim(), cmdInfo.Description, args.Skip(1).ToArray(), ct);
+                await cmd.ProcessAsync($"{id} {childId}".Trim(), cmdInfo.Description, args.Skip(1).ToArray(), ct);
                 return;
             }
         }
@@ -52,7 +57,7 @@ public abstract class Group : CommandBase
         {
             var cmd = provider.Resolve(cmdInfo.Type).CastTo<CommandBase>();
             cmd.SetRoot(Root);
-            cmd.Process(id, cmdInfo.Description, args, ct);
+            await cmd.ProcessAsync(id, cmdInfo.Description, args, ct);
             return;
         }
 

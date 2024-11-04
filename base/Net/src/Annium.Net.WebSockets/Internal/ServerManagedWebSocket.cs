@@ -91,7 +91,9 @@ internal class ServerManagedWebSocket : IServerManagedWebSocket, ILogSubject
 
         this.Trace("done");
 
+#pragma warning disable VSTHRD002
         return task.Result;
+#pragma warning restore VSTHRD002
     }
 
     private void HandleOnTextReceived(ReadOnlyMemory<byte> data)

@@ -202,11 +202,11 @@ public class ClientServerManagedWebSocketTests : TestBase, IAsyncLifetime
 
         this.Trace("assert text messages arrive");
         var expectedTexts = new[] { text };
-        await Expect.To(() => _texts.IsEqual(expectedTexts));
+        await Expect.ToAsync(() => _texts.IsEqual(expectedTexts));
 
         this.Trace("assert binary messages arrive");
         var expectedBinaries = new[] { binary };
-        await Expect.To(() => _binaries.IsEqual(expectedBinaries));
+        await Expect.ToAsync(() => _binaries.IsEqual(expectedBinaries));
 
         this.Trace("done");
     }
@@ -255,7 +255,7 @@ public class ClientServerManagedWebSocketTests : TestBase, IAsyncLifetime
 
         this.Trace("assert text message arrive");
         var expectedTexts = new[] { text };
-        await Expect.To(() => _texts.IsEqual(expectedTexts));
+        await Expect.ToAsync(() => _texts.IsEqual(expectedTexts));
 
         this.Trace("disconnect");
         await ClientSocket.DisconnectAsync();
@@ -274,7 +274,7 @@ public class ClientServerManagedWebSocketTests : TestBase, IAsyncLifetime
 
         this.Trace("assert binary message arrive");
         var expectedBinaries = new[] { binary };
-        await Expect.To(() => _binaries.IsEqual(expectedBinaries));
+        await Expect.ToAsync(() => _binaries.IsEqual(expectedBinaries));
 
         this.Trace("disconnect");
         await ClientSocket.DisconnectAsync();
@@ -300,7 +300,9 @@ public class ClientServerManagedWebSocketTests : TestBase, IAsyncLifetime
 
         // act
         this.Trace("await closed state");
+#pragma warning disable VSTHRD003
         var result = await ClientSocket.IsClosed;
+#pragma warning restore VSTHRD003
 
         // assert
         this.Trace("assert closed local and no exception");
@@ -327,7 +329,9 @@ public class ClientServerManagedWebSocketTests : TestBase, IAsyncLifetime
 
         // act
         this.Trace("await closed state");
+#pragma warning disable VSTHRD003
         var result = await ClientSocket.IsClosed;
+#pragma warning restore VSTHRD003
 
         // assert
         this.Trace("assert closed local and no exception");
@@ -351,7 +355,9 @@ public class ClientServerManagedWebSocketTests : TestBase, IAsyncLifetime
 
         // act
         this.Trace("await closed state");
+#pragma warning disable VSTHRD003
         var result = await ClientSocket.IsClosed;
+#pragma warning restore VSTHRD003
 
         // assert
         this.Trace("assert closed remote and no exception");
@@ -389,7 +395,7 @@ public class ClientServerManagedWebSocketTests : TestBase, IAsyncLifetime
 
         // assert
         this.Trace("assert text messages arrive");
-        await Expect.To(
+        await Expect.ToAsync(
             () =>
             {
                 _texts.Has(messages.Length);
@@ -430,10 +436,12 @@ public class ClientServerManagedWebSocketTests : TestBase, IAsyncLifetime
 
         // assert
         this.Trace("assert text messages arrive");
-        await Expect.To(() => _texts.IsEqual(messages), 1000);
+        await Expect.ToAsync(() => _texts.IsEqual(messages), 1000);
 
         this.Trace("await closed state");
+#pragma warning disable VSTHRD003
         var result = await ClientSocket.IsClosed;
+#pragma warning restore VSTHRD003
 
         this.Trace("assert closed remote and no exception");
         result.Status.Is(WebSocketCloseStatus.ClosedRemote);
@@ -477,13 +485,15 @@ public class ClientServerManagedWebSocketTests : TestBase, IAsyncLifetime
 
         // assert
         this.Trace("assert text messages arrive");
-        await Expect.To(() => _texts.IsEqual(texts), 1000);
+        await Expect.ToAsync(() => _texts.IsEqual(texts), 1000);
 
         this.Trace("assert binary messages arrive");
-        await Expect.To(() => _binaries.IsEqual(binaries), 1000);
+        await Expect.ToAsync(() => _binaries.IsEqual(binaries), 1000);
 
         this.Trace("await closed state");
+#pragma warning disable VSTHRD003
         var result = await ClientSocket.IsClosed;
+#pragma warning restore VSTHRD003
 
         this.Trace("assert closed remote and no exception");
         result.Status.Is(WebSocketCloseStatus.ClosedRemote);

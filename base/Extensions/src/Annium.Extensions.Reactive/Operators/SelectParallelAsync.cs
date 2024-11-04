@@ -22,7 +22,7 @@ public static class SelectParallelAsyncOperatorExtensions
                     {
                         observer.OnNext(await selector(x));
                     }),
-                () => executor.DisposeAsync().AsTask().ContinueWith(_ => observer.OnCompleted())
+                () => executor.DisposeAsync().AsTask().ContinueWith(_ => observer.OnCompleted()).GetAwaiter()
             );
         });
     }

@@ -67,7 +67,7 @@ internal sealed class ObjectCache<TKey, TValue> : IObjectCache<TKey, TValue>, IL
             // create reference, incrementing reference counter
             this.Trace("Get by {key}: add entry {entry} reference", key, entry);
             entry.AddReference();
-            reference ??= Disposable.Reference(entry.Value, () => Release(key, entry));
+            reference ??= Disposable.Reference(entry.Value, () => ReleaseAsync(key, entry));
 
             entry.Release();
 
@@ -80,7 +80,7 @@ internal sealed class ObjectCache<TKey, TValue> : IObjectCache<TKey, TValue>, IL
         }
     }
 
-    private async Task Release(TKey key, CacheEntry entry)
+    private async Task ReleaseAsync(TKey key, CacheEntry entry)
     {
         try
         {

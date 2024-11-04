@@ -94,7 +94,9 @@ internal sealed class WorkerManager<TKey> : IWorkerManager<TKey>, IAsyncDisposab
         }
 
         this.Trace("await stop of entry {entry} for {key}", entry.GetFullId(), key);
+#pragma warning disable VSTHRD003
         await entry.WhenStopped;
+#pragma warning restore VSTHRD003
 
         this.Trace("done for {key}", key);
     }

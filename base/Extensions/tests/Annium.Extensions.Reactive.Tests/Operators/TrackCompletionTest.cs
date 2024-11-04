@@ -34,7 +34,7 @@ public class TrackCompletionTest : TestBase
             .TrackCompletion(logger);
 
         // act
-        await observable.WhenCompleted(logger);
+        await observable.WhenCompletedAsync(logger);
     }
 
     [Fact]
@@ -56,6 +56,6 @@ public class TrackCompletionTest : TestBase
             .TrackCompletion(logger);
 
         // act
-        await observable.WhenCompleted(logger);
+        await observable.WhenCompletedAsync(logger);
     }
 }

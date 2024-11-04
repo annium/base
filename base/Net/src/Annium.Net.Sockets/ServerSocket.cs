@@ -34,7 +34,7 @@ public class ServerSocket : IServerSocket
         this.Trace<string>("paired with {socket}", _socket.GetFullId());
 
         this.Trace("subscribe to IsClosed");
-        _socket.IsClosed.ContinueWith(HandleClosed, CancellationToken.None);
+        _socket.IsClosed.ContinueWith(HandleClosed, CancellationToken.None).GetAwaiter();
 
         this.Trace("init monitor");
         _connectionMonitor =
@@ -76,7 +76,8 @@ public class ServerSocket : IServerSocket
             {
                 this.Trace("fire disconnected");
                 OnDisconnected(SocketCloseStatus.ClosedLocal);
-            });
+            })
+            .GetAwaiter();
 
         this.Trace("done");
     }
@@ -113,7 +114,9 @@ public class ServerSocket : IServerSocket
         this.Trace("stop monitor");
         _connectionMonitor.Stop();
 
+#pragma warning disable VSTHRD002
         var result = task.Result;
+#pragma warning restore VSTHRD002
         if (result.Exception is not null)
         {
             this.Trace("fire error: {exception}", result.Exception);

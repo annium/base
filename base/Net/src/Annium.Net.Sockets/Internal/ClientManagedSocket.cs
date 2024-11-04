@@ -13,8 +13,10 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
 {
     public ILogger Logger { get; }
     public event Action<ReadOnlyMemory<byte>> OnReceived = delegate { };
+
     public Task<SocketCloseResult> IsClosed { get; private set; } =
         Task.FromResult(new SocketCloseResult(SocketCloseStatus.ClosedLocal, null));
+
     private readonly ManagedSocketOptions _options;
     private readonly object _locker = new();
     private Connection? _cn;
@@ -116,7 +118,9 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
                 if (ct.IsCancellationRequested)
                 {
                     this.Trace("connection canceled, dispose");
+#pragma warning disable VSTHRD103
                     cn.Dispose();
+#pragma warning restore VSTHRD103
 
                     return null;
                 }
@@ -164,15 +168,19 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
             cn.Socket.OnReceived -= HandleOnReceived;
 
             this.Trace("cancel listen cts");
+#pragma warning disable VSTHRD103
             _listenCts.Cancel();
             _listenCts.Dispose();
 
             this.Trace("dispose connection");
             cn.Dispose();
+#pragma warning restore VSTHRD103
         }
 
         this.Trace("await listen task");
+#pragma warning disable VSTHRD003
         await IsClosed;
+#pragma warning restore VSTHRD003
 
         this.Trace("done");
     }
@@ -191,6 +199,7 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
         if (task.Exception is not null)
             this.Error(task.Exception);
 
+#pragma warning disable VSTHRD002
         lock (_locker)
         {
             var cn = Interlocked.Exchange(ref _cn, null);
@@ -210,6 +219,7 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
         this.Trace("done");
 
         return task.Result;
+#pragma warning restore VSTHRD002
     }
 
     private void HandleOnReceived(ReadOnlyMemory<byte> data)

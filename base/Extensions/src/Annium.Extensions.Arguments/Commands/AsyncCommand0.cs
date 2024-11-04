@@ -2,7 +2,6 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Annium.Extensions.Arguments.Internal;
-using Annium.Threading.Tasks;
 
 // ReSharper disable once CheckNamespace
 namespace Annium.Extensions.Arguments;
@@ -11,7 +10,7 @@ public abstract class AsyncCommand : CommandBase
 {
     public abstract Task HandleAsync(CancellationToken ct);
 
-    public override void Process(string id, string description, string[] args, CancellationToken ct)
+    public override async Task ProcessAsync(string id, string description, string[] args, CancellationToken ct)
     {
         if (Root.ConfigurationBuilder.Build<HelpConfiguration>(args).Help)
         {
@@ -19,6 +18,6 @@ public abstract class AsyncCommand : CommandBase
             return;
         }
 
-        HandleAsync(ct).Await();
+        await HandleAsync(ct);
     }
 }

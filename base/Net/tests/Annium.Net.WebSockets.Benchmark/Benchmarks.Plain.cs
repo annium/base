@@ -31,20 +31,26 @@ public partial class Benchmarks
         _plainSocket
             .ConnectAsync(new Uri($"ws://127.0.0.1:{Constants.Port}/"), CancellationToken.None)
             .GetAwaiter()
+#pragma warning disable VSTHRD002
             .GetResult();
+#pragma warning restore VSTHRD002
         _plainListenTask = client.ListenAsync(_plainCts.Token);
     }
 
     [IterationCleanup(Target = nameof(Plain))]
     public void IterationCleanup_Plain()
     {
+#pragma warning disable VSTHRD110
         _plainSocket.CloseOutputAsync(
             System.Net.WebSockets.WebSocketCloseStatus.NormalClosure,
             string.Empty,
             CancellationToken.None
         );
+#pragma warning restore VSTHRD110
         _plainCts.Cancel();
+#pragma warning disable VSTHRD002
         _plainListenTask.Wait();
+#pragma warning restore VSTHRD002
     }
 
     [Benchmark(Baseline = true)]

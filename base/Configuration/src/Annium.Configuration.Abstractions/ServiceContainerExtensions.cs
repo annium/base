@@ -49,7 +49,7 @@ public static class ServiceContainerExtensions
         return container;
     }
 
-    public static async Task<IServiceContainer> AddConfiguration<T>(
+    public static async Task<IServiceContainer> AddConfigurationAsync<T>(
         this IServiceContainer container,
         Func<IConfigurationContainer, Task> configure
     )

@@ -52,8 +52,10 @@ public abstract class TestBase : Testing.TestBase
         {
             // await before cancellation for a while
             await Task.Delay(5, CancellationToken.None);
-            cts.Cancel();
+            await cts.CancelAsync();
+#pragma warning disable VSTHRD003
             await serverTask;
+#pragma warning restore VSTHRD003
         });
     }
 }

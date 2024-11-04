@@ -18,7 +18,7 @@ internal class DebounceTimer<T> : DebounceTimerBase
         _handler = handler;
     }
 
-    protected override ValueTask Handle()
+    protected override ValueTask HandleAsync()
     {
         return _handler(_state);
     }
@@ -34,7 +34,7 @@ internal class DebounceTimer : DebounceTimerBase
         _handler = handler;
     }
 
-    protected override ValueTask Handle()
+    protected override ValueTask HandleAsync()
     {
         return _handler();
     }
@@ -80,9 +80,11 @@ internal abstract class DebounceTimerBase : IDebounceTimer, ILogSubject
         _isRequested = 1;
     }
 
-    protected abstract ValueTask Handle();
+    protected abstract ValueTask HandleAsync();
 
+#pragma warning disable VSTHRD100
     private async void Callback(object? _)
+#pragma warning restore VSTHRD100
     {
         if (Interlocked.CompareExchange(ref _isHandling, 1, 0) == 1)
             return;
@@ -91,7 +93,7 @@ internal abstract class DebounceTimerBase : IDebounceTimer, ILogSubject
 
         try
         {
-            await Handle();
+            await HandleAsync();
         }
         catch (Exception e)
         {
