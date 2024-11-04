@@ -14,4 +14,17 @@
         <EnableNETAnalyzers>true</EnableNETAnalyzers>
         <AnalysisMode>Default</AnalysisMode>
     </PropertyGroup>
+    <PropertyGroup>
+        <VersionMajor>1</VersionMajor>
+        <VersionMinor>0</VersionMinor>
+        <BuildNumber>$(BuildNumber)</BuildNumber>
+        <BuildNumber Condition="'$(BuildNumber)' == ''">0</BuildNumber>
+        <PackageVersion>$(VersionMajor).$(VersionMinor).$(BuildNumber)$(VersionTag)</PackageVersion>
+    </PropertyGroup>
+    <ItemGroup>
+        <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" PrivateAssets="all">
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
+    </ItemGroup>
 </Project>

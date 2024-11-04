@@ -23,7 +23,7 @@ test:
 	dotnet test -c Release --no-build --nologo -v q
 
 publish:
-	dotnet pack --no-build -o . -c Release -p:PackageVersion=0.1.0 -p:SymbolPackageFormat=snupkg
+	dotnet pack --no-build -o . -c Release -p:SymbolPackageFormat=snupkg
 	dotnet nuget push "*.nupkg" --source https://dotnet.pkg.annium.com/v3/index.json --api-key $(shell cat .xx.credentials)
 	find . -type f -name '*.nupkg' | xargs rm
 
