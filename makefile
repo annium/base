@@ -22,9 +22,11 @@ build:
 test:
 	dotnet test -c Release --no-build --nologo -v q
 
-publish:
+pack:
 	dotnet pack --no-build -o . -c Release -p:SymbolPackageFormat=snupkg
-	dotnet nuget push "*.nupkg" --source https://dotnet.pkg.annium.com/v3/index.json --api-key $(shell cat .xx.credentials)
+
+publish:
+	dotnet nuget push "*.nupkg" --source https://api.nuget.org/v3/index.json --api-key $(shell cat .xx.credentials)
 	find . -type f -name '*.nupkg' | xargs rm
 
 gen-rsa-keys:

@@ -4,6 +4,7 @@
 
 # artifacts
 *.log
+*.nupkg
 
 # xx ignore patterns
 .xx.ignore
