@@ -3,6 +3,7 @@
         <Solutions>Annium.Base</Solutions>
         <OutputType>Exe</OutputType>
         <IsPackable>false</IsPackable>
+        <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
     </PropertyGroup>
     <ItemGroup>
         <ProjectReference Include="../../src/Annium.Net.Servers.Web/Annium.Net.Servers.Web.csproj" />
