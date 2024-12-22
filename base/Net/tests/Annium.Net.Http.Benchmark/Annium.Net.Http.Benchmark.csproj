@@ -3,7 +3,7 @@
         <Solutions>Annium.Base</Solutions>
         <OutputType>Exe</OutputType>
         <IsPackable>false</IsPackable>
-        <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
     </PropertyGroup>
     <ItemGroup>
         <ProjectReference Include="../../../Logging/src/Annium.Logging.InMemory/Annium.Logging.InMemory.csproj" />

@@ -3,7 +3,7 @@
         <Solutions>Annium.Base</Solutions>
         <OutputType>Library</OutputType>
         <IsPackable>true</IsPackable>
-        <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
     </PropertyGroup>
     <ItemGroup>
         <ProjectReference Include="../../../Core/src/Annium.Core.DependencyInjection/Annium.Core.DependencyInjection.csproj" />
