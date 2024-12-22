@@ -25,10 +25,12 @@ public class RawManagedSocketTests : TestBase, IAsyncLifetime
     private Stream? _clientStream;
     private IManagedSocket? _managedSocket;
     private readonly List<byte> _stream = new();
+
     private Func<Socket, Task<Stream>> _createClientStreamAsync = delegate
     {
         throw new NotImplementedException();
     };
+
     private Func<Func<IManagedSocket, CancellationToken, Task>, IAsyncDisposable> _runServer = delegate
     {
         throw new NotImplementedException();
@@ -460,7 +462,7 @@ public class RawManagedSocketTests : TestBase, IAsyncLifetime
 
                 _runServer = handleSocket =>
                 {
-                    var cert = X509CertificateLoader.LoadCertificateFromFile("keys/ecdsa_cert.pfx");
+                    var cert = X509CertificateLoader.LoadPkcs12FromFile("keys/ecdsa_cert.pfx", []);
 
                     return RunServerBase(
                         async (sp, raw, ct) =>

@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Net;
 using System.Net.Security;
+using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using Annium.Logging;
@@ -15,7 +16,10 @@ public static class ClientSocketExtensions
         uri.EnsureAbsolute();
         var entry = Dns.GetHostEntry(uri.Host).NotNull();
 
-        var endpoint = new IPEndPoint(entry.AddressList.First(), uri.Port);
+        var endpoint = new IPEndPoint(
+            entry.AddressList.First(x => x.AddressFamily is AddressFamily.InterNetwork),
+            uri.Port
+        );
         socket.Connect(endpoint, authOptions);
     }
 

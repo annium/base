@@ -665,7 +665,7 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
 
                 _runServer = handleSocket =>
                 {
-                    var cert = X509CertificateLoader.LoadCertificateFromFile("keys/ecdsa_cert.pfx");
+                    var cert = X509CertificateLoader.LoadPkcs12FromFile("keys/ecdsa_cert.pfx", []);
 
                     return RunServerBase(
                         async (sp, raw, ct) =>
