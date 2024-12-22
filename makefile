@@ -16,8 +16,9 @@ update:
 clean:
 	xx clean -sc -ic
 
+buildNumber?=0
 build:
-	dotnet build -c Release --nologo -v q
+	dotnet build -c Release --nologo -v q -p:BuildNumber=$(buildNumber)
 
 test:
 	dotnet test -c Release --no-build --nologo -v q
