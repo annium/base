@@ -1,24 +1,42 @@
 using System;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 
 namespace Annium.Testing;
 
 public static class Wrap
 {
-    public static WrappedDelegate It(
-        Delegate @delegate,
-        [CallerArgumentExpression(nameof(@delegate))] string delegateEx = default!
-    ) => new(@delegate, delegateEx);
+    public static WrappedAction It(
+        Action action,
+        [CallerArgumentExpression(nameof(action))] string delegateEx = default!
+    ) => new(action, delegateEx);
+
+    public static WrappedTaskAction It(
+        Func<Task> action,
+        [CallerArgumentExpression(nameof(action))] string delegateEx = default!
+    ) => new(action, delegateEx);
 }
 
-public readonly ref struct WrappedDelegate
+public readonly struct WrappedAction
 {
-    public readonly Delegate Delegate;
-    public readonly string DelegateEx;
+    public readonly Action Execute;
+    public readonly string Expression;
 
-    public WrappedDelegate(Delegate @delegate, string delegateEx)
+    public WrappedAction(Action execute, string expression)
     {
-        Delegate = @delegate;
-        DelegateEx = delegateEx;
+        Execute = execute;
+        Expression = expression;
+    }
+}
+
+public readonly struct WrappedTaskAction
+{
+    public readonly Func<Task> Execute;
+    public readonly string Expression;
+
+    public WrappedTaskAction(Func<Task> execute, string expression)
+    {
+        Execute = execute;
+        Expression = expression;
     }
 }

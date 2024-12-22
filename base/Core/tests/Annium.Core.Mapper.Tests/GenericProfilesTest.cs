@@ -37,7 +37,7 @@ public class GenericProfilesTest : TestBase
         Register(c => c.AddMapper(autoload: false).AddProfile(typeof(InvalidProfile<>)));
 
         // assert
-        Wrap.It(Get<IMapper>).Throws<ArgumentException>();
+        Wrap.It(() => Get<IMapper>()).Throws<ArgumentException>();
     }
 
     private class ValidProfile<T> : Profile

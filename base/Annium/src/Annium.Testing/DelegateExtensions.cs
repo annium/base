@@ -1,27 +1,38 @@
 using System;
-using System.Linq;
-using System.Reflection;
 using System.Threading.Tasks;
 
 namespace Annium.Testing;
 
 public static class DelegateExtensions
 {
-    public static TException Throws<TException>(this WrappedDelegate value)
+    public static TException Throws<TException>(this WrappedAction action)
         where TException : Exception
     {
         try
         {
-            var result = value.Delegate.DynamicInvoke();
-            if (result is Task { Exception: not null } task)
-                return task.Exception.InnerExceptions.Single().Is<TException>();
+            action.Execute();
         }
-        catch (TargetInvocationException exception)
+        catch (Exception exception)
         {
-            return exception.InnerException.NotNull().Is<TException>();
+            return exception.Is<TException>();
         }
 
-        throw new AssertionFailedException($"{value.DelegateEx} has not thrown {typeof(TException).FriendlyName()}");
+        throw new AssertionFailedException($"{action.Expression} has not thrown {typeof(TException).FriendlyName()}");
+    }
+
+    public static async Task<TException> ThrowsAsync<TException>(this WrappedTaskAction action)
+        where TException : Exception
+    {
+        try
+        {
+            await action.Execute();
+        }
+        catch (Exception exception)
+        {
+            return exception.Is<TException>();
+        }
+
+        throw new AssertionFailedException($"{action.Expression} has not thrown {typeof(TException).FriendlyName()}");
     }
 
     private static TException Is<TException>(this Exception? value)

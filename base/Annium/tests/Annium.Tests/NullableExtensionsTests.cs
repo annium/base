@@ -21,7 +21,7 @@ public class NullableExtensionsTests
         Wrap.It(() =>
             {
                 var failedValue = nullValue.NotNull();
-                return new string(failedValue);
+                var s = new string(failedValue);
             })
             .Throws<NullReferenceException>()
             .Reports($"{nameof(nullValue)} is null");
@@ -41,7 +41,6 @@ public class NullableExtensionsTests
         Wrap.It(() =>
             {
                 var failedValue = nullValue.NotNull();
-                return failedValue;
             })
             .Throws<NullReferenceException>()
             .Reports($"{nameof(nullValue)} is null");
@@ -59,10 +58,10 @@ public class NullableExtensionsTests
 
         // assert
 #pragma warning disable VSTHRD003
-        Wrap.It(async () => await nullValue.NotNullAsync())
+        await Wrap.It(() => nullValue.NotNullAsync())
 #pragma warning restore VSTHRD003
-            .Throws<NullReferenceException>()
-            .Reports($"{nameof(nullValue)} is null");
+            .ThrowsAsync<NullReferenceException>()
+            .ReportsAsync($"{nameof(nullValue)} is null");
 
         var verifiedValue = await validValue.NotNullAsync();
         verifiedValue.Is("data");
@@ -76,22 +75,21 @@ public class NullableExtensionsTests
         var validValue = Task.FromResult<bool?>(true);
 
         // assert
-        Wrap.It(async () =>
+        await Wrap.It(async () =>
             {
                 try
                 {
 #pragma warning disable VSTHRD003
                     var failedValue = await nullValue.NotNullAsync();
 #pragma warning restore VSTHRD003
-                    return failedValue;
                 }
                 catch (AggregateException ex)
                 {
                     throw ex.InnerExceptions.Single();
                 }
             })
-            .Throws<NullReferenceException>()
-            .Reports($"{nameof(nullValue)} is null");
+            .ThrowsAsync<NullReferenceException>()
+            .ReportsAsync($"{nameof(nullValue)} is null");
 
         var verifiedValue = await validValue.NotNullAsync();
         verifiedValue.Is(true);
