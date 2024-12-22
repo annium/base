@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using Annium.Linq;
 
 namespace Annium.Data.Operations.Internal;
@@ -17,7 +18,7 @@ internal abstract record ResultBase<T> : IResultBase<T>, IResultBase, ICopyable<
 
     public bool IsOk => _plainErrors.Count == 0 && _labeledErrors.Count == 0;
     public bool HasErrors => _plainErrors.Count > 0 || _labeledErrors.Count > 0;
-    private readonly object _locker = new();
+    private readonly Lock _locker = new();
     private readonly HashSet<string> _plainErrors = new();
     private readonly Dictionary<string, HashSet<string>> _labeledErrors = new();
 

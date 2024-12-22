@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Annium.Logging;
 
@@ -147,7 +148,7 @@ public abstract class DisposableBoxBase<TBox> : ILogSubject
     public bool IsDisposed { get; private set; }
     protected readonly List<IDisposable> SyncDisposables = new();
     protected readonly List<Action> SyncDisposes = new();
-    private readonly object _locker = new();
+    private readonly Lock _locker = new();
 
     protected DisposableBoxBase(ILogger logger)
     {

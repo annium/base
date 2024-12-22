@@ -18,7 +18,7 @@ public class ClientSocket : IClientSocket
     public event Action<Exception> OnError = delegate { };
     private ConnectionConfig Config =>
         _connectionConfig ?? throw new InvalidOperationException("Connection config is not set");
-    private readonly object _locker = new();
+    private readonly Lock _locker = new();
     private readonly IClientManagedSocket _socket;
     private readonly ConnectionMonitorBase _connectionMonitor;
     private readonly int _connectTimeout;

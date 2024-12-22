@@ -5,11 +5,9 @@ using MessagePack.Formatters;
 
 namespace Annium.Data.Operations.Serialization.MessagePack.Internal;
 
-internal class BooleanResultDataFormatter<T> : IMessagePackFormatter<IBooleanResult<T>>
+internal class BooleanResultDataFormatter<T> : IMessagePackFormatter<IBooleanResult<T>?>
 {
     public static IMessagePackFormatter Instance { get; } = new BooleanResultDataFormatter<T>();
-
-    private BooleanResultDataFormatter() { }
 
     public IBooleanResult<T> Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
     {
@@ -57,7 +55,7 @@ internal class BooleanResultDataFormatter<T> : IMessagePackFormatter<IBooleanRes
         return result;
     }
 
-    public void Serialize(ref MessagePackWriter writer, IBooleanResult<T> value, MessagePackSerializerOptions options)
+    public void Serialize(ref MessagePackWriter writer, IBooleanResult<T>? value, MessagePackSerializerOptions options)
     {
         if (value == null!)
         {

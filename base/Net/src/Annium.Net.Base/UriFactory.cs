@@ -92,7 +92,6 @@ public class UriFactory
     public UriFactory Param(string key, StringValues value)
     {
         ArgumentNullException.ThrowIfNull(key);
-        ArgumentNullException.ThrowIfNull(value);
 
         _query[key] = value;
 

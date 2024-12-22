@@ -16,7 +16,7 @@ public class ClientWebSocket : IClientWebSocket
     public event Action<WebSocketCloseStatus> OnDisconnected = delegate { };
     public event Action<Exception> OnError = delegate { };
     private Uri Uri => _uri ?? throw new InvalidOperationException("Uri is not set");
-    private readonly object _locker = new();
+    private readonly Lock _locker = new();
     private readonly IClientManagedWebSocket _socket;
     private readonly ConnectionMonitorBase _connectionMonitor;
     private readonly int _connectTimeout;

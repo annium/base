@@ -577,7 +577,7 @@ public class MessagingManagedSocketTests : TestBase, IAsyncLifetime
 
                 _runServer = handleSocket =>
                 {
-                    var cert = X509Certificate.CreateFromCertFile("keys/ecdsa_cert.pfx");
+                    var cert = X509CertificateLoader.LoadCertificateFromFile("keys/ecdsa_cert.pfx");
 
                     return RunServerBase(
                         async (sp, raw, ct) =>

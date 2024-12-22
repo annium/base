@@ -18,7 +18,7 @@ internal sealed class Table<T> : ITable<T>, ILogSubject
     {
         get
         {
-            lock (_dataLocker)
+            lock (_locker)
                 return _table.Count;
         }
     }
@@ -27,7 +27,7 @@ internal sealed class Table<T> : ITable<T>, ILogSubject
     {
         get
         {
-            lock (_dataLocker)
+            lock (_locker)
                 return _table.ToDictionary();
         }
     }
@@ -37,7 +37,7 @@ internal sealed class Table<T> : ITable<T>, ILogSubject
     private readonly HasChanged<T, T> _hasChanged;
     private readonly Update<T, T> _update;
     private readonly Func<T, bool> _isActive;
-    private readonly object _dataLocker = new();
+    private readonly Lock _locker = new();
     private readonly CancellationTokenSource _observableCts = new();
     private readonly IObservable<ChangeEvent<T>> _observable;
     private readonly TablePermission _permissions;
@@ -86,7 +86,7 @@ internal sealed class Table<T> : ITable<T>, ILogSubject
         await _observable.WhenCompletedAsync(Logger);
 
         this.Trace("clear table");
-        lock (_dataLocker)
+        lock (_locker)
             _table.Clear();
 
         this.Trace("done");
@@ -106,7 +106,7 @@ internal sealed class Table<T> : ITable<T>, ILogSubject
     {
         EnsurePermission(TablePermission.Init);
 
-        lock (_dataLocker)
+        lock (_locker)
         {
             _table.Clear();
 
@@ -124,7 +124,7 @@ internal sealed class Table<T> : ITable<T>, ILogSubject
     {
         var key = _getKey(entry);
 
-        lock (_dataLocker)
+        lock (_locker)
         {
             var exists = _table.ContainsKey(key);
             if (exists)
@@ -155,7 +155,7 @@ internal sealed class Table<T> : ITable<T>, ILogSubject
         EnsurePermission(TablePermission.Delete);
         var key = _getKey(entry);
 
-        lock (_dataLocker)
+        lock (_locker)
         {
             if (_table.Remove(key, out var item))
                 AddEvent(ChangeEvent.Delete(item));
@@ -185,7 +185,7 @@ internal sealed class Table<T> : ITable<T>, ILogSubject
 
     private IReadOnlyCollection<T> Get()
     {
-        lock (_dataLocker)
+        lock (_locker)
             return _table.Values.ToArray();
     }
 

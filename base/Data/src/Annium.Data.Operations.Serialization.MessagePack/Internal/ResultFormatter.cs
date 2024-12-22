@@ -5,11 +5,9 @@ using MessagePack.Formatters;
 
 namespace Annium.Data.Operations.Serialization.MessagePack.Internal;
 
-internal class ResultFormatter : IMessagePackFormatter<IResult>
+internal class ResultFormatter : IMessagePackFormatter<IResult?>
 {
     public static IMessagePackFormatter Instance { get; } = new ResultFormatter();
-
-    private ResultFormatter() { }
 
     public IResult Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
     {
@@ -48,7 +46,7 @@ internal class ResultFormatter : IMessagePackFormatter<IResult>
         return result;
     }
 
-    public void Serialize(ref MessagePackWriter writer, IResult value, MessagePackSerializerOptions options)
+    public void Serialize(ref MessagePackWriter writer, IResult? value, MessagePackSerializerOptions options)
     {
         if (value == null!)
         {

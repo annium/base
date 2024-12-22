@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Threading;
 using Annium.Core.Mapper;
 
 // ReSharper disable once CheckNamespace
@@ -9,7 +10,7 @@ namespace Annium.Data.Models.Extensions;
 
 public static partial class IsShallowEqualExtensions
 {
-    private static readonly object _locker = new();
+    private static readonly Lock _locker = new();
 
     private static readonly HashSet<Type> _comparersInProgress = new();
 

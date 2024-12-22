@@ -15,7 +15,7 @@ internal class ClientManagedWebSocket : IClientManagedWebSocket, ILogSubject
     public Task<WebSocketCloseResult> IsClosed { get; private set; } =
         Task.FromResult(new WebSocketCloseResult(WebSocketCloseStatus.ClosedLocal, null));
     private readonly int _keepAliveInterval;
-    private readonly object _locker = new();
+    private readonly Lock _locker = new();
     private Connection? _cn;
     private CancellationTokenSource _listenCts = new();
 

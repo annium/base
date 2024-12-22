@@ -15,7 +15,7 @@ public class ServerWebSocket : IServerWebSocket
     public event Action<ReadOnlyMemory<byte>> OnBinaryReceived = delegate { };
     public event Action<WebSocketCloseStatus> OnDisconnected = delegate { };
     public event Action<Exception> OnError = delegate { };
-    private readonly object _locker = new();
+    private readonly Lock _locker = new();
     private readonly IServerManagedWebSocket _socket;
     private readonly ConnectionMonitorBase _connectionMonitor;
     private Status _status = Status.Connected;

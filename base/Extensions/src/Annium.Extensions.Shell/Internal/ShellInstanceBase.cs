@@ -12,7 +12,7 @@ namespace Annium.Extensions.Shell.Internal;
 internal abstract class ShellInstanceBase : IShellInstance, ILogSubject
 {
     public ILogger Logger { get; }
-    private static readonly object _consoleLock = new();
+    private static readonly Lock _locker = new();
     protected readonly IReadOnlyList<string> Cmd;
     protected readonly ProcessStartInfo StartInfo;
     private bool _pipe;
@@ -105,14 +105,14 @@ internal abstract class ShellInstanceBase : IShellInstance, ILogSubject
         {
             Task.Run(() =>
                 {
-                    lock (_consoleLock)
+                    lock (_locker)
                         PipeOut(process.StandardOutput);
                 })
                 .ConfigureAwait(false)
                 .GetAwaiter();
             Task.Run(() =>
                 {
-                    lock (_consoleLock)
+                    lock (_locker)
                         PipeOut(process.StandardError);
                 })
                 .ConfigureAwait(false)

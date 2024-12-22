@@ -14,7 +14,7 @@ public class ServerSocket : IServerSocket
     public event Action<ReadOnlyMemory<byte>> OnReceived = delegate { };
     public event Action<SocketCloseStatus> OnDisconnected = delegate { };
     public event Action<Exception> OnError = delegate { };
-    private readonly object _locker = new();
+    private readonly Lock _locker = new();
     private readonly IServerManagedSocket _socket;
     private readonly ConnectionMonitorBase _connectionMonitor;
     private Status _status = Status.Connected;

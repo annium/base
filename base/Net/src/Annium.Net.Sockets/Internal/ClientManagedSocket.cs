@@ -18,7 +18,7 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
         Task.FromResult(new SocketCloseResult(SocketCloseStatus.ClosedLocal, null));
 
     private readonly ManagedSocketOptions _options;
-    private readonly object _locker = new();
+    private readonly Lock _locker = new();
     private Connection? _cn;
     private CancellationTokenSource _listenCts = new();
 

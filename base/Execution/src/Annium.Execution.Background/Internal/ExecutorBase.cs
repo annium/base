@@ -21,7 +21,7 @@ internal abstract class ExecutorBase : IExecutor, ILogSubject
     }
 
     protected readonly CancellationTokenSource Cts = new();
-    private readonly object _locker = new();
+    private readonly Lock _locker = new();
     private readonly ChannelWriter<Delegate> _taskWriter;
     private readonly ChannelReader<Delegate> _taskReader;
     private readonly TaskCompletionSource _runTcs = new();

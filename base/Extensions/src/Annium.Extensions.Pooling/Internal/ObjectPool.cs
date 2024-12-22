@@ -9,7 +9,7 @@ namespace Annium.Extensions.Pooling.Internal;
 internal class ObjectPool<T> : IObjectPool<T>
     where T : notnull
 {
-    private readonly object _poolLocker = new();
+    private readonly Lock _locker = new();
     private readonly ILoader<T> _loader;
     private readonly IStorage<T> _storage;
     private readonly Semaphore _semaphore;
@@ -24,13 +24,13 @@ internal class ObjectPool<T> : IObjectPool<T>
     public T Get()
     {
         _semaphore.WaitOne();
-        lock (_poolLocker)
+        lock (_locker)
             return _loader.Get();
     }
 
     public void Return(T item)
     {
-        lock (_poolLocker)
+        lock (_locker)
             _storage.Return(item);
         _semaphore.Release();
     }
