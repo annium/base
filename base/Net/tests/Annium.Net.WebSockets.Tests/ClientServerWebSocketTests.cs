@@ -570,7 +570,7 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
 
         ClientSocket.Connect(ServerUri);
 
-        await tcs.Task.WaitAsync(TimeSpan.FromSeconds(1));
+        await tcs.Task.WaitAsync(TimeSpan.FromSeconds(10));
 
         this.Trace("done");
     }

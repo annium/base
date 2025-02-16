@@ -1,7 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Annium.Core.DependencyInjection;
+using Annium.Linq;
 using Annium.Logging.Shared;
 using Annium.Testing;
 using Annium.Threading.Tasks;
@@ -48,10 +51,10 @@ public class LoggerTests : TestBase
         subject.Info("two");
 
         // assert
-        await Wait.UntilAsync(() => !string.IsNullOrWhiteSpace(GetLog()));
+        await Wait.UntilAsync(() => GetLog().Count == 2);
         var log = GetLog();
-        log.Contains("one").IsTrue();
-        log.Contains("two").IsTrue();
+        log.At(0).Contains("one").IsTrue();
+        log.At(1).Contains("two").IsTrue();
     }
 
     [Fact]
@@ -67,8 +70,8 @@ public class LoggerTests : TestBase
         subject.Error(ex);
 
         // assert
-        await Wait.UntilAsync(() => !string.IsNullOrWhiteSpace(GetLog()));
-        var log = GetLog();
+        await Wait.UntilAsync(() => GetLog().Any());
+        var log = GetLog().Join(Environment.NewLine);
         log.Contains("2 error(s) in").IsTrue();
         log.Contains("xxx").IsTrue();
         log.Contains("yyy").IsTrue();
@@ -87,12 +90,12 @@ public class LoggerTests : TestBase
         subject.Error(ex);
 
         // assert
-        await Wait.UntilAsync(() => !string.IsNullOrWhiteSpace(GetLog()));
-        var log = GetLog();
+        await Wait.UntilAsync(() => GetLog().Any());
+        var log = GetLog().Join(Environment.NewLine);
         log.Contains("xxx").IsTrue();
     }
 
     private ILogSubject GetSubject() => Get<ILogBridgeFactory>().Get("test");
 
-    private string GetLog() => System.IO.File.ReadAllText(_logFile);
+    private IReadOnlyList<string> GetLog() => System.IO.File.ReadAllLines(_logFile);
 }

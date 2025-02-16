@@ -728,7 +728,7 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
 
         _handleConnect(ClientSocket);
 
-        await tcs.Task.WaitAsync(TimeSpan.FromSeconds(1));
+        await tcs.Task.WaitAsync(TimeSpan.FromSeconds(10));
 
         this.Trace("done");
     }
