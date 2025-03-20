@@ -21,7 +21,7 @@ public class IsShallowEqualExtensionTest
             {
                 new() { Date = now, Point = new Point(1, 2) },
             },
-            Points = new HashSet<Point>(new[] { new Point(1, 2) }),
+            Points = [new Point(1, 2)],
             Dictionary = new Dictionary<Point, Sample>
             {
                 {
@@ -45,7 +45,7 @@ public class IsShallowEqualExtensionTest
             {
                 new() { Date = now, Point = new Point(1, 2) },
             },
-            Points = new HashSet<Point>(new[] { new Point(1, 2) }),
+            Points = [.. new[] { new Point(1, 2) }],
             Dictionary = new Dictionary<Point, Sample>
             {
                 {

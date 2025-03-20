@@ -7,5 +7,5 @@ public interface ITrackingWeakReference<T>
 {
     event Action OnCollected;
     bool IsAlive { get; }
-    public bool TryGetTarget(out T target);
+    bool TryGetTarget(out T target);
 }

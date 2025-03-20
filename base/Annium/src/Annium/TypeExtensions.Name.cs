@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.CompilerServices;
 
 namespace Annium;
 
+[SuppressMessage("Style", "IDE0306:Simplify collection initialization")]
 public static class TypeNameExtensions
 {
     private static readonly ConcurrentDictionary<Type, string> _typeNames =

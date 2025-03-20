@@ -16,7 +16,9 @@ public class DoubleEdgeQueue<T> : IDoubleEdgeQueue<T>
 
     public DoubleEdgeQueue(IEnumerable<T> entries, bool isDirect)
     {
+#pragma warning disable IDE0306
         _entries = new LinkedList<T>(entries);
+#pragma warning restore IDE0306
         _isDirect = isDirect;
     }
 

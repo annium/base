@@ -5,5 +5,5 @@ namespace Annium.Core.DependencyInjection;
 
 public interface IKeyedFactoryServiceDescriptor : IServiceDescriptor
 {
-    public Func<IServiceProvider, object, object> ImplementationFactory { get; }
+    Func<IServiceProvider, object, object> ImplementationFactory { get; }
 }

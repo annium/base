@@ -5,5 +5,5 @@ namespace Annium.Net.Types.Refs;
 public interface IRef
 {
     [ResolutionKey]
-    public RefType Type { get; }
+    RefType Type { get; }
 }

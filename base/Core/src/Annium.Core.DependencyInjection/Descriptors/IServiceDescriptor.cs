@@ -5,7 +5,7 @@ namespace Annium.Core.DependencyInjection;
 
 public interface IServiceDescriptor
 {
-    public Type ServiceType { get; }
-    public object? Key { get; }
-    public ServiceLifetime Lifetime { get; }
+    Type ServiceType { get; }
+    object? Key { get; }
+    ServiceLifetime Lifetime { get; }
 }

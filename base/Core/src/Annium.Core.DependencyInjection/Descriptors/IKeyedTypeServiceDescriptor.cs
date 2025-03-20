@@ -5,5 +5,5 @@ namespace Annium.Core.DependencyInjection;
 
 public interface IKeyedTypeServiceDescriptor : IServiceDescriptor
 {
-    public Type ImplementationType { get; }
+    Type ImplementationType { get; }
 }

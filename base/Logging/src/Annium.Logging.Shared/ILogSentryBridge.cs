@@ -5,7 +5,7 @@ namespace Annium.Logging.Shared;
 
 public interface ILogSentryBridge
 {
-    public void Register(
+    void Register(
         string subjectType,
         string subjectId,
         string file,
