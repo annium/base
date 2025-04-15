@@ -12,10 +12,10 @@ namespace Annium.Extensions.Shell.Internal;
 internal abstract class ShellInstanceBase : IShellInstance, ILogSubject
 {
     public ILogger Logger { get; }
-    private static readonly Lock _locker = new();
     protected readonly IReadOnlyList<string> Cmd;
     protected readonly ProcessStartInfo StartInfo;
-    private bool _pipe;
+    private bool _isSensitive;
+    private bool _print;
 
     protected ShellInstanceBase(IReadOnlyList<string> cmd, ILogger logger)
     {
@@ -31,9 +31,16 @@ internal abstract class ShellInstanceBase : IShellInstance, ILogSubject
         return this;
     }
 
-    public IShellInstance Pipe(bool pipe)
+    public IShellInstance Print(bool print)
     {
-        _pipe = pipe;
+        _print = print;
+
+        return this;
+    }
+
+    public IShellInstance MarkSensitive(bool isSensitive = true)
+    {
+        _isSensitive = isSensitive;
 
         return this;
     }
@@ -68,6 +75,14 @@ internal abstract class ShellInstanceBase : IShellInstance, ILogSubject
 
     private TaskCompletionSource<ShellResult> StartProcess(Process process, CancellationToken ct)
     {
+        if (!_isSensitive)
+            this.Trace<string, string, string>(
+                "shell: [{dir}] {fileName} {arguments}",
+                process.StartInfo.WorkingDirectory,
+                process.StartInfo.FileName,
+                process.StartInfo.Arguments
+            );
+
         var tcs = new TaskCompletionSource<ShellResult>();
 
         // as far as there's no way to know if process was killed or finished on it's own - track it manually
@@ -75,6 +90,10 @@ internal abstract class ShellInstanceBase : IShellInstance, ILogSubject
 
         // this will be called when process finished on it's own, or is killed
         var exitHandled = false;
+
+        // setup output capture
+        var stdout = new StringBuilder();
+        var stderr = new StringBuilder();
 
         // track token cancellation and kill process if requested
         var registration = ct.Register(() =>
@@ -85,9 +104,9 @@ internal abstract class ShellInstanceBase : IShellInstance, ILogSubject
             {
                 process.Kill();
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                this.Warn("Kill process {command} failed: {e}", GetCommand(process), e);
+                this.Warn("Kill process {command} failed: {e}", GetCommand(process), ex);
             }
 
             HandleExit();
@@ -101,23 +120,9 @@ internal abstract class ShellInstanceBase : IShellInstance, ILogSubject
 
         process.Start();
 
-        if (_pipe)
-        {
-            Task.Run(() =>
-                {
-                    lock (_locker)
-                        PipeOut(process.StandardOutput);
-                })
-                .ConfigureAwait(false)
-                .GetAwaiter();
-            Task.Run(() =>
-                {
-                    lock (_locker)
-                        PipeOut(process.StandardError);
-                })
-                .ConfigureAwait(false)
-                .GetAwaiter();
-        }
+        // setup output capture
+        PipeOut(process.StandardOutput, stdout, Console.Out, _print, ct);
+        PipeOut(process.StandardError, stderr, Console.Error, _print, ct);
 
         return tcs;
 
@@ -130,39 +135,42 @@ internal abstract class ShellInstanceBase : IShellInstance, ILogSubject
             if (killed)
                 tcs.TrySetCanceled();
             else
-                tcs.TrySetResult(GetResult(process));
+                tcs.TrySetResult(GetResult(process.ExitCode, stdout, stderr));
             try
             {
                 process.Dispose();
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                this.Warn("Process.Dispose() failed: {e}", e);
+                this.Warn("Process.Dispose() failed: {e}", ex);
             }
         }
 
-        static void PipeOut(StreamReader src)
+        static void PipeOut(StreamReader src, StringBuilder result, TextWriter dst, bool print, CancellationToken ct)
         {
-            while (!src.EndOfStream)
-                Console.Write((char)src.Read());
+            Task.Run(() =>
+                {
+                    if (print)
+                        while (!src.EndOfStream && !ct.IsCancellationRequested)
+                        {
+                            var c = (char)src.Read();
+                            result.Append(c);
+                            dst.Write(c);
+                        }
+                    else
+                        while (!src.EndOfStream && !ct.IsCancellationRequested)
+                            result.Append((char)src.Read());
+                })
+                .ConfigureAwait(false)
+                .GetAwaiter();
         }
-    }
 
-    private ShellResult GetResult(Process process)
-    {
-        var output = Read(process.StandardOutput);
-        var error = Read(process.StandardError);
-
-        return new ShellResult(process.ExitCode, output, error);
-
-        static string Read(StreamReader src)
+        static ShellResult GetResult(int exitCode, StringBuilder stdout, StringBuilder stderr)
         {
-            var sb = new StringBuilder();
-            string? line;
-            while ((line = src.ReadLine()) != null)
-                sb.AppendLine(line);
+            var output = stdout.ToString();
+            var error = stderr.ToString();
 
-            return sb.ToString();
+            return new ShellResult(exitCode, output, error);
         }
     }
 

@@ -9,7 +9,7 @@ public interface IShellInstance
 {
     IShellInstance Configure(Action<ProcessStartInfo> configure);
 
-    IShellInstance Pipe(bool pipe);
+    IShellInstance Print(bool print);
 
     Task<ShellResult> RunAsync(TimeSpan timeout);
 
