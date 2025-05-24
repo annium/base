@@ -14,6 +14,7 @@ update:
 
 clean:
 	xx clean -sc -ic
+	find . -type f -name '*.nupkg' | xargs rm
 
 buildNumber?=0
 build:
