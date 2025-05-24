@@ -1,12 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-    <PropertyGroup>
-        <Solutions>Annium.Base</Solutions>
-        <OutputType>Library</OutputType>
-        <IsPackable>false</IsPackable>
-        <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    </PropertyGroup>
-    <ItemGroup>
-        <ProjectReference Include="../../../Annium/src/Annium.Testing/Annium.Testing.csproj" />
-        <ProjectReference Include="../../src/Annium.Net.Types/Annium.Net.Types.csproj" />
-    </ItemGroup>
+  <PropertyGroup>
+    <Solutions>Annium.Base</Solutions>
+    <OutputType>Library</OutputType>
+    <IsPackable>false</IsPackable>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../../Annium/src/Annium.Testing/Annium.Testing.csproj" />
+    <ProjectReference Include="../../src/Annium.Net.Types/Annium.Net.Types.csproj" />
+  </ItemGroup>
 </Project>

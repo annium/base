@@ -18,8 +18,7 @@ public class KeyedFactoryRegistrationTest : TestBase
         Build();
 
         // assert
-        GetKeyed<D>("x")
-            .Is(instance);
+        GetKeyed<D>("x").Is(instance);
         instance.IsNotDefault();
         instance.Key.Is("x");
     }
@@ -36,8 +35,7 @@ public class KeyedFactoryRegistrationTest : TestBase
         Build();
 
         // assert
-        GetKeyed<C>("x")
-            .Is(instance);
+        GetKeyed<C>("x").Is(instance);
         instance.IsNotDefault();
         instance.Key.Is("x");
     }

@@ -4,8 +4,6 @@ using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace Annium.Analyzers.Logging;
 
-
-
 // public class LogOverloadedCallAnalyzer : DiagnosticAnalyzer
 // {
 //     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } =

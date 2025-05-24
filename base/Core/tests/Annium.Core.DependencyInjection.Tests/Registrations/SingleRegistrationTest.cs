@@ -44,8 +44,7 @@ public class SingleRegistrationTest : TestBase
         Build();
 
         // assert
-        Get<IA>()
-            .Is(Get<IB>());
+        Get<IA>().Is(Get<IB>());
         Get<IB>().Is(Get<IB>());
     }
 
@@ -91,8 +90,7 @@ public class SingleRegistrationTest : TestBase
         Build();
 
         // assert
-        Get<Func<B>>()()
-            .Is(Get<B>());
+        Get<Func<B>>()().Is(Get<B>());
     }
 
     [Fact]
@@ -105,8 +103,7 @@ public class SingleRegistrationTest : TestBase
         Build();
 
         // assert
-        Get<Func<A>>()()
-            .Is(Get<B>());
+        Get<Func<A>>()().Is(Get<B>());
     }
 
     [Fact]
@@ -119,8 +116,7 @@ public class SingleRegistrationTest : TestBase
         Build();
 
         // assert
-        GetKeyed<Func<B>>(nameof(B))()
-            .Is(Get<B>());
+        GetKeyed<Func<B>>(nameof(B))().Is(Get<B>());
     }
 
     [Fact]
@@ -133,8 +129,7 @@ public class SingleRegistrationTest : TestBase
         Build();
 
         // assert
-        GetKeyed<Func<A>>(nameof(B))()
-            .Is(Get<B>());
+        GetKeyed<Func<A>>(nameof(B))().Is(Get<B>());
     }
 
     private sealed class B : A, IB

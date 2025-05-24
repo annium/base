@@ -1,8 +1,12 @@
 <Project>
-    <ImportGroup>
-        <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
-    </ImportGroup>
-    <ItemGroup>
-        <ProjectReference Include="$(MSBuildThisFileDirectory)/../Annium/src/Annium.Analyzers/Annium.Analyzers.csproj" OutputItemType="Analyzer" PrivateAssets="all" />
-    </ItemGroup>
+  <ImportGroup>
+    <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+  </ImportGroup>
+  <ItemGroup>
+    <ProjectReference
+      Include="$(MSBuildThisFileDirectory)/../Annium/src/Annium.Analyzers/Annium.Analyzers.csproj"
+      OutputItemType="Analyzer"
+      PrivateAssets="all"
+    />
+  </ItemGroup>
 </Project>

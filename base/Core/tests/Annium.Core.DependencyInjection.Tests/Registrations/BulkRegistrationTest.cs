@@ -65,8 +65,7 @@ public class BulkRegistrationTest : TestBase
         Build();
 
         // assert
-        Get<IA>()
-            .Is(Get<IB>());
+        Get<IA>().Is(Get<IB>());
         Get<IEnumerable<IA>>().At(0).AsExact<A>();
         Get<IEnumerable<IA>>().At(1).AsExact<B>();
     }
@@ -99,8 +98,7 @@ public class BulkRegistrationTest : TestBase
         Build();
 
         // assert
-        GetKeyed<A>(nameof(A))
-            .AsExact<A>();
+        GetKeyed<A>(nameof(A)).AsExact<A>();
         GetKeyed<A>(nameof(B)).AsExact<B>();
     }
 

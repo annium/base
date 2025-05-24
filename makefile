@@ -2,8 +2,8 @@ setup:
 	dotnet tool restore
 
 format:
+	dotnet csharpier format .
 	xx format -sc -ic
-	dotnet csharpier .
 
 format-full: format
 	dotnet format style

@@ -17,8 +17,7 @@ public class ServiceContainerTest : TestBase
         Build();
 
         // assert
-        Get<A>()
-            .Is(instance);
+        Get<A>().Is(instance);
     }
 
     [Fact]

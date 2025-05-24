@@ -1,13 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-    <PropertyGroup>
-        <Solutions>Annium.Base</Solutions>
-        <OutputType>Library</OutputType>
-        <IsPackable>true</IsPackable>
-        <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    </PropertyGroup>
-    <ItemGroup>
-        <ProjectReference Include="../../../Data/src/Annium.Data.Models/Annium.Data.Models.csproj" />
-        <ProjectReference Include="../../../Logging/src/Annium.Logging.Xunit/Annium.Logging.Xunit.csproj" />
-        <ProjectReference Include="../Annium.Analyzers/Annium.Analyzers.csproj" OutputItemType="Analyzer" />
-    </ItemGroup>
+  <PropertyGroup>
+    <Solutions>Annium.Base</Solutions>
+    <OutputType>Library</OutputType>
+    <IsPackable>true</IsPackable>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../../Data/src/Annium.Data.Models/Annium.Data.Models.csproj" />
+    <ProjectReference Include="../../../Logging/src/Annium.Logging.Xunit/Annium.Logging.Xunit.csproj" />
+    <ProjectReference Include="../Annium.Analyzers/Annium.Analyzers.csproj" OutputItemType="Analyzer" />
+  </ItemGroup>
 </Project>

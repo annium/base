@@ -6,8 +6,11 @@ namespace Annium.NodaTime.Extensions.Tests;
 
 public class ZonedDateTimeExtensionsTest
 {
-    private readonly ZonedDateTime _moment =
-        new(new LocalDateTime(1971, 11, 26, 10, 40), DateTimeZone.Utc, Offset.Zero);
+    private readonly ZonedDateTime _moment = new(
+        new LocalDateTime(1971, 11, 26, 10, 40),
+        DateTimeZone.Utc,
+        Offset.Zero
+    );
 
     [Fact]
     public void FromUnixTimeMinutes()

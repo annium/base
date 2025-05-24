@@ -17,8 +17,7 @@ public class InstanceRegistrationTest : TestBase
         Build();
 
         // assert
-        Get<D>()
-            .Is(instance);
+        Get<D>().Is(instance);
     }
 
     [Fact]
@@ -45,8 +44,7 @@ public class InstanceRegistrationTest : TestBase
         Build();
 
         // assert
-        Get<IC>()
-            .Is(Get<D>());
+        Get<IC>().Is(Get<D>());
         Get<ID>().Is(Get<D>());
     }
 
@@ -61,8 +59,7 @@ public class InstanceRegistrationTest : TestBase
         Build();
 
         // assert
-        GetKeyed<D>(nameof(D))
-            .Is(instance);
+        GetKeyed<D>(nameof(D)).Is(instance);
     }
 
     [Fact]
@@ -76,8 +73,7 @@ public class InstanceRegistrationTest : TestBase
         Build();
 
         // assert
-        GetKeyed<C>(nameof(D))
-            .Is(instance);
+        GetKeyed<C>(nameof(D)).Is(instance);
     }
 
     [Fact]
@@ -91,8 +87,7 @@ public class InstanceRegistrationTest : TestBase
         Build();
 
         // assert
-        Get<Func<D>>()()
-            .Is(instance);
+        Get<Func<D>>()().Is(instance);
     }
 
     [Fact]
@@ -106,8 +101,7 @@ public class InstanceRegistrationTest : TestBase
         Build();
 
         // assert
-        Get<Func<C>>()()
-            .Is(instance);
+        Get<Func<C>>()().Is(instance);
     }
 
     [Fact]
@@ -121,8 +115,7 @@ public class InstanceRegistrationTest : TestBase
         Build();
 
         // assert
-        GetKeyed<Func<D>>(nameof(D))()
-            .Is(instance);
+        GetKeyed<Func<D>>(nameof(D))().Is(instance);
     }
 
     [Fact]
@@ -136,8 +129,7 @@ public class InstanceRegistrationTest : TestBase
         Build();
 
         // assert
-        GetKeyed<Func<C>>(nameof(C))()
-            .Is(instance);
+        GetKeyed<Func<C>>(nameof(C))().Is(instance);
     }
 
     private sealed class D : C, ID

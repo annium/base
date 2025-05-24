@@ -109,8 +109,8 @@ internal class MapBuilder : IMapBuilder, ILogSubject
                 return entry.Mapping;
             }
 
-            entry.SetMapping(
-                () => BuildMapping(src, tgt, entry.HasConfiguration ? entry.Configuration : MapConfiguration.Empty)
+            entry.SetMapping(() =>
+                BuildMapping(src, tgt, entry.HasConfiguration ? entry.Configuration : MapConfiguration.Empty)
             );
         }
 

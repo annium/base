@@ -1,16 +1,16 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-    <PropertyGroup>
-        <Solutions>Annium.Base</Solutions>
-        <OutputType>Exe</OutputType>
-        <IsPackable>false</IsPackable>
-        <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    </PropertyGroup>
-    <ItemGroup>
-        <ProjectReference Include="../../../Logging/src/Annium.Logging.InMemory/Annium.Logging.InMemory.csproj" />
-        <ProjectReference Include="../../src/Annium.Net.Http/Annium.Net.Http.csproj" />
-        <ProjectReference Include="../../src/Annium.Net.Servers.Web/Annium.Net.Servers.Web.csproj" />
-    </ItemGroup>
-    <ItemGroup>
-        <PackageReference Include="BenchmarkDotNet" />
-    </ItemGroup>
+  <PropertyGroup>
+    <Solutions>Annium.Base</Solutions>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../../Logging/src/Annium.Logging.InMemory/Annium.Logging.InMemory.csproj" />
+    <ProjectReference Include="../../src/Annium.Net.Http/Annium.Net.Http.csproj" />
+    <ProjectReference Include="../../src/Annium.Net.Servers.Web/Annium.Net.Servers.Web.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" />
+  </ItemGroup>
 </Project>

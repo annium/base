@@ -1,13 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-    <PropertyGroup>
-        <Solutions>Annium.Base</Solutions>
-        <OutputType>Library</OutputType>
-        <IsPackable>true</IsPackable>
-        <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    </PropertyGroup>
-    <ItemGroup>
-        <ProjectReference Include="../../../Core/src/Annium.Core.Mediator/Annium.Core.Mediator.csproj" />
-        <ProjectReference Include="../../../Extensions/src/Annium.Extensions.Composition/Annium.Extensions.Composition.csproj" />
-        <ProjectReference Include="../../../Extensions/src/Annium.Extensions.Validation/Annium.Extensions.Validation.csproj" />
-    </ItemGroup>
+  <PropertyGroup>
+    <Solutions>Annium.Base</Solutions>
+    <OutputType>Library</OutputType>
+    <IsPackable>true</IsPackable>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../../Core/src/Annium.Core.Mediator/Annium.Core.Mediator.csproj" />
+    <ProjectReference Include="../../../Extensions/src/Annium.Extensions.Composition/Annium.Extensions.Composition.csproj" />
+    <ProjectReference Include="../../../Extensions/src/Annium.Extensions.Validation/Annium.Extensions.Validation.csproj" />
+  </ItemGroup>
 </Project>
