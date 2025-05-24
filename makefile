@@ -1,5 +1,4 @@
 setup:
-	xx remote restore -user $(user) -password $(pass)
 	dotnet tool restore
 
 format:
