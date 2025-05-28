@@ -1,5 +1,5 @@
 using System;
-using System.Linq;
+using System.Collections.Generic;
 using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Channels;
@@ -57,7 +57,7 @@ internal class BackgroundLogScheduler<TContext> : ILogScheduler<TContext>, ILogS
         _subscription = _observable
             .Buffer(configuration.BufferTime, configuration.BufferCount)
             .Where(x => x.Count > 0)
-            .DoParallelAsync(async x => await handler.HandleAsync(x.ToArray()))
+            .DoSequentialAsync(async x => await handler.HandleAsync(x.AsReadOnly()))
             .Subscribe();
     }
 
