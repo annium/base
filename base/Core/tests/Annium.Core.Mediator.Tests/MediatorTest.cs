@@ -7,7 +7,6 @@ using Annium.Data.Operations;
 using Annium.Logging;
 using Annium.Testing;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Annium.Core.Mediator.Tests;
 
@@ -26,7 +25,7 @@ public class MediatorTest : TestBase
         var request = new Base { Value = "base" };
 
         // act
-        var response = await mediator.SendAsync<One>(request);
+        var response = await mediator.SendAsync<One>(request, TestContext.Current.CancellationToken);
 
         // assert
         response.GetHashCode().Is(new One { First = request.Value.Length, Value = request.Value }.GetHashCode());
@@ -42,7 +41,7 @@ public class MediatorTest : TestBase
         var request = new Two { Second = 2, Value = "one two three" };
 
         // act
-        var response = await mediator.SendAsync<Base>(request);
+        var response = await mediator.SendAsync<Base>(request, TestContext.Current.CancellationToken);
 
         // assert
         response.GetHashCode().Is(new Base { Value = "one_two_three" }.GetHashCode());
@@ -63,7 +62,9 @@ public class MediatorTest : TestBase
         var payload = new Request<Two>(request);
 
         // act
-        var response = (await mediator.SendAsync<Response<IBooleanResult<Base>>>(payload)).Value;
+        var response = (
+            await mediator.SendAsync<Response<IBooleanResult<Base>>>(payload, TestContext.Current.CancellationToken)
+        ).Value;
 
         // assert
         response.IsSuccess.IsTrue();
@@ -86,7 +87,9 @@ public class MediatorTest : TestBase
         var payload = new Request<Two>(request);
 
         // act
-        var response = (await mediator.SendAsync<IResponse>(payload)).As<Response<IBooleanResult<Base>>>().Value;
+        var response = (await mediator.SendAsync<IResponse>(payload, TestContext.Current.CancellationToken))
+            .As<Response<IBooleanResult<Base>>>()
+            .Value;
 
         // assert
         response.IsSuccess.IsTrue();

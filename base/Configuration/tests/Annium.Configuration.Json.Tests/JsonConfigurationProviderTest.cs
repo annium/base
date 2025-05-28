@@ -7,7 +7,6 @@ using Annium.Core.DependencyInjection;
 using Annium.Serialization.Abstractions;
 using Annium.Testing;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Annium.Configuration.Json.Tests;
 

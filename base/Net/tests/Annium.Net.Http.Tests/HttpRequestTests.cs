@@ -9,7 +9,6 @@ using Annium.Core.DependencyInjection;
 using Annium.Logging;
 using Annium.Testing;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Annium.Net.Http.Tests;
 
@@ -35,7 +34,10 @@ public class HttpRequestTests : TestBase
 
         // act
         this.Trace("send text");
-        var response = await _httpRequestFactory.New(ServerUri).Get("/").RunAsync();
+        var response = await _httpRequestFactory
+            .New(ServerUri)
+            .Get("/")
+            .RunAsync(TestContext.Current.CancellationToken);
 
         // assert
         response.IsAbort.IsTrue();
@@ -94,7 +96,7 @@ public class HttpRequestTests : TestBase
             .New(ServerUri)
             .Get("/")
             .Timeout(TimeSpan.FromMilliseconds(50))
-            .RunAsync();
+            .RunAsync(TestContext.Current.CancellationToken);
 
         // assert
         response.IsAbort.IsTrue();
@@ -122,14 +124,17 @@ public class HttpRequestTests : TestBase
 
         // act
         this.Trace("send");
-        var response = await _httpRequestFactory.New(ServerUri).With(HttpMethod.Patch, "/").RunAsync();
+        var response = await _httpRequestFactory
+            .New(ServerUri)
+            .With(HttpMethod.Patch, "/")
+            .RunAsync(TestContext.Current.CancellationToken);
 
         // assert
         response.IsAbort.IsFalse();
         response.IsSuccess.IsTrue();
         response.IsFailure.IsFalse();
         response.StatusCode.Is(HttpStatusCode.OK);
-        var responseContent = await response.Content.ReadAsStringAsync();
+        var responseContent = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
         responseContent.Is(HttpMethod.Patch.ToString());
 
         this.Trace("done");
@@ -163,7 +168,11 @@ public class HttpRequestTests : TestBase
 
         // act
         this.Trace("send");
-        var response = await _httpRequestFactory.New(ServerUri).Head("/").Header(headerKey, headerValue).RunAsync();
+        var response = await _httpRequestFactory
+            .New(ServerUri)
+            .Head("/")
+            .Header(headerKey, headerValue)
+            .RunAsync(TestContext.Current.CancellationToken);
 
         // assert
         response.IsAbort.IsFalse();
@@ -200,14 +209,14 @@ public class HttpRequestTests : TestBase
             .Get("/")
             .Param("x", "a")
             .Param("y", new[] { "b", "c" })
-            .RunAsync();
+            .RunAsync(TestContext.Current.CancellationToken);
 
         // assert
         response.IsAbort.IsFalse();
         response.IsSuccess.IsTrue();
         response.IsFailure.IsFalse();
         response.StatusCode.Is(HttpStatusCode.OK);
-        var responseContent = await response.Content.ReadAsStringAsync();
+        var responseContent = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
         responseContent.Is("?x=a&y=b&y=c");
 
         this.Trace("done");
@@ -230,14 +239,18 @@ public class HttpRequestTests : TestBase
 
         // act
         this.Trace("send");
-        var response = await _httpRequestFactory.New(ServerUri).Post("/").StringContent(message).RunAsync();
+        var response = await _httpRequestFactory
+            .New(ServerUri)
+            .Post("/")
+            .StringContent(message)
+            .RunAsync(TestContext.Current.CancellationToken);
 
         // assert
         response.IsAbort.IsFalse();
         response.IsSuccess.IsTrue();
         response.IsFailure.IsFalse();
         response.StatusCode.Is(HttpStatusCode.OK);
-        var responseContent = await response.Content.ReadAsStringAsync();
+        var responseContent = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
         responseContent.Is(message);
 
         this.Trace("done");

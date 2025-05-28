@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Annium.Logging;
 using Annium.Testing;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Annium.Extensions.Reactive.Tests.Operators;
 

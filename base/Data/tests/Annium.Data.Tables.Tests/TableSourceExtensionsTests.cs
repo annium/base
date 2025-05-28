@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using Annium.Core.DependencyInjection;
 using Annium.Testing;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Annium.Data.Tables.Tests;
 
@@ -124,7 +123,7 @@ public class TableSourceExtensionsTests : TestBase
         // sync with some data
         var syncValues = new[] { new Sample(1, "a"), new Sample(3, "c") };
         table.SyncAddDelete(syncValues);
-        await Task.Delay(100);
+        await Task.Delay(100, TestContext.Current.CancellationToken);
         log.Has(3);
         log.At(1).Equals(ChangeEvent.Delete(initValues[1])).IsTrue();
         log.At(2).Equals(ChangeEvent.Set(syncValues[1])).IsTrue();
@@ -152,7 +151,7 @@ public class TableSourceExtensionsTests : TestBase
         // sync with some data
         var syncValues = new[] { new Sample(1, "z"), new Sample(3, "c") };
         table.SyncAddUpdateDelete(syncValues);
-        await Task.Delay(100);
+        await Task.Delay(100, TestContext.Current.CancellationToken);
         log.Has(4);
         log.At(1).Equals(ChangeEvent.Delete(initValues[1])).IsTrue();
         log.At(2).Equals(ChangeEvent.Set(syncValues[0])).IsTrue();

@@ -8,7 +8,6 @@ using Annium.Logging;
 using Annium.Testing;
 using Annium.Threading.Tasks;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Annium.Net.WebSockets.Tests;
 
@@ -32,7 +31,7 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
 
         // act
         this.Trace("send text");
-        var result = await SendTextAsync(message);
+        var result = await SendTextAsync(message, TestContext.Current.CancellationToken);
 
         // assert
         this.Trace("assert closed");
@@ -95,7 +94,7 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
         await DisconnectAsync();
 
         this.Trace("send text");
-        var result = await SendTextAsync(message);
+        var result = await SendTextAsync(message, TestContext.Current.CancellationToken);
 
         // assert
         this.Trace("assert closed");
@@ -122,7 +121,7 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
         });
 
         this.Trace("connect");
-        var disconnectionTask = ClientSocket.WhenDisconnectedAsync();
+        var disconnectionTask = ClientSocket.WhenDisconnectedAsync(ct: TestContext.Current.CancellationToken);
         await ConnectAsync();
 
         this.Trace("await until disconnected");
@@ -130,7 +129,7 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
 
         // act
         this.Trace("send text");
-        var result = await SendTextAsync(message);
+        var result = await SendTextAsync(message, TestContext.Current.CancellationToken);
 
         // assert
         this.Trace("assert closed");
@@ -177,7 +176,7 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
 
         // act && assert
         this.Trace("send text");
-        var textResult = await SendTextAsync(text);
+        var textResult = await SendTextAsync(text, TestContext.Current.CancellationToken);
 
         this.Trace("assert sent ok");
         textResult.Is(WebSocketSendStatus.Ok);
@@ -187,7 +186,7 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
         await Expect.ToAsync(() => _texts.IsEqual(expectedTexts));
 
         this.Trace("send binary");
-        var binaryResult = await SendBinaryAsync(binary);
+        var binaryResult = await SendBinaryAsync(binary, TestContext.Current.CancellationToken);
 
         this.Trace("assert ok");
         binaryResult.Is(WebSocketSendStatus.Ok);
@@ -237,7 +236,7 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
 
         // act - send text
         this.Trace("send text");
-        var textResult = await SendTextAsync(text);
+        var textResult = await SendTextAsync(text, TestContext.Current.CancellationToken);
 
         this.Trace("assert sent ok");
         textResult.Is(WebSocketSendStatus.Ok);
@@ -258,7 +257,7 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
         await serverConnectionTcs.Task;
 
         this.Trace("send binary");
-        var binaryResult = await SendBinaryAsync(binary);
+        var binaryResult = await SendBinaryAsync(binary, TestContext.Current.CancellationToken);
 
         this.Trace("assert sent ok");
         binaryResult.Is(WebSocketSendStatus.Ok);
@@ -341,7 +340,7 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
 
         // act
         this.Trace("connect");
-        var disconnectionTask = ClientSocket.WhenDisconnectedAsync();
+        var disconnectionTask = ClientSocket.WhenDisconnectedAsync(ct: TestContext.Current.CancellationToken);
         await ConnectAsync();
 
         // assert
@@ -394,7 +393,7 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
 
         // act
         this.Trace("connect");
-        var disconnectionTask = ClientSocket.WhenDisconnectedAsync();
+        var disconnectionTask = ClientSocket.WhenDisconnectedAsync(ct: TestContext.Current.CancellationToken);
         await ConnectAsync();
 
         // assert
@@ -495,7 +494,7 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
         this.Trace("done");
     }
 
-    public Task InitializeAsync()
+    public ValueTask InitializeAsync()
     {
         this.Trace("start");
 
@@ -517,10 +516,10 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
 
         this.Trace("done");
 
-        return Task.CompletedTask;
+        return ValueTask.CompletedTask;
     }
 
-    public Task DisposeAsync()
+    public ValueTask DisposeAsync()
     {
         this.Trace("start");
 
@@ -528,7 +527,7 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
 
         this.Trace("done");
 
-        return Task.CompletedTask;
+        return ValueTask.CompletedTask;
     }
 
     private IAsyncDisposable RunServer(Func<ServerWebSocket, Task> handleWebSocket)

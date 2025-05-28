@@ -7,7 +7,6 @@ using Annium.Logging;
 using Annium.Net.Http.Internal;
 using Annium.Testing;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Annium.Net.Http.Tests.Extensions;
 
@@ -55,7 +54,10 @@ public class AsExtensionsTests : TestBase
 
         // act
         this.Trace("send");
-        var response = await _httpRequestFactory.New(ServerUri).Get("/").AsAsync<Data>();
+        var response = await _httpRequestFactory
+            .New(ServerUri)
+            .Get("/")
+            .AsAsync<Data>(ct: TestContext.Current.CancellationToken);
 
         // assert
         response.IsNotDefault();
@@ -80,7 +82,10 @@ public class AsExtensionsTests : TestBase
 
         // act
         this.Trace("send");
-        var response = await _httpRequestFactory.New(ServerUri).Get("/").AsAsync<Data>();
+        var response = await _httpRequestFactory
+            .New(ServerUri)
+            .Get("/")
+            .AsAsync<Data>(ct: TestContext.Current.CancellationToken);
 
         // assert
         response.IsDefault();
@@ -106,7 +111,10 @@ public class AsExtensionsTests : TestBase
 
         // act
         this.Trace("send");
-        var response = await _httpRequestFactory.New(ServerUri).Get("/").AsAsync(defaultData);
+        var response = await _httpRequestFactory
+            .New(ServerUri)
+            .Get("/")
+            .AsAsync(defaultData, ct: TestContext.Current.CancellationToken);
 
         // assert
         response.IsNotDefault();
@@ -132,7 +140,10 @@ public class AsExtensionsTests : TestBase
 
         // act
         this.Trace("send");
-        var response = await _httpRequestFactory.New(ServerUri).Get("/").AsAsync(defaultData);
+        var response = await _httpRequestFactory
+            .New(ServerUri)
+            .Get("/")
+            .AsAsync(defaultData, ct: TestContext.Current.CancellationToken);
 
         // assert
         response.IsNotDefault();
@@ -158,7 +169,10 @@ public class AsExtensionsTests : TestBase
 
         // act
         this.Trace("send");
-        var response = await _httpRequestFactory.New(ServerUri).Get("/").AsAsync<Data, Error>();
+        var response = await _httpRequestFactory
+            .New(ServerUri)
+            .Get("/")
+            .AsAsync<Data, Error>(ct: TestContext.Current.CancellationToken);
 
         // assert
         response.IsT0.IsTrue();
@@ -185,7 +199,10 @@ public class AsExtensionsTests : TestBase
 
         // act
         this.Trace("send");
-        var response = await _httpRequestFactory.New(ServerUri).Get("/").AsAsync<Data, Error>();
+        var response = await _httpRequestFactory
+            .New(ServerUri)
+            .Get("/")
+            .AsAsync<Data, Error>(ct: TestContext.Current.CancellationToken);
 
         // assert
         response.IsT1.IsTrue();
@@ -215,7 +232,10 @@ public class AsExtensionsTests : TestBase
         var response = await _httpRequestFactory
             .New(ServerUri)
             .Get("/")
-            .AsAsync<Data, Error>((r, c, e) => Task.FromResult(new Error(r, e?.Message ?? "failure")));
+            .AsAsync<Data, Error>(
+                (r, c, e) => Task.FromResult(new Error(r, e?.Message ?? "failure")),
+                ct: TestContext.Current.CancellationToken
+            );
 
         // assert
         response.IsT0.IsTrue();
@@ -245,7 +265,10 @@ public class AsExtensionsTests : TestBase
         var response = await _httpRequestFactory
             .New(ServerUri)
             .Get("/")
-            .AsAsync<Data, Error>((r, c, e) => Task.FromResult(new Error(r, e?.Message ?? "failure")));
+            .AsAsync<Data, Error>(
+                (r, c, e) => Task.FromResult(new Error(r, e?.Message ?? "failure")),
+                ct: TestContext.Current.CancellationToken
+            );
 
         // assert
         response.IsT1.IsTrue();
@@ -274,7 +297,10 @@ public class AsExtensionsTests : TestBase
         var response = await _httpRequestFactory
             .New(ServerUri)
             .Get("/")
-            .AsAsync<Data, Error>((r, c, e) => Task.FromResult(new Error(r, e?.Message ?? "failure")));
+            .AsAsync<Data, Error>(
+                (r, c, e) => Task.FromResult(new Error(r, e?.Message ?? "failure")),
+                ct: TestContext.Current.CancellationToken
+            );
 
         // assert
         response.IsT1.IsTrue();

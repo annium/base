@@ -5,7 +5,6 @@ using Annium.Core.DependencyInjection;
 using Annium.Logging;
 using Annium.Testing;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Annium.Net.Http.Tests;
 
@@ -45,13 +44,13 @@ public class HttpRequestConfigureInterceptTests : TestBase
             .New(ServerUri)
             .Get("/")
             .Configure(req => req.Param("x", "a"))
-            .RunAsync();
+            .RunAsync(TestContext.Current.CancellationToken);
 
         // assert
         response.IsSuccess.IsTrue();
         response.IsFailure.IsFalse();
         response.StatusCode.Is(HttpStatusCode.OK);
-        var responseContent = await response.Content.ReadAsStringAsync();
+        var responseContent = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
         responseContent.Is("?x=a");
 
         this.Trace("done");
@@ -87,13 +86,13 @@ public class HttpRequestConfigureInterceptTests : TestBase
                 return response;
             })
             .StringContent(message)
-            .RunAsync();
+            .RunAsync(TestContext.Current.CancellationToken);
 
         // assert
         response.IsSuccess.IsTrue();
         response.IsFailure.IsFalse();
         response.StatusCode.Is(HttpStatusCode.OK);
-        var responseContent = await response.Content.ReadAsStringAsync();
+        var responseContent = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
         responseContent.Is(message);
         log.IsEqual(new[] { "before", "after" });
 
@@ -133,13 +132,13 @@ public class HttpRequestConfigureInterceptTests : TestBase
             )
             .Param("x", 1)
             .StringContent(message)
-            .RunAsync();
+            .RunAsync(TestContext.Current.CancellationToken);
 
         // assert
         response.IsSuccess.IsTrue();
         response.IsFailure.IsFalse();
         response.StatusCode.Is(HttpStatusCode.OK);
-        var responseContent = await response.Content.ReadAsStringAsync();
+        var responseContent = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
         responseContent.Is(message);
         log.IsEqual(new[] { "before 1", "after 1" });
 

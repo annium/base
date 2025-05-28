@@ -4,7 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Annium.Logging;
 using Annium.Net.Servers.Web;
-using Xunit.Abstractions;
+using Xunit;
 
 namespace Annium.Net.Http.Tests;
 

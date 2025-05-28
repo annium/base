@@ -1,6 +1,5 @@
 using Annium.Testing;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Annium.Tests;
 

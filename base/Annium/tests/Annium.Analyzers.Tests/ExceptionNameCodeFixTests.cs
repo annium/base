@@ -22,6 +22,6 @@ public class ExceptionNameCodeFixTests : CSharpCodeFixTest<ExceptionNameAnalyzer
 
         FixedState.Sources.Add(("CustomErrorException.cs", "public class CustomErrorException : System.Exception { }"));
 
-        await RunAsync();
+        await RunAsync(TestContext.Current.CancellationToken);
     }
 }

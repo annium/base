@@ -9,7 +9,6 @@ using Annium.Logging.Shared;
 using Annium.Testing;
 using Annium.Threading.Tasks;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Annium.Logging.File.Tests;
 

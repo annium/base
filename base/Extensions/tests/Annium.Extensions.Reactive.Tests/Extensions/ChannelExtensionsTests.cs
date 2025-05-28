@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using Annium.Logging;
 using Annium.Testing;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Annium.Extensions.Reactive.Tests.Extensions;
 
@@ -33,7 +32,7 @@ public class ChannelExtensionsTests : TestBase
         var disposeCounter = 0;
 
         this.Trace("await");
-        await Task.Delay(50);
+        await Task.Delay(50, TestContext.Current.CancellationToken);
 
         this.Trace("create observable from channel");
         var observable = channel.Reader.AsObservable(HandleDisposed);

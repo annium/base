@@ -1,7 +1,7 @@
 using Annium.Net.Types.Refs;
 using Annium.Testing;
 using Namotion.Reflection;
-using Xunit.Abstractions;
+using Xunit;
 
 namespace Annium.Net.Types.Tests.Lib.Mapper;
 

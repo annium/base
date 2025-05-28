@@ -4,7 +4,6 @@ using Annium.Core.Mediator;
 using Annium.Data.Operations;
 using Annium.Testing;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Annium.Architecture.Mediator.Tests;
 
@@ -22,7 +21,10 @@ public class LoggingPipeHandlerTest : TestBase
         var request = new LoginRequest();
 
         // act
-        var result = await mediator.SendAsync<IStatusResult<OperationStatus, LoginRequest>>(request);
+        var result = await mediator.SendAsync<IStatusResult<OperationStatus, LoginRequest>>(
+            request,
+            TestContext.Current.CancellationToken
+        );
 
         // assert
         result.Status.Is(OperationStatus.Ok);

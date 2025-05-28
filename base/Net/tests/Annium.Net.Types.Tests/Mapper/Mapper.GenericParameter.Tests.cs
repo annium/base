@@ -1,6 +1,5 @@
 using Annium.Net.Types.Tests.Lib.Mapper;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Annium.Net.Types.Tests.Mapper;
 

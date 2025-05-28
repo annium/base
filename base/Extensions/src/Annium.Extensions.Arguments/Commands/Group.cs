@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Annium.Core.DependencyInjection;
 using Annium.Extensions.Arguments.Internal;
 
@@ -26,12 +27,7 @@ public abstract class Group : CommandBase
         return this;
     }
 
-    public override async System.Threading.Tasks.Task ProcessAsync(
-        string id,
-        string description,
-        string[] args,
-        CancellationToken ct
-    )
+    public override async Task ProcessAsync(string id, string description, string[] args, CancellationToken ct)
     {
         var (provider, configurationBuilder, helpBuilder) = Root;
         CommandInfo? cmdInfo;

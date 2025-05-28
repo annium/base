@@ -1,7 +1,7 @@
 using System;
 using Annium.Logging.Shared;
 using Annium.Logging.Xunit.Internal;
-using Xunit.Abstractions;
+using Xunit;
 using static Annium.Logging.Shared.LogMessageExtensions;
 
 // ReSharper disable once CheckNamespace

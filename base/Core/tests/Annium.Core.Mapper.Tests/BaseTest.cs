@@ -1,7 +1,6 @@
 using Annium.Core.DependencyInjection;
 using Annium.Testing;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Annium.Core.Mapper.Tests;
 

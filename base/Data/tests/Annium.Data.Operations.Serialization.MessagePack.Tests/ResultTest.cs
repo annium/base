@@ -4,7 +4,6 @@ using Annium.Data.Operations.Serialization.Tests.Base;
 using MessagePack;
 using MessagePack.Resolvers;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Annium.Data.Operations.Serialization.MessagePack.Tests;
 

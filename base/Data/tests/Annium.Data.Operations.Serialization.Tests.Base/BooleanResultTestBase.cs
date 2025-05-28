@@ -1,6 +1,6 @@
 using Annium.Serialization.Abstractions;
 using Annium.Testing;
-using Xunit.Abstractions;
+using Xunit;
 
 namespace Annium.Data.Operations.Serialization.Tests.Base;
 

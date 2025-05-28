@@ -7,7 +7,6 @@ using Annium.Logging;
 using Annium.Testing;
 using OneOf;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Annium.Extensions.Pooling.Tests;
 

@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using Annium.Core.DependencyInjection;
 using Annium.Testing;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Annium.Data.Tables.Tests;
 

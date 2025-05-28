@@ -5,7 +5,6 @@ using Annium.Logging;
 using Annium.Testing;
 using Annium.Threading;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Annium.Tests.Threading;
 
@@ -45,10 +44,10 @@ public class DebounceTimerTests : TestBase
                 this.Trace("chunk start");
                 Parallel.ForEach(Enumerable.Range(0, 5), _ => timer.Request());
                 this.Trace("chunk delay");
-                await Task.Delay(1);
+                await Task.Delay(1, TestContext.Current.CancellationToken);
             }
             this.Trace("bulk delay");
-            await Task.Delay(50);
+            await Task.Delay(50, TestContext.Current.CancellationToken);
         }
 
         // assert
@@ -88,10 +87,10 @@ public class DebounceTimerTests : TestBase
                 this.Trace("chunk start");
                 Parallel.ForEach(Enumerable.Range(0, 5), _ => timer.Request());
                 this.Trace("chunk delay");
-                await Task.Delay(1);
+                await Task.Delay(1, TestContext.Current.CancellationToken);
             }
             this.Trace("bulk delay");
-            await Task.Delay(50);
+            await Task.Delay(50, TestContext.Current.CancellationToken);
         }
 
         // assert

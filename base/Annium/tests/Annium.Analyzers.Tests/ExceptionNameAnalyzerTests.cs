@@ -15,7 +15,7 @@ public class ExceptionNameAnalyzerTests : CSharpAnalyzerTest<ExceptionNameAnalyz
 
         ExpectedDiagnostics.Clear();
 
-        await RunAsync();
+        await RunAsync(TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -29,6 +29,6 @@ public class ExceptionNameAnalyzerTests : CSharpAnalyzerTest<ExceptionNameAnalyz
                 .WithSpan("CustomError.cs", 1, 14, 1, 25)
         );
 
-        await RunAsync();
+        await RunAsync(TestContext.Current.CancellationToken);
     }
 }

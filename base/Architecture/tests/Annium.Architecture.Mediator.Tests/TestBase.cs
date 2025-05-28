@@ -1,7 +1,7 @@
 using System;
 using Annium.Core.DependencyInjection;
 using Annium.Core.Mediator;
-using Xunit.Abstractions;
+using Xunit;
 
 namespace Annium.Architecture.Mediator.Tests;
 

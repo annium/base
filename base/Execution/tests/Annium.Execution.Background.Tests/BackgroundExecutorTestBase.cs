@@ -6,7 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Annium.Logging;
 using Annium.Testing;
-using Xunit.Abstractions;
+using Xunit;
 
 namespace Annium.Execution.Background.Tests;
 

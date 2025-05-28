@@ -5,7 +5,6 @@ using Annium.Configuration.Tests.Lib;
 using Annium.Core.DependencyInjection;
 using Annium.Testing;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Annium.Configuration.CommandLine.Tests;
 

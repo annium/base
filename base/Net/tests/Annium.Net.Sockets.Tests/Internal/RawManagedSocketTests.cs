@@ -12,7 +12,6 @@ using Annium.Logging;
 using Annium.Net.Sockets.Internal;
 using Annium.Testing;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Annium.Net.Sockets.Tests.Internal;
 
@@ -55,7 +54,7 @@ public class RawManagedSocketTests : TestBase, IAsyncLifetime
         await using var _ = _runServer(async (serverSocket, ct) => await serverSocket.ListenAsync(ct));
 
         this.Trace("connect and start listening");
-        await ConnectAndStartListenAsync();
+        await ConnectAndStartListenAsync(TestContext.Current.CancellationToken);
 
         // act
         this.Trace("send message with canceled flag");
@@ -84,14 +83,14 @@ public class RawManagedSocketTests : TestBase, IAsyncLifetime
         await using var _ = _runServer(async (serverSocket, ct) => await serverSocket.ListenAsync(ct));
 
         this.Trace("connect and start listening");
-        await ConnectAndStartListenAsync();
+        await ConnectAndStartListenAsync(TestContext.Current.CancellationToken);
 
         // act
         this.Trace("close client socket");
         ClientSocket.Close();
 
         this.Trace("send message");
-        var result = await ManagedSocket.SendAsync(message);
+        var result = await ManagedSocket.SendAsync(message, TestContext.Current.CancellationToken);
 
         // assert
         this.Trace("assert close is received");
@@ -124,7 +123,7 @@ public class RawManagedSocketTests : TestBase, IAsyncLifetime
         );
 
         this.Trace("connect and start listening");
-        await ConnectAndStartListenAsync();
+        await ConnectAndStartListenAsync(TestContext.Current.CancellationToken);
 
         // delay to let server close connection
         this.Trace("await server signal");
@@ -132,7 +131,7 @@ public class RawManagedSocketTests : TestBase, IAsyncLifetime
 
         // act
         this.Trace("send message");
-        var result = await ManagedSocket.SendAsync(message);
+        var result = await ManagedSocket.SendAsync(message, TestContext.Current.CancellationToken);
 
         // assert
         this.Trace("assert close is received");
@@ -171,7 +170,7 @@ public class RawManagedSocketTests : TestBase, IAsyncLifetime
         );
 
         this.Trace("connect and start listening");
-        await ConnectAndStartListenAsync();
+        await ConnectAndStartListenAsync(TestContext.Current.CancellationToken);
 
         // delay to let server close connection
         this.Trace("await server signal");
@@ -179,7 +178,7 @@ public class RawManagedSocketTests : TestBase, IAsyncLifetime
 
         // act
         this.Trace("send message");
-        var messageResult = await ManagedSocket.SendAsync(message);
+        var messageResult = await ManagedSocket.SendAsync(message, TestContext.Current.CancellationToken);
 
         // assert
         this.Trace("assert ok is received");
@@ -207,7 +206,7 @@ public class RawManagedSocketTests : TestBase, IAsyncLifetime
         await using var _ = _runServer(async (serverSocket, ct) => await serverSocket.ListenAsync(ct));
 
         this.Trace("connect");
-        await ConnectAsync();
+        await ConnectAsync(TestContext.Current.CancellationToken);
 
         // act
         this.Trace("listen with canceled token");
@@ -234,14 +233,14 @@ public class RawManagedSocketTests : TestBase, IAsyncLifetime
         await using var _ = _runServer(async (serverSocket, ct) => await serverSocket.ListenAsync(ct));
 
         this.Trace("connect");
-        await ConnectAsync();
+        await ConnectAsync(TestContext.Current.CancellationToken);
 
         this.Trace("close client socket");
         ClientSocket.Close();
 
         // act
         this.Trace("listen");
-        var result = await ListenAsync();
+        var result = await ListenAsync(TestContext.Current.CancellationToken);
 
         // assert
         this.Trace("assert closed local with no exception");
@@ -270,11 +269,11 @@ public class RawManagedSocketTests : TestBase, IAsyncLifetime
         );
 
         this.Trace("connect");
-        await ConnectAsync();
+        await ConnectAsync(TestContext.Current.CancellationToken);
 
         // act
         this.Trace("listen");
-        var result = await ListenAsync();
+        var result = await ListenAsync(TestContext.Current.CancellationToken);
 
         // assert
         this.Trace("assert closed remote with no exception");
@@ -316,10 +315,10 @@ public class RawManagedSocketTests : TestBase, IAsyncLifetime
 
         // act
         this.Trace("connect");
-        await ConnectAsync();
+        await ConnectAsync(TestContext.Current.CancellationToken);
 
         this.Trace("listen detached");
-        ListenAsync().GetAwaiter();
+        ListenAsync(TestContext.Current.CancellationToken).GetAwaiter();
 
         // assert
         this.Trace("assert data arrived");
@@ -363,10 +362,10 @@ public class RawManagedSocketTests : TestBase, IAsyncLifetime
 
         // act
         this.Trace("connect");
-        await ConnectAsync();
+        await ConnectAsync(TestContext.Current.CancellationToken);
 
         this.Trace("listen detached");
-        var listenTask = ListenAsync();
+        var listenTask = ListenAsync(TestContext.Current.CancellationToken);
 
         // assert
         this.Trace("assert data arrived");
@@ -385,12 +384,12 @@ public class RawManagedSocketTests : TestBase, IAsyncLifetime
         this.Trace("done");
     }
 
-    public Task InitializeAsync()
+    public ValueTask InitializeAsync()
     {
-        return Task.CompletedTask;
+        return ValueTask.CompletedTask;
     }
 
-    public async Task DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
         this.Trace("start");
 

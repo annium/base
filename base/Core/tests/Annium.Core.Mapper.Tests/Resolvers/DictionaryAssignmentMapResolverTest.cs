@@ -4,7 +4,6 @@ using Annium.Core.DependencyInjection;
 using Annium.Data.Models.Extensions;
 using Annium.Testing;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Annium.Core.Mapper.Tests.Resolvers;
 

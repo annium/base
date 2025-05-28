@@ -44,7 +44,7 @@ public class Sample : ILogSubject
 
         ExpectedDiagnostics.Clear();
 
-        await RunAsync();
+        await RunAsync(TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -83,6 +83,6 @@ public class Sample : ILogSubject
                 .WithSpan(16, 9, 16, 36)
         );
 
-        await RunAsync();
+        await RunAsync(TestContext.Current.CancellationToken);
     }
 }

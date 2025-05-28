@@ -2,7 +2,7 @@ using System;
 using Annium.Core.DependencyInjection;
 using Annium.Logging;
 using Microsoft.Extensions.DependencyInjection;
-using Xunit.Abstractions;
+using Xunit;
 using AsyncServiceScope = Microsoft.Extensions.DependencyInjection.AsyncServiceScope;
 using ServiceLifetime = Annium.Core.DependencyInjection.ServiceLifetime;
 

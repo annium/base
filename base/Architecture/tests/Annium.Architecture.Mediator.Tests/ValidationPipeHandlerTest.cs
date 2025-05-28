@@ -5,7 +5,6 @@ using Annium.Data.Operations;
 using Annium.Extensions.Validation;
 using Annium.Testing;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Annium.Architecture.Mediator.Tests;
 
@@ -23,7 +22,10 @@ public class ValidationPipeHandlerTest : TestBase
         var request = new LoginRequest();
 
         // act
-        var result = await mediator.SendAsync<IStatusResult<OperationStatus, LoginRequest>>(request);
+        var result = await mediator.SendAsync<IStatusResult<OperationStatus, LoginRequest>>(
+            request,
+            TestContext.Current.CancellationToken
+        );
 
         // assert
         result.Status.Is(OperationStatus.BadRequest);
@@ -41,7 +43,10 @@ public class ValidationPipeHandlerTest : TestBase
         var request = new LoginRequest { UserName = "user", Password = "pass" };
 
         // act
-        var result = await mediator.SendAsync<IStatusResult<OperationStatus, LoginRequest>>(request);
+        var result = await mediator.SendAsync<IStatusResult<OperationStatus, LoginRequest>>(
+            request,
+            TestContext.Current.CancellationToken
+        );
 
         // assert
         result.Status.Is(OperationStatus.Ok);

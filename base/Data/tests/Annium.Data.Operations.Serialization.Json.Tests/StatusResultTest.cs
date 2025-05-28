@@ -3,7 +3,6 @@ using System.IO;
 using Annium.Core.DependencyInjection;
 using Annium.Data.Operations.Serialization.Tests.Base;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Annium.Data.Operations.Serialization.Json.Tests;
 

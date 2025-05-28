@@ -10,7 +10,6 @@ using Annium.Logging;
 using Annium.Testing;
 using Annium.Threading.Tasks;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Annium.Net.Sockets.Tests;
 
@@ -48,7 +47,7 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
 
         // act
         this.Trace("send text");
-        var result = await SendAsync(message);
+        var result = await SendAsync(message, TestContext.Current.CancellationToken);
 
         // assert
         this.Trace("assert closed");
@@ -121,7 +120,7 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
         await DisconnectAsync();
 
         this.Trace("send text");
-        var result = await SendAsync(message);
+        var result = await SendAsync(message, TestContext.Current.CancellationToken);
 
         // assert
         this.Trace("assert closed");
@@ -158,7 +157,7 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
         );
 
         this.Trace("connect");
-        var disconnectionTask = ClientSocket.WhenDisconnectedAsync();
+        var disconnectionTask = ClientSocket.WhenDisconnectedAsync(ct: TestContext.Current.CancellationToken);
         await ConnectAsync();
 
         this.Trace("set client connection tcs");
@@ -169,7 +168,7 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
 
         // act
         this.Trace("send text");
-        var result = await SendAsync(message);
+        var result = await SendAsync(message, TestContext.Current.CancellationToken);
 
         // assert
         this.Trace("assert closed");
@@ -216,7 +215,7 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
 
         // act && assert
         this.Trace("send");
-        var binaryResult = await SendAsync(message);
+        var binaryResult = await SendAsync(message, TestContext.Current.CancellationToken);
 
         this.Trace("assert ok");
         binaryResult.Is(SocketSendStatus.Ok);
@@ -268,7 +267,7 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
         await serverConnectionTcs.Task;
 
         this.Trace("send");
-        var result = await SendAsync(message);
+        var result = await SendAsync(message, TestContext.Current.CancellationToken);
 
         this.Trace("assert sent ok");
         result.Is(SocketSendStatus.Ok);
@@ -292,7 +291,7 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
         await serverConnectionTcs.Task;
 
         this.Trace("send");
-        result = await SendAsync(message);
+        result = await SendAsync(message, TestContext.Current.CancellationToken);
 
         this.Trace("assert sent ok");
         result.Is(SocketSendStatus.Ok);
@@ -399,7 +398,7 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
 
         // act
         this.Trace("connect");
-        var disconnectionTask = ClientSocket.WhenDisconnectedAsync();
+        var disconnectionTask = ClientSocket.WhenDisconnectedAsync(ct: TestContext.Current.CancellationToken);
         await ConnectAsync();
 
         // assert
@@ -551,7 +550,7 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
         await ConnectAsync();
 
         this.Trace("wait");
-        await Task.Delay(700);
+        await Task.Delay(700, TestContext.Current.CancellationToken);
 
         // assert
         this.Trace("assert disconnected");
@@ -560,7 +559,7 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
         this.Trace("done");
     }
 
-    public Task InitializeAsync()
+    public ValueTask InitializeAsync()
     {
         this.Trace("start");
 
@@ -584,10 +583,10 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
 
         this.Trace("done");
 
-        return Task.CompletedTask;
+        return ValueTask.CompletedTask;
     }
 
-    public Task DisposeAsync()
+    public ValueTask DisposeAsync()
     {
         this.Trace("start");
 
@@ -595,7 +594,7 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
 
         this.Trace("done");
 
-        return Task.CompletedTask;
+        return ValueTask.CompletedTask;
     }
 
     private void Configure(StreamType streamType, ServerSocketOptions? socketOptions = null)

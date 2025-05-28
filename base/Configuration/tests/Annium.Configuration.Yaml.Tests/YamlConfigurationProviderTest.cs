@@ -6,7 +6,6 @@ using Annium.Configuration.Tests.Lib;
 using Annium.Core.DependencyInjection;
 using Annium.Testing;
 using Xunit;
-using Xunit.Abstractions;
 using YamlDotNet.Serialization;
 
 namespace Annium.Configuration.Yaml.Tests;

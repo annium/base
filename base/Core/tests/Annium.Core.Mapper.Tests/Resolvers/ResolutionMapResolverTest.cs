@@ -3,7 +3,6 @@ using Annium.Core.DependencyInjection;
 using Annium.Core.Runtime.Types;
 using Annium.Testing;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Annium.Core.Mapper.Tests.Resolvers;
 

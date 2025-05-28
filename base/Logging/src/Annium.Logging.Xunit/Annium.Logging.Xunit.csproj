@@ -9,6 +9,6 @@
     <ProjectReference Include="../Annium.Logging.Shared/Annium.Logging.Shared.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="xunit.abstractions" />
+    <PackageReference Include="xunit.v3.extensibility.core" />
   </ItemGroup>
 </Project>

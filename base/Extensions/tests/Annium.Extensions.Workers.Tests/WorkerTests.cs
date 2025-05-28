@@ -7,7 +7,6 @@ using Annium.Core.DependencyInjection;
 using Annium.Logging;
 using Annium.Testing;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Annium.Extensions.Workers.Tests;
 
@@ -48,9 +47,15 @@ public class WorkerTests : TestBase
         var manager = Get<IWorkerManager<WorkerData>>();
 
         // act
-        await Task.WhenAll(Task.Run(() => manager.StartAsync(keyA)), Task.Run(() => manager.StartAsync(keyB)));
-        await Task.Delay(100);
-        await Task.WhenAll(Task.Run(() => manager.StopAsync(keyA)), Task.Run(() => manager.StopAsync(keyB)));
+        await Task.WhenAll(
+            Task.Run(() => manager.StartAsync(keyA), TestContext.Current.CancellationToken),
+            Task.Run(() => manager.StartAsync(keyB), TestContext.Current.CancellationToken)
+        );
+        await Task.Delay(100, TestContext.Current.CancellationToken);
+        await Task.WhenAll(
+            Task.Run(() => manager.StopAsync(keyA), TestContext.Current.CancellationToken),
+            Task.Run(() => manager.StopAsync(keyB), TestContext.Current.CancellationToken)
+        );
 
         // assert
         await Expect.ToAsync(() =>
@@ -71,16 +76,16 @@ public class WorkerTests : TestBase
 
         // act
         await Task.WhenAll(
-            Task.Run(() => manager.StartAsync(keyA)),
-            Task.Run(() => manager.StartAsync(keyB)),
-            Task.Run(() => manager.StartAsync(keyA)),
-            Task.Run(() => manager.StartAsync(keyB))
+            Task.Run(() => manager.StartAsync(keyA), TestContext.Current.CancellationToken),
+            Task.Run(() => manager.StartAsync(keyB), TestContext.Current.CancellationToken),
+            Task.Run(() => manager.StartAsync(keyA), TestContext.Current.CancellationToken),
+            Task.Run(() => manager.StartAsync(keyB), TestContext.Current.CancellationToken)
         );
         await Task.WhenAll(
-            Task.Run(() => manager.StopAsync(keyA)),
-            Task.Run(() => manager.StopAsync(keyB)),
-            Task.Run(() => manager.StopAsync(keyA)),
-            Task.Run(() => manager.StopAsync(keyB))
+            Task.Run(() => manager.StopAsync(keyA), TestContext.Current.CancellationToken),
+            Task.Run(() => manager.StopAsync(keyB), TestContext.Current.CancellationToken),
+            Task.Run(() => manager.StopAsync(keyA), TestContext.Current.CancellationToken),
+            Task.Run(() => manager.StopAsync(keyB), TestContext.Current.CancellationToken)
         );
 
         // assert

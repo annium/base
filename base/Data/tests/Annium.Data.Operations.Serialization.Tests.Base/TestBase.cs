@@ -1,4 +1,4 @@
-using Xunit.Abstractions;
+using Xunit;
 
 namespace Annium.Data.Operations.Serialization.Tests.Base;
 

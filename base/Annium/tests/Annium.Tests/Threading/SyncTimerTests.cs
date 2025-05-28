@@ -6,7 +6,6 @@ using Annium.Logging;
 using Annium.Testing;
 using Annium.Threading;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Annium.Tests.Threading;
 
@@ -36,7 +35,7 @@ public class SyncTimerTests : TestBase
         );
 
         // act
-        await Task.Delay(50);
+        await Task.Delay(50, TestContext.Current.CancellationToken);
         timer.Change(Timeout.Infinite, Timeout.Infinite);
 
         // assert
@@ -68,7 +67,7 @@ public class SyncTimerTests : TestBase
         timer.Change(0, 1);
 
         // act
-        await Task.Delay(50);
+        await Task.Delay(50, TestContext.Current.CancellationToken);
         timer.Change(Timeout.Infinite, Timeout.Infinite);
 
         // assert
@@ -98,7 +97,7 @@ public class SyncTimerTests : TestBase
         );
 
         // act
-        await Task.Delay(50);
+        await Task.Delay(50, TestContext.Current.CancellationToken);
         timer.Change(Timeout.Infinite, Timeout.Infinite);
 
         // assert
@@ -129,7 +128,7 @@ public class SyncTimerTests : TestBase
         timer.Change(0, 1);
 
         // act
-        await Task.Delay(50);
+        await Task.Delay(50, TestContext.Current.CancellationToken);
         timer.Change(Timeout.Infinite, Timeout.Infinite);
 
         // assert

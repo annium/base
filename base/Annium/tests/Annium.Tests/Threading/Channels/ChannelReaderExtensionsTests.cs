@@ -8,7 +8,6 @@ using Annium.Logging;
 using Annium.Testing;
 using Annium.Threading.Channels;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Annium.Tests.Threading.Channels;
 

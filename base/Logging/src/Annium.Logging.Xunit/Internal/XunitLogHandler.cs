@@ -1,6 +1,6 @@
 using System;
 using Annium.Logging.Shared;
-using Xunit.Abstractions;
+using Xunit;
 
 namespace Annium.Logging.Xunit.Internal;
 
