@@ -3,17 +3,17 @@ setup:
 
 format:
 	dotnet csharpier format .
-	xx format -sc -ic
+	xs format -sc -ic
 
 format-full: format
 	dotnet format style
 	dotnet format analyzers
 
 update:
-	xx update all -sc -ic
+	xs update all -sc -ic
 
 clean:
-	xx clean -sc -ic
+	xs clean -sc -ic
 	find . -type f -name '*.nupkg' | xargs rm
 
 buildNumber?=0
@@ -27,7 +27,7 @@ pack:
 	dotnet pack --no-build -o . -c Release -p:SymbolPackageFormat=snupkg
 
 publish:
-	dotnet nuget push "*.nupkg" --source https://api.nuget.org/v3/index.json --api-key $(shell cat .xx.credentials)
+	dotnet nuget push "*.nupkg" --source https://api.nuget.org/v3/index.json --api-key $(shell cat .xs.credentials)
 	find . -type f -name '*.nupkg' | xargs rm
 
 gen-rsa-keys:
