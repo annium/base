@@ -27,7 +27,7 @@ pack:
 	dotnet pack --no-build -o . -c Release -p:SymbolPackageFormat=snupkg
 
 publish:
-	dotnet nuget push "*.nupkg" --source https://api.nuget.org/v3/index.json --api-key $(shell cat .xs.credentials)
+	dotnet nuget push "*.nupkg" --source https://api.nuget.org/v3/index.json --api-key $(apiKey)
 	find . -type f -name '*.nupkg' | xargs rm
 
 gen-rsa-keys:

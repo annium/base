@@ -1,0 +1,38 @@
+name: Merge Request
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Setup
+        run: make setup
+
+      - name: Format
+        run: make format
+
+      - name: Check for uncommitted changes
+        run: |
+          if [[ -n "$(git status --porcelain)" ]]; then
+            echo "::error::Code formatting check failed. Please run 'make format' locally and commit the changes."
+            git status
+            exit 1
+          fi
+
+      - name: Build
+        run: make build
+
+      - name: Test
+        run: make test 
