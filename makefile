@@ -18,10 +18,10 @@ clean:
 
 buildNumber?=0
 build:
-	dotnet build -c Release --nologo -v q -p:BuildNumber=$(buildNumber)
+	dotnet build -c Release --nologo -p:BuildNumber=$(buildNumber)
 
 test:
-	dotnet test -c Release --no-build --nologo -v q
+	dotnet test -c Release --no-build --nologo
 
 pack:
 	dotnet pack --no-build -o . -c Release -p:SymbolPackageFormat=snupkg
