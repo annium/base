@@ -2,18 +2,18 @@ setup:
 	dotnet tool restore
 
 format:
-	dotnet csharpier format .
-	xs format -sc -ic
+	dotnet tool run csharpier format .
+	dotnet tool run xs format -sc -ic
 
 format-full: format
 	dotnet format style
 	dotnet format analyzers
 
 update:
-	xs update all -sc -ic
+	dotnet tool run xs update all -sc -ic
 
 clean:
-	xs clean -sc -ic
+	dotnet tool run xs clean -sc -ic
 	find . -type f -name '*.nupkg' | xargs rm
 
 buildNumber?=0
