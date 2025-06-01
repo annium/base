@@ -54,6 +54,15 @@ jobs:
       - name: Test
         run: make test
 
+      - name: Publish Test Results
+        uses: dorny/test-reporter@v2
+        if: always()
+        with:
+          name: test-results
+          artifact: test-results.trx
+          path: '**/test-results.trx'
+          reporter: dotnet-trx
+
       - name: Pack
         run: make pack buildNumber=${{ steps.get_version.outputs.patch }}
 

@@ -35,4 +35,12 @@ jobs:
         run: make build
 
       - name: Test
-        run: make test 
+        run: make test
+
+      - name: Publish Test Results
+        uses: dorny/test-reporter@v2
+        if: always()
+        with:
+          name: 'Test report $1'
+          path: 'base/**/test-results.trx,integrations/**/test-results.trx'
+          reporter: dotnet-trx

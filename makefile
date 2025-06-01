@@ -21,7 +21,7 @@ build:
 	dotnet build -c Release --nologo -p:BuildNumber=$(buildNumber)
 
 test:
-	dotnet test -c Release --no-build --nologo
+	dotnet test -c Release --no-build --nologo --logger "trx;LogFileName=test-results.trx"
 
 pack:
 	dotnet pack --no-build -o . -c Release -p:SymbolPackageFormat=snupkg
