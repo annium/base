@@ -69,8 +69,7 @@ jobs:
         run: ls -R test-results
 
       - name: Publish Test Results
-        uses: dorny/test-reporter@v2
+        uses: EnricoMi/publish-unit-test-result-action@v2.16.1
+        if: always()
         with:
-          name: 'Test report $1'
-          path: test-results/**/*.trx
-          reporter: dotnet-trx
+          trx_files: "test-results/**/*.trx"
