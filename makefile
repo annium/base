@@ -21,7 +21,7 @@ build:
 	dotnet build -c Release --nologo -p:BuildNumber=$(buildNumber)
 
 test:
-	dotnet test -c Release --no-build --nologo --logger "trx;LogFilePrefix=test-results.trx"
+	dotnet test -c Release --no-build --nologo --logger "trx;LogFilePrefix=test-results.trx" --verbosity detailed --blame-hang-timeout 15m --blame-crash
 
 pack:
 	dotnet pack --no-build -o . -c Release -p:SymbolPackageFormat=snupkg
