@@ -260,11 +260,11 @@ public class RawManagedSocketTests : TestBase, IAsyncLifetime
 
         this.Trace("run server");
         await using var _ = RunServerBase(
-            (_, socket, _) =>
+            async (_, socket, _) =>
             {
+                await Task.Delay(10, CancellationToken.None);
+                socket.LingerState = new LingerOption(true, 0);
                 socket.Close();
-
-                return Task.CompletedTask;
             }
         );
 
