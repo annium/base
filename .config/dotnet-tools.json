@@ -2,10 +2,16 @@
   "version": 1,
   "isRoot": true,
   "tools": {
-    "csharpier": {
-      "version": "1.0.1",
+    "annium.xs.cli": {
+      "version": "1.1.1",
       "commands": [
-        "CSharpier"
+        "xs"
+      ]
+    },
+    "csharpier": {
+      "version": "1.0.2",
+      "commands": [
+        "csharpier"
       ]
     }
   }
