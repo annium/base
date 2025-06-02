@@ -114,10 +114,10 @@ public class RawManagedSocketTests : TestBase, IAsyncLifetime
         await using var _ = RunServerBase(
             async (_, socket, _) =>
             {
-                await Task.Delay(10, CancellationToken.None);
+                await Task.Delay(50, CancellationToken.None);
                 socket.LingerState = new LingerOption(true, 0);
                 socket.Close();
-                await Task.Delay(10, CancellationToken.None);
+                await Task.Delay(50, CancellationToken.None);
                 serverTcs.SetResult();
             }
         );
@@ -262,7 +262,7 @@ public class RawManagedSocketTests : TestBase, IAsyncLifetime
         await using var _ = RunServerBase(
             async (_, socket, _) =>
             {
-                await Task.Delay(10, CancellationToken.None);
+                await Task.Delay(50, CancellationToken.None);
                 socket.LingerState = new LingerOption(true, 0);
                 socket.Close();
             }
