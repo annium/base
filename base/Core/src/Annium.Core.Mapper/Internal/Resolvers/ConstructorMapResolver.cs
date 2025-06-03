@@ -16,6 +16,9 @@ internal class ConstructorMapResolver : IMapResolver
 
     public bool CanResolveMap(Type src, Type tgt)
     {
+        if (tgt.IsEnum || tgt.IsAbstract || tgt.IsInterface)
+            return false;
+
         return tgt.GetConstructor(Type.EmptyTypes) is null;
     }
 
