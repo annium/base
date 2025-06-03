@@ -28,17 +28,6 @@ jobs:
       - name: Setup
         run: make setup
 
-      - name: Format
-        run: make format
-
-      - name: Check for uncommitted changes
-        run: |
-          if [[ -n "$(git status --porcelain)" ]]; then
-            echo "::error::Code formatting check failed. Please run 'make format' locally and commit the changes."
-            git status
-            exit 1
-          fi
-
       - name: Get latest tag version
         id: get_version
         run: |

@@ -34,6 +34,7 @@ jobs:
           if [[ -n "$(git status --porcelain)" ]]; then
             echo "::error::Code formatting check failed. Please run 'make format' locally and commit the changes."
             git status
+            git diff
             exit 1
           fi
 
