@@ -41,6 +41,7 @@ public static class ServiceContainerExtensions
         container.AddProfileInstance(new EmptyProfile());
         container.AddProfileInstance(new DefaultProfile());
         container.AddProfileType(typeof(EnumProfile<>));
+        container.AddProfileType(typeof(EnumProfile<,>));
 
         // special cases
         container.AddProfileInstance(new EnumProfile<LogLevel>());
