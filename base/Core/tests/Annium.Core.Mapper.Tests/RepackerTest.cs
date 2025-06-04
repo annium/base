@@ -8,8 +8,21 @@ using Xunit;
 
 namespace Annium.Core.Mapper.Tests;
 
-public class RepackerTest
+/// <summary>
+/// Tests for repacking functionality in the mapper.
+/// </summary>
+/// <remarks>
+/// Verifies that the repacker can repack different expression types
+/// </remarks>
+public class RepackerTest : TestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="RepackerTest"/> class.
+    /// </summary>
+    /// <param name="outputHelper">The test output helper for logging test results.</param>
+    public RepackerTest(ITestOutputHelper outputHelper)
+        : base(outputHelper) { }
+
     [Fact]
     public void Binary_Works()
     {

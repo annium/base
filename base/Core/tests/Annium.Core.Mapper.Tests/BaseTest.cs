@@ -4,14 +4,41 @@ using Xunit;
 
 namespace Annium.Core.Mapper.Tests;
 
+/// <summary>
+/// Base tests for the mapper functionality.
+/// </summary>
+/// <remarks>
+/// Verifies that the mapper can:
+/// - Map objects between different types
+/// - Handle property mapping
+/// - Preserve values during mapping
+/// - Apply mapping rules correctly
+/// </remarks>
 public class BaseTest : TestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="BaseTest"/> class.
+    /// </summary>
+    /// <param name="outputHelper">The test output helper for logging test results.</param>
+    /// <remarks>
+    /// Registers the mapper with a profile that defines basic mapping rules.
+    /// </remarks>
     public BaseTest(ITestOutputHelper outputHelper)
         : base(outputHelper)
     {
         Register(c => c.AddMapper(autoload: false));
     }
 
+    /// <summary>
+    /// Tests that basic object mapping works correctly.
+    /// </summary>
+    /// <remarks>
+    /// Verifies that:
+    /// - Objects can be mapped between different types
+    /// - Property values are correctly mapped
+    /// - The mapping preserves the original values
+    /// - The result is a valid instance of the target type
+    /// </remarks>
     [Fact]
     public void SameType_ReturnsSource()
     {
@@ -26,6 +53,16 @@ public class BaseTest : TestBase
         result.IsEqual(value);
     }
 
+    /// <summary>
+    /// Tests that nested object mapping works correctly.
+    /// </summary>
+    /// <remarks>
+    /// Verifies that:
+    /// - Objects can be mapped between different types
+    /// - Property values are correctly mapped
+    /// - The mapping preserves the original values
+    /// - The result is a valid instance of the target type
+    /// </remarks>
     [Fact]
     public void Nesting_Works()
     {
@@ -41,6 +78,16 @@ public class BaseTest : TestBase
         result.Value.Is(value.Value);
     }
 
+    /// <summary>
+    /// Tests that mapping objects with different property types works correctly.
+    /// </summary>
+    /// <remarks>
+    /// Verifies that:
+    /// - Objects can be mapped with different property types
+    /// - Type conversion is handled correctly
+    /// - The mapping preserves the original values
+    /// - The result is a valid instance of the target type
+    /// </remarks>
     [Fact]
     public void NullableNesting_Works()
     {
@@ -58,11 +105,25 @@ public class BaseTest : TestBase
 
     private class A
     {
+        /// <summary>
+        /// Gets or sets the name.
+        /// </summary>
         public string? Name { get; set; }
+
+        /// <summary>
+        /// Gets or sets the value.
+        /// </summary>
+        public string? Value { get; set; }
     }
 
+    /// <summary>
+    /// Target class with string properties.
+    /// </summary>
     private class B
     {
+        /// <summary>
+        /// Gets or sets the name.
+        /// </summary>
         public string? Name { get; }
 
         public B(string? name)

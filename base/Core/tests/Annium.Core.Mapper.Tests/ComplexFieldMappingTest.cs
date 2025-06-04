@@ -6,14 +6,41 @@ using Xunit;
 
 namespace Annium.Core.Mapper.Tests;
 
+/// <summary>
+/// Tests for complex field mapping scenarios in the mapper.
+/// </summary>
+/// <remarks>
+/// This class tests advanced mapping scenarios including:
+/// - Mapping with property assignments
+/// - Mapping with constructor parameters
+/// - Mapping with serialized/deserialized values
+/// - Ignoring specific properties during mapping
+/// </remarks>
 public class ComplexFieldMappingTest : TestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the ComplexFieldMappingTest class.
+    /// </summary>
+    /// <param name="outputHelper">The test output helper for logging test results.</param>
+    /// <remarks>
+    /// Registers the mapper with a custom profile that configures complex mapping scenarios.
+    /// </remarks>
     public ComplexFieldMappingTest(ITestOutputHelper outputHelper)
         : base(outputHelper)
     {
         Register(c => c.AddMapper(autoload: false).AddProfile(ConfigureProfile));
     }
 
+    /// <summary>
+    /// Tests mapping with property assignments and serialization.
+    /// </summary>
+    /// <remarks>
+    /// Verifies that:
+    /// - Properties can be mapped through serialization/deserialization
+    /// - Ignored properties are not mapped
+    /// - Bidirectional mapping works correctly
+    /// - Serialized values are preserved
+    /// </remarks>
     [Fact]
     public void AssignmentMapping_Works()
     {
@@ -39,6 +66,16 @@ public class ComplexFieldMappingTest : TestBase
         restored.IsShallowEqual(new A { SerializedValue = serialized });
     }
 
+    /// <summary>
+    /// Tests mapping with constructor parameters and serialization.
+    /// </summary>
+    /// <remarks>
+    /// Verifies that:
+    /// - Properties can be mapped through constructor parameters
+    /// - Serialized values are correctly deserialized into constructor parameters
+    /// - Ignored properties are not mapped
+    /// - Bidirectional mapping works correctly
+    /// </remarks>
     [Fact]
     public void ConstructorMapping_Works()
     {
@@ -56,6 +93,16 @@ public class ComplexFieldMappingTest : TestBase
         restored.IsShallowEqual(new A { SerializedValue = serialized });
     }
 
+    /// <summary>
+    /// Configures the mapping profile for complex mapping scenarios.
+    /// </summary>
+    /// <param name="p">The profile to configure.</param>
+    /// <remarks>
+    /// Sets up mappings between classes A, B, and C with:
+    /// - Property ignoring
+    /// - Serialization/deserialization of values
+    /// - Bidirectional mapping
+    /// </remarks>
     private void ConfigureProfile(Profile p)
     {
         p.Map<A, B>()
@@ -82,11 +129,17 @@ public class ComplexFieldMappingTest : TestBase
             );
     }
 
+    /// <summary>
+    /// Source class containing serialized data.
+    /// </summary>
     private class A
     {
         public string SerializedValue { get; set; } = string.Empty;
     }
 
+    /// <summary>
+    /// Target class with properties for assignment mapping.
+    /// </summary>
     private class B
     {
         public int IgnoredA { get; set; }
@@ -95,6 +148,9 @@ public class ComplexFieldMappingTest : TestBase
         public int Age { get; set; }
     }
 
+    /// <summary>
+    /// Target class with constructor parameters for constructor mapping.
+    /// </summary>
     private class C
     {
         public int IgnoredA { get; }
@@ -111,6 +167,9 @@ public class ComplexFieldMappingTest : TestBase
         }
     }
 
+    /// <summary>
+    /// Class representing the serialized data structure.
+    /// </summary>
     private class Serialized
     {
         public string Name { get; set; } = string.Empty;
