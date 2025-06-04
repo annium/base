@@ -2,7 +2,7 @@ setup:
 	dotnet tool restore
 
 format:
-	dotnet tool run csharpier format .
+	dotnet tool run csharpier format . --config-path $(shell pwd)/.editorconfig
 	dotnet tool run xs format -sc -ic
 
 format-full: format
