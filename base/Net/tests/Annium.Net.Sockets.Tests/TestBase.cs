@@ -13,7 +13,7 @@ namespace Annium.Net.Sockets.Tests;
 
 public abstract class TestBase : Testing.TestBase
 {
-    private static int _basePort = 10000;
+    private static int _basePort = 30000;
     protected readonly Uri ServerUri;
     protected readonly IPEndPoint EndPoint;
     private readonly int _port;

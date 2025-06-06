@@ -144,9 +144,8 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
         this.Trace("start");
 
         // arrange
-        const string text = "demo";
-        var binary = Encoding.UTF8.GetBytes(text);
-        var expectedMessages = new[] { text };
+        const string message = "demo";
+        var expectedMessages = new[] { message };
         var serverConnectionTcs = new TaskCompletionSource();
 
         this.Trace("run server");
@@ -177,7 +176,7 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
 
         // act && assert
         this.Trace("send text");
-        var textResult = await SendTextAsync(text, TestContext.Current.CancellationToken);
+        var textResult = await SendTextAsync(message, TestContext.Current.CancellationToken);
 
         this.Trace("assert sent ok");
         textResult.Is(WebSocketSendStatus.Ok);
@@ -186,7 +185,7 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
         await Expect.ToAsync(() => _texts.IsEqual(expectedMessages));
 
         this.Trace("send binary");
-        var binaryResult = await SendBinaryAsync(binary, TestContext.Current.CancellationToken);
+        var binaryResult = await SendBinaryAsync(message, TestContext.Current.CancellationToken);
 
         this.Trace("assert ok");
         binaryResult.Is(WebSocketSendStatus.Ok);
@@ -203,9 +202,8 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
         this.Trace("start");
 
         // arrange
-        const string text = "demo";
-        var binary = Encoding.UTF8.GetBytes(text);
-        var expectedMessages = new[] { text };
+        const string message = "demo";
+        var expectedMessages = new[] { message };
         var serverConnectionTcs = new TaskCompletionSource();
 
         this.Trace("run server");
@@ -236,7 +234,7 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
 
         // act - send text
         this.Trace("send text");
-        var textResult = await SendTextAsync(text, TestContext.Current.CancellationToken);
+        var textResult = await SendTextAsync(message, TestContext.Current.CancellationToken);
 
         this.Trace("assert sent ok");
         textResult.Is(WebSocketSendStatus.Ok);
@@ -256,7 +254,7 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
         await serverConnectionTcs.Task;
 
         this.Trace("send binary");
-        var binaryResult = await SendBinaryAsync(binary, TestContext.Current.CancellationToken);
+        var binaryResult = await SendBinaryAsync(message, TestContext.Current.CancellationToken);
 
         this.Trace("assert sent ok");
         binaryResult.Is(WebSocketSendStatus.Ok);
@@ -286,7 +284,7 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
 
             foreach (var message in messages)
             {
-                await serverSocket.SendTextAsync(Encoding.UTF8.GetBytes(message));
+                await serverSocket.SendTextAsync(message);
                 await Task.Delay(1, CancellationToken.None);
             }
 
@@ -325,7 +323,7 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
 
             foreach (var message in messages)
             {
-                await serverSocket.SendTextAsync(Encoding.UTF8.GetBytes(message));
+                await serverSocket.SendTextAsync(message);
                 await Task.Delay(1, CancellationToken.None);
             }
 
@@ -371,11 +369,11 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
 
             foreach (var message in messages)
             {
-                await serverSocket.SendTextAsync(Encoding.UTF8.GetBytes(message));
+                await serverSocket.SendTextAsync(message);
                 await Task.Delay(1, CancellationToken.None);
             }
 
-            foreach (var message in messages.Select(Encoding.UTF8.GetBytes))
+            foreach (var message in messages)
             {
                 await serverSocket.SendBinaryAsync(message);
                 await Task.Delay(1, CancellationToken.None);
@@ -461,7 +459,7 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
 
             this.Trace("sending messages complete");
 
-            // await until 3-rd connection is handled
+            // wait until 3-rd connection is handled
             this.Trace("wait for signal from client");
 #pragma warning disable VSTHRD003
             await serverStopTcs.Task;
@@ -503,7 +501,7 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
         };
         ClientSocket.OnBinaryReceived += x =>
         {
-            var message = Encoding.UTF8.GetString(x.ToArray());
+            var message = Encoding.UTF8.GetString(x.Span);
             _binaries.Add(message);
         };
 
@@ -599,14 +597,14 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
     {
         this.Trace("start");
 
-        var result = await ClientSocket.SendTextAsync(Encoding.UTF8.GetBytes(text), ct);
+        var result = await ClientSocket.SendTextAsync(text, ct);
 
         this.Trace("done");
 
         return result;
     }
 
-    private async Task<WebSocketSendStatus> SendBinaryAsync(byte[] data, CancellationToken ct = default)
+    private async Task<WebSocketSendStatus> SendBinaryAsync(string data, CancellationToken ct = default)
     {
         this.Trace("start");
 
