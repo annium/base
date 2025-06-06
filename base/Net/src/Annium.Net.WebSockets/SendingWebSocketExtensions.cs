@@ -16,5 +16,5 @@ public static class SendingWebSocketExtensions
         this ISendingWebSocket socket,
         string text,
         CancellationToken ct = default
-    ) => socket.SendTextAsync(Encoding.UTF8.GetBytes(text), ct);
+    ) => socket.SendBinaryAsync(Encoding.UTF8.GetBytes(text), ct);
 }
