@@ -10,7 +10,7 @@ namespace Annium.Net.Http.Tests;
 
 public abstract class TestBase : Testing.TestBase
 {
-    private static int _basePort = 14000;
+    private static int _basePort = 40000;
     protected readonly Uri ServerUri;
     private readonly int _port;
 

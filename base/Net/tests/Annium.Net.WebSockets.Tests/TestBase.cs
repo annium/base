@@ -10,7 +10,7 @@ namespace Annium.Net.WebSockets.Tests;
 
 public abstract class TestBase : Testing.TestBase
 {
-    private static int _basePort = 15000;
+    private static int _basePort = 35000;
     protected readonly Uri ServerUri;
     private readonly int _port;
 
