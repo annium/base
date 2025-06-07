@@ -7,8 +7,18 @@ using OneOf;
 
 namespace Annium.Identity.Tokens.Jwt;
 
+/// <summary>
+/// Provides functionality for reading and validating JWT tokens
+/// </summary>
 public static class JwtReader
 {
+    /// <summary>
+    /// Reads and validates a JWT token
+    /// </summary>
+    /// <param name="raw">The raw JWT token string</param>
+    /// <param name="opts">The token validation parameters</param>
+    /// <param name="now">The current time for validation</param>
+    /// <returns>The result containing either the token or an exception</returns>
     public static IStatusResult<JwtReadStatus, OneOf<JwtSecurityToken, Exception>> Read(
         string raw,
         TokenValidationParameters opts,
@@ -47,6 +57,14 @@ public static class JwtReader
         }
     }
 
+    /// <summary>
+    /// Creates token validation parameters for JWT validation
+    /// </summary>
+    /// <param name="securityKey">The security key for validation</param>
+    /// <param name="issuer">The expected issuer</param>
+    /// <param name="audience">The expected audience</param>
+    /// <param name="expirationWindow">The clock skew tolerance</param>
+    /// <returns>The configured validation parameters</returns>
     public static TokenValidationParameters GetValidationParameters(
         SecurityKey securityKey,
         string issuer,

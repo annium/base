@@ -75,17 +75,17 @@ public class CompositionPipeHandlerTest : TestBase
         /// Gets or sets a value indicating whether composition should succeed.
         /// </summary>
         public bool IsComposedSuccessfully { get; set; }
-        
+
         /// <summary>
         /// Gets or sets the username.
         /// </summary>
         public string UserName { get; set; } = string.Empty;
-        
+
         /// <summary>
         /// Gets or sets the password.
         /// </summary>
         public string Password { get; set; } = string.Empty;
-        
+
         /// <summary>
         /// Gets a value indicating whether the handler should throw an exception.
         /// </summary>

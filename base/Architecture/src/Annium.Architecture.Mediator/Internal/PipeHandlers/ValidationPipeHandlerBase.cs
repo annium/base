@@ -18,6 +18,7 @@ internal abstract class ValidationPipeHandlerBase<TRequest, TResponse> : ILogSub
     /// Gets the logger for this pipe handler
     /// </summary>
     public ILogger Logger { get; }
+
     /// <summary>
     /// The validator instance used to validate requests.
     /// </summary>

@@ -312,7 +312,7 @@ public class MediatorTest : TestBase
         /// Gets the logger for this handler.
         /// </summary>
         public ILogger Logger { get; }
-        
+
         /// <summary>
         /// The validation function to apply to requests.
         /// </summary>

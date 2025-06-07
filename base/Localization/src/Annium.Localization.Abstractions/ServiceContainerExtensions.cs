@@ -4,8 +4,17 @@ using Annium.Localization.Abstractions;
 // ReSharper disable once CheckNamespace
 namespace Annium.Core.DependencyInjection;
 
+/// <summary>
+/// Extension methods for configuring localization services
+/// </summary>
 public static class ServiceContainerExtensions
 {
+    /// <summary>
+    /// Adds localization services to the service container
+    /// </summary>
+    /// <param name="container">The service container</param>
+    /// <param name="configure">The localization configuration action</param>
+    /// <returns>The service container for method chaining</returns>
     public static IServiceContainer AddLocalization(
         this IServiceContainer container,
         Action<LocalizationOptions> configure

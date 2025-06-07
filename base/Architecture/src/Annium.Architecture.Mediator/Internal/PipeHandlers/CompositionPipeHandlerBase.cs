@@ -20,6 +20,7 @@ internal abstract class CompositionPipeHandlerBase<TRequest, TResponse> : ILogSu
     /// Gets the logger for this pipe handler
     /// </summary>
     public ILogger Logger { get; }
+
     /// <summary>
     /// The composer instance used to compose requests.
     /// </summary>

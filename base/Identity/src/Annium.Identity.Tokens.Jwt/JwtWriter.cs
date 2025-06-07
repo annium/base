@@ -7,8 +7,23 @@ using NodaTime;
 
 namespace Annium.Identity.Tokens.Jwt;
 
+/// <summary>
+/// Provides functionality for creating JWT tokens
+/// </summary>
 public static class JwtWriter
 {
+    /// <summary>
+    /// Creates a new JWT security token
+    /// </summary>
+    /// <param name="securityKey">The security key for signing</param>
+    /// <param name="algorithm">The signing algorithm</param>
+    /// <param name="tokenId">The unique token identifier</param>
+    /// <param name="issuer">The token issuer</param>
+    /// <param name="audience">The token audience</param>
+    /// <param name="now">The current time</param>
+    /// <param name="lifetime">The token lifetime</param>
+    /// <param name="data">Additional claims data</param>
+    /// <returns>The created JWT security token</returns>
     public static JwtSecurityToken Create(
         SecurityKey securityKey,
         string algorithm,

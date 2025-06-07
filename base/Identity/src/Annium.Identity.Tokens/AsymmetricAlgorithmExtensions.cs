@@ -5,8 +5,18 @@ using SimpleBase;
 
 namespace Annium.Identity.Tokens;
 
+/// <summary>
+/// Extension methods for asymmetric algorithm operations
+/// </summary>
 public static class AsymmetricAlgorithmExtensions
 {
+    /// <summary>
+    /// Imports a PEM-formatted key into the algorithm
+    /// </summary>
+    /// <typeparam name="T">The type of asymmetric algorithm</typeparam>
+    /// <param name="algorithm">The algorithm instance</param>
+    /// <param name="raw">The PEM-formatted key data</param>
+    /// <returns>The algorithm instance for method chaining</returns>
     public static T ImportPem<T>(this T algorithm, ReadOnlySpan<char> raw)
         where T : AsymmetricAlgorithm
     {
@@ -15,6 +25,11 @@ public static class AsymmetricAlgorithmExtensions
         return algorithm;
     }
 
+    /// <summary>
+    /// Generates a unique key identifier from the algorithm's public key
+    /// </summary>
+    /// <param name="algorithm">The asymmetric algorithm</param>
+    /// <returns>A Base32-encoded key identifier</returns>
     public static string GetKeyId(this AsymmetricAlgorithm algorithm)
     {
         var publicKeyInfo = algorithm.ExportSubjectPublicKeyInfo();

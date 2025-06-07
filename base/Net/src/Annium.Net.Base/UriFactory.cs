@@ -6,12 +6,29 @@ using Microsoft.Extensions.Primitives;
 
 namespace Annium.Net.Base;
 
+/// <summary>
+/// Factory for building URIs with fluent configuration
+/// </summary>
 public class UriFactory
 {
+    /// <summary>
+    /// Creates a new UriFactory with the specified base URI
+    /// </summary>
+    /// <param name="baseUri">The base URI</param>
+    /// <returns>A new UriFactory instance</returns>
     public static UriFactory Base(Uri baseUri) => new(baseUri);
 
+    /// <summary>
+    /// Creates a new UriFactory with the specified base URI string
+    /// </summary>
+    /// <param name="baseUri">The base URI string</param>
+    /// <returns>A new UriFactory instance</returns>
     public static UriFactory Base(string baseUri) => new(new Uri(baseUri));
 
+    /// <summary>
+    /// Creates a new UriFactory without a base URI
+    /// </summary>
+    /// <returns>A new UriFactory instance</returns>
     public static UriFactory Base() => new();
 
     private readonly Uri? _baseUri;
@@ -41,6 +58,11 @@ public class UriFactory
 
     private UriFactory() { }
 
+    /// <summary>
+    /// Sets the path component of the URI
+    /// </summary>
+    /// <param name="uri">The URI path</param>
+    /// <returns>This UriFactory instance for method chaining</returns>
     public UriFactory Path(string uri)
     {
         ArgumentNullException.ThrowIfNull(uri);
@@ -50,16 +72,58 @@ public class UriFactory
         return this;
     }
 
+    /// <summary>
+    /// Adds a query parameter with multiple values from a List
+    /// </summary>
+    /// <typeparam name="T">The type of the parameter values</typeparam>
+    /// <param name="key">The parameter name</param>
+    /// <param name="values">The parameter values</param>
+    /// <returns>This UriFactory instance for method chaining</returns>
     public UriFactory Param<T>(string key, List<T> values) => Param(key, values.AsEnumerable());
 
+    /// <summary>
+    /// Adds a query parameter with multiple values from an IList
+    /// </summary>
+    /// <typeparam name="T">The type of the parameter values</typeparam>
+    /// <param name="key">The parameter name</param>
+    /// <param name="values">The parameter values</param>
+    /// <returns>This UriFactory instance for method chaining</returns>
     public UriFactory Param<T>(string key, IList<T> values) => Param(key, values.AsEnumerable());
 
+    /// <summary>
+    /// Adds a query parameter with multiple values from an IReadOnlyList
+    /// </summary>
+    /// <typeparam name="T">The type of the parameter values</typeparam>
+    /// <param name="key">The parameter name</param>
+    /// <param name="values">The parameter values</param>
+    /// <returns>This UriFactory instance for method chaining</returns>
     public UriFactory Param<T>(string key, IReadOnlyList<T> values) => Param(key, values.AsEnumerable());
 
+    /// <summary>
+    /// Adds a query parameter with multiple values from an IReadOnlyCollection
+    /// </summary>
+    /// <typeparam name="T">The type of the parameter values</typeparam>
+    /// <param name="key">The parameter name</param>
+    /// <param name="values">The parameter values</param>
+    /// <returns>This UriFactory instance for method chaining</returns>
     public UriFactory Param<T>(string key, IReadOnlyCollection<T> values) => Param(key, values.AsEnumerable());
 
+    /// <summary>
+    /// Adds a query parameter with multiple values from an array
+    /// </summary>
+    /// <typeparam name="T">The type of the parameter values</typeparam>
+    /// <param name="key">The parameter name</param>
+    /// <param name="values">The parameter values</param>
+    /// <returns>This UriFactory instance for method chaining</returns>
     public UriFactory Param<T>(string key, T[] values) => Param(key, values.AsEnumerable());
 
+    /// <summary>
+    /// Adds a query parameter with multiple values from an IEnumerable
+    /// </summary>
+    /// <typeparam name="T">The type of the parameter values</typeparam>
+    /// <param name="key">The parameter name</param>
+    /// <param name="values">The parameter values</param>
+    /// <returns>This UriFactory instance for method chaining</returns>
     public UriFactory Param<T>(string key, IEnumerable<T> values)
     {
         ArgumentNullException.ThrowIfNull(key);
@@ -70,6 +134,13 @@ public class UriFactory
         return this;
     }
 
+    /// <summary>
+    /// Adds a query parameter with a single value
+    /// </summary>
+    /// <typeparam name="T">The type of the parameter value</typeparam>
+    /// <param name="key">The parameter name</param>
+    /// <param name="value">The parameter value</param>
+    /// <returns>This UriFactory instance for method chaining</returns>
     public UriFactory Param<T>(string key, T value)
     {
         ArgumentNullException.ThrowIfNull(key);
@@ -89,6 +160,12 @@ public class UriFactory
     //     return this;
     // }
 
+    /// <summary>
+    /// Adds a query parameter with StringValues
+    /// </summary>
+    /// <param name="key">The parameter name</param>
+    /// <param name="value">The parameter values</param>
+    /// <returns>This UriFactory instance for method chaining</returns>
     public UriFactory Param(string key, StringValues value)
     {
         ArgumentNullException.ThrowIfNull(key);
@@ -98,8 +175,16 @@ public class UriFactory
         return this;
     }
 
+    /// <summary>
+    /// Creates a copy of this UriFactory instance
+    /// </summary>
+    /// <returns>A new UriFactory instance with the same configuration</returns>
     public UriFactory Clone() => new(_baseUri, _uri, _query);
 
+    /// <summary>
+    /// Builds the final URI from the configured components
+    /// </summary>
+    /// <returns>The constructed URI</returns>
     public Uri Build()
     {
         var uri = BuildUriBase();

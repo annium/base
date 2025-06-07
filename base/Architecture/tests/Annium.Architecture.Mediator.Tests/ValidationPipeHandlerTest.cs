@@ -73,12 +73,12 @@ public class ValidationPipeHandlerTest : TestBase
         /// Gets or sets the username.
         /// </summary>
         public string UserName { get; set; } = string.Empty;
-        
+
         /// <summary>
         /// Gets or sets the password.
         /// </summary>
         public string Password { get; set; } = string.Empty;
-        
+
         /// <summary>
         /// Gets a value indicating whether the handler should throw an exception.
         /// </summary>

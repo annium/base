@@ -5,8 +5,14 @@ using Annium.Linq;
 
 namespace Annium.Extensions.CommandLine;
 
+/// <summary>
+/// Provides utility methods for command line interface operations
+/// </summary>
 public static class Cli
 {
+    /// <summary>
+    /// Clears the console screen
+    /// </summary>
     public static void Clear()
     {
         Console.SetCursorPosition(0, 0);
@@ -18,6 +24,12 @@ public static class Cli
         Console.SetCursorPosition(0, 0);
     }
 
+    /// <summary>
+    /// Prompts user for confirmation with Y/N input
+    /// </summary>
+    /// <param name="label">The confirmation prompt text</param>
+    /// <param name="defaultValue">The default value if Enter is pressed</param>
+    /// <returns>True if user confirms, false otherwise</returns>
     public static bool Confirm(string label, bool? defaultValue = null)
     {
         var y = defaultValue.HasValue && defaultValue.Value ? 'Y' : 'y';
@@ -37,6 +49,11 @@ public static class Cli
         }
     }
 
+    /// <summary>
+    /// Prompts user for text input
+    /// </summary>
+    /// <param name="label">The prompt text</param>
+    /// <returns>The user input text</returns>
     public static string Prompt(string label)
     {
         Console.Write(label);
@@ -44,6 +61,11 @@ public static class Cli
         return Console.ReadLine() ?? string.Empty;
     }
 
+    /// <summary>
+    /// Reads secure input from user with masked characters
+    /// </summary>
+    /// <param name="label">The prompt text</param>
+    /// <returns>The secure input text</returns>
     public static string ReadSecure(string label)
     {
         Console.Write(label);
@@ -84,18 +106,36 @@ public static class Cli
         return string.Join(string.Empty, result.Reverse());
     }
 
+    /// <summary>
+    /// Writes colored text to the console
+    /// </summary>
+    /// <param name="text">The text to write</param>
+    /// <param name="foreground">The foreground color</param>
+    /// <param name="background">The background color</param>
     public static void WriteColored(string text, ConsoleColor? foreground = null, ConsoleColor? background = null)
     {
         using var _ = SetColors(foreground, background);
         Console.Write(text);
     }
 
+    /// <summary>
+    /// Writes colored text line to the console
+    /// </summary>
+    /// <param name="text">The text to write</param>
+    /// <param name="foreground">The foreground color</param>
+    /// <param name="background">The background color</param>
     public static void WriteLineColored(string text, ConsoleColor? foreground = null, ConsoleColor? background = null)
     {
         using var _ = SetColors(foreground, background);
         Console.WriteLine(text);
     }
 
+    /// <summary>
+    /// Sets console colors and returns a disposable to restore original colors
+    /// </summary>
+    /// <param name="foreground">The foreground color</param>
+    /// <param name="background">The background color</param>
+    /// <returns>A disposable that restores the original colors when disposed</returns>
     public static IDisposable SetColors(ConsoleColor? foreground = null, ConsoleColor? background = null)
     {
         var originalBackground = Console.BackgroundColor;

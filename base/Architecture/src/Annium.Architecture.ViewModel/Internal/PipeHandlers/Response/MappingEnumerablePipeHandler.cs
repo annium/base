@@ -30,6 +30,7 @@ internal class MappingEnumerablePipeHandler<TRequest, TResponseIn, TResponseOut>
     /// Gets the logger for this pipe handler
     /// </summary>
     public ILogger Logger { get; }
+
     /// <summary>
     /// The mapper instance used to map between types.
     /// </summary>

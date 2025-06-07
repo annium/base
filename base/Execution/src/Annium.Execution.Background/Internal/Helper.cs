@@ -5,8 +5,17 @@ using System.Threading.Tasks;
 
 namespace Annium.Execution.Background.Internal;
 
+/// <summary>
+/// Helper class for running tasks in different execution contexts
+/// </summary>
 internal static class Helper
 {
+    /// <summary>
+    /// Runs a task in the background using Task.Run
+    /// </summary>
+    /// <param name="task">The task to run</param>
+    /// <param name="ct">The cancellation token</param>
+    /// <returns>A task representing the background execution</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Task RunTaskInBackgroundAsync(Delegate task, CancellationToken ct) =>
         task switch
@@ -24,6 +33,12 @@ internal static class Helper
             _ => throw new NotSupportedException(),
         };
 
+    /// <summary>
+    /// Runs a task in the foreground synchronously
+    /// </summary>
+    /// <param name="task">The task to run</param>
+    /// <param name="ct">The cancellation token</param>
+    /// <returns>A task representing the execution</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static async ValueTask RunTaskInForegroundAsync(Delegate task, CancellationToken ct)
     {

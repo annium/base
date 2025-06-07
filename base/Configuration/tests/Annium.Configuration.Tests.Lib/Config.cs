@@ -14,37 +14,37 @@ public sealed record Config
     /// Gets or sets a boolean flag value.
     /// </summary>
     public bool Flag { get; set; }
-    
+
     /// <summary>
     /// Gets or sets a plain integer value.
     /// </summary>
     public int Plain { get; set; }
-    
+
     /// <summary>
     /// Gets or sets a nullable decimal value.
     /// </summary>
     public decimal? Nullable { get; set; }
-    
+
     /// <summary>
     /// Gets or sets an array of integers.
     /// </summary>
     public int[] Array { get; set; } = System.Array.Empty<int>();
-    
+
     /// <summary>
     /// Gets or sets a matrix (list of integer arrays).
     /// </summary>
     public List<int[]> Matrix { get; set; } = new();
-    
+
     /// <summary>
     /// Gets or sets a list of Val objects.
     /// </summary>
     public List<Val> List { get; set; } = new();
-    
+
     /// <summary>
     /// Gets or sets a dictionary of string keys to Val values.
     /// </summary>
     public Dictionary<string, Val> Dictionary { get; set; } = new();
-    
+
     /// <summary>
     /// Gets or sets a nested Val object.
     /// </summary>
@@ -54,12 +54,12 @@ public sealed record Config
     /// Gets or sets an abstract configuration object.
     /// </summary>
     public SomeConfig Abstract { get; set; } = new ConfigOne();
-    
+
     /// <summary>
     /// Gets or sets an enum value.
     /// </summary>
     public SomeEnum Enum { get; set; }
-    
+
     /// <summary>
     /// Gets or sets a tuple of string and integer.
     /// </summary>
