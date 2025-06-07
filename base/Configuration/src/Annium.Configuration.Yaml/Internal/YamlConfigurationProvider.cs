@@ -5,15 +5,29 @@ using YamlDotNet.RepresentationModel;
 
 namespace Annium.Configuration.Yaml.Internal;
 
+/// <summary>
+/// Configuration provider that reads configuration data from YAML
+/// </summary>
 internal class YamlConfigurationProvider : ConfigurationProviderBase
 {
+    /// <summary>
+    /// Raw YAML string to process
+    /// </summary>
     private readonly string _raw;
 
+    /// <summary>
+    /// Initializes a new instance of YamlConfigurationProvider
+    /// </summary>
+    /// <param name="raw">Raw YAML string to process</param>
     public YamlConfigurationProvider(string raw)
     {
         _raw = raw;
     }
 
+    /// <summary>
+    /// Reads configuration data from YAML and returns it as a dictionary
+    /// </summary>
+    /// <returns>Dictionary containing configuration keys and values</returns>
     public override IReadOnlyDictionary<string[], string> Read()
     {
         Init();
@@ -30,6 +44,10 @@ internal class YamlConfigurationProvider : ConfigurationProviderBase
         return Data;
     }
 
+    /// <summary>
+    /// Processes a YAML mapping node by iterating through its key-value pairs
+    /// </summary>
+    /// <param name="node">YAML mapping node to process</param>
     private void Process(YamlMappingNode node)
     {
         foreach (var (key, value) in node.Children)
@@ -47,6 +65,10 @@ internal class YamlConfigurationProvider : ConfigurationProviderBase
         }
     }
 
+    /// <summary>
+    /// Processes a YAML sequence node by iterating through its items with indices
+    /// </summary>
+    /// <param name="node">YAML sequence node to process</param>
     private void Process(YamlSequenceNode node)
     {
         var index = 0;
@@ -66,6 +88,10 @@ internal class YamlConfigurationProvider : ConfigurationProviderBase
         }
     }
 
+    /// <summary>
+    /// Processes a YAML scalar node by adding its value to the configuration data
+    /// </summary>
+    /// <param name="token">YAML scalar node to process</param>
     private void Process(YamlScalarNode token)
     {
         Data[Path] = token.Value!;

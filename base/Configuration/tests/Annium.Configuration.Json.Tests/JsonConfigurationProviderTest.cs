@@ -10,6 +10,9 @@ using Xunit;
 
 namespace Annium.Configuration.Json.Tests;
 
+/// <summary>
+/// Tests for JSON configuration provider functionality.
+/// </summary>
 public class JsonConfigurationProviderTest : TestBase
 {
     public JsonConfigurationProviderTest(ITestOutputHelper outputHelper)
@@ -18,6 +21,9 @@ public class JsonConfigurationProviderTest : TestBase
         RegisterMapper();
     }
 
+    /// <summary>
+    /// Tests that JSON configuration works correctly.
+    /// </summary>
     [Fact]
     public void JsonConfiguration_Works()
     {

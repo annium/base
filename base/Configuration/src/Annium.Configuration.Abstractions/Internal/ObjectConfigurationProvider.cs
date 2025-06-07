@@ -7,15 +7,29 @@ using Annium.Reflection;
 
 namespace Annium.Configuration.Abstractions.Internal;
 
+/// <summary>
+/// Configuration provider that reads configuration data from .NET objects
+/// </summary>
 internal class ObjectConfigurationProvider : ConfigurationProviderBase
 {
+    /// <summary>
+    /// The configuration object to read data from
+    /// </summary>
     private readonly object? _config;
 
+    /// <summary>
+    /// Initializes a new instance of ObjectConfigurationProvider
+    /// </summary>
+    /// <param name="config">Configuration object to read data from</param>
     public ObjectConfigurationProvider(object? config)
     {
         _config = config;
     }
 
+    /// <summary>
+    /// Reads configuration data from the object and returns it as a dictionary
+    /// </summary>
+    /// <returns>Dictionary containing configuration keys and values</returns>
     public override IReadOnlyDictionary<string[], string> Read()
     {
         var result = new Dictionary<string[], string>();
@@ -26,6 +40,12 @@ internal class ObjectConfigurationProvider : ConfigurationProviderBase
         return result;
     }
 
+    /// <summary>
+    /// Processes an object value and adds its data to the configuration
+    /// </summary>
+    /// <param name="prefix">Key prefix for the current path</param>
+    /// <param name="addValue">Action to add key-value pairs</param>
+    /// <param name="value">Object value to process</param>
     private void Process(string[] prefix, Action<string[], string> addValue, object? value)
     {
         if (value is null)
@@ -55,6 +75,12 @@ internal class ObjectConfigurationProvider : ConfigurationProviderBase
         }
     }
 
+    /// <summary>
+    /// Processes an object by iterating through its properties and fields
+    /// </summary>
+    /// <param name="prefix">Key prefix for the current path</param>
+    /// <param name="addValue">Action to add key-value pairs</param>
+    /// <param name="value">Object to process</param>
     private void ProcessObject(string[] prefix, Action<string[], string> addValue, object value)
     {
         var type = value.GetType();
@@ -70,6 +96,12 @@ internal class ObjectConfigurationProvider : ConfigurationProviderBase
         }
     }
 
+    /// <summary>
+    /// Processes a dictionary by iterating through its key-value pairs
+    /// </summary>
+    /// <param name="prefix">Key prefix for the current path</param>
+    /// <param name="addValue">Action to add key-value pairs</param>
+    /// <param name="value">Dictionary to process</param>
     private void ProcessDictionary(string[] prefix, Action<string[], string> addValue, object value)
     {
         var type = value.GetType();
@@ -95,6 +127,12 @@ internal class ObjectConfigurationProvider : ConfigurationProviderBase
         }
     }
 
+    /// <summary>
+    /// Processes an enumerable by iterating through its items with indices
+    /// </summary>
+    /// <param name="prefix">Key prefix for the current path</param>
+    /// <param name="addValue">Action to add key-value pairs</param>
+    /// <param name="value">Enumerable to process</param>
     private void ProcessEnumerable(string[] prefix, Action<string[], string> addValue, object value)
     {
         var index = 0;
@@ -110,6 +148,12 @@ internal class ObjectConfigurationProvider : ConfigurationProviderBase
         }
     }
 
+    /// <summary>
+    /// Processes a nullable value by extracting its underlying value
+    /// </summary>
+    /// <param name="prefix">Key prefix for the current path</param>
+    /// <param name="addValue">Action to add key-value pairs</param>
+    /// <param name="value">Nullable value to process</param>
     private void ProcessNullable(string[] prefix, Action<string[], string> addValue, object value)
     {
         var type = value.GetType();
@@ -121,6 +165,12 @@ internal class ObjectConfigurationProvider : ConfigurationProviderBase
         Process(prefix, addValue, innerValue);
     }
 
+    /// <summary>
+    /// Processes a primitive value by converting it to string
+    /// </summary>
+    /// <param name="prefix">Key prefix for the current path</param>
+    /// <param name="addValue">Action to add key-value pairs</param>
+    /// <param name="value">Primitive value to process</param>
     private void ProcessPrimitive(string[] prefix, Action<string[], string> addValue, object value)
     {
         var valueString = value.ToString();
@@ -131,11 +181,26 @@ internal class ObjectConfigurationProvider : ConfigurationProviderBase
     }
 }
 
+/// <summary>
+/// Static helper class for type processing utilities
+/// </summary>
 file static class Helper
 {
+    /// <summary>
+    /// Cache for type variants to improve performance
+    /// </summary>
     private static readonly Dictionary<Type, TypeVariant> _variants = new();
+
+    /// <summary>
+    /// Cache for type members to improve performance
+    /// </summary>
     private static readonly Dictionary<Type, IReadOnlyCollection<MemberInfo>> _members = new();
 
+    /// <summary>
+    /// Gets the type variant for a given type
+    /// </summary>
+    /// <param name="type">Type to get variant for</param>
+    /// <returns>Type variant of the specified type</returns>
     public static TypeVariant GetVariant(Type type)
     {
         if (_variants.TryGetValue(type, out var variant))
@@ -146,6 +211,11 @@ file static class Helper
         return variant;
     }
 
+    /// <summary>
+    /// Gets the accessible members for a given type
+    /// </summary>
+    /// <param name="type">Type to get members for</param>
+    /// <returns>Collection of accessible members</returns>
     public static IReadOnlyCollection<MemberInfo> GetMembers(Type type)
     {
         if (_members.TryGetValue(type, out var members))
@@ -156,6 +226,11 @@ file static class Helper
         return members;
     }
 
+    /// <summary>
+    /// Resolves the type variant for a type
+    /// </summary>
+    /// <param name="type">Type to resolve variant for</param>
+    /// <returns>Type variant of the specified type</returns>
     private static TypeVariant ResolveVariant(Type type)
     {
         if (type.IsNullableValueType())
@@ -176,6 +251,11 @@ file static class Helper
         return TypeVariant.Object;
     }
 
+    /// <summary>
+    /// Resolves the accessible members for a type
+    /// </summary>
+    /// <param name="type">Type to resolve members for</param>
+    /// <returns>Collection of accessible members</returns>
     private static IReadOnlyCollection<MemberInfo> ResolveMembers(Type type)
     {
         return type.GetAllProperties(BindingFlags.Public | BindingFlags.Instance)
@@ -185,11 +265,33 @@ file static class Helper
     }
 }
 
+/// <summary>
+/// Enumeration of different type variants for configuration processing
+/// </summary>
 file enum TypeVariant
 {
+    /// <summary>
+    /// Regular object type
+    /// </summary>
     Object,
+
+    /// <summary>
+    /// Dictionary type
+    /// </summary>
     Dictionary,
+
+    /// <summary>
+    /// Enumerable type
+    /// </summary>
     Enumerable,
+
+    /// <summary>
+    /// Nullable value type
+    /// </summary>
     Nullable,
+
+    /// <summary>
+    /// Primitive value type
+    /// </summary>
     Primitive,
 }

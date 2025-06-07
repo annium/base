@@ -10,6 +10,9 @@ using YamlDotNet.Serialization;
 
 namespace Annium.Configuration.Yaml.Tests;
 
+/// <summary>
+/// Tests for YAML configuration provider functionality.
+/// </summary>
 public class YamlConfigurationProviderTest : TestBase
 {
     public YamlConfigurationProviderTest(ITestOutputHelper outputHelper)
@@ -18,6 +21,9 @@ public class YamlConfigurationProviderTest : TestBase
         RegisterMapper();
     }
 
+    /// <summary>
+    /// Tests that YAML configuration works correctly.
+    /// </summary>
     [Fact]
     public void YamlConfiguration_Works()
     {
