@@ -7,6 +7,9 @@ using Xunit;
 
 namespace Annium.Data.Tables.Tests;
 
+/// <summary>
+/// Tests for table source extension methods including mapping and synchronization operations.
+/// </summary>
 public class TableSourceExtensionsTests : TestBase
 {
     public TableSourceExtensionsTests(ITestOutputHelper outputHelper)
@@ -15,6 +18,9 @@ public class TableSourceExtensionsTests : TestBase
         Register(x => x.AddTables());
     }
 
+    /// <summary>
+    /// Tests that MapWriteTo correctly maps and writes data from source table to target table with full replacement.
+    /// </summary>
     [Fact]
     public void MapWriteTo_Works()
     {
@@ -57,6 +63,9 @@ public class TableSourceExtensionsTests : TestBase
         log.At(5).Item.Is(new Sample(3, "6"));
     }
 
+    /// <summary>
+    /// Tests that MapAppendTo correctly maps and appends data from source table to target table without replacement.
+    /// </summary>
     [Fact]
     public void MapAppendTo_Works()
     {
@@ -101,6 +110,10 @@ public class TableSourceExtensionsTests : TestBase
         log.At(7).Item.IsEqual(new Sample(3, "6"));
     }
 
+    /// <summary>
+    /// Tests that SyncAddDelete correctly synchronizes tables by adding new items and removing obsolete ones.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Fact]
     public async Task SyncAddRemove_Works()
     {
@@ -129,6 +142,10 @@ public class TableSourceExtensionsTests : TestBase
         log.At(2).Equals(ChangeEvent.Set(syncValues[1])).IsTrue();
     }
 
+    /// <summary>
+    /// Tests that SyncAddUpdateDelete correctly synchronizes tables by adding, updating, and removing items as needed.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Fact]
     public async Task SyncAddUpdateRemove_Works()
     {
@@ -159,26 +176,58 @@ public class TableSourceExtensionsTests : TestBase
     }
 }
 
+/// <summary>
+/// Test record representing a sample with a key and data, implementing ICopyable for table operations.
+/// </summary>
+/// <param name="Key">The unique identifier for the sample.</param>
+/// <param name="Data">The data content of the sample.</param>
 file sealed record Sample(int Key, string Data) : ICopyable<Sample>
 {
+    /// <summary>
+    /// Gets the data content of the sample.
+    /// </summary>
     public string Data { get; private set; } = Data;
 
+    /// <summary>
+    /// Updates the data content of the sample.
+    /// </summary>
+    /// <param name="data">The new data value.</param>
     public void Update(string data)
     {
         Data = data;
     }
 
+    /// <summary>
+    /// Creates a copy of the current sample.
+    /// </summary>
+    /// <returns>A new Sample instance that is a copy of the current instance.</returns>
     public Sample Copy() => this with { };
 }
 
+/// <summary>
+/// Test record representing raw data with a key and timestamp, implementing ICopyable for table operations.
+/// </summary>
+/// <param name="Key">The unique identifier for the raw data.</param>
+/// <param name="Stamp">The timestamp value for the raw data.</param>
 file sealed record Raw(int Key, long Stamp) : ICopyable<Raw>
 {
+    /// <summary>
+    /// Gets the timestamp value of the raw data.
+    /// </summary>
     public long Stamp { get; private set; } = Stamp;
 
+    /// <summary>
+    /// Updates the timestamp value of the raw data.
+    /// </summary>
+    /// <param name="stamp">The new timestamp value.</param>
     public void Update(long stamp)
     {
         Stamp = stamp;
     }
 
+    /// <summary>
+    /// Creates a copy of the current raw data.
+    /// </summary>
+    /// <returns>A new Raw instance that is a copy of the current instance.</returns>
     public Raw Copy() => this with { };
 }

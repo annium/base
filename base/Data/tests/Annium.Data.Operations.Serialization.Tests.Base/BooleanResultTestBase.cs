@@ -4,11 +4,22 @@ using Xunit;
 
 namespace Annium.Data.Operations.Serialization.Tests.Base;
 
+/// <summary>
+/// Base class for testing BooleanResult serialization functionality.
+/// </summary>
 public abstract class BooleanResultTestBase : TestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the BooleanResultTestBase class.
+    /// </summary>
+    /// <param name="outputHelper">The test output helper.</param>
     protected BooleanResultTestBase(ITestOutputHelper outputHelper)
         : base(outputHelper) { }
 
+    /// <summary>
+    /// Tests basic BooleanResult serialization and deserialization.
+    /// </summary>
+    /// <typeparam name="T">The serialization format type.</typeparam>
     public void Simple_Base<T>()
     {
         // arrange
@@ -28,6 +39,10 @@ public abstract class BooleanResultTestBase : TestBase
         deserialized.LabeledErrors.IsEqual(result.LabeledErrors);
     }
 
+    /// <summary>
+    /// Tests BooleanResult with data serialization and deserialization.
+    /// </summary>
+    /// <typeparam name="T">The serialization format type.</typeparam>
     public void Data_Base<T>()
     {
         // arrange

@@ -5,10 +5,22 @@ using MessagePack.Formatters;
 
 namespace Annium.Data.Operations.Serialization.MessagePack.Internal;
 
+/// <summary>
+/// MessagePack formatter for IResult instances without data
+/// </summary>
 internal class ResultFormatter : IMessagePackFormatter<IResult?>
 {
+    /// <summary>
+    /// Gets the singleton instance of the formatter
+    /// </summary>
     public static IMessagePackFormatter Instance { get; } = new ResultFormatter();
 
+    /// <summary>
+    /// Deserializes an IResult from MessagePack format
+    /// </summary>
+    /// <param name="reader">The MessagePack reader</param>
+    /// <param name="options">The serialization options</param>
+    /// <returns>The deserialized result instance</returns>
     public IResult Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
     {
         if (reader.TryReadNil())
@@ -46,6 +58,12 @@ internal class ResultFormatter : IMessagePackFormatter<IResult?>
         return result;
     }
 
+    /// <summary>
+    /// Serializes an IResult to MessagePack format
+    /// </summary>
+    /// <param name="writer">The MessagePack writer</param>
+    /// <param name="value">The result instance to serialize</param>
+    /// <param name="options">The serialization options</param>
     public void Serialize(ref MessagePackWriter writer, IResult? value, MessagePackSerializerOptions options)
     {
         if (value == null!)

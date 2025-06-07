@@ -5,8 +5,14 @@ using Xunit;
 
 namespace Annium.Data.Models.Tests;
 
+/// <summary>
+/// Tests for the ValueRange functionality including managed and computed ranges.
+/// </summary>
 public class ValueRangeTest
 {
+    /// <summary>
+    /// Tests basic functionality of managed value ranges.
+    /// </summary>
     [Fact]
     public void Managed_Basics()
     {
@@ -26,6 +32,9 @@ public class ValueRangeTest
         range.End.Is(4);
     }
 
+    /// <summary>
+    /// Tests basic functionality of computed value ranges.
+    /// </summary>
     [Fact]
     public void Computed_Basics()
     {
@@ -47,6 +56,9 @@ public class ValueRangeTest
         range.End.Is(4);
     }
 
+    /// <summary>
+    /// Tests that value ranges correctly determine if they contain specific points.
+    /// </summary>
     [Fact]
     public void Contains_Point()
     {
@@ -68,6 +80,9 @@ public class ValueRangeTest
         range.Contains(3, RangeBounds.Both).IsTrue();
     }
 
+    /// <summary>
+    /// Tests that value ranges correctly determine if they contain other ranges.
+    /// </summary>
     [Fact]
     public void Contains_Range()
     {
@@ -93,6 +108,9 @@ public class ValueRangeTest
         range.Contains(ValueRange.Create(2, 3), RangeBounds.Both).IsTrue();
     }
 
+    /// <summary>
+    /// Tests the subtraction operation between value ranges.
+    /// </summary>
     [Fact]
     public void Subtract()
     {

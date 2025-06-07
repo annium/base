@@ -4,11 +4,22 @@ using Xunit;
 
 namespace Annium.Data.Operations.Serialization.Tests.Base;
 
+/// <summary>
+/// Base class for testing StatusResult serialization functionality.
+/// </summary>
 public abstract class StatusResultTestBase : TestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the StatusResultTestBase class.
+    /// </summary>
+    /// <param name="outputHelper">The test output helper.</param>
     protected StatusResultTestBase(ITestOutputHelper outputHelper)
         : base(outputHelper) { }
 
+    /// <summary>
+    /// Tests basic StatusResult serialization and deserialization.
+    /// </summary>
+    /// <typeparam name="T">The serialization format type.</typeparam>
     public void Simple_Base<T>()
     {
         // arrange
@@ -27,6 +38,10 @@ public abstract class StatusResultTestBase : TestBase
         deserialized.LabeledErrors.IsEqual(result.LabeledErrors);
     }
 
+    /// <summary>
+    /// Tests StatusResult with data serialization and deserialization.
+    /// </summary>
+    /// <typeparam name="T">The serialization format type.</typeparam>
     public void Data_Base<T>()
     {
         // arrange

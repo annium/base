@@ -4,8 +4,16 @@ using System.Runtime.CompilerServices;
 // ReSharper disable once CheckNamespace
 namespace Annium.Data.Operations;
 
+/// <summary>
+/// Extension methods for result base types
+/// </summary>
 public static class ResultBaseExtensions
 {
+    /// <summary>
+    /// Throws an exception if the result has any errors
+    /// </summary>
+    /// <param name="result">The result to check</param>
+    /// <param name="resultEx">The expression that generated the result</param>
     public static void ThrowIfHasErrors(
         this IResultBase result,
         [CallerArgumentExpression(nameof(result))] string resultEx = default!

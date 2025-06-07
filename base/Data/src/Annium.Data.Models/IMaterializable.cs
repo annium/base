@@ -5,5 +5,8 @@ namespace Annium.Data.Models;
 /// </summary>
 public interface IMaterializable
 {
+    /// <summary>
+    /// Called when the entity has been materialized from a data source
+    /// </summary>
     void OnMaterialized();
 }

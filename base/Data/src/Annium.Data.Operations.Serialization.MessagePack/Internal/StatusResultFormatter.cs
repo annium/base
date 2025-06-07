@@ -5,10 +5,23 @@ using MessagePack.Formatters;
 
 namespace Annium.Data.Operations.Serialization.MessagePack.Internal;
 
+/// <summary>
+/// MessagePack formatter for IStatusResult&lt;TS&gt; instances with status but no data
+/// </summary>
+/// <typeparam name="TS">The type of status in the result</typeparam>
 internal class StatusResultFormatter<TS> : IMessagePackFormatter<IStatusResult<TS>?>
 {
+    /// <summary>
+    /// Gets the singleton instance of the formatter
+    /// </summary>
     public static IMessagePackFormatter Instance { get; } = new StatusResultFormatter<TS>();
 
+    /// <summary>
+    /// Deserializes an IStatusResult&lt;TS&gt; from MessagePack format
+    /// </summary>
+    /// <param name="reader">The MessagePack reader</param>
+    /// <param name="options">The serialization options</param>
+    /// <returns>The deserialized status result instance</returns>
     public IStatusResult<TS> Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
     {
         if (reader.TryReadNil())
@@ -50,6 +63,12 @@ internal class StatusResultFormatter<TS> : IMessagePackFormatter<IStatusResult<T
         return result;
     }
 
+    /// <summary>
+    /// Serializes an IStatusResult&lt;TS&gt; to MessagePack format
+    /// </summary>
+    /// <param name="writer">The MessagePack writer</param>
+    /// <param name="value">The status result instance to serialize</param>
+    /// <param name="options">The serialization options</param>
     public void Serialize(ref MessagePackWriter writer, IStatusResult<TS>? value, MessagePackSerializerOptions options)
     {
         if (value == null!)

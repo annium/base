@@ -3,8 +3,14 @@ using Xunit;
 
 namespace Annium.Data.Operations.Tests;
 
+/// <summary>
+/// Tests for StatusResult functionality and behavior.
+/// </summary>
 public class StatusResultTest
 {
+    /// <summary>
+    /// Tests that a StatusResult without data correctly stores the status.
+    /// </summary>
     [Fact]
     public void StatusResult_WithoutData_WorksCorrectly()
     {
@@ -15,6 +21,9 @@ public class StatusResultTest
         result.Status.Is(Access.Allowed);
     }
 
+    /// <summary>
+    /// Tests that a StatusResult with data correctly stores both status and data.
+    /// </summary>
     [Fact]
     public void StatusResult_WithData_WorksCorrectly()
     {
@@ -29,6 +38,9 @@ public class StatusResultTest
         data.Is(5);
     }
 
+    /// <summary>
+    /// Tests that cloning a StatusResult produces a valid copy with all properties preserved.
+    /// </summary>
     [Fact]
     public void StatusResult_Clone_ReturnsValidClone()
     {
@@ -52,6 +64,9 @@ public class StatusResultTest
         failedClone.LabeledErrors.At("label").At(0).Is("value");
     }
 
+    /// <summary>
+    /// Tests that cloning a StatusResult with data produces a valid copy with all properties and data preserved.
+    /// </summary>
     [Fact]
     public void StatusResult_CloneWithData_ReturnsValidClone()
     {

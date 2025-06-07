@@ -4,8 +4,20 @@ using System.Linq;
 
 namespace Annium.Data.Tables;
 
+/// <summary>
+/// Extension methods for working with table sources and mapping operations.
+/// </summary>
 public static class TableSourceExtensions
 {
+    /// <summary>
+    /// Maps and writes change events from a source observable to a target table source, replacing existing data on initialization.
+    /// </summary>
+    /// <typeparam name="TS">The source item type.</typeparam>
+    /// <typeparam name="TD">The destination item type.</typeparam>
+    /// <param name="source">The source observable of change events.</param>
+    /// <param name="target">The target table source to write to.</param>
+    /// <param name="map">The mapping function to transform source items to destination items.</param>
+    /// <returns>A disposable subscription to the source observable.</returns>
     public static IDisposable MapWriteTo<TS, TD>(
         this IObservable<ChangeEvent<TS>> source,
         ITableSource<TD> target,
@@ -17,6 +29,15 @@ public static class TableSourceExtensions
         return source.Subscribe(e => target.MapWrite(e, map));
     }
 
+    /// <summary>
+    /// Maps and appends change events from a source observable to a target table source, adding to existing data on initialization.
+    /// </summary>
+    /// <typeparam name="TS">The source item type.</typeparam>
+    /// <typeparam name="TD">The destination item type.</typeparam>
+    /// <param name="source">The source observable of change events.</param>
+    /// <param name="target">The target table source to append to.</param>
+    /// <param name="map">The mapping function to transform source items to destination items.</param>
+    /// <returns>A disposable subscription to the source observable.</returns>
     public static IDisposable MapAppendTo<TS, TD>(
         this IObservable<ChangeEvent<TS>> source,
         ITableSource<TD> target,
@@ -28,6 +49,14 @@ public static class TableSourceExtensions
         return source.Subscribe(e => target.MapAppend(e, map));
     }
 
+    /// <summary>
+    /// Maps a change event and writes it to the target table source, replacing existing data on initialization.
+    /// </summary>
+    /// <typeparam name="TS">The source item type.</typeparam>
+    /// <typeparam name="TD">The destination item type.</typeparam>
+    /// <param name="target">The target table source.</param>
+    /// <param name="e">The change event to map and write.</param>
+    /// <param name="map">The mapping function.</param>
     private static void MapWrite<TS, TD>(this ITableSource<TD> target, ChangeEvent<TS> e, Func<TS, TD?> map)
         where TS : notnull
         where TD : notnull
@@ -54,6 +83,14 @@ public static class TableSourceExtensions
         }
     }
 
+    /// <summary>
+    /// Maps a change event and appends it to the target table source, adding to existing data on initialization.
+    /// </summary>
+    /// <typeparam name="TS">The source item type.</typeparam>
+    /// <typeparam name="TD">The destination item type.</typeparam>
+    /// <param name="target">The target table source.</param>
+    /// <param name="e">The change event to map and append.</param>
+    /// <param name="map">The mapping function.</param>
     private static void MapAppend<TS, TD>(this ITableSource<TD> target, ChangeEvent<TS> e, Func<TS, TD?> map)
         where TS : notnull
         where TD : notnull
@@ -86,6 +123,12 @@ public static class TableSourceExtensions
         }
     }
 
+    /// <summary>
+    /// Synchronizes the target table source with the provided values by adding missing items and deleting unexpected ones.
+    /// </summary>
+    /// <typeparam name="T">The type of items in the table.</typeparam>
+    /// <param name="target">The target table source to synchronize.</param>
+    /// <param name="values">The collection of values to synchronize with.</param>
     public static void SyncAddDelete<T>(this ITableSource<T> target, IReadOnlyCollection<T> values)
         where T : notnull
     {
@@ -103,6 +146,12 @@ public static class TableSourceExtensions
                 target.Set(value);
     }
 
+    /// <summary>
+    /// Synchronizes the target table source with the provided values by adding missing items, updating existing ones, and deleting unexpected ones.
+    /// </summary>
+    /// <typeparam name="T">The type of items in the table.</typeparam>
+    /// <param name="target">The target table source to synchronize.</param>
+    /// <param name="values">The collection of values to synchronize with.</param>
     public static void SyncAddUpdateDelete<T>(this ITableSource<T> target, IReadOnlyCollection<T> values)
         where T : notnull
     {
