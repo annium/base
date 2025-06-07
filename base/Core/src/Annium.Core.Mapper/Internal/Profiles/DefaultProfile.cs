@@ -4,8 +4,14 @@ using static System.Globalization.CultureInfo;
 
 namespace Annium.Core.Mapper.Internal.Profiles;
 
+/// <summary>
+/// Default profile that provides mappings for built-in types and commonly used types
+/// </summary>
 internal class DefaultProfile : Profile
 {
+    /// <summary>
+    /// Initializes a new instance of the DefaultProfile class
+    /// </summary>
     public DefaultProfile()
     {
         RegisterString();
@@ -24,6 +30,9 @@ internal class DefaultProfile : Profile
         RegisterNodaTime();
     }
 
+    /// <summary>
+    /// Registers string conversion mappings
+    /// </summary>
     private void RegisterString()
     {
         // from
@@ -65,6 +74,9 @@ internal class DefaultProfile : Profile
         Map<TimeOnly, string>(x => x.ToString(CurrentUICulture));
     }
 
+    /// <summary>
+    /// Registers byte conversion mappings
+    /// </summary>
     private void RegisterByte()
     {
         //from
@@ -94,6 +106,9 @@ internal class DefaultProfile : Profile
         Map<ushort, byte>(x => (byte)x);
     }
 
+    /// <summary>
+    /// Registers signed byte conversion mappings
+    /// </summary>
     private void RegisterSbyte()
     {
         //from
@@ -123,6 +138,9 @@ internal class DefaultProfile : Profile
         Map<ushort, sbyte>(x => (sbyte)x);
     }
 
+    /// <summary>
+    /// Registers character conversion mappings
+    /// </summary>
     private void RegisterChar()
     {
         //from
@@ -152,6 +170,9 @@ internal class DefaultProfile : Profile
         Map<ushort, char>(x => (char)x);
     }
 
+    /// <summary>
+    /// Registers decimal conversion mappings
+    /// </summary>
     private void RegisterDecimal()
     {
         //from
@@ -181,6 +202,9 @@ internal class DefaultProfile : Profile
         Map<ushort, decimal>(x => x);
     }
 
+    /// <summary>
+    /// Registers double precision floating point conversion mappings
+    /// </summary>
     private void RegisterDouble()
     {
         //from
@@ -210,6 +234,9 @@ internal class DefaultProfile : Profile
         Map<ushort, double>(x => x);
     }
 
+    /// <summary>
+    /// Registers single precision floating point conversion mappings
+    /// </summary>
     private void RegisterFloat()
     {
         //from
@@ -239,6 +266,9 @@ internal class DefaultProfile : Profile
         Map<ushort, float>(x => x);
     }
 
+    /// <summary>
+    /// Registers integer conversion mappings
+    /// </summary>
     private void RegisterInt()
     {
         //from
@@ -268,6 +298,9 @@ internal class DefaultProfile : Profile
         Map<ushort, int>(x => x);
     }
 
+    /// <summary>
+    /// Registers unsigned integer conversion mappings
+    /// </summary>
     private void RegisterUint()
     {
         //from
@@ -297,6 +330,9 @@ internal class DefaultProfile : Profile
         Map<ushort, uint>(x => x);
     }
 
+    /// <summary>
+    /// Registers long integer conversion mappings
+    /// </summary>
     private void RegisterLong()
     {
         //from
@@ -326,6 +362,9 @@ internal class DefaultProfile : Profile
         Map<ushort, long>(x => x);
     }
 
+    /// <summary>
+    /// Registers unsigned long integer conversion mappings
+    /// </summary>
     private void RegisterUlong()
     {
         //from
@@ -355,6 +394,9 @@ internal class DefaultProfile : Profile
         Map<ushort, ulong>(x => x);
     }
 
+    /// <summary>
+    /// Registers short integer conversion mappings
+    /// </summary>
     private void RegisterShort()
     {
         //from
@@ -384,6 +426,9 @@ internal class DefaultProfile : Profile
         Map<ushort, short>(x => (short)x);
     }
 
+    /// <summary>
+    /// Registers unsigned short integer conversion mappings
+    /// </summary>
     private void RegisterUshort()
     {
         //from
@@ -413,6 +458,9 @@ internal class DefaultProfile : Profile
         Map<short, ushort>(x => (ushort)x);
     }
 
+    /// <summary>
+    /// Registers NodaTime conversion mappings
+    /// </summary>
     private void RegisterNodaTime()
     {
         // to noda time

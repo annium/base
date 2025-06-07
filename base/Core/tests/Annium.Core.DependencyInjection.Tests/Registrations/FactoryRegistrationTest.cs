@@ -3,8 +3,14 @@ using Xunit;
 
 namespace Annium.Core.DependencyInjection.Tests.Registrations;
 
+/// <summary>
+/// Tests for factory registration functionality in the dependency injection container
+/// </summary>
 public class FactoryRegistrationTest : TestBase
 {
+    /// <summary>
+    /// Verifies that factory registration as self works correctly
+    /// </summary>
     [Fact]
     public void AsSelf_Works()
     {
@@ -22,6 +28,9 @@ public class FactoryRegistrationTest : TestBase
         Get<D>().Is(d);
     }
 
+    /// <summary>
+    /// Verifies that factory registration as specific type works correctly
+    /// </summary>
     [Fact]
     public void As_Works()
     {
@@ -37,6 +46,9 @@ public class FactoryRegistrationTest : TestBase
         Get<C>().Is(instance);
     }
 
+    /// <summary>
+    /// Verifies that factory registration as interfaces works correctly
+    /// </summary>
     [Fact]
     public void AsInterfaces_Works()
     {
@@ -52,14 +64,23 @@ public class FactoryRegistrationTest : TestBase
         Get<IX>().Is(instance);
     }
 
+    /// <summary>
+    /// Test class D that inherits from C and implements IX
+    /// </summary>
     private sealed class D : C, IX
     {
         public D(A x)
             : base(x) { }
     }
 
+    /// <summary>
+    /// Test class C
+    /// </summary>
     private class C
     {
+        /// <summary>
+        /// Gets the A instance
+        /// </summary>
         public A A { get; }
 
         protected C(A a)
@@ -68,7 +89,13 @@ public class FactoryRegistrationTest : TestBase
         }
     }
 
+    /// <summary>
+    /// Test class A
+    /// </summary>
     private class A;
 
+    /// <summary>
+    /// Test interface IX
+    /// </summary>
     private interface IX;
 }

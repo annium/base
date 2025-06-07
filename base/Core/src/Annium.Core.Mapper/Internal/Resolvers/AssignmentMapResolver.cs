@@ -6,17 +6,41 @@ using System.Reflection;
 
 namespace Annium.Core.Mapper.Internal.Resolvers;
 
+/// <summary>
+/// Map resolver that creates mappings using property assignment for types with default constructors
+/// </summary>
 internal class AssignmentMapResolver : IMapResolver
 {
+    /// <summary>
+    /// The expression repacker for repackaging expressions
+    /// </summary>
     private readonly IRepacker _repacker;
 
+    /// <summary>
+    /// Initializes a new instance of the AssignmentMapResolver class
+    /// </summary>
+    /// <param name="repacker">The expression repacker</param>
     public AssignmentMapResolver(IRepacker repacker)
     {
         _repacker = repacker;
     }
 
+    /// <summary>
+    /// Determines whether this resolver can create a mapping between the specified source and target types
+    /// </summary>
+    /// <param name="src">The source type</param>
+    /// <param name="tgt">The target type</param>
+    /// <returns>True if the target type has a default constructor, otherwise false</returns>
     public bool CanResolveMap(Type src, Type tgt) => tgt.GetConstructor(Type.EmptyTypes) is not null;
 
+    /// <summary>
+    /// Resolves and creates a mapping between the specified source and target types using property assignment
+    /// </summary>
+    /// <param name="src">The source type</param>
+    /// <param name="tgt">The target type</param>
+    /// <param name="cfg">The mapping configuration</param>
+    /// <param name="ctx">The resolver context</param>
+    /// <returns>The resolved mapping</returns>
     public Mapping ResolveMap(Type src, Type tgt, IMapConfiguration cfg, IMapResolverContext ctx) =>
         source =>
         {

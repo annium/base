@@ -5,8 +5,16 @@ using MicrosoftServiceDescriptor = Microsoft.Extensions.DependencyInjection.Serv
 // ReSharper disable once CheckNamespace
 namespace Annium.Core.DependencyInjection;
 
+/// <summary>
+/// Factory class for creating service descriptors
+/// </summary>
 public static class ServiceDescriptor
 {
+    /// <summary>
+    /// Creates a service descriptor from a Microsoft service descriptor
+    /// </summary>
+    /// <param name="descriptor">Microsoft service descriptor to convert</param>
+    /// <returns>Converted service descriptor</returns>
     public static IServiceDescriptor From(MicrosoftServiceDescriptor descriptor)
     {
         if (descriptor.ServiceKey is not null)
@@ -56,6 +64,13 @@ public static class ServiceDescriptor
         throw new NotSupportedException($"{descriptor} has unsupported configuration");
     }
 
+    /// <summary>
+    /// Creates a type-based service descriptor for generic types
+    /// </summary>
+    /// <typeparam name="TService">Service type</typeparam>
+    /// <typeparam name="TImplementation">Implementation type</typeparam>
+    /// <param name="lifetime">Service lifetime</param>
+    /// <returns>Type service descriptor</returns>
     public static ITypeServiceDescriptor Type<TService, TImplementation>(ServiceLifetime lifetime)
         where TImplementation : TService
     {
@@ -67,6 +82,14 @@ public static class ServiceDescriptor
         };
     }
 
+    /// <summary>
+    /// Creates a keyed type-based service descriptor for generic types
+    /// </summary>
+    /// <typeparam name="TService">Service type</typeparam>
+    /// <typeparam name="TImplementation">Implementation type</typeparam>
+    /// <param name="key">Service key</param>
+    /// <param name="lifetime">Service lifetime</param>
+    /// <returns>Keyed type service descriptor</returns>
     public static IKeyedTypeServiceDescriptor KeyedType<TService, TImplementation>(object key, ServiceLifetime lifetime)
         where TImplementation : TService
     {
@@ -79,6 +102,13 @@ public static class ServiceDescriptor
         };
     }
 
+    /// <summary>
+    /// Creates a type-based service descriptor
+    /// </summary>
+    /// <param name="serviceType">Service type</param>
+    /// <param name="implementationType">Implementation type</param>
+    /// <param name="lifetime">Service lifetime</param>
+    /// <returns>Type service descriptor</returns>
     public static ITypeServiceDescriptor Type(Type serviceType, Type implementationType, ServiceLifetime lifetime)
     {
         return new TypeServiceDescriptor
@@ -89,6 +119,14 @@ public static class ServiceDescriptor
         };
     }
 
+    /// <summary>
+    /// Creates a keyed type-based service descriptor
+    /// </summary>
+    /// <param name="serviceType">Service type</param>
+    /// <param name="key">Service key</param>
+    /// <param name="implementationType">Implementation type</param>
+    /// <param name="lifetime">Service lifetime</param>
+    /// <returns>Keyed type service descriptor</returns>
     public static IKeyedTypeServiceDescriptor KeyedType(
         Type serviceType,
         object key,
@@ -105,6 +143,13 @@ public static class ServiceDescriptor
         };
     }
 
+    /// <summary>
+    /// Creates a factory-based service descriptor for generic type
+    /// </summary>
+    /// <typeparam name="T">Service type</typeparam>
+    /// <param name="implementationFactory">Factory function</param>
+    /// <param name="lifetime">Service lifetime</param>
+    /// <returns>Factory service descriptor</returns>
     public static IFactoryServiceDescriptor Factory<T>(
         Func<IServiceProvider, T> implementationFactory,
         ServiceLifetime lifetime
@@ -119,6 +164,14 @@ public static class ServiceDescriptor
         };
     }
 
+    /// <summary>
+    /// Creates a keyed factory-based service descriptor for generic type
+    /// </summary>
+    /// <typeparam name="T">Service type</typeparam>
+    /// <param name="key">Service key</param>
+    /// <param name="implementationFactory">Keyed factory function</param>
+    /// <param name="lifetime">Service lifetime</param>
+    /// <returns>Keyed factory service descriptor</returns>
     public static IKeyedFactoryServiceDescriptor KeyedFactory<T>(
         object key,
         Func<IServiceProvider, object, T> implementationFactory,
@@ -135,6 +188,13 @@ public static class ServiceDescriptor
         };
     }
 
+    /// <summary>
+    /// Creates a factory-based service descriptor
+    /// </summary>
+    /// <param name="serviceType">Service type</param>
+    /// <param name="implementationFactory">Factory function</param>
+    /// <param name="lifetime">Service lifetime</param>
+    /// <returns>Factory service descriptor</returns>
     public static IFactoryServiceDescriptor Factory(
         Type serviceType,
         Func<IServiceProvider, object> implementationFactory,
@@ -149,6 +209,14 @@ public static class ServiceDescriptor
         };
     }
 
+    /// <summary>
+    /// Creates a keyed factory-based service descriptor
+    /// </summary>
+    /// <param name="serviceType">Service type</param>
+    /// <param name="key">Service key</param>
+    /// <param name="implementationFactory">Keyed factory function</param>
+    /// <param name="lifetime">Service lifetime</param>
+    /// <returns>Keyed factory service descriptor</returns>
     public static IKeyedFactoryServiceDescriptor KeyedFactory(
         Type serviceType,
         object key,
@@ -165,6 +233,13 @@ public static class ServiceDescriptor
         };
     }
 
+    /// <summary>
+    /// Creates an instance-based service descriptor for generic type
+    /// </summary>
+    /// <typeparam name="T">Service type</typeparam>
+    /// <param name="implementationInstance">Service instance</param>
+    /// <param name="lifetime">Service lifetime</param>
+    /// <returns>Instance service descriptor</returns>
     public static IInstanceServiceDescriptor Instance<T>(T implementationInstance, ServiceLifetime lifetime)
         where T : notnull
     {
@@ -176,6 +251,14 @@ public static class ServiceDescriptor
         };
     }
 
+    /// <summary>
+    /// Creates a keyed instance-based service descriptor for generic type
+    /// </summary>
+    /// <typeparam name="T">Service type</typeparam>
+    /// <param name="key">Service key</param>
+    /// <param name="implementationInstance">Service instance</param>
+    /// <param name="lifetime">Service lifetime</param>
+    /// <returns>Keyed instance service descriptor</returns>
     public static IKeyedInstanceServiceDescriptor KeyedInstance<T>(
         object key,
         T implementationInstance,
@@ -192,6 +275,13 @@ public static class ServiceDescriptor
         };
     }
 
+    /// <summary>
+    /// Creates an instance-based service descriptor
+    /// </summary>
+    /// <param name="serviceType">Service type</param>
+    /// <param name="implementationInstance">Service instance</param>
+    /// <param name="lifetime">Service lifetime</param>
+    /// <returns>Instance service descriptor</returns>
     public static IInstanceServiceDescriptor Instance(
         Type serviceType,
         object implementationInstance,
@@ -206,6 +296,14 @@ public static class ServiceDescriptor
         };
     }
 
+    /// <summary>
+    /// Creates a keyed instance-based service descriptor
+    /// </summary>
+    /// <param name="serviceType">Service type</param>
+    /// <param name="key">Service key</param>
+    /// <param name="implementationInstance">Service instance</param>
+    /// <param name="lifetime">Service lifetime</param>
+    /// <returns>Keyed instance service descriptor</returns>
     public static IKeyedInstanceServiceDescriptor KeyedInstance(
         Type serviceType,
         object key,

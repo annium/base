@@ -5,15 +5,31 @@ using System.Linq.Expressions;
 
 namespace Annium.Core.Mapper.Internal.Resolvers;
 
+/// <summary>
+/// Map resolver that creates mappings using constructor parameters for types without default constructors
+/// </summary>
 internal class ConstructorMapResolver : IMapResolver
 {
+    /// <summary>
+    /// The expression repacker for repackaging expressions
+    /// </summary>
     private readonly IRepacker _repacker;
 
+    /// <summary>
+    /// Initializes a new instance of the ConstructorMapResolver class
+    /// </summary>
+    /// <param name="repacker">The expression repacker</param>
     public ConstructorMapResolver(IRepacker repacker)
     {
         _repacker = repacker;
     }
 
+    /// <summary>
+    /// Determines whether this resolver can create a mapping between the specified source and target types
+    /// </summary>
+    /// <param name="src">The source type</param>
+    /// <param name="tgt">The target type</param>
+    /// <returns>True if the target type has no default constructor and is not enum, abstract, or interface, otherwise false</returns>
     public bool CanResolveMap(Type src, Type tgt)
     {
         if (tgt.IsEnum || tgt.IsAbstract || tgt.IsInterface)
@@ -22,6 +38,14 @@ internal class ConstructorMapResolver : IMapResolver
         return tgt.GetConstructor(Type.EmptyTypes) is null;
     }
 
+    /// <summary>
+    /// Resolves and creates a mapping between the specified source and target types using constructor parameters
+    /// </summary>
+    /// <param name="src">The source type</param>
+    /// <param name="tgt">The target type</param>
+    /// <param name="cfg">The mapping configuration</param>
+    /// <param name="ctx">The resolver context</param>
+    /// <returns>The resolved mapping</returns>
     public Mapping ResolveMap(Type src, Type tgt, IMapConfiguration cfg, IMapResolverContext ctx) =>
         source =>
         {

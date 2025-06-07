@@ -66,6 +66,10 @@ public class ProfilesTest : TestBase
         result.At(1).As<LinkModel>().Created.Is(instant.ToDateTimeUtc());
     }
 
+    /// <summary>
+    /// Configures the mapping profile with DateTime and Instant conversions
+    /// </summary>
+    /// <param name="p">The profile to configure</param>
     private void ConfigureProfile(Profile p)
     {
         p.Map<DateTime, Instant>(d => Instant.FromDateTimeUtc(d.ToUniversalTime()));

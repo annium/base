@@ -4,8 +4,14 @@ using Xunit;
 
 namespace Annium.Core.DependencyInjection.Tests.Registrations;
 
+/// <summary>
+/// Tests for single type registration functionality in the dependency injection container
+/// </summary>
 public class SingleRegistrationTest : TestBase
 {
+    /// <summary>
+    /// Verifies that single type registration as self works correctly
+    /// </summary>
     [Fact]
     public void AsSelf_Works()
     {
@@ -20,6 +26,9 @@ public class SingleRegistrationTest : TestBase
         Get<B>().AsExact<B>();
     }
 
+    /// <summary>
+    /// Verifies that single type registration as specific type works correctly
+    /// </summary>
     [Fact]
     public void As_Works()
     {
@@ -34,6 +43,9 @@ public class SingleRegistrationTest : TestBase
         Get<A>().Is(Get<B>());
     }
 
+    /// <summary>
+    /// Verifies that single type registration as interfaces works correctly
+    /// </summary>
     [Fact]
     public void AsInterfaces_Works()
     {
@@ -48,6 +60,9 @@ public class SingleRegistrationTest : TestBase
         Get<IB>().Is(Get<IB>());
     }
 
+    /// <summary>
+    /// Verifies that single type registration as keyed self works correctly
+    /// </summary>
     [Fact]
     public void AsKeyedSelf_Works()
     {
@@ -64,6 +79,9 @@ public class SingleRegistrationTest : TestBase
         B.InstancesCount.Is(1);
     }
 
+    /// <summary>
+    /// Verifies that single type registration as keyed service works correctly
+    /// </summary>
     [Fact]
     public void AsKeyed_Works()
     {
@@ -80,6 +98,9 @@ public class SingleRegistrationTest : TestBase
         B.InstancesCount.Is(1);
     }
 
+    /// <summary>
+    /// Verifies that single type registration as self factory works correctly
+    /// </summary>
     [Fact]
     public void AsSelfFactory_Works()
     {
@@ -93,6 +114,9 @@ public class SingleRegistrationTest : TestBase
         Get<Func<B>>()().Is(Get<B>());
     }
 
+    /// <summary>
+    /// Verifies that single type registration as factory works correctly
+    /// </summary>
     [Fact]
     public void AsFactory_Works()
     {
@@ -106,6 +130,9 @@ public class SingleRegistrationTest : TestBase
         Get<Func<A>>()().Is(Get<B>());
     }
 
+    /// <summary>
+    /// Verifies that single type registration as keyed self factory works correctly
+    /// </summary>
     [Fact]
     public void AsKeyedSelfFactory_Works()
     {
@@ -119,6 +146,9 @@ public class SingleRegistrationTest : TestBase
         GetKeyed<Func<B>>(nameof(B))().Is(Get<B>());
     }
 
+    /// <summary>
+    /// Verifies that single type registration as keyed factory works correctly
+    /// </summary>
     [Fact]
     public void AsKeyedFactory_Works()
     {
@@ -132,13 +162,22 @@ public class SingleRegistrationTest : TestBase
         GetKeyed<Func<A>>(nameof(B))().Is(Get<B>());
     }
 
+    /// <summary>
+    /// Test class B that inherits from A and implements IB
+    /// </summary>
     private sealed class B : A, IB
     {
+        /// <summary>
+        /// Resets the instance count for testing purposes
+        /// </summary>
         public static void Reset()
         {
             InstancesCount = 0;
         }
 
+        /// <summary>
+        /// Gets the number of instances created
+        /// </summary>
         public static int InstancesCount { get; private set; }
 
         public B()
@@ -147,9 +186,18 @@ public class SingleRegistrationTest : TestBase
         }
     }
 
+    /// <summary>
+    /// Test class A that implements IA
+    /// </summary>
     private class A : IA;
 
+    /// <summary>
+    /// Test interface IB that extends IA
+    /// </summary>
     private interface IB : IA;
 
+    /// <summary>
+    /// Test interface IA
+    /// </summary>
     private interface IA;
 }

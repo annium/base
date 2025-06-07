@@ -17,6 +17,9 @@ namespace Annium.Core.Runtime.Types;
 /// </remarks>
 public static class TypeManager
 {
+    /// <summary>
+    /// Cache of type manager instances indexed by assembly cache key
+    /// </summary>
     private static readonly ConcurrentDictionary<CacheKey, ITypeManager> _instances = new();
 
     /// <summary>

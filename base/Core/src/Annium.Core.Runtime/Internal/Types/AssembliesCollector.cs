@@ -8,17 +8,35 @@ using Annium.Reflection;
 
 namespace Annium.Core.Runtime.Internal.Types;
 
+/// <summary>
+/// Internal collector that gathers assemblies for type scanning based on AutoScannedAttribute
+/// </summary>
 internal class AssembliesCollector : ILogSubject
 {
+    /// <summary>
+    /// The type ID for AutoScannedAttribute used for efficient comparison
+    /// </summary>
     private static readonly TypeId _autoScannedTypeId = typeof(AutoScannedAttribute).GetTypeId();
 
+    /// <summary>
+    /// The logger for this collector
+    /// </summary>
     public ILogger Logger { get; }
 
+    /// <summary>
+    /// Initializes a new instance of AssembliesCollector with the specified logger
+    /// </summary>
+    /// <param name="logger">The logger to use for tracing collection operations</param>
     public AssembliesCollector(ILogger logger)
     {
         Logger = logger;
     }
 
+    /// <summary>
+    /// Collects all assemblies that should be included in type scanning starting from the specified assembly
+    /// </summary>
+    /// <param name="assembly">The starting assembly to collect dependencies from</param>
+    /// <returns>Collection of assemblies marked for auto-scanning</returns>
     public IReadOnlyCollection<Assembly> Collect(Assembly assembly)
     {
         this.Trace("start");
@@ -51,6 +69,13 @@ internal class AssembliesCollector : ILogSubject
         return matchedAssemblies;
     }
 
+    /// <summary>
+    /// Recursively collects assemblies and their dependencies for type scanning
+    /// </summary>
+    /// <param name="name">The assembly name to collect</param>
+    /// <param name="resolveAssembly">Function to resolve assembly by name</param>
+    /// <param name="registerAssembly">Function to register an assembly as processed</param>
+    /// <param name="addMatchedAssembly">Action to add a matched assembly to the collection</param>
     private void Collect(
         AssemblyName name,
         Func<AssemblyName, Assembly?> resolveAssembly,
@@ -91,6 +116,11 @@ internal class AssembliesCollector : ILogSubject
             Collect(assemblyName, resolveAssembly, registerAssembly, addMatchedAssembly);
     }
 
+    /// <summary>
+    /// Creates a function for loading assemblies with caching
+    /// </summary>
+    /// <param name="assemblies">Dictionary to cache loaded assemblies</param>
+    /// <returns>Function that loads and caches assemblies by name</returns>
     private Func<AssemblyName, Assembly?> LoadAssembly(IDictionary<string, Assembly> assemblies) =>
         name =>
         {

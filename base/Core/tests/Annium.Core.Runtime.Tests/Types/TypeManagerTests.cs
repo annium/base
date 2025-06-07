@@ -299,6 +299,9 @@ file class A;
 /// </summary>
 file class B : A
 {
+    /// <summary>
+    /// Gets or sets a property specific to class B for signature-based resolution.
+    /// </summary>
     public int ForB { get; set; }
 }
 
@@ -307,6 +310,9 @@ file class B : A
 /// </summary>
 file class C : A
 {
+    /// <summary>
+    /// Gets or sets a property specific to class C for signature-based resolution.
+    /// </summary>
     public int ForC { get; set; }
 }
 
@@ -315,6 +321,9 @@ file class C : A
 /// </summary>
 file class D
 {
+    /// <summary>
+    /// Gets the type identifier used for key-based resolution.
+    /// </summary>
     [ResolutionKey]
     public string Type { get; }
 
@@ -359,6 +368,9 @@ file class G : D
 /// </summary>
 file class H
 {
+    /// <summary>
+    /// Gets the type identifier used for ID-based resolution.
+    /// </summary>
     [ResolutionId]
     public string Type => GetType().GetIdString();
 }
@@ -373,6 +385,9 @@ file class K : H;
 /// </summary>
 file record L
 {
+    /// <summary>
+    /// Gets or sets the type identifier used for ID-based resolution.
+    /// </summary>
     [ResolutionId]
     public string Type { get; set; } = string.Empty;
 }

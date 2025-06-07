@@ -23,6 +23,9 @@ public class RepackerTest : TestBase
     public RepackerTest(ITestOutputHelper outputHelper)
         : base(outputHelper) { }
 
+    /// <summary>
+    /// Verifies that binary expressions can be repacked correctly
+    /// </summary>
     [Fact]
     public void Binary_Works()
     {
@@ -34,6 +37,9 @@ public class RepackerTest : TestBase
         result(null).Is(0);
     }
 
+    /// <summary>
+    /// Verifies that method call expressions can be repacked correctly
+    /// </summary>
     [Fact]
     public void Call_Works()
     {
@@ -44,6 +50,9 @@ public class RepackerTest : TestBase
         result(1).Is("1");
     }
 
+    /// <summary>
+    /// Verifies that lambda expressions can be repacked correctly
+    /// </summary>
     [Fact]
     public void Lambda_Works()
     {
@@ -54,6 +63,9 @@ public class RepackerTest : TestBase
         result(1).Is(1);
     }
 
+    /// <summary>
+    /// Verifies that member access expressions can be repacked correctly
+    /// </summary>
     [Fact]
     public void Member_Works()
     {
@@ -64,6 +76,9 @@ public class RepackerTest : TestBase
         result("asd").Is(3);
     }
 
+    /// <summary>
+    /// Verifies that member initialization expressions can be repacked correctly
+    /// </summary>
     [Fact]
     public void MemberInit_Works()
     {
@@ -74,6 +89,9 @@ public class RepackerTest : TestBase
         result(3).Is("   ");
     }
 
+    /// <summary>
+    /// Verifies that ternary conditional expressions can be repacked correctly
+    /// </summary>
     [Fact]
     public void Ternary_Works()
     {
@@ -90,6 +108,9 @@ public class RepackerTest : TestBase
         result("3").Is("other");
     }
 
+    /// <summary>
+    /// Verifies that new object expressions can be repacked correctly
+    /// </summary>
     [Fact]
     public void New_Works()
     {
@@ -102,6 +123,9 @@ public class RepackerTest : TestBase
         ex.Source.Is("a");
     }
 
+    /// <summary>
+    /// Verifies that unary expressions can be repacked correctly
+    /// </summary>
     [Fact]
     public void Unary_Works()
     {
@@ -112,6 +136,9 @@ public class RepackerTest : TestBase
         result(false).IsTrue();
     }
 
+    /// <summary>
+    /// Verifies that list initialization expressions can be repacked correctly
+    /// </summary>
     [Fact]
     public void ListInit_Works()
     {
@@ -122,6 +149,9 @@ public class RepackerTest : TestBase
         result(5).Has(1).At(0).Is(5);
     }
 
+    /// <summary>
+    /// Verifies that array initialization expressions can be repacked correctly
+    /// </summary>
     [Fact]
     public void NewArrayInit_Works()
     {
@@ -132,6 +162,13 @@ public class RepackerTest : TestBase
         result(5).Has(1).At(0).Is(5);
     }
 
+    /// <summary>
+    /// Repacks an expression and returns a compiled function
+    /// </summary>
+    /// <typeparam name="TS">The source type</typeparam>
+    /// <typeparam name="TR">The result type</typeparam>
+    /// <param name="ex">The expression to repack</param>
+    /// <returns>A compiled function representing the repacked expression</returns>
     private Func<TS, TR> Repack<TS, TR>(Expression<Func<TS, TR>> ex)
     {
         var repacker = new ServiceContainer()

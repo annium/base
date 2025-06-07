@@ -103,15 +103,18 @@ public class BaseTest : TestBase
         result.Value.Is(value.Value);
     }
 
+    /// <summary>
+    /// Test class A with string properties
+    /// </summary>
     private class A
     {
         /// <summary>
-        /// Gets or sets the name.
+        /// Gets or sets the name
         /// </summary>
         public string? Name { get; set; }
 
         /// <summary>
-        /// Gets or sets the value.
+        /// Gets or sets the value
         /// </summary>
         public string? Value { get; set; }
     }
@@ -132,10 +135,19 @@ public class BaseTest : TestBase
         }
     }
 
+    /// <summary>
+    /// Test class D with nested structure
+    /// </summary>
     private class D
     {
+        /// <summary>
+        /// Gets the inner A instance
+        /// </summary>
         public A? Inner { get; }
 
+        /// <summary>
+        /// Gets the value
+        /// </summary>
         public string? Value { get; }
 
         public D(A? inner, string? value)
@@ -145,10 +157,19 @@ public class BaseTest : TestBase
         }
     }
 
+    /// <summary>
+    /// Test class E with nested structure
+    /// </summary>
     private class E
     {
+        /// <summary>
+        /// Gets or sets the inner B instance
+        /// </summary>
         public B? Inner { get; set; }
 
+        /// <summary>
+        /// Gets or sets the value
+        /// </summary>
         public string? Value { get; set; }
     }
 }

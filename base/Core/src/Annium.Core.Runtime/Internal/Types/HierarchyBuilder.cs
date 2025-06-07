@@ -4,10 +4,23 @@ using System.Linq;
 
 namespace Annium.Core.Runtime.Internal.Types;
 
+/// <summary>
+/// Internal builder that constructs type hierarchies from collections of types
+/// </summary>
 internal static class HierarchyBuilder
 {
+    /// <summary>
+    /// Delegate for registering ancestor-descendant relationships
+    /// </summary>
+    /// <param name="type">The ancestor type</param>
+    /// <param name="ancestor">The descendant type</param>
     private delegate void RegisterAncestor(Type type, Type ancestor);
 
+    /// <summary>
+    /// Builds a complete type hierarchy from the given collection of types
+    /// </summary>
+    /// <param name="types">The types to build hierarchy from</param>
+    /// <returns>Dictionary mapping ancestors to their descendant collections</returns>
     public static IReadOnlyDictionary<Ancestor, IReadOnlyCollection<Descendant>> BuildHierarchy(
         IReadOnlyCollection<Type> types
     )
@@ -47,6 +60,11 @@ internal static class HierarchyBuilder
         }
     }
 
+    /// <summary>
+    /// Collects all ancestors for a class type including interfaces and base classes
+    /// </summary>
+    /// <param name="type">The class type to collect ancestors for</param>
+    /// <param name="register">The function to register ancestor relationships</param>
     private static void CollectClassAncestors(Type type, RegisterAncestor register)
     {
         foreach (var ancestor in type.GetInterfaces())
@@ -60,6 +78,11 @@ internal static class HierarchyBuilder
         }
     }
 
+    /// <summary>
+    /// Collects all ancestors for a struct or interface type
+    /// </summary>
+    /// <param name="type">The struct or interface type to collect ancestors for</param>
+    /// <param name="register">The function to register ancestor relationships</param>
     private static void CollectStructOrInterfaceAncestors(Type type, RegisterAncestor register)
     {
         foreach (var ancestor in type.GetInterfaces())

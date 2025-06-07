@@ -5,13 +5,30 @@ using System.Linq.Expressions;
 
 namespace Annium.Core.Mapper.Internal.Resolvers;
 
+/// <summary>
+/// Map resolver that creates mappings between enumerable types by mapping their element types
+/// </summary>
 internal class EnumerableMapResolver : IMapResolver
 {
+    /// <summary>
+    /// Determines whether this resolver can create a mapping between the specified source and target types
+    /// </summary>
+    /// <param name="src">The source type</param>
+    /// <param name="tgt">The target type</param>
+    /// <returns>True if both types are enumerable, otherwise false</returns>
     public bool CanResolveMap(Type src, Type tgt)
     {
         return src.GetEnumerableElementType() != null && tgt.GetEnumerableElementType() != null;
     }
 
+    /// <summary>
+    /// Resolves and creates a mapping between enumerable types by mapping their elements
+    /// </summary>
+    /// <param name="src">The source type</param>
+    /// <param name="tgt">The target type</param>
+    /// <param name="cfg">The mapping configuration</param>
+    /// <param name="ctx">The resolver context</param>
+    /// <returns>The resolved mapping</returns>
     public Mapping ResolveMap(Type src, Type tgt, IMapConfiguration cfg, IMapResolverContext ctx) =>
         source =>
         {
@@ -58,6 +75,13 @@ internal class EnumerableMapResolver : IMapResolver
             return Expression.New(constructor, selection);
         };
 
+    /// <summary>
+    /// Builds a lambda expression for selecting and mapping elements from source to target type
+    /// </summary>
+    /// <param name="srcEl">The source element type</param>
+    /// <param name="tgtEl">The target element type</param>
+    /// <param name="ctx">The resolver context</param>
+    /// <returns>The lambda expression for element mapping</returns>
     private LambdaExpression BuildSelectLambda(Type srcEl, Type tgtEl, IMapResolverContext ctx)
     {
         var param = Expression.Parameter(srcEl);
