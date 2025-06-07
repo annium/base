@@ -9,11 +9,20 @@ using Xunit;
 
 namespace Annium.Tests.Collections.Generic;
 
+/// <summary>
+/// Contains unit tests for <see cref="ExpiringCollection{T}"/> to verify expiration and collection behavior.
+/// </summary>
 public class ExpiringCollectionTest : TestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ExpiringCollectionTest"/> class.
+    /// </summary>
     public ExpiringCollectionTest(ITestOutputHelper outputHelper)
         : base(outputHelper) { }
 
+    /// <summary>
+    /// Verifies that adding elements to the collection works correctly.
+    /// </summary>
     [Fact]
     public void Add_Works()
     {
@@ -30,6 +39,9 @@ public class ExpiringCollectionTest : TestBase
             collection.Contains(value).IsTrue();
     }
 
+    /// <summary>
+    /// Verifies that the Contains method works correctly, including after expiration.
+    /// </summary>
     [Fact]
     public void Contains_Works()
     {
@@ -48,6 +60,9 @@ public class ExpiringCollectionTest : TestBase
         collection.Contains(value).IsFalse();
     }
 
+    /// <summary>
+    /// Verifies that removing elements from the collection works correctly, including after expiration.
+    /// </summary>
     [Fact]
     public void Remove_Works()
     {
@@ -70,6 +85,10 @@ public class ExpiringCollectionTest : TestBase
         collection.Contains(value2).IsFalse();
     }
 
+    /// <summary>
+    /// Gets the time manager and time provider for testing expiration logic.
+    /// </summary>
+    /// <returns>A tuple containing the time manager and time provider.</returns>
     private (ITimeManager, ITimeProvider) GetTimeTools()
     {
         Get<ITimeProviderSwitcher>().UseManagedTime();

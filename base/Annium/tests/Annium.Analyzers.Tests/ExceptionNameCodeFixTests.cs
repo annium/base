@@ -6,8 +6,15 @@ using Xunit;
 
 namespace Annium.Analyzers.Tests;
 
+/// <summary>
+/// Contains unit tests for <see cref="ExceptionNameCodeFix"/> to verify code fix for exception naming conventions.
+/// </summary>
 public class ExceptionNameCodeFixTests : CSharpCodeFixTest<ExceptionNameAnalyzer, ExceptionNameCodeFix, DefaultVerifier>
 {
+    /// <summary>
+    /// Verifies that the code fix adds the 'Exception' postfix to incorrectly named exception classes.
+    /// </summary>
+    /// <returns>True if the code fix adds the Exception postfix; otherwise, false.</returns>
     [Fact]
     public async Task WhenInconsistentName_AddsExceptionPostfix()
     {

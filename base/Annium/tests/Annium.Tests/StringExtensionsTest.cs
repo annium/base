@@ -4,8 +4,14 @@ using Xunit;
 
 namespace Annium.Tests;
 
+/// <summary>
+/// Contains unit tests for the StringExtensions class.
+/// </summary>
 public class StringExtensionsTest
 {
+    /// <summary>
+    /// Verifies that IsNullOrEmpty works correctly.
+    /// </summary>
     [Fact]
     public void IsNullOrEmpty_WorksCorrectly()
     {
@@ -13,6 +19,9 @@ public class StringExtensionsTest
         " ".IsNullOrEmpty().IsFalse();
     }
 
+    /// <summary>
+    /// Verifies that IsNullOrWhiteSpace works correctly.
+    /// </summary>
     [Fact]
     public void IsNullOrWhiteSpace_WorksCorrectly()
     {
@@ -20,6 +29,9 @@ public class StringExtensionsTest
         " ".IsNullOrWhiteSpace().IsTrue();
     }
 
+    /// <summary>
+    /// Verifies that UpperFirst works correctly.
+    /// </summary>
     [Fact]
     public void UpperFirst_WorksCorrectly()
     {
@@ -29,6 +41,9 @@ public class StringExtensionsTest
         " aB ".UpperFirst().Is("AB");
     }
 
+    /// <summary>
+    /// Verifies that LowerFirst works correctly.
+    /// </summary>
     [Fact]
     public void LowerFirst_WorksCorrectly()
     {
@@ -38,6 +53,9 @@ public class StringExtensionsTest
         " Ab ".LowerFirst().Is("ab");
     }
 
+    /// <summary>
+    /// Verifies that PascalCase works correctly.
+    /// </summary>
     [Fact]
     public void PascalCase_WorksCorrectly()
     {
@@ -53,6 +71,9 @@ public class StringExtensionsTest
         "andThatBAR0a00KBar0KK12312".PascalCase().Is("AndThatBar0A00KBar0Kk12312");
     }
 
+    /// <summary>
+    /// Verifies that CamelCase works correctly.
+    /// </summary>
     [Fact]
     public void CamelCase_WorksCorrectly()
     {
@@ -67,6 +88,9 @@ public class StringExtensionsTest
         "andThatBAR0a00KBar0KK12312".CamelCase().Is("andThatBar0A00KBar0Kk12312");
     }
 
+    /// <summary>
+    /// Verifies that KebabCase works correctly.
+    /// </summary>
     [Fact]
     public void KebabCase_WorksCorrectly()
     {
@@ -81,6 +105,9 @@ public class StringExtensionsTest
         "andThatBAR0a00KBar0KK12312".KebabCase().Is("and-that-bar0-a00-k-bar0-kk12312");
     }
 
+    /// <summary>
+    /// Verifies that SnakeCase works correctly.
+    /// </summary>
     [Fact]
     public void SnakeCase_WorksCorrectly()
     {
@@ -95,12 +122,18 @@ public class StringExtensionsTest
         "andThatBAR0a00KBar0KK12312".SnakeCase().Is("and_that_bar0_a00_k_bar0_kk12312");
     }
 
+    /// <summary>
+    /// Verifies that ToWords works correctly.
+    /// </summary>
     [Fact]
     public void ToWords_WorksCorrectly()
     {
         "".ToWords().Has(0);
     }
 
+    /// <summary>
+    /// Verifies that Repeat works correctly.
+    /// </summary>
     [Fact]
     public void Repeat_WorksCorrectly()
     {
@@ -109,6 +142,9 @@ public class StringExtensionsTest
         "demo".Repeat(2).Is("demodemo");
     }
 
+    /// <summary>
+    /// Verifies that FromHexStringToByteArray returns false or throws when the input is null.
+    /// </summary>
     [Fact]
     public void FromHexStringToByteArray_Null_ThrowsArgumentNullOrReturnsFalse()
     {
@@ -123,6 +159,9 @@ public class StringExtensionsTest
         byteArray.IsEmpty();
     }
 
+    /// <summary>
+    /// Verifies that FromHexStringToByteArray returns false or throws when the input format is invalid.
+    /// </summary>
     [Fact]
     public void FromHexStringToByteArray_InvalidFormat_ThrowsFormatOrReturnsFalse()
     {
@@ -138,6 +177,9 @@ public class StringExtensionsTest
         byteArray.IsEmpty();
     }
 
+    /// <summary>
+    /// Verifies that FromHexStringToByteArray returns false or throws when the input contains invalid characters.
+    /// </summary>
     [Fact]
     public void FromHexStringToByteArray_InvalidChars_ThrowsOverflowOrReturnsFalse()
     {
@@ -158,6 +200,9 @@ public class StringExtensionsTest
         byteArray2.IsEmpty();
     }
 
+    /// <summary>
+    /// Verifies that FromHexStringToByteArray works correctly with valid input.
+    /// </summary>
     [Fact]
     public void FromHexStringToByteArray_Valid_Works()
     {

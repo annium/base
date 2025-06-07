@@ -6,8 +6,14 @@ using Xunit;
 
 namespace Annium.Tests.Reflection.Type;
 
+/// <summary>
+/// Contains unit tests for the IsCuriouslyRecurringGenericParameter extension method.
+/// </summary>
 public class IsCuriouslyRecurringGenericParameterExtensionTests
 {
+    /// <summary>
+    /// Verifies that IsCuriouslyRecurringGenericParameter throws when called on null.
+    /// </summary>
     [Fact]
     public void IsCuriouslyRecurringGenericParameter_OfNull_Throws()
     {
@@ -15,6 +21,9 @@ public class IsCuriouslyRecurringGenericParameterExtensionTests
         Wrap.It(() => (null as System.Type)!.IsCuriouslyRecurringGenericParameter()).Throws<ArgumentNullException>();
     }
 
+    /// <summary>
+    /// Verifies that IsCuriouslyRecurringGenericParameter works correctly.
+    /// </summary>
     [Fact]
     public void IsCuriouslyRecurringGenericParameter_Works()
     {
@@ -24,6 +33,9 @@ public class IsCuriouslyRecurringGenericParameterExtensionTests
         typeof(Demo<>).GetGenericArguments()[0].IsCuriouslyRecurringGenericParameter().IsTrue();
     }
 
+    /// <summary>
+    /// A demo class used for testing curiously recurring generic parameters.
+    /// </summary>
     private class Demo<T>
         where T : Demo<T>;
 }

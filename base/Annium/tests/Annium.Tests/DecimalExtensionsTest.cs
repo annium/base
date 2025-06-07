@@ -3,8 +3,14 @@ using Xunit;
 
 namespace Annium.Tests;
 
+/// <summary>
+/// Contains unit tests for decimal extension methods.
+/// </summary>
 public class DecimalExtensionsTest
 {
+    /// <summary>
+    /// Verifies that the DiffFrom extension method works correctly.
+    /// </summary>
     [Fact]
     public void DiffFrom()
     {
@@ -24,6 +30,9 @@ public class DecimalExtensionsTest
         0m.DiffFrom(0m).Is(0m);
     }
 
+    /// <summary>
+    /// Verifies that the ToPretty extension method works correctly.
+    /// </summary>
     [Fact]
     public void ToPretty()
     {
@@ -33,6 +42,9 @@ public class DecimalExtensionsTest
         123.9214999m.ToPretty(0.5m).Is(100m);
     }
 
+    /// <summary>
+    /// Verifies that the FloorTo extension method works correctly.
+    /// </summary>
     [Fact]
     public void FloorTo()
     {
@@ -41,6 +53,9 @@ public class DecimalExtensionsTest
         123.21m.FloorTo(0.2m).Is(123.2m);
     }
 
+    /// <summary>
+    /// Verifies that the CeilTo extension method works correctly.
+    /// </summary>
     [Fact]
     public void CeilTo()
     {
@@ -49,6 +64,9 @@ public class DecimalExtensionsTest
         123.21m.CeilTo(0.2m).Is(123.4m);
     }
 
+    /// <summary>
+    /// Verifies that the Align extension method works correctly.
+    /// </summary>
     [Fact]
     public void Align()
     {

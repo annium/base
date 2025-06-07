@@ -3,11 +3,17 @@ using Xunit;
 
 namespace Annium.Tests;
 
+/// <summary>
+/// Contains unit tests for array deconstruction extension methods.
+/// </summary>
 public class ArrayExtensionsTest : TestBase
 {
     public ArrayExtensionsTest(ITestOutputHelper outputHelper)
         : base(outputHelper) { }
 
+    /// <summary>
+    /// Verifies deconstruction with 1 element and the rest.
+    /// </summary>
     [Fact]
     public void Deconstruct_1_Works()
     {
@@ -21,6 +27,9 @@ public class ArrayExtensionsTest : TestBase
         rest.IsEqual(new[] { 2, 3, 4, 5, 6, 7, 8, 9, 10 });
     }
 
+    /// <summary>
+    /// Verifies deconstruction with 2 elements and the rest.
+    /// </summary>
     [Fact]
     public void Deconstruct_2_Works()
     {
@@ -35,6 +44,9 @@ public class ArrayExtensionsTest : TestBase
         rest.IsEqual(new[] { 3, 4, 5, 6, 7, 8, 9, 10 });
     }
 
+    /// <summary>
+    /// Verifies deconstruction with 3 elements and the rest.
+    /// </summary>
     [Fact]
     public void Deconstruct_3_Works()
     {
@@ -50,6 +62,9 @@ public class ArrayExtensionsTest : TestBase
         rest.IsEqual(new[] { 4, 5, 6, 7, 8, 9, 10 });
     }
 
+    /// <summary>
+    /// Verifies deconstruction with 4 elements and the rest.
+    /// </summary>
     [Fact]
     public void Deconstruct_4_Works()
     {
@@ -66,6 +81,9 @@ public class ArrayExtensionsTest : TestBase
         rest.IsEqual(new[] { 5, 6, 7, 8, 9, 10 });
     }
 
+    /// <summary>
+    /// Verifies deconstruction with 5 elements and the rest.
+    /// </summary>
     [Fact]
     public void Deconstruct_5_Works()
     {
@@ -83,6 +101,9 @@ public class ArrayExtensionsTest : TestBase
         rest.IsEqual(new[] { 6, 7, 8, 9, 10 });
     }
 
+    /// <summary>
+    /// Verifies deconstruction with 6 elements and the rest.
+    /// </summary>
     [Fact]
     public void Deconstruct_6_Works()
     {
@@ -101,6 +122,9 @@ public class ArrayExtensionsTest : TestBase
         rest.IsEqual(new[] { 7, 8, 9, 10 });
     }
 
+    /// <summary>
+    /// Verifies deconstruction with 7 elements and the rest.
+    /// </summary>
     [Fact]
     public void Deconstruct_7_Works()
     {
@@ -120,6 +144,9 @@ public class ArrayExtensionsTest : TestBase
         rest.IsEqual(new[] { 8, 9, 10 });
     }
 
+    /// <summary>
+    /// Verifies deconstruction with 8 elements and the rest.
+    /// </summary>
     [Fact]
     public void Deconstruct_8_Works()
     {

@@ -4,8 +4,17 @@ using System.Linq;
 // ReSharper disable once CheckNamespace
 namespace Annium.Reflection;
 
+/// <summary>
+/// Provides extension methods for resolving generic arguments by implementation for class types.
+/// </summary>
 public static partial class ResolveGenericArgumentsByImplementationExtension
 {
+    /// <summary>
+    /// Resolves generic arguments for a class type when the target is a generic parameter.
+    /// </summary>
+    /// <param name="type">The class type to resolve arguments for.</param>
+    /// <param name="target">The target generic parameter type.</param>
+    /// <returns>An array of resolved type arguments, or null if resolution fails.</returns>
     private static Type[]? ResolveClassArgumentsByGenericParameter(this Type type, Type target)
     {
         if (type.TryGetTargetImplementation(target, out var args))
@@ -18,6 +27,12 @@ public static partial class ResolveGenericArgumentsByImplementationExtension
         return type.CanBeUsedAsParameter(target) ? type.GetGenericArguments() : null;
     }
 
+    /// <summary>
+    /// Resolves generic arguments for a class type when the target is another class type.
+    /// </summary>
+    /// <param name="type">The class type to resolve arguments for.</param>
+    /// <param name="target">The target class type.</param>
+    /// <returns>An array of resolved type arguments, or null if resolution fails.</returns>
     private static Type[]? ResolveClassArgumentsByClass(this Type type, Type target)
     {
         if (type.TryGetTargetImplementation(target, out var args))
@@ -47,6 +62,12 @@ public static partial class ResolveGenericArgumentsByImplementationExtension
         return Helper.ResolveBase(type, target);
     }
 
+    /// <summary>
+    /// Resolves generic arguments for a class type when the target is an interface type.
+    /// </summary>
+    /// <param name="type">The class type to resolve arguments for.</param>
+    /// <param name="target">The target interface type.</param>
+    /// <returns>An array of resolved type arguments, or null if resolution fails.</returns>
     private static Type[]? ResolveClassArgumentsByInterface(this Type type, Type target)
     {
         if (type.TryGetTargetImplementation(target, out var args))
@@ -76,8 +97,17 @@ public static partial class ResolveGenericArgumentsByImplementationExtension
     }
 }
 
+/// <summary>
+/// Helper class for resolving generic arguments by implementation.
+/// </summary>
 file class Helper
 {
+    /// <summary>
+    /// Resolves generic arguments for a base type.
+    /// </summary>
+    /// <param name="type">The type to resolve arguments for.</param>
+    /// <param name="target">The target type.</param>
+    /// <returns>An array of resolved type arguments, or null if resolution fails.</returns>
     public static Type[]? ResolveBase(Type type, Type target)
     {
         var unboundBaseType = type.GetUnboundBaseType();

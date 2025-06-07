@@ -4,8 +4,17 @@ using System.Reflection;
 // ReSharper disable once CheckNamespace
 namespace Annium.Reflection;
 
+/// <summary>
+/// Provides extension methods for resolving generic arguments for generic parameter types based on target types.
+/// </summary>
 public static partial class ResolveGenericArgumentsByImplementationExtension
 {
+    /// <summary>
+    /// Resolves generic arguments for a generic parameter type when the target is another generic parameter.
+    /// </summary>
+    /// <param name="type">The generic parameter type to resolve arguments for.</param>
+    /// <param name="target">The target generic parameter type.</param>
+    /// <returns>An array containing the resolved type, or null if constraints are not met.</returns>
     private static Type[]? ResolveGenericParameterArgumentsByGenericParameter(this Type type, Type target)
     {
         var typeAttrs = type.GenericParameterAttributes;
@@ -36,18 +45,36 @@ public static partial class ResolveGenericArgumentsByImplementationExtension
         return Helper.ParameterMeetsConstraints(type, target) ? new[] { type } : null;
     }
 
+    /// <summary>
+    /// Resolves generic arguments for a generic parameter type when the target is a class type.
+    /// </summary>
+    /// <param name="type">The generic parameter type to resolve arguments for.</param>
+    /// <param name="target">The target class type.</param>
+    /// <returns>An array containing the resolved type, or null if constraints are not met.</returns>
     private static Type[]? ResolveGenericParameterArgumentsByClass(this Type type, Type target)
     {
         // return target, if all parameter constraints are implemented
         return target.CanBeUsedAsParameter(type) ? new[] { target } : null;
     }
 
+    /// <summary>
+    /// Resolves generic arguments for a generic parameter type when the target is a struct type.
+    /// </summary>
+    /// <param name="type">The generic parameter type to resolve arguments for.</param>
+    /// <param name="target">The target struct type.</param>
+    /// <returns>An array containing the resolved type, or null if constraints are not met.</returns>
     private static Type[]? ResolveGenericParameterArgumentsByStruct(this Type type, Type target)
     {
         // return target, if all parameter constraints are implemented
         return target.CanBeUsedAsParameter(type) ? new[] { target } : null;
     }
 
+    /// <summary>
+    /// Resolves generic arguments for a generic parameter type when the target is an interface type.
+    /// </summary>
+    /// <param name="type">The generic parameter type to resolve arguments for.</param>
+    /// <param name="target">The target interface type.</param>
+    /// <returns>An array containing the resolved type, or null if constraints are not met.</returns>
     private static Type[]? ResolveGenericParameterArgumentsByInterface(this Type type, Type target)
     {
         // return target, if all parameter constraints are implemented
@@ -55,8 +82,17 @@ public static partial class ResolveGenericArgumentsByImplementationExtension
     }
 }
 
+/// <summary>
+/// Helper class for checking if a generic parameter meets all constraints of a target parameter.
+/// </summary>
 file class Helper
 {
+    /// <summary>
+    /// Checks if the source generic parameter meets all constraints of the target generic parameter.
+    /// </summary>
+    /// <param name="source">The source generic parameter.</param>
+    /// <param name="target">The target generic parameter.</param>
+    /// <returns>True if all constraints are met; otherwise, false.</returns>
     public static bool ParameterMeetsConstraints(Type source, Type target)
     {
         var sourceConstraints = source.GetGenericParameterConstraints();

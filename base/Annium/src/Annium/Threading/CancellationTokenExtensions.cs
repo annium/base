@@ -4,11 +4,16 @@ using System.Threading;
 
 namespace Annium.Threading;
 
+/// <summary>
+/// Provides extension methods for working with cancellation tokens.
+/// </summary>
 public static class CancellationTokenExtensions
 {
     /// <summary>
     /// Allows a cancellation token to be awaited.
     /// </summary>
+    /// <param name="ct">The cancellation token to await.</param>
+    /// <returns>An awaiter for the cancellation token.</returns>
     [EditorBrowsable(EditorBrowsableState.Never)]
     public static IAwaiter GetAwaiter(this CancellationToken ct)
     {
@@ -22,13 +27,24 @@ public static class CancellationTokenExtensions
     [EditorBrowsable(EditorBrowsableState.Never)]
     internal readonly struct CancellationTokenAwaiter : IAwaiter
     {
+        /// <summary>
+        /// The cancellation token being awaited.
+        /// </summary>
         private readonly CancellationToken _cancellationToken;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CancellationTokenAwaiter"/> struct.
+        /// </summary>
+        /// <param name="cancellationToken">The cancellation token to await.</param>
         public CancellationTokenAwaiter(CancellationToken cancellationToken)
         {
             _cancellationToken = cancellationToken;
         }
 
+        /// <summary>
+        /// Gets the result of the awaited operation.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown when the cancellation token has not been cancelled.</exception>
         public void GetResult()
         {
             // this is called by compiler generated methods when the
@@ -37,15 +53,22 @@ public static class CancellationTokenExtensions
                 throw new InvalidOperationException("The cancellation token has not yet been cancelled.");
         }
 
-        // called by compiler generated/.NET internals to check
-        // if the task has completed.
+        /// <summary>
+        /// Gets a value indicating whether the awaited operation has completed.
+        /// </summary>
+        /// <returns>True if the cancellation token has been cancelled; otherwise, false.</returns>
         public bool IsCompleted => _cancellationToken.IsCancellationRequested;
 
-        // The compiler will generate stuff that hooks in
-        // here. We hook those methods directly into the
-        // cancellation token.
+        /// <summary>
+        /// Schedules the continuation action that's invoked when the instance completes.
+        /// </summary>
+        /// <param name="continuation">The action to invoke when the operation completes.</param>
         public void OnCompleted(Action continuation) => _cancellationToken.Register(continuation);
 
+        /// <summary>
+        /// Schedules the continuation action that's invoked when the instance completes.
+        /// </summary>
+        /// <param name="continuation">The action to invoke when the operation completes.</param>
         public void UnsafeOnCompleted(Action continuation) => _cancellationToken.Register(continuation);
     }
 }

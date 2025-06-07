@@ -7,8 +7,18 @@ using Annium.Logging;
 
 namespace Annium.Threading.Channels;
 
+/// <summary>
+/// Provides extension methods for working with channel readers.
+/// </summary>
 public static class ChannelReaderExtensions
 {
+    /// <summary>
+    /// Reads an item from the channel reader.
+    /// </summary>
+    /// <typeparam name="T">The type of items in the channel.</typeparam>
+    /// <param name="reader">The channel reader.</param>
+    /// <returns>The read item.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when the read operation fails.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static T Read<T>(this ChannelReader<T> reader)
     {
@@ -18,6 +28,14 @@ public static class ChannelReaderExtensions
         return item;
     }
 
+    /// <summary>
+    /// Pipes data from a channel reader to a channel writer with logging.
+    /// </summary>
+    /// <typeparam name="T">The type of items in the channel.</typeparam>
+    /// <param name="reader">The source channel reader.</param>
+    /// <param name="writer">The target channel writer.</param>
+    /// <param name="logger">The logger to use for logging.</param>
+    /// <returns>A disposable object that can be used to stop the pipe operation.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static IDisposable Pipe<T>(this ChannelReader<T> reader, ChannelWriter<T> writer, ILogger logger)
     {
@@ -66,6 +84,13 @@ public static class ChannelReaderExtensions
         });
     }
 
+    /// <summary>
+    /// Waits asynchronously until the channel reader is empty.
+    /// </summary>
+    /// <typeparam name="T">The type of items in the channel.</typeparam>
+    /// <param name="reader">The channel reader.</param>
+    /// <param name="delay">The delay in milliseconds between checks.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static async Task WhenEmptyAsync<T>(this ChannelReader<T> reader, int delay = 25)
     {

@@ -6,8 +6,14 @@ using Xunit;
 
 namespace Annium.Tests.Linq;
 
+/// <summary>
+/// Contains unit tests for SortedList extension methods.
+/// </summary>
 public class SortedListExtensionsTest
 {
+    /// <summary>
+    /// Verifies that AddRange works correctly for adding multiple items.
+    /// </summary>
     [Fact]
     public void AddRange()
     {
@@ -28,6 +34,9 @@ public class SortedListExtensionsTest
         data.Values.IsEqual(new[] { 1, 2, 3, 4, 5, 4, 5 });
     }
 
+    /// <summary>
+    /// Verifies that SetRange works correctly for setting multiple items.
+    /// </summary>
     [Fact]
     public void SetRange()
     {
@@ -51,6 +60,9 @@ public class SortedListExtensionsTest
         data.Values.IsEqual(new[] { 13, 14, 15, 6, 7, 8, 7, 8, 9 });
     }
 
+    /// <summary>
+    /// Verifies that GetRange works correctly for retrieving a range of items.
+    /// </summary>
     [Fact]
     public void GetRange()
     {
@@ -84,6 +96,9 @@ public class SortedListExtensionsTest
         span[1].Is(new(2, 2));
     }
 
+    /// <summary>
+    /// Verifies that FindIndex works correctly for finding indices by key or predicate.
+    /// </summary>
     [Fact]
     public void FindIndex()
     {
@@ -103,6 +118,9 @@ public class SortedListExtensionsTest
         data.FindIndex(x => x == 6).Is(-1);
     }
 
+    /// <summary>
+    /// Verifies that GetChunks works correctly for retrieving chunks of data.
+    /// </summary>
     [Fact]
     public void GetChunks()
     {

@@ -4,8 +4,15 @@ using Xunit;
 
 namespace Annium.Tests;
 
+/// <summary>
+/// Contains unit tests for <see cref="AsyncLazy{T}"/> to verify lazy initialization behavior.
+/// </summary>
 public class AsyncLazyTest
 {
+    /// <summary>
+    /// Verifies that the synchronous factory works as expected.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     [Fact]
     public async Task SyncFactory_Works()
     {
@@ -19,6 +26,10 @@ public class AsyncLazyTest
         value.Is(10);
     }
 
+    /// <summary>
+    /// Verifies that the synchronous factory works correctly when accessed concurrently.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     [Fact]
     public async Task SyncFactory_Concurrent_Works()
     {
@@ -45,6 +56,10 @@ public class AsyncLazyTest
             value.Is(subject);
     }
 
+    /// <summary>
+    /// Verifies that the asynchronous factory works as expected.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     [Fact]
     public async Task AsyncFactory_Works()
     {
@@ -62,6 +77,10 @@ public class AsyncLazyTest
         value.Is(10);
     }
 
+    /// <summary>
+    /// Verifies that the asynchronous factory works correctly when accessed concurrently.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     [Fact]
     public async Task AsyncFactory_Concurrent_Works()
     {

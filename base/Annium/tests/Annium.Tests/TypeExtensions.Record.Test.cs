@@ -6,8 +6,15 @@ using Xunit;
 
 namespace Annium.Tests;
 
+/// <summary>
+/// Contains unit tests for record-related type extension methods.
+/// </summary>
 public class TypeRecordExtensionsTest
 {
+    /// <summary>
+    /// Verifies that TryGetRecordElementTypes correctly identifies record element types for various types.
+    /// </summary>
+    /// <returns>Nothing. Asserts are used for validation.</returns>
     [Fact]
     public void TryGetRecordElementTypes_Ok()
     {

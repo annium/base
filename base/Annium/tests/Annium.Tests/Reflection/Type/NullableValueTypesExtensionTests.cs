@@ -5,8 +5,14 @@ using Xunit;
 
 namespace Annium.Tests.Reflection.Type;
 
+/// <summary>
+/// Contains unit tests for the NullableValueTypes extension methods.
+/// </summary>
 public class NullableValueTypesExtensionTests
 {
+    /// <summary>
+    /// Verifies that IsNotNullableValueType throws when called on null.
+    /// </summary>
     [Fact]
     public void IsNotNullableValueType_OfNull_Throws()
     {
@@ -14,6 +20,9 @@ public class NullableValueTypesExtensionTests
         Wrap.It(() => (null as System.Type)!.IsNotNullableValueType()).Throws<ArgumentNullException>();
     }
 
+    /// <summary>
+    /// Verifies that IsNullableValueType throws when called on null.
+    /// </summary>
     [Fact]
     public void IsNullableValueType_OfNull_Throws()
     {
@@ -21,6 +30,9 @@ public class NullableValueTypesExtensionTests
         Wrap.It(() => (null as System.Type)!.IsNullableValueType()).Throws<ArgumentNullException>();
     }
 
+    /// <summary>
+    /// Verifies that IsNotNullableValueType works correctly.
+    /// </summary>
     [Fact]
     public void IsNotNullableValueType_Works()
     {
@@ -30,6 +42,9 @@ public class NullableValueTypesExtensionTests
         typeof(bool?).IsNotNullableValueType().IsFalse();
     }
 
+    /// <summary>
+    /// Verifies that IsNullableValueType works correctly.
+    /// </summary>
     [Fact]
     public void IsNullableValueType_Works()
     {

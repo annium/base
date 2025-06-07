@@ -10,11 +10,21 @@ using Xunit;
 
 namespace Annium.Tests.Collections.Generic;
 
+/// <summary>
+/// Contains unit tests for <see cref="ExpiringDictionary{TKey, TValue}"/> to verify expiration and dictionary behavior.
+/// </summary>
 public class ExpiringDictionaryTest : TestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ExpiringDictionaryTest"/> class.
+    /// </summary>
+    /// <param name="outputHelper">The test output helper.</param>
     public ExpiringDictionaryTest(ITestOutputHelper outputHelper)
         : base(outputHelper) { }
 
+    /// <summary>
+    /// Verifies that adding elements to the dictionary works correctly.
+    /// </summary>
     [Fact]
     public void Add_Works()
     {
@@ -31,6 +41,9 @@ public class ExpiringDictionaryTest : TestBase
             collection.ContainsKey(value).IsTrue();
     }
 
+    /// <summary>
+    /// Verifies that getting elements from the dictionary works correctly, including after expiration.
+    /// </summary>
     [Fact]
     public void Get_Works()
     {
@@ -50,6 +63,9 @@ public class ExpiringDictionaryTest : TestBase
         Wrap.It(() => collection.Get(key)).Throws<KeyNotFoundException>();
     }
 
+    /// <summary>
+    /// Verifies that TryGet works correctly, including after expiration.
+    /// </summary>
     [Fact]
     public void TryGet_Works()
     {
@@ -70,6 +86,9 @@ public class ExpiringDictionaryTest : TestBase
         Wrap.It(() => collection.Get(key)).Throws<KeyNotFoundException>();
     }
 
+    /// <summary>
+    /// Verifies that ContainsKey works correctly, including after expiration.
+    /// </summary>
     [Fact]
     public void ContainsKey_Works()
     {
@@ -88,6 +107,9 @@ public class ExpiringDictionaryTest : TestBase
         collection.ContainsKey(key).IsFalse();
     }
 
+    /// <summary>
+    /// Verifies that removing elements from the dictionary works correctly, including after expiration.
+    /// </summary>
     [Fact]
     public void Remove_Works()
     {
@@ -110,6 +132,10 @@ public class ExpiringDictionaryTest : TestBase
         collection.ContainsKey(key2).IsFalse();
     }
 
+    /// <summary>
+    /// Gets the time manager and time provider for testing.
+    /// </summary>
+    /// <returns>A tuple containing the time manager and time provider.</returns>
     private (ITimeManager, ITimeProvider) GetTimeTools()
     {
         Get<ITimeProviderSwitcher>().UseManagedTime();

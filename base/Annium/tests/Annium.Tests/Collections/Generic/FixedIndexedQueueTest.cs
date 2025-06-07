@@ -5,8 +5,14 @@ using Xunit;
 
 namespace Annium.Tests.Collections.Generic;
 
+/// <summary>
+/// Contains unit tests for <see cref="FixedIndexedQueue{T}"/> to verify fixed-size queue behavior.
+/// </summary>
 public class FixedIndexedQueueTest
 {
+    /// <summary>
+    /// Verifies that adding elements, counting, indexing, and enumeration work correctly.
+    /// </summary>
     [Fact]
     public void Add_Count_Index_Enumerate()
     {
@@ -60,6 +66,9 @@ public class FixedIndexedQueueTest
         list.IsEqual(new[] { 5, 6, 7 });
     }
 
+    /// <summary>
+    /// Verifies that creating a queue from an existing collection works correctly.
+    /// </summary>
     [Fact]
     public void Create()
     {

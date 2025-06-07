@@ -8,17 +8,40 @@ using System.Text.RegularExpressions;
 
 namespace Annium;
 
+/// <summary>
+/// Provides extension methods for string manipulation and formatting.
+/// </summary>
 public static class StringExtensions
 {
+    /// <summary>
+    /// Determines whether the string is filled (not null, empty, or whitespace).
+    /// </summary>
+    /// <param name="value">The string to check.</param>
+    /// <returns>true if the string is filled; otherwise, false.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsFilled([NotNullWhen(true)] this string? value) => !string.IsNullOrWhiteSpace(value);
 
+    /// <summary>
+    /// Determines whether the string is null or empty.
+    /// </summary>
+    /// <param name="value">The string to check.</param>
+    /// <returns>true if the string is null or empty; otherwise, false.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsNullOrEmpty([NotNullWhen(false)] this string? value) => string.IsNullOrEmpty(value);
 
+    /// <summary>
+    /// Determines whether the string is null, empty, or consists only of white-space characters.
+    /// </summary>
+    /// <param name="value">The string to check.</param>
+    /// <returns>true if the string is null, empty, or consists only of white-space characters; otherwise, false.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsNullOrWhiteSpace([NotNullWhen(false)] this string? value) => string.IsNullOrWhiteSpace(value);
 
+    /// <summary>
+    /// Converts the first character of the string to uppercase.
+    /// </summary>
+    /// <param name="value">The string to convert.</param>
+    /// <returns>A string with the first character converted to uppercase.</returns>
     public static string UpperFirst(this string value)
     {
         value = Preprocess(value);
@@ -28,6 +51,11 @@ public static class StringExtensions
         return value[..1].ToUpperInvariant() + value[1..];
     }
 
+    /// <summary>
+    /// Converts the first character of the string to lowercase.
+    /// </summary>
+    /// <param name="value">The string to convert.</param>
+    /// <returns>A string with the first character converted to lowercase.</returns>
     public static string LowerFirst(this string value)
     {
         value = Preprocess(value);
@@ -37,6 +65,11 @@ public static class StringExtensions
         return value[..1].ToLowerInvariant() + value[1..];
     }
 
+    /// <summary>
+    /// Converts the string to Pascal case (e.g., "helloWorld" becomes "HelloWorld").
+    /// </summary>
+    /// <param name="value">The string to convert.</param>
+    /// <returns>A string in Pascal case format.</returns>
     public static string PascalCase(this string value)
     {
         return Compound(value, PascalCaseInternal);
@@ -44,6 +77,11 @@ public static class StringExtensions
         static string PascalCaseInternal(string result, string word) => result + word.ToLowerInvariant().UpperFirst();
     }
 
+    /// <summary>
+    /// Converts the string to camel case (e.g., "HelloWorld" becomes "helloWorld").
+    /// </summary>
+    /// <param name="value">The string to convert.</param>
+    /// <returns>A string in camel case format.</returns>
     public static string CamelCase(this string value)
     {
         return Compound(value, CamelCaseInternal);
@@ -53,6 +91,11 @@ public static class StringExtensions
             + (result == string.Empty ? word.ToLowerInvariant().LowerFirst() : word.ToLowerInvariant().UpperFirst());
     }
 
+    /// <summary>
+    /// Converts the string to kebab case (e.g., "helloWorld" becomes "hello-world").
+    /// </summary>
+    /// <param name="value">The string to convert.</param>
+    /// <returns>A string in kebab case format.</returns>
     public static string KebabCase(this string value)
     {
         return Compound(value, KebabCaseInternal);
@@ -61,6 +104,11 @@ public static class StringExtensions
             result + (result == string.Empty ? string.Empty : "-") + word.ToLowerInvariant();
     }
 
+    /// <summary>
+    /// Converts the string to snake case (e.g., "helloWorld" becomes "hello_world").
+    /// </summary>
+    /// <param name="value">The string to convert.</param>
+    /// <returns>A string in snake case format.</returns>
     public static string SnakeCase(this string value)
     {
         return Compound(value, SnakeCaseInternal);
@@ -69,6 +117,12 @@ public static class StringExtensions
             result + (result == string.Empty ? string.Empty : "_") + word.ToLowerInvariant();
     }
 
+    /// <summary>
+    /// Repeats the string a specified number of times.
+    /// </summary>
+    /// <param name="value">The string to repeat.</param>
+    /// <param name="count">The number of times to repeat the string.</param>
+    /// <returns>A string that is the result of repeating the input string the specified number of times.</returns>
     public static string Repeat(this string value, int count)
     {
         if (string.IsNullOrEmpty(value) || count <= 0)
@@ -77,6 +131,11 @@ public static class StringExtensions
         return new StringBuilder(value.Length * count).AppendJoin(value, new string[count + 1]).ToString();
     }
 
+    /// <summary>
+    /// Splits the string into words based on case changes and special characters.
+    /// </summary>
+    /// <param name="value">The string to split.</param>
+    /// <returns>An enumerable of words extracted from the string.</returns>
     public static IEnumerable<string> ToWords(this string value)
     {
         value = Preprocess(value);
@@ -141,8 +200,18 @@ public static class StringExtensions
 
     #region HexString
 
+    /// <summary>
+    /// A lookup table for hexadecimal characters.
+    /// </summary>
     private static readonly IReadOnlyDictionary<char, byte> _hexLookup = CreateHexLookup();
 
+    /// <summary>
+    /// Converts a hexadecimal string to a byte array.
+    /// </summary>
+    /// <param name="str">The hexadecimal string to convert.</param>
+    /// <returns>A byte array containing the converted values.</returns>
+    /// <exception cref="FormatException">Thrown when the string length is not even.</exception>
+    /// <exception cref="OverflowException">Thrown when the string contains invalid hexadecimal characters.</exception>
     public static byte[] FromHexStringToByteArray(this string str)
     {
         if (str.Length % 2 != 0)
@@ -167,6 +236,12 @@ public static class StringExtensions
         return byteArray;
     }
 
+    /// <summary>
+    /// Attempts to convert a hexadecimal string to a byte array.
+    /// </summary>
+    /// <param name="str">The hexadecimal string to convert.</param>
+    /// <param name="byteArray">When this method returns, contains the converted byte array if successful; otherwise, an empty array.</param>
+    /// <returns>true if the conversion was successful; otherwise, false.</returns>
     public static bool TryFromHexStringToByteArray(this string str, out byte[] byteArray)
     {
         byteArray = Array.Empty<byte>();
@@ -210,6 +285,12 @@ public static class StringExtensions
 
     #endregion
 
+    /// <summary>
+    /// Applies a compound operation to a string using a callback function.
+    /// </summary>
+    /// <param name="value">The string to process.</param>
+    /// <param name="callback">The callback function to apply to each word.</param>
+    /// <returns>The processed string.</returns>
     private static string Compound(string value, Func<string, string, string> callback)
     {
         value = Preprocess(value);
@@ -219,8 +300,18 @@ public static class StringExtensions
         return ToWords(value).Aggregate(string.Empty, callback);
     }
 
+    /// <summary>
+    /// Preprocesses a string by trimming whitespace.
+    /// </summary>
+    /// <param name="value">The string to preprocess.</param>
+    /// <returns>The preprocessed string.</returns>
     private static string Preprocess(string value) => value.Trim();
 
+    /// <summary>
+    /// Gets the symbol type of a character.
+    /// </summary>
+    /// <param name="c">The character to check.</param>
+    /// <returns>The symbol type of the character.</returns>
     private static Symbol GetSymbol(char c)
     {
         if (char.IsUpper(c))
@@ -233,6 +324,10 @@ public static class StringExtensions
         return Symbol.Other;
     }
 
+    /// <summary>
+    /// Creates a lookup table for hexadecimal characters.
+    /// </summary>
+    /// <returns>A dictionary mapping hexadecimal characters to their byte values.</returns>
     private static IReadOnlyDictionary<char, byte> CreateHexLookup()
     {
         return new Dictionary<char, byte>
@@ -262,11 +357,29 @@ public static class StringExtensions
         };
     }
 
+    /// <summary>
+    /// Represents the type of a character in a string.
+    /// </summary>
     private enum Symbol
     {
+        /// <summary>
+        /// An uppercase letter.
+        /// </summary>
         Upper,
+
+        /// <summary>
+        /// A lowercase letter.
+        /// </summary>
         Lower,
+
+        /// <summary>
+        /// A digit.
+        /// </summary>
         Digit,
+
+        /// <summary>
+        /// Any other character.
+        /// </summary>
         Other,
     }
 }

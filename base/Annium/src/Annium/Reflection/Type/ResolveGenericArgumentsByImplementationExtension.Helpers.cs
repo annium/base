@@ -5,8 +5,18 @@ using System.Reflection;
 // ReSharper disable once CheckNamespace
 namespace Annium.Reflection;
 
+/// <summary>
+/// Provides extension methods for resolving generic arguments based on type implementations.
+/// </summary>
 public static partial class ResolveGenericArgumentsByImplementationExtension
 {
+    /// <summary>
+    /// Builds generic arguments for a type based on source and target types.
+    /// </summary>
+    /// <param name="type">The type to build arguments for.</param>
+    /// <param name="source">The source type containing the generic parameters.</param>
+    /// <param name="target">The target type to resolve against.</param>
+    /// <returns>An array of resolved type arguments, or null if resolution fails.</returns>
     private static Type[]? BuildArgs(Type type, Type source, Type target)
     {
         var args = type.GetGenericArguments();
@@ -44,6 +54,13 @@ public static partial class ResolveGenericArgumentsByImplementationExtension
         return args;
     }
 
+    /// <summary>
+    /// Fills generic arguments array based on source and target types.
+    /// </summary>
+    /// <param name="args">The array to fill with resolved arguments.</param>
+    /// <param name="source">The source type containing the generic parameters.</param>
+    /// <param name="target">The target type to resolve against.</param>
+    /// <returns>True if arguments were successfully filled; otherwise, false.</returns>
     private static bool FillArgs(Type[] args, Type source, Type target)
     {
         var implementation = target.GetTargetImplementation(source);
@@ -80,6 +97,12 @@ public static partial class ResolveGenericArgumentsByImplementationExtension
         return true;
     }
 
+    /// <summary>
+    /// Determines if a type can be used as a generic parameter based on its constraints.
+    /// </summary>
+    /// <param name="type">The type to check.</param>
+    /// <param name="parameter">The generic parameter to check against.</param>
+    /// <returns>True if the type can be used as the parameter; otherwise, false.</returns>
     private static bool CanBeUsedAsParameter(this Type type, Type parameter)
     {
         var parameterAttrs = parameter.GenericParameterAttributes;
@@ -114,6 +137,13 @@ public static partial class ResolveGenericArgumentsByImplementationExtension
         return true;
     }
 
+    /// <summary>
+    /// Attempts to get the target implementation of a type and its generic arguments.
+    /// </summary>
+    /// <param name="type">The type to check for implementation.</param>
+    /// <param name="target">The target type to resolve against.</param>
+    /// <param name="args">When this method returns, contains the generic arguments if successful; otherwise, null.</param>
+    /// <returns>True if the implementation was found; otherwise, false.</returns>
     private static bool TryGetTargetImplementation(this Type type, Type target, out Type[]? args)
     {
         // if type is not generic - check target implementation and return empty types if implementation is available
@@ -134,6 +164,13 @@ public static partial class ResolveGenericArgumentsByImplementationExtension
         return false;
     }
 
+    /// <summary>
+    /// Attempts to check if a type is assignable from another type and get its generic arguments.
+    /// </summary>
+    /// <param name="type">The type to check.</param>
+    /// <param name="target">The target type to check against.</param>
+    /// <param name="args">When this method returns, contains the generic arguments if successful; otherwise, null.</param>
+    /// <returns>True if the check was successful; otherwise, false.</returns>
     private static bool TryCheckAssignableFrom(this Type type, Type target, out Type[]? args)
     {
         // is expected to be used only on generic type

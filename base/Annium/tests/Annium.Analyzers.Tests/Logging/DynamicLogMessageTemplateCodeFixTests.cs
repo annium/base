@@ -9,9 +9,16 @@ using Xunit;
 
 namespace Annium.Analyzers.Tests.Logging;
 
+/// <summary>
+/// Contains unit tests for <see cref="DynamicLogMessageTemplateCodeFix"/> to verify code fix for dynamic log message templates.
+/// </summary>
 public class DynamicLogMessageTemplateCodeFixTests
     : CSharpCodeFixTest<DynamicLogMessageTemplateAnalyzer, DynamicLogMessageTemplateCodeFix, DefaultVerifier>
 {
+    /// <summary>
+    /// Verifies that the code fix converts dynamic string interpolation to a static template with parameters.
+    /// </summary>
+    /// <returns>True if the code fix converts a dynamic template to a static template; otherwise, false.</returns>
     [Fact]
     public async Task WhenDynamicTemplate_ConvertsToStaticTmplate()
     {

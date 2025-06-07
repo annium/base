@@ -6,8 +6,14 @@ using Xunit;
 
 namespace Annium.Tests;
 
+/// <summary>
+/// Contains unit tests for nullable extension methods.
+/// </summary>
 public class NullableExtensionsTests
 {
+    /// <summary>
+    /// Verifies that NotNull throws for null class references and returns the value otherwise.
+    /// </summary>
     [Fact]
     public void EnsureNotNull_Class()
     {
@@ -30,6 +36,9 @@ public class NullableExtensionsTests
         verifiedValue.Is(validValue);
     }
 
+    /// <summary>
+    /// Verifies that NotNull throws for null struct values and returns the value otherwise.
+    /// </summary>
     [Fact]
     public void EnsureNotNull_Struct()
     {
@@ -49,6 +58,10 @@ public class NullableExtensionsTests
         verifiedValue.Is(validValue.Value);
     }
 
+    /// <summary>
+    /// Verifies that NotNullAsync throws for null class Task results and returns the value otherwise.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     [Fact]
     public async Task EnsureNotNull_ClassTask()
     {
@@ -67,6 +80,10 @@ public class NullableExtensionsTests
         verifiedValue.Is("data");
     }
 
+    /// <summary>
+    /// Verifies that NotNullAsync throws for null struct Task results and returns the value otherwise.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     [Fact]
     public async Task EnsureNotNull_StructTask()
     {

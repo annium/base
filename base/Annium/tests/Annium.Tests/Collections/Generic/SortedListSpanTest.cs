@@ -1,12 +1,19 @@
 using System.Linq;
+using Annium.Collections.Generic;
 using Annium.Linq;
 using Annium.Testing;
 using Xunit;
 
 namespace Annium.Tests.Collections.Generic;
 
+/// <summary>
+/// Contains unit tests for <see cref="SortedListSpan{TKey,TValue}"/> to verify sorted span behavior.
+/// </summary>
 public class SortedListSpanTest
 {
+    /// <summary>
+    /// Verifies that adding elements, counting, indexing, and moving the sorted span work correctly.
+    /// </summary>
     [Fact]
     public void Add_Count_Index_Move()
     {

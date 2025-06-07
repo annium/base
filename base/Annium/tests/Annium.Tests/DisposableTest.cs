@@ -5,11 +5,22 @@ using Xunit;
 
 namespace Annium.Tests;
 
+/// <summary>
+/// Contains unit tests for <see cref="Disposable"/> to verify disposable behavior.
+/// </summary>
 public class DisposableTest : TestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DisposableTest"/> class.
+    /// </summary>
+    /// <param name="outputHelper">The test output helper.</param>
     public DisposableTest(ITestOutputHelper outputHelper)
         : base(outputHelper) { }
 
+    /// <summary>
+    /// Verifies that adding disposables to an async disposable box works correctly.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     [Fact]
     public async Task AsyncDisposable_Add_Works()
     {
@@ -28,6 +39,10 @@ public class DisposableTest : TestBase
         calls.Is(4);
     }
 
+    /// <summary>
+    /// Verifies that removing disposables from an async disposable box works correctly.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     [Fact]
     public async Task AsyncDisposable_Remove_Works()
     {
@@ -54,6 +69,10 @@ public class DisposableTest : TestBase
         calls.Is(0);
     }
 
+    /// <summary>
+    /// Verifies that resetting an async disposable box works correctly.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     [Fact]
     public async Task AsyncDisposable_Reset_Works()
     {
@@ -67,6 +86,9 @@ public class DisposableTest : TestBase
         box.IsDisposed.IsFalse();
     }
 
+    /// <summary>
+    /// Verifies that adding disposables to a disposable box works correctly.
+    /// </summary>
     [Fact]
     public void Disposable_Add_Works()
     {
@@ -83,6 +105,9 @@ public class DisposableTest : TestBase
         calls.Is(2);
     }
 
+    /// <summary>
+    /// Verifies that removing disposables from a disposable box works correctly.
+    /// </summary>
     [Fact]
     public void Disposable_Remove_Works()
     {
@@ -103,6 +128,9 @@ public class DisposableTest : TestBase
         calls.Is(0);
     }
 
+    /// <summary>
+    /// Verifies that resetting a disposable box works correctly.
+    /// </summary>
     [Fact]
     public void Disposable_Reset_Works()
     {

@@ -13,12 +13,12 @@ namespace Annium;
 public sealed class AsyncLazy<T>
 {
     /// <summary>
-    /// The underlying lazy task's value state.
+    /// Gets a value indicating whether the value has been created.
     /// </summary>
     public bool IsValueCreated => _isValueCreated;
 
     /// <summary>
-    /// The underlying lazy task's value state.
+    /// Gets the value of the asynchronous operation.
     /// </summary>
     public T Value => _instance.Value.Await();
 
@@ -27,10 +27,13 @@ public sealed class AsyncLazy<T>
     /// </summary>
     private readonly Lazy<Task<T>> _instance;
 
+    /// <summary>
+    /// Indicates whether the value has been created.
+    /// </summary>
     private bool _isValueCreated;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="AsyncLazy&lt;T&gt;"/> class.
+    /// Initializes a new instance of the <see cref="AsyncLazy{T}"/> class with a synchronous factory.
     /// </summary>
     /// <param name="factory">The delegate that is invoked on a background thread to produce the value when it is needed.</param>
     public AsyncLazy(Func<T> factory)
@@ -49,7 +52,7 @@ public sealed class AsyncLazy<T>
     }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="AsyncLazy&lt;T&gt;"/> class.
+    /// Initializes a new instance of the <see cref="AsyncLazy{T}"/> class with an asynchronous factory.
     /// </summary>
     /// <param name="factory">The asynchronous delegate that is invoked on a background thread to produce the value when it is needed.</param>
     public AsyncLazy(Func<Task<T>> factory)
@@ -68,8 +71,9 @@ public sealed class AsyncLazy<T>
     }
 
     /// <summary>
-    /// Asynchronous infrastructure support. This method permits instances of <see cref="AsyncLazy&lt;T&gt;"/> to be await'ed.
+    /// Gets the awaiter for the asynchronous operation.
     /// </summary>
+    /// <returns>A <see cref="TaskAwaiter{T}"/> for the asynchronous operation.</returns>
     public TaskAwaiter<T> GetAwaiter()
     {
         return _instance.Value.GetAwaiter();

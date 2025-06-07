@@ -9,16 +9,31 @@ using Microsoft.CodeAnalysis.Rename;
 
 namespace Annium.Analyzers;
 
+/// <summary>
+/// Provides a code fix for exception classes that don't follow the naming convention by appending "Exception" to their names.
+/// </summary>
 [ExportCodeFixProvider(LanguageNames.CSharp), Shared]
 public class ExceptionNameCodeFix : CodeFixProvider
 {
+    /// <summary>
+    /// Gets the diagnostic IDs that this code fix provider can fix.
+    /// </summary>
     public override ImmutableArray<string> FixableDiagnosticIds { get; } = [Descriptors.Pg0001ExceptionNameFormat.Id];
 
+    /// <summary>
+    /// Gets the fix all provider for this code fix provider.
+    /// </summary>
+    /// <returns>Returns null as this code fix provider doesn't support fix all operations.</returns>
     public override FixAllProvider GetFixAllProvider()
     {
         return null!;
     }
 
+    /// <summary>
+    /// Registers code fixes for the given context.
+    /// </summary>
+    /// <param name="context">The code fix context containing the diagnostic and document to fix.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
     public override async Task RegisterCodeFixesAsync(CodeFixContext context)
     {
         var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken);

@@ -2,14 +2,35 @@ using System;
 
 namespace Annium;
 
+/// <summary>
+/// Provides extension methods for converting byte arrays and memory to hexadecimal string representations.
+/// </summary>
 public static class ByteExtensions
 {
+    /// <summary>
+    /// Lookup table for hexadecimal characters.
+    /// </summary>
     private static readonly char[] _hexLookup = CreateHexLookup();
 
+    /// <summary>
+    /// Converts a byte array to its hexadecimal string representation.
+    /// </summary>
+    /// <param name="value">The byte array to convert.</param>
+    /// <returns>A hexadecimal string representation of the byte array.</returns>
     public static string ToHexString(this byte[] value) => ToHexString(value.AsMemory());
 
+    /// <summary>
+    /// Converts a <see cref="Memory{T}"/> to its hexadecimal string representation.
+    /// </summary>
+    /// <param name="value">The memory of bytes to convert.</param>
+    /// <returns>A hexadecimal string representation of the memory.</returns>
     public static string ToHexString(this Memory<byte> value) => ToHexString((ReadOnlyMemory<byte>)value);
 
+    /// <summary>
+    /// Converts a <see cref="ReadOnlyMemory{T}"/> to its hexadecimal string representation.
+    /// </summary>
+    /// <param name="value">The read-only memory of bytes to convert.</param>
+    /// <returns>A hexadecimal string representation of the read-only memory.</returns>
     public static string ToHexString(this ReadOnlyMemory<byte> value)
     {
         var lookup = _hexLookup;
@@ -26,6 +47,10 @@ public static class ByteExtensions
         return new string(result);
     }
 
+    /// <summary>
+    /// Creates a lookup table for hexadecimal characters.
+    /// </summary>
+    /// <returns>An array of hexadecimal characters for lookup.</returns>
     private static char[] CreateHexLookup()
     {
         var result = new char[512];

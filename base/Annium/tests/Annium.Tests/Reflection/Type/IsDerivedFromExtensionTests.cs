@@ -6,8 +6,14 @@ using Xunit;
 
 namespace Annium.Tests.Reflection.Type;
 
+/// <summary>
+/// Contains unit tests for the IsDerivedFrom extension method.
+/// </summary>
 public class IsDerivedFromExtensionTests
 {
+    /// <summary>
+    /// Verifies that the IsDerivedFrom extension method correctly identifies type relationships.
+    /// </summary>
     [Fact]
     public void IsDerivedFromExtensionTests_Works()
     {

@@ -6,8 +6,14 @@ using Xunit;
 
 namespace Annium.Tests;
 
+/// <summary>
+/// Contains unit tests for array-related type extension methods.
+/// </summary>
 public class TypeArrayExtensionsTest
 {
+    /// <summary>
+    /// Verifies that IsEnumerable correctly identifies enumerable types.
+    /// </summary>
     [Fact]
     public void IsEnumerable_Ok()
     {
@@ -18,6 +24,9 @@ public class TypeArrayExtensionsTest
         typeof(IReadOnlyDictionary<,>).IsEnumerable().IsTrue();
     }
 
+    /// <summary>
+    /// Verifies that TryGetArrayElementType correctly extracts element types from array and collection types.
+    /// </summary>
     [Fact]
     public void TryGetArrayElementType_Ok()
     {

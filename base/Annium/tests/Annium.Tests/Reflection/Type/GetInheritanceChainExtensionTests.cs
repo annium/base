@@ -5,8 +5,14 @@ using Xunit;
 
 namespace Annium.Tests.Reflection.Type;
 
+/// <summary>
+/// Contains unit tests for the GetInheritanceChain extension method.
+/// </summary>
 public class GetInheritanceChainExtensionTests
 {
+    /// <summary>
+    /// Verifies that GetInheritanceChain throws ArgumentNullException when called on null.
+    /// </summary>
     [Fact]
     public void GetInheritanceChain_OfNull_Throws()
     {
@@ -14,6 +20,9 @@ public class GetInheritanceChainExtensionTests
         Wrap.It(() => (null as System.Type)!.GetInheritanceChain()).Throws<ArgumentNullException>();
     }
 
+    /// <summary>
+    /// Verifies that GetInheritanceChain works correctly for the root class (object).
+    /// </summary>
     [Fact]
     public void GetInheritanceChain_Class_Root_Works()
     {
@@ -24,6 +33,9 @@ public class GetInheritanceChainExtensionTests
         typeof(object).GetInheritanceChain(self: true, root: true).Has(1).At(0).Is(typeof(object));
     }
 
+    /// <summary>
+    /// Verifies that GetInheritanceChain works correctly for a non-inherited class.
+    /// </summary>
     [Fact]
     public void GetInheritanceChain_Class_NotInherited_Works()
     {
@@ -37,6 +49,9 @@ public class GetInheritanceChainExtensionTests
             .IsEqual(new[] { typeof(Sample), typeof(object) });
     }
 
+    /// <summary>
+    /// Verifies that GetInheritanceChain works correctly for an inherited class.
+    /// </summary>
     [Fact]
     public void GetInheritanceChain_Class_Inherited_Works()
     {
@@ -50,6 +65,9 @@ public class GetInheritanceChainExtensionTests
             .IsEqual(new[] { typeof(Derived), typeof(Sample), typeof(object) });
     }
 
+    /// <summary>
+    /// Verifies that GetInheritanceChain works correctly for the root struct (ValueType).
+    /// </summary>
     [Fact]
     public void GetInheritanceChain_Struct_Root_Works()
     {
@@ -60,6 +78,9 @@ public class GetInheritanceChainExtensionTests
         typeof(ValueType).GetInheritanceChain(self: true, root: true).Has(1).At(0).Is(typeof(ValueType));
     }
 
+    /// <summary>
+    /// Verifies that GetInheritanceChain works correctly for a struct.
+    /// </summary>
     [Fact]
     public void GetInheritanceChain_Struct_Works()
     {
@@ -73,6 +94,9 @@ public class GetInheritanceChainExtensionTests
             .IsEqual(new[] { typeof(Point), typeof(ValueType) });
     }
 
+    /// <summary>
+    /// Verifies that GetInheritanceChain returns an empty chain for unsupported types (interfaces).
+    /// </summary>
     [Fact]
     public void GetInheritanceChain_UnsupportedType_ReturnsEmptyChain()
     {
@@ -80,11 +104,23 @@ public class GetInheritanceChainExtensionTests
         typeof(IFace).GetInheritanceChain().IsEmpty();
     }
 
+    /// <summary>
+    /// A derived class used for testing inheritance.
+    /// </summary>
     private class Derived : Sample;
 
+    /// <summary>
+    /// A base class used for testing inheritance.
+    /// </summary>
     private class Sample;
 
+    /// <summary>
+    /// A struct used for testing inheritance.
+    /// </summary>
     private struct Point;
 
+    /// <summary>
+    /// An interface used for testing unsupported types.
+    /// </summary>
     private interface IFace;
 }

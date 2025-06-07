@@ -5,8 +5,14 @@ using Xunit;
 
 namespace Annium.Tests;
 
+/// <summary>
+/// Contains unit tests for enum extension methods.
+/// </summary>
 public class EnumExtensionsTest
 {
+    /// <summary>
+    /// Verifies that parsing enum values from strings without a default value works correctly.
+    /// </summary>
     [Fact]
     public void ParseEnum_StringNoDefault_Works()
     {
@@ -23,6 +29,9 @@ public class EnumExtensionsTest
         Wrap.It(() => invalid.ParseEnum<TestEnum>()).Throws<ArgumentException>();
     }
 
+    /// <summary>
+    /// Verifies that parsing enum values from numeric values without a default value works correctly.
+    /// </summary>
     [Fact]
     public void ParseEnum_ValueNoDefault_Works()
     {
@@ -41,6 +50,9 @@ public class EnumExtensionsTest
         Wrap.It(() => e.ParseEnum<TestEnum>()).Throws<ArgumentException>();
     }
 
+    /// <summary>
+    /// Verifies that parsing flag values without a default value works correctly.
+    /// </summary>
     [Fact]
     public void ParseFlags_NoDefault_Works()
     {
@@ -54,6 +66,9 @@ public class EnumExtensionsTest
         Wrap.It(() => invalid.ParseFlags<TestEnum>(",")).Throws<ArgumentException>();
     }
 
+    /// <summary>
+    /// Verifies that parsing enum values from strings with a default value works correctly.
+    /// </summary>
     [Fact]
     public void ParseEnum_StringDefault_Works()
     {
@@ -70,6 +85,9 @@ public class EnumExtensionsTest
         invalid.ParseEnum(TestEnum.None).Is(TestEnum.None);
     }
 
+    /// <summary>
+    /// Verifies that parsing enum values from numeric values with a default value works correctly.
+    /// </summary>
     [Fact]
     public void ParseEnum_ValueDefault_Works()
     {
@@ -88,6 +106,9 @@ public class EnumExtensionsTest
         e.ParseEnum(TestEnum.None).Is(TestEnum.None);
     }
 
+    /// <summary>
+    /// Verifies that parsing flag values with a default value works correctly.
+    /// </summary>
     [Fact]
     public void ParseFlags_Default_Works()
     {

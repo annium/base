@@ -6,8 +6,14 @@ using Xunit;
 
 namespace Annium.Tests.Reflection.Type;
 
-public class IsConstructableExtensionTest
+/// <summary>
+/// Contains unit tests for the IsClassOrValueType extension method.
+/// </summary>
+public class IsClassOrValueTypeExtensionTest
 {
+    /// <summary>
+    /// Verifies that IsClassOrValueType throws when called on null.
+    /// </summary>
     [Fact]
     public void OfNull_Throws()
     {
@@ -15,6 +21,9 @@ public class IsConstructableExtensionTest
         Wrap.It(() => (null as System.Type)!.IsConstructable()).Throws<ArgumentNullException>();
     }
 
+    /// <summary>
+    /// Verifies that IsClassOrValueType works for classes.
+    /// </summary>
     [Fact]
     public void Class_Works()
     {
@@ -24,6 +33,9 @@ public class IsConstructableExtensionTest
         typeof(Stream).IsConstructable().IsFalse();
     }
 
+    /// <summary>
+    /// Verifies that IsClassOrValueType works for structs.
+    /// </summary>
     [Fact]
     public void Struct_Works()
     {
