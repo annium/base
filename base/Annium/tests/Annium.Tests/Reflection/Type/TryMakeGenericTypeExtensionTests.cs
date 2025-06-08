@@ -5,8 +5,14 @@ using Xunit;
 
 namespace Annium.Tests.Reflection.Type;
 
+/// <summary>
+/// Contains unit tests for the TryMakeGenericType extension method.
+/// </summary>
 public class TryMakeGenericTypeExtensionTests
 {
+    /// <summary>
+    /// Verifies that TryMakeGenericType throws when called on null.
+    /// </summary>
     [Fact]
     public void TryMakeGenericType_OfNull_Throws()
     {
@@ -14,6 +20,9 @@ public class TryMakeGenericTypeExtensionTests
         Wrap.It(() => (null as System.Type)!.TryMakeGenericType(out _)).Throws<ArgumentNullException>();
     }
 
+    /// <summary>
+    /// Verifies that TryMakeGenericType works correctly.
+    /// </summary>
     [Fact]
     public void ITryMakeGenericType_Works()
     {
@@ -28,6 +37,9 @@ public class TryMakeGenericTypeExtensionTests
         result.Is(typeof(Demo<object>));
     }
 
+    /// <summary>
+    /// A demo class used for testing generic type creation.
+    /// </summary>
     private class Demo<T>
         where T : class;
 }

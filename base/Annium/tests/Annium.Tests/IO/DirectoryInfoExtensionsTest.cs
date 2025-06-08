@@ -6,8 +6,14 @@ using Xunit;
 
 namespace Annium.Tests.IO;
 
+/// <summary>
+/// Contains unit tests for DirectoryInfo extension methods.
+/// </summary>
 public class DirectoryInfoExtensionsTest
 {
+    /// <summary>
+    /// Verifies that IsAt works correctly for various directory paths.
+    /// </summary>
     [Fact]
     public void IsAt_WorksCorrectly()
     {
@@ -22,5 +28,10 @@ public class DirectoryInfoExtensionsTest
         GetDir(Path.Combine(root, "xx")).IsAt(Path.Combine(root, "xx")).IsFalse();
     }
 
+    /// <summary>
+    /// Creates a new DirectoryInfo instance for the specified path.
+    /// </summary>
+    /// <param name="path">The directory path.</param>
+    /// <returns>A new DirectoryInfo instance.</returns>
     private DirectoryInfo GetDir(string path) => new(path);
 }

@@ -3,8 +3,14 @@ using Xunit;
 
 namespace Annium.Tests;
 
+/// <summary>
+/// Contains unit tests for double extension methods.
+/// </summary>
 public class DoubleExtensionsTest
 {
+    /// <summary>
+    /// Verifies that the DiffFrom extension method works correctly.
+    /// </summary>
     [Fact]
     public void DiffFrom()
     {

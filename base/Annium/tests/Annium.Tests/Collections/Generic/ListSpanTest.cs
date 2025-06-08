@@ -1,11 +1,18 @@
+using Annium.Collections.Generic;
 using Annium.Linq;
 using Annium.Testing;
 using Xunit;
 
 namespace Annium.Tests.Collections.Generic;
 
+/// <summary>
+/// Contains unit tests for <see cref="ListSpan{T}"/> to verify span behavior.
+/// </summary>
 public class ListSpanTest
 {
+    /// <summary>
+    /// Verifies that adding elements, counting, indexing, and moving the span work correctly.
+    /// </summary>
     [Fact]
     public void Add_Count_Index_Move()
     {

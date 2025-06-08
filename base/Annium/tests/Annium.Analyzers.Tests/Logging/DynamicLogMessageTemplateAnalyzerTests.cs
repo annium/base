@@ -9,9 +9,16 @@ using Xunit;
 
 namespace Annium.Analyzers.Tests.Logging;
 
+/// <summary>
+/// Contains unit tests for <see cref="DynamicLogMessageTemplateAnalyzer"/> to verify log message template analysis.
+/// </summary>
 public class DynamicLogMessageTemplateAnalyzerTests
     : CSharpAnalyzerTest<DynamicLogMessageTemplateAnalyzer, DefaultVerifier>
 {
+    /// <summary>
+    /// Verifies that the analyzer ignores constant log message templates.
+    /// </summary>
+    /// <returns>True if the analyzer ignores constant templates; otherwise, false.</returns>
     [Fact]
     public async Task ConstantTemplate_Ignores()
     {
@@ -47,6 +54,10 @@ public class Sample : ILogSubject
         await RunAsync(TestContext.Current.CancellationToken);
     }
 
+    /// <summary>
+    /// Verifies that the analyzer shows a warning for dynamic log message templates.
+    /// </summary>
+    /// <returns>True if the analyzer shows a warning for dynamic templates; otherwise, false.</returns>
     [Fact]
     public async Task DynamicTemplate_ShowsWarning()
     {

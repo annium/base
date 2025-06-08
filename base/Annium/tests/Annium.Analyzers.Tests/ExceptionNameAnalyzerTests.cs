@@ -6,8 +6,15 @@ using Xunit;
 
 namespace Annium.Analyzers.Tests;
 
+/// <summary>
+/// Contains unit tests for <see cref="ExceptionNameAnalyzer"/> to verify exception naming conventions.
+/// </summary>
 public class ExceptionNameAnalyzerTests : CSharpAnalyzerTest<ExceptionNameAnalyzer, DefaultVerifier>
 {
+    /// <summary>
+    /// Verifies that the analyzer ignores correctly named exception classes.
+    /// </summary>
+    /// <returns>True if the analyzer ignores correct exception names; otherwise, false.</returns>
     [Fact]
     public async Task WhenCorrectName_Ignores()
     {
@@ -18,6 +25,10 @@ public class ExceptionNameAnalyzerTests : CSharpAnalyzerTest<ExceptionNameAnalyz
         await RunAsync(TestContext.Current.CancellationToken);
     }
 
+    /// <summary>
+    /// Verifies that the analyzer shows a warning for incorrectly named exception classes.
+    /// </summary>
+    /// <returns>True if the analyzer shows a warning for inconsistent exception names; otherwise, false.</returns>
     [Fact]
     public async Task WhenInconsistentName_ShowsWarning()
     {

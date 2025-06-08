@@ -6,12 +6,29 @@ using System.Reflection;
 // ReSharper disable once CheckNamespace
 namespace Annium.Reflection;
 
+/// <summary>
+/// Provides extension methods for resolving the implementation of a target type (possibly generic) by a given type.
+/// </summary>
 public static class GetTargetImplementationExtension
 {
-    // Get base of given concrete type, that implements target type, that may contain generic parameters
+    /// <summary>
+    /// Gets the implementation of the specified target type by the given type.
+    /// </summary>
+    /// <param name="type">The concrete type to check for implementation.</param>
+    /// <param name="target">The target type, possibly containing generic parameters.</param>
+    /// <returns>The <see cref="Type"/> representing the implementation, or <c>null</c> if not found.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="type"/> or <paramref name="target"/> is null.</exception>
+    /// <exception cref="ArgumentException">Thrown if <paramref name="type"/> contains generic parameters.</exception>
     public static Type? GetTargetImplementation(this Type type, Type target) =>
         type.GetTargetImplementation(target, new HashSet<Type>());
 
+    /// <summary>
+    /// Gets the implementation of the specified target type by the given type, using a set of known generic parameters to avoid cyclic recursion.
+    /// </summary>
+    /// <param name="type">The concrete type to check for implementation.</param>
+    /// <param name="target">The target type, possibly containing generic parameters.</param>
+    /// <param name="genericParameters">A set of known generic parameters to avoid cyclic recursion.</param>
+    /// <returns>The <see cref="Type"/> representing the implementation, or <c>null</c> if not found.</returns>
     private static Type? GetTargetImplementation(this Type type, Type target, HashSet<Type> genericParameters)
     {
         if (type is null)
@@ -53,6 +70,13 @@ public static class GetTargetImplementationExtension
         return implementation.IsAssignableFrom(type) ? implementation : null;
     }
 
+    /// <summary>
+    /// Gets the implementation of the target type by a class type.
+    /// </summary>
+    /// <param name="type">The class type to check for implementation.</param>
+    /// <param name="target">The target type to resolve against.</param>
+    /// <param name="genericParameters">A set of known generic parameters to avoid cyclic recursion.</param>
+    /// <returns>The <see cref="Type"/> representing the implementation, or <c>null</c> if not found.</returns>
     private static Type? GetClassImplementationOfTarget(this Type type, Type target, HashSet<Type> genericParameters)
     {
         if (target.IsGenericParameter)
@@ -67,6 +91,13 @@ public static class GetTargetImplementationExtension
         throw GetException(type, target);
     }
 
+    /// <summary>
+    /// Gets the implementation of the target type by a struct type.
+    /// </summary>
+    /// <param name="type">The struct type to check for implementation.</param>
+    /// <param name="target">The target type to resolve against.</param>
+    /// <param name="genericParameters">A set of known generic parameters to avoid cyclic recursion.</param>
+    /// <returns>The <see cref="Type"/> representing the implementation, or <c>null</c> if not found.</returns>
     private static Type? GetStructImplementationOfTarget(this Type type, Type target, HashSet<Type> genericParameters)
     {
         if (target.IsGenericParameter)
@@ -81,6 +112,13 @@ public static class GetTargetImplementationExtension
         throw GetException(type, target);
     }
 
+    /// <summary>
+    /// Gets the implementation of the target type by an interface type.
+    /// </summary>
+    /// <param name="type">The interface type to check for implementation.</param>
+    /// <param name="target">The target type to resolve against.</param>
+    /// <param name="genericParameters">A set of known generic parameters to avoid cyclic recursion.</param>
+    /// <returns>The <see cref="Type"/> representing the implementation, or <c>null</c> if not found.</returns>
     private static Type? GetInterfaceImplementationOfTarget(
         this Type type,
         Type target,
@@ -99,6 +137,13 @@ public static class GetTargetImplementationExtension
         throw GetException(type, target);
     }
 
+    /// <summary>
+    /// Gets the implementation of a generic parameter by a class type.
+    /// </summary>
+    /// <param name="type">The class type to check for implementation.</param>
+    /// <param name="target">The generic parameter to resolve against.</param>
+    /// <param name="genericParameters">A set of known generic parameters to avoid cyclic recursion.</param>
+    /// <returns>The <see cref="Type"/> representing the implementation, or <c>null</c> if not found.</returns>
     private static Type? GetClassImplementationOfGenericParameter(
         this Type type,
         Type target,
@@ -124,6 +169,13 @@ public static class GetTargetImplementationExtension
         return meetsConstraints ? type : null;
     }
 
+    /// <summary>
+    /// Gets the implementation of a class type by another class type.
+    /// </summary>
+    /// <param name="type">The class type to check for implementation.</param>
+    /// <param name="target">The target class type to resolve against.</param>
+    /// <param name="genericParameters">A set of known generic parameters to avoid cyclic recursion.</param>
+    /// <returns>The <see cref="Type"/> representing the implementation, or <c>null</c> if not found.</returns>
     private static Type? GetClassImplementationOfClass(this Type type, Type target, HashSet<Type> genericParameters)
     {
         // special handling for array types (array is not generic type, but can contain generic parameters)
@@ -156,6 +208,13 @@ public static class GetTargetImplementationExtension
         return BuildImplementation(implementation, target, genericParameters);
     }
 
+    /// <summary>
+    /// Gets the implementation of an interface by a class type.
+    /// </summary>
+    /// <param name="type">The class type to check for implementation.</param>
+    /// <param name="target">The target interface to resolve against.</param>
+    /// <param name="genericParameters">A set of known generic parameters to avoid cyclic recursion.</param>
+    /// <returns>The <see cref="Type"/> representing the implementation, or <c>null</c> if not found.</returns>
     private static Type? GetClassImplementationOfInterface(this Type type, Type target, HashSet<Type> genericParameters)
     {
         var targetBase = target.GetGenericTypeDefinition();
@@ -168,6 +227,13 @@ public static class GetTargetImplementationExtension
         return BuildImplementation(implementation, target, genericParameters);
     }
 
+    /// <summary>
+    /// Gets the implementation of a generic parameter by a struct type.
+    /// </summary>
+    /// <param name="type">The struct type to check for implementation.</param>
+    /// <param name="target">The generic parameter to resolve against.</param>
+    /// <param name="genericParameters">A set of known generic parameters to avoid cyclic recursion.</param>
+    /// <returns>The <see cref="Type"/> representing the implementation, or <c>null</c> if not found.</returns>
     private static Type? GetStructImplementationOfGenericParameter(
         this Type type,
         Type target,
@@ -197,6 +263,13 @@ public static class GetTargetImplementationExtension
         return meetsConstraints ? type : null;
     }
 
+    /// <summary>
+    /// Gets the implementation of a struct type by another struct type.
+    /// </summary>
+    /// <param name="type">The struct type to check for implementation.</param>
+    /// <param name="target">The target struct type to resolve against.</param>
+    /// <param name="genericParameters">A set of known generic parameters to avoid cyclic recursion.</param>
+    /// <returns>The <see cref="Type"/> representing the implementation, or <c>null</c> if not found.</returns>
     private static Type? GetStructImplementationOfStruct(this Type type, Type target, HashSet<Type> genericParameters)
     {
         if (!type.IsGenericType || type.GetGenericTypeDefinition() != target.GetGenericTypeDefinition())
@@ -205,6 +278,13 @@ public static class GetTargetImplementationExtension
         return BuildImplementation(type, target, genericParameters);
     }
 
+    /// <summary>
+    /// Gets the implementation of an interface by a struct type.
+    /// </summary>
+    /// <param name="type">The struct type to check for implementation.</param>
+    /// <param name="target">The target interface to resolve against.</param>
+    /// <param name="genericParameters">A set of known generic parameters to avoid cyclic recursion.</param>
+    /// <returns>The <see cref="Type"/> representing the implementation, or <c>null</c> if not found.</returns>
     private static Type? GetStructImplementationOfInterface(
         this Type type,
         Type target,
@@ -221,6 +301,13 @@ public static class GetTargetImplementationExtension
         return BuildImplementation(implementation, target, genericParameters);
     }
 
+    /// <summary>
+    /// Gets the implementation of a generic parameter by an interface type.
+    /// </summary>
+    /// <param name="type">The interface type to check for implementation.</param>
+    /// <param name="target">The generic parameter to resolve against.</param>
+    /// <param name="genericParameters">A set of known generic parameters to avoid cyclic recursion.</param>
+    /// <returns>The <see cref="Type"/> representing the implementation, or <c>null</c> if not found.</returns>
     private static Type? GetInterfaceImplementationOfGenericParameter(
         this Type type,
         Type target,
@@ -246,6 +333,13 @@ public static class GetTargetImplementationExtension
         return meetsConstraints ? type : null;
     }
 
+    /// <summary>
+    /// Gets the implementation of an interface by another interface type.
+    /// </summary>
+    /// <param name="type">The interface type to check for implementation.</param>
+    /// <param name="target">The target interface to resolve against.</param>
+    /// <param name="genericParameters">A set of known generic parameters to avoid cyclic recursion.</param>
+    /// <returns>The <see cref="Type"/> representing the implementation, or <c>null</c> if not found.</returns>
     private static Type? GetInterfaceImplementationOfInterface(
         this Type type,
         Type target,
@@ -264,18 +358,12 @@ public static class GetTargetImplementationExtension
     }
 
     /// <summary>
-    ///     Build implementation by target
+    /// Builds the implementation of a target type by a given implementation type.
     /// </summary>
-    /// <param name="implementation">
-    ///     generic type, base for type, whose generic definition is constructed against target
-    /// </param>
-    /// <param name="target">
-    ///     implementation target
-    /// </param>
-    /// <param name="genericParameters">
-    ///     known generic parameters, kept to detect cyclic recursion
-    /// </param>
-    /// <returns></returns>
+    /// <param name="implementation">The generic type, base for the type whose generic definition is constructed against the target.</param>
+    /// <param name="target">The implementation target.</param>
+    /// <param name="genericParameters">A set of known generic parameters to avoid cyclic recursion.</param>
+    /// <returns>The <see cref="Type"/> representing the built implementation, or <c>null</c> if not found.</returns>
     private static Type? BuildImplementation(Type implementation, Type target, HashSet<Type> genericParameters)
     {
         if (target.IsGenericTypeDefinition)
@@ -307,6 +395,12 @@ public static class GetTargetImplementationExtension
         return result;
     }
 
+    /// <summary>
+    /// Gets a <see cref="NotImplementedException"/> for the case when the implementation cannot be resolved.
+    /// </summary>
+    /// <param name="type">The type for which the implementation was attempted.</param>
+    /// <param name="target">The target type for which the implementation was attempted.</param>
+    /// <returns>A <see cref="NotImplementedException"/> with a descriptive message.</returns>
     private static NotImplementedException GetException(Type type, Type target) =>
         throw new NotImplementedException($"Can't resolve {type.Name} implementation of {target.Name}");
 }

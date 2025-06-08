@@ -5,8 +5,14 @@ using Xunit;
 
 namespace Annium.Tests;
 
+/// <summary>
+/// Contains unit tests for the TrackingWeakReference class.
+/// </summary>
 public class TrackingWeakReferenceTest
 {
+    /// <summary>
+    /// Verifies that TrackingWeakReference correctly tracks object collection and raises the OnCollected event.
+    /// </summary>
     [Fact]
     public void TrackingWeakReference_Works()
     {
@@ -38,6 +44,10 @@ public class TrackingWeakReferenceTest
         counter.Is(1);
     }
 
+    /// <summary>
+    /// Wraps an action to prevent inlining, ensuring proper garbage collection behavior.
+    /// </summary>
+    /// <param name="wrap">The action to wrap.</param>
     [MethodImpl(MethodImplOptions.NoInlining)]
     private void Wrap(Action wrap) => wrap();
 }

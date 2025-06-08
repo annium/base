@@ -3,49 +3,40 @@ using NodaTime;
 
 namespace Annium;
 
+/// <summary>
+/// Provides functionality for scheduling actions to be executed after a delay or at regular intervals.
+/// </summary>
 public interface IActionScheduler
 {
     /// <summary>
-    ///     Executes some code asynchronously within given amount of time.
+    /// Schedules an action to be executed after the specified timeout.
     /// </summary>
-    /// <param name="handle">
-    ///     Code to execute when time comes.
-    /// </param>
-    /// <param name="timeout">
-    ///     The timeout at which the code will be run, in milliseconds.
-    /// </param>
+    /// <param name="handle">The action to execute when the timeout expires.</param>
+    /// <param name="timeout">The timeout in milliseconds before executing the action.</param>
+    /// <returns>An action that can be used to cancel the scheduled execution.</returns>
     Action Delay(Action handle, int timeout);
 
     /// <summary>
-    ///     Executes some code asynchronously within given amount of time.
+    /// Schedules an action to be executed after the specified timeout.
     /// </summary>
-    /// <param name="handle">
-    ///     Code to execute when time comes.
-    /// </param>
-    /// <param name="timeout">
-    ///     The timeout at which the code will be run, as <see cref="Duration"/>.
-    /// </param>
+    /// <param name="handle">The action to execute when the timeout expires.</param>
+    /// <param name="timeout">The timeout duration before executing the action.</param>
+    /// <returns>An action that can be used to cancel the scheduled execution.</returns>
     Action Delay(Action handle, Duration timeout);
 
     /// <summary>
-    ///     Executes some code asynchronously within given amount of time.
+    /// Schedules an action to be executed repeatedly at the specified interval.
     /// </summary>
-    /// <param name="handle">
-    ///     Code to execute when time comes.
-    /// </param>
-    /// <param name="interval">
-    ///     The interval at which the code will be run, in milliseconds.
-    /// </param>
+    /// <param name="handle">The action to execute at each interval.</param>
+    /// <param name="interval">The interval in milliseconds between executions.</param>
+    /// <returns>An action that can be used to cancel the scheduled execution.</returns>
     Action Interval(Action handle, int interval);
 
     /// <summary>
-    ///     Executes some code asynchronously within given amount of time.
+    /// Schedules an action to be executed repeatedly at the specified interval.
     /// </summary>
-    /// <param name="handle">
-    ///     Code to execute when time comes.
-    /// </param>
-    /// <param name="interval">
-    ///     The interval at which the code will be run, as <see cref="Duration"/>.
-    /// </param>
+    /// <param name="handle">The action to execute at each interval.</param>
+    /// <param name="interval">The interval duration between executions.</param>
+    /// <returns>An action that can be used to cancel the scheduled execution.</returns>
     Action Interval(Action handle, Duration interval);
 }

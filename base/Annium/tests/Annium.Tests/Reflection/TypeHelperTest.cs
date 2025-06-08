@@ -5,8 +5,14 @@ using Xunit;
 
 namespace Annium.Tests.Reflection;
 
+/// <summary>
+/// Contains unit tests for the TypeHelper class.
+/// </summary>
 public class TypeHelperTest
 {
+    /// <summary>
+    /// Verifies that GetAccessExpressions works correctly with multiple property access expressions.
+    /// </summary>
     [Fact]
     public void GetAccessExpressions_Multiple_Works()
     {
@@ -30,6 +36,9 @@ public class TypeHelperTest
         result.IsEqual(data.InnerTwo);
     }
 
+    /// <summary>
+    /// Verifies that GetAccessExpressions works correctly with a single property access expression.
+    /// </summary>
     [Fact]
     public void GetAccessExpressions_Single_Works()
     {
@@ -50,6 +59,9 @@ public class TypeHelperTest
         result.Is(data.InnerOne.One);
     }
 
+    /// <summary>
+    /// Verifies that ResolveProperties works correctly with multiple property access expressions.
+    /// </summary>
     [Fact]
     public void ResolveProperties_Multiple_Works()
     {
@@ -62,6 +74,9 @@ public class TypeHelperTest
         properties.At(1).Is(typeof(B).GetProperty(nameof(B.InnerTwo)));
     }
 
+    /// <summary>
+    /// Verifies that ResolveProperty works correctly with a unary property access expression.
+    /// </summary>
     [Fact]
     public void ResolveProperty_Unary_Works()
     {
@@ -69,6 +84,9 @@ public class TypeHelperTest
         TypeHelper.ResolveProperty<A>(x => x.Two).Is(typeof(A).GetProperty(nameof(A.Two)));
     }
 
+    /// <summary>
+    /// Verifies that ResolveProperty works correctly with a nested property access expression.
+    /// </summary>
     [Fact]
     public void ResolveProperty_Inner_Works()
     {
@@ -76,6 +94,9 @@ public class TypeHelperTest
         TypeHelper.ResolveProperty<B>(x => x.InnerTwo.Two).Is(typeof(A).GetProperty(nameof(A.Two)));
     }
 
+    /// <summary>
+    /// Verifies that ResolveProperty throws ArgumentException when the expression is not a property access.
+    /// </summary>
     [Fact]
     public void ResolveProperty_NotProperty_Fails()
     {
@@ -83,15 +104,35 @@ public class TypeHelperTest
         Wrap.It(() => TypeHelper.ResolveProperty<B>(x => x.InnerTwo.ToString()!)).Throws<ArgumentException>();
     }
 
+    /// <summary>
+    /// A test class with nested properties.
+    /// </summary>
     private class B
     {
+        /// <summary>
+        /// Gets or sets the first inner property.
+        /// </summary>
         public A InnerOne { get; set; } = null!;
+
+        /// <summary>
+        /// Gets or sets the second inner property.
+        /// </summary>
         public A InnerTwo { get; set; } = null!;
     }
 
+    /// <summary>
+    /// A test class with string properties.
+    /// </summary>
     private class A
     {
+        /// <summary>
+        /// Gets or sets the first string property.
+        /// </summary>
         public string One { get; set; } = null!;
+
+        /// <summary>
+        /// Gets or sets the second string property.
+        /// </summary>
         public string Two { get; set; } = null!;
     }
 }

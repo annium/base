@@ -7,8 +7,14 @@ using Xunit;
 
 namespace Annium.Tests.Reflection.Type;
 
+/// <summary>
+/// Contains unit tests for the HasDefaultConstructor extension method.
+/// </summary>
 public class HasDefaultConstructorTests
 {
+    /// <summary>
+    /// Verifies that HasDefaultConstructor throws when called on null.
+    /// </summary>
     [Fact]
     public void HasDefaultConstructor_OfNull_Throws()
     {
@@ -16,6 +22,9 @@ public class HasDefaultConstructorTests
         Wrap.It(() => (null as System.Type)!.HasDefaultConstructor()).Throws<ArgumentNullException>();
     }
 
+    /// <summary>
+    /// Verifies that HasDefaultConstructor works for classes.
+    /// </summary>
     [Fact]
     public void HasDefaultConstructor_Class_Works()
     {
@@ -24,6 +33,9 @@ public class HasDefaultConstructorTests
         typeof(FileInfo).HasDefaultConstructor().IsFalse();
     }
 
+    /// <summary>
+    /// Verifies that HasDefaultConstructor works for structs.
+    /// </summary>
     [Fact]
     public void HasDefaultConstructor_Struct_Works()
     {
@@ -32,6 +44,9 @@ public class HasDefaultConstructorTests
         typeof(ValueTuple<>).HasDefaultConstructor().IsFalse();
     }
 
+    /// <summary>
+    /// Verifies that HasDefaultConstructor throws for other types.
+    /// </summary>
     [Fact]
     public void HasDefaultConstructor_Other_Throws()
     {

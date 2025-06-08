@@ -4,8 +4,17 @@ using System.Linq;
 // ReSharper disable once CheckNamespace
 namespace Annium.Reflection;
 
+/// <summary>
+/// Provides extension methods for resolving generic arguments for interface types based on target types.
+/// </summary>
 public static partial class ResolveGenericArgumentsByImplementationExtension
 {
+    /// <summary>
+    /// Resolves generic arguments for an interface type when the target is a generic parameter.
+    /// </summary>
+    /// <param name="type">The interface type to resolve arguments for.</param>
+    /// <param name="target">The target generic parameter type.</param>
+    /// <returns>An array of resolved type arguments, or null if resolution fails.</returns>
     private static Type[]? ResolveInterfaceArgumentsByGenericParameter(this Type type, Type target)
     {
         if (type.TryGetTargetImplementation(target, out var args))
@@ -18,6 +27,12 @@ public static partial class ResolveGenericArgumentsByImplementationExtension
         return type.CanBeUsedAsParameter(target) ? type.GetGenericArguments() : null;
     }
 
+    /// <summary>
+    /// Resolves generic arguments for an interface type when the target is another interface type.
+    /// </summary>
+    /// <param name="type">The interface type to resolve arguments for.</param>
+    /// <param name="target">The target interface type.</param>
+    /// <returns>An array of resolved type arguments, or null if resolution fails.</returns>
     private static Type[]? ResolveInterfaceArgumentsByInterface(this Type type, Type target)
     {
         if (type.TryGetTargetImplementation(target, out var args))

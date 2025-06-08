@@ -9,11 +9,22 @@ using Xunit;
 
 namespace Annium.Tests.Threading;
 
+/// <summary>
+/// Contains unit tests for the AsyncTimer class.
+/// </summary>
 public class AsyncTimerTests : TestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the AsyncTimerTests class.
+    /// </summary>
+    /// <param name="outputHelper">The test output helper.</param>
     public AsyncTimerTests(ITestOutputHelper outputHelper)
         : base(outputHelper) { }
 
+    /// <summary>
+    /// Verifies that stateful timer works correctly with overlapping executions.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     [Fact]
     public async Task Stateful_Overlapping()
     {
@@ -45,6 +56,10 @@ public class AsyncTimerTests : TestBase
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Verifies that stateful timer works correctly with concurrent starts.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     [Fact]
     public async Task Stateful_ConcurrentStart()
     {
@@ -77,6 +92,10 @@ public class AsyncTimerTests : TestBase
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Verifies that stateless timer works correctly with overlapping executions.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     [Fact]
     public async Task Stateless_Overlapping()
     {
@@ -107,6 +126,10 @@ public class AsyncTimerTests : TestBase
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Verifies that stateless timer works correctly with concurrent starts.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     [Fact]
     public async Task Stateless_ConcurrentStart()
     {
@@ -138,6 +161,11 @@ public class AsyncTimerTests : TestBase
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Ensures that the state is valid by checking the sequence of numbers.
+    /// </summary>
+    /// <param name="state">The state to validate.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
     private async Task EnsureValid(State state)
     {
         // await until timers complete (step is executed to end)
@@ -150,10 +178,19 @@ public class AsyncTimerTests : TestBase
         state.Data.SequenceEqual(expectedData).IsTrue();
     }
 
+    /// <summary>
+    /// A class that maintains a queue of integers for testing.
+    /// </summary>
     private class State
     {
+        /// <summary>
+        /// Gets the queue of integers.
+        /// </summary>
         public Queue<int> Data { get; } = new();
 
+        /// <summary>
+        /// Adds the current count to the queue.
+        /// </summary>
         public void Push()
         {
             Data.Enqueue(Data.Count);

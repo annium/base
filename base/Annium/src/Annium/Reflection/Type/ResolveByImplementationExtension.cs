@@ -4,9 +4,18 @@ using System.Linq;
 // ReSharper disable once CheckNamespace
 namespace Annium.Reflection;
 
+/// <summary>
+/// Provides extension methods for resolving a type by its implementation of a target type, possibly with generic parameters.
+/// </summary>
 public static class ResolveByImplementationExtension
 {
-    // Get implementation of given type, that may contain generic parameters, that implements concrete target type
+    /// <summary>
+    /// Gets the implementation of the given type (which may contain generic parameters) that implements the specified concrete target type.
+    /// </summary>
+    /// <param name="type">The type to resolve, possibly containing generic parameters.</param>
+    /// <param name="target">The concrete target type to resolve against.</param>
+    /// <returns>The resolved <see cref="Type"/> if found; otherwise, null.</returns>
+    /// <exception cref="ArgumentNullException">Thrown if <paramref name="type"/> or <paramref name="target"/> is null.</exception>
     public static Type? ResolveByImplementation(this Type type, Type target)
     {
         if (type is null)

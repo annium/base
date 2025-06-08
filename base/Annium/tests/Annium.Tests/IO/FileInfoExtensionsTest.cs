@@ -6,8 +6,14 @@ using Xunit;
 
 namespace Annium.Tests.IO;
 
+/// <summary>
+/// Contains unit tests for FileInfo extension methods.
+/// </summary>
 public class FileInfoExtensionsTest
 {
+    /// <summary>
+    /// Verifies that IsAt works correctly for various file paths.
+    /// </summary>
     [Fact]
     public void IsAt_WorksCorrectly()
     {
@@ -18,5 +24,10 @@ public class FileInfoExtensionsTest
         GetFile(Path.Combine(root, "xx", "..", "x.txt")).IsAt(Path.Combine(root, "xxx")).IsFalse();
     }
 
+    /// <summary>
+    /// Creates a new FileInfo instance for the specified path.
+    /// </summary>
+    /// <param name="path">The file path.</param>
+    /// <returns>A new FileInfo instance.</returns>
     private FileInfo GetFile(string path) => new(path);
 }

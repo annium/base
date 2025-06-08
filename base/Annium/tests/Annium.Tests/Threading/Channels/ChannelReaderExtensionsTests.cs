@@ -11,11 +11,21 @@ using Xunit;
 
 namespace Annium.Tests.Threading.Channels;
 
+/// <summary>
+/// Contains unit tests for <see cref="ChannelReaderExtensions"/> to verify channel piping behavior.
+/// </summary>
 public class ChannelReaderExtensionsTests : TestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ChannelReaderExtensionsTests"/> class.
+    /// </summary>
     public ChannelReaderExtensionsTests(ITestOutputHelper outputHelper)
         : base(outputHelper) { }
 
+    /// <summary>
+    /// Verifies that data can be piped from one channel to another using the Pipe extension method.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     [Fact]
     public async Task Pipe()
     {

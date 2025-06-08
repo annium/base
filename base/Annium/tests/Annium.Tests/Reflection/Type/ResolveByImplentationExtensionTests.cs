@@ -7,8 +7,14 @@ using Xunit;
 
 namespace Annium.Tests.Reflection.Type;
 
+/// <summary>
+/// Contains unit tests for the ResolveByImplementation extension method.
+/// </summary>
 public class ResolveByImplementationExtensionTests
 {
+    /// <summary>
+    /// Verifies that passing null as the type parameter throws ArgumentNullException.
+    /// </summary>
     [Fact]
     public void TypeNull_Throws()
     {
@@ -16,6 +22,9 @@ public class ResolveByImplementationExtensionTests
         Wrap.It(() => (null as System.Type)!.ResolveByImplementation(typeof(byte))).Throws<ArgumentNullException>();
     }
 
+    /// <summary>
+    /// Verifies that passing null as the target parameter throws ArgumentNullException.
+    /// </summary>
     [Fact]
     public void TargetNull_Throws()
     {
@@ -23,6 +32,9 @@ public class ResolveByImplementationExtensionTests
         Wrap.It(() => typeof(byte).ResolveByImplementation((null as System.Type)!)).Throws<ArgumentNullException>();
     }
 
+    /// <summary>
+    /// Verifies that when a type is defined and assignable to the target type, it returns the correct type.
+    /// </summary>
     [Fact]
     public void Defined_Assignable_ReturnsType()
     {
@@ -30,6 +42,9 @@ public class ResolveByImplementationExtensionTests
         typeof(MemoryStream).ResolveByImplementation(typeof(Stream)).Is(typeof(MemoryStream));
     }
 
+    /// <summary>
+    /// Verifies that when a type is defined but not assignable to the target type, it returns null.
+    /// </summary>
     [Fact]
     public void Defined_NotAssignable_ReturnsType()
     {
@@ -37,6 +52,9 @@ public class ResolveByImplementationExtensionTests
         typeof(FileInfo).ResolveByImplementation(typeof(Stream)).IsDefault();
     }
 
+    /// <summary>
+    /// Verifies that when a generic type is not resolved, it returns null.
+    /// </summary>
     [Fact]
     public void Generic_NotResolved_ReturnsNull()
     {
@@ -44,6 +62,9 @@ public class ResolveByImplementationExtensionTests
         typeof(List<>).ResolveByImplementation(typeof(Stream)).IsDefault();
     }
 
+    /// <summary>
+    /// Verifies that when resolving a generic parameter, it returns the correct parameter type.
+    /// </summary>
     [Fact]
     public void GenericParameter_ReturnsParameter()
     {
@@ -51,6 +72,9 @@ public class ResolveByImplementationExtensionTests
         typeof(List<>).GetGenericArguments()[0].ResolveByImplementation(typeof(int)).Is(typeof(int));
     }
 
+    /// <summary>
+    /// Verifies that when resolving a generic type, it returns the correct constructed type.
+    /// </summary>
     [Fact]
     public void GenericType_ReturnsType()
     {

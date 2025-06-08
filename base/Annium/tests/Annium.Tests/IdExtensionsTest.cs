@@ -3,8 +3,14 @@ using Xunit;
 
 namespace Annium.Tests;
 
+/// <summary>
+/// Contains unit tests for ID extension methods.
+/// </summary>
 public class IdExtensionsTest
 {
+    /// <summary>
+    /// Verifies that GetId is stably unique per object and not shared among types.
+    /// </summary>
     [Fact]
     public void GetId_IsStablyUniquePerObject_NotSharedAmongTypes()
     {
@@ -22,4 +28,7 @@ public class IdExtensionsTest
     }
 }
 
+/// <summary>
+/// Sample record for testing GetId extension.
+/// </summary>
 file record Sample;
