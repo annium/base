@@ -5,8 +5,16 @@ using Xunit;
 
 namespace Annium.Identity.Tokens.Jwt.Tests;
 
+/// <summary>
+/// Tests for JWT reader and writer functionality using ECDSA cryptographic algorithm.
+/// Validates JWT token creation, signing, and verification with ECDSA keys.
+/// </summary>
 public class JwtReaderWriterEcdsaTests : JwtReaderWriterTestsBase
 {
+    /// <summary>
+    /// Tests JWT token creation and reading with ECDSA cryptographic algorithm.
+    /// Verifies that tokens signed with ECDSA private key can be validated with corresponding public key.
+    /// </summary>
     [Fact]
     public void Works()
     {

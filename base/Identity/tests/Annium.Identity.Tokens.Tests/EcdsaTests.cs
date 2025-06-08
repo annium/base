@@ -6,8 +6,16 @@ using Xunit;
 
 namespace Annium.Identity.Tokens.Tests;
 
+/// <summary>
+/// Tests for ECDSA cryptographic key import and validation functionality.
+/// Validates the import and properties of both private and public ECDSA keys from PEM format.
+/// </summary>
 public class EcdsaTests
 {
+    /// <summary>
+    /// Tests the import and validation of ECDSA private key from PEM format.
+    /// Verifies key properties including KeyId, PrivateKeyStatus, and KeySize.
+    /// </summary>
     [Fact]
     public void PrivateKey()
     {
@@ -25,6 +33,10 @@ public class EcdsaTests
         key.KeySize.Is(521);
     }
 
+    /// <summary>
+    /// Tests the import and validation of ECDSA public key from PEM format.
+    /// Verifies key properties including KeyId, PrivateKeyStatus, and KeySize.
+    /// </summary>
     [Fact]
     public void PublicKey()
     {

@@ -7,8 +7,18 @@ using OneOf;
 
 namespace Annium.Identity.Tokens.Jwt;
 
+/// <summary>
+/// Provides functionality for reading and validating JWT tokens
+/// </summary>
 public static class JwtReader
 {
+    /// <summary>
+    /// Reads and validates a JWT token
+    /// </summary>
+    /// <param name="raw">The raw JWT token string</param>
+    /// <param name="opts">The token validation parameters</param>
+    /// <param name="now">The current time for validation</param>
+    /// <returns>The result containing either the token or an exception</returns>
     public static IStatusResult<JwtReadStatus, OneOf<JwtSecurityToken, Exception>> Read(
         string raw,
         TokenValidationParameters opts,
@@ -47,6 +57,14 @@ public static class JwtReader
         }
     }
 
+    /// <summary>
+    /// Creates token validation parameters for JWT validation
+    /// </summary>
+    /// <param name="securityKey">The security key for validation</param>
+    /// <param name="issuer">The expected issuer</param>
+    /// <param name="audience">The expected audience</param>
+    /// <param name="expirationWindow">The clock skew tolerance</param>
+    /// <returns>The configured validation parameters</returns>
     public static TokenValidationParameters GetValidationParameters(
         SecurityKey securityKey,
         string issuer,
@@ -88,6 +106,11 @@ public static class JwtReader
         return validationParameters;
     }
 
+    /// <summary>
+    /// Handles JWT validation failures by mapping exceptions to status codes and error messages
+    /// </summary>
+    /// <param name="exception">The exception that occurred during validation</param>
+    /// <returns>A tuple containing the status code and error message</returns>
     private static ValueTuple<JwtReadStatus, string> HandleValidationFailure(Exception exception)
     {
         return exception switch
@@ -107,6 +130,12 @@ public static class JwtReader
         };
     }
 
+    /// <summary>
+    /// Creates a failure result with the specified status and error message
+    /// </summary>
+    /// <param name="status">The JWT read status indicating the type of failure</param>
+    /// <param name="error">The error message describing the failure</param>
+    /// <returns>A status result indicating failure with an exception</returns>
     private static IStatusResult<JwtReadStatus, OneOf<JwtSecurityToken, Exception>> Fail(
         JwtReadStatus status,
         string error
@@ -117,6 +146,13 @@ public static class JwtReader
             .Error(error);
     }
 
+    /// <summary>
+    /// Creates a failure result with the specified status, exception, and error message
+    /// </summary>
+    /// <param name="status">The JWT read status indicating the type of failure</param>
+    /// <param name="exception">The exception that caused the failure</param>
+    /// <param name="error">The error message describing the failure</param>
+    /// <returns>A status result indicating failure with the provided exception</returns>
     private static IStatusResult<JwtReadStatus, OneOf<JwtSecurityToken, Exception>> Fail(
         JwtReadStatus status,
         Exception exception,

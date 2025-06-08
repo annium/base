@@ -7,8 +7,19 @@ using NodaTime;
 
 namespace Annium.Identity.Tokens.Jwt.Tests;
 
+/// <summary>
+/// Base class providing common test functionality for JWT reader and writer operations.
+/// Contains shared test logic for validating JWT token creation, encoding, and validation.
+/// </summary>
 public class JwtReaderWriterTestsBase
 {
+    /// <summary>
+    /// Base test method that validates JWT token creation and reading with specified cryptographic keys.
+    /// Tests the complete round-trip of token creation, encoding, and validation.
+    /// </summary>
+    /// <param name="privateKey">The private key used for token signing</param>
+    /// <param name="publicKey">The public key used for token validation</param>
+    /// <param name="signatureAlgorithm">The cryptographic algorithm for signing</param>
     protected void Works_Base(SecurityKey privateKey, SecurityKey publicKey, string signatureAlgorithm)
     {
         // arrange

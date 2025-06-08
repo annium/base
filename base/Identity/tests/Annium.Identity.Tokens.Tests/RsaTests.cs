@@ -6,8 +6,16 @@ using Xunit;
 
 namespace Annium.Identity.Tokens.Tests;
 
+/// <summary>
+/// Tests for RSA cryptographic key import and validation functionality.
+/// Validates the import and properties of both private and public RSA keys from PEM format.
+/// </summary>
 public class RsaTests
 {
+    /// <summary>
+    /// Tests the import and validation of RSA private key from PEM format.
+    /// Verifies key properties including KeyId, PrivateKeyStatus, and KeySize.
+    /// </summary>
     [Fact]
     public void PrivateKey()
     {
@@ -24,6 +32,10 @@ public class RsaTests
         key.KeySize.Is(2048);
     }
 
+    /// <summary>
+    /// Tests the import and validation of RSA public key from PEM format.
+    /// Verifies key properties including KeyId, PrivateKeyStatus, and KeySize.
+    /// </summary>
     [Fact]
     public void PublicKey()
     {
