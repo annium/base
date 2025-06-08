@@ -6,8 +6,18 @@ using Annium.Logging.Shared.Internal;
 // ReSharper disable once CheckNamespace
 namespace Annium.Core.DependencyInjection;
 
+/// <summary>
+/// Extensions for IServiceProvider to configure logging routes
+/// </summary>
 public static class ServiceProviderExtensions
 {
+    /// <summary>
+    /// Configures logging for a specific context type with route configuration
+    /// </summary>
+    /// <typeparam name="TContext">The type of log context</typeparam>
+    /// <param name="provider">The service provider</param>
+    /// <param name="configure">Action to configure the log route</param>
+    /// <returns>The service provider for chaining</returns>
     public static IServiceProvider UseLogging<TContext>(
         this IServiceProvider provider,
         Action<LogRoute<TContext>> configure
@@ -20,6 +30,12 @@ public static class ServiceProviderExtensions
         return provider.UseLoggingBase(routes);
     }
 
+    /// <summary>
+    /// Configures logging using the default log context with route configuration
+    /// </summary>
+    /// <param name="provider">The service provider</param>
+    /// <param name="configure">Action to configure the log route</param>
+    /// <returns>The service provider for chaining</returns>
     public static IServiceProvider UseLogging(
         this IServiceProvider provider,
         Action<LogRoute<DefaultLogContext>> configure
@@ -31,6 +47,13 @@ public static class ServiceProviderExtensions
         return provider.UseLoggingBase(routes);
     }
 
+    /// <summary>
+    /// Configures logging for a specific context type with route and service provider access
+    /// </summary>
+    /// <typeparam name="TContext">The type of log context</typeparam>
+    /// <param name="provider">The service provider</param>
+    /// <param name="configure">Action to configure the log route with service provider access</param>
+    /// <returns>The service provider for chaining</returns>
     public static IServiceProvider UseLogging<TContext>(
         this IServiceProvider provider,
         Action<LogRoute<TContext>, IServiceProvider> configure
@@ -43,6 +66,12 @@ public static class ServiceProviderExtensions
         return provider.UseLoggingBase(routes);
     }
 
+    /// <summary>
+    /// Configures logging using the default log context with route and service provider access
+    /// </summary>
+    /// <param name="provider">The service provider</param>
+    /// <param name="configure">Action to configure the log route with service provider access</param>
+    /// <returns>The service provider for chaining</returns>
     public static IServiceProvider UseLogging(
         this IServiceProvider provider,
         Action<LogRoute<DefaultLogContext>, IServiceProvider> configure
@@ -54,6 +83,13 @@ public static class ServiceProviderExtensions
         return provider.UseLoggingBase(routes);
     }
 
+    /// <summary>
+    /// Internal method to configure logging base functionality with the provided routes
+    /// </summary>
+    /// <typeparam name="TContext">The type of log context</typeparam>
+    /// <param name="provider">The service provider</param>
+    /// <param name="routes">The list of configured routes</param>
+    /// <returns>The service provider for chaining</returns>
     private static IServiceProvider UseLoggingBase<TContext>(
         this IServiceProvider provider,
         List<LogRoute<TContext>> routes

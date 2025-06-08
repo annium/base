@@ -6,13 +6,22 @@ using Xunit;
 
 namespace Annium.Logging.Shared.Tests;
 
+/// <summary>
+/// Base tests for logging functionality
+/// </summary>
 public class BaseLoggerTest : TestBase
 {
+    /// <summary>
+    /// Collection of captured log messages for testing
+    /// </summary>
     private readonly IList<LogMessage<Context>> _messages = new List<LogMessage<Context>>();
 
     public BaseLoggerTest(ITestOutputHelper outputHelper)
         : base(outputHelper) { }
 
+    /// <summary>
+    /// Tests that valid log level entries are written
+    /// </summary>
     [Fact]
     public void Log_ValidLevel_WritesLogEntry()
     {
@@ -33,6 +42,9 @@ public class BaseLoggerTest : TestBase
         _messages.At(0).Message.Is("sample");
     }
 
+    /// <summary>
+    /// Tests that invalid log level entries are omitted
+    /// </summary>
     [Fact]
     public void Log_InvalidLevel_OmitsLogEntry()
     {
@@ -47,6 +59,9 @@ public class BaseLoggerTest : TestBase
         _messages.IsEmpty();
     }
 
+    /// <summary>
+    /// Tests that trace level log entries are written
+    /// </summary>
     [Fact]
     public void LogTrace_WritesTraceLogEntry()
     {
@@ -61,6 +76,9 @@ public class BaseLoggerTest : TestBase
         _messages.At(0).Level.Is(LogLevel.Info);
     }
 
+    /// <summary>
+    /// Tests that debug level log entries are written
+    /// </summary>
     [Fact]
     public void LogDebug_WritesDebugLogEntry()
     {
@@ -75,6 +93,9 @@ public class BaseLoggerTest : TestBase
         _messages.At(0).Level.Is(LogLevel.Warn);
     }
 
+    /// <summary>
+    /// Tests that info level log entries are written
+    /// </summary>
     [Fact]
     public void LogInfo_WritesInfoLogEntry()
     {
@@ -89,6 +110,9 @@ public class BaseLoggerTest : TestBase
         _messages.At(0).Level.Is(LogLevel.Info);
     }
 
+    /// <summary>
+    /// Tests that warn level log entries are written
+    /// </summary>
     [Fact]
     public void LogWarn_WritesWarnLogEntry()
     {
@@ -103,6 +127,9 @@ public class BaseLoggerTest : TestBase
         _messages.At(0).Level.Is(LogLevel.Warn);
     }
 
+    /// <summary>
+    /// Tests that error level log entries with exceptions are written
+    /// </summary>
     [Fact]
     public void LogErrorException_WritesErrorExceptionLogEntry()
     {
@@ -120,6 +147,9 @@ public class BaseLoggerTest : TestBase
         _messages.At(0).Exception.Is(exception);
     }
 
+    /// <summary>
+    /// Tests that error level log entries with messages are written
+    /// </summary>
     [Fact]
     public void LogErrorMessage_WritesErrorMessageLogEntry()
     {
@@ -135,6 +165,11 @@ public class BaseLoggerTest : TestBase
         _messages.At(0).Message.Is("sample");
     }
 
+    /// <summary>
+    /// Creates a configured service provider for testing
+    /// </summary>
+    /// <param name="minLogLevel">The minimum log level to capture</param>
+    /// <returns>A configured service provider</returns>
     private IServiceProvider GetProvider(LogLevel minLogLevel = LogLevel.Trace)
     {
         var container = new ServiceContainer();
@@ -152,8 +187,14 @@ public class BaseLoggerTest : TestBase
         return provider;
     }
 
+    /// <summary>
+    /// Test log handler that captures messages for verification
+    /// </summary>
     private class LogHandler : ILogHandler<Context>
     {
+        /// <summary>
+        /// Gets the collection of captured log messages
+        /// </summary>
         public IList<LogMessage<Context>> Messages { get; }
 
         public LogHandler(IList<LogMessage<Context>> messages)
@@ -161,17 +202,32 @@ public class BaseLoggerTest : TestBase
             Messages = messages;
         }
 
+        /// <summary>
+        /// Handles a log message by adding it to the messages collection
+        /// </summary>
+        /// <param name="message">The log message to handle</param>
         public void Handle(LogMessage<Context> message)
         {
             Messages.Add(message);
         }
     }
 
+    /// <summary>
+    /// Test context class for logging tests
+    /// </summary>
     private class Context;
 }
 
+/// <summary>
+/// Extensions for service provider to get test subjects
+/// </summary>
 file static class ServiceProviderExtensions
 {
+    /// <summary>
+    /// Gets a test log subject from the service provider
+    /// </summary>
+    /// <param name="sp">The service provider</param>
+    /// <returns>A log subject for testing</returns>
     public static ILogSubject GetSubject(this IServiceProvider sp)
     {
         return sp.Resolve<ILogBridgeFactory>().Get("test");

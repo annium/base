@@ -6,19 +6,39 @@ using Annium.Logging.Shared.Internal;
 // ReSharper disable once CheckNamespace
 namespace Annium.Core.DependencyInjection;
 
+/// <summary>
+/// Extensions for IServiceContainer to register logging services
+/// </summary>
 public static class ServiceContainerExtensions
 {
+    /// <summary>
+    /// Adds logging services for a specific context type
+    /// </summary>
+    /// <typeparam name="TContext">The type of log context</typeparam>
+    /// <param name="container">The service container</param>
+    /// <returns>The service container for chaining</returns>
     public static IServiceContainer AddLogging<TContext>(this IServiceContainer container)
         where TContext : class
     {
         return container.AddLoggingBase<TContext>();
     }
 
+    /// <summary>
+    /// Adds logging services using the default log context
+    /// </summary>
+    /// <param name="container">The service container</param>
+    /// <returns>The service container for chaining</returns>
     public static IServiceContainer AddLogging(this IServiceContainer container)
     {
         return container.AddLoggingBase<DefaultLogContext>();
     }
 
+    /// <summary>
+    /// Internal method to add base logging services for a context type
+    /// </summary>
+    /// <typeparam name="TContext">The type of log context</typeparam>
+    /// <param name="container">The service container</param>
+    /// <returns>The service container for chaining</returns>
     private static IServiceContainer AddLoggingBase<TContext>(this IServiceContainer container)
         where TContext : class
     {
