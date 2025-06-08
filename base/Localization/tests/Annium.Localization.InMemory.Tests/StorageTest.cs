@@ -7,8 +7,16 @@ using Xunit;
 
 namespace Annium.Localization.InMemory.Tests;
 
+/// <summary>
+/// Tests for in-memory localization storage functionality.
+/// Validates locale loading and translation retrieval from memory-based storage.
+/// </summary>
 public class StorageTest
 {
+    /// <summary>
+    /// Tests basic localization functionality with in-memory storage.
+    /// Verifies that localizer correctly retrieves translations from memory-based locale storage.
+    /// </summary>
     [Fact]
     public void Localization_Works()
     {
@@ -26,6 +34,10 @@ public class StorageTest
         ru.Is("демо");
     }
 
+    /// <summary>
+    /// Creates a localizer instance with in-memory storage for testing.
+    /// </summary>
+    /// <returns>A configured localizer instance with in-memory storage</returns>
     private ILocalizer<StorageTest> GetLocalizer()
     {
         var container = new ServiceContainer();
