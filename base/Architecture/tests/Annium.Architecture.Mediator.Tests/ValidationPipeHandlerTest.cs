@@ -8,11 +8,18 @@ using Xunit;
 
 namespace Annium.Architecture.Mediator.Tests;
 
+/// <summary>
+/// Tests for the validation pipe handler functionality.
+/// </summary>
 public class ValidationPipeHandlerTest : TestBase
 {
     public ValidationPipeHandlerTest(ITestOutputHelper outputHelper)
         : base(outputHelper) { }
 
+    /// <summary>
+    /// Tests that validation failure returns a BadRequest status.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Fact]
     public async Task ValidationFailure_ReturnsBadRequest()
     {
@@ -34,6 +41,10 @@ public class ValidationPipeHandlerTest : TestBase
         result.LabeledErrors.At(nameof(LoginRequest.Password)).Has(1);
     }
 
+    /// <summary>
+    /// Tests that validation success returns the original result.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Fact]
     public async Task ValidationSuccess_ReturnsOriginalResult()
     {
@@ -53,23 +64,52 @@ public class ValidationPipeHandlerTest : TestBase
         result.IsOk.IsTrue();
     }
 
+    /// <summary>
+    /// Test request class for validation testing.
+    /// </summary>
     private class LoginRequest : IUserName, IPassword, IThrowing
     {
+        /// <summary>
+        /// Gets or sets the username.
+        /// </summary>
         public string UserName { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Gets or sets the password.
+        /// </summary>
         public string Password { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Gets a value indicating whether the handler should throw an exception.
+        /// </summary>
         public bool Throw => false;
     }
 
+    /// <summary>
+    /// Interface for objects that have a username.
+    /// </summary>
     private interface IUserName
     {
+        /// <summary>
+        /// Gets the username.
+        /// </summary>
         string UserName { get; }
     }
 
+    /// <summary>
+    /// Interface for objects that have a password.
+    /// </summary>
     private interface IPassword
     {
+        /// <summary>
+        /// Gets the password.
+        /// </summary>
         string Password { get; }
     }
 
+    /// <summary>
+    /// Validator for username fields.
+    /// </summary>
     // ReSharper disable once UnusedType.Local
     private class UserNameValidator : Validator<IUserName>
     {
@@ -79,6 +119,9 @@ public class ValidationPipeHandlerTest : TestBase
         }
     }
 
+    /// <summary>
+    /// Validator for password fields.
+    /// </summary>
     // ReSharper disable once UnusedType.Local
     private class PasswordValidator : Validator<IPassword>
     {
