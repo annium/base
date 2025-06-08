@@ -7,8 +7,16 @@ using Annium.Data.Operations.Serialization.Json.Internal;
 // ReSharper disable once CheckNamespace
 namespace Annium.Core.DependencyInjection;
 
+/// <summary>
+/// Extensions for configuring JsonSerializerOptions to work with Data.Operations types
+/// </summary>
 public static class JsonSerializerOptionsExtensions
 {
+    /// <summary>
+    /// Configures JsonSerializerOptions for serializing Data.Operations types
+    /// </summary>
+    /// <param name="options">The options to configure</param>
+    /// <returns>The configured options</returns>
     public static JsonSerializerOptions ConfigureForOperations(this JsonSerializerOptions options)
     {
         options.Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
@@ -20,6 +28,10 @@ public static class JsonSerializerOptionsExtensions
         return options;
     }
 
+    /// <summary>
+    /// Adds default converters for Data.Operations types to the converter list.
+    /// </summary>
+    /// <param name="converters">The converter list to add to.</param>
     private static void AddDefaultConverters(IList<JsonConverter> converters)
     {
         converters.Insert(0, new BooleanDataResultConverterFactory());

@@ -7,6 +7,9 @@ using Xunit;
 
 namespace Annium.Data.Tables.Tests;
 
+/// <summary>
+/// Tests for basic table functionality including subscription and initialization.
+/// </summary>
 public class TableTests : TestBase
 {
     public TableTests(ITestOutputHelper outputHelper)
@@ -15,6 +18,10 @@ public class TableTests : TestBase
         Register(x => x.AddTables());
     }
 
+    /// <summary>
+    /// Tests that table subscription and initialization work correctly with proper event emission.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Fact]
     public async Task Works()
     {
@@ -46,14 +53,30 @@ public class TableTests : TestBase
     }
 }
 
+/// <summary>
+/// Test record representing a sample with a key and alive status, implementing ICopyable for table operations.
+/// </summary>
+/// <param name="Key">The unique identifier for the sample.</param>
+/// <param name="IsAlive">The alive status of the sample.</param>
 file record Sample(int Key, bool IsAlive) : ICopyable<Sample>
 {
+    /// <summary>
+    /// Gets the alive status of the sample.
+    /// </summary>
     public bool IsAlive { get; private set; } = IsAlive;
 
+    /// <summary>
+    /// Updates the alive status of the sample.
+    /// </summary>
+    /// <param name="isAlive">The new alive status value.</param>
     public void Update(bool isAlive)
     {
         IsAlive = isAlive;
     }
 
+    /// <summary>
+    /// Creates a copy of the current sample.
+    /// </summary>
+    /// <returns>A new Sample instance that is a copy of the current instance.</returns>
     public Sample Copy() => this with { };
 }

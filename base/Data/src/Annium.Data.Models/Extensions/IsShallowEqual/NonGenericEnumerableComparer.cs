@@ -8,8 +8,17 @@ using Annium.Core.Mapper;
 // ReSharper disable once CheckNamespace
 namespace Annium.Data.Models.Extensions;
 
+/// <summary>
+/// Extension methods for shallow equality comparison - non-generic enumerable support.
+/// </summary>
 public static partial class IsShallowEqualExtensions
 {
+    /// <summary>
+    /// Builds a comparer expression for non-generic enumerable types.
+    /// </summary>
+    /// <param name="type">The enumerable type to build the comparer for.</param>
+    /// <param name="mapper">The mapper to use for type conversions.</param>
+    /// <returns>A lambda expression that compares enumerable collections element by element.</returns>
     private static LambdaExpression BuildNonGenericEnumerableComparer(Type type, IMapper mapper)
     {
         var a = Expression.Parameter(type);

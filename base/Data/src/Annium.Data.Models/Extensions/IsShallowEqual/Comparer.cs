@@ -8,8 +8,17 @@ using Annium.Core.Mapper;
 // ReSharper disable once CheckNamespace
 namespace Annium.Data.Models.Extensions;
 
+/// <summary>
+/// Extension methods for shallow equality comparison
+/// </summary>
 public static partial class IsShallowEqualExtensions
 {
+    /// <summary>
+    /// Builds a comparer expression for the specified type.
+    /// </summary>
+    /// <param name="type">The type to build a comparer for.</param>
+    /// <param name="mapper">The mapper to use for type conversions.</param>
+    /// <returns>A lambda expression that can compare two instances of the specified type.</returns>
     private static LambdaExpression BuildComparer(Type type, IMapper mapper)
     {
         // if Equality operator is overriden - return it's call
@@ -33,6 +42,13 @@ public static partial class IsShallowEqualExtensions
         return BuildPropertyFieldComparer(type, mapper);
     }
 
+    /// <summary>
+    /// Adds reference equality checks to the comparer expression.
+    /// </summary>
+    /// <param name="a">The first parameter expression.</param>
+    /// <param name="b">The second parameter expression.</param>
+    /// <param name="returnTarget">The return target for early exit.</param>
+    /// <returns>Expressions that perform reference equality checks.</returns>
     private static IEnumerable<Expression> AddReferenceEqualityChecks(
         ParameterExpression a,
         ParameterExpression b,

@@ -6,8 +6,14 @@ using Xunit;
 
 namespace Annium.Data.Models.Tests.Extensions;
 
+/// <summary>
+/// Tests for the IsShallowEqual extension method functionality.
+/// </summary>
 public class IsShallowEqualExtensionTest
 {
+    /// <summary>
+    /// Tests that shallow equality works correctly for complex objects with nested properties.
+    /// </summary>
     [Fact]
     public void IsShallowEqual_Complex_Works()
     {
@@ -66,6 +72,9 @@ public class IsShallowEqualExtensionTest
         demo1.IsShallowEqual(demo2).IsTrue();
     }
 
+    /// <summary>
+    /// Tests that shallow equality works correctly for objects with properties.
+    /// </summary>
     [Fact]
     public void IsShallowEqual_Property_Works()
     {
@@ -84,6 +93,9 @@ public class IsShallowEqualExtensionTest
         a.IsShallowEqual(e).IsTrue();
     }
 
+    /// <summary>
+    /// Tests that shallow equality works correctly for arrays.
+    /// </summary>
     [Fact]
     public void IsShallowEqual_Array_Works()
     {
@@ -111,6 +123,9 @@ public class IsShallowEqualExtensionTest
         a.IsShallowEqual(e).IsTrue();
     }
 
+    /// <summary>
+    /// Tests that shallow equality works correctly for lists.
+    /// </summary>
     [Fact]
     public void IsShallowEqual_List_Works()
     {
@@ -138,6 +153,9 @@ public class IsShallowEqualExtensionTest
         a.IsShallowEqual(e).IsTrue();
     }
 
+    /// <summary>
+    /// Tests that shallow equality works correctly for IDictionary instances.
+    /// </summary>
     [Fact]
     public void IsShallowEqual_IDictionary_Works()
     {
@@ -174,6 +192,9 @@ public class IsShallowEqualExtensionTest
         a.IsShallowEqual(e).IsTrue();
     }
 
+    /// <summary>
+    /// Tests that shallow equality works correctly for IReadOnlyDictionary instances.
+    /// </summary>
     [Fact]
     public void IsShallowEqual_IReadOnlyDictionary_Works()
     {
@@ -210,6 +231,9 @@ public class IsShallowEqualExtensionTest
         a.IsShallowEqual(e).IsTrue();
     }
 
+    /// <summary>
+    /// Tests that shallow equality works correctly for objects with recursive references.
+    /// </summary>
     [Fact]
     public void IsShallowEqual_Recursive_Works()
     {
@@ -221,6 +245,9 @@ public class IsShallowEqualExtensionTest
         a.IsShallowEqual(b).IsTrue();
     }
 
+    /// <summary>
+    /// Tests that shallow equality works correctly when comparing with null values.
+    /// </summary>
     [Fact]
     public void IsShallowEqual_ToNull_Works()
     {
@@ -233,6 +260,9 @@ public class IsShallowEqualExtensionTest
         b.IsShallowEqual(a).IsFalse();
     }
 
+    /// <summary>
+    /// Tests that shallow equality works correctly when comparing with anonymous objects.
+    /// </summary>
     [Fact]
     // TODO: fix, not valid
     public void IsShallowEqual_ToAnonymousObject_Works()
@@ -263,35 +293,94 @@ public class IsShallowEqualExtensionTest
     }
 }
 
+/// <summary>
+/// Test class representing a complex demo object with various property types.
+/// </summary>
 internal class Demo
 {
+    /// <summary>
+    /// Gets or sets a nullable boolean value.
+    /// </summary>
     public bool? Nullable { get; set; }
 
+    /// <summary>
+    /// Gets or sets a collection of URI objects.
+    /// </summary>
     public IEnumerable<Uri> Uris { get; set; } = Array.Empty<Uri>();
+
+    /// <summary>
+    /// Gets or sets a list of sample objects.
+    /// </summary>
     public List<Sample> Samples { get; set; } = new();
 
+    /// <summary>
+    /// Gets or sets a hash set of point objects.
+    /// </summary>
     public HashSet<Point> Points { get; set; } = new();
+
+    /// <summary>
+    /// Gets or sets a dictionary mapping points to samples.
+    /// </summary>
     public IDictionary<Point, Sample> Dictionary { get; set; } = new Dictionary<Point, Sample>();
+
+    /// <summary>
+    /// Gets or sets a read-only dictionary mapping points to samples.
+    /// </summary>
     public IReadOnlyDictionary<Point, Sample> ReadOnlyDictionary { get; set; } = new Dictionary<Point, Sample>();
 }
 
+/// <summary>
+/// Test class representing a large object with collections.
+/// </summary>
 internal class Big
 {
+    /// <summary>
+    /// Gets or sets a collection of sample objects.
+    /// </summary>
     public IEnumerable<Sample> Samples { get; set; } = Array.Empty<Sample>();
+
+    /// <summary>
+    /// Gets or sets a dictionary mapping strings to key objects.
+    /// </summary>
     public Dictionary<string, Key> Keys { get; set; } = new();
 }
 
+/// <summary>
+/// Test struct representing a sample with date and point data.
+/// </summary>
 internal struct Sample
 {
+    /// <summary>
+    /// Gets or sets the date and time value.
+    /// </summary>
     public DateTimeOffset Date { get; set; }
+
+    /// <summary>
+    /// Gets or sets the point coordinates.
+    /// </summary>
     public Point Point { get; set; }
 }
 
+/// <summary>
+/// Test class representing a key with X and Y coordinates.
+/// </summary>
 internal class Key
 {
+    /// <summary>
+    /// Gets the X coordinate value.
+    /// </summary>
     public int X { get; }
+
+    /// <summary>
+    /// Gets the Y coordinate value.
+    /// </summary>
     public int Y { get; }
 
+    /// <summary>
+    /// Initializes a new instance of the Key class.
+    /// </summary>
+    /// <param name="x">The X coordinate value.</param>
+    /// <param name="y">The Y coordinate value.</param>
     public Key(int x, int y)
     {
         X = x;

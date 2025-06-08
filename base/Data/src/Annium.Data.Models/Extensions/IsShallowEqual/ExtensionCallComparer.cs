@@ -6,8 +6,17 @@ using Annium.Core.Mapper;
 // ReSharper disable once CheckNamespace
 namespace Annium.Data.Models.Extensions;
 
+/// <summary>
+/// Extension methods for shallow equality comparison - recursive call support.
+/// </summary>
 public static partial class IsShallowEqualExtensions
 {
+    /// <summary>
+    /// Builds a comparer expression that makes a recursive call to the extension method.
+    /// </summary>
+    /// <param name="type">The type to build the comparer for.</param>
+    /// <param name="mapper">The mapper to use for type conversions.</param>
+    /// <returns>A lambda expression that calls the extension method recursively.</returns>
     private static LambdaExpression BuildExtensionCallComparer(Type type, IMapper mapper)
     {
         var a = Expression.Parameter(type);
