@@ -7,14 +7,26 @@ using Xunit;
 
 namespace Annium.Extensions.Reactive.Tests.Operators;
 
+/// <summary>
+/// Tests for the SelectParallelAsync operator in reactive extensions.
+/// </summary>
 public class SelectParallelAsyncTest : TestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SelectParallelAsyncTest"/> class.
+    /// </summary>
+    /// <param name="outputHelper">The test output helper for logging test results.</param>
     public SelectParallelAsyncTest(ITestOutputHelper outputHelper)
         : base(outputHelper)
     {
         RegisterTestLogs();
     }
 
+    /// <summary>
+    /// Tests that the SelectParallelAsync operator transforms elements in parallel,
+    /// allowing concurrent execution of async transformations.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Fact]
     public async Task SelectParallelAsync_WorksCorrectly()
     {

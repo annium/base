@@ -7,10 +7,21 @@ using NodaTime;
 
 namespace Annium.Extensions.Jobs.Internal;
 
+/// <summary>
+/// Parses cron expressions into delay calculation functions using expression trees for optimal performance
+/// </summary>
 internal class IntervalParser : IIntervalParser
 {
+    /// <summary>
+    /// Wildcard character representing "every" in cron expressions
+    /// </summary>
     private const string EveryMoment = "*";
 
+    /// <summary>
+    /// Creates a function that calculates the delay until the next scheduled execution based on a cron expression
+    /// </summary>
+    /// <param name="interval">The cron expression with 5 parts: second minute hour day day-of-week</param>
+    /// <returns>A compiled function that calculates delay from current time to next execution</returns>
     public Func<LocalDateTime, Duration> GetDelayResolver(string interval)
     {
         if (interval == Interval.Secondly)
@@ -117,6 +128,19 @@ internal class IntervalParser : IIntervalParser
         return resolver;
     }
 
+    /// <summary>
+    /// Handles repeatable time parts (seconds, minutes, hours, days) that can use modulo operations
+    /// </summary>
+    /// <param name="source">Expression representing the current time part value</param>
+    /// <param name="from">Function to create Duration from the time part</param>
+    /// <param name="name">Name of the time part for error messages</param>
+    /// <param name="interval">The cron expression part for this time unit</param>
+    /// <param name="min">Minimum valid value for this time part</param>
+    /// <param name="max">Maximum valid value for this time part</param>
+    /// <param name="size">Total size of the time part range</param>
+    /// <param name="add">Action to add expressions to the calculation</param>
+    /// <param name="sum">Expression accumulating the total delay</param>
+    /// <param name="align">Optional expression for time alignment</param>
     private void HandleRepeatablePartExpression(
         Expression source,
         Func<Expression, Expression> from,
@@ -149,6 +173,19 @@ internal class IntervalParser : IIntervalParser
         throw new InvalidOperationException($"Can't handle scheduler interval part '{interval}'");
     }
 
+    /// <summary>
+    /// Handles exact time parts (like day of week) that don't support modulo operations
+    /// </summary>
+    /// <param name="property">Expression representing the current time part value</param>
+    /// <param name="from">Function to create Duration from the time part</param>
+    /// <param name="name">Name of the time part for error messages</param>
+    /// <param name="interval">The cron expression part for this time unit</param>
+    /// <param name="min">Minimum valid value for this time part</param>
+    /// <param name="max">Maximum valid value for this time part</param>
+    /// <param name="size">Total size of the time part range</param>
+    /// <param name="add">Action to add expressions to the calculation</param>
+    /// <param name="sum">Expression accumulating the total delay</param>
+    /// <param name="align">Optional expression for time alignment</param>
     private void HandleExactPartExpression(
         Expression property,
         Func<Expression, Expression> from,
@@ -177,6 +214,20 @@ internal class IntervalParser : IIntervalParser
         throw new InvalidOperationException($"Can't handle scheduler interval part '{interval}'");
     }
 
+    /// <summary>
+    /// Attempts to parse the interval as a modulo expression (e.g., "*/5" for every 5 units)
+    /// </summary>
+    /// <param name="source">Expression representing the current time part value</param>
+    /// <param name="from">Function to create Duration from the time part</param>
+    /// <param name="name">Name of the time part for error messages</param>
+    /// <param name="interval">The cron expression part to parse</param>
+    /// <param name="min">Minimum valid value for this time part</param>
+    /// <param name="max">Maximum valid value for this time part</param>
+    /// <param name="size">Total size of the time part range</param>
+    /// <param name="add">Action to add expressions to the calculation</param>
+    /// <param name="sum">Expression accumulating the total delay</param>
+    /// <param name="align">Optional expression for time alignment</param>
+    /// <returns>True if successfully parsed as modulo expression</returns>
     private bool TryAsModulo(
         Expression source,
         Func<Expression, Expression> from,
@@ -231,6 +282,20 @@ internal class IntervalParser : IIntervalParser
         return true;
     }
 
+    /// <summary>
+    /// Attempts to parse the interval as a constant value (e.g., "5" for exactly at 5)
+    /// </summary>
+    /// <param name="source">Expression representing the current time part value</param>
+    /// <param name="from">Function to create Duration from the time part</param>
+    /// <param name="name">Name of the time part for error messages</param>
+    /// <param name="interval">The cron expression part to parse</param>
+    /// <param name="min">Minimum valid value for this time part</param>
+    /// <param name="max">Maximum valid value for this time part</param>
+    /// <param name="size">Total size of the time part range</param>
+    /// <param name="add">Action to add expressions to the calculation</param>
+    /// <param name="sum">Expression accumulating the total delay</param>
+    /// <param name="align">Optional expression for time alignment</param>
+    /// <returns>True if successfully parsed as constant value</returns>
     private bool TryAsConst(
         Expression source,
         Func<Expression, Expression> from,
@@ -271,6 +336,20 @@ internal class IntervalParser : IIntervalParser
         return true;
     }
 
+    /// <summary>
+    /// Attempts to parse the interval as a comma-separated list of values (e.g., "1,3,5")
+    /// </summary>
+    /// <param name="source">Expression representing the current time part value</param>
+    /// <param name="from">Function to create Duration from the time part</param>
+    /// <param name="name">Name of the time part for error messages</param>
+    /// <param name="interval">The cron expression part to parse</param>
+    /// <param name="min">Minimum valid value for this time part</param>
+    /// <param name="max">Maximum valid value for this time part</param>
+    /// <param name="size">Total size of the time part range</param>
+    /// <param name="add">Action to add expressions to the calculation</param>
+    /// <param name="sum">Expression accumulating the total delay</param>
+    /// <param name="align">Optional expression for time alignment</param>
+    /// <returns>True if successfully parsed as list of values</returns>
     private bool TryAsList(
         Expression source,
         Func<Expression, Expression> from,
@@ -324,12 +403,28 @@ internal class IntervalParser : IIntervalParser
         return true;
     }
 
+    /// <summary>
+    /// Creates a property access expression for LocalDateTime properties
+    /// </summary>
+    /// <param name="ex">The parameter expression representing the LocalDateTime instance</param>
+    /// <param name="name">The property name to access</param>
+    /// <returns>A member expression for the property access</returns>
     private static MemberExpression Property(ParameterExpression ex, string name) =>
         Expression.Property(ex, typeof(LocalDateTime).GetProperty(name)!);
 
+    /// <summary>
+    /// Creates a function that generates Duration creation expressions from integer values
+    /// </summary>
+    /// <param name="name">The Duration factory method name (e.g., "FromSeconds")</param>
+    /// <returns>A function that creates Duration expressions from integer expressions</returns>
     private static Func<Expression, Expression> FromInt(string name) =>
         ex => Expression.Call(null, typeof(Duration).GetMethod(name, new[] { typeof(int) })!, ex);
 
+    /// <summary>
+    /// Creates a function that generates Duration creation expressions from long values
+    /// </summary>
+    /// <param name="name">The Duration factory method name (e.g., "FromSeconds")</param>
+    /// <returns>A function that creates Duration expressions from long expressions</returns>
     private static Func<Expression, Expression> FromLong(string name) =>
         ex =>
             Expression.Call(
@@ -338,6 +433,12 @@ internal class IntervalParser : IIntervalParser
                 Expression.Convert(ex, typeof(long))
             );
 
+    /// <summary>
+    /// Creates an expression that rounds up time to the next boundary (minute, hour, day)
+    /// </summary>
+    /// <param name="ex">The parameter expression representing the LocalDateTime instance</param>
+    /// <param name="name">The ceiling method name (e.g., "CeilToMinute")</param>
+    /// <returns>An assignment expression that updates the parameter with the ceiling value</returns>
     private static Expression Ceil(ParameterExpression ex, string name) =>
         Expression.Assign(
             ex,

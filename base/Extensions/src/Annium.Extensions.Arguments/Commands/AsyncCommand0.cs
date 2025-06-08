@@ -6,10 +6,26 @@ using Annium.Extensions.Arguments.Internal;
 // ReSharper disable once CheckNamespace
 namespace Annium.Extensions.Arguments;
 
+/// <summary>
+/// Base class for asynchronous commands without configuration
+/// </summary>
 public abstract class AsyncCommand : CommandBase
 {
+    /// <summary>
+    /// Handles the command execution
+    /// </summary>
+    /// <param name="ct">The cancellation token</param>
+    /// <returns>A task representing the asynchronous operation</returns>
     public abstract Task HandleAsync(CancellationToken ct);
 
+    /// <summary>
+    /// Processes the command arguments and executes the command
+    /// </summary>
+    /// <param name="id">The command identifier</param>
+    /// <param name="description">The command description</param>
+    /// <param name="args">The command line arguments</param>
+    /// <param name="ct">The cancellation token</param>
+    /// <returns>A task representing the asynchronous operation</returns>
     public override async Task ProcessAsync(string id, string description, string[] args, CancellationToken ct)
     {
         if (Root.ConfigurationBuilder.Build<HelpConfiguration>(args).Help)

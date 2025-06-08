@@ -7,8 +7,16 @@ using NodaTime;
 
 namespace Annium.Extensions.Jobs.Internal;
 
+/// <summary>
+/// Resolves cron expressions into compiled matching functions using expression trees for optimal performance
+/// </summary>
 internal class IntervalResolver : IIntervalResolver
 {
+    /// <summary>
+    /// Creates a compiled function that determines if a given instant matches the cron expression
+    /// </summary>
+    /// <param name="interval">The cron expression with 5 parts: minute hour day month dayOfWeek</param>
+    /// <returns>A compiled function that returns true if the instant matches the schedule</returns>
     public Func<Instant, bool> GetMatcher(string interval)
     {
         var intervals = interval.Split(' ').Select(e => e.Trim()).ToArray();
@@ -78,6 +86,15 @@ internal class IntervalResolver : IIntervalResolver
         return (Func<Instant, bool>)expression.Compile();
     }
 
+    /// <summary>
+    /// Creates an expression that matches a specific time part against the cron expression part
+    /// </summary>
+    /// <param name="name">The name of the time part for error messages</param>
+    /// <param name="part">The cron expression part to match against</param>
+    /// <param name="min">Minimum valid value for this time part</param>
+    /// <param name="max">Maximum valid value for this time part</param>
+    /// <param name="getPart">Expression that gets the current value of this time part</param>
+    /// <returns>An expression that evaluates to true if the time part matches, null if wildcard</returns>
     private Expression? GetPartExpression(string name, string part, uint min, uint max, Expression getPart)
     {
         // if any - return null
@@ -108,6 +125,12 @@ internal class IntervalResolver : IIntervalResolver
         throw new InvalidOperationException($"Can't handle scheduler interval part '{part}'");
     }
 
+    /// <summary>
+    /// Creates a property access expression for ZonedDateTime properties
+    /// </summary>
+    /// <param name="ex">The parameter expression representing the ZonedDateTime instance</param>
+    /// <param name="name">The property name to access</param>
+    /// <returns>A member expression for the property access</returns>
     private MemberExpression ZonedDateTimeProperty(ParameterExpression ex, string name) =>
         Expression.Property(ex, typeof(ZonedDateTime).GetProperty(name)!);
 }

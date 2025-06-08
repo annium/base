@@ -4,8 +4,15 @@ using Annium.Extensions.Arguments.Internal;
 // ReSharper disable once CheckNamespace
 namespace Annium.Core.DependencyInjection;
 
+/// <summary>
+/// Extension methods for configuring argument processing services
+/// </summary>
 public static class ServiceContainerExtensions
 {
+    /// <summary>
+    /// Adds argument processing services to the service container
+    /// </summary>
+    /// <param name="container">The service container</param>
     public static void AddArguments(this IServiceContainer container)
     {
         container.Add<IArgumentProcessor, ArgumentProcessor>().Singleton();

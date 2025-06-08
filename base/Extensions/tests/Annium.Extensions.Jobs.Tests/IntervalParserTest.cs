@@ -6,8 +6,14 @@ using Xunit;
 
 namespace Annium.Extensions.Jobs.Tests;
 
+/// <summary>
+/// Test class for interval parser functionality
+/// </summary>
 public class IntervalParserTest
 {
+    /// <summary>
+    /// Tests that the parser works with always-running intervals
+    /// </summary>
     [Fact]
     public void Always_Works()
     {
@@ -21,6 +27,9 @@ public class IntervalParserTest
         resolver(GetDate(1, 0, 0, 15)).Is(Zero);
     }
 
+    /// <summary>
+    /// Tests that the parser works with interval patterns
+    /// </summary>
     [Fact]
     public void Interval_Works()
     {
@@ -36,6 +45,9 @@ public class IntervalParserTest
         resolver(GetDate(1, 0, 0, 59)).Is(Sec(1));
     }
 
+    /// <summary>
+    /// Tests that the parser works with constant values
+    /// </summary>
     [Fact]
     public void Const_Works()
     {
@@ -52,6 +64,9 @@ public class IntervalParserTest
         resolver(GetDate(1, 0, 0, 59)).Is(Sec(28));
     }
 
+    /// <summary>
+    /// Tests that the parser works with list patterns
+    /// </summary>
     [Fact]
     public void List_Works()
     {
@@ -69,6 +84,9 @@ public class IntervalParserTest
         resolver(GetDate(1, 0, 0, 59)).Is(Sec(18));
     }
 
+    /// <summary>
+    /// Tests that the parser works with simple combination patterns
+    /// </summary>
     [Fact]
     public void ComboSimple_Works()
     {
@@ -84,6 +102,9 @@ public class IntervalParserTest
         resolver(GetDate(1, 0, 0, 59)).Is(Min(2) + Sec(11));
     }
 
+    /// <summary>
+    /// Tests that the parser works with full combination patterns
+    /// </summary>
     [Fact]
     public void ComboFull_Works()
     {
@@ -99,19 +120,54 @@ public class IntervalParserTest
         resolver(GetDate(3, 3, 20, 43)).Is(Day(6) + Hour(23) + Min(1) + Sec(7));
     }
 
+    /// <summary>
+    /// Gets a LocalDateTime for the specified date components
+    /// </summary>
+    /// <param name="day">The day of the month</param>
+    /// <param name="hour">The hour of the day</param>
+    /// <param name="minute">The minute of the hour</param>
+    /// <param name="second">The second of the minute</param>
+    /// <returns>A LocalDateTime representing the specified date and time</returns>
     private static LocalDateTime GetDate(int day, int hour, int minute, int second) =>
         new(2000, 1, day, hour, minute, second);
 
+    /// <summary>
+    /// Gets a zero duration
+    /// </summary>
     private static Duration Zero { get; } = Duration.Zero;
 
+    /// <summary>
+    /// Creates a duration representing the specified number of days
+    /// </summary>
+    /// <param name="x">The number of days</param>
+    /// <returns>A Duration representing the specified days</returns>
     private static Duration Day(int x) => Duration.FromDays(x);
 
+    /// <summary>
+    /// Creates a duration representing the specified number of hours
+    /// </summary>
+    /// <param name="x">The number of hours</param>
+    /// <returns>A Duration representing the specified hours</returns>
     private static Duration Hour(int x) => Duration.FromHours(x);
 
+    /// <summary>
+    /// Creates a duration representing the specified number of minutes
+    /// </summary>
+    /// <param name="x">The number of minutes</param>
+    /// <returns>A Duration representing the specified minutes</returns>
     private static Duration Min(int x) => Duration.FromMinutes(x);
 
+    /// <summary>
+    /// Creates a duration representing the specified number of seconds
+    /// </summary>
+    /// <param name="x">The number of seconds</param>
+    /// <returns>A Duration representing the specified seconds</returns>
     private static Duration Sec(int x) => Duration.FromSeconds(x);
 
+    /// <summary>
+    /// Gets an interval parser instance for testing
+    /// </summary>
+    /// <returns>An IIntervalParser instance</returns>
     private static IIntervalParser GetParser() =>
         new ServiceContainer().AddScheduler().BuildServiceProvider().Resolve<IIntervalParser>();
 }

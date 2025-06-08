@@ -4,11 +4,23 @@ using Annium.Logging;
 
 namespace Annium.Extensions.Shell.Internal;
 
+/// <summary>
+/// Windows-specific implementation of shell command execution using cmd.exe
+/// </summary>
 internal class WindowsShellInstance : ShellInstanceBase
 {
+    /// <summary>
+    /// Initializes a new instance of the Windows shell command executor
+    /// </summary>
+    /// <param name="cmd">The command and arguments to execute</param>
+    /// <param name="logger">The logger instance for shell operations</param>
     public WindowsShellInstance(IReadOnlyList<string> cmd, ILogger logger)
         : base(cmd, logger) { }
 
+    /// <summary>
+    /// Creates and configures a Windows process for command execution using cmd.exe
+    /// </summary>
+    /// <returns>A configured Process instance ready for Windows execution</returns>
     protected override Process GetProcess()
     {
         var process = new Process { EnableRaisingEvents = true };

@@ -6,8 +6,16 @@ using Xunit;
 
 namespace Annium.Extensions.Reactive.Tests.Operators;
 
+/// <summary>
+/// Tests for the CatchAsync operator in reactive extensions.
+/// </summary>
 public class CatchAsyncTest
 {
+    /// <summary>
+    /// Tests that the CatchAsync operator correctly handles exceptions asynchronously
+    /// and continues the observable sequence with the provided fallback.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Fact]
     public async Task CatchAsync_WorksCorrectly()
     {

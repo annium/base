@@ -7,8 +7,16 @@ using Xunit;
 
 namespace Annium.Extensions.Reactive.Tests.Operators;
 
+/// <summary>
+/// Tests for the SelectSequentialAsync operator in reactive extensions.
+/// </summary>
 public class SelectSequentialAsyncTest
 {
+    /// <summary>
+    /// Tests that the SelectSequentialAsync operator transforms elements sequentially,
+    /// ensuring proper ordering of async transformations.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Fact]
     public async Task SelectSequentialAsync_WorksCorrectly()
     {

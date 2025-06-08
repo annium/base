@@ -10,11 +10,23 @@ using Xunit;
 
 namespace Annium.Extensions.Reactive.Tests.Creation.ObservableInstance;
 
+/// <summary>
+/// Tests for the StaticObservableInstance functionality in the reactive extensions.
+/// </summary>
 public class StaticObservableInstanceTest : TestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="StaticObservableInstanceTest"/> class.
+    /// </summary>
+    /// <param name="outputHelper">The test output helper for logging test results.</param>
     public StaticObservableInstanceTest(ITestOutputHelper outputHelper)
         : base(outputHelper) { }
 
+    /// <summary>
+    /// Tests that events are emitted correctly from a static observable instance,
+    /// including proper retry behavior and error handling.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Fact]
     public async Task Events_AreEmittedCorrectly()
     {
@@ -63,15 +75,29 @@ public class StaticObservableInstanceTest : TestBase
         disposeCounter.Is(1);
     }
 
+    /// <summary>
+    /// A sample data class used for testing observable events.
+    /// </summary>
     private class Sample
     {
+        /// <summary>
+        /// Gets the integer value of this sample.
+        /// </summary>
         public int Value { get; }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Sample"/> class.
+        /// </summary>
+        /// <param name="value">The integer value for this sample.</param>
         public Sample(int value)
         {
             Value = value;
         }
 
+        /// <summary>
+        /// Returns a string representation of this sample.
+        /// </summary>
+        /// <returns>The string representation of the sample value.</returns>
         public override string ToString() => Value.ToString();
     }
 }

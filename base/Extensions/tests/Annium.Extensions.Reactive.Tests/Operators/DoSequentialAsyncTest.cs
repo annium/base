@@ -7,8 +7,16 @@ using Xunit;
 
 namespace Annium.Extensions.Reactive.Tests.Operators;
 
+/// <summary>
+/// Tests for the DoSequentialAsync operator in reactive extensions.
+/// </summary>
 public class DoSequentialAsyncTest
 {
+    /// <summary>
+    /// Tests that the DoSequentialAsync operator executes side effects sequentially,
+    /// ensuring proper ordering of async operations.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Fact]
     public async Task DoSequentialAsync_WorksCorrectly()
     {

@@ -10,11 +10,29 @@ using Xunit;
 
 namespace Annium.Extensions.Pooling.Tests;
 
+/// <summary>
+/// Test class for object cache functionality
+/// </summary>
 public class ObjectCacheTests : TestBase
 {
+    /// <summary>
+    /// Constant for created state
+    /// </summary>
     private const string Created = "Created";
+
+    /// <summary>
+    /// Constant for suspended state
+    /// </summary>
     private const string Suspended = "Suspended";
+
+    /// <summary>
+    /// Constant for resumed state
+    /// </summary>
     private const string Resumed = "Resumed";
+
+    /// <summary>
+    /// Constant for disposed state
+    /// </summary>
     private const string Disposed = "Disposed";
 
     public ObjectCacheTests(ITestOutputHelper outputHelper)
@@ -27,6 +45,10 @@ public class ObjectCacheTests : TestBase
         RegisterTestLogs();
     }
 
+    /// <summary>
+    /// Tests that object cache creation works correctly
+    /// </summary>
+    /// <returns>Task representing the asynchronous test operation</returns>
     [Fact]
     public async Task ObjectCache_Create_Works()
     {
@@ -53,6 +75,10 @@ public class ObjectCacheTests : TestBase
         this.Trace("assert references validity");
     }
 
+    /// <summary>
+    /// Tests that object cache suspension works correctly
+    /// </summary>
+    /// <returns>Task representing the asynchronous test operation</returns>
     [Fact]
     public async Task ObjectCache_Suspend_Works()
     {
@@ -89,8 +115,14 @@ public class ObjectCacheTests : TestBase
         Enumerable.Range(0, 2).Select(x => $"{x} {Disposed}").All(log.Contains).IsTrue();
     }
 
+    /// <summary>
+    /// Test item provider for object cache
+    /// </summary>
     private class ItemProvider : ObjectCacheProvider<ItemKey, Item>
     {
+        /// <summary>
+        /// Test logging instance
+        /// </summary>
         private readonly TestLog<string> _log;
 
         public ItemProvider(TestLog<string> log)
@@ -98,6 +130,12 @@ public class ObjectCacheTests : TestBase
             _log = log;
         }
 
+        /// <summary>
+        /// Creates a new item asynchronously
+        /// </summary>
+        /// <param name="id">The item key</param>
+        /// <param name="ct">Cancellation token</param>
+        /// <returns>Task containing the created item or disposable reference</returns>
         public override async Task<OneOf<Item, IDisposableReference<Item>>> CreateAsync(
             ItemKey id,
             CancellationToken ct
@@ -111,18 +149,36 @@ public class ObjectCacheTests : TestBase
             return item;
         }
 
+        /// <summary>
+        /// Suspends an item asynchronously
+        /// </summary>
+        /// <param name="id">The item key</param>
+        /// <param name="value">The item to suspend</param>
+        /// <returns>Task representing the asynchronous suspension operation</returns>
         public override async Task SuspendAsync(ItemKey id, Item value)
         {
             await value.Suspend();
             _log.Add($"{value} {Suspended}");
         }
 
+        /// <summary>
+        /// Resumes an item asynchronously
+        /// </summary>
+        /// <param name="id">The item key</param>
+        /// <param name="value">The item to resume</param>
+        /// <returns>Task representing the asynchronous resume operation</returns>
         public override async Task ResumeAsync(ItemKey id, Item value)
         {
             await value.Resume();
             _log.Add($"{value} {Resumed}");
         }
 
+        /// <summary>
+        /// Disposes an item asynchronously
+        /// </summary>
+        /// <param name="id">The item key</param>
+        /// <param name="value">The item to dispose</param>
+        /// <returns>Task representing the asynchronous disposal operation</returns>
         public override Task DisposeAsync(ItemKey id, Item value)
         {
             value.Dispose();
@@ -132,8 +188,14 @@ public class ObjectCacheTests : TestBase
         }
     }
 
+    /// <summary>
+    /// Test item class for object cache testing
+    /// </summary>
     private class Item : IDisposable
     {
+        /// <summary>
+        /// The item's unique identifier
+        /// </summary>
         private readonly ItemKey _id;
 
         public Item(ItemKey id)
@@ -141,25 +203,50 @@ public class ObjectCacheTests : TestBase
             _id = id;
         }
 
+        /// <summary>
+        /// Suspends the item
+        /// </summary>
+        /// <returns>Task representing the asynchronous suspension operation</returns>
         public async Task Suspend()
         {
             await Task.Delay(10);
         }
 
+        /// <summary>
+        /// Resumes the item
+        /// </summary>
+        /// <returns>Task representing the asynchronous resume operation</returns>
         public async Task Resume()
         {
             await Task.Delay(10);
         }
 
+        /// <summary>
+        /// Disposes the item
+        /// </summary>
         public void Dispose() { }
 
+        /// <summary>
+        /// Returns a string representation of the item
+        /// </summary>
+        /// <returns>String representation of the item</returns>
         public override string ToString() => _id.ToString();
     }
 }
 
+/// <summary>
+/// Test key record for identifying cached items
+/// </summary>
 public sealed record ItemKey
 {
+    /// <summary>
+    /// Gets the key value
+    /// </summary>
     public required int Value { get; init; }
 
+    /// <summary>
+    /// Returns a string representation of the key
+    /// </summary>
+    /// <returns>String representation of the key value</returns>
     public override string ToString() => Value.ToString();
 }
