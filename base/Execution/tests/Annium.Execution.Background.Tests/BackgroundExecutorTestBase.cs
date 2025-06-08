@@ -10,8 +10,14 @@ using Xunit;
 
 namespace Annium.Execution.Background.Tests;
 
+/// <summary>
+/// Base class for testing background executor implementations
+/// </summary>
 public abstract class BackgroundExecutorTestBase : TestBase
 {
+    /// <summary>
+    /// The executor instance being tested
+    /// </summary>
     private readonly IExecutor _executor;
 
     protected BackgroundExecutorTestBase(Func<ILogger, IExecutor> getExecutor, ITestOutputHelper outputHelper)
@@ -20,6 +26,11 @@ public abstract class BackgroundExecutorTestBase : TestBase
         _executor = getExecutor(Get<ILogger>());
     }
 
+    /// <summary>
+    /// Tests that the executor can process scheduled tasks correctly
+    /// </summary>
+    /// <param name="size">The number of tasks to schedule</param>
+    /// <returns>A list of task execution results</returns>
     protected async Task<IReadOnlyList<int>> Works_Base(int size)
     {
         this.Trace("start");
@@ -49,6 +60,10 @@ public abstract class BackgroundExecutorTestBase : TestBase
         return queue.ToArray();
     }
 
+    /// <summary>
+    /// Tests the executor's availability state throughout its lifecycle
+    /// </summary>
+    /// <returns>A task representing the test operation</returns>
     protected async Task Availability_Base()
     {
         this.Trace("start");
@@ -84,6 +99,10 @@ public abstract class BackgroundExecutorTestBase : TestBase
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Tests that the executor handles task failures gracefully
+    /// </summary>
+    /// <returns>A task representing the test operation</returns>
     protected async Task HandlesFailure_Base()
     {
         this.Trace("start");
@@ -165,6 +184,10 @@ public abstract class BackgroundExecutorTestBase : TestBase
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Tests scheduling of synchronous action tasks
+    /// </summary>
+    /// <returns>A task representing the test operation</returns>
     protected async Task Schedule_SyncAction_Base()
     {
         this.Trace("start");
@@ -191,6 +214,10 @@ public abstract class BackgroundExecutorTestBase : TestBase
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Tests scheduling of synchronous action tasks with cancellation support
+    /// </summary>
+    /// <returns>A task representing the test operation</returns>
     protected async Task Schedule_SyncCancellableAction_Base()
     {
         this.Trace("start");
@@ -217,6 +244,10 @@ public abstract class BackgroundExecutorTestBase : TestBase
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Tests scheduling of asynchronous action tasks
+    /// </summary>
+    /// <returns>A task representing the test operation</returns>
     protected async Task Schedule_AsyncAction_Base()
     {
         this.Trace("start");
@@ -247,6 +278,10 @@ public abstract class BackgroundExecutorTestBase : TestBase
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Tests scheduling of asynchronous action tasks with cancellation support
+    /// </summary>
+    /// <returns>A task representing the test operation</returns>
     protected async Task Schedule_AsyncCancellableAction_Base()
     {
         this.Trace("start");

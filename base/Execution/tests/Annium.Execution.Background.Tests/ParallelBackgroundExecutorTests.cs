@@ -7,11 +7,18 @@ using Xunit;
 
 namespace Annium.Execution.Background.Tests;
 
+/// <summary>
+/// Tests for the parallel background executor implementation
+/// </summary>
 public class ParallelBackgroundExecutorTests : BackgroundExecutorTestBase
 {
     public ParallelBackgroundExecutorTests(ITestOutputHelper outputHelper)
         : base(Executor.Parallel<ParallelBackgroundExecutorTests>, outputHelper) { }
 
+    /// <summary>
+    /// Tests that the parallel executor processes tasks correctly with potential out-of-order execution
+    /// </summary>
+    /// <returns>A task representing the test operation</returns>
     [Fact]
     public async Task Works()
     {
@@ -31,6 +38,10 @@ public class ParallelBackgroundExecutorTests : BackgroundExecutorTestBase
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Tests the executor's availability state throughout its lifecycle
+    /// </summary>
+    /// <returns>A task representing the test operation</returns>
     [Fact]
     public async Task Availability()
     {
@@ -41,6 +52,10 @@ public class ParallelBackgroundExecutorTests : BackgroundExecutorTestBase
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Tests that the executor handles task failures gracefully
+    /// </summary>
+    /// <returns>A task representing the test operation</returns>
     [Fact]
     public async Task HandlesFailure()
     {
@@ -51,6 +66,10 @@ public class ParallelBackgroundExecutorTests : BackgroundExecutorTestBase
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Tests scheduling of synchronous action tasks
+    /// </summary>
+    /// <returns>A task representing the test operation</returns>
     [Fact]
     public async Task Schedule_SyncAction()
     {
@@ -61,6 +80,10 @@ public class ParallelBackgroundExecutorTests : BackgroundExecutorTestBase
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Tests scheduling of synchronous action tasks with cancellation support
+    /// </summary>
+    /// <returns>A task representing the test operation</returns>
     [Fact]
     public async Task Schedule_SyncCancellableAction()
     {
@@ -71,6 +94,10 @@ public class ParallelBackgroundExecutorTests : BackgroundExecutorTestBase
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Tests scheduling of asynchronous action tasks
+    /// </summary>
+    /// <returns>A task representing the test operation</returns>
     [Fact]
     public async Task Schedule_AsyncAction()
     {
@@ -81,6 +108,10 @@ public class ParallelBackgroundExecutorTests : BackgroundExecutorTestBase
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Tests scheduling of asynchronous action tasks with cancellation support
+    /// </summary>
+    /// <returns>A task representing the test operation</returns>
     [Fact]
     public async Task Schedule_AsyncCancellableAction()
     {

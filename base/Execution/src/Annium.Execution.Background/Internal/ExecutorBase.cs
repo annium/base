@@ -7,10 +7,19 @@ using Annium.Logging;
 
 namespace Annium.Execution.Background.Internal;
 
+/// <summary>
+/// Abstract base class for background task executors
+/// </summary>
 internal abstract class ExecutorBase : IExecutor, ILogSubject
 {
+    /// <summary>
+    /// Gets the logger instance for this executor
+    /// </summary>
     public ILogger Logger { get; }
 
+    /// <summary>
+    /// Gets a value indicating whether the executor is available to schedule new tasks
+    /// </summary>
     public bool IsAvailable
     {
         get
@@ -20,15 +29,50 @@ internal abstract class ExecutorBase : IExecutor, ILogSubject
         }
     }
 
+    /// <summary>
+    /// Cancellation token source for managing executor lifecycle
+    /// </summary>
     protected readonly CancellationTokenSource Cts = new();
+
+    /// <summary>
+    /// Lock for synchronizing state changes
+    /// </summary>
     private readonly Lock _locker = new();
+
+    /// <summary>
+    /// Channel writer for adding tasks to the execution queue
+    /// </summary>
     private readonly ChannelWriter<Delegate> _taskWriter;
+
+    /// <summary>
+    /// Channel reader for consuming tasks from the execution queue
+    /// </summary>
     private readonly ChannelReader<Delegate> _taskReader;
+
+    /// <summary>
+    /// Task completion source for signaling when all tasks are complete
+    /// </summary>
     private readonly TaskCompletionSource _runTcs = new();
+
+    /// <summary>
+    /// The main execution task
+    /// </summary>
     private ConfiguredTaskAwaitable _runTask = Task.CompletedTask.ConfigureAwait(false);
+
+    /// <summary>
+    /// Current state of the executor
+    /// </summary>
     private State _state = State.Created;
+
+    /// <summary>
+    /// Counter tracking the number of running tasks
+    /// </summary>
     private int _taskCounter;
 
+    /// <summary>
+    /// Initializes a new instance of the ExecutorBase class
+    /// </summary>
+    /// <param name="logger">The logger instance</param>
     protected ExecutorBase(ILogger logger)
     {
         Logger = logger;
@@ -44,26 +88,51 @@ internal abstract class ExecutorBase : IExecutor, ILogSubject
         _taskReader = taskChannel.Reader;
     }
 
+    /// <summary>
+    /// Schedules a synchronous task for execution
+    /// </summary>
+    /// <param name="task">The task to schedule</param>
+    /// <returns>True if the task was successfully scheduled, false otherwise</returns>
     public bool Schedule(Action task)
     {
         return TryScheduleTask(task);
     }
 
+    /// <summary>
+    /// Schedules a synchronous task for execution with cancellation support
+    /// </summary>
+    /// <param name="task">The task to schedule</param>
+    /// <returns>True if the task was successfully scheduled, false otherwise</returns>
     public bool Schedule(Action<CancellationToken> task)
     {
         return TryScheduleTask(task);
     }
 
+    /// <summary>
+    /// Schedules an asynchronous task for execution
+    /// </summary>
+    /// <param name="task">The task to schedule</param>
+    /// <returns>True if the task was successfully scheduled, false otherwise</returns>
     public bool Schedule(Func<ValueTask> task)
     {
         return TryScheduleTask(task);
     }
 
+    /// <summary>
+    /// Schedules an asynchronous task for execution with cancellation support
+    /// </summary>
+    /// <param name="task">The task to schedule</param>
+    /// <returns>True if the task was successfully scheduled, false otherwise</returns>
     public bool Schedule(Func<CancellationToken, ValueTask> task)
     {
         return TryScheduleTask(task);
     }
 
+    /// <summary>
+    /// Starts the executor
+    /// </summary>
+    /// <param name="ct">The cancellation token</param>
+    /// <returns>The executor instance</returns>
     public IExecutor Start(CancellationToken ct = default)
     {
         this.Trace("start");
@@ -90,6 +159,10 @@ internal abstract class ExecutorBase : IExecutor, ILogSubject
         return this;
     }
 
+    /// <summary>
+    /// Disposes the executor and waits for all tasks to complete
+    /// </summary>
+    /// <returns>A task representing the disposal operation</returns>
     public async ValueTask DisposeAsync()
     {
         this.Trace("start");
@@ -131,8 +204,17 @@ internal abstract class ExecutorBase : IExecutor, ILogSubject
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Runs a task asynchronously. Implementation varies by executor type
+    /// </summary>
+    /// <param name="task">The task to run</param>
+    /// <returns>A task representing the execution</returns>
     protected abstract Task RunTaskAsync(Delegate task);
 
+    /// <summary>
+    /// Marks a task as completed and decrements the task counter
+    /// </summary>
+    /// <param name="task">The completed task</param>
     protected void CompleteTask(Delegate task)
     {
         var taskCounter = Interlocked.Decrement(ref _taskCounter);
@@ -140,6 +222,11 @@ internal abstract class ExecutorBase : IExecutor, ILogSubject
         TryFinish(taskCounter);
     }
 
+    /// <summary>
+    /// Attempts to schedule a task for execution
+    /// </summary>
+    /// <param name="task">The task to schedule</param>
+    /// <returns>True if the task was successfully scheduled, false if the executor is not available</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private bool TryScheduleTask(Delegate task)
     {
@@ -161,6 +248,10 @@ internal abstract class ExecutorBase : IExecutor, ILogSubject
         return false;
     }
 
+    /// <summary>
+    /// Main execution loop that processes scheduled tasks
+    /// </summary>
+    /// <returns>A task representing the execution loop</returns>
     private async Task RunAsync()
     {
         this.Trace("start");
@@ -203,6 +294,9 @@ internal abstract class ExecutorBase : IExecutor, ILogSubject
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Stops the executor and prevents new tasks from being scheduled
+    /// </summary>
     private void Stop()
     {
         this.Trace("start");
@@ -227,6 +321,10 @@ internal abstract class ExecutorBase : IExecutor, ILogSubject
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Attempts to finish the executor if no tasks are running and the executor is not available
+    /// </summary>
+    /// <param name="taskCounter">The current number of running tasks</param>
     private void TryFinish(int taskCounter)
     {
         if (IsAvailable || taskCounter != 0)
