@@ -8,6 +8,9 @@ using Xunit;
 
 namespace Annium.Configuration.CommandLine.Tests;
 
+/// <summary>
+/// Tests for command line configuration provider functionality.
+/// </summary>
 public class CommandLineConfigurationProviderTest : TestBase
 {
     public CommandLineConfigurationProviderTest(ITestOutputHelper outputHelper)
@@ -16,6 +19,9 @@ public class CommandLineConfigurationProviderTest : TestBase
         RegisterMapper();
     }
 
+    /// <summary>
+    /// Tests that command line configuration works correctly.
+    /// </summary>
     [Fact]
     public void CommandLineConfiguration_Works()
     {
@@ -47,8 +53,17 @@ public class CommandLineConfigurationProviderTest : TestBase
     }
 }
 
+/// <summary>
+/// Extension methods for List collections.
+/// </summary>
 internal static class ListExtensions
 {
+    /// <summary>
+    /// Adds a range of values to the list.
+    /// </summary>
+    /// <typeparam name="T">The type of elements in the list.</typeparam>
+    /// <param name="list">The list to add values to.</param>
+    /// <param name="values">The values to add.</param>
     public static void AddRange<T>(this List<T> list, params T[] values)
     {
         list.AddRange(values);

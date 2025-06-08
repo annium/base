@@ -8,15 +8,43 @@ using Annium.Reflection;
 
 namespace Annium.Configuration.Abstractions.Internal;
 
+/// <summary>
+/// Processes configuration data and converts it to strongly typed objects
+/// </summary>
 internal class ConfigurationProcessor<T>
     where T : new()
 {
+    /// <summary>
+    /// Type manager for resolving types during processing
+    /// </summary>
     private readonly ITypeManager _typeManager;
+
+    /// <summary>
+    /// Mapper for converting between different data types
+    /// </summary>
     private readonly IMapper _mapper;
+
+    /// <summary>
+    /// Configuration data to process
+    /// </summary>
     private readonly IReadOnlyDictionary<string[], string> _config;
+
+    /// <summary>
+    /// Stack maintaining the current path context during processing
+    /// </summary>
     private readonly Stack<string> _context = new();
+
+    /// <summary>
+    /// Gets the current path as an array of strings from the context stack
+    /// </summary>
     private string[] Path => _context.Reverse().ToArray();
 
+    /// <summary>
+    /// Initializes a new instance of ConfigurationProcessor
+    /// </summary>
+    /// <param name="typeManager">Type manager for type resolution</param>
+    /// <param name="mapper">Mapper for data conversion</param>
+    /// <param name="config">Configuration data to process</param>
     public ConfigurationProcessor(
         ITypeManager typeManager,
         IMapper mapper,
@@ -28,11 +56,20 @@ internal class ConfigurationProcessor<T>
         _config = config;
     }
 
+    /// <summary>
+    /// Processes the configuration data and returns an instance of type T
+    /// </summary>
+    /// <returns>Configured instance of type T</returns>
     public T Process()
     {
         return (T)(Process(typeof(T)) ?? default!);
     }
 
+    /// <summary>
+    /// Processes configuration data for a specific type
+    /// </summary>
+    /// <param name="type">Type to process configuration for</param>
+    /// <returns>Configured instance of the specified type</returns>
     private object? Process(Type type)
     {
         if (type.IsEnum || type.IsNullableValueType() || _mapper.HasMap(string.Empty, type))
@@ -46,6 +83,11 @@ internal class ConfigurationProcessor<T>
         return ProcessObject(type);
     }
 
+    /// <summary>
+    /// Processes configuration data for dictionary types
+    /// </summary>
+    /// <param name="type">Dictionary type to process</param>
+    /// <returns>Configured dictionary instance</returns>
     private object ProcessDictionary(Type type)
     {
         var keyType = type.GetGenericArguments()[0];
@@ -69,6 +111,11 @@ internal class ConfigurationProcessor<T>
         return result;
     }
 
+    /// <summary>
+    /// Processes configuration data for list types
+    /// </summary>
+    /// <param name="type">List type to process</param>
+    /// <returns>Configured list instance</returns>
     private object ProcessList(Type type)
     {
         var elementType = type.GetGenericArguments()[0];
@@ -86,6 +133,11 @@ internal class ConfigurationProcessor<T>
         return result;
     }
 
+    /// <summary>
+    /// Processes configuration data for array types
+    /// </summary>
+    /// <param name="type">Array type to process</param>
+    /// <returns>Configured array instance</returns>
     private object ProcessArray(Type type)
     {
         var elementType = type.GetElementType()!;
@@ -99,6 +151,11 @@ internal class ConfigurationProcessor<T>
         return result;
     }
 
+    /// <summary>
+    /// Processes configuration data for object types
+    /// </summary>
+    /// <param name="type">Object type to process</param>
+    /// <returns>Configured object instance</returns>
     private object ProcessObject(Type type)
     {
         if (type.IsAbstract || type.IsInterface)
@@ -132,6 +189,11 @@ internal class ConfigurationProcessor<T>
         return result;
     }
 
+    /// <summary>
+    /// Processes configuration data for value types
+    /// </summary>
+    /// <param name="type">Value type to process</param>
+    /// <returns>Configured value instance</returns>
     private object? ProcessValue(Type type)
     {
         if (!_config.TryGetValue(Path, out var value))
@@ -140,6 +202,10 @@ internal class ConfigurationProcessor<T>
         return _mapper.Map(value, Nullable.GetUnderlyingType(type) ?? type);
     }
 
+    /// <summary>
+    /// Gets descendant keys from the current path context
+    /// </summary>
+    /// <returns>Array of descendant key strings</returns>
     private string[] GetDescendants()
     {
         var path = Normalize(Path);
@@ -154,6 +220,10 @@ internal class ConfigurationProcessor<T>
             .ToArray();
     }
 
+    /// <summary>
+    /// Checks if a key exists at the current path context
+    /// </summary>
+    /// <returns>True if key exists, false otherwise</returns>
     private bool KeyExists()
     {
         var path = Normalize(Path);
@@ -166,5 +236,10 @@ internal class ConfigurationProcessor<T>
             .Any(k => Normalize(k).SequenceEqual(path));
     }
 
+    /// <summary>
+    /// Normalizes a sequence of strings to camel case
+    /// </summary>
+    /// <param name="seq">Sequence of strings to normalize</param>
+    /// <returns>Array of normalized strings</returns>
     private string[] Normalize(IEnumerable<string> seq) => seq.Select(e => e.CamelCase()).ToArray();
 }
