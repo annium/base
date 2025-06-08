@@ -5,20 +5,44 @@ using Annium.Core.Runtime.Types;
 
 namespace Annium.Core.Mapper.Internal.Resolvers;
 
+/// <summary>
+/// Map resolver that creates mappings for abstract types and interfaces using type resolution
+/// </summary>
 internal class ResolutionMapResolver : IMapResolver
 {
+    /// <summary>
+    /// The type manager for resolving concrete implementations
+    /// </summary>
     private readonly ITypeManager _typeManager;
 
+    /// <summary>
+    /// Initializes a new instance of the ResolutionMapResolver class
+    /// </summary>
+    /// <param name="typeManager">The type manager for type resolution</param>
     public ResolutionMapResolver(ITypeManager typeManager)
     {
         _typeManager = typeManager;
     }
 
+    /// <summary>
+    /// Determines whether this resolver can create a mapping between the specified source and target types
+    /// </summary>
+    /// <param name="src">The source type</param>
+    /// <param name="tgt">The target type</param>
+    /// <returns>True if the target type is abstract or interface, otherwise false</returns>
     public bool CanResolveMap(Type src, Type tgt)
     {
         return tgt.IsAbstract || tgt.IsInterface;
     }
 
+    /// <summary>
+    /// Resolves and creates a mapping for abstract types using type resolution to find concrete implementations
+    /// </summary>
+    /// <param name="src">The source type</param>
+    /// <param name="tgt">The target type</param>
+    /// <param name="cfg">The mapping configuration</param>
+    /// <param name="ctx">The resolver context</param>
+    /// <returns>The resolved mapping</returns>
     public Mapping ResolveMap(Type src, Type tgt, IMapConfiguration cfg, IMapResolverContext ctx) =>
         source =>
         {

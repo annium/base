@@ -8,8 +8,14 @@ using Annium.Logging;
 
 namespace Annium.Core.Runtime.Internal.Types;
 
+/// <summary>
+/// Internal implementation of type manager that handles type resolution and hierarchy management
+/// </summary>
 internal class TypeManagerInstance : ITypeManager, ILogSubject
 {
+    /// <summary>
+    /// The logger for this type manager instance
+    /// </summary>
     public ILogger Logger { get; }
 
     /// <summary>
@@ -17,9 +23,21 @@ internal class TypeManagerInstance : ITypeManager, ILogSubject
     /// </summary>
     public IReadOnlyCollection<Type> Types { get; }
 
+    /// <summary>
+    /// The type hierarchy mapping ancestors to their descendants
+    /// </summary>
     private readonly IReadOnlyDictionary<Ancestor, IReadOnlyCollection<Descendant>> _hierarchy;
+
+    /// <summary>
+    /// Mapping of type IDs to their corresponding types
+    /// </summary>
     private readonly IReadOnlyDictionary<TypeId, Type> _ids;
 
+    /// <summary>
+    /// Initializes a new instance of TypeManagerInstance for the specified assembly
+    /// </summary>
+    /// <param name="assembly">The assembly to collect types from</param>
+    /// <param name="logger">The logger to use for tracing operations</param>
     public TypeManagerInstance(Assembly assembly, ILogger logger)
     {
         Logger = logger;
@@ -43,7 +61,8 @@ internal class TypeManagerInstance : ITypeManager, ILogSubject
     /// <summary>
     /// Returns whether given type is registered with one or more of subtypes.
     /// </summary>
-    /// <param name="baseType"></param>
+    /// <param name="baseType">The base type to check for implementations</param>
+    /// <returns>True if the type has implementations; otherwise, false</returns>
     public bool HasImplementations(Type baseType)
     {
         if (baseType is null)
@@ -55,8 +74,8 @@ internal class TypeManagerInstance : ITypeManager, ILogSubject
     /// <summary>
     /// Returns all direct implementations of base type
     /// </summary>
-    /// <param name="baseType"></param>
-    /// <returns></returns>
+    /// <param name="baseType">The base type to get implementations for</param>
+    /// <returns>Array of types that implement the base type</returns>
     public Type[] GetImplementations(Type baseType)
     {
         if (baseType is null)
@@ -68,9 +87,9 @@ internal class TypeManagerInstance : ITypeManager, ILogSubject
     /// <summary>
     /// Returns resolution id property for given base type, if exists
     /// </summary>
-    /// <param name="baseType"></param>
-    /// <returns></returns>
-    /// <exception cref="ArgumentNullException"></exception>
+    /// <param name="baseType">The base type to get the resolution ID property for</param>
+    /// <returns>The PropertyInfo for the resolution ID property, or null if not found</returns>
+    /// <exception cref="ArgumentNullException">Thrown when baseType is null</exception>
     public PropertyInfo? GetResolutionIdProperty(Type baseType)
     {
         if (baseType is null)
@@ -90,9 +109,9 @@ internal class TypeManagerInstance : ITypeManager, ILogSubject
     /// <summary>
     /// Returns resolution key property for given base type, if exists
     /// </summary>
-    /// <param name="baseType"></param>
-    /// <returns></returns>
-    /// <exception cref="ArgumentNullException"></exception>
+    /// <param name="baseType">The base type to get the resolution key property for</param>
+    /// <returns>The PropertyInfo for the resolution key property, or null if not found</returns>
+    /// <exception cref="ArgumentNullException">Thrown when baseType is null</exception>
     public PropertyInfo? GetResolutionKeyProperty(Type baseType)
     {
         if (baseType is null)
@@ -103,6 +122,11 @@ internal class TypeManagerInstance : ITypeManager, ILogSubject
         return _hierarchy.Keys.FirstOrDefault(x => x.Type == lookupType)?.KeyProperty;
     }
 
+    /// <summary>
+    /// Gets a TypeId by its string identifier
+    /// </summary>
+    /// <param name="id">The string identifier to look up</param>
+    /// <returns>The TypeId if found; otherwise, null</returns>
     public TypeId? GetTypeId(string id)
     {
         if (string.IsNullOrWhiteSpace(id))
@@ -114,10 +138,10 @@ internal class TypeManagerInstance : ITypeManager, ILogSubject
     /// <summary>
     /// Resolve type descendant by id
     /// </summary>
-    /// <param name="id"></param>
-    /// <returns></returns>
-    /// <exception cref="ArgumentNullException"></exception>
-    /// <exception cref="TypeResolutionException"></exception>
+    /// <param name="id">The string ID to resolve</param>
+    /// <returns>The resolved type or null if not found</returns>
+    /// <exception cref="ArgumentNullException">Thrown when id is null or empty</exception>
+    /// <exception cref="TypeResolutionException">Thrown when type resolution fails</exception>
     public Type? ResolveById(string id)
     {
         if (string.IsNullOrWhiteSpace(id))
@@ -129,11 +153,11 @@ internal class TypeManagerInstance : ITypeManager, ILogSubject
     /// <summary>
     /// Resolve type descendant by key
     /// </summary>
-    /// <param name="key"></param>
-    /// <param name="baseType"></param>
-    /// <returns></returns>
-    /// <exception cref="ArgumentNullException"></exception>
-    /// <exception cref="TypeResolutionException"></exception>
+    /// <param name="key">The resolution key to match</param>
+    /// <param name="baseType">The base type to resolve from</param>
+    /// <returns>The resolved type or null if not found</returns>
+    /// <exception cref="ArgumentNullException">Thrown when key or baseType is null</exception>
+    /// <exception cref="TypeResolutionException">Thrown when type resolution fails</exception>
     public Type? ResolveByKey(object key, Type baseType)
     {
         if (key is null)
@@ -163,11 +187,11 @@ internal class TypeManagerInstance : ITypeManager, ILogSubject
     /// <summary>
     /// Resolves type by signature
     /// </summary>
-    /// <param name="signature"></param>
-    /// <param name="baseType"></param>
-    /// <param name="exact"></param>
-    /// <returns></returns>
-    /// <exception cref="ArgumentNullException"></exception>
+    /// <param name="signature">The signature to match against</param>
+    /// <param name="baseType">The base type to resolve from</param>
+    /// <param name="exact">Whether to require exact signature match</param>
+    /// <returns>The resolved type or null if not found</returns>
+    /// <exception cref="ArgumentNullException">Thrown when signature or baseType is null</exception>
     public Type? ResolveBySignature(IEnumerable<string> signature, Type baseType, bool exact = false)
     {
         if (signature is null)
@@ -184,10 +208,10 @@ internal class TypeManagerInstance : ITypeManager, ILogSubject
     /// <summary>
     /// Resolves descendant type of baseType by given source instance
     /// </summary>
-    /// <param name="instance"></param>
-    /// <param name="baseType"></param>
-    /// <returns></returns>
-    /// <exception cref="ArgumentNullException"></exception>
+    /// <param name="instance">The instance to resolve type from</param>
+    /// <param name="baseType">The base type to resolve to</param>
+    /// <returns>The resolved type or null if not found</returns>
+    /// <exception cref="ArgumentNullException">Thrown when instance or baseType is null</exception>
     public Type? Resolve(object instance, Type baseType)
     {
         if (instance is null)
@@ -224,11 +248,11 @@ internal class TypeManagerInstance : ITypeManager, ILogSubject
     /// <summary>
     /// Internal resolve by TypeSignature implementation
     /// </summary>
-    /// <param name="signature"></param>
-    /// <param name="baseType"></param>
-    /// <param name="assumedSourceType"></param>
-    /// <returns></returns>
-    /// <exception cref="TypeResolutionException"></exception>
+    /// <param name="signature">The type signature to match</param>
+    /// <param name="baseType">The base type to resolve from</param>
+    /// <param name="assumedSourceType">The assumed source type for error reporting</param>
+    /// <returns>Array of matching descendants ordered by match quality</returns>
+    /// <exception cref="TypeResolutionException">Thrown when resolution is ambiguous</exception>
     private Descendant[] ResolveBySignature(TypeSignature signature, Type baseType, Type assumedSourceType)
     {
         var descendants = GetImplementationDescendants(baseType);
@@ -259,8 +283,8 @@ internal class TypeManagerInstance : ITypeManager, ILogSubject
     /// <summary>
     /// Returns all direct implementations of base type.
     /// </summary>
-    /// <param name="baseType"></param>
-    /// <returns></returns>
+    /// <param name="baseType">The base type to get descendants for</param>
+    /// <returns>Array of descendant implementations</returns>
     private Descendant[] GetImplementationDescendants(Type baseType)
     {
         baseType = baseType.IsGenericType ? baseType.GetGenericTypeDefinition() : baseType;
@@ -270,11 +294,11 @@ internal class TypeManagerInstance : ITypeManager, ILogSubject
     }
 
     /// <summary>
-    ///
+    /// Resolves the actual resolution ID property for an instance
     /// </summary>
-    /// <param name="instance"></param>
-    /// <param name="property"></param>
-    /// <returns></returns>
+    /// <param name="instance">The instance to resolve property from</param>
+    /// <param name="property">The expected property info</param>
+    /// <returns>The actual PropertyInfo for the resolution ID</returns>
     private PropertyInfo ResolveResolutionIdProperty(object instance, PropertyInfo property)
     {
         var type = instance.GetType();
@@ -309,11 +333,11 @@ internal class TypeManagerInstance : ITypeManager, ILogSubject
     }
 
     /// <summary>
-    ///
+    /// Resolves the actual resolution key property for an instance
     /// </summary>
-    /// <param name="instance"></param>
-    /// <param name="property"></param>
-    /// <returns></returns>
+    /// <param name="instance">The instance to resolve property from</param>
+    /// <param name="property">The expected property info</param>
+    /// <returns>The actual PropertyInfo for the resolution key</returns>
     private PropertyInfo ResolveResolutionKeyProperty(object instance, PropertyInfo property)
     {
         var type = instance.GetType();

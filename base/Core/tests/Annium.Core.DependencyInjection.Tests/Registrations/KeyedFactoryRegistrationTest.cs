@@ -4,8 +4,14 @@ using Xunit;
 
 namespace Annium.Core.DependencyInjection.Tests.Registrations;
 
+/// <summary>
+/// Tests for keyed factory registration functionality in the dependency injection container
+/// </summary>
 public class KeyedFactoryRegistrationTest : TestBase
 {
+    /// <summary>
+    /// Verifies that keyed factory registration as self works correctly
+    /// </summary>
     [Fact]
     public void AsKeyedSelf_Works()
     {
@@ -23,6 +29,9 @@ public class KeyedFactoryRegistrationTest : TestBase
         instance.Key.Is("x");
     }
 
+    /// <summary>
+    /// Verifies that keyed factory registration as specific type works correctly
+    /// </summary>
     [Fact]
     public void AsKeyed_Works()
     {
@@ -40,6 +49,9 @@ public class KeyedFactoryRegistrationTest : TestBase
         instance.Key.Is("x");
     }
 
+    /// <summary>
+    /// Verifies that keyed factory registration as interfaces works correctly
+    /// </summary>
     [Fact]
     public void AsKeyedInterfaces_Works()
     {
@@ -58,12 +70,24 @@ public class KeyedFactoryRegistrationTest : TestBase
         instance.Key.Is("x");
     }
 
+    /// <summary>
+    /// Test class D that inherits from C and implements IX
+    /// </summary>
     private sealed class D : C, IX
     {
+        /// <summary>
+        /// Counter for tracking instance creation
+        /// </summary>
         private static int _count;
 
+        /// <summary>
+        /// Resets the instance count for testing purposes
+        /// </summary>
         public static void Reset() => _count = 0;
 
+        /// <summary>
+        /// Gets the key associated with this instance
+        /// </summary>
         public string Key { get; }
 
         public D(string key)
@@ -74,7 +98,13 @@ public class KeyedFactoryRegistrationTest : TestBase
         }
     }
 
+    /// <summary>
+    /// Test class C
+    /// </summary>
     private class C;
 
+    /// <summary>
+    /// Test interface IX
+    /// </summary>
     private interface IX;
 }

@@ -50,5 +50,8 @@ public class InstanceOfMapResolverTest : TestBase
         result.Is(value);
     }
 
+    /// <summary>
+    /// Simple payload class for testing instance mapping.
+    /// </summary>
     private class Payload;
 }

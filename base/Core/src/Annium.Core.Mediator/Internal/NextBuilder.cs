@@ -8,19 +8,40 @@ using Ex = System.Linq.Expressions.Expression;
 
 namespace Annium.Core.Mediator.Internal;
 
+/// <summary>
+/// Builds delegate functions for invoking the next handler in execution chains
+/// </summary>
 internal class NextBuilder
 {
+    /// <summary>
+    /// Cached reference to ChainExecutor.ExecuteAsync method
+    /// </summary>
     private readonly MethodInfo _executeAsync = typeof(ChainExecutor).GetMethod(
         nameof(ChainExecutor.ExecuteAsync),
         BindingFlags.Public | BindingFlags.Static
     )!;
 
+    /// <summary>
+    /// Cached reference to Task.GetAwaiter method
+    /// </summary>
     private readonly MethodInfo _getAwaiter = typeof(Task<object>).GetMethod(nameof(Task<int>.GetAwaiter))!;
 
+    /// <summary>
+    /// Cached reference to TaskAwaiter.GetResult method
+    /// </summary>
     private readonly MethodInfo _getResult = typeof(TaskAwaiter<object>).GetMethod(nameof(TaskAwaiter<int>.GetResult))!;
 
+    /// <summary>
+    /// Cached reference to Task.FromResult method
+    /// </summary>
     private readonly MethodInfo _fromResult = typeof(Task).GetMethod(nameof(Task.FromResult))!;
 
+    /// <summary>
+    /// Builds a delegate function for invoking the next handler in the chain
+    /// </summary>
+    /// <param name="input">Input type for the next handler</param>
+    /// <param name="output">Output type for the next handler</param>
+    /// <returns>Compiled delegate function for chain continuation</returns>
     public Delegate BuildNext(Type input, Type output)
     {
         var provider = Ex.Parameter(typeof(IServiceProvider));

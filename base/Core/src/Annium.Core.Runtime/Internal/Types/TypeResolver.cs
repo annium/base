@@ -7,17 +7,37 @@ using Annium.Reflection;
 
 namespace Annium.Core.Runtime.Internal.Types;
 
+/// <summary>
+/// Internal implementation of type resolver that handles generic type resolution
+/// </summary>
 internal class TypeResolver : ITypeResolver, ILogSubject
 {
+    /// <summary>
+    /// The logger for this type resolver
+    /// </summary>
     public ILogger Logger { get; }
+
+    /// <summary>
+    /// The type manager used for type lookup
+    /// </summary>
     private readonly ITypeManager _typeManager;
 
+    /// <summary>
+    /// Initializes a new instance of TypeResolver with the specified type manager and logger
+    /// </summary>
+    /// <param name="typeManager">The type manager to use for type resolution</param>
+    /// <param name="logger">The logger to use for tracing operations</param>
     public TypeResolver(ITypeManager typeManager, ILogger logger)
     {
         Logger = logger;
         _typeManager = typeManager;
     }
 
+    /// <summary>
+    /// Resolves a collection of types based on the specified type criteria
+    /// </summary>
+    /// <param name="type">The type to use as resolution criteria</param>
+    /// <returns>A collection of resolved types</returns>
     public IReadOnlyCollection<Type> ResolveType(Type type)
     {
         if (!type.IsGenericType)
@@ -48,6 +68,11 @@ internal class TypeResolver : ITypeResolver, ILogSubject
         return types;
     }
 
+    /// <summary>
+    /// Generates all possible combinations from the given sets of types
+    /// </summary>
+    /// <param name="sets">The sets of types to generate combinations from</param>
+    /// <returns>All possible combinations of types</returns>
     private IReadOnlyCollection<Type[]> GetCombinations(IReadOnlyCollection<Type[]> sets)
     {
         if (sets.Count == 1)

@@ -8,11 +8,26 @@ using System.Threading.Tasks;
 
 namespace Annium.Core.Runtime.Loader.Internal;
 
+/// <summary>
+/// Custom assembly load context that uses configurable resolvers to load assemblies
+/// </summary>
 internal class ResolvingLoadContext : AssemblyLoadContext
 {
+    /// <summary>
+    /// Collection of path-based assembly resolvers
+    /// </summary>
     private readonly IReadOnlyCollection<Func<AssemblyName, string?>> _pathResolvers;
+
+    /// <summary>
+    /// Collection of byte array-based assembly resolvers
+    /// </summary>
     private readonly IReadOnlyCollection<Func<AssemblyName, Task<byte[]>?>> _byteArrayResolvers;
 
+    /// <summary>
+    /// Initializes a new instance of ResolvingLoadContext with specified resolvers
+    /// </summary>
+    /// <param name="pathResolvers">Collection of functions that resolve assembly names to file paths</param>
+    /// <param name="byteArrayResolvers">Collection of functions that resolve assembly names to byte arrays</param>
     public ResolvingLoadContext(
         IReadOnlyCollection<Func<AssemblyName, string?>> pathResolvers,
         IReadOnlyCollection<Func<AssemblyName, Task<byte[]>?>> byteArrayResolvers
@@ -23,6 +38,11 @@ internal class ResolvingLoadContext : AssemblyLoadContext
         _byteArrayResolvers = byteArrayResolvers;
     }
 
+    /// <summary>
+    /// Attempts to load an assembly using configured resolvers
+    /// </summary>
+    /// <param name="assemblyName">The name of the assembly to load</param>
+    /// <returns>The loaded assembly or null if not found</returns>
     protected override Assembly? Load(AssemblyName assemblyName)
     {
         // try resolve by path

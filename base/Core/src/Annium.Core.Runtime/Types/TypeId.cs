@@ -4,8 +4,16 @@ using Annium.Core.Runtime.Internal.Types;
 
 namespace Annium.Core.Runtime.Types;
 
+/// <summary>
+/// Abstract base record for representing type identities in the runtime system
+/// </summary>
 public abstract record TypeId
 {
+    /// <summary>
+    /// Creates a TypeId for the specified type
+    /// </summary>
+    /// <param name="type">The type to create an ID for</param>
+    /// <returns>A TypeId representing the specified type</returns>
     public static TypeId Create(Type type)
     {
         if (type.IsGenericParameter)
@@ -20,6 +28,12 @@ public abstract record TypeId
         return new ClosedGenericTypeId(type);
     }
 
+    /// <summary>
+    /// Attempts to parse a string ID into a TypeId using the specified type manager
+    /// </summary>
+    /// <param name="id">The string ID to parse</param>
+    /// <param name="tm">The type manager to use for resolution</param>
+    /// <returns>The parsed TypeId or null if parsing fails</returns>
     public static TypeId? TryParse(string id, ITypeManager tm)
     {
         // if not constructed generic type - try resolve from TypeManager
@@ -46,6 +60,11 @@ public abstract record TypeId
         return Create(type);
     }
 
+    /// <summary>
+    /// Gets the formatted name for a type including namespace
+    /// </summary>
+    /// <param name="type">The type to get the name for</param>
+    /// <returns>The formatted name string</returns>
     protected static string GetName(Type type)
     {
         var ns = type.Namespace;
@@ -54,14 +73,40 @@ public abstract record TypeId
         return $"{ns}:{name}";
     }
 
+    /// <summary>
+    /// The actual Type this ID represents
+    /// </summary>
     public Type Type { get; }
+
+    /// <summary>
+    /// The base type (for generic types, this is the generic type definition)
+    /// </summary>
     public Type BaseType { get; }
+
+    /// <summary>
+    /// The formatted name of the type
+    /// </summary>
     public string Name { get; }
+
+    /// <summary>
+    /// The unique string identifier for this type
+    /// </summary>
     public string Id { get; protected init; } = string.Empty;
 
+    /// <summary>
+    /// Initializes a new TypeId with the specified type and name
+    /// </summary>
+    /// <param name="type">The type this ID represents</param>
+    /// <param name="name">The formatted name of the type</param>
     protected TypeId(Type type, string name)
         : this(type, type, name) { }
 
+    /// <summary>
+    /// Initializes a new TypeId with the specified type, base type, and name
+    /// </summary>
+    /// <param name="type">The type this ID represents</param>
+    /// <param name="baseType">The base type</param>
+    /// <param name="name">The formatted name of the type</param>
     protected TypeId(Type type, Type baseType, string name)
     {
         Type = type;
@@ -69,7 +114,16 @@ public abstract record TypeId
         Name = name;
     }
 
+    /// <summary>
+    /// Determines whether this TypeId equals another TypeId based on their string IDs
+    /// </summary>
+    /// <param name="other">The other TypeId to compare with</param>
+    /// <returns>True if the IDs are equal; otherwise, false</returns>
     public virtual bool Equals(TypeId? other) => Id == other?.Id;
 
+    /// <summary>
+    /// Gets the hash code for this TypeId based on its string ID
+    /// </summary>
+    /// <returns>The hash code of the string ID</returns>
     public override int GetHashCode() => Id.GetHashCode();
 }

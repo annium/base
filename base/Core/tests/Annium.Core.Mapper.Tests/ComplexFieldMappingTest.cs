@@ -134,6 +134,9 @@ public class ComplexFieldMappingTest : TestBase
     /// </summary>
     private class A
     {
+        /// <summary>
+        /// Gets or sets the serialized value containing data to be mapped
+        /// </summary>
         public string SerializedValue { get; set; } = string.Empty;
     }
 
@@ -142,9 +145,24 @@ public class ComplexFieldMappingTest : TestBase
     /// </summary>
     private class B
     {
+        /// <summary>
+        /// Gets or sets a value that should be ignored during mapping
+        /// </summary>
         public int IgnoredA { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value that should be ignored during mapping
+        /// </summary>
         public long IgnoredB { get; set; }
+
+        /// <summary>
+        /// Gets or sets the name property
+        /// </summary>
         public string Name { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Gets or sets the age property
+        /// </summary>
         public int Age { get; set; }
     }
 
@@ -153,9 +171,24 @@ public class ComplexFieldMappingTest : TestBase
     /// </summary>
     private class C
     {
+        /// <summary>
+        /// Gets a value that should be ignored during mapping
+        /// </summary>
         public int IgnoredA { get; }
+
+        /// <summary>
+        /// Gets a value that should be ignored during mapping
+        /// </summary>
         public long IgnoredB { get; }
+
+        /// <summary>
+        /// Gets the name property
+        /// </summary>
         public string Name { get; }
+
+        /// <summary>
+        /// Gets the age property
+        /// </summary>
         public int Age { get; }
 
         public C(int ignoredA, long ignoredB, string name, int age)
@@ -172,7 +205,14 @@ public class ComplexFieldMappingTest : TestBase
     /// </summary>
     private class Serialized
     {
+        /// <summary>
+        /// Gets or sets the name from serialized data
+        /// </summary>
         public string Name { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Gets or sets the age from serialized data
+        /// </summary>
         public int Age { get; set; }
     }
 }

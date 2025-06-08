@@ -101,5 +101,8 @@ public class AssignmentMapResolverTest : TestBase
         public string? Name { get; set; }
     }
 
+    /// <summary>
+    /// Target class C for testing mapping with excess properties
+    /// </summary>
     private class C;
 }

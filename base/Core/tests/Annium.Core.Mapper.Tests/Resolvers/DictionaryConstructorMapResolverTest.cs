@@ -54,6 +54,10 @@ public class DictionaryConstructorMapResolverTest : TestBase
         result.IsShallowEqual(new C(0, 0, "Alex", 20));
     }
 
+    /// <summary>
+    /// Configures the mapping profile for dictionary to object mapping.
+    /// </summary>
+    /// <param name="p">The profile to configure.</param>
     private void ConfigureProfile(Profile p)
     {
         p.Map<Dictionary<string, object>, C>()
@@ -105,9 +109,19 @@ public class DictionaryConstructorMapResolverTest : TestBase
         }
     }
 
+    /// <summary>
+    /// Information class for deserialization testing.
+    /// </summary>
     private class Info
     {
+        /// <summary>
+        /// Gets or sets the name.
+        /// </summary>
         public string Name { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Gets or sets the age.
+        /// </summary>
         public int Age { get; set; }
     }
 }

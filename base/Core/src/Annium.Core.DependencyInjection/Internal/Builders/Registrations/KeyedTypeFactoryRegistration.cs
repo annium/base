@@ -5,12 +5,32 @@ using static Annium.Core.DependencyInjection.Internal.Builders.Registrations.Hel
 
 namespace Annium.Core.DependencyInjection.Internal.Builders.Registrations;
 
+/// <summary>
+/// Registration for keyed type-based factories
+/// </summary>
 internal class KeyedTypeFactoryRegistration : IRegistration
 {
+    /// <summary>
+    /// The service type for this registration
+    /// </summary>
     private readonly Type _serviceType;
+
+    /// <summary>
+    /// The key associated with this service
+    /// </summary>
     private readonly object _key;
+
+    /// <summary>
+    /// The implementation type for this service
+    /// </summary>
     private readonly Type _implementationType;
 
+    /// <summary>
+    /// Initializes a new instance of the KeyedTypeFactoryRegistration class
+    /// </summary>
+    /// <param name="serviceType">The service type</param>
+    /// <param name="key">The service key</param>
+    /// <param name="implementationType">The implementation type</param>
     public KeyedTypeFactoryRegistration(Type serviceType, object key, Type implementationType)
     {
         _serviceType = serviceType;
@@ -18,6 +38,11 @@ internal class KeyedTypeFactoryRegistration : IRegistration
         _implementationType = implementationType;
     }
 
+    /// <summary>
+    /// Resolves this registration into service descriptors with the specified lifetime
+    /// </summary>
+    /// <param name="lifetime">The service lifetime to apply</param>
+    /// <returns>The collection of service descriptors</returns>
     public IEnumerable<IServiceDescriptor> ResolveServiceDescriptors(ServiceLifetime lifetime)
     {
         yield return Factory(
