@@ -5,8 +5,14 @@ using Xunit;
 
 namespace Annium.Serialization.Json.Tests.Converters;
 
+/// <summary>
+/// Tests for enum JSON converter functionality
+/// </summary>
 public class EnumJsonConverterTest : TestBase
 {
+    /// <summary>
+    /// Tests that basic enum serialization and deserialization works correctly
+    /// </summary>
     [Fact]
     public void Serialization_Basic_Works()
     {
@@ -34,26 +40,64 @@ public class EnumJsonConverterTest : TestBase
         c4.Is(C.Z);
     }
 
+    /// <summary>
+    /// Test enum A for basic enum testing
+    /// </summary>
     internal enum A
     {
+        /// <summary>
+        /// X value
+        /// </summary>
         X,
+
+        /// <summary>
+        /// Y value
+        /// </summary>
         Y,
     }
 
+    /// <summary>
+    /// Test flags enum B for flags enum testing
+    /// </summary>
     [Flags]
     internal enum B
     {
+        /// <summary>
+        /// X flag
+        /// </summary>
         X,
+
+        /// <summary>
+        /// Y flag
+        /// </summary>
         Y,
+
+        /// <summary>
+        /// Z flag
+        /// </summary>
         Z,
     }
 
+    /// <summary>
+    /// Test flags enum C with custom parsing for enum parsing testing
+    /// </summary>
     [Flags]
     [EnumParse(",", Z)]
     internal enum C
     {
+        /// <summary>
+        /// X flag
+        /// </summary>
         X,
+
+        /// <summary>
+        /// Y flag
+        /// </summary>
         Y,
+
+        /// <summary>
+        /// Z flag
+        /// </summary>
         Z,
     }
 }

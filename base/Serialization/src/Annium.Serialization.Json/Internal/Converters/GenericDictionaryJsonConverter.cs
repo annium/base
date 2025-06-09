@@ -5,10 +5,22 @@ using System.Text.Json.Serialization;
 
 namespace Annium.Serialization.Json.Internal.Converters;
 
+/// <summary>
+/// JSON converter for generic dictionaries that serializes complex keys as JSON strings.
+/// </summary>
+/// <typeparam name="TKey">The key type.</typeparam>
+/// <typeparam name="TValue">The value type.</typeparam>
 internal class GenericDictionaryJsonConverter<TKey, TValue> : JsonConverter<Dictionary<TKey, TValue>>
     where TKey : notnull
     where TValue : notnull
 {
+    /// <summary>
+    /// Reads and converts JSON to a dictionary.
+    /// </summary>
+    /// <param name="reader">The JSON reader.</param>
+    /// <param name="typeToConvert">The type to convert to.</param>
+    /// <param name="options">The serializer options.</param>
+    /// <returns>The converted dictionary.</returns>
     public override Dictionary<TKey, TValue> Read(
         ref Utf8JsonReader reader,
         Type typeToConvert,
@@ -40,6 +52,12 @@ internal class GenericDictionaryJsonConverter<TKey, TValue> : JsonConverter<Dict
         throw new JsonException();
     }
 
+    /// <summary>
+    /// Writes a dictionary as JSON.
+    /// </summary>
+    /// <param name="writer">The JSON writer.</param>
+    /// <param name="value">The dictionary to write.</param>
+    /// <param name="options">The serializer options.</param>
     public override void Write(Utf8JsonWriter writer, Dictionary<TKey, TValue> value, JsonSerializerOptions options)
     {
         writer.WriteStartObject();

@@ -5,15 +5,31 @@ using MessagePack;
 
 namespace Annium.Serialization.MessagePack.Internal;
 
+/// <summary>
+/// A MessagePack serializer implementation that works with ReadOnlyMemory&lt;byte&gt; data.
+/// </summary>
 internal class ReadOnlyMemoryByteSerializer : ISerializer<ReadOnlyMemory<byte>>
 {
+    /// <summary>
+    /// The MessagePack serializer options used for serialization and deserialization.
+    /// </summary>
     private readonly MessagePackSerializerOptions _opts;
 
+    /// <summary>
+    /// Initializes a new instance of the ReadOnlyMemoryByteSerializer class.
+    /// </summary>
+    /// <param name="opts">The MessagePack serializer options to use.</param>
     public ReadOnlyMemoryByteSerializer(MessagePackSerializerOptions opts)
     {
         _opts = opts;
     }
 
+    /// <summary>
+    /// Deserializes a ReadOnlyMemory&lt;byte&gt; value to the specified type.
+    /// </summary>
+    /// <typeparam name="T">The type to deserialize to.</typeparam>
+    /// <param name="value">The ReadOnlyMemory&lt;byte&gt; data to deserialize.</param>
+    /// <returns>The deserialized object of type T.</returns>
     public T Deserialize<T>(ReadOnlyMemory<byte> value)
     {
         try
@@ -36,6 +52,12 @@ internal class ReadOnlyMemoryByteSerializer : ISerializer<ReadOnlyMemory<byte>>
         }
     }
 
+    /// <summary>
+    /// Deserializes a ReadOnlyMemory&lt;byte&gt; value to the specified type.
+    /// </summary>
+    /// <param name="type">The type to deserialize to.</param>
+    /// <param name="value">The ReadOnlyMemory&lt;byte&gt; data to deserialize.</param>
+    /// <returns>The deserialized object of the specified type.</returns>
     public object? Deserialize(Type type, ReadOnlyMemory<byte> value)
     {
         try
@@ -58,6 +80,12 @@ internal class ReadOnlyMemoryByteSerializer : ISerializer<ReadOnlyMemory<byte>>
         }
     }
 
+    /// <summary>
+    /// Serializes an object to ReadOnlyMemory&lt;byte&gt; format.
+    /// </summary>
+    /// <typeparam name="T">The type of the object to serialize.</typeparam>
+    /// <param name="value">The object to serialize.</param>
+    /// <returns>The serialized data as ReadOnlyMemory&lt;byte&gt;.</returns>
     public ReadOnlyMemory<byte> Serialize<T>(T value)
     {
         try
@@ -77,6 +105,12 @@ internal class ReadOnlyMemoryByteSerializer : ISerializer<ReadOnlyMemory<byte>>
         }
     }
 
+    /// <summary>
+    /// Serializes an object to ReadOnlyMemory&lt;byte&gt; format.
+    /// </summary>
+    /// <param name="type">The type of the object to serialize.</param>
+    /// <param name="value">The object to serialize.</param>
+    /// <returns>The serialized data as ReadOnlyMemory&lt;byte&gt;.</returns>
     public ReadOnlyMemory<byte> Serialize(Type type, object? value)
     {
         try

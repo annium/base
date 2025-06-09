@@ -5,8 +5,14 @@ using Xunit;
 
 namespace Annium.Serialization.Abstractions.Tests;
 
+/// <summary>
+/// Tests for serializer factory functionality
+/// </summary>
 public class SerializerFactoryTests
 {
+    /// <summary>
+    /// Tests that creating a generic serializer works correctly
+    /// </summary>
     [Fact]
     public void Create_GenericSerializer_Works()
     {
@@ -25,6 +31,9 @@ public class SerializerFactoryTests
         deserialized.Is(data);
     }
 
+    /// <summary>
+    /// Tests that creating a precise serializer works correctly
+    /// </summary>
     [Fact]
     public void Create_PreciseSerializer_Works()
     {
@@ -43,9 +52,19 @@ public class SerializerFactoryTests
         deserialized.Is(data);
     }
 
+    /// <summary>
+    /// Test data structure representing a point with X and Y coordinates
+    /// </summary>
     public struct Point
     {
+        /// <summary>
+        /// Gets or sets the X coordinate
+        /// </summary>
         public int X { get; set; }
+
+        /// <summary>
+        /// Gets or sets the Y coordinate
+        /// </summary>
         public int Y { get; set; }
     }
 }

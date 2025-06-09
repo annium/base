@@ -7,8 +7,14 @@ using YamlDotNet.Serialization.NamingConventions;
 
 namespace Annium.Serialization.Yaml.Tests;
 
+/// <summary>
+/// Tests for YAML serialization configuration functionality
+/// </summary>
 public class ConfigurationTest
 {
+    /// <summary>
+    /// Tests that multiple YAML serialization configurations can coexist and work correctly
+    /// </summary>
     [Fact]
     public void MultipleConfigurations_Work()
     {

@@ -9,13 +9,34 @@ using Annium.Serialization.Json.Converters;
 
 namespace Annium.Serialization.Json.Internal.Converters;
 
+/// <summary>
+/// JSON converter that deserializes objects using constructor parameters and properties.
+/// </summary>
+/// <typeparam name="T">The type to convert.</typeparam>
 internal class ConstructorJsonConverter<T> : JsonConverter<T>
     where T : notnull
 {
+    /// <summary>
+    /// The constructor to use for creating instances.
+    /// </summary>
     private readonly ConstructorInfo _constructor;
+
+    /// <summary>
+    /// The constructor parameters configuration.
+    /// </summary>
     private readonly List<ConstructorJsonConverterConfiguration.ParameterItem> _parameters;
+
+    /// <summary>
+    /// The properties that can be set after construction.
+    /// </summary>
     private readonly IReadOnlyCollection<PropertyInfo> _properties;
 
+    /// <summary>
+    /// Initializes a new instance of the ConstructorJsonConverter class.
+    /// </summary>
+    /// <param name="constructor">The constructor to use for creating instances.</param>
+    /// <param name="parameters">The constructor parameters configuration.</param>
+    /// <param name="properties">The properties that can be set after construction.</param>
     public ConstructorJsonConverter(
         ConstructorInfo constructor,
         List<ConstructorJsonConverterConfiguration.ParameterItem> parameters,
@@ -27,6 +48,13 @@ internal class ConstructorJsonConverter<T> : JsonConverter<T>
         _properties = properties;
     }
 
+    /// <summary>
+    /// Reads and converts JSON to an object using constructor-based deserialization.
+    /// </summary>
+    /// <param name="reader">The JSON reader.</param>
+    /// <param name="typeToConvert">The type to convert to.</param>
+    /// <param name="options">The serializer options.</param>
+    /// <returns>The converted object.</returns>
     public override T Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         using var doc = JsonDocument.ParseValue(ref reader);
@@ -70,6 +98,12 @@ internal class ConstructorJsonConverter<T> : JsonConverter<T>
         return (T)result;
     }
 
+    /// <summary>
+    /// Writes a value as JSON using standard serialization.
+    /// </summary>
+    /// <param name="writer">The JSON writer.</param>
+    /// <param name="value">The value to write.</param>
+    /// <param name="options">The serializer options.</param>
     public override void Write(Utf8JsonWriter writer, T value, JsonSerializerOptions options)
     {
         JsonSerializer.Serialize(writer, value, options.Clone().RemoveConverter<ConstructorJsonConverterFactory>());

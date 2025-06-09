@@ -8,12 +8,29 @@ using Constants = Annium.Serialization.MessagePack.Constants;
 // ReSharper disable once CheckNamespace
 namespace Annium.Core.DependencyInjection;
 
+/// <summary>
+/// Delegate for configuring MessagePack serializer options using a service provider.
+/// </summary>
+/// <param name="provider">The service provider for dependency resolution.</param>
+/// <returns>The configured MessagePackSerializerOptions.</returns>
 public delegate MessagePackSerializerOptions ConfigureSerializer(IServiceProvider provider);
 
+/// <summary>
+/// Extension methods for configuring MessagePack serialization.
+/// </summary>
 public static class SerializationConfigurationBuilderExtensions
 {
+    /// <summary>
+    /// Cache for MessagePack serializer options keyed by options configuration.
+    /// </summary>
     private static readonly ConcurrentDictionary<OptionsKey, MessagePackSerializerOptions> _options = new();
 
+    /// <summary>
+    /// Adds MessagePack serialization support with default configuration.
+    /// </summary>
+    /// <param name="builder">The serialization configuration builder.</param>
+    /// <param name="isDefault">Whether this should be the default serializer.</param>
+    /// <returns>The configuration builder for method chaining.</returns>
     public static ISerializationConfigurationBuilder WithMessagePack(
         this ISerializationConfigurationBuilder builder,
         bool isDefault = false
@@ -29,6 +46,13 @@ public static class SerializationConfigurationBuilderExtensions
         );
     }
 
+    /// <summary>
+    /// Adds MessagePack serialization support with custom configuration.
+    /// </summary>
+    /// <param name="builder">The serialization configuration builder.</param>
+    /// <param name="configure">Function to configure MessagePack serializer options.</param>
+    /// <param name="isDefault">Whether this should be the default serializer.</param>
+    /// <returns>The configuration builder for method chaining.</returns>
     public static ISerializationConfigurationBuilder WithMessagePack(
         this ISerializationConfigurationBuilder builder,
         Func<MessagePackSerializerOptions> configure,
@@ -44,6 +68,13 @@ public static class SerializationConfigurationBuilderExtensions
         );
     }
 
+    /// <summary>
+    /// Adds MessagePack serialization support with service provider-based configuration.
+    /// </summary>
+    /// <param name="builder">The serialization configuration builder.</param>
+    /// <param name="configure">Delegate to configure MessagePack serializer options using service provider.</param>
+    /// <param name="isDefault">Whether this should be the default serializer.</param>
+    /// <returns>The configuration builder for method chaining.</returns>
     public static ISerializationConfigurationBuilder WithMessagePack(
         this ISerializationConfigurationBuilder builder,
         ConfigureSerializer configure,
@@ -57,6 +88,14 @@ public static class SerializationConfigurationBuilderExtensions
         );
     }
 
+    /// <summary>
+    /// Creates a function to resolve a serializer instance with configuration.
+    /// </summary>
+    /// <typeparam name="TSerializer">The type of serializer to create.</typeparam>
+    /// <param name="key">The serializer key for caching.</param>
+    /// <param name="configure">The configuration delegate.</param>
+    /// <param name="factory">The factory function to create the serializer.</param>
+    /// <returns>A function that resolves the serializer from a service provider.</returns>
     private static Func<IServiceProvider, TSerializer> ResolveSerializer<TSerializer>(
         string key,
         ConfigureSerializer configure,
@@ -70,6 +109,13 @@ public static class SerializationConfigurationBuilderExtensions
             return factory(options);
         };
 
+    /// <summary>
+    /// Adds MessagePack serialization support with pre-configured options.
+    /// </summary>
+    /// <param name="builder">The serialization configuration builder.</param>
+    /// <param name="opts">The pre-configured MessagePack serializer options.</param>
+    /// <param name="isDefault">Whether this should be the default serializer.</param>
+    /// <returns>The configuration builder for method chaining.</returns>
     public static ISerializationConfigurationBuilder WithMessagePack(
         this ISerializationConfigurationBuilder builder,
         MessagePackSerializerOptions opts,
@@ -83,15 +129,32 @@ public static class SerializationConfigurationBuilderExtensions
         );
     }
 
+    /// <summary>
+    /// Creates a function to resolve a serializer instance with pre-configured options.
+    /// </summary>
+    /// <typeparam name="TSerializer">The type of serializer to create.</typeparam>
+    /// <param name="options">The pre-configured MessagePack serializer options.</param>
+    /// <param name="factory">The factory function to create the serializer.</param>
+    /// <returns>A function that resolves the serializer from a service provider.</returns>
     private static Func<IServiceProvider, TSerializer> ResolveSerializer<TSerializer>(
         MessagePackSerializerOptions options,
         Func<MessagePackSerializerOptions, TSerializer> factory
     ) => _ => factory(options);
 
+    /// <summary>
+    /// Creates a ReadOnlyMemoryByteSerializer instance with the specified options.
+    /// </summary>
+    /// <param name="opts">The MessagePack serializer options.</param>
+    /// <returns>A new ReadOnlyMemoryByteSerializer instance.</returns>
     private static ReadOnlyMemoryByteSerializer CreateReadOnlyMemoryByte(MessagePackSerializerOptions opts) =>
         new(opts);
 
     //
 
+    /// <summary>
+    /// Record representing a cache key for MessagePack serializer options.
+    /// </summary>
+    /// <param name="SerializerKey">The serializer key identifying the configuration.</param>
+    /// <param name="Configure">The configuration delegate used to create options.</param>
     private record OptionsKey(SerializerKey SerializerKey, ConfigureSerializer Configure);
 }

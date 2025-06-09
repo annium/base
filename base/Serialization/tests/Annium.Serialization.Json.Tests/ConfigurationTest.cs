@@ -6,8 +6,14 @@ using Xunit;
 
 namespace Annium.Serialization.Json.Tests;
 
+/// <summary>
+/// Tests for JSON serialization configuration functionality
+/// </summary>
 public class ConfigurationTest
 {
+    /// <summary>
+    /// Tests that multiple JSON serialization configurations can coexist and work correctly
+    /// </summary>
     [Fact]
     public void MultipleConfigurations_Work()
     {

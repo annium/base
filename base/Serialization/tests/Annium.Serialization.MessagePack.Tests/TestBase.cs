@@ -5,8 +5,16 @@ using MessagePack;
 
 namespace Annium.Serialization.MessagePack.Tests;
 
+/// <summary>
+/// Base class for MessagePack serialization tests providing common setup
+/// </summary>
 public class TestBase
 {
+    /// <summary>
+    /// Gets a configured MessagePack serializer for testing
+    /// </summary>
+    /// <param name="configure">Optional configuration function for MessagePack options</param>
+    /// <returns>A MessagePack serializer with the specified configuration</returns>
     protected ISerializer<ReadOnlyMemory<byte>> GetSerializer(Func<MessagePackSerializerOptions>? configure = null)
     {
         var container = new ServiceContainer();
