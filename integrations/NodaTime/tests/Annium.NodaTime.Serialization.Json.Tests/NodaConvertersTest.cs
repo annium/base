@@ -12,6 +12,9 @@ namespace Annium.NodaTime.Serialization.Json.Tests;
 /// </summary>
 public class ConvertersTest
 {
+    /// <summary>
+    /// Tests that the OffsetConverter correctly serializes and deserializes Offset values.
+    /// </summary>
     [Fact]
     public void OffsetConverter()
     {
@@ -20,6 +23,9 @@ public class ConvertersTest
         AssertConversions(value, json, Converters.OffsetConverter);
     }
 
+    /// <summary>
+    /// Tests that the InstantConverter correctly serializes and deserializes Instant values.
+    /// </summary>
     [Fact]
     public void InstantConverter()
     {
@@ -28,6 +34,9 @@ public class ConvertersTest
         AssertConversions(value, json, Converters.InstantConverter);
     }
 
+    /// <summary>
+    /// Tests that the LocalDateConverter correctly serializes and deserializes LocalDate values.
+    /// </summary>
     [Fact]
     public void LocalDateConverter()
     {
@@ -36,6 +45,9 @@ public class ConvertersTest
         AssertConversions(value, json, Converters.LocalDateConverter);
     }
 
+    /// <summary>
+    /// Tests that the LocalDateConverter throws an exception when trying to serialize non-ISO calendar dates.
+    /// </summary>
     [Fact]
     public void LocalDateConverter_SerializeNonIso_Throws()
     {
@@ -45,6 +57,9 @@ public class ConvertersTest
             .Throws<ArgumentException>();
     }
 
+    /// <summary>
+    /// Tests that the LocalDateTimeConverter correctly serializes and deserializes LocalDateTime values.
+    /// </summary>
     [Fact]
     public void LocalDateTimeConverter()
     {
@@ -53,6 +68,9 @@ public class ConvertersTest
         AssertConversions(value, json, Converters.LocalDateTimeConverter);
     }
 
+    /// <summary>
+    /// Tests that the LocalDateTimeConverter throws an exception when trying to serialize non-ISO calendar date times.
+    /// </summary>
     [Fact]
     public void LocalDateTimeConverter_SerializeNonIso_Throws()
     {
@@ -62,6 +80,9 @@ public class ConvertersTest
             .Throws<ArgumentException>();
     }
 
+    /// <summary>
+    /// Tests that the LocalTimeConverter correctly serializes and deserializes LocalTime values.
+    /// </summary>
     [Fact]
     public void LocalTimeConverter()
     {
@@ -70,6 +91,9 @@ public class ConvertersTest
         AssertConversions(value, json, Converters.LocalTimeConverter);
     }
 
+    /// <summary>
+    /// Tests that the RoundtripPeriodConverter correctly serializes and deserializes Period values for round-trip scenarios.
+    /// </summary>
     [Fact]
     public void RoundtripPeriodConverter()
     {
@@ -78,6 +102,9 @@ public class ConvertersTest
         AssertConversions(value, json, Converters.RoundtripPeriodConverter);
     }
 
+    /// <summary>
+    /// Tests that the NormalizingIsoPeriodConverter normalizes periods during serialization when normalization is required.
+    /// </summary>
     [Fact]
     public void NormalizingIsoPeriodConverter_RequiresNormalization()
     {
@@ -87,6 +114,9 @@ public class ConvertersTest
         json.Is("\"P2DT4H30M\"");
     }
 
+    /// <summary>
+    /// Tests that the NormalizingIsoPeriodConverter correctly handles periods that are already normalized.
+    /// </summary>
     [Fact]
     public void NormalizingIsoPeriodConverter_AlreadyNormalized()
     {
@@ -96,6 +126,9 @@ public class ConvertersTest
         AssertConversions(value, json, Converters.NormalizingIsoPeriodConverter);
     }
 
+    /// <summary>
+    /// Tests that the ZonedDateTimeConverter correctly handles ambiguous local times during serialization and deserialization.
+    /// </summary>
     [Fact]
     public void ZonedDateTimeConverter()
     {
@@ -111,6 +144,9 @@ public class ConvertersTest
         AssertConversions(laterValue, laterJson, converter);
     }
 
+    /// <summary>
+    /// Tests that the OffsetDateTimeConverter correctly serializes and deserializes OffsetDateTime values.
+    /// </summary>
     [Fact]
     public void OffsetDateTimeConverter()
     {
@@ -121,6 +157,9 @@ public class ConvertersTest
         AssertConversions(value, json, Converters.OffsetDateTimeConverter);
     }
 
+    /// <summary>
+    /// Tests that the OffsetDateTimeConverter correctly formats whole hour offsets for RFC3339 compliance.
+    /// </summary>
     [Fact]
     public void OffsetDateTimeConverter_WholeHours()
     {
@@ -131,6 +170,9 @@ public class ConvertersTest
         AssertConversions(value, json, Converters.OffsetDateTimeConverter);
     }
 
+    /// <summary>
+    /// Tests that the OffsetDateTimeConverter correctly handles zero offset (UTC) formatting.
+    /// </summary>
     [Fact]
     public void OffsetDateTimeConverter_ZeroOffset()
     {
@@ -141,12 +183,18 @@ public class ConvertersTest
         AssertConversions(value, json, Converters.OffsetDateTimeConverter);
     }
 
+    /// <summary>
+    /// Tests that the DurationConverter correctly serializes and deserializes whole second durations.
+    /// </summary>
     [Fact]
     public void Duration_WholeSeconds()
     {
         AssertConversions(Duration.FromHours(48), "\"48:00:00\"", Converters.DurationConverter);
     }
 
+    /// <summary>
+    /// Tests that the DurationConverter correctly handles fractional seconds with various precision levels.
+    /// </summary>
     [Fact]
     public void Duration_FractionalSeconds()
     {
@@ -172,6 +220,9 @@ public class ConvertersTest
         );
     }
 
+    /// <summary>
+    /// Tests that the DurationConverter correctly handles minimum and maximum duration values.
+    /// </summary>
     [Fact]
     public void Duration_MinAndMaxValues()
     {
@@ -198,6 +249,9 @@ public class ConvertersTest
         (Duration.FromHours(25) + Duration.FromMinutes(10) + Duration.FromTicks(1234000)).Is(parsed);
     }
 
+    /// <summary>
+    /// Tests that the OffsetDateConverter correctly serializes and deserializes OffsetDate values.
+    /// </summary>
     [Fact]
     public void OffsetDateConverter()
     {
@@ -206,6 +260,9 @@ public class ConvertersTest
         AssertConversions(value, json, Converters.OffsetDateConverter);
     }
 
+    /// <summary>
+    /// Tests that the OffsetTimeConverter correctly serializes and deserializes OffsetTime values.
+    /// </summary>
     [Fact]
     public void OffsetTimeConverter()
     {
@@ -214,6 +271,9 @@ public class ConvertersTest
         AssertConversions(value, json, Converters.OffsetTimeConverter);
     }
 
+    /// <summary>
+    /// Tests that the YearMonthConverter correctly serializes and deserializes YearMonth values.
+    /// </summary>
     [Fact]
     public void YearMonthConverter()
     {
@@ -222,6 +282,9 @@ public class ConvertersTest
         AssertConversions(value, json, Converters.YearMonthConverter);
     }
 
+    /// <summary>
+    /// Tests that the YearMonthConverter throws an exception when trying to serialize non-ISO calendar year-month values.
+    /// </summary>
     [Fact]
     public void YearMonthConverter_SerializeNonIso_Throws()
     {

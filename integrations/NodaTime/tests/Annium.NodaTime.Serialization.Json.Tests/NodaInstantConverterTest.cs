@@ -6,8 +6,14 @@ using static Annium.NodaTime.Serialization.Json.Tests.TestHelper;
 
 namespace Annium.NodaTime.Serialization.Json.Tests;
 
+/// <summary>
+/// Tests for the Instant JSON converter that handles instant serialization.
+/// </summary>
 public class NodaInstantConverterTest
 {
+    /// <summary>
+    /// Tests that non-nullable Instant values are correctly serialized to ISO-8601 format.
+    /// </summary>
     [Fact]
     public void Serialize_NonNullableType()
     {
@@ -32,6 +38,9 @@ public class NodaInstantConverterTest
     //     json.Is("null");
     // }
 
+    /// <summary>
+    /// Tests that ISO-8601 strings are correctly deserialized to non-nullable Instant values.
+    /// </summary>
     [Fact]
     public void Deserialize_ToNonNullableType()
     {

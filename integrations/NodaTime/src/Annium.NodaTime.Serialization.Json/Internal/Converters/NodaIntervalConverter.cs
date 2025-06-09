@@ -11,6 +11,13 @@ namespace Annium.NodaTime.Serialization.Json.Internal.Converters;
 /// </summary>
 internal sealed class NodaIntervalConverter : ConverterBase<Interval>
 {
+    /// <summary>
+    /// Reads a JSON object representation of an Interval with separate "start" and "end" properties.
+    /// </summary>
+    /// <param name="reader">The JSON reader to read from.</param>
+    /// <param name="typeToConvert">The type to convert to.</param>
+    /// <param name="options">The serializer options to use.</param>
+    /// <returns>The deserialized Interval.</returns>
     public override Interval ReadImplementation(
         ref Utf8JsonReader reader,
         Type typeToConvert,
@@ -32,6 +39,12 @@ internal sealed class NodaIntervalConverter : ConverterBase<Interval>
         return new Interval(startInstant, endInstant);
     }
 
+    /// <summary>
+    /// Writes an Interval as a JSON object with separate "start" and "end" properties (omitting null values).
+    /// </summary>
+    /// <param name="writer">The JSON writer to write to.</param>
+    /// <param name="value">The Interval value to serialize.</param>
+    /// <param name="options">The serializer options to use.</param>
     public override void WriteImplementation(Utf8JsonWriter writer, Interval value, JsonSerializerOptions options)
     {
         writer.WriteStartObject();

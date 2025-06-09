@@ -4,8 +4,14 @@ using Xunit;
 
 namespace Annium.NodaTime.Extensions.Tests;
 
+/// <summary>
+/// Tests for year month extension methods that provide date arithmetic operations.
+/// </summary>
 public class YearMonthExtensionsTest
 {
+    /// <summary>
+    /// Tests that AddYears correctly adds or subtracts years from a YearMonth.
+    /// </summary>
     [Fact]
     public void AddYears()
     {
@@ -16,6 +22,9 @@ public class YearMonthExtensionsTest
         new YearMonth(3, 2).AddYears(-2).Is(new YearMonth(1, 2));
     }
 
+    /// <summary>
+    /// Tests that AddMonths correctly adds or subtracts months from a YearMonth, handling year overflow.
+    /// </summary>
     [Fact]
     public void AddMonths()
     {
@@ -30,6 +39,9 @@ public class YearMonthExtensionsTest
         new YearMonth(3, 1).AddMonths(-14).Is(new YearMonth(1, 11));
     }
 
+    /// <summary>
+    /// Tests that NextYear returns the same month in the following year.
+    /// </summary>
     [Fact]
     public void NextYear()
     {
@@ -39,6 +51,9 @@ public class YearMonthExtensionsTest
             .Is(new YearMonth(2, 1));
     }
 
+    /// <summary>
+    /// Tests that PrevYear returns the same month in the previous year.
+    /// </summary>
     [Fact]
     public void PrevYear()
     {
@@ -48,6 +63,9 @@ public class YearMonthExtensionsTest
             .Is(new YearMonth(1, 1));
     }
 
+    /// <summary>
+    /// Tests that NextMonth advances to the next month, handling year rollover.
+    /// </summary>
     [Fact]
     public void NextMonth()
     {
@@ -58,6 +76,9 @@ public class YearMonthExtensionsTest
         new YearMonth(1, 12).NextMonth().Is(new YearMonth(2, 1));
     }
 
+    /// <summary>
+    /// Tests that PrevMonth goes back to the previous month, handling year rollback.
+    /// </summary>
     [Fact]
     public void PrevMonth()
     {
