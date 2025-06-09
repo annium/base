@@ -9,25 +9,61 @@ using Annium.Logging;
 
 namespace Annium.Net.Sockets.Internal;
 
+/// <summary>
+/// Internal implementation of a client-side managed socket that handles connection, SSL, and data transmission
+/// </summary>
 internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
 {
+    /// <summary>
+    /// Gets the logger instance
+    /// </summary>
     public ILogger Logger { get; }
+
+    /// <summary>
+    /// Event raised when data is received from the remote endpoint
+    /// </summary>
     public event Action<ReadOnlyMemory<byte>> OnReceived = delegate { };
 
+    /// <summary>
+    /// Gets a task that completes when the socket is closed
+    /// </summary>
     public Task<SocketCloseResult> IsClosed { get; private set; } =
         Task.FromResult(new SocketCloseResult(SocketCloseStatus.ClosedLocal, null));
 
+    /// <summary>
+    /// Configuration options for the managed socket
+    /// </summary>
     private readonly ManagedSocketOptions _options;
+
+    /// <summary>
+    /// Thread synchronization lock for connection operations
+    /// </summary>
     private readonly Lock _locker = new();
+
+    /// <summary>
+    /// Current connection state including stream and cancellation token
+    /// </summary>
     private Connection? _cn;
+
+    /// <summary>
+    /// Cancellation token source for listening operations
+    /// </summary>
     private CancellationTokenSource _listenCts = new();
 
+    /// <summary>
+    /// Initializes a new instance of the ClientManagedSocket class
+    /// </summary>
+    /// <param name="options">Configuration options for the socket</param>
+    /// <param name="logger">Logger instance for diagnostics</param>
     public ClientManagedSocket(ManagedSocketOptions options, ILogger logger)
     {
         _options = options;
         Logger = logger;
     }
 
+    /// <summary>
+    /// Disposes the socket and releases all resources
+    /// </summary>
     public void Dispose()
     {
         this.Trace("start");
@@ -55,6 +91,13 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Connects to the specified remote endpoint asynchronously
+    /// </summary>
+    /// <param name="endpoint">The remote endpoint to connect to</param>
+    /// <param name="authOptions">Optional SSL client authentication options</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>A task that completes with null on success or an exception on failure</returns>
     public async Task<Exception?> ConnectAsync(
         IPEndPoint endpoint,
         SslClientAuthenticationOptions? authOptions,
@@ -151,6 +194,10 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
         }
     }
 
+    /// <summary>
+    /// Disconnects from the remote endpoint asynchronously
+    /// </summary>
+    /// <returns>A task that completes when disconnection is finished</returns>
     public async Task DisconnectAsync()
     {
         this.Trace("start");
@@ -185,6 +232,12 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Sends data to the remote endpoint asynchronously
+    /// </summary>
+    /// <param name="data">The data to send</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>The status of the send operation</returns>
     public ValueTask<SocketSendStatus> SendAsync(ReadOnlyMemory<byte> data, CancellationToken ct = default)
     {
         this.Trace("send");
@@ -192,6 +245,11 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
         return _cn?.Socket.SendAsync(data, ct) ?? ValueTask.FromResult(SocketSendStatus.Closed);
     }
 
+    /// <summary>
+    /// Handles when the underlying socket is closed
+    /// </summary>
+    /// <param name="task">The socket close task result</param>
+    /// <returns>The socket close result</returns>
     private SocketCloseResult HandleClosed(Task<SocketCloseResult> task)
     {
         this.Trace("start");
@@ -222,12 +280,21 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
 #pragma warning restore VSTHRD002
     }
 
+    /// <summary>
+    /// Handles received data from the underlying socket
+    /// </summary>
+    /// <param name="data">The received data</param>
     private void HandleOnReceived(ReadOnlyMemory<byte> data)
     {
         this.Trace("trigger binary received");
         OnReceived(data);
     }
 
+    /// <summary>
+    /// Cleans up resources when connection fails
+    /// </summary>
+    /// <param name="stream">The stream to dispose</param>
+    /// <param name="socket">The socket to dispose</param>
     private void Cleanup(Stream? stream, IManagedSocket? socket)
     {
         this.Trace("start");
@@ -248,8 +315,17 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Represents a connection with its stream and socket
+    /// </summary>
+    /// <param name="Stream">The network stream</param>
+    /// <param name="Socket">The managed socket</param>
+    /// <param name="Logger">The logger instance</param>
     private sealed record Connection(Stream Stream, IManagedSocket Socket, ILogger Logger) : IDisposable, ILogSubject
     {
+        /// <summary>
+        /// Disposes the connection resources
+        /// </summary>
         public void Dispose()
         {
             try

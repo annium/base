@@ -9,14 +9,39 @@ using NativeClientWebSocket = System.Net.WebSockets.ClientWebSocket;
 
 namespace Annium.Net.WebSockets.Benchmark;
 
+/// <summary>
+/// WebSocket benchmarks using observable pattern for receiving messages
+/// </summary>
 public partial class Benchmarks
 {
+    /// <summary>
+    /// Cancellation token source for observable benchmark
+    /// </summary>
     private CancellationTokenSource _observableCts = default!;
+
+    /// <summary>
+    /// Manual reset event for synchronizing observable benchmark completion
+    /// </summary>
     private ManualResetEventSlim _observableGate = default!;
+
+    /// <summary>
+    /// Counter for observable events received
+    /// </summary>
     private long _observableEventCount;
+
+    /// <summary>
+    /// Native client WebSocket for observable benchmark
+    /// </summary>
     private NativeClientWebSocket _observableSocket = default!;
+
+    /// <summary>
+    /// Task for listening to observable WebSocket messages
+    /// </summary>
     private Task<WebSocketCloseResult> _observableListenTask = default!;
 
+    /// <summary>
+    /// Sets up the observable benchmark iteration
+    /// </summary>
     [IterationSetup(Target = nameof(Observable))]
     public void IterationSetup_Observable()
     {
@@ -36,6 +61,9 @@ public partial class Benchmarks
         _observableListenTask = client.ListenAsync(_observableCts.Token);
     }
 
+    /// <summary>
+    /// Cleans up the observable benchmark iteration
+    /// </summary>
     [IterationCleanup(Target = nameof(Observable))]
     public void IterationCleanup_Observable()
     {
@@ -52,12 +80,19 @@ public partial class Benchmarks
 #pragma warning restore VSTHRD002
     }
 
+    /// <summary>
+    /// Benchmark for observable pattern WebSocket message handling
+    /// </summary>
     [Benchmark]
     public void Observable()
     {
         _observableGate.Wait();
     }
 
+    /// <summary>
+    /// Handles observable WebSocket message events
+    /// </summary>
+    /// <param name="data">The message data received</param>
     private void HandleMessage_Observable(ReadOnlyMemory<byte> data)
     {
         if (Interlocked.Decrement(ref _observableEventCount) > 0)

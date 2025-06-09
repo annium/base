@@ -9,8 +9,14 @@ using Namotion.Reflection;
 
 namespace Annium.Net.Types.Serialization.Json.Tests.Mapper;
 
+/// <summary>
+/// Test provider implementation for JSON serialization testing
+/// </summary>
 internal class TestProvider : ITestProvider
 {
+    /// <summary>
+    /// Gets the collection of models available for testing
+    /// </summary>
     public IReadOnlyCollection<IModel> Models
     {
         get
@@ -21,9 +27,20 @@ internal class TestProvider : ITestProvider
         }
     }
 
+    /// <summary>
+    /// The model mapper instance
+    /// </summary>
     private IModelMapper _mapper = default!;
+
+    /// <summary>
+    /// The serializer instance
+    /// </summary>
     private ISerializer<string> _serializer = default!;
 
+    /// <summary>
+    /// Configures the service container with necessary services
+    /// </summary>
+    /// <param name="container">The service container to configure</param>
     public void ConfigureContainer(IServiceContainer container)
     {
         container.AddRuntime(GetType().Assembly);
@@ -38,12 +55,21 @@ internal class TestProvider : ITestProvider
             );
     }
 
+    /// <summary>
+    /// Sets up the test provider with resolved services
+    /// </summary>
+    /// <param name="sp">The service provider</param>
     public void Setup(IServiceProvider sp)
     {
         _mapper = sp.Resolve<IModelMapper>();
         _serializer = sp.Resolve<ISerializer<string>>();
     }
 
+    /// <summary>
+    /// Maps a contextual type to a type reference
+    /// </summary>
+    /// <param name="type">The contextual type to map</param>
+    /// <returns>The mapped type reference</returns>
     public IRef Map(ContextualType type)
     {
         var originalRef = _mapper.Map(type);

@@ -8,15 +8,47 @@ using Annium.Logging;
 
 namespace Annium.Net.Sockets.Internal;
 
+/// <summary>
+/// Implementation of a managed socket for raw data transmission without message framing
+/// </summary>
 internal class RawManagedSocket : IManagedSocket, ILogSubject
 {
+    /// <summary>
+    /// Gets the logger instance
+    /// </summary>
     public ILogger Logger { get; }
+
+    /// <summary>
+    /// Event raised when data is received
+    /// </summary>
     public event Action<ReadOnlyMemory<byte>> OnReceived = delegate { };
+
+    /// <summary>
+    /// The underlying network stream
+    /// </summary>
     private readonly Stream _stream;
+
+    /// <summary>
+    /// Configuration options for the socket
+    /// </summary>
     private readonly ManagedSocketOptionsBase _options;
+
+    /// <summary>
+    /// Counter for bytes sent
+    /// </summary>
     private long _sendCounter;
+
+    /// <summary>
+    /// Counter for bytes received
+    /// </summary>
     private long _recvCounter;
 
+    /// <summary>
+    /// Initializes a new instance of the RawManagedSocket class
+    /// </summary>
+    /// <param name="socket">The network stream</param>
+    /// <param name="options">Configuration options</param>
+    /// <param name="logger">Logger instance for diagnostics</param>
     public RawManagedSocket(Stream socket, ManagedSocketOptionsBase options, ILogger logger)
     {
         Logger = logger;
@@ -25,6 +57,12 @@ internal class RawManagedSocket : IManagedSocket, ILogSubject
         this.Trace("buffer size: {bufferSize}", options.BufferSize);
     }
 
+    /// <summary>
+    /// Sends data asynchronously
+    /// </summary>
+    /// <param name="data">The data to send</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>The status of the send operation</returns>
     public async ValueTask<SocketSendStatus> SendAsync(ReadOnlyMemory<byte> data, CancellationToken ct = default)
     {
         this.Trace("{dataLength} - start", data.Length);
@@ -69,6 +107,11 @@ internal class RawManagedSocket : IManagedSocket, ILogSubject
         }
     }
 
+    /// <summary>
+    /// Starts listening for incoming data asynchronously
+    /// </summary>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>A task that completes with the socket close result when listening ends</returns>
     public Task<SocketCloseResult> ListenAsync(CancellationToken ct) =>
         Task.Run(
             async () =>
@@ -95,11 +138,20 @@ internal class RawManagedSocket : IManagedSocket, ILogSubject
             CancellationToken.None
         );
 
+    /// <summary>
+    /// Disposes the socket resources
+    /// </summary>
     public void Dispose()
     {
         this.Trace("run");
     }
 
+    /// <summary>
+    /// Receives data into the buffer asynchronously
+    /// </summary>
+    /// <param name="buffer">The buffer to receive data into</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>A tuple indicating if the socket is closed and the close result</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private async ValueTask<(bool IsClosed, SocketCloseResult Result)> ReceiveAsync(
         RawBuffer buffer,
@@ -135,6 +187,12 @@ internal class RawManagedSocket : IManagedSocket, ILogSubject
         return (false, new SocketCloseResult(SocketCloseStatus.ClosedRemote, null));
     }
 
+    /// <summary>
+    /// Receives a chunk of data from the stream
+    /// </summary>
+    /// <param name="buffer">The buffer to receive data into</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>The result of the receive operation</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private async ValueTask<ReceiveResult> ReceiveChunkAsync(RawBuffer buffer, CancellationToken ct)
     {

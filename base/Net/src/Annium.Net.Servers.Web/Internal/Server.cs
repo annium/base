@@ -8,15 +8,48 @@ using Annium.Logging;
 
 namespace Annium.Net.Servers.Web.Internal;
 
+/// <summary>
+/// Internal implementation of a web server that handles HTTP and WebSocket requests.
+/// </summary>
 internal class Server : IServer, ILogSubject
 {
+    /// <summary>
+    /// Gets the logger instance for this server.
+    /// </summary>
     public ILogger Logger { get; }
+
+    /// <summary>
+    /// The HTTP listener used to accept incoming connections.
+    /// </summary>
     private readonly HttpListener _listener;
+
+    /// <summary>
+    /// The function used to handle HTTP requests.
+    /// </summary>
     private readonly Func<HttpListenerContext, CancellationToken, Task> _handleHttpRequest;
+
+    /// <summary>
+    /// The function used to handle WebSocket upgrade requests.
+    /// </summary>
     private readonly Func<HttpListenerContext, CancellationToken, Task> _handleWebSocketRequest;
+
+    /// <summary>
+    /// The function used to handle established WebSocket connections.
+    /// </summary>
     private readonly Func<HttpListenerWebSocketContext, CancellationToken, Task> _handleWebSocket;
+
+    /// <summary>
+    /// The executor used for parallel processing of incoming requests.
+    /// </summary>
     private readonly IExecutor _executor;
 
+    /// <summary>
+    /// Initializes a new instance of the Server class.
+    /// </summary>
+    /// <param name="port">The port number to listen on.</param>
+    /// <param name="httpHandler">The HTTP handler to process HTTP requests, or null to return 404 for all HTTP requests.</param>
+    /// <param name="webSocketHandler">The WebSocket handler to process WebSocket connections, or null to reject WebSocket upgrades.</param>
+    /// <param name="logger">The logger instance for this server.</param>
     public Server(int port, IHttpHandler? httpHandler, IWebSocketHandler? webSocketHandler, ILogger logger)
     {
         Logger = logger;
@@ -37,6 +70,11 @@ internal class Server : IServer, ILogSubject
         _executor = Executor.Parallel<Server>(logger);
     }
 
+    /// <summary>
+    /// Starts the web server and runs it until cancellation is requested.
+    /// </summary>
+    /// <param name="ct">The cancellation token to stop the server.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
     public async Task RunAsync(CancellationToken ct = default)
     {
         this.Trace("start");
@@ -84,6 +122,12 @@ internal class Server : IServer, ILogSubject
         _listener.Stop();
     }
 
+    /// <summary>
+    /// Creates a function that handles an incoming request by routing it to the appropriate handler.
+    /// </summary>
+    /// <param name="ctx">The HTTP listener context for the request.</param>
+    /// <param name="ct">The cancellation token.</param>
+    /// <returns>A function that performs the request handling when executed.</returns>
     private Func<ValueTask> HandleRequest(HttpListenerContext ctx, CancellationToken ct) =>
         async () =>
         {
@@ -99,6 +143,12 @@ internal class Server : IServer, ILogSubject
             }
         };
 
+    /// <summary>
+    /// Handles a WebSocket upgrade request by accepting the connection and delegating to the WebSocket handler.
+    /// </summary>
+    /// <param name="ctx">The HTTP listener context for the WebSocket upgrade request.</param>
+    /// <param name="ct">The cancellation token.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
     private async Task HandleWebSocketRequestAsync(HttpListenerContext ctx, CancellationToken ct)
     {
         this.Trace("start");
@@ -143,6 +193,12 @@ internal class Server : IServer, ILogSubject
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Closes an HTTP connection with a 404 Not Found response.
+    /// </summary>
+    /// <param name="ctx">The HTTP listener context to close.</param>
+    /// <param name="ct">The cancellation token.</param>
+    /// <returns>A completed task.</returns>
     private Task CloseConnectionAsync(HttpListenerContext ctx, CancellationToken ct)
     {
         this.Trace("start");
@@ -155,6 +211,12 @@ internal class Server : IServer, ILogSubject
         return Task.CompletedTask;
     }
 
+    /// <summary>
+    /// Ignores a WebSocket connection by doing nothing (used when no WebSocket handler is configured).
+    /// </summary>
+    /// <param name="ctx">The WebSocket context to ignore.</param>
+    /// <param name="ct">The cancellation token.</param>
+    /// <returns>A completed task.</returns>
     private Task IgnoreWebSocketAsync(HttpListenerWebSocketContext ctx, CancellationToken ct)
     {
         this.Trace("done");

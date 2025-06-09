@@ -7,16 +7,32 @@ using BenchmarkDotNet.Attributes;
 
 namespace Annium.Net.Http.Benchmark;
 
+/// <summary>
+/// Benchmark class for HTTP request operations.
+/// </summary>
 [MemoryDiagnoser]
 public class Benchmarks
 {
+    /// <summary>
+    /// Gets or sets the total number of requests to execute in the benchmark.
+    /// </summary>
     [Params(1000)]
     public int TotalRequests { get; set; }
 
+    /// <summary>
+    /// Gets or sets the size parameter for the benchmark (affects payload size).
+    /// </summary>
     [Params(10, 100, 1000)]
     public int Size { get; set; }
 
+    /// <summary>
+    /// The server URI for benchmark requests.
+    /// </summary>
     private static readonly Uri _serverUri = new($"http://127.0.0.1:{Constants.Port}/");
+
+    /// <summary>
+    /// The HTTP request factory for creating requests.
+    /// </summary>
     private readonly IHttpRequestFactory _httpRequestFactory;
 
     public Benchmarks()
@@ -32,6 +48,10 @@ public class Benchmarks
         _httpRequestFactory = sp.Resolve<IHttpRequestFactory>();
     }
 
+    /// <summary>
+    /// Benchmarks HTTP requests with query parameters.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     [Benchmark]
     public async Task ParamsAsync()
     {
@@ -46,6 +66,10 @@ public class Benchmarks
         }
     }
 
+    /// <summary>
+    /// Benchmarks HTTP upload requests with payload data.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     [Benchmark]
     public async Task UploadAsync()
     {
@@ -61,6 +85,10 @@ public class Benchmarks
         }
     }
 
+    /// <summary>
+    /// Benchmarks HTTP download requests.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     [Benchmark]
     public async Task DownloadAsync()
     {

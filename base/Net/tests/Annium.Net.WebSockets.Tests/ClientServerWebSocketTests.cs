@@ -11,16 +11,38 @@ using Xunit;
 
 namespace Annium.Net.WebSockets.Tests;
 
+/// <summary>
+/// Tests for client-server WebSocket communication scenarios
+/// </summary>
 public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
 {
+    /// <summary>
+    /// Gets the client WebSocket instance
+    /// </summary>
     private IClientWebSocket ClientSocket => _clientSocket.NotNull();
+
+    /// <summary>
+    /// The client WebSocket instance
+    /// </summary>
     private IClientWebSocket? _clientSocket;
+
+    /// <summary>
+    /// Log for text messages received
+    /// </summary>
     private readonly TestLog<string> _texts = new();
+
+    /// <summary>
+    /// Log for binary messages received
+    /// </summary>
     private readonly TestLog<string> _binaries = new();
 
     public ClientServerWebSocketTests(ITestOutputHelper outputHelper)
         : base(outputHelper) { }
 
+    /// <summary>
+    /// Tests sending a message when WebSocket is not connected
+    /// </summary>
+    /// <returns>Task representing the test operation</returns>
     [Fact]
     public async Task Send_NotConnected()
     {
@@ -40,6 +62,10 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Tests sending a message with a canceled cancellation token
+    /// </summary>
+    /// <returns>Task representing the test operation</returns>
     [Fact]
     public async Task Send_Canceled()
     {
@@ -65,6 +91,10 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Tests sending a message after client WebSocket is closed
+    /// </summary>
+    /// <returns>Task representing the test operation</returns>
     [Fact]
     public async Task Send_ClientClosed()
     {
@@ -103,6 +133,10 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Tests sending a message after server closes the connection
+    /// </summary>
+    /// <returns>Task representing the test operation</returns>
     [Fact]
     public async Task Send_ServerClosed()
     {
@@ -138,6 +172,10 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Tests normal message sending and echo behavior
+    /// </summary>
+    /// <returns>Task representing the test operation</returns>
     [Fact]
     public async Task Send_Normal()
     {
@@ -196,6 +234,10 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Tests sending messages with client reconnection
+    /// </summary>
+    /// <returns>Task representing the test operation</returns>
     [Fact]
     public async Task Send_Reconnect()
     {
@@ -268,6 +310,10 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Tests normal message listening behavior
+    /// </summary>
+    /// <returns>Task representing the test operation</returns>
     [Fact]
     public async Task Listen_Normal()
     {
@@ -307,6 +353,10 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Tests message listening with large messages that exceed buffer size
+    /// </summary>
+    /// <returns>Task representing the test operation</returns>
     [Fact]
     public async Task Listen_SmallBuffer()
     {
@@ -353,6 +403,10 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Tests listening to both text and binary message types
+    /// </summary>
+    /// <returns>Task representing the test operation</returns>
     [Fact]
     public async Task Listen_BothTypes()
     {
@@ -408,6 +462,10 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Tests message listening with automatic reconnection
+    /// </summary>
+    /// <returns>Task representing the test operation</returns>
     [Fact]
     public async Task Listen_Reconnect()
     {
@@ -489,6 +547,10 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Initializes the test instance and sets up WebSocket client
+    /// </summary>
+    /// <returns>Task representing the initialization operation</returns>
     public ValueTask InitializeAsync()
     {
         this.Trace("start");
@@ -514,6 +576,10 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
         return ValueTask.CompletedTask;
     }
 
+    /// <summary>
+    /// Disposes the test instance and cleans up WebSocket client
+    /// </summary>
+    /// <returns>Task representing the disposal operation</returns>
     public ValueTask DisposeAsync()
     {
         this.Trace("start");
@@ -525,6 +591,11 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
         return ValueTask.CompletedTask;
     }
 
+    /// <summary>
+    /// Runs a test server with the specified WebSocket handler
+    /// </summary>
+    /// <param name="handleWebSocket">Function to handle WebSocket connections</param>
+    /// <returns>Disposable representing the running server</returns>
     private IAsyncDisposable RunServer(Func<ServerWebSocket, Task> handleWebSocket)
     {
         return RunServerBase(
@@ -545,6 +616,10 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
         );
     }
 
+    /// <summary>
+    /// Connects the client WebSocket to the test server
+    /// </summary>
+    /// <returns>Task representing the connection operation</returns>
     private async Task ConnectAsync()
     {
         this.Trace("start");
@@ -569,6 +644,10 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Disconnects the client WebSocket from the server
+    /// </summary>
+    /// <returns>Task representing the disconnection operation</returns>
     private async Task DisconnectAsync()
     {
         this.Trace("start");
@@ -593,6 +672,12 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Sends a text message through the WebSocket
+    /// </summary>
+    /// <param name="text">The text message to send</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Task with send status result</returns>
     private async Task<WebSocketSendStatus> SendTextAsync(string text, CancellationToken ct = default)
     {
         this.Trace("start");
@@ -604,6 +689,12 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
         return result;
     }
 
+    /// <summary>
+    /// Sends a binary message through the WebSocket
+    /// </summary>
+    /// <param name="data">The string data to convert and send as binary</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Task with send status result</returns>
     private async Task<WebSocketSendStatus> SendBinaryAsync(string data, CancellationToken ct = default)
     {
         this.Trace("start");

@@ -6,8 +6,16 @@ using System.Net;
 // ReSharper disable once CheckNamespace
 namespace Annium.Net.Http;
 
+/// <summary>
+/// Extension methods for HTTP response processing
+/// </summary>
 public static class HttpResponseExtensions
 {
+    /// <summary>
+    /// Extracts cookies from the HTTP response
+    /// </summary>
+    /// <param name="response">The HTTP response</param>
+    /// <returns>A collection of cookies from the response</returns>
     public static IReadOnlyCollection<Cookie> Cookies(this IHttpResponse response)
     {
         if (!response.Headers.TryGetValues("Set-Cookie", out var cookieHeaders))

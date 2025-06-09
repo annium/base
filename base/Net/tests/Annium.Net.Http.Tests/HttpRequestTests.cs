@@ -12,10 +12,20 @@ using Xunit;
 
 namespace Annium.Net.Http.Tests;
 
+/// <summary>
+/// Test class for HTTP request functionality.
+/// </summary>
 public class HttpRequestTests : TestBase
 {
+    /// <summary>
+    /// The HTTP request factory for creating requests.
+    /// </summary>
     private readonly IHttpRequestFactory _httpRequestFactory;
 
+    /// <summary>
+    /// Initializes a new instance of the HttpRequestTests class.
+    /// </summary>
+    /// <param name="outputHelper">The test output helper.</param>
     public HttpRequestTests(ITestOutputHelper outputHelper)
         : base(outputHelper)
     {
@@ -27,6 +37,10 @@ public class HttpRequestTests : TestBase
         _httpRequestFactory = Get<IHttpRequestFactory>();
     }
 
+    /// <summary>
+    /// Tests that sending request to non-connected server returns proper abort status.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     [Fact]
     public async Task Send_NotConnected()
     {
@@ -48,6 +62,10 @@ public class HttpRequestTests : TestBase
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Tests that sending request with cancelled token returns proper abort status.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     [Fact]
     public async Task Send_Canceled()
     {
@@ -76,6 +94,10 @@ public class HttpRequestTests : TestBase
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Tests that sending request with timeout returns proper abort status.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     [Fact]
     public async Task Send_Timeout()
     {
@@ -107,6 +129,10 @@ public class HttpRequestTests : TestBase
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Tests that sending request with custom HTTP method works correctly.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     [Fact]
     public async Task Send_CustomMethod()
     {
@@ -140,6 +166,10 @@ public class HttpRequestTests : TestBase
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Tests that sending request with custom headers works correctly.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     [Fact]
     public async Task Send_Headers()
     {
@@ -187,6 +217,10 @@ public class HttpRequestTests : TestBase
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Tests that sending request with query parameters works correctly.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     [Fact]
     public async Task Send_Params()
     {
@@ -222,6 +256,10 @@ public class HttpRequestTests : TestBase
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Tests that sending request with content body works correctly.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     [Fact]
     public async Task Send_Content()
     {

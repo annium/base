@@ -6,8 +6,16 @@ using Namotion.Reflection;
 
 namespace Annium.Net.Types.Internal.Helpers;
 
+/// <summary>
+/// Helper class for working with array-like types and resolving their element types
+/// </summary>
 internal static class ArrayHelper
 {
+    /// <summary>
+    /// Resolves the element type of an array-like type (arrays, IEnumerable&lt;T&gt;, collections, etc.)
+    /// </summary>
+    /// <param name="type">The array-like type to analyze</param>
+    /// <returns>The contextual type representing the element type of the array</returns>
     public static ContextualType ResolveElementType(ContextualType type)
     {
         ContextualType? elementType;

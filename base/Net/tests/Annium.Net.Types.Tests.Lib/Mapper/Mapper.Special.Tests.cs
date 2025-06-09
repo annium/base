@@ -6,11 +6,22 @@ using Xunit;
 
 namespace Annium.Net.Types.Tests.Lib.Mapper;
 
+/// <summary>
+/// Base class for testing special type mapping functionality, particularly for Task types
+/// </summary>
 public abstract class MapperSpecialTestsBase : TestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="MapperSpecialTestsBase"/> class
+    /// </summary>
+    /// <param name="testProvider">The test provider for type mapping operations</param>
+    /// <param name="outputHelper">The test output helper</param>
     protected MapperSpecialTestsBase(ITestProvider testProvider, ITestOutputHelper outputHelper)
         : base(testProvider, outputHelper) { }
 
+    /// <summary>
+    /// Tests mapping of generic Task types with nullable return values
+    /// </summary>
     protected void Task_Generic_Nullable_Base()
     {
         // arrange
@@ -24,6 +35,9 @@ public abstract class MapperSpecialTestsBase : TestBase
         Models.IsEmpty();
     }
 
+    /// <summary>
+    /// Tests mapping of generic Task types with non-nullable return values
+    /// </summary>
     protected void Task_Generic_NotNullable_Base()
     {
         // arrange
@@ -37,6 +51,9 @@ public abstract class MapperSpecialTestsBase : TestBase
         Models.IsEmpty();
     }
 
+    /// <summary>
+    /// Tests mapping of non-generic Task types
+    /// </summary>
     protected void Task_NonGeneric_Base()
     {
         // arrange
@@ -51,4 +68,9 @@ public abstract class MapperSpecialTestsBase : TestBase
     }
 }
 
+/// <summary>
+/// Sample record for testing Task type mapping
+/// </summary>
+/// <param name="NullableTask">Task with nullable return type</param>
+/// <param name="NotNullableTask">Task with non-nullable return type</param>
 file record Sample(Task<string?> NullableTask, Task<string> NotNullableTask);

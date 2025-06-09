@@ -4,6 +4,9 @@ using System.Threading.Tasks;
 
 namespace Annium.Net.WebSockets;
 
+/// <summary>
+/// Interface for WebSocket components that can send messages to remote endpoints
+/// </summary>
 public interface ISendingWebSocket
 {
     /// <summary>

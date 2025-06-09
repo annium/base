@@ -9,15 +9,40 @@ using NativeClientWebSocket = System.Net.WebSockets.ClientWebSocket;
 
 namespace Annium.Net.WebSockets.Benchmark;
 
+/// <summary>
+/// WebSocket benchmarks using plain event handlers for receiving messages
+/// </summary>
 [MemoryDiagnoser]
 public partial class Benchmarks
 {
+    /// <summary>
+    /// Cancellation token source for plain benchmark
+    /// </summary>
     private CancellationTokenSource _plainCts = default!;
+
+    /// <summary>
+    /// Manual reset event for synchronizing plain benchmark completion
+    /// </summary>
     private ManualResetEventSlim _plainGate = default!;
+
+    /// <summary>
+    /// Counter for plain events received
+    /// </summary>
     private long _plainEventCount;
+
+    /// <summary>
+    /// Native client WebSocket for plain benchmark
+    /// </summary>
     private NativeClientWebSocket _plainSocket = default!;
+
+    /// <summary>
+    /// Task for listening to plain WebSocket messages
+    /// </summary>
     private Task<WebSocketCloseResult> _plainListenTask = default!;
 
+    /// <summary>
+    /// Sets up the plain benchmark iteration
+    /// </summary>
     [IterationSetup(Target = nameof(Plain))]
     public void IterationSetup_Plain()
     {
@@ -37,6 +62,9 @@ public partial class Benchmarks
         _plainListenTask = client.ListenAsync(_plainCts.Token);
     }
 
+    /// <summary>
+    /// Cleans up the plain benchmark iteration
+    /// </summary>
     [IterationCleanup(Target = nameof(Plain))]
     public void IterationCleanup_Plain()
     {
@@ -53,12 +81,19 @@ public partial class Benchmarks
 #pragma warning restore VSTHRD002
     }
 
+    /// <summary>
+    /// Benchmark for plain event handler WebSocket message handling
+    /// </summary>
     [Benchmark(Baseline = true)]
     public void Plain()
     {
         _plainGate.Wait();
     }
 
+    /// <summary>
+    /// Handles plain WebSocket message events
+    /// </summary>
+    /// <param name="data">The message data received</param>
     private void HandleMessage_Plain(ReadOnlyMemory<byte> data)
     {
         if (Interlocked.Decrement(ref _plainEventCount) > 0)

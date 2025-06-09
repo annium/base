@@ -9,8 +9,20 @@ using Annium.Logging;
 // ReSharper disable once CheckNamespace
 namespace Annium.Net.Http;
 
+/// <summary>
+/// Extension methods for adding logging to HTTP requests
+/// </summary>
 public static class HttpRequestLogExtensions
 {
+    /// <summary>
+    /// Adds logging capabilities to the HTTP request
+    /// </summary>
+    /// <typeparam name="T">The type of the log subject</typeparam>
+    /// <param name="request">The HTTP request</param>
+    /// <param name="subject">The log subject to write logs to</param>
+    /// <param name="log">The type of data to log</param>
+    /// <param name="headerMasks">Header names to include in logging</param>
+    /// <returns>The HTTP request with logging interceptor attached</returns>
     public static IHttpRequest WithLogFrom<T>(
         this IHttpRequest request,
         T subject,

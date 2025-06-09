@@ -9,8 +9,17 @@ using Annium.Logging;
 
 namespace Annium.Net.Sockets;
 
+/// <summary>
+/// Extension methods for client socket operations
+/// </summary>
 public static class ClientSocketExtensions
 {
+    /// <summary>
+    /// Connects to a remote endpoint specified by URI
+    /// </summary>
+    /// <param name="socket">The client socket to connect</param>
+    /// <param name="uri">The URI of the remote endpoint</param>
+    /// <param name="authOptions">Optional SSL client authentication options</param>
     public static void Connect(this IClientSocket socket, Uri uri, SslClientAuthenticationOptions? authOptions = null)
     {
         uri.EnsureAbsolute();
@@ -23,6 +32,12 @@ public static class ClientSocketExtensions
         socket.Connect(endpoint, authOptions);
     }
 
+    /// <summary>
+    /// Returns a task that completes when the socket connects
+    /// </summary>
+    /// <param name="socket">The client socket to monitor</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>A task that completes when the socket connects</returns>
     public static Task WhenConnectedAsync(this IClientSocket socket, CancellationToken ct = default)
     {
         var tcs = new TaskCompletionSource();
@@ -41,6 +56,12 @@ public static class ClientSocketExtensions
         return tcs.Task.WaitAsync(ct);
     }
 
+    /// <summary>
+    /// Returns a task that completes when the socket disconnects
+    /// </summary>
+    /// <param name="socket">The client socket to monitor</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>A task that completes with the disconnect status when the socket disconnects</returns>
     public static Task<SocketCloseStatus> WhenDisconnectedAsync(
         this IClientSocket socket,
         CancellationToken ct = default

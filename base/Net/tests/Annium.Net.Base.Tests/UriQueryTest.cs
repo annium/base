@@ -4,8 +4,14 @@ using Xunit;
 
 namespace Annium.Net.Base.Tests;
 
+/// <summary>
+/// Test class for UriQuery functionality.
+/// </summary>
 public class UriQueryTest
 {
+    /// <summary>
+    /// Tests that parsing query strings works correctly.
+    /// </summary>
     [Fact]
     public void Parse_Works()
     {
@@ -24,6 +30,9 @@ public class UriQueryTest
         q4.ToString().Is("?a=1&b=2%2C3");
     }
 
+    /// <summary>
+    /// Tests that UriQuery equality comparison works correctly.
+    /// </summary>
     [Fact]
     public void Equality_Works()
     {

@@ -8,8 +8,20 @@ using Namotion.Reflection;
 
 namespace Annium.Net.Types.Internal.Helpers;
 
+/// <summary>
+/// Extension methods for referrers that provide common functionality for building type references.
+/// </summary>
 internal static class ReferrerExtensions
 {
+    /// <summary>
+    /// Builds a type reference for the specified contextual type using the provided factory function.
+    /// </summary>
+    /// <typeparam name="TRef">The type of reference to build</typeparam>
+    /// <param name="referrer">The referrer instance</param>
+    /// <param name="type">The contextual type to build a reference for</param>
+    /// <param name="ctx">The processing context</param>
+    /// <param name="factory">Factory function to create the reference</param>
+    /// <returns>The built type reference</returns>
     public static TRef BuildRef<TRef>(
         this IReferrer referrer,
         ContextualType type,

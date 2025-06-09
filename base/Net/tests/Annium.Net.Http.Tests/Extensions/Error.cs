@@ -4,10 +4,25 @@ using System.Text.Json.Serialization;
 
 namespace Annium.Net.Http.Tests.Extensions;
 
+/// <summary>
+/// Test error record containing failure reason and message for HTTP error testing
+/// </summary>
+/// <param name="Reason">The HTTP failure reason</param>
+/// <param name="Message">The error message</param>
 internal sealed record Error(HttpFailureReason Reason, string Message);
 
+/// <summary>
+/// Custom JSON converter for Error record type
+/// </summary>
 internal class ErrorConverter : JsonConverter<Error>
 {
+    /// <summary>
+    /// Reads JSON and converts it to an Error object
+    /// </summary>
+    /// <param name="reader">The JSON reader</param>
+    /// <param name="typeToConvert">The type to convert to</param>
+    /// <param name="options">Serializer options</param>
+    /// <returns>The deserialized Error object or null if conversion fails</returns>
     public override Error? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         if (reader.TokenType != JsonTokenType.StartObject)
@@ -52,6 +67,12 @@ internal class ErrorConverter : JsonConverter<Error>
         throw new JsonException("Unexpected end of json");
     }
 
+    /// <summary>
+    /// Writes an Error object as JSON
+    /// </summary>
+    /// <param name="writer">The JSON writer</param>
+    /// <param name="value">The Error object to serialize</param>
+    /// <param name="options">Serializer options</param>
     public override void Write(Utf8JsonWriter writer, Error value, JsonSerializerOptions options)
     {
         writer.WriteStartObject();

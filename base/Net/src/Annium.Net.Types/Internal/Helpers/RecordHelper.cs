@@ -6,8 +6,16 @@ using Namotion.Reflection;
 
 namespace Annium.Net.Types.Internal.Helpers;
 
+/// <summary>
+/// Helper methods for working with record types and resolving their key-value element types.
+/// </summary>
 internal static class RecordHelper
 {
+    /// <summary>
+    /// Resolves the key and value types for a record type that implements IEnumerable&lt;KeyValuePair&lt;TKey, TValue&gt;&gt;.
+    /// </summary>
+    /// <param name="type">The contextual type to resolve element types for</param>
+    /// <returns>A tuple containing the key type and value type of the record</returns>
     public static (ContextualType keyType, ContextualType valueType) ResolveElementType(ContextualType type)
     {
         var arrayImplementation =

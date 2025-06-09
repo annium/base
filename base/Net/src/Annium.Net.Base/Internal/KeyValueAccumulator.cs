@@ -4,15 +4,26 @@ using Microsoft.Extensions.Primitives;
 
 namespace Annium.Net.Base.Internal;
 
+/// <summary>
+/// Accumulates key-value pairs for efficient string value collection
+/// </summary>
 internal struct KeyValueAccumulator
 {
+    /// <summary>
+    /// Primary dictionary for storing key-value pairs with up to 2 values per key
+    /// </summary>
     private Dictionary<string, StringValues> _accumulator;
+
+    /// <summary>
+    /// Secondary dictionary for storing keys with 3 or more values
+    /// </summary>
     private Dictionary<string, List<string>> _expandingAccumulator;
 
     /// <summary>
-    /// This API supports infrastructure and is not intended to be used
-    /// directly from your code. This API may change or be removed in future releases.
+    /// Appends a key-value pair to the accumulator
     /// </summary>
+    /// <param name="key">The key to append</param>
+    /// <param name="value">The value to append</param>
     public void Append(string key, string value)
     {
         _accumulator ??= new Dictionary<string, StringValues>(StringComparer.OrdinalIgnoreCase);
@@ -55,6 +66,10 @@ internal struct KeyValueAccumulator
             }
     }
 
+    /// <summary>
+    /// Gets the accumulated results as a dictionary
+    /// </summary>
+    /// <returns>A dictionary containing all accumulated key-value pairs</returns>
     public Dictionary<string, StringValues> GetResults()
     {
         if (_expandingAccumulator is null)

@@ -7,8 +7,17 @@ using Annium.Net.Types.Internal.Referrers;
 // ReSharper disable CheckNamespace
 namespace Annium.Core.DependencyInjection;
 
+/// <summary>
+/// Extension methods for configuring the model mapper and related services in the dependency injection container.
+/// </summary>
 public static class ServiceContainerExtensions
 {
+    /// <summary>
+    /// Registers all components required for the model mapper functionality including configuration,
+    /// processors, referrers, and the main mapper implementation.
+    /// </summary>
+    /// <param name="container">The service container to register services in</param>
+    /// <returns>The service container for method chaining</returns>
     public static IServiceContainer AddModelMapper(this IServiceContainer container)
     {
         container.Add<MapperConfig>().AsSelf().Singleton();

@@ -13,26 +13,57 @@ using Xunit;
 
 namespace Annium.Net.Sockets.Tests;
 
+/// <summary>
+/// Tests for client-server socket communication functionality
+/// </summary>
 public class ClientServerSocketTests : TestBase, IAsyncLifetime
 {
+    /// <summary>
+    /// Gets the client socket instance
+    /// </summary>
     private IClientSocket ClientSocket => _clientSocket.NotNull();
+
+    /// <summary>
+    /// The client socket instance
+    /// </summary>
     private IClientSocket? _clientSocket;
+
+    /// <summary>
+    /// Collection of received messages
+    /// </summary>
     private readonly List<byte[]> _messages = new();
+
+    /// <summary>
+    /// Action to handle client connection
+    /// </summary>
     private Action<IClientSocket> _handleConnect = delegate
     {
         throw new NotImplementedException();
     };
+
+    /// <summary>
+    /// Function to run the server with a handler
+    /// </summary>
     private Func<Func<IServerSocket, CancellationToken, Task>, IAsyncDisposable> _runServer = delegate
     {
         throw new NotImplementedException();
     };
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ClientServerSocketTests"/> class
+    /// </summary>
+    /// <param name="outputHelper">The test output helper</param>
     public ClientServerSocketTests(ITestOutputHelper outputHelper)
         : base(outputHelper)
     {
         Register(container => container.AddSocketsDefaultConnectionMonitorFactory());
     }
 
+    /// <summary>
+    /// Tests sending data when not connected
+    /// </summary>
+    /// <param name="streamType">The type of stream to test</param>
+    /// <returns>A task representing the test operation</returns>
     [Theory]
     [InlineData(StreamType.Plain)]
     [InlineData(StreamType.Ssl)]
@@ -56,6 +87,11 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Tests sending data when the operation is canceled
+    /// </summary>
+    /// <param name="streamType">The type of stream to test</param>
+    /// <returns>A task representing the test operation</returns>
     [Theory]
     [InlineData(StreamType.Plain)]
     [InlineData(StreamType.Ssl)]
@@ -85,6 +121,11 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Tests sending data when the client is closed
+    /// </summary>
+    /// <param name="streamType">The type of stream to test</param>
+    /// <returns>A task representing the test operation</returns>
     [Theory]
     [InlineData(StreamType.Plain)]
     [InlineData(StreamType.Ssl)]
@@ -129,6 +170,11 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Tests sending data when the server is closed
+    /// </summary>
+    /// <param name="streamType">The type of stream to test</param>
+    /// <returns>A task representing the test operation</returns>
     [Theory]
     [InlineData(StreamType.Plain)]
     [InlineData(StreamType.Ssl)]
@@ -177,6 +223,11 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Tests normal sending operation
+    /// </summary>
+    /// <param name="streamType">The type of stream to test</param>
+    /// <returns>A task representing the test operation</returns>
     [Theory]
     [InlineData(StreamType.Plain)]
     [InlineData(StreamType.Ssl)]
@@ -229,6 +280,11 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Tests sending data after reconnection
+    /// </summary>
+    /// <param name="streamType">The type of stream to test</param>
+    /// <returns>A task representing the test operation</returns>
     [Theory]
     [InlineData(StreamType.Plain)]
     [InlineData(StreamType.Ssl)]
@@ -308,6 +364,11 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Tests normal listening operation
+    /// </summary>
+    /// <param name="streamType">The type of stream to test</param>
+    /// <returns>A task representing the test operation</returns>
     [Theory]
     [InlineData(StreamType.Plain)]
     [InlineData(StreamType.Ssl)]
@@ -361,6 +422,11 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Tests listening with small buffer sizes
+    /// </summary>
+    /// <param name="streamType">The type of stream to test</param>
+    /// <returns>A task representing the test operation</returns>
     [Theory]
     [InlineData(StreamType.Plain)]
     [InlineData(StreamType.Ssl)]
@@ -418,6 +484,11 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Tests listening after reconnection
+    /// </summary>
+    /// <param name="streamType">The type of stream to test</param>
+    /// <returns>A task representing the test operation</returns>
     [Theory]
     [InlineData(StreamType.Plain)]
     [InlineData(StreamType.Ssl)]
@@ -504,6 +575,11 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Tests listening when connection is lost
+    /// </summary>
+    /// <param name="streamType">The type of stream to test</param>
+    /// <returns>A task representing the test operation</returns>
     [Theory]
     [InlineData(StreamType.Plain)]
     [InlineData(StreamType.Ssl)]
@@ -559,6 +635,10 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Initializes the test asynchronously
+    /// </summary>
+    /// <returns>A task representing the initialization</returns>
     public ValueTask InitializeAsync()
     {
         this.Trace("start");
@@ -586,6 +666,10 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
         return ValueTask.CompletedTask;
     }
 
+    /// <summary>
+    /// Disposes the test resources asynchronously
+    /// </summary>
+    /// <returns>A task representing the disposal</returns>
     public ValueTask DisposeAsync()
     {
         this.Trace("start");
@@ -597,6 +681,11 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
         return ValueTask.CompletedTask;
     }
 
+    /// <summary>
+    /// Configures the client and server for the specified stream type
+    /// </summary>
+    /// <param name="streamType">The type of stream to configure</param>
+    /// <param name="socketOptions">Optional server socket options</param>
     private void Configure(StreamType streamType, ServerSocketOptions? socketOptions = null)
     {
         this.Trace("start");
@@ -708,6 +797,10 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Connects the client socket asynchronously
+    /// </summary>
+    /// <returns>A task representing the connection operation</returns>
     private async Task ConnectAsync()
     {
         this.Trace("start");
@@ -732,6 +825,10 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Disconnects the client socket asynchronously
+    /// </summary>
+    /// <returns>A task representing the disconnection operation</returns>
     private async Task DisconnectAsync()
     {
         this.Trace("start");
@@ -756,6 +853,12 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Sends data through the client socket asynchronously
+    /// </summary>
+    /// <param name="data">The data to send</param>
+    /// <param name="ct">The cancellation token</param>
+    /// <returns>The send status</returns>
     private async Task<SocketSendStatus> SendAsync(byte[] data, CancellationToken ct = default)
     {
         this.Trace("start");

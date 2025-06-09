@@ -14,27 +14,74 @@ using Xunit;
 
 namespace Annium.Net.Sockets.Tests.Internal;
 
+/// <summary>
+/// Tests for messaging managed socket functionality
+/// </summary>
 public class MessagingManagedSocketTests : TestBase, IAsyncLifetime
 {
+    /// <summary>
+    /// Gets the client socket instance
+    /// </summary>
     private Socket ClientSocket => _clientSocket.NotNull();
+
+    /// <summary>
+    /// Gets the client stream instance
+    /// </summary>
     private Stream ClientStream => _clientStream.NotNull();
+
+    /// <summary>
+    /// Gets the managed socket instance
+    /// </summary>
     private IManagedSocket ManagedSocket => _managedSocket.NotNull();
+
+    /// <summary>
+    /// The client socket instance
+    /// </summary>
     private Socket? _clientSocket;
+
+    /// <summary>
+    /// The client stream instance
+    /// </summary>
     private Stream? _clientStream;
+
+    /// <summary>
+    /// The managed socket instance
+    /// </summary>
     private IManagedSocket? _managedSocket;
+
+    /// <summary>
+    /// Collection of received messages
+    /// </summary>
     private readonly List<byte[]> _messages = new();
+
+    /// <summary>
+    /// Function to create client stream asynchronously
+    /// </summary>
     private Func<Socket, Task<Stream>> _createClientStreamAsync = delegate
     {
         throw new NotImplementedException();
     };
+
+    /// <summary>
+    /// Function to run the server with a handler
+    /// </summary>
     private Func<Func<IManagedSocket, CancellationToken, Task>, IAsyncDisposable> _runServer = delegate
     {
         throw new NotImplementedException();
     };
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="MessagingManagedSocketTests"/> class
+    /// </summary>
+    /// <param name="outputHelper">The test output helper</param>
     public MessagingManagedSocketTests(ITestOutputHelper outputHelper)
         : base(outputHelper) { }
 
+    /// <summary>
+    /// Tests sending data when the operation is canceled
+    /// </summary>
+    /// <param name="streamType">The type of stream to test</param>
+    /// <returns>A task representing the test operation</returns>
     [Theory]
     [InlineData(StreamType.Plain)]
     [InlineData(StreamType.Ssl)]
@@ -64,6 +111,11 @@ public class MessagingManagedSocketTests : TestBase, IAsyncLifetime
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Tests sending data when the client is closed
+    /// </summary>
+    /// <param name="streamType">The type of stream to test</param>
+    /// <returns>A task representing the test operation</returns>
     [Theory]
     [InlineData(StreamType.Plain)]
     [InlineData(StreamType.Ssl)]
@@ -96,6 +148,11 @@ public class MessagingManagedSocketTests : TestBase, IAsyncLifetime
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Tests sending data when the server is closed
+    /// </summary>
+    /// <param name="streamType">The type of stream to test</param>
+    /// <returns>A task representing the test operation</returns>
     [Theory]
     [InlineData(StreamType.Plain)]
     public async Task Send_ServerClosed(StreamType streamType)
@@ -137,6 +194,11 @@ public class MessagingManagedSocketTests : TestBase, IAsyncLifetime
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Tests sending extreme message that exceeds buffer size
+    /// </summary>
+    /// <param name="streamType">The type of stream to test</param>
+    /// <returns>A task representing the test operation</returns>
     [Theory]
     [InlineData(StreamType.Plain)]
     [InlineData(StreamType.Ssl)]
@@ -201,6 +263,11 @@ public class MessagingManagedSocketTests : TestBase, IAsyncLifetime
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Tests normal sending operation
+    /// </summary>
+    /// <param name="streamType">The type of stream to test</param>
+    /// <returns>A task representing the test operation</returns>
     [Theory]
     [InlineData(StreamType.Plain)]
     [InlineData(StreamType.Ssl)]
@@ -254,6 +321,11 @@ public class MessagingManagedSocketTests : TestBase, IAsyncLifetime
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Tests listening when the operation is canceled
+    /// </summary>
+    /// <param name="streamType">The type of stream to test</param>
+    /// <returns>A task representing the test operation</returns>
     [Theory]
     [InlineData(StreamType.Plain)]
     [InlineData(StreamType.Ssl)]
@@ -281,6 +353,11 @@ public class MessagingManagedSocketTests : TestBase, IAsyncLifetime
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Tests listening when the client is closed
+    /// </summary>
+    /// <param name="streamType">The type of stream to test</param>
+    /// <returns>A task representing the test operation</returns>
     [Theory]
     [InlineData(StreamType.Plain)]
     [InlineData(StreamType.Ssl)]
@@ -311,6 +388,11 @@ public class MessagingManagedSocketTests : TestBase, IAsyncLifetime
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Tests listening when the server is closed
+    /// </summary>
+    /// <param name="streamType">The type of stream to test</param>
+    /// <returns>A task representing the test operation</returns>
     [Theory]
     [InlineData(StreamType.Plain)]
     public async Task Listen_ServerClosed(StreamType streamType)
@@ -344,6 +426,11 @@ public class MessagingManagedSocketTests : TestBase, IAsyncLifetime
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Tests listening with extreme message that exceeds buffer size
+    /// </summary>
+    /// <param name="streamType">The type of stream to test</param>
+    /// <returns>A task representing the test operation</returns>
     [Theory]
     [InlineData(StreamType.Plain)]
     [InlineData(StreamType.Ssl)]
@@ -392,6 +479,11 @@ public class MessagingManagedSocketTests : TestBase, IAsyncLifetime
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Tests normal listening operation
+    /// </summary>
+    /// <param name="streamType">The type of stream to test</param>
+    /// <returns>A task representing the test operation</returns>
     [Theory]
     [InlineData(StreamType.Plain)]
     [InlineData(StreamType.Ssl)]
@@ -439,6 +531,11 @@ public class MessagingManagedSocketTests : TestBase, IAsyncLifetime
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Tests listening with small buffer sizes
+    /// </summary>
+    /// <param name="streamType">The type of stream to test</param>
+    /// <returns>A task representing the test operation</returns>
     [Theory]
     [InlineData(StreamType.Plain)]
     [InlineData(StreamType.Ssl)]
@@ -493,11 +590,19 @@ public class MessagingManagedSocketTests : TestBase, IAsyncLifetime
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Initializes the test asynchronously
+    /// </summary>
+    /// <returns>A task representing the initialization</returns>
     public ValueTask InitializeAsync()
     {
         return ValueTask.CompletedTask;
     }
 
+    /// <summary>
+    /// Disposes the test resources asynchronously
+    /// </summary>
+    /// <returns>A task representing the disposal</returns>
     public async ValueTask DisposeAsync()
     {
         this.Trace("start");
@@ -508,6 +613,11 @@ public class MessagingManagedSocketTests : TestBase, IAsyncLifetime
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Configures the client and server for the specified stream type
+    /// </summary>
+    /// <param name="streamType">The type of stream to configure</param>
+    /// <param name="serverSocketOptions">Optional server socket options</param>
     private void Configure(StreamType streamType, ManagedSocketOptionsBase? serverSocketOptions = null)
     {
         this.Trace("start");
@@ -609,6 +719,11 @@ public class MessagingManagedSocketTests : TestBase, IAsyncLifetime
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Connects the client and starts listening asynchronously
+    /// </summary>
+    /// <param name="ct">The cancellation token</param>
+    /// <returns>A task representing the operation</returns>
     private async Task ConnectAndStartListenAsync(CancellationToken ct = default)
     {
         this.Trace("start");
@@ -619,6 +734,12 @@ public class MessagingManagedSocketTests : TestBase, IAsyncLifetime
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Connects the client socket asynchronously
+    /// </summary>
+    /// <param name="ct">The cancellation token</param>
+    /// <param name="options">Optional managed socket options</param>
+    /// <returns>A task representing the connection operation</returns>
     private async Task ConnectAsync(CancellationToken ct = default, ManagedSocketOptionsBase? options = null)
     {
         this.Trace("start");
@@ -646,6 +767,11 @@ public class MessagingManagedSocketTests : TestBase, IAsyncLifetime
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Listens for incoming data asynchronously
+    /// </summary>
+    /// <param name="ct">The cancellation token</param>
+    /// <returns>The socket close result</returns>
     private async Task<SocketCloseResult> ListenAsync(CancellationToken ct = default)
     {
         this.Trace("start");

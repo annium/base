@@ -3,8 +3,14 @@ using System.Buffers;
 
 namespace Annium.Net.Sockets.Internal;
 
+/// <summary>
+/// A buffer implementation for messaging socket operations with frame length prefixes
+/// </summary>
 internal class MessagingBuffer : IDisposable
 {
+    /// <summary>
+    /// The size of the message header in bytes (4 bytes for int32 length)
+    /// </summary>
     public const int HeaderSize = sizeof(int);
 
     /// <summary>
@@ -71,14 +77,46 @@ internal class MessagingBuffer : IDisposable
         }
     }
 
+    /// <summary>
+    /// Gets the end position of data in the buffer
+    /// </summary>
     private int DataEnd => _dataStart + _dataLength;
+
+    /// <summary>
+    /// The maximum allowed message size for extreme message detection
+    /// </summary>
     private readonly int _maxMessageSize;
+
+    /// <summary>
+    /// The starting position of data in the buffer
+    /// </summary>
     private int _dataStart;
+
+    /// <summary>
+    /// The length of data currently in the buffer
+    /// </summary>
     private int _dataLength;
+
+    /// <summary>
+    /// The size of the current message being processed
+    /// </summary>
     private int _messageSize;
+
+    /// <summary>
+    /// The underlying byte array buffer from the array pool
+    /// </summary>
     private byte[] _buffer;
+
+    /// <summary>
+    /// Flag indicating whether the buffer has been disposed
+    /// </summary>
     private bool _isDisposed;
 
+    /// <summary>
+    /// Initializes a new instance of the MessagingBuffer class
+    /// </summary>
+    /// <param name="size">The buffer size</param>
+    /// <param name="maxMessageSize">The maximum expected message size</param>
     public MessagingBuffer(int size, int maxMessageSize)
     {
         _maxMessageSize = maxMessageSize;
@@ -160,6 +198,9 @@ internal class MessagingBuffer : IDisposable
         _dataStart = 0;
     }
 
+    /// <summary>
+    /// Disposes the buffer and returns it to the array pool
+    /// </summary>
     public void Dispose()
     {
         EnsureNotDisposed();
@@ -168,15 +209,26 @@ internal class MessagingBuffer : IDisposable
         ArrayPool<byte>.Shared.Return(_buffer);
     }
 
+    /// <summary>
+    /// Returns a string representation of the buffer state
+    /// </summary>
+    /// <returns>A string describing the buffer state</returns>
     public override string ToString() =>
         $"{_dataStart}->{_dataLength} [{(_messageSize > 0 ? HeaderSize + _messageSize : 0)} | {_buffer.Length}] {{max:{_maxMessageSize}}}";
 
+    /// <summary>
+    /// Attempts to resolve the message size from the header if not already resolved
+    /// </summary>
     private void TryResolveMessageSize()
     {
         if (_messageSize == 0 && _dataLength >= HeaderSize)
             _messageSize = BitConverter.ToInt32(new ReadOnlySpan<byte>(_buffer, _dataStart, HeaderSize));
     }
 
+    /// <summary>
+    /// Ensures the buffer has not been disposed
+    /// </summary>
+    /// <exception cref="ObjectDisposedException">Thrown when the buffer is disposed</exception>
     private void EnsureNotDisposed()
     {
         if (_isDisposed)

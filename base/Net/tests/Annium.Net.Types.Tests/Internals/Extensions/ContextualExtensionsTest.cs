@@ -7,8 +7,14 @@ using Xunit;
 
 namespace Annium.Net.Types.Tests.Internals.Extensions;
 
+/// <summary>
+/// Tests for contextual type extension methods
+/// </summary>
 public class ContextualExtensionsTest
 {
+    /// <summary>
+    /// Tests getting generic arguments from array types
+    /// </summary>
     [Fact]
     public void Array()
     {
@@ -22,6 +28,9 @@ public class ContextualExtensionsTest
         args.IsEmpty();
     }
 
+    /// <summary>
+    /// Tests getting generic arguments from non-generic types
+    /// </summary>
     [Fact]
     public void NonGeneric()
     {
@@ -35,6 +44,9 @@ public class ContextualExtensionsTest
         args.IsEmpty();
     }
 
+    /// <summary>
+    /// Tests getting generic arguments from unbound generic types
+    /// </summary>
     [Fact]
     public void Generic_Unbound()
     {
@@ -49,6 +61,9 @@ public class ContextualExtensionsTest
         args.At(0).Type.IsGenericTypeParameter.IsTrue();
     }
 
+    /// <summary>
+    /// Tests getting generic arguments from bound generic types
+    /// </summary>
     [Fact]
     public void Generic_Bound()
     {
@@ -65,4 +80,9 @@ public class ContextualExtensionsTest
     }
 }
 
+/// <summary>
+/// Sample generic record for testing contextual extensions
+/// </summary>
+/// <typeparam name="T">The generic type parameter</typeparam>
+/// <param name="Value">The list value</param>
 file record Sample<T>(List<T?> Value);

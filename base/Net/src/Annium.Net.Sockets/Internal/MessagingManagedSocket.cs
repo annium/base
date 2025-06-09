@@ -8,17 +8,57 @@ using Annium.Logging;
 
 namespace Annium.Net.Sockets.Internal;
 
+/// <summary>
+/// A managed socket implementation that handles framed messaging over a stream with length prefixes
+/// </summary>
 internal class MessagingManagedSocket : IManagedSocket, ILogSubject
 {
+    /// <summary>
+    /// Logger for tracing socket operations
+    /// </summary>
     public ILogger Logger { get; }
+
+    /// <summary>
+    /// Event raised when data is received from the socket
+    /// </summary>
     public event Action<ReadOnlyMemory<byte>> OnReceived = delegate { };
+
+    /// <summary>
+    /// The underlying stream for socket communication
+    /// </summary>
     private readonly Stream _stream;
+
+    /// <summary>
+    /// Configuration options for the managed socket
+    /// </summary>
     private readonly ManagedSocketOptionsBase _options;
+
+    /// <summary>
+    /// Semaphore to ensure thread-safe sending operations
+    /// </summary>
     private readonly SemaphoreSlim _gate = new(1, 1);
+
+    /// <summary>
+    /// Flag indicating whether the socket has been disposed
+    /// </summary>
     private bool _isDisposed;
+
+    /// <summary>
+    /// Counter tracking total bytes sent
+    /// </summary>
     private long _sendCounter;
+
+    /// <summary>
+    /// Counter tracking total bytes received
+    /// </summary>
     private long _recvCounter;
 
+    /// <summary>
+    /// Initializes a new instance of the MessagingManagedSocket class
+    /// </summary>
+    /// <param name="stream">The underlying stream for socket communication</param>
+    /// <param name="options">Configuration options for the managed socket</param>
+    /// <param name="logger">Logger for tracing socket operations</param>
     public MessagingManagedSocket(Stream stream, ManagedSocketOptionsBase options, ILogger logger)
     {
         Logger = logger;
@@ -31,6 +71,12 @@ internal class MessagingManagedSocket : IManagedSocket, ILogSubject
         );
     }
 
+    /// <summary>
+    /// Sends data through the socket with a length prefix frame
+    /// </summary>
+    /// <param name="data">The data to send</param>
+    /// <param name="ct">Cancellation token for the operation</param>
+    /// <returns>The status of the send operation</returns>
     public async ValueTask<SocketSendStatus> SendAsync(ReadOnlyMemory<byte> data, CancellationToken ct = default)
     {
         this.Trace("{dataLength} - start", data.Length);
@@ -98,6 +144,11 @@ internal class MessagingManagedSocket : IManagedSocket, ILogSubject
         }
     }
 
+    /// <summary>
+    /// Starts listening for incoming messages on the socket
+    /// </summary>
+    /// <param name="ct">Cancellation token for the listening operation</param>
+    /// <returns>The result of the socket close operation when listening ends</returns>
     public Task<SocketCloseResult> ListenAsync(CancellationToken ct) =>
         Task.Run(
             async () =>
@@ -130,6 +181,9 @@ internal class MessagingManagedSocket : IManagedSocket, ILogSubject
             CancellationToken.None
         );
 
+    /// <summary>
+    /// Disposes the managed socket and releases associated resources
+    /// </summary>
     public void Dispose()
     {
         this.Trace("start");
@@ -148,6 +202,12 @@ internal class MessagingManagedSocket : IManagedSocket, ILogSubject
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Receives data from the stream into the buffer and processes complete messages
+    /// </summary>
+    /// <param name="buffer">The buffer to receive data into</param>
+    /// <param name="ct">Cancellation token for the operation</param>
+    /// <returns>A tuple indicating if the socket is closed and the close result</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private async ValueTask<(bool IsClosed, SocketCloseResult Result)> ReceiveAsync(
         MessagingBuffer buffer,
@@ -205,6 +265,12 @@ internal class MessagingManagedSocket : IManagedSocket, ILogSubject
         return (false, new SocketCloseResult(SocketCloseStatus.ClosedRemote, null));
     }
 
+    /// <summary>
+    /// Receives a chunk of data from the stream into the buffer
+    /// </summary>
+    /// <param name="buffer">The buffer to receive data into</param>
+    /// <param name="ct">Cancellation token for the operation</param>
+    /// <returns>The result of the receive operation</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private async ValueTask<ReceiveResult> ReceiveChunkAsync(MessagingBuffer buffer, CancellationToken ct)
     {

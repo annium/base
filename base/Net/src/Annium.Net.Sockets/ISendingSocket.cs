@@ -4,6 +4,9 @@ using System.Threading.Tasks;
 
 namespace Annium.Net.Sockets;
 
+/// <summary>
+/// Interface for sockets that can send binary data
+/// </summary>
 public interface ISendingSocket
 {
     /// <summary>

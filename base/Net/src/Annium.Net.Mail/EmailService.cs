@@ -8,15 +8,33 @@ using Scriban.Runtime;
 
 namespace Annium.Net.Mail;
 
+/// <summary>
+/// Implementation of email service that sends emails via SMTP using Scriban templates
+/// </summary>
 internal class EmailService : IEmailService
 {
+    /// <summary>
+    /// The email service configuration
+    /// </summary>
     private readonly Configuration _cfg;
 
+    /// <summary>
+    /// Initializes a new instance of the EmailService class
+    /// </summary>
+    /// <param name="cfg">The email service configuration</param>
     public EmailService(Configuration cfg)
     {
         _cfg = cfg;
     }
 
+    /// <summary>
+    /// Sends an email using a template with data
+    /// </summary>
+    /// <typeparam name="T">The type of the template data</typeparam>
+    /// <param name="message">The mail message</param>
+    /// <param name="template">The template name (without .html extension)</param>
+    /// <param name="data">The template data to be injected into the template</param>
+    /// <returns>A result indicating success or failure of the email sending operation</returns>
     public async Task<IBooleanResult> SendAsync<T>(MailMessage message, string template, T data)
         where T : notnull
     {
@@ -36,6 +54,10 @@ internal class EmailService : IEmailService
         }
     }
 
+    /// <summary>
+    /// Creates and configures an SMTP client using the service configuration
+    /// </summary>
+    /// <returns>A configured SMTP client</returns>
     private SmtpClient GetClient()
     {
         return new(_cfg.Host, _cfg.Port)
@@ -47,6 +69,13 @@ internal class EmailService : IEmailService
         };
     }
 
+    /// <summary>
+    /// Loads and renders an email template with the provided data using Scriban templating engine
+    /// </summary>
+    /// <typeparam name="T">The type of the template data</typeparam>
+    /// <param name="template">The template name (without .html extension)</param>
+    /// <param name="data">The data to be injected into the template</param>
+    /// <returns>The rendered email body as HTML</returns>
     private string LoadBody<T>(string template, T data)
     {
         var templatesDirectory = Path.GetFullPath(_cfg.TemplatesDirectory);

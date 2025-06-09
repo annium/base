@@ -7,11 +7,22 @@ using Xunit;
 
 namespace Annium.Net.Types.Tests.Lib.Mapper;
 
+/// <summary>
+/// Base class for testing record type mapping functionality
+/// </summary>
 public abstract class MapperRecordTestsBase : TestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="MapperRecordTestsBase"/> class
+    /// </summary>
+    /// <param name="testProvider">The test provider for type mapping operations</param>
+    /// <param name="outputHelper">The test output helper</param>
     protected MapperRecordTestsBase(ITestProvider testProvider, ITestOutputHelper outputHelper)
         : base(testProvider, outputHelper) { }
 
+    /// <summary>
+    /// Tests mapping of interface-based record types with generic parameters
+    /// </summary>
     protected void Interface_Base()
     {
         // arrange
@@ -26,6 +37,9 @@ public abstract class MapperRecordTestsBase : TestBase
         Models.IsEmpty();
     }
 
+    /// <summary>
+    /// Tests mapping of concrete implementation record types
+    /// </summary>
     protected void Implementation_Base()
     {
         // arrange
