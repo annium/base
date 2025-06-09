@@ -8,8 +8,20 @@ using Annium.Serialization.Abstractions;
 // ReSharper disable once CheckNamespace
 namespace Annium.Core.DependencyInjection;
 
+/// <summary>
+/// Extension methods for configuring Seq logging integration with the logging pipeline.
+/// Provides fluent API for adding Seq as a log destination with CLEF formatting.
+/// </summary>
 public static class LogRouteExtensions
 {
+    /// <summary>
+    /// Configures the log route to send filtered log events to a Seq server using CLEF format.
+    /// Excludes HttpRequest logs and applies the existing route filter before sending to Seq.
+    /// </summary>
+    /// <typeparam name="TContext">The type of the logging context</typeparam>
+    /// <param name="route">The log route to configure for Seq integration</param>
+    /// <param name="configuration">Seq server configuration including endpoint, API key, and project settings</param>
+    /// <returns>The configured log route for method chaining</returns>
     public static LogRoute<TContext> UseSeq<TContext>(this LogRoute<TContext> route, SeqConfiguration configuration)
         where TContext : class
     {
