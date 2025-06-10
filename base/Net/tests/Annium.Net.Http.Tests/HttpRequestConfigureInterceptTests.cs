@@ -1,17 +1,29 @@
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
-using Annium.Core.DependencyInjection;
 using Annium.Logging;
+using Annium.Net.Http.Extensions;
+using Annium.Serialization.Abstractions;
+using Annium.Serialization.Json;
 using Annium.Testing;
 using Xunit;
 
 namespace Annium.Net.Http.Tests;
 
+/// <summary>
+/// Test class for HTTP request configuration and interception functionality.
+/// </summary>
 public class HttpRequestConfigureInterceptTests : TestBase
 {
+    /// <summary>
+    /// The HTTP request factory for creating requests.
+    /// </summary>
     private readonly IHttpRequestFactory _httpRequestFactory;
 
+    /// <summary>
+    /// Initializes a new instance of the HttpRequestConfigureInterceptTests class.
+    /// </summary>
+    /// <param name="outputHelper">The test output helper.</param>
     public HttpRequestConfigureInterceptTests(ITestOutputHelper outputHelper)
         : base(outputHelper)
     {
@@ -23,6 +35,10 @@ public class HttpRequestConfigureInterceptTests : TestBase
         _httpRequestFactory = Get<IHttpRequestFactory>();
     }
 
+    /// <summary>
+    /// Tests that HTTP request configuration works correctly.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     [Fact]
     public async Task Configure()
     {
@@ -56,6 +72,10 @@ public class HttpRequestConfigureInterceptTests : TestBase
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Tests that HTTP request interception with next() function works correctly.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     [Fact]
     public async Task Intercept_Next()
     {
@@ -99,6 +119,10 @@ public class HttpRequestConfigureInterceptTests : TestBase
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Tests that HTTP request interception with access to request object works correctly.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
     [Fact]
     public async Task Intercept_Next_Request()
     {

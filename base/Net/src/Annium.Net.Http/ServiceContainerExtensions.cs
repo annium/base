@@ -1,19 +1,36 @@
+using Annium.Core.DependencyInjection.Builders;
+using Annium.Core.DependencyInjection.Container;
+using Annium.Core.DependencyInjection.Extensions;
 using Annium.Logging;
-using Annium.Net.Http;
 using Annium.Net.Http.Internal;
 using Constants = Annium.Net.Http.Internal.Constants;
 using Serializer = Annium.Net.Http.Internal.Serializer;
 
-// ReSharper disable once CheckNamespace
-namespace Annium.Core.DependencyInjection;
+namespace Annium.Net.Http;
 
+/// <summary>
+/// Extensions for configuring HTTP request factory services
+/// </summary>
 public static class ServiceContainerExtensions
 {
+    /// <summary>
+    /// Adds HTTP request factory services to the container
+    /// </summary>
+    /// <param name="container">The service container</param>
+    /// <param name="isDefault">Whether to register as default services</param>
+    /// <returns>The service container for method chaining</returns>
     public static IServiceContainer AddHttpRequestFactory(this IServiceContainer container, bool isDefault = false)
     {
         return container.AddHttpRequestFactory(Constants.DefaultKey, isDefault);
     }
 
+    /// <summary>
+    /// Adds HTTP request factory services to the container with a specific key
+    /// </summary>
+    /// <param name="container">The service container</param>
+    /// <param name="key">The service key</param>
+    /// <param name="isDefault">Whether to register as default services</param>
+    /// <returns>The service container for method chaining</returns>
     public static IServiceContainer AddHttpRequestFactory(
         this IServiceContainer container,
         string key,

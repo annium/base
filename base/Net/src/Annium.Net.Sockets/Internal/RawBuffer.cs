@@ -3,10 +3,24 @@ using System.Buffers;
 
 namespace Annium.Net.Sockets.Internal;
 
+/// <summary>
+/// A buffer implementation for raw socket operations that uses pooled arrays
+/// </summary>
 internal struct RawBuffer : IDisposable
 {
+    /// <summary>
+    /// The underlying byte buffer from the array pool
+    /// </summary>
     private readonly byte[] _buffer;
+
+    /// <summary>
+    /// The current length of valid data in the buffer
+    /// </summary>
     private int _dataLength;
+
+    /// <summary>
+    /// Indicates whether the buffer has been disposed
+    /// </summary>
     private bool _isDisposed;
 
     /// <summary>
@@ -37,6 +51,10 @@ internal struct RawBuffer : IDisposable
         }
     }
 
+    /// <summary>
+    /// Initializes a new instance of the RawBuffer struct
+    /// </summary>
+    /// <param name="size">The minimum size of the buffer to rent from the array pool</param>
     public RawBuffer(int size)
     {
         _buffer = ArrayPool<byte>.Shared.Rent(size);
@@ -65,6 +83,9 @@ internal struct RawBuffer : IDisposable
         _dataLength += dataSize;
     }
 
+    /// <summary>
+    /// Disposes the buffer and returns it to the array pool
+    /// </summary>
     public void Dispose()
     {
         EnsureNotDisposed();
@@ -73,6 +94,10 @@ internal struct RawBuffer : IDisposable
         ArrayPool<byte>.Shared.Return(_buffer);
     }
 
+    /// <summary>
+    /// Ensures the buffer has not been disposed
+    /// </summary>
+    /// <exception cref="ObjectDisposedException">Thrown when the buffer is disposed</exception>
     private void EnsureNotDisposed()
     {
         if (_isDisposed)

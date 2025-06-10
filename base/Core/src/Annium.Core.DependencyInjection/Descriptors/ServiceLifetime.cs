@@ -1,8 +1,6 @@
-// ReSharper disable once CheckNamespace
+namespace Annium.Core.DependencyInjection.Descriptors;
 
-namespace Annium.Core.DependencyInjection;
-
-/// <summary>Specifies the lifetime of a service in an <see cref="T:Annium.Core.DependencyInjection.IServiceContainer" />.</summary>
+/// <summary>Specifies the lifetime of a service in an <see cref="T:Annium.Core.DependencyInjection.Container.IServiceContainer" />.</summary>
 public enum ServiceLifetime
 {
     /// <summary>Specifies that a single instance of the service will be created.</summary>

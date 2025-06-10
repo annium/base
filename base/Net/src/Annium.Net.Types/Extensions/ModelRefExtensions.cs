@@ -4,8 +4,18 @@ using Annium.Net.Types.Refs;
 
 namespace Annium.Net.Types.Extensions;
 
+/// <summary>
+/// Extension methods for model reference types providing type matching functionality.
+/// </summary>
 public static class ModelRefExtensions
 {
+    /// <summary>
+    /// Determines whether this model reference matches the specified .NET type.
+    /// Compares namespace, name, and generic argument count for compatibility.
+    /// </summary>
+    /// <param name="ref">The model reference to check</param>
+    /// <param name="type">The .NET type to match against</param>
+    /// <returns>True if the reference matches the type, false otherwise</returns>
     public static bool IsFor(this IModelRef @ref, Type type) =>
         @ref switch
         {
@@ -16,6 +26,13 @@ public static class ModelRefExtensions
             _ => @ref.Namespace == type.Namespace && @ref.Name == type.PureName(),
         };
 
+    /// <summary>
+    /// Determines whether this model reference matches the specified type model.
+    /// Compares namespace, name, and generic argument count for compatibility.
+    /// </summary>
+    /// <param name="ref">The model reference to check</param>
+    /// <param name="model">The type model to match against</param>
+    /// <returns>True if the reference matches the model, false otherwise</returns>
     public static bool IsFor(this IModelRef @ref, IModel model) =>
         model switch
         {

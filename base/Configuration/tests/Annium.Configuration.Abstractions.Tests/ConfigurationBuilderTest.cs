@@ -1,11 +1,13 @@
 using System.Collections.Generic;
 using Annium.Configuration.Tests.Lib;
-using Annium.Core.DependencyInjection;
 using Annium.Testing;
 using Xunit;
 
 namespace Annium.Configuration.Abstractions.Tests;
 
+/// <summary>
+/// Tests for configuration builder functionality.
+/// </summary>
 public class ConfigurationBuilderTest : TestBase
 {
     public ConfigurationBuilderTest(ITestOutputHelper outputHelper)
@@ -14,6 +16,9 @@ public class ConfigurationBuilderTest : TestBase
         RegisterMapper();
     }
 
+    /// <summary>
+    /// Tests that basic configuration building works correctly.
+    /// </summary>
     [Fact]
     public void BaseBuilding_Works()
     {

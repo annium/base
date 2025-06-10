@@ -1,13 +1,23 @@
 using System;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
+using Annium.Extensions.Reactive.Operators;
 using Annium.Testing;
+using Annium.Testing.Collection;
 using Xunit;
 
 namespace Annium.Extensions.Reactive.Tests.Operators;
 
+/// <summary>
+/// Tests for the SubscribeAsync operator in reactive extensions.
+/// </summary>
 public class SubscribeAsyncTest
 {
+    /// <summary>
+    /// Tests that the SubscribeAsync operator correctly handles errors asynchronously
+    /// when subscribing to an observable sequence.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Fact]
     public async Task SubscribeAsync_OnErrorWorksCorrectly()
     {
@@ -41,6 +51,11 @@ public class SubscribeAsyncTest
         log[2].Is("err: 3");
     }
 
+    /// <summary>
+    /// Tests that the SubscribeAsync operator correctly handles completion asynchronously
+    /// when subscribing to an observable sequence.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Fact]
     public async Task SubscribeAsync_OnCompletedWorksCorrectly()
     {

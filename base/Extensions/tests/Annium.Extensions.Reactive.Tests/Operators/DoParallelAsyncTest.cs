@@ -2,19 +2,33 @@ using System;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
+using Annium.Extensions.Reactive.Operators;
 using Annium.Testing;
+using Annium.Testing.Collection;
 using Xunit;
 
 namespace Annium.Extensions.Reactive.Tests.Operators;
 
+/// <summary>
+/// Tests for the DoParallelAsync operator in reactive extensions.
+/// </summary>
 public class DoParallelAsyncTest : TestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DoParallelAsyncTest"/> class.
+    /// </summary>
+    /// <param name="outputHelper">The test output helper for logging test results.</param>
     public DoParallelAsyncTest(ITestOutputHelper outputHelper)
         : base(outputHelper)
     {
         RegisterTestLogs();
     }
 
+    /// <summary>
+    /// Tests that the DoParallelAsync operator executes side effects in parallel,
+    /// allowing concurrent execution of async operations.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Fact]
     public async Task DoParallelAsync_WorksCorrectly()
     {

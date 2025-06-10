@@ -8,8 +8,16 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Annium.Net.Http.Benchmark.Internal;
 
+/// <summary>
+/// Provides a workload server for HTTP benchmarks.
+/// </summary>
 internal static class WorkloadServer
 {
+    /// <summary>
+    /// Runs the workload server asynchronously.
+    /// </summary>
+    /// <param name="ct">Cancellation token to stop the server.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
     public static async Task RunAsync(CancellationToken ct)
     {
         var services = new ServiceCollection();
@@ -20,8 +28,17 @@ internal static class WorkloadServer
     }
 }
 
+/// <summary>
+/// HTTP handler for benchmark workload requests.
+/// </summary>
 file class HttpHandler : IHttpHandler
 {
+    /// <summary>
+    /// Handles incoming HTTP requests.
+    /// </summary>
+    /// <param name="ctx">The HTTP listener context.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
     public Task HandleAsync(HttpListenerContext ctx, CancellationToken ct)
     {
         var path = ctx.Request.Url.NotNull().AbsolutePath;
@@ -35,6 +52,11 @@ file class HttpHandler : IHttpHandler
         };
     }
 
+    /// <summary>
+    /// Handles HTTP requests to the params endpoint.
+    /// </summary>
+    /// <param name="ctx">The HTTP listener context.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
     private static Task HandleHttpParamsRequestAsync(HttpListenerContext ctx)
     {
         ctx.Response.StatusCode = (int)HttpStatusCode.OK;
@@ -43,6 +65,11 @@ file class HttpHandler : IHttpHandler
         return Task.CompletedTask;
     }
 
+    /// <summary>
+    /// Handles HTTP requests to the upload endpoint.
+    /// </summary>
+    /// <param name="ctx">The HTTP listener context.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
     private static Task HandleHttpUploadRequestAsync(HttpListenerContext ctx)
     {
         ctx.Response.StatusCode = (int)HttpStatusCode.OK;
@@ -51,6 +78,11 @@ file class HttpHandler : IHttpHandler
         return Task.CompletedTask;
     }
 
+    /// <summary>
+    /// Handles HTTP requests to the download endpoint.
+    /// </summary>
+    /// <param name="ctx">The HTTP listener context.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
     private static async Task HandleHttpDownloadRequestAsync(HttpListenerContext ctx)
     {
         var query = UriQuery.Parse(ctx.Request.Url.NotNull().Query);

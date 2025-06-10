@@ -12,8 +12,14 @@ namespace Annium.NodaTime.Serialization.Json.Tests;
 /// </summary>
 public class NodaIsoIntervalConverterTest
 {
+    /// <summary>
+    /// JSON converters used for testing ISO interval serialization.
+    /// </summary>
     private readonly JsonConverter[] _converters = { Converters.IsoIntervalConverter };
 
+    /// <summary>
+    /// Tests that Interval values can be serialized to ISO format and deserialized back correctly.
+    /// </summary>
     [Fact]
     public void RoundTrip()
     {
@@ -23,6 +29,9 @@ public class NodaIsoIntervalConverterTest
         AssertConversions(interval, "\"2012-01-02T03:04:05.67Z/2013-06-07T08:09:10.123456789Z\"", _converters);
     }
 
+    /// <summary>
+    /// Tests that infinite intervals are correctly serialized to ISO format with slash delimiters.
+    /// </summary>
     [Fact]
     public void RoundTrip_Infinite()
     {
@@ -32,6 +41,9 @@ public class NodaIsoIntervalConverterTest
         AssertConversions(new Interval(null, null), "\"/\"", _converters);
     }
 
+    /// <summary>
+    /// Tests that ISO intervals with comma decimal separators can be correctly deserialized.
+    /// </summary>
     [Fact]
     public void DeserializeComma()
     {
@@ -46,6 +58,9 @@ public class NodaIsoIntervalConverterTest
         interval.Is(expectedInterval);
     }
 
+    /// <summary>
+    /// Tests that Interval values can be serialized in ISO format when contained within another object.
+    /// </summary>
     [Fact]
     public void Serialize_InObject()
     {
@@ -59,6 +74,9 @@ public class NodaIsoIntervalConverterTest
         json.Is("{\"interval\":\"2012-01-02T03:04:05Z/2013-06-07T08:09:10Z\"}");
     }
 
+    /// <summary>
+    /// Tests that Interval values can be deserialized from ISO format when contained within another object.
+    /// </summary>
     [Fact]
     public void Deserialize_InObject()
     {
@@ -74,8 +92,14 @@ public class NodaIsoIntervalConverterTest
         interval.Is(expectedInterval);
     }
 
+    /// <summary>
+    /// Test object containing an Interval property for testing ISO serialization scenarios.
+    /// </summary>
     public class TestObject
     {
+        /// <summary>
+        /// Gets or sets the interval for testing.
+        /// </summary>
         public Interval Interval { get; set; }
     }
 }

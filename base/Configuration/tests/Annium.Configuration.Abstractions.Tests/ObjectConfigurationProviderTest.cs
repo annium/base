@@ -1,12 +1,15 @@
 using System.Collections.Generic;
 using System.Linq;
 using Annium.Configuration.Tests.Lib;
-using Annium.Core.DependencyInjection;
 using Annium.Testing;
+using Annium.Testing.Collection;
 using Xunit;
 
 namespace Annium.Configuration.Abstractions.Tests;
 
+/// <summary>
+/// Tests for object configuration provider functionality.
+/// </summary>
 public class ObjectConfigurationProviderTest : TestBase
 {
     public ObjectConfigurationProviderTest(ITestOutputHelper outputHelper)
@@ -15,6 +18,9 @@ public class ObjectConfigurationProviderTest : TestBase
         RegisterMapper();
     }
 
+    /// <summary>
+    /// Tests that object configuration provider works correctly.
+    /// </summary>
     [Fact]
     public void Works()
     {

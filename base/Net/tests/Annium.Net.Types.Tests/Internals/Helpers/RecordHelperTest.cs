@@ -9,8 +9,15 @@ using Xunit;
 
 namespace Annium.Net.Types.Tests.Internals.Helpers;
 
+/// <summary>
+/// Tests for record helper functionality
+/// </summary>
 public class RecordHelperTest
 {
+    /// <summary>
+    /// Tests behavior when type is not array-like
+    /// </summary>
+    /// <param name="type">The type to test</param>
     [Theory]
     [InlineData(typeof(IEnumerable))]
     public void NotArrayLike(Type type)
@@ -24,6 +31,10 @@ public class RecordHelperTest
             .Reports($"doesn't implement {MapperConfig.BaseArrayType.FriendlyName()}");
     }
 
+    /// <summary>
+    /// Tests behavior when type is not record-like
+    /// </summary>
+    /// <param name="type">The type to test</param>
     [Theory]
     [InlineData(typeof(IEnumerable<>))]
     [InlineData(typeof(int[]))]
@@ -39,6 +50,10 @@ public class RecordHelperTest
             .Reports($"doesn't implement {MapperConfig.BaseRecordValueType.FriendlyName()}");
     }
 
+    /// <summary>
+    /// Tests resolving element types from record-like types
+    /// </summary>
+    /// <param name="type">The type to test</param>
     [Theory]
     [InlineData(typeof(IEnumerable<KeyValuePair<string, int>>))]
     [InlineData(typeof(IDictionary<string, int>))]

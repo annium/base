@@ -1,19 +1,31 @@
 using System;
 using System.IO;
-using Annium.Core.DependencyInjection;
 using Annium.Data.Operations.Serialization.Tests.Base;
+using Annium.Serialization.Abstractions;
+using Annium.Serialization.Json;
 using Xunit;
 
 namespace Annium.Data.Operations.Serialization.Json.Tests;
 
+/// <summary>
+/// Tests for JSON serialization of Result types.
+/// </summary>
 public class ResultTest : ResultTestBase
 {
     public ResultTest(ITestOutputHelper outputHelper)
         : base(outputHelper)
     {
-        Register(container => container.AddSerializers().WithJson(opts => opts.ConfigureForOperations(), true));
+        Register(container =>
+            container
+                .AddSerializers()
+                .WithJson(opts => JsonSerializerOptionsExtensions.ConfigureForOperations(opts), true)
+        );
     }
 
+    /// <summary>
+    /// Tests that simple Result types can be serialized and deserialized correctly using JSON.
+    /// </summary>
+    /// <param name="type">The type to test serialization for.</param>
     [Theory]
     [InlineData(typeof(string))]
     [InlineData(typeof(byte[]))]
@@ -24,6 +36,10 @@ public class ResultTest : ResultTestBase
         GetType().GetMethod(nameof(Simple_Base))!.MakeGenericMethod(type).Invoke(this, Array.Empty<object>());
     }
 
+    /// <summary>
+    /// Tests that Result types with data can be serialized and deserialized correctly using JSON.
+    /// </summary>
+    /// <param name="type">The type to test serialization for.</param>
     [Theory]
     [InlineData(typeof(string))]
     [InlineData(typeof(byte[]))]

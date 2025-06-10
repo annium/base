@@ -7,8 +7,16 @@ using NodaTime;
 
 namespace Annium.Net.Types.Internal.Config;
 
+/// <summary>
+/// Extension methods for configuring mapper with default type mappings and rules
+/// </summary>
 internal static class MapperConfigExtensions
 {
+    /// <summary>
+    /// Configures the mapper with standard base type mappings for primitive and common .NET types
+    /// </summary>
+    /// <param name="cfg">The mapper configuration to extend</param>
+    /// <returns>The mapper configuration for method chaining</returns>
     public static IMapperConfig SetBaseTypes(this IMapperConfig cfg) =>
         cfg.SetBaseType(typeof(object), BaseType.Object)
             .SetBaseType(typeof(bool), BaseType.Bool)
@@ -38,6 +46,11 @@ internal static class MapperConfigExtensions
             .SetBaseType(typeof(YearMonth), BaseType.YearMonth)
             .SetBaseType(typeof(void), BaseType.Void);
 
+    /// <summary>
+    /// Configures the mapper to ignore common system types and interfaces that should not be mapped
+    /// </summary>
+    /// <param name="cfg">The mapper configuration to extend</param>
+    /// <returns>The mapper configuration for method chaining</returns>
     public static IMapperConfig Ignore(this IMapperConfig cfg) =>
         cfg
         // basic types
@@ -64,6 +77,11 @@ internal static class MapperConfigExtensions
             // custom basic interfaces
             .Ignore(Match.Is(typeof(ICopyable<>)));
 
+    /// <summary>
+    /// Configures the mapper to recognize standard collection interfaces and types as arrays for mapping
+    /// </summary>
+    /// <param name="cfg">The mapper configuration to extend</param>
+    /// <returns>The mapper configuration for method chaining</returns>
     public static IMapperConfig RegisterArrays(this IMapperConfig cfg) =>
         cfg.SetArray(typeof(IEnumerable<>))
             .SetArray(typeof(IReadOnlyCollection<>))
@@ -75,6 +93,11 @@ internal static class MapperConfigExtensions
             .SetArray(typeof(List<>))
             .SetArray(typeof(HashSet<>));
 
+    /// <summary>
+    /// Configures the mapper to recognize standard dictionary interfaces and types as records for mapping
+    /// </summary>
+    /// <param name="cfg">The mapper configuration to extend</param>
+    /// <returns>The mapper configuration for method chaining</returns>
     public static IMapperConfig RegisterRecords(this IMapperConfig cfg) =>
         cfg.SetRecord(typeof(IDictionary<,>))
             .SetRecord(typeof(IReadOnlyDictionary<,>))

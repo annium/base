@@ -1,5 +1,4 @@
 using System;
-using Annium.Core.DependencyInjection;
 
 namespace Annium.Core.Mapper.Attributes;
 

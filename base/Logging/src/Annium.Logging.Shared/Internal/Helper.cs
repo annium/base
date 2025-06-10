@@ -4,8 +4,17 @@ using System.Text;
 
 namespace Annium.Logging.Shared.Internal;
 
+/// <summary>
+/// Helper class for processing log message templates
+/// </summary>
 internal static class Helper
 {
+    /// <summary>
+    /// Processes a message template with data items to produce a formatted message and data dictionary
+    /// </summary>
+    /// <param name="messageTemplate">The message template with placeholder variables</param>
+    /// <param name="dataItems">The data items to substitute into the template</param>
+    /// <returns>A tuple containing the formatted message and data dictionary</returns>
     public static (string, IReadOnlyDictionary<string, object?>) Process(
         string messageTemplate,
         IReadOnlyList<object?> dataItems

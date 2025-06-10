@@ -2,27 +2,37 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using Annium.Core.Mapper;
+using Annium.Core.DependencyInjection.Container;
+using Annium.Core.DependencyInjection.Extensions;
 using Annium.Core.Mapper.Attributes;
 using Annium.Core.Mapper.Internal;
 using Annium.Core.Mapper.Internal.DependencyInjection;
 using Annium.Core.Mapper.Internal.Profiles;
 using Annium.Core.Mapper.Internal.Resolvers;
+using Annium.Core.Runtime;
 using Annium.Core.Runtime.Types;
 using Annium.Logging;
-using Annium.Reflection;
+using Annium.Reflection.Types;
 
-// ReSharper disable once CheckNamespace
-namespace Annium.Core.DependencyInjection;
+namespace Annium.Core.Mapper;
 
+/// <summary>
+/// Extensions for configuring mapper services in the service container
+/// </summary>
 public static class ServiceContainerExtensions
 {
+    /// <summary>
+    /// Adds mapper services to the service container
+    /// </summary>
+    /// <param name="container">The service container</param>
+    /// <param name="autoload">Whether to automatically discover and register profiles</param>
+    /// <returns>The service container for method chaining</returns>
     public static IServiceContainer AddMapper(this IServiceContainer container, bool autoload = true)
     {
         // register base services
         container.Add<IRepacker, Repacker>().Singleton();
         container.Add<IMapBuilder, MapBuilder>().Singleton();
-        container.Add<IMapper, Mapper.Internal.Mapper>().Singleton();
+        container.Add<IMapper, Internal.Mapper>().Singleton();
         container
             .Add(sp => new Lazy<IMapContext>(() => new MapContext(sp.Resolve<IMapper>()), true))
             .AsSelf()
@@ -60,6 +70,12 @@ public static class ServiceContainerExtensions
         return container;
     }
 
+    /// <summary>
+    /// Adds a configured profile to the service container
+    /// </summary>
+    /// <param name="container">The service container</param>
+    /// <param name="configure">The profile configuration action</param>
+    /// <returns>The service container for method chaining</returns>
     public static IServiceContainer AddProfile(this IServiceContainer container, Action<Profile> configure)
     {
         var profile = new EmptyProfile();
@@ -70,6 +86,12 @@ public static class ServiceContainerExtensions
         return container;
     }
 
+    /// <summary>
+    /// Adds a profile type to the service container
+    /// </summary>
+    /// <typeparam name="T">The profile type</typeparam>
+    /// <param name="container">The service container</param>
+    /// <returns>The service container for method chaining</returns>
     public static IServiceContainer AddProfile<T>(this IServiceContainer container)
         where T : Profile
     {
@@ -78,6 +100,12 @@ public static class ServiceContainerExtensions
         return container;
     }
 
+    /// <summary>
+    /// Adds a profile type to the service container
+    /// </summary>
+    /// <param name="container">The service container</param>
+    /// <param name="profileType">The profile type</param>
+    /// <returns>The service container for method chaining</returns>
     public static IServiceContainer AddProfile(this IServiceContainer container, Type profileType)
     {
         if (!profileType.GetInheritanceChain().Contains(typeof(Profile)))
@@ -88,6 +116,13 @@ public static class ServiceContainerExtensions
         return container;
     }
 
+    /// <summary>
+    /// Adds a profile instance to the service container
+    /// </summary>
+    /// <typeparam name="T">The profile type</typeparam>
+    /// <param name="container">The service container</param>
+    /// <param name="profile">The profile instance</param>
+    /// <returns>The service container for method chaining</returns>
     private static IServiceContainer AddProfileInstance<T>(this IServiceContainer container, T profile)
         where T : Profile
     {
@@ -97,6 +132,12 @@ public static class ServiceContainerExtensions
         return container;
     }
 
+    /// <summary>
+    /// Adds a profile type to the service container
+    /// </summary>
+    /// <param name="container">The service container</param>
+    /// <param name="profileType">The profile type</param>
+    /// <returns>The service container for method chaining</returns>
     private static IServiceContainer AddProfileType(this IServiceContainer container, Type profileType)
     {
         container.Add(profileType).AsSelf().Singleton();
@@ -105,6 +146,11 @@ public static class ServiceContainerExtensions
         return container;
     }
 
+    /// <summary>
+    /// Resolves all profiles from the service provider
+    /// </summary>
+    /// <param name="sp">The service provider</param>
+    /// <returns>The resolved profiles</returns>
     private static IEnumerable<Profile> ResolveProfiles(IServiceProvider sp)
     {
         var baseInstances = sp.Resolve<IEnumerable<ProfileInstance>>().Select(x => x.Instance).ToArray();

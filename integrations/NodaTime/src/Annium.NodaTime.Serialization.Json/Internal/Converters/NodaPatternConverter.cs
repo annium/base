@@ -12,7 +12,14 @@ namespace Annium.NodaTime.Serialization.Json.Internal.Converters;
 /// <typeparam name="T">The type to convert to/from JSON.</typeparam>
 internal sealed class NodaPatternConverter<T> : ConverterBase<T>
 {
+    /// <summary>
+    /// The pattern used for parsing and formatting values of type T.
+    /// </summary>
     private readonly IPattern<T> _pattern;
+
+    /// <summary>
+    /// The validator called before writing values to ensure they can be serialized.
+    /// </summary>
     private readonly Action<T> _validator;
 
     /// <summary>
@@ -37,6 +44,13 @@ internal sealed class NodaPatternConverter<T> : ConverterBase<T>
         _validator = validator;
     }
 
+    /// <summary>
+    /// Reads a JSON string and parses it using the configured pattern.
+    /// </summary>
+    /// <param name="reader">The JSON reader to read from.</param>
+    /// <param name="typeToConvert">The type to convert to.</param>
+    /// <param name="options">The serializer options to use.</param>
+    /// <returns>The parsed value.</returns>
     public override T ReadImplementation(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         if (reader.TokenType != JsonTokenType.String)
@@ -47,6 +61,12 @@ internal sealed class NodaPatternConverter<T> : ConverterBase<T>
         return _pattern.Parse(reader.GetString()!).Value;
     }
 
+    /// <summary>
+    /// Writes a value as a JSON string using the configured pattern after validation.
+    /// </summary>
+    /// <param name="writer">The JSON writer to write to.</param>
+    /// <param name="value">The value to serialize.</param>
+    /// <param name="options">The serializer options to use.</param>
     public override void WriteImplementation(Utf8JsonWriter writer, T value, JsonSerializerOptions options)
     {
         _validator.Invoke(value);

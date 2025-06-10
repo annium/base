@@ -4,10 +4,16 @@ using System.Linq.Expressions;
 
 namespace Annium.Core.Mapper.Internal;
 
-// Summary:
-//      Repacks given expression with given source expression, replacing parameter expressions to given source expression
+/// <summary>
+/// Repacks given expression with given source expression, replacing parameter expressions to given source expression
+/// </summary>
 internal class Repacker : IRepacker
 {
+    /// <summary>
+    /// Repacks an expression into a mapping configuration
+    /// </summary>
+    /// <param name="ex">The expression to repack</param>
+    /// <returns>The repacked mapping</returns>
     public Mapping Repack(Expression? ex) =>
         source =>
         {
@@ -32,6 +38,11 @@ internal class Repacker : IRepacker
             };
         };
 
+    /// <summary>
+    /// Repacks a binary expression
+    /// </summary>
+    /// <param name="ex">The binary expression</param>
+    /// <returns>The repacked mapping</returns>
     private Mapping Binary(BinaryExpression ex) =>
         source =>
             Expression.MakeBinary(
@@ -43,6 +54,11 @@ internal class Repacker : IRepacker
                 ex.Conversion
             );
 
+    /// <summary>
+    /// Repacks a conditional expression
+    /// </summary>
+    /// <param name="ex">The conditional expression</param>
+    /// <returns>The repacked mapping</returns>
     private Mapping Conditional(ConditionalExpression ex) =>
         source =>
             Expression.Condition(
@@ -52,9 +68,19 @@ internal class Repacker : IRepacker
                 ex.Type
             );
 
+    /// <summary>
+    /// Repacks a lambda expression
+    /// </summary>
+    /// <param name="ex">The lambda expression</param>
+    /// <returns>The repacked mapping</returns>
     private Mapping Lambda(LambdaExpression ex) =>
         source => Expression.Lambda(Repack(ex.Body)(source), (ParameterExpression)source);
 
+    /// <summary>
+    /// Repacks a list initialization expression
+    /// </summary>
+    /// <param name="ex">The list init expression</param>
+    /// <returns>The repacked mapping</returns>
     private Mapping ListInit(ListInitExpression ex) =>
         source =>
             Expression.ListInit(
@@ -62,9 +88,19 @@ internal class Repacker : IRepacker
                 ex.Initializers.Select(x => x.Update(x.Arguments.Select(a => Repack(a)(source))))
             );
 
+    /// <summary>
+    /// Repacks a member access expression
+    /// </summary>
+    /// <param name="ex">The member expression</param>
+    /// <returns>The repacked mapping</returns>
     private Mapping Member(MemberExpression ex) =>
         source => Expression.MakeMemberAccess(Repack(ex.Expression)(source), ex.Member);
 
+    /// <summary>
+    /// Repacks a member initialization expression
+    /// </summary>
+    /// <param name="ex">The member init expression</param>
+    /// <returns>The repacked mapping</returns>
     private Mapping MemberInit(MemberInitExpression ex) =>
         source =>
             Expression.MemberInit(
@@ -78,6 +114,11 @@ internal class Repacker : IRepacker
                 })
             );
 
+    /// <summary>
+    /// Repacks a method call expression
+    /// </summary>
+    /// <param name="ex">The method call expression</param>
+    /// <returns>The repacked mapping</returns>
     private Mapping MethodCall(MethodCallExpression ex) =>
         source =>
             Expression.Call(
@@ -86,12 +127,27 @@ internal class Repacker : IRepacker
                 ex.Arguments.Select(a => Repack(a)(source)).ToArray()
             );
 
+    /// <summary>
+    /// Repacks a new object expression
+    /// </summary>
+    /// <param name="ex">The new expression</param>
+    /// <returns>The repacked mapping</returns>
     private Mapping New(NewExpression ex) =>
         source => Expression.New(ex.Constructor!, ex.Arguments.Select(a => Repack(a)(source)));
 
+    /// <summary>
+    /// Repacks a new array expression
+    /// </summary>
+    /// <param name="ex">The new array expression</param>
+    /// <returns>The repacked mapping</returns>
     private Mapping NewArray(NewArrayExpression ex) =>
         source => ex.Update(ex.Expressions.Select(e => Repack(e)(source)));
 
+    /// <summary>
+    /// Repacks a unary expression
+    /// </summary>
+    /// <param name="ex">The unary expression</param>
+    /// <returns>The repacked mapping</returns>
     private Mapping Unary(UnaryExpression ex) =>
         source => Expression.MakeUnary(ex.NodeType, Repack(ex.Operand)(source), ex.Type, ex.Method);
 }

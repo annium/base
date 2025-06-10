@@ -7,10 +7,19 @@ using static Annium.NodaTime.Serialization.Json.Tests.TestHelper;
 
 namespace Annium.NodaTime.Serialization.Json.Tests;
 
+/// <summary>
+/// Tests for the DateTimeZone JSON converter that handles time zone serialization.
+/// </summary>
 public class NodaDateTimeZoneConverterTest
 {
+    /// <summary>
+    /// JSON converter for DateTimeZone using the TZDB provider.
+    /// </summary>
     private readonly JsonConverter _converter = Converters.CreateDateTimeZoneConverter(DateTimeZoneProviders.Tzdb);
 
+    /// <summary>
+    /// Tests that DateTimeZone values are correctly serialized to their ID strings.
+    /// </summary>
     [Fact]
     public void Serialize()
     {
@@ -19,6 +28,9 @@ public class NodaDateTimeZoneConverterTest
         json.Is("\"America/Los_Angeles\"");
     }
 
+    /// <summary>
+    /// Tests that DateTimeZone values are correctly deserialized from their ID strings.
+    /// </summary>
     [Fact]
     public void Deserialize()
     {
@@ -28,6 +40,9 @@ public class NodaDateTimeZoneConverterTest
         dateTimeZone.Is(expectedDateTimeZone);
     }
 
+    /// <summary>
+    /// Tests that deserializing an invalid time zone ID throws a JsonException.
+    /// </summary>
     [Fact]
     public void Deserialize_TimeZoneNotFound()
     {

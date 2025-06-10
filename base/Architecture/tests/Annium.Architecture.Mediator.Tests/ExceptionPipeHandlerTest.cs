@@ -3,15 +3,23 @@ using Annium.Architecture.Base;
 using Annium.Core.Mediator;
 using Annium.Data.Operations;
 using Annium.Testing;
+using Annium.Testing.Collection;
 using Xunit;
 
 namespace Annium.Architecture.Mediator.Tests;
 
+/// <summary>
+/// Tests for the exception pipe handler functionality.
+/// </summary>
 public class ExceptionPipeHandlerTest : TestBase
 {
     public ExceptionPipeHandlerTest(ITestOutputHelper outputHelper)
         : base(outputHelper) { }
 
+    /// <summary>
+    /// Tests that exceptions are caught and returned as uncaught exception results.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Fact]
     public async Task Exception_ReturnsUncaughtExceptionResult()
     {
@@ -32,6 +40,10 @@ public class ExceptionPipeHandlerTest : TestBase
         result.PlainErrors.At(0).Is("TEST EXCEPTION");
     }
 
+    /// <summary>
+    /// Tests that successful operations return the original result.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Fact]
     public async Task Success_ReturnsOriginalResult()
     {
@@ -51,8 +63,14 @@ public class ExceptionPipeHandlerTest : TestBase
         result.IsOk.IsTrue();
     }
 
+    /// <summary>
+    /// Test request class for exception handling testing.
+    /// </summary>
     private class LoginRequest : IThrowing
     {
+        /// <summary>
+        /// Gets or sets a value indicating whether an exception should be thrown.
+        /// </summary>
         public bool Throw { get; set; }
     }
 }

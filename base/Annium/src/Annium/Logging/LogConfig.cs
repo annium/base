@@ -3,8 +3,14 @@ using System.Linq;
 
 namespace Annium.Logging;
 
+/// <summary>
+/// Provides configuration for logging, including the global log level.
+/// </summary>
 public static class LogConfig
 {
+    /// <summary>
+    /// Gets or sets the current global log level.
+    /// </summary>
     public static LogLevel Level { get; private set; }
 
     static LogConfig()
@@ -38,5 +44,9 @@ public static class LogConfig
         }
     }
 
+    /// <summary>
+    /// Sets the global log level.
+    /// </summary>
+    /// <param name="level">The log level to set.</param>
     public static void SetLevel(LogLevel level) => Level = level;
 }

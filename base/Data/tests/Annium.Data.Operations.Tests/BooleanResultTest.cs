@@ -1,10 +1,17 @@
 using Annium.Testing;
+using Annium.Testing.Collection;
 using Xunit;
 
 namespace Annium.Data.Operations.Tests;
 
+/// <summary>
+/// Tests for BooleanResult functionality and behavior.
+/// </summary>
 public class BooleanResultTest
 {
+    /// <summary>
+    /// Tests that a success BooleanResult has correct state properties.
+    /// </summary>
     [Fact]
     public void BooleanResult_Success_IsCorrect()
     {
@@ -16,6 +23,9 @@ public class BooleanResultTest
         result.IsFailure.IsFalse();
     }
 
+    /// <summary>
+    /// Tests that a success BooleanResult remains successful even when errors are added.
+    /// </summary>
     [Fact]
     public void BooleanResult_SuccessWithError_IsSuccess()
     {
@@ -27,6 +37,9 @@ public class BooleanResultTest
         result.IsFailure.IsFalse();
     }
 
+    /// <summary>
+    /// Tests that a failure BooleanResult has correct state properties.
+    /// </summary>
     [Fact]
     public void BooleanResult_Failure_IsCorrect()
     {
@@ -38,6 +51,9 @@ public class BooleanResultTest
         result.IsFailure.IsTrue();
     }
 
+    /// <summary>
+    /// Tests that a success BooleanResult with data has correct state and data properties.
+    /// </summary>
     [Fact]
     public void BooleanResult_SuccessWithData_IsCorrect()
     {
@@ -53,6 +69,9 @@ public class BooleanResultTest
         succeed.IsTrue();
     }
 
+    /// <summary>
+    /// Tests that a success BooleanResult with data remains successful even when errors are added.
+    /// </summary>
     [Fact]
     public void BooleanResult_SuccessWithDataWithError_IsSuccess()
     {
@@ -68,6 +87,9 @@ public class BooleanResultTest
         succeed.IsTrue();
     }
 
+    /// <summary>
+    /// Tests that a failure BooleanResult with data has correct state and data properties.
+    /// </summary>
     [Fact]
     public void BooleanResult_FailureWithData_IsCorrect()
     {
@@ -83,6 +105,9 @@ public class BooleanResultTest
         succeed.IsFalse();
     }
 
+    /// <summary>
+    /// Tests that cloning a BooleanResult produces a valid copy with all properties preserved.
+    /// </summary>
     [Fact]
     public void BooleanResult_Clone_ReturnsValidClone()
     {
@@ -106,6 +131,9 @@ public class BooleanResultTest
         failedClone.LabeledErrors.At("label").At(0).Is("value");
     }
 
+    /// <summary>
+    /// Tests that cloning a BooleanResult with data produces a valid copy with all properties and data preserved.
+    /// </summary>
     [Fact]
     public void BooleanResult_CloneWithData_ReturnsValidClone()
     {

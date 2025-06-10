@@ -1,5 +1,7 @@
 using System;
-using Annium.Core.DependencyInjection;
+using Annium.Core.DependencyInjection.Container;
+using Annium.Core.DependencyInjection.Extensions;
+using Annium.Core.Runtime;
 using Annium.Serialization.Abstractions;
 using Annium.Testing;
 using Xunit;
@@ -7,8 +9,14 @@ using YamlDotNet.Serialization.NamingConventions;
 
 namespace Annium.Serialization.Yaml.Tests;
 
+/// <summary>
+/// Tests for YAML serialization configuration functionality
+/// </summary>
 public class ConfigurationTest
 {
+    /// <summary>
+    /// Tests that multiple YAML serialization configurations can coexist and work correctly
+    /// </summary>
     [Fact]
     public void MultipleConfigurations_Work()
     {

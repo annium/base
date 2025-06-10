@@ -5,8 +5,14 @@ using Xunit;
 
 namespace Annium.Data.Models.Tests;
 
+/// <summary>
+/// Tests for the Comparable implementation functionality.
+/// </summary>
 public class ComparableTest
 {
+    /// <summary>
+    /// Tests that direct comparison operations work correctly for comparable objects.
+    /// </summary>
     [Fact]
     public void DirectComparison_WorksCorrectly()
     {
@@ -27,6 +33,9 @@ public class ComparableTest
         c.CompareTo(b as object).Is(1);
     }
 
+    /// <summary>
+    /// Tests that indirect comparison operations and operator overloads work correctly for comparable objects.
+    /// </summary>
     [Fact]
     public void IndirectComparison_WorksCorrectly()
     {

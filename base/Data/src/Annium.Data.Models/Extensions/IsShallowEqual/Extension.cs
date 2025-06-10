@@ -5,20 +5,42 @@ using System.Reflection;
 using System.Threading;
 using Annium.Core.Mapper;
 
-// ReSharper disable once CheckNamespace
-namespace Annium.Data.Models.Extensions;
+namespace Annium.Data.Models.Extensions.IsShallowEqual;
 
+/// <summary>
+/// Extension methods for shallow equality comparison.
+/// </summary>
 public static partial class IsShallowEqualExtensions
 {
+    /// <summary>
+    /// Lock object for thread-safe access to comparer caches.
+    /// </summary>
     private static readonly Lock _locker = new();
 
+    /// <summary>
+    /// Set of types currently being processed to prevent circular dependencies.
+    /// </summary>
     private static readonly HashSet<Type> _comparersInProgress = new();
 
+    /// <summary>
+    /// Cache of compiled comparer delegates for each type.
+    /// </summary>
     private static readonly IDictionary<Type, Delegate> _comparers = new Dictionary<Type, Delegate>();
 
+    /// <summary>
+    /// Cache of raw lambda expressions for each type before compilation.
+    /// </summary>
     private static readonly IDictionary<Type, LambdaExpression> _rawComparers =
         new Dictionary<Type, LambdaExpression>();
 
+    /// <summary>
+    /// Determines whether two values are shallowly equal using the default mapper
+    /// </summary>
+    /// <typeparam name="T">The type of the first value</typeparam>
+    /// <typeparam name="TD">The type of the second value</typeparam>
+    /// <param name="value">The first value to compare</param>
+    /// <param name="data">The second value to compare</param>
+    /// <returns>True if the values are shallowly equal</returns>
     public static bool IsShallowEqual<T, TD>(this T value, TD data)
     {
         var mapper = Mapper.GetFor(Assembly.GetCallingAssembly());
@@ -26,6 +48,15 @@ public static partial class IsShallowEqualExtensions
         return value.IsShallowEqual(data, mapper);
     }
 
+    /// <summary>
+    /// Determines whether two values are shallowly equal using the specified mapper
+    /// </summary>
+    /// <typeparam name="T">The type of the first value</typeparam>
+    /// <typeparam name="TD">The type of the second value</typeparam>
+    /// <param name="value">The first value to compare</param>
+    /// <param name="data">The second value to compare</param>
+    /// <param name="mapper">The mapper to use for type conversions</param>
+    /// <returns>True if the values are shallowly equal</returns>
     public static bool IsShallowEqual<T, TD>(this T value, TD data, IMapper mapper)
     {
         var type = typeof(TD);
@@ -80,6 +111,12 @@ public static partial class IsShallowEqualExtensions
         }
     }
 
+    /// <summary>
+    /// Resolves or builds a comparer for the specified type.
+    /// </summary>
+    /// <param name="type">The type to resolve a comparer for.</param>
+    /// <param name="mapper">The mapper to use for type conversions.</param>
+    /// <returns>The lambda expression comparer for the type.</returns>
     private static LambdaExpression ResolveComparer(Type type, IMapper mapper)
     {
         if (_rawComparers.TryGetValue(type, out var comparer))

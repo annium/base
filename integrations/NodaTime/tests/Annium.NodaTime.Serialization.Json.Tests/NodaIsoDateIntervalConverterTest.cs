@@ -12,12 +12,18 @@ namespace Annium.NodaTime.Serialization.Json.Tests;
 /// </summary>
 public class NodaIsoDateIntervalConverterTest
 {
+    /// <summary>
+    /// JSON converters used for testing ISO date interval serialization.
+    /// </summary>
     private readonly JsonConverter[] _converters =
     {
         Converters.IsoDateIntervalConverter,
         Converters.LocalDateConverter,
     };
 
+    /// <summary>
+    /// Tests that DateInterval values can be serialized to ISO format and deserialized back correctly.
+    /// </summary>
     [Fact]
     public void RoundTrip()
     {
@@ -27,6 +33,9 @@ public class NodaIsoDateIntervalConverterTest
         AssertConversions(dateInterval, "\"2012-01-02/2013-06-07\"", _converters);
     }
 
+    /// <summary>
+    /// Tests that DateInterval values can be serialized in ISO format when contained within another object.
+    /// </summary>
     [Fact]
     public void Serialize_InObject()
     {
@@ -40,6 +49,9 @@ public class NodaIsoDateIntervalConverterTest
         json.Is("{\"interval\":\"2012-01-02/2013-06-07\"}");
     }
 
+    /// <summary>
+    /// Tests that DateInterval values can be deserialized from ISO format when contained within another object.
+    /// </summary>
     [Fact]
     public void Deserialize_InObject()
     {
@@ -55,8 +67,14 @@ public class NodaIsoDateIntervalConverterTest
         interval.Is(expectedInterval);
     }
 
+    /// <summary>
+    /// Test object containing a DateInterval property for testing ISO serialization scenarios.
+    /// </summary>
     public class TestObject
     {
+        /// <summary>
+        /// Gets or sets the date interval for testing.
+        /// </summary>
         public DateInterval Interval { get; set; } = null!;
     }
 }

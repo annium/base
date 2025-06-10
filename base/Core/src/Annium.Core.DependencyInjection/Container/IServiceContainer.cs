@@ -1,14 +1,29 @@
 using System;
 using System.Collections.Generic;
+using Annium.Core.DependencyInjection.Builders;
+using Annium.Core.DependencyInjection.Descriptors;
 using Microsoft.Extensions.DependencyInjection;
 
-// ReSharper disable once CheckNamespace
-namespace Annium.Core.DependencyInjection;
+namespace Annium.Core.DependencyInjection.Container;
 
+/// <summary>
+/// Interface for service container that manages service registrations.
+/// </summary>
 public interface IServiceContainer : IEnumerable<IServiceDescriptor>
 {
+    /// <summary>
+    /// Gets the number of service descriptors in the container.
+    /// </summary>
     int Count { get; }
+
+    /// <summary>
+    /// Gets the underlying service collection.
+    /// </summary>
     IServiceCollection Collection { get; }
+
+    /// <summary>
+    /// Event raised when the service provider is built.
+    /// </summary>
     event Action<IServiceProvider> OnBuild;
 
     /// <summary>
@@ -36,7 +51,7 @@ public interface IServiceContainer : IEnumerable<IServiceDescriptor>
     /// <summary>
     /// Register type factory
     /// </summary>
-    /// <param name="factory"></param>
+    /// <param name="factory">factory</param>
     /// <typeparam name="T">type</typeparam>
     /// <returns>factory registration builder</returns>
     IFactoryRegistrationBuilderBase Add<T>(Func<IServiceProvider, T> factory)
@@ -92,6 +107,6 @@ public interface IServiceContainer : IEnumerable<IServiceDescriptor>
     /// <summary>
     /// Build service provider
     /// </summary>
-    /// <returns></returns>
+    /// <returns>The built service provider</returns>
     ServiceProvider BuildServiceProvider();
 }

@@ -1,12 +1,16 @@
 using System;
-using Annium.Core.DependencyInjection;
 using Annium.Data.Operations.Serialization.Tests.Base;
+using Annium.Serialization.Abstractions;
+using Annium.Serialization.MessagePack;
 using MessagePack;
 using MessagePack.Resolvers;
 using Xunit;
 
 namespace Annium.Data.Operations.Serialization.MessagePack.Tests;
 
+/// <summary>
+/// Tests for MessagePack serialization of StatusResult types.
+/// </summary>
 public class StatusResultTest : StatusResultTestBase
 {
     public StatusResultTest(ITestOutputHelper outputHelper)
@@ -25,6 +29,10 @@ public class StatusResultTest : StatusResultTestBase
         );
     }
 
+    /// <summary>
+    /// Tests that simple StatusResult types can be serialized and deserialized correctly using MessagePack.
+    /// </summary>
+    /// <param name="type">The type to test serialization for.</param>
     [Theory]
     [InlineData(typeof(ReadOnlyMemory<byte>))]
     public void Simple(Type type)
@@ -32,6 +40,10 @@ public class StatusResultTest : StatusResultTestBase
         GetType().GetMethod(nameof(Simple_Base))!.MakeGenericMethod(type).Invoke(this, Array.Empty<object>());
     }
 
+    /// <summary>
+    /// Tests that StatusResult types with data can be serialized and deserialized correctly using MessagePack.
+    /// </summary>
+    /// <param name="type">The type to test serialization for.</param>
     [Theory]
     [InlineData(typeof(ReadOnlyMemory<byte>))]
     public void Data(Type type)

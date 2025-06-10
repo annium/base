@@ -4,13 +4,21 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using Annium.Core.Mapper;
-using Annium.Reflection;
+using Annium.Reflection.Types;
 
-// ReSharper disable once CheckNamespace
-namespace Annium.Data.Models.Extensions;
+namespace Annium.Data.Models.Extensions.IsShallowEqual;
 
+/// <summary>
+/// Extension methods for shallow equality comparison - property and field support.
+/// </summary>
 public static partial class IsShallowEqualExtensions
 {
+    /// <summary>
+    /// Builds a comparer expression that compares objects by their properties and fields.
+    /// </summary>
+    /// <param name="type">The type to build the comparer for.</param>
+    /// <param name="mapper">The mapper to use for type conversions.</param>
+    /// <returns>A lambda expression that compares objects by their public properties and fields.</returns>
     private static LambdaExpression BuildPropertyFieldComparer(Type type, IMapper mapper)
     {
         var a = Expression.Parameter(type);

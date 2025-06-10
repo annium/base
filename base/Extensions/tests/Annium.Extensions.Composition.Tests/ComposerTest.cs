@@ -1,15 +1,23 @@
 using System;
 using System.Threading.Tasks;
-using Annium.Data.Models.Extensions;
+using Annium.Data.Models.Extensions.IsShallowEqual;
 using Annium.Testing;
+using Annium.Testing.Collection;
 using Xunit;
 
 // ReSharper disable UnusedType.Local
 
 namespace Annium.Extensions.Composition.Tests;
 
+/// <summary>
+/// Test class for testing composition functionality
+/// </summary>
 public class ComposerTest : TestBase
 {
+    /// <summary>
+    /// Tests that composition with null value and no label produces plain error
+    /// </summary>
+    /// <returns>Task representing the asynchronous test operation</returns>
     [Fact]
     public async Task Composition_NullWithoutLabel_UsesPlainError()
     {
@@ -25,6 +33,10 @@ public class ComposerTest : TestBase
         result.PlainErrors.At(0).Is("Value is null");
     }
 
+    /// <summary>
+    /// Tests that composition with null value and label produces labeled error
+    /// </summary>
+    /// <returns>Task representing the asynchronous test operation</returns>
     [Fact]
     public async Task Composition_NullWithLabel_UsesLabelForLabeledError()
     {
@@ -40,6 +52,10 @@ public class ComposerTest : TestBase
         result.LabeledErrors.At("nested").At(0).Is("Value is null");
     }
 
+    /// <summary>
+    /// Tests that composition without label uses property name as label
+    /// </summary>
+    /// <returns>Task representing the asynchronous test operation</returns>
     [Fact]
     public async Task Composition_WithoutLabel_UsesPropertyNameAsLabel()
     {
@@ -55,6 +71,10 @@ public class ComposerTest : TestBase
         data.Name.Is(nameof(Person.Name));
     }
 
+    /// <summary>
+    /// Tests composition of compound objects through interface implementations
+    /// </summary>
+    /// <returns>Task representing the asynchronous test operation</returns>
     [Fact]
     public async Task Composition_CompoundThroughInterfaces()
     {
@@ -71,6 +91,10 @@ public class ComposerTest : TestBase
         data.Login.Is(nameof(User.Login));
     }
 
+    /// <summary>
+    /// Tests conditional composition implementation
+    /// </summary>
+    /// <returns>Task representing the asynchronous test operation</returns>
     [Fact]
     public async Task Composition_When_ImplementsConditional()
     {
@@ -97,22 +121,47 @@ public class ComposerTest : TestBase
         );
     }
 
+    /// <summary>
+    /// Test user class implementing email and login interfaces
+    /// </summary>
     private class User : IEmail, ILogin
     {
+        /// <summary>
+        /// Gets or sets the email address
+        /// </summary>
         public string Email { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Gets or sets the login name
+        /// </summary>
         public string Login { get; set; } = string.Empty;
     }
 
+    /// <summary>
+    /// Interface for objects that have an email property
+    /// </summary>
     private interface IEmail
     {
+        /// <summary>
+        /// Gets or sets the email address
+        /// </summary>
         string Email { get; set; }
     }
 
+    /// <summary>
+    /// Interface for objects that have a login property
+    /// </summary>
     private interface ILogin
     {
+        /// <summary>
+        /// Gets or sets the login name
+        /// </summary>
         string Login { get; set; }
     }
 
+    /// <summary>
+    /// Composer for email interface implementations
+    /// </summary>
     private class EmailComposer : Composer<IEmail>
     {
         public EmailComposer()
@@ -121,6 +170,9 @@ public class ComposerTest : TestBase
         }
     }
 
+    /// <summary>
+    /// Composer for login interface implementations
+    /// </summary>
     private class LoginComposer : Composer<ILogin>
     {
         public LoginComposer()
@@ -129,13 +181,30 @@ public class ComposerTest : TestBase
         }
     }
 
+    /// <summary>
+    /// Test person class with name, user ID, and user properties
+    /// </summary>
     private class Person
     {
+        /// <summary>
+        /// Gets or sets the person's name
+        /// </summary>
         public string Name { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Gets or sets the user ID
+        /// </summary>
         public Guid? UserId { get; set; }
+
+        /// <summary>
+        /// Gets or sets the associated user
+        /// </summary>
         public User? User { get; set; }
     }
 
+    /// <summary>
+    /// Composer for person objects
+    /// </summary>
     private class PersonComposer : Composer<Person>
     {
         public PersonComposer()
@@ -147,8 +216,14 @@ public class ComposerTest : TestBase
         }
     }
 
+    /// <summary>
+    /// Test class representing a bad configuration
+    /// </summary>
     private class Bad
     {
+        /// <summary>
+        /// Gets or sets the name
+        /// </summary>
         public string Name { get; set; } = string.Empty;
     }
 }

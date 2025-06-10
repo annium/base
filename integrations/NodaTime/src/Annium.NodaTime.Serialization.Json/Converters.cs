@@ -137,6 +137,12 @@ public static class Converters
     public static JsonConverter YearMonthConverter { get; } =
         new NodaPatternConverter<YearMonth>(YearMonthPattern.Iso, CreateIsoValidator<YearMonth>(x => x.Calendar));
 
+    /// <summary>
+    /// Creates a validator that ensures values use the ISO calendar system for serialization.
+    /// </summary>
+    /// <typeparam name="T">The type of value to validate.</typeparam>
+    /// <param name="calendarProjection">A function to extract the calendar system from the value.</param>
+    /// <returns>A validation action that throws if the value doesn't use the ISO calendar.</returns>
     private static Action<T> CreateIsoValidator<T>(Func<T, CalendarSystem> calendarProjection) =>
         value =>
         {

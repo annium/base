@@ -6,8 +6,14 @@ using Xunit;
 
 namespace Annium.Serialization.MessagePack.Tests;
 
+/// <summary>
+/// Tests for MessagePack serialization functionality
+/// </summary>
 public class MessagePackSerializerTests : TestBase
 {
+    /// <summary>
+    /// Tests that MessagePack serialization and deserialization works correctly
+    /// </summary>
     [Fact]
     public void Serialization_Deserialization_Works()
     {
@@ -30,15 +36,27 @@ public class MessagePackSerializerTests : TestBase
         deserialized.LastName.Is(data.LastName);
     }
 
+    /// <summary>
+    /// Test person class for MessagePack serialization testing
+    /// </summary>
     [MessagePackObject]
     public class Person
     {
+        /// <summary>
+        /// Gets or sets the first name
+        /// </summary>
         [Key(0)]
         public string FirstName { get; set; } = string.Empty;
 
+        /// <summary>
+        /// Gets or sets the last name
+        /// </summary>
         [Key(1)]
         public string LastName { get; set; } = string.Empty;
 
+        /// <summary>
+        /// Gets or sets the tags collection
+        /// </summary>
         [Key(2)]
         public IReadOnlyCollection<string> Tags { get; set; } = Array.Empty<string>();
     }

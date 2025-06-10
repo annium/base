@@ -7,24 +7,91 @@ using Annium.Net.WebSockets.Internal;
 
 namespace Annium.Net.WebSockets;
 
+/// <summary>
+/// Client-side WebSocket implementation with automatic reconnection and connection monitoring capabilities
+/// </summary>
 public class ClientWebSocket : IClientWebSocket
 {
+    /// <summary>
+    /// Gets the logger instance for this WebSocket client
+    /// </summary>
     public ILogger Logger { get; }
+
+    /// <summary>
+    /// Event triggered when a text message is received from the server
+    /// </summary>
     public event Action<ReadOnlyMemory<byte>> OnTextReceived = delegate { };
+
+    /// <summary>
+    /// Event triggered when a binary message is received from the server
+    /// </summary>
     public event Action<ReadOnlyMemory<byte>> OnBinaryReceived = delegate { };
+
+    /// <summary>
+    /// Event triggered when the WebSocket connection is successfully established
+    /// </summary>
     public event Action OnConnected = delegate { };
+
+    /// <summary>
+    /// Event triggered when the WebSocket connection is closed
+    /// </summary>
     public event Action<WebSocketCloseStatus> OnDisconnected = delegate { };
+
+    /// <summary>
+    /// Event triggered when an error occurs during WebSocket operations
+    /// </summary>
     public event Action<Exception> OnError = delegate { };
+
+    /// <summary>
+    /// Gets the current connection URI, throws if not set
+    /// </summary>
     private Uri Uri => _uri ?? throw new InvalidOperationException("Uri is not set");
+
+    /// <summary>
+    /// Lock object for thread-safe status updates
+    /// </summary>
     private readonly Lock _locker = new();
+
+    /// <summary>
+    /// The underlying managed WebSocket client implementation
+    /// </summary>
     private readonly IClientManagedWebSocket _socket;
+
+    /// <summary>
+    /// Connection monitor for detecting and handling connection issues
+    /// </summary>
     private readonly ConnectionMonitorBase _connectionMonitor;
+
+    /// <summary>
+    /// Timeout in milliseconds for connection attempts
+    /// </summary>
     private readonly int _connectTimeout;
+
+    /// <summary>
+    /// Delay in milliseconds before attempting to reconnect after connection loss
+    /// </summary>
     private readonly int _reconnectDelay;
+
+    /// <summary>
+    /// The current connection URI, null if not connected
+    /// </summary>
     private Uri? _uri;
+
+    /// <summary>
+    /// Cancellation token source for connection operations
+    /// </summary>
     private CancellationTokenSource _connectionCts = new();
+
+    /// <summary>
+    /// Current connection status of the WebSocket client
+    /// </summary>
     private Status _status = Status.Disconnected;
 
+    /// <summary>
+    /// Initializes a new instance of the ClientWebSocket with specified options and logger
+    /// </summary>
+    /// <param name="options">Configuration options for the WebSocket client</param>
+    /// <param name="logger">Logger instance for tracing and error reporting</param>
     public ClientWebSocket(ClientWebSocketOptions options, ILogger logger)
     {
         Logger = logger;
@@ -46,9 +113,17 @@ public class ClientWebSocket : IClientWebSocket
         _connectionMonitor.OnConnectionLost += HandleConnectionLost;
     }
 
+    /// <summary>
+    /// Initializes a new instance of the ClientWebSocket with default options
+    /// </summary>
+    /// <param name="logger">Logger instance for tracing and error reporting</param>
     public ClientWebSocket(ILogger logger)
         : this(ClientWebSocketOptions.Default, logger) { }
 
+    /// <summary>
+    /// Connects the WebSocket client to the specified URI
+    /// </summary>
+    /// <param name="uri">The URI to connect to</param>
     public void Connect(Uri uri)
     {
         this.Trace("start");
@@ -69,6 +144,9 @@ public class ClientWebSocket : IClientWebSocket
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Disconnects the WebSocket client from the server
+    /// </summary>
     public void Disconnect()
     {
         this.Trace("start");
@@ -98,23 +176,43 @@ public class ClientWebSocket : IClientWebSocket
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Sends a text message to the server asynchronously
+    /// </summary>
+    /// <param name="text">The encoded text message to send</param>
+    /// <param name="ct">Cancellation token to cancel the operation</param>
+    /// <returns>The status of the send operation</returns>
     public ValueTask<WebSocketSendStatus> SendTextAsync(ReadOnlyMemory<byte> text, CancellationToken ct = default)
     {
         this.Trace("send text");
         return _socket.SendTextAsync(text, ct);
     }
 
+    /// <summary>
+    /// Sends binary data to the server asynchronously
+    /// </summary>
+    /// <param name="data">The binary data to send</param>
+    /// <param name="ct">Cancellation token to cancel the operation</param>
+    /// <returns>The status of the send operation</returns>
     public ValueTask<WebSocketSendStatus> SendBinaryAsync(ReadOnlyMemory<byte> data, CancellationToken ct = default)
     {
         this.Trace("send binary");
         return _socket.SendBinaryAsync(data, ct);
     }
 
+    /// <summary>
+    /// Disposes the WebSocket client and releases all resources
+    /// </summary>
     public void Dispose()
     {
         Disconnect();
     }
 
+    /// <summary>
+    /// Handles the reconnection logic after a connection failure or loss
+    /// </summary>
+    /// <param name="uri">The URI to reconnect to</param>
+    /// <param name="result">The result from the previous connection attempt or closure</param>
     private void ReconnectPrivate(Uri uri, WebSocketCloseResult result)
     {
         this.Trace("start");
@@ -143,6 +241,10 @@ public class ClientWebSocket : IClientWebSocket
             .GetAwaiter();
     }
 
+    /// <summary>
+    /// Performs the actual connection logic to the specified URI
+    /// </summary>
+    /// <param name="uri">The URI to connect to</param>
     private void ConnectPrivate(Uri uri)
     {
         this.Trace("start");
@@ -165,6 +267,11 @@ public class ClientWebSocket : IClientWebSocket
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Handles the completion of a connection attempt
+    /// </summary>
+    /// <param name="task">The task representing the connection attempt</param>
+    /// <param name="state">The URI state object passed from the connection attempt</param>
     private void HandleConnected(Task<Exception?> task, object? state)
     {
         this.Trace("start");
@@ -210,6 +317,9 @@ public class ClientWebSocket : IClientWebSocket
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Handles the event when the connection monitor detects a lost connection
+    /// </summary>
     private void HandleConnectionLost()
     {
         this.Trace("start");
@@ -231,6 +341,10 @@ public class ClientWebSocket : IClientWebSocket
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Handles the completion of the WebSocket closure
+    /// </summary>
+    /// <param name="task">The task representing the closure operation with its result</param>
     private void HandleClosed(Task<WebSocketCloseResult> task)
     {
         this.Trace("start");
@@ -256,6 +370,10 @@ public class ClientWebSocket : IClientWebSocket
         this.Trace("done");
     }
 
+    /// <summary>
+    /// Updates the current connection status with thread-safe logging
+    /// </summary>
+    /// <param name="status">The new status to set</param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void SetStatus(Status status)
     {
@@ -263,22 +381,44 @@ public class ClientWebSocket : IClientWebSocket
         _status = status;
     }
 
+    /// <summary>
+    /// Handles text messages received from the managed WebSocket and forwards them to event subscribers
+    /// </summary>
+    /// <param name="data">The received text message data</param>
     private void HandleOnTextReceived(ReadOnlyMemory<byte> data)
     {
         this.Trace("trigger text received");
         OnTextReceived(data);
     }
 
+    /// <summary>
+    /// Handles binary messages received from the managed WebSocket and forwards them to event subscribers
+    /// </summary>
+    /// <param name="data">The received binary message data</param>
     private void HandleOnBinaryReceived(ReadOnlyMemory<byte> data)
     {
         this.Trace("trigger binary received");
         OnBinaryReceived(data);
     }
 
+    /// <summary>
+    /// Represents the current connection status of the WebSocket client
+    /// </summary>
     private enum Status
     {
+        /// <summary>
+        /// WebSocket is disconnected
+        /// </summary>
         Disconnected,
+
+        /// <summary>
+        /// WebSocket is in the process of connecting
+        /// </summary>
         Connecting,
+
+        /// <summary>
+        /// WebSocket is connected and ready for communication
+        /// </summary>
         Connected,
     }
 }

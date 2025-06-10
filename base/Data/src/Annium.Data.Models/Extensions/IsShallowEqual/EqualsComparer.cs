@@ -4,11 +4,18 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
-// ReSharper disable once CheckNamespace
-namespace Annium.Data.Models.Extensions;
+namespace Annium.Data.Models.Extensions.IsShallowEqual;
 
+/// <summary>
+/// Extension methods for shallow equality comparison - Equals method support.
+/// </summary>
 public static partial class IsShallowEqualExtensions
 {
+    /// <summary>
+    /// Resolves the Equals method for the specified type.
+    /// </summary>
+    /// <param name="type">The type to resolve the Equals method for.</param>
+    /// <returns>The Equals method if found, otherwise null.</returns>
     private static MethodInfo? ResolveEqualsMethod(Type type)
     {
         var methods = type.GetMethods()
@@ -24,6 +31,12 @@ public static partial class IsShallowEqualExtensions
         );
     }
 
+    /// <summary>
+    /// Builds a comparer expression that uses the type's Equals method.
+    /// </summary>
+    /// <param name="type">The type to build the comparer for.</param>
+    /// <param name="equalsMethod">The Equals method to use.</param>
+    /// <returns>A lambda expression that uses the Equals method for comparison.</returns>
     private static LambdaExpression BuildEqualsComparer(Type type, MethodInfo equalsMethod)
     {
         var a = Expression.Parameter(type);

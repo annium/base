@@ -2,7 +2,10 @@ using System;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using Annium.Core.DependencyInjection.Descriptors;
 using Microsoft.Extensions.DependencyInjection;
+using ServiceDescriptor = Annium.Core.DependencyInjection.Descriptors.ServiceDescriptor;
+using ServiceLifetime = Annium.Core.DependencyInjection.Descriptors.ServiceLifetime;
 
 namespace Annium.Core.DependencyInjection.Internal.Builders.Registrations;
 
@@ -36,8 +39,14 @@ namespace Annium.Core.DependencyInjection.Internal.Builders.Registrations;
  * - Func<S> = SP => () => II
  * - KV<K,Func<S>> = SP => new KV<K,Func<S>>(key, () => II)
  */
+/// <summary>
+/// Helper class for creating service descriptors and expression trees for dependency injection registrations
+/// </summary>
 internal static class Helper
 {
+    /// <summary>
+    /// Cached method info for GetRequiredService method
+    /// </summary>
     private static readonly MethodInfo _getRequiredServiceMethod = typeof(ServiceProviderServiceExtensions)
         .GetMethods()
         .Single(x =>
@@ -46,6 +55,9 @@ internal static class Helper
             && x.GetParameters()[0].ParameterType == typeof(IServiceProvider)
         );
 
+    /// <summary>
+    /// Cached method info for GetRequiredKeyedService method
+    /// </summary>
     private static readonly MethodInfo _getRequiredKeyedServiceMethod = typeof(ServiceProviderKeyedServiceExtensions)
         .GetMethods()
         .Single(x =>
@@ -55,11 +67,23 @@ internal static class Helper
             && x.GetParameters()[1].ParameterType == typeof(object)
         );
 
+    /// <summary>
+    /// Creates a factory type for the specified type
+    /// </summary>
+    /// <param name="type">The type to create a factory for</param>
+    /// <returns>The factory type</returns>
     public static Type FactoryType(Type type) => typeof(Func<>).MakeGenericType(type);
 
     // public static Type KeyValueType(Type keyType, Type valueType) =>
     //     typeof(KeyValue<,>).MakeGenericType(keyType, valueType);
 
+    /// <summary>
+    /// Creates a service descriptor with a factory using an expression body
+    /// </summary>
+    /// <param name="serviceType">The service type</param>
+    /// <param name="getBody">Function to generate the expression body</param>
+    /// <param name="lifetime">The service lifetime</param>
+    /// <returns>The service descriptor</returns>
     public static IServiceDescriptor Factory(
         Type serviceType,
         Func<ParameterExpression, Expression> getBody,
@@ -73,6 +97,14 @@ internal static class Helper
         return ServiceDescriptor.Factory(serviceType, (Func<IServiceProvider, object>)function, lifetime);
     }
 
+    /// <summary>
+    /// Creates a keyed service descriptor with a factory using an expression body
+    /// </summary>
+    /// <param name="serviceType">The service type</param>
+    /// <param name="key">The service key</param>
+    /// <param name="getBody">Function to generate the expression body</param>
+    /// <param name="lifetime">The service lifetime</param>
+    /// <returns>The service descriptor</returns>
     public static IServiceDescriptor Factory(
         Type serviceType,
         object key,
@@ -96,6 +128,12 @@ internal static class Helper
     // public static Expression KeyValue(Type keyType, Type valueType, object key, Expression value) =>
     //     Expression.New(KeyValueConstructor(keyType, valueType), Expression.Constant(key), Expression.Lambda(value));
 
+    /// <summary>
+    /// Creates an expression for resolving a service from a service provider
+    /// </summary>
+    /// <param name="sp">The service provider parameter expression</param>
+    /// <param name="type">The type to resolve</param>
+    /// <returns>The resolve expression</returns>
     public static Expression Resolve(ParameterExpression sp, Type type)
     {
         var getRequiredService = GetRequiredService(type);
@@ -103,6 +141,13 @@ internal static class Helper
         return Expression.Call(null, getRequiredService, sp);
     }
 
+    /// <summary>
+    /// Creates an expression for resolving a keyed service from a service provider
+    /// </summary>
+    /// <param name="sp">The service provider parameter expression</param>
+    /// <param name="key">The key parameter expression</param>
+    /// <param name="type">The type to resolve</param>
+    /// <returns>The resolve expression</returns>
     public static Expression Resolve(ParameterExpression sp, ParameterExpression key, Type type)
     {
         var getRequiredService = GetRequiredKeyedService(type);
@@ -110,8 +155,18 @@ internal static class Helper
         return Expression.Call(null, getRequiredService, sp, key);
     }
 
+    /// <summary>
+    /// Gets the generic GetRequiredService method for the specified type
+    /// </summary>
+    /// <param name="type">The service type</param>
+    /// <returns>The generic method info</returns>
     private static MethodInfo GetRequiredService(Type type) => _getRequiredServiceMethod.MakeGenericMethod(type);
 
+    /// <summary>
+    /// Gets the generic GetRequiredKeyedService method for the specified type
+    /// </summary>
+    /// <param name="type">The service type</param>
+    /// <returns>The generic method info</returns>
     private static MethodInfo GetRequiredKeyedService(Type type) =>
         _getRequiredKeyedServiceMethod.MakeGenericMethod(type);
     //

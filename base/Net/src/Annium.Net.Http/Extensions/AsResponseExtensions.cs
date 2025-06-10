@@ -4,11 +4,20 @@ using System.Threading.Tasks;
 using Annium.Net.Http.Internal;
 using OneOf;
 
-// ReSharper disable once CheckNamespace
-namespace Annium.Net.Http;
+namespace Annium.Net.Http.Extensions;
 
+/// <summary>
+/// Extension methods for converting HTTP request responses to typed HTTP response objects
+/// </summary>
 public static class AsResponseExtensions
 {
+    /// <summary>
+    /// Executes the HTTP request and returns a response with parsed content
+    /// </summary>
+    /// <typeparam name="T">The type to parse the response content to</typeparam>
+    /// <param name="request">The HTTP request to execute</param>
+    /// <param name="ct">The cancellation token</param>
+    /// <returns>An HTTP response containing the parsed content or default value</returns>
     public static async Task<IHttpResponse<T?>> AsResponseAsync<T>(
         this IHttpRequest request,
         CancellationToken ct = default
@@ -30,6 +39,14 @@ public static class AsResponseExtensions
         }
     }
 
+    /// <summary>
+    /// Executes the HTTP request and returns a response with parsed content or default value
+    /// </summary>
+    /// <typeparam name="T">The type to parse the response content to</typeparam>
+    /// <param name="request">The HTTP request to execute</param>
+    /// <param name="defaultData">The default value to use if parsing fails</param>
+    /// <param name="ct">The cancellation token</param>
+    /// <returns>An HTTP response containing the parsed content or the default value</returns>
     public static async Task<IHttpResponse<T>> AsResponseAsync<T>(
         this IHttpRequest request,
         T defaultData,
@@ -51,6 +68,14 @@ public static class AsResponseExtensions
         }
     }
 
+    /// <summary>
+    /// Executes the HTTP request and returns a response with content parsed as either success or failure type
+    /// </summary>
+    /// <typeparam name="TSuccess">The type for successful response</typeparam>
+    /// <typeparam name="TFailure">The type for failure response</typeparam>
+    /// <param name="request">The HTTP request to execute</param>
+    /// <param name="ct">The cancellation token</param>
+    /// <returns>An HTTP response containing a union type with either success or failure result</returns>
     public static async Task<IHttpResponse<OneOf<TSuccess, TFailure?>>> AsResponseAsync<TSuccess, TFailure>(
         this IHttpRequest request,
         CancellationToken ct = default
@@ -78,6 +103,15 @@ public static class AsResponseExtensions
         }
     }
 
+    /// <summary>
+    /// Executes the HTTP request and returns a response with content parsed as either success or failure type with custom failure handling
+    /// </summary>
+    /// <typeparam name="TSuccess">The type for successful response</typeparam>
+    /// <typeparam name="TFailure">The type for failure response</typeparam>
+    /// <param name="request">The HTTP request to execute</param>
+    /// <param name="getFailure">Function to handle failure scenarios</param>
+    /// <param name="ct">The cancellation token</param>
+    /// <returns>An HTTP response containing a union type with either success or failure result</returns>
     public static async Task<IHttpResponse<OneOf<TSuccess, TFailure>>> AsResponseAsync<TSuccess, TFailure>(
         this IHttpRequest request,
         Func<HttpFailureReason, IHttpResponse, Exception?, Task<TFailure>> getFailure,

@@ -3,8 +3,14 @@ using Xunit;
 
 namespace Annium.Serialization.BinaryString.Tests;
 
+/// <summary>
+/// Tests for hex string serialization functionality
+/// </summary>
 public class HexStringSerializerTests : TestBase
 {
+    /// <summary>
+    /// Tests that serialization and deserialization of byte arrays to hex strings works correctly
+    /// </summary>
     [Fact]
     public void Serialization_Deserialization_Works()
     {

@@ -1,4 +1,4 @@
-using Annium.Core.DependencyInjection;
+using Annium.Core.DependencyInjection.Packs;
 
 namespace Annium.Architecture.Http;
 

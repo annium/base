@@ -6,8 +6,16 @@ using Annium.Linq;
 
 namespace Annium.Core.Mediator;
 
+/// <summary>
+/// Configuration for mediator request handlers and type matches
+/// </summary>
 public class MediatorConfiguration
 {
+    /// <summary>
+    /// Merges multiple mediator configurations into a single configuration
+    /// </summary>
+    /// <param name="configurations">Configurations to merge</param>
+    /// <returns>Merged configuration containing all handlers and matches</returns>
     internal static MediatorConfiguration Merge(params MediatorConfiguration[] configurations)
     {
         return new(
@@ -16,20 +24,48 @@ public class MediatorConfiguration
         );
     }
 
+    /// <summary>
+    /// Collection of registered request handlers
+    /// </summary>
     internal IEnumerable<Handler> Handlers => _handlers;
+
+    /// <summary>
+    /// Collection of registered type matches
+    /// </summary>
     internal IEnumerable<Match> Matches => _matches;
+
+    /// <summary>
+    /// Internal storage for request handlers
+    /// </summary>
     private readonly IList<Handler> _handlers;
+
+    /// <summary>
+    /// Internal storage for type matches
+    /// </summary>
     private readonly IList<Match> _matches;
 
+    /// <summary>
+    /// Initializes a new empty mediator configuration
+    /// </summary>
     internal MediatorConfiguration()
         : this(new List<Handler>(), new List<Match>()) { }
 
+    /// <summary>
+    /// Initializes a new mediator configuration with specified handlers and matches
+    /// </summary>
+    /// <param name="handlers">List of request handlers</param>
+    /// <param name="matches">List of type matches</param>
     private MediatorConfiguration(IList<Handler> handlers, IList<Match> matches)
     {
         _handlers = handlers;
         _matches = matches;
     }
 
+    /// <summary>
+    /// Adds a request handler type to the configuration
+    /// </summary>
+    /// <param name="handlerType">Type implementing pipe or final request handler interface</param>
+    /// <returns>This configuration instance for method chaining</returns>
     public MediatorConfiguration AddHandler(Type handlerType)
     {
         // ensure type is pipe or final handler
@@ -59,6 +95,13 @@ public class MediatorConfiguration
         );
     }
 
+    /// <summary>
+    /// Adds a type match for request/response resolution
+    /// </summary>
+    /// <param name="requestType">Type that was originally requested</param>
+    /// <param name="expectedType">Type that was expected</param>
+    /// <param name="resolvedType">Type that should be used for resolution</param>
+    /// <returns>This configuration instance for method chaining</returns>
     public MediatorConfiguration AddMatch(Type requestType, Type expectedType, Type resolvedType)
     {
         if (requestType.IsGenericTypeParameter || requestType.ContainsGenericParameters)

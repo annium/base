@@ -6,18 +6,35 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Annium.Reflection;
+using Annium.Reflection.Types;
 using Annium.Serialization.Abstractions.Attributes;
 using Annium.Serialization.Json.Internal.Converters;
 
 namespace Annium.Serialization.Json.Converters;
 
+/// <summary>
+/// JSON converter factory that creates converters for types with parameterized constructors.
+/// </summary>
 public class ConstructorJsonConverterFactory : JsonConverterFactory
 {
+    /// <summary>
+    /// Cache of constructor configurations for different types.
+    /// </summary>
     private readonly ConcurrentDictionary<Type, ConstructorJsonConverterConfiguration?> _configurations = new();
 
+    /// <summary>
+    /// Determines whether this factory can convert the specified type.
+    /// </summary>
+    /// <param name="type">The type to check for conversion support.</param>
+    /// <returns>True if the type can be converted; otherwise, false.</returns>
     public override bool CanConvert(Type type) => _configurations.GetOrAdd(type, GetConfiguration) is not null;
 
+    /// <summary>
+    /// Creates a JSON converter for the specified type.
+    /// </summary>
+    /// <param name="typeToConvert">The type to create a converter for.</param>
+    /// <param name="options">The JSON serializer options.</param>
+    /// <returns>A JSON converter for the specified type.</returns>
     public override JsonConverter CreateConverter(Type typeToConvert, JsonSerializerOptions options)
     {
         var configuration =
@@ -33,6 +50,11 @@ public class ConstructorJsonConverterFactory : JsonConverterFactory
             )!;
     }
 
+    /// <summary>
+    /// Gets the configuration for a type's constructor-based JSON conversion.
+    /// </summary>
+    /// <param name="type">The type to analyze.</param>
+    /// <returns>The configuration if the type is suitable; otherwise, null.</returns>
     private ConstructorJsonConverterConfiguration? GetConfiguration(Type type)
     {
         if (!IsSuitableType(type))
@@ -69,6 +91,11 @@ public class ConstructorJsonConverterFactory : JsonConverterFactory
         return BuildConfiguration(nonDefault[0].constructor);
     }
 
+    /// <summary>
+    /// Builds a configuration for the specified constructor.
+    /// </summary>
+    /// <param name="constructor">The constructor to build configuration for.</param>
+    /// <returns>The built configuration.</returns>
     private static ConstructorJsonConverterConfiguration BuildConfiguration(ConstructorInfo constructor)
     {
         var type = constructor.DeclaringType!;
@@ -89,6 +116,11 @@ public class ConstructorJsonConverterFactory : JsonConverterFactory
         return new ConstructorJsonConverterConfiguration(constructor, parameters, properties);
     }
 
+    /// <summary>
+    /// Determines whether the specified type is suitable for constructor-based JSON conversion.
+    /// </summary>
+    /// <param name="type">The type to check.</param>
+    /// <returns>True if the type is suitable; otherwise, false.</returns>
     private static bool IsSuitableType(Type type)
     {
         // must be class or struct
@@ -114,6 +146,11 @@ public class ConstructorJsonConverterFactory : JsonConverterFactory
         return true;
     }
 
+    /// <summary>
+    /// Determines whether the specified constructor is suitable for JSON conversion.
+    /// </summary>
+    /// <param name="constructor">The constructor to check.</param>
+    /// <returns>True if the constructor is suitable; otherwise, false.</returns>
     private static bool IsSuitableConstructor(ConstructorInfo constructor)
     {
         var type = constructor.DeclaringType;

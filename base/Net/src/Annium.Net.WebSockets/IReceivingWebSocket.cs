@@ -2,6 +2,9 @@ using System;
 
 namespace Annium.Net.WebSockets;
 
+/// <summary>
+/// Interface for WebSocket components that can receive messages from remote endpoints
+/// </summary>
 public interface IReceivingWebSocket
 {
     /// <summary>

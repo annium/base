@@ -3,12 +3,24 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Annium.Core.DependencyInjection;
+using Annium.Core.DependencyInjection.Extensions;
 
 namespace Annium.Core.Mediator.Internal;
 
+/// <summary>
+/// Executes mediator request handler chains
+/// </summary>
 internal static class ChainExecutor
 {
+    /// <summary>
+    /// Executes a mediator chain starting from the specified index
+    /// </summary>
+    /// <param name="provider">Service provider for resolving handler instances</param>
+    /// <param name="chain">Execution chain to process</param>
+    /// <param name="request">Request object to process</param>
+    /// <param name="cancellationToken">Cancellation token for the operation</param>
+    /// <param name="index">Index of the chain element to start execution from</param>
+    /// <returns>Result of the chain execution</returns>
     public static async Task<object> ExecuteAsync(
         IServiceProvider provider,
         IReadOnlyList<ChainElement> chain,

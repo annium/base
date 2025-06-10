@@ -7,10 +7,19 @@ using static Annium.NodaTime.Serialization.Json.Tests.TestHelper;
 
 namespace Annium.NodaTime.Serialization.Json.Tests;
 
+/// <summary>
+/// Tests for the Interval JSON converter that handles time interval serialization.
+/// </summary>
 public class NodaIntervalConverterTest
 {
+    /// <summary>
+    /// JSON converters used for testing Interval serialization.
+    /// </summary>
     private readonly JsonConverter[] _converters = { Converters.IntervalConverter, Converters.InstantConverter };
 
+    /// <summary>
+    /// Tests that Interval values can be serialized to JSON and deserialized back correctly.
+    /// </summary>
     [Fact]
     public void RoundTrip()
     {
@@ -24,6 +33,9 @@ public class NodaIntervalConverterTest
         );
     }
 
+    /// <summary>
+    /// Tests that infinite intervals (with null start or end) are correctly serialized and deserialized.
+    /// </summary>
     [Fact]
     public void RoundTrip_Infinite()
     {
@@ -33,6 +45,9 @@ public class NodaIntervalConverterTest
         AssertConversions(new Interval(null, null), "{}", _converters);
     }
 
+    /// <summary>
+    /// Tests that Interval values can be serialized when contained within another object.
+    /// </summary>
     [Fact]
     public void Serialize_InObject()
     {
@@ -46,6 +61,9 @@ public class NodaIntervalConverterTest
         json.Is("{\"interval\":{\"start\":\"2012-01-02T03:04:05Z\",\"end\":\"2013-06-07T08:09:10Z\"}}");
     }
 
+    /// <summary>
+    /// Tests that Interval values can be serialized with camel case naming policy.
+    /// </summary>
     [Fact]
     public void Serialize_InObject_CamelCase()
     {
@@ -59,6 +77,9 @@ public class NodaIntervalConverterTest
         json.Is("{\"interval\":{\"start\":\"2012-01-02T03:04:05Z\",\"end\":\"2013-06-07T08:09:10Z\"}}");
     }
 
+    /// <summary>
+    /// Tests that Interval values can be deserialized when contained within another object.
+    /// </summary>
     [Fact]
     public void Deserialize_InObject()
     {
@@ -74,6 +95,9 @@ public class NodaIntervalConverterTest
         interval.Is(expectedInterval);
     }
 
+    /// <summary>
+    /// Tests that Interval values can be deserialized with camel case naming policy.
+    /// </summary>
     [Fact]
     public void Deserialize_InObject_CamelCase()
     {
@@ -89,8 +113,14 @@ public class NodaIntervalConverterTest
         interval.Is(expectedInterval);
     }
 
+    /// <summary>
+    /// Test object containing an Interval property for testing serialization scenarios.
+    /// </summary>
     public class TestObject
     {
+        /// <summary>
+        /// Gets or sets the interval for testing.
+        /// </summary>
         public Interval Interval { get; set; }
     }
 }

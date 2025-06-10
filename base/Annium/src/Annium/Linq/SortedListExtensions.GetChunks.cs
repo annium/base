@@ -4,8 +4,19 @@ using Annium.Collections.Generic;
 
 namespace Annium.Linq;
 
+/// <summary>Provides extension methods for getting chunks from sorted lists.</summary>
 public static class SortedListGetChunksExtensions
 {
+    /// <summary>Divides a sorted list into chunks based on a range and key sequence.</summary>
+    /// <typeparam name="TKey">The type of keys in the sorted list.</typeparam>
+    /// <typeparam name="TValue">The type of values in the sorted list.</typeparam>
+    /// <param name="source">The source sorted list.</param>
+    /// <param name="start">The starting key of the range.</param>
+    /// <param name="end">The ending key of the range.</param>
+    /// <param name="nextKey">A function that returns the next key in the sequence.</param>
+    /// <param name="chunkSize">The minimum size of a chunk. Default is 1.</param>
+    /// <returns>A dictionary mapping key ranges to their corresponding list spans, with null values for ranges not present in the source.</returns>
+    /// <exception cref="ArgumentException">Thrown when the start key is greater than the end key.</exception>
     public static IReadOnlyDictionary<(TKey Start, TKey End), ISortedListSpan<TKey, TValue>?> GetChunks<TKey, TValue>(
         this SortedList<TKey, TValue> source,
         TKey start,

@@ -8,11 +8,21 @@ using Annium.Serialization.Json.Attributes;
 
 namespace Annium.Serialization.Json.Internal.Converters;
 
+/// <summary>
+/// JSON converter that serializes objects as JSON arrays based on member order and placeholders.
+/// </summary>
+/// <typeparam name="T">The type to convert.</typeparam>
 internal class ObjectArrayJsonConverter<T> : JsonConverter<T>
 {
+    /// <summary>
+    /// The ordered list of members and placeholders for array serialization.
+    /// </summary>
     // ReSharper disable once StaticMemberInGenericType
     private static readonly IReadOnlyList<object?> _members;
 
+    /// <summary>
+    /// Static constructor that initializes the member order configuration.
+    /// </summary>
     static ObjectArrayJsonConverter()
     {
         var raw = typeof(T)
@@ -31,11 +41,21 @@ internal class ObjectArrayJsonConverter<T> : JsonConverter<T>
         _members = raw.All(x => x.order is null) ? GetAllMembersList(raw) : GetMembersWithPlaceholdersList(raw);
     }
 
+    /// <summary>
+    /// Gets all members ordered by name when no explicit order is specified.
+    /// </summary>
+    /// <param name="raw">The raw member collection.</param>
+    /// <returns>The ordered member list.</returns>
     private static IReadOnlyList<MemberInfo> GetAllMembersList(IReadOnlyCollection<(int? order, MemberInfo member)> raw)
     {
         return raw.OrderBy(x => x.member.Name).Select(x => x.member).ToArray();
     }
 
+    /// <summary>
+    /// Gets members with placeholders ordered by explicit order attributes.
+    /// </summary>
+    /// <param name="raw">The raw member collection.</param>
+    /// <returns>The ordered list with members and placeholders.</returns>
     private static IReadOnlyList<object?> GetMembersWithPlaceholdersList(
         IReadOnlyCollection<(int? order, MemberInfo member)> raw
     )
@@ -75,6 +95,13 @@ internal class ObjectArrayJsonConverter<T> : JsonConverter<T>
         return result;
     }
 
+    /// <summary>
+    /// Reads and converts JSON array to an object.
+    /// </summary>
+    /// <param name="reader">The JSON reader.</param>
+    /// <param name="typeToConvert">The type to convert to.</param>
+    /// <param name="options">The serializer options.</param>
+    /// <returns>The converted object.</returns>
     public override T Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         if (reader.TokenType != JsonTokenType.StartArray)
@@ -103,6 +130,12 @@ internal class ObjectArrayJsonConverter<T> : JsonConverter<T>
         return (T)value;
     }
 
+    /// <summary>
+    /// Writes an object as JSON array.
+    /// </summary>
+    /// <param name="writer">The JSON writer.</param>
+    /// <param name="value">The object to write.</param>
+    /// <param name="options">The serializer options.</param>
     public override void Write(Utf8JsonWriter writer, T value, JsonSerializerOptions options)
     {
         writer.WriteStartArray();

@@ -3,13 +3,21 @@ using System.IO;
 using System.Linq;
 using Annium.Configuration.Abstractions;
 using Annium.Configuration.Tests.Lib;
-using Annium.Core.DependencyInjection;
+using Annium.Core.DependencyInjection.Container;
+using Annium.Core.DependencyInjection.Extensions;
+using Annium.Core.Runtime;
+using Annium.Logging.Shared;
 using Annium.Serialization.Abstractions;
+using Annium.Serialization.Json;
 using Annium.Testing;
+using Annium.Testing.Collection;
 using Xunit;
 
 namespace Annium.Configuration.Json.Tests;
 
+/// <summary>
+/// Tests for JSON configuration provider functionality.
+/// </summary>
 public class JsonConfigurationProviderTest : TestBase
 {
     public JsonConfigurationProviderTest(ITestOutputHelper outputHelper)
@@ -18,6 +26,9 @@ public class JsonConfigurationProviderTest : TestBase
         RegisterMapper();
     }
 
+    /// <summary>
+    /// Tests that JSON configuration works correctly.
+    /// </summary>
     [Fact]
     public void JsonConfiguration_Works()
     {

@@ -1,0 +1,177 @@
+- name: Home
+  href: index.md
+- name: API Reference
+  items:
+    - name: Core Framework
+      href: api/base/Annium/Annium/Annium.yml
+      items:
+        - name: Annium
+          href: api/base/Annium/Annium/Annium.yml
+        - name: Annium.Analyzers
+          href: api/base/Annium/Annium.Analyzers/Annium.Analyzers.yml
+        - name: Annium.Testing
+          href: api/base/Annium/Annium.Testing/Annium.Testing.yml
+    - name: Architecture
+      href: api/base/Architecture/Annium.Architecture.Base/Annium.Architecture.Base.yml
+      items:
+        - name: Annium.Architecture.Base
+          href: api/base/Architecture/Annium.Architecture.Base/Annium.Architecture.Base.yml
+        - name: Annium.Architecture.CQRS
+          href: api/base/Architecture/Annium.Architecture.CQRS/Annium.Architecture.CQRS.yml
+        - name: Annium.Architecture.Http
+          href: api/base/Architecture/Annium.Architecture.Http/Annium.Architecture.Http.yml
+        - name: Annium.Architecture.Mediator
+          href: api/base/Architecture/Annium.Architecture.Mediator/Annium.Architecture.Mediator.yml
+        - name: Annium.Architecture.ViewModel
+          href: api/base/Architecture/Annium.Architecture.ViewModel/Annium.Architecture.ViewModel.yml
+    - name: Configuration
+      href: api/base/Configuration/Annium.Configuration.Abstractions/Annium.Configuration.Abstractions.yml
+      items:
+        - name: Annium.Configuration.Abstractions
+          href: api/base/Configuration/Annium.Configuration.Abstractions/Annium.Configuration.Abstractions.yml
+        - name: Annium.Configuration.CommandLine
+          href: api/base/Configuration/Annium.Configuration.CommandLine/Annium.Configuration.CommandLine.yml
+        - name: Annium.Configuration.Json
+          href: api/base/Configuration/Annium.Configuration.Json/Annium.Configuration.Json.yml
+        - name: Annium.Configuration.Yaml
+          href: api/base/Configuration/Annium.Configuration.Yaml/Annium.Configuration.Yaml.yml
+    - name: Core Services
+      href: api/base/Core/Annium.Core.DependencyInjection/Annium.Core.DependencyInjection.yml
+      items:
+        - name: Annium.Core.DependencyInjection
+          href: api/base/Core/Annium.Core.DependencyInjection/Annium.Core.DependencyInjection.yml
+        - name: Annium.Core.Entrypoint
+          href: api/base/Core/Annium.Core.Entrypoint/Annium.Core.Entrypoint.yml
+        - name: Annium.Core.Mapper
+          href: api/base/Core/Annium.Core.Mapper/Annium.Core.Mapper.yml
+        - name: Annium.Core.Mediator
+          href: api/base/Core/Annium.Core.Mediator/Annium.Core.Mediator.yml
+        - name: Annium.Core.Runtime
+          href: api/base/Core/Annium.Core.Runtime/Annium.Core.Runtime.yml
+        - name: Annium.Core.Runtime.Loader
+          href: api/base/Core/Annium.Core.Runtime.Loader/Annium.Core.Runtime.Loader.yml
+    - name: Data
+      href: api/base/Data/Annium.Data.Models/Annium.Data.Models.yml
+      items:
+        - name: Annium.Data.Models
+          href: api/base/Data/Annium.Data.Models/Annium.Data.Models.yml
+        - name: Annium.Data.Operations
+          href: api/base/Data/Annium.Data.Operations/Annium.Data.Operations.yml
+        - name: Annium.Data.Operations.Serialization.Json
+          href: api/base/Data/Annium.Data.Operations.Serialization.Json/Annium.Data.Operations.Serialization.Json.yml
+        - name: Annium.Data.Operations.Serialization.MessagePack
+          href: api/base/Data/Annium.Data.Operations.Serialization.MessagePack/Annium.Data.Operations.Serialization.MessagePack.yml
+        - name: Annium.Data.Operations.Testing
+          href: api/base/Data/Annium.Data.Operations.Testing/Annium.Data.Operations.Testing.yml
+        - name: Annium.Data.Tables
+          href: api/base/Data/Annium.Data.Tables/Annium.Data.Tables.yml
+    - name: Execution
+      href: api/base/Execution/Annium.Execution.Background/Annium.Execution.Background.yml
+      items:
+        - name: Annium.Execution.Background
+          href: api/base/Execution/Annium.Execution.Background/Annium.Execution.Background.yml
+        - name: Annium.Execution.Flow
+          href: api/base/Execution/Annium.Execution.Flow/Annium.Execution.Flow.yml
+    - name: Extensions
+      href: api/base/Extensions/Annium.Extensions.Arguments/Annium.Extensions.Arguments.yml
+      items:
+        - name: Annium.Extensions.Arguments
+          href: api/base/Extensions/Annium.Extensions.Arguments/Annium.Extensions.Arguments.yml
+        - name: Annium.Extensions.CommandLine
+          href: api/base/Extensions/Annium.Extensions.CommandLine/Annium.Extensions.CommandLine.yml
+        - name: Annium.Extensions.Composition
+          href: api/base/Extensions/Annium.Extensions.Composition/Annium.Extensions.Composition.yml
+        - name: Annium.Extensions.Jobs
+          href: api/base/Extensions/Annium.Extensions.Jobs/Annium.Extensions.Jobs.yml
+        - name: Annium.Extensions.Pooling
+          href: api/base/Extensions/Annium.Extensions.Pooling/Annium.Extensions.Pooling.yml
+        - name: Annium.Extensions.Reactive
+          href: api/base/Extensions/Annium.Extensions.Reactive/Annium.Extensions.Reactive.yml
+        - name: Annium.Extensions.Shell
+          href: api/base/Extensions/Annium.Extensions.Shell/Annium.Extensions.Shell.yml
+        - name: Annium.Extensions.Validation
+          href: api/base/Extensions/Annium.Extensions.Validation/Annium.Extensions.Validation.yml
+        - name: Annium.Extensions.Workers
+          href: api/base/Extensions/Annium.Extensions.Workers/Annium.Extensions.Workers.yml
+    - name: Identity & Security
+      href: api/base/Identity/Annium.Identity.Tokens/Annium.Identity.Tokens.yml
+      items:
+        - name: Annium.Identity.Tokens
+          href: api/base/Identity/Annium.Identity.Tokens/Annium.Identity.Tokens.yml
+        - name: Annium.Identity.Tokens.Jwt
+          href: api/base/Identity/Annium.Identity.Tokens.Jwt/Annium.Identity.Tokens.Jwt.yml
+    - name: Localization
+      href: api/base/Localization/Annium.Localization.Abstractions/Annium.Localization.Abstractions.yml
+      items:
+        - name: Annium.Localization.Abstractions
+          href: api/base/Localization/Annium.Localization.Abstractions/Annium.Localization.Abstractions.yml
+        - name: Annium.Localization.InMemory
+          href: api/base/Localization/Annium.Localization.InMemory/Annium.Localization.InMemory.yml
+        - name: Annium.Localization.Yaml
+          href: api/base/Localization/Annium.Localization.Yaml/Annium.Localization.Yaml.yml
+    - name: Logging
+      href: api/base/Logging/Annium.Logging.Shared/Annium.Logging.Shared.yml
+      items:
+        - name: Annium.Logging.Console
+          href: api/base/Logging/Annium.Logging.Console/Annium.Logging.Console.yml
+        - name: Annium.Logging.File
+          href: api/base/Logging/Annium.Logging.File/Annium.Logging.File.yml
+        - name: Annium.Logging.InMemory
+          href: api/base/Logging/Annium.Logging.InMemory/Annium.Logging.InMemory.yml
+        - name: Annium.Logging.Microsoft
+          href: api/base/Logging/Annium.Logging.Microsoft/Annium.Logging.Microsoft.yml
+        - name: Annium.Logging.Shared
+          href: api/base/Logging/Annium.Logging.Shared/Annium.Logging.Shared.yml
+        - name: Annium.Logging.Xunit
+          href: api/base/Logging/Annium.Logging.Xunit/Annium.Logging.Xunit.yml
+    - name: Networking
+      href: api/base/Net/Annium.Net.Base/Annium.Net.Base.yml
+      items:
+        - name: Annium.Net.Base
+          href: api/base/Net/Annium.Net.Base/Annium.Net.Base.yml
+        - name: Annium.Net.Http
+          href: api/base/Net/Annium.Net.Http/Annium.Net.Http.yml
+        - name: Annium.Net.Mail
+          href: api/base/Net/Annium.Net.Mail/Annium.Net.Mail.yml
+        - name: Annium.Net.Servers.Sockets
+          href: api/base/Net/Annium.Net.Servers.Sockets/Annium.Net.Servers.Sockets.yml
+        - name: Annium.Net.Servers.Web
+          href: api/base/Net/Annium.Net.Servers.Web/Annium.Net.Servers.Web.yml
+        - name: Annium.Net.Sockets
+          href: api/base/Net/Annium.Net.Sockets/Annium.Net.Sockets.yml
+        - name: Annium.Net.Types
+          href: api/base/Net/Annium.Net.Types/Annium.Net.Types.yml
+        - name: Annium.Net.Types.Serialization.Json
+          href: api/base/Net/Annium.Net.Types.Serialization.Json/Annium.Net.Types.Serialization.Json.yml
+        - name: Annium.Net.WebSockets
+          href: api/base/Net/Annium.Net.WebSockets/Annium.Net.WebSockets.yml
+    - name: Serialization
+      href: api/base/Serialization/Annium.Serialization.Abstractions/Annium.Serialization.Abstractions.yml
+      items:
+        - name: Annium.Serialization.Abstractions
+          href: api/base/Serialization/Annium.Serialization.Abstractions/Annium.Serialization.Abstractions.yml
+        - name: Annium.Serialization.BinaryString
+          href: api/base/Serialization/Annium.Serialization.BinaryString/Annium.Serialization.BinaryString.yml
+        - name: Annium.Serialization.Json
+          href: api/base/Serialization/Annium.Serialization.Json/Annium.Serialization.Json.yml
+        - name: Annium.Serialization.MessagePack
+          href: api/base/Serialization/Annium.Serialization.MessagePack/Annium.Serialization.MessagePack.yml
+        - name: Annium.Serialization.Yaml
+          href: api/base/Serialization/Annium.Serialization.Yaml/Annium.Serialization.Yaml.yml
+    - name: Integrations
+      href: api/integrations/Graylog/Annium.Graylog.Logging/Annium.Graylog.Logging.yml
+      items:
+        - name: Graylog
+          items:
+            - name: Annium.Graylog.Logging
+              href: api/integrations/Graylog/Annium.Graylog.Logging/Annium.Graylog.Logging.yml
+        - name: NodaTime
+          items:
+            - name: Annium.NodaTime.Extensions
+              href: api/integrations/NodaTime/Annium.NodaTime.Extensions/Annium.NodaTime.Extensions.yml
+            - name: Annium.NodaTime.Serialization.Json
+              href: api/integrations/NodaTime/Annium.NodaTime.Serialization.Json/Annium.NodaTime.Serialization.Json.yml
+        - name: Seq
+          items:
+            - name: Annium.Seq.Logging
+              href: api/integrations/Seq/Annium.Seq.Logging/Annium.Seq.Logging.yml

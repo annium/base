@@ -11,8 +11,14 @@ using Xunit;
 
 namespace Annium.Net.Types.Tests.Extensions;
 
+/// <summary>
+/// Tests for model reference extension methods
+/// </summary>
 public class ModelRefExtensionsTest
 {
+    /// <summary>
+    /// Tests IsFor method with struct type references
+    /// </summary>
     [Fact]
     public void IsFor_StructType()
     {
@@ -26,6 +32,9 @@ public class ModelRefExtensionsTest
         taskTRef.IsFor(typeof(Task)).IsFalse();
     }
 
+    /// <summary>
+    /// Tests IsFor method with interface type references
+    /// </summary>
     [Fact]
     public void IsFor_InterfaceType()
     {
@@ -39,6 +48,9 @@ public class ModelRefExtensionsTest
         taskTRef.IsFor(typeof(IEnumerable)).IsFalse();
     }
 
+    /// <summary>
+    /// Tests IsFor method with enum type references
+    /// </summary>
     [Fact]
     public void IsFor_EnumType()
     {
@@ -47,6 +59,9 @@ public class ModelRefExtensionsTest
         taskTRef.IsFor(typeof(UriKind)).IsFalse();
     }
 
+    /// <summary>
+    /// Tests IsFor method with struct model references
+    /// </summary>
     [Fact]
     public void IsFor_StructModel()
     {
@@ -60,6 +75,9 @@ public class ModelRefExtensionsTest
         taskTRef.IsFor(ModelFor(typeof(Task))).IsFalse();
     }
 
+    /// <summary>
+    /// Tests IsFor method with interface model references
+    /// </summary>
     [Fact]
     public void IsFor_InterfaceModel()
     {
@@ -73,6 +91,9 @@ public class ModelRefExtensionsTest
         taskTRef.IsFor(ModelFor(typeof(IEnumerable))).IsFalse();
     }
 
+    /// <summary>
+    /// Tests IsFor method with enum model references
+    /// </summary>
     [Fact]
     public void IsFor_EnumModel()
     {
@@ -81,6 +102,11 @@ public class ModelRefExtensionsTest
         taskTRef.IsFor(ModelFor(typeof(UriKind))).IsFalse();
     }
 
+    /// <summary>
+    /// Creates a model for the specified type
+    /// </summary>
+    /// <param name="type">The type to create a model for</param>
+    /// <returns>The created model</returns>
     private static IModel ModelFor(Type type) =>
         type switch
         {
@@ -89,6 +115,11 @@ public class ModelRefExtensionsTest
             _ => BuildStruct(type),
         };
 
+    /// <summary>
+    /// Builds a struct model for the specified type
+    /// </summary>
+    /// <param name="type">The struct type</param>
+    /// <returns>The struct model</returns>
     private static StructModel BuildStruct(Type type)
     {
         var model = new StructModel(type.Namespace!.ToNamespace(), type.IsAbstract, type.PureName());
@@ -102,6 +133,11 @@ public class ModelRefExtensionsTest
         return model;
     }
 
+    /// <summary>
+    /// Builds an interface model for the specified type
+    /// </summary>
+    /// <param name="type">The interface type</param>
+    /// <returns>The interface model</returns>
     private static InterfaceModel BuildInterface(Type type)
     {
         var model = new InterfaceModel(type.Namespace!.ToNamespace(), type.PureName());
@@ -115,6 +151,11 @@ public class ModelRefExtensionsTest
         return model;
     }
 
+    /// <summary>
+    /// Builds an enum model for the specified type
+    /// </summary>
+    /// <param name="type">The enum type</param>
+    /// <returns>The enum model</returns>
     private static EnumModel BuildEnum(Type type)
     {
         var model = new EnumModel(type.Namespace!.ToNamespace(), type.PureName(), new Dictionary<string, long>());
@@ -123,8 +164,19 @@ public class ModelRefExtensionsTest
     }
 }
 
+/// <summary>
+/// Test Task struct for model reference testing
+/// </summary>
+/// <typeparam name="T">The generic type parameter</typeparam>
 file record struct Task<T>;
 
+/// <summary>
+/// Test IEnumerable interface for model reference testing
+/// </summary>
+/// <typeparam name="T">The generic type parameter</typeparam>
 file interface IEnumerable<T>;
 
+/// <summary>
+/// Test UriKind enum for model reference testing
+/// </summary>
 file enum UriKind;

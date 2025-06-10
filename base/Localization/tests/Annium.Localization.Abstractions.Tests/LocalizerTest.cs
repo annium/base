@@ -1,14 +1,24 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using Annium.Core.DependencyInjection;
+using Annium.Core.DependencyInjection.Container;
+using Annium.Core.DependencyInjection.Extensions;
+using Annium.Localization.InMemory;
 using Annium.Testing;
 using Xunit;
 
 namespace Annium.Localization.Abstractions.Tests;
 
+/// <summary>
+/// Tests for localization functionality including culture switching, parameter formatting,
+/// and culture configuration options.
+/// </summary>
 public class LocalizerTest
 {
+    /// <summary>
+    /// Tests basic localization functionality with culture switching.
+    /// Verifies that localizer returns correct translations for different cultures.
+    /// </summary>
     [Fact]
     public void Localization_Base_Works()
     {
@@ -28,6 +38,10 @@ public class LocalizerTest
         ru.Is("демо");
     }
 
+    /// <summary>
+    /// Tests localization with parameter formatting.
+    /// Verifies that localizer correctly formats translated strings with parameters.
+    /// </summary>
     [Fact]
     public void Localization_WithParams_Works()
     {
@@ -47,6 +61,10 @@ public class LocalizerTest
         ru.Is("демо 5");
     }
 
+    /// <summary>
+    /// Tests localization with a fixed culture configuration.
+    /// Verifies that localizer uses the specified culture regardless of current culture.
+    /// </summary>
     [Fact]
     public void Localization_WithSpecifiedCulture_UsesSpecificCulture()
     {
@@ -66,6 +84,10 @@ public class LocalizerTest
         ru.Is("demo");
     }
 
+    /// <summary>
+    /// Tests localization with a culture accessor function.
+    /// Verifies that localizer uses the culture accessor to determine the current culture.
+    /// </summary>
     [Fact]
     public void Localization_WithSpecifiedCultureAccessor_UsesCultureAccessor()
     {
@@ -85,6 +107,11 @@ public class LocalizerTest
         ru.Is("демо");
     }
 
+    /// <summary>
+    /// Creates a configured localizer instance for testing.
+    /// </summary>
+    /// <param name="configure">Configuration action for localization options</param>
+    /// <returns>A configured localizer instance</returns>
     private ILocalizer<LocalizerTest> GetLocalizer(Action<LocalizationOptions> configure)
     {
         var container = new ServiceContainer();

@@ -2,12 +2,19 @@ using System;
 using System.Linq;
 using Annium.Collections.Generic;
 using Annium.Testing;
+using Annium.Testing.Collection;
 using Xunit;
 
 namespace Annium.Tests.Collections.Generic;
 
+/// <summary>
+/// Contains unit tests for <see cref="DoubleEdgeQueue{T}"/> to verify queue operations in both direct and reverse modes.
+/// </summary>
 public class DoubleEdgeQueueTest
 {
+    /// <summary>
+    /// Verifies that adding elements to the first position works correctly in direct mode.
+    /// </summary>
     [Fact]
     public void Direct_AddFirst()
     {
@@ -26,6 +33,9 @@ public class DoubleEdgeQueueTest
         queue.ToArray().IsEqual(new[] { 2, 1 });
     }
 
+    /// <summary>
+    /// Verifies that adding elements to the last position works correctly in direct mode.
+    /// </summary>
     [Fact]
     public void Direct_AddLast()
     {
@@ -44,6 +54,9 @@ public class DoubleEdgeQueueTest
         queue.ToArray().IsEqual(new[] { 1, 2 });
     }
 
+    /// <summary>
+    /// Verifies that removing elements from the first position works correctly in direct mode.
+    /// </summary>
     [Fact]
     public void Direct_RemoveFirst()
     {
@@ -61,6 +74,9 @@ public class DoubleEdgeQueueTest
         Wrap.It(() => queue.RemoveFirst()).Throws<InvalidOperationException>();
     }
 
+    /// <summary>
+    /// Verifies that removing elements from the last position works correctly in direct mode.
+    /// </summary>
     [Fact]
     public void Direct_RemoveLast()
     {
@@ -78,6 +94,9 @@ public class DoubleEdgeQueueTest
         Wrap.It(() => queue.RemoveLast()).Throws<InvalidOperationException>();
     }
 
+    /// <summary>
+    /// Verifies that adding elements to the first position works correctly in reverse mode.
+    /// </summary>
     [Fact]
     public void Reverse_AddFirst()
     {
@@ -96,6 +115,9 @@ public class DoubleEdgeQueueTest
         queue.ToArray().IsEqual(new[] { 1, 2 });
     }
 
+    /// <summary>
+    /// Verifies that adding elements to the last position works correctly in reverse mode.
+    /// </summary>
     [Fact]
     public void Reverse_AddLast()
     {
@@ -114,6 +136,9 @@ public class DoubleEdgeQueueTest
         queue.ToArray().IsEqual(new[] { 2, 1 });
     }
 
+    /// <summary>
+    /// Verifies that removing elements from the first position works correctly in reverse mode.
+    /// </summary>
     [Fact]
     public void Reverse_RemoveFirst()
     {
@@ -131,6 +156,9 @@ public class DoubleEdgeQueueTest
         Wrap.It(() => queue.RemoveFirst()).Throws<InvalidOperationException>();
     }
 
+    /// <summary>
+    /// Verifies that removing elements from the last position works correctly in reverse mode.
+    /// </summary>
     [Fact]
     public void Reverse_RemoveLast()
     {

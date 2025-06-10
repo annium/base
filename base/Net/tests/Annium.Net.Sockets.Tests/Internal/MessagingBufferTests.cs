@@ -7,8 +7,15 @@ using static Annium.Net.Sockets.Internal.MessagingBuffer;
 
 namespace Annium.Net.Sockets.Tests.Internal;
 
+/// <summary>
+/// Tests for messaging buffer functionality
+/// </summary>
 public class MessagingBufferTests
 {
+    /// <summary>
+    /// Tests buffer behavior with no data
+    /// </summary>
+    /// <returns>A task representing the test operation</returns>
     [Fact]
     public void No_Data()
     {
@@ -22,6 +29,10 @@ public class MessagingBufferTests
         buffer.Reset();
     }
 
+    /// <summary>
+    /// Tests buffer behavior with partial header data
+    /// </summary>
+    /// <returns>A task representing the test operation</returns>
     [Fact]
     public void Partial_Header()
     {
@@ -41,6 +52,10 @@ public class MessagingBufferTests
         buffer.Reset();
     }
 
+    /// <summary>
+    /// Tests buffer behavior with complete header data
+    /// </summary>
+    /// <returns>A task representing the test operation</returns>
     [Fact]
     public void Full_Header()
     {
@@ -60,6 +75,10 @@ public class MessagingBufferTests
         buffer.Reset();
     }
 
+    /// <summary>
+    /// Tests buffer behavior with partial message data
+    /// </summary>
+    /// <returns>A task representing the test operation</returns>
     [Fact]
     public void Partial_Data()
     {
@@ -80,6 +99,10 @@ public class MessagingBufferTests
         buffer.Reset();
     }
 
+    /// <summary>
+    /// Tests buffer behavior with exact message data
+    /// </summary>
+    /// <returns>A task representing the test operation</returns>
     [Fact]
     public void Exact_Data()
     {
@@ -103,6 +126,10 @@ public class MessagingBufferTests
         buffer.Assert(false, false, false, freeSpace, Array.Empty<byte>());
     }
 
+    /// <summary>
+    /// Tests buffer behavior with extra message data
+    /// </summary>
+    /// <returns>A task representing the test operation</returns>
     [Fact]
     public void Extra_Data()
     {
@@ -143,6 +170,10 @@ public class MessagingBufferTests
         buffer.Assert(false, false, false, freeSpace, Array.Empty<byte>());
     }
 
+    /// <summary>
+    /// Tests buffer behavior with multiple messages
+    /// </summary>
+    /// <returns>A task representing the test operation</returns>
     [Fact]
     public void MultiMessage_Data()
     {
@@ -208,19 +239,37 @@ public class MessagingBufferTests
     }
 }
 
+/// <summary>
+/// Extension methods for messaging buffer testing
+/// </summary>
 file static class BufferExtensions
 {
+    /// <summary>
+    /// Writes a complete message to the buffer
+    /// </summary>
+    /// <param name="buffer">The messaging buffer</param>
+    /// <param name="data">The message data to write</param>
     public static void WriteMessage(this MessagingBuffer buffer, byte[] data)
     {
         buffer.WriteMessageSize(data.Length);
         buffer.Write(data);
     }
 
+    /// <summary>
+    /// Writes the message size header to the buffer
+    /// </summary>
+    /// <param name="buffer">The messaging buffer</param>
+    /// <param name="size">The size of the message</param>
     public static void WriteMessageSize(this MessagingBuffer buffer, int size)
     {
         buffer.Write(BitConverter.GetBytes(size));
     }
 
+    /// <summary>
+    /// Writes data to the buffer
+    /// </summary>
+    /// <param name="buffer">The messaging buffer</param>
+    /// <param name="data">The data to write</param>
     public static void Write(this MessagingBuffer buffer, ReadOnlySpan<byte> data)
     {
         var freeSpace = buffer.FreeSpace.Span;
@@ -230,6 +279,15 @@ file static class BufferExtensions
         buffer.TrackData(data.Length);
     }
 
+    /// <summary>
+    /// Asserts the buffer state matches expected values
+    /// </summary>
+    /// <param name="buffer">The messaging buffer</param>
+    /// <param name="isFull">Expected full state</param>
+    /// <param name="containsFullMessage">Expected full message state</param>
+    /// <param name="extremeMessageExpected">Expected extreme message state</param>
+    /// <param name="freeSpace">Expected free space</param>
+    /// <param name="message">Expected message content</param>
     public static void Assert(
         this MessagingBuffer buffer,
         bool isFull,

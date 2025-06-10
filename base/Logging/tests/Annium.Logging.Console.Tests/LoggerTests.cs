@@ -1,15 +1,24 @@
 using System;
-using Annium.Core.DependencyInjection;
+using Annium.Core.DependencyInjection.Container;
+using Annium.Core.DependencyInjection.Extensions;
+using Annium.Core.Runtime;
+using Annium.Logging.Shared;
 using Annium.Testing;
 using Xunit;
 
 namespace Annium.Logging.Console.Tests;
 
+/// <summary>
+/// Tests for console logging functionality
+/// </summary>
 public class LoggerTests : TestBase
 {
     public LoggerTests(ITestOutputHelper outputHelper)
         : base(outputHelper) { }
 
+    /// <summary>
+    /// Tests that log messages are written to console output
+    /// </summary>
     [Fact]
     public void LogMessage_WritesLogMessageToConsole()
     {
@@ -24,6 +33,9 @@ public class LoggerTests : TestBase
         capture.Output.Contains("sample").IsTrue();
     }
 
+    /// <summary>
+    /// Tests that aggregate exceptions write error count and all errors to console
+    /// </summary>
     [Fact]
     public void LogAggregateException_WritesErrorsCountAndAllErrorsToConsole()
     {
@@ -43,6 +55,9 @@ public class LoggerTests : TestBase
         capture.Output.Contains("yyy").IsTrue();
     }
 
+    /// <summary>
+    /// Tests that exceptions are written to console output
+    /// </summary>
     [Fact]
     public void LogException_WritesExceptionToConsole()
     {
@@ -60,6 +75,11 @@ public class LoggerTests : TestBase
         capture.Output.Contains("xxx").IsTrue();
     }
 
+    /// <summary>
+    /// Creates a test subject with console logging configured
+    /// </summary>
+    /// <param name="minLogLevel">The minimum log level to capture</param>
+    /// <returns>A log subject for testing</returns>
     private ILogSubject GetSubject(LogLevel minLogLevel = LogLevel.Trace)
     {
         var container = new ServiceContainer();

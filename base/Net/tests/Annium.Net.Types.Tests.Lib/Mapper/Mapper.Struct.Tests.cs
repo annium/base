@@ -4,16 +4,29 @@ using Annium.Net.Types.Extensions;
 using Annium.Net.Types.Models;
 using Annium.Net.Types.Refs;
 using Annium.Testing;
+using Annium.Testing.Collection;
 using Namotion.Reflection;
 using Xunit;
 
 namespace Annium.Net.Types.Tests.Lib.Mapper;
 
+/// <summary>
+/// Base class for testing struct type mapping functionality
+/// </summary>
 public abstract class MapperStructTestsBase : TestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="MapperStructTestsBase"/> class
+    /// </summary>
+    /// <param name="testProvider">The test provider for type mapping operations</param>
+    /// <param name="outputHelper">The test output helper</param>
     protected MapperStructTestsBase(ITestProvider testProvider, ITestOutputHelper outputHelper)
         : base(testProvider, outputHelper) { }
 
+    /// <summary>
+    /// Tests mapping of empty struct types
+    /// </summary>
+    /// <param name="type">The struct type to test</param>
     protected void Empty_Base(Type type)
     {
         // arrange
@@ -36,6 +49,9 @@ public abstract class MapperStructTestsBase : TestBase
         model.Fields.IsEmpty();
     }
 
+    /// <summary>
+    /// Tests mapping of complex struct types with generic parameters, interfaces, and fields
+    /// </summary>
     protected void Struct_Base()
     {
         // arrange
@@ -188,27 +204,77 @@ public abstract class MapperStructTestsBase : TestBase
     }
 }
 
+/// <summary>
+/// Empty struct for testing struct mapping
+/// </summary>
 file struct EmptyStruct;
 
+/// <summary>
+/// Empty record for testing struct mapping
+/// </summary>
 file record EmptyRecord;
 
+/// <summary>
+/// Multi-generic interface for testing struct mapping
+/// </summary>
+/// <typeparam name="T1">First generic type parameter</typeparam>
+/// <typeparam name="T2">Second generic type parameter</typeparam>
 file interface IMulti<T1, T2>
     where T1 : notnull
     where T2 : notnull
 {
+    /// <summary>
+    /// Gets the name
+    /// </summary>
     string Name { get; }
+
+    /// <summary>
+    /// Gets the optional comment
+    /// </summary>
     string? Comment { get; }
+
+    /// <summary>
+    /// Gets the data array
+    /// </summary>
     T1[] Data { get; }
+
+    /// <summary>
+    /// Gets the values dictionary
+    /// </summary>
     IDictionary<string, T2?> Values { get; }
 }
 
+/// <summary>
+/// Single-generic interface for testing struct mapping
+/// </summary>
+/// <typeparam name="T">The generic type parameter</typeparam>
 file interface IUno<T>
     where T : notnull
 {
+    /// <summary>
+    /// Gets the optional time-to-live value
+    /// </summary>
     int? Ttl { get; }
+
+    /// <summary>
+    /// Gets the items list
+    /// </summary>
     List<T> Items { get; }
 }
 
+/// <summary>
+/// Complex generic struct for testing struct mapping
+/// </summary>
+/// <typeparam name="T1">First generic type parameter</typeparam>
+/// <typeparam name="T2">Second generic type parameter</typeparam>
+/// <param name="Name">The name</param>
+/// <param name="Comment">The optional comment</param>
+/// <param name="Data">The data array</param>
+/// <param name="Values">The values dictionary</param>
+/// <param name="Ttl">The optional time-to-live</param>
+/// <param name="Items">The nested items list</param>
+/// <param name="Option">The optional empty struct</param>
+/// <param name="Records">The records enumerable</param>
 file record struct Struct<T1, T2>(
     string Name,
     string? Comment,

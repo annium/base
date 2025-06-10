@@ -4,17 +4,32 @@ using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using Annium.Extensions.Reactive.Extensions;
+using Annium.Extensions.Reactive.Operators;
 using Annium.Logging;
 using Annium.Testing;
+using Annium.Testing.Collection;
 using Xunit;
 
 namespace Annium.Extensions.Reactive.Tests.Extensions;
 
+/// <summary>
+/// Tests for the channel extensions functionality in reactive extensions.
+/// </summary>
 public class ChannelExtensionsTests : TestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ChannelExtensionsTests"/> class.
+    /// </summary>
+    /// <param name="outputHelper">The test output helper for logging test results.</param>
     public ChannelExtensionsTests(ITestOutputHelper outputHelper)
         : base(outputHelper) { }
 
+    /// <summary>
+    /// Tests that events are emitted correctly when converting a channel reader to an observable,
+    /// including proper disposal behavior.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
     [Fact]
     public async Task Events_AreEmittedCorrectly()
     {

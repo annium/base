@@ -1,11 +1,18 @@
 using System.Collections.Generic;
 using Annium.Testing;
+using Annium.Testing.Collection;
 using Xunit;
 
 namespace Annium.Data.Operations.Tests;
 
+/// <summary>
+/// Tests for Result functionality including error handling, data management, and cloning.
+/// </summary>
 public class ResultTest
 {
+    /// <summary>
+    /// Tests that a blank Result has no errors.
+    /// </summary>
     [Fact]
     public void Blank_HasNoErrors()
     {
@@ -16,6 +23,9 @@ public class ResultTest
         result.IsOk.IsTrue();
     }
 
+    /// <summary>
+    /// Tests that a blank Result with data correctly stores the data.
+    /// </summary>
     [Fact]
     public void Blank_WithData_IsCorrect()
     {
@@ -27,6 +37,9 @@ public class ResultTest
         result.Data.Is(5);
     }
 
+    /// <summary>
+    /// Tests that clearing a Result removes all errors.
+    /// </summary>
     [Fact]
     public void Clear_RemovesErrors()
     {
@@ -40,6 +53,9 @@ public class ResultTest
         result.IsOk.IsTrue();
     }
 
+    /// <summary>
+    /// Tests that plain errors are correctly added to the PlainErrors collection.
+    /// </summary>
     [Fact]
     public void PlainError_IsAddedToPlainErrors()
     {
@@ -55,6 +71,9 @@ public class ResultTest
         result.PlainErrors.At(0).Is("plain");
     }
 
+    /// <summary>
+    /// Tests that labeled errors are correctly added to the LabeledErrors collection.
+    /// </summary>
     [Fact]
     public void LabeledError_IsAddedToLabeledErrors()
     {
@@ -70,6 +89,9 @@ public class ResultTest
         result.LabeledErrors.At("label").At(0).Is("plain");
     }
 
+    /// <summary>
+    /// Tests that multiple plain errors can be added using params syntax with duplicates removed.
+    /// </summary>
     [Fact]
     public void PlainErrors_Params_IsAddedCorrectly()
     {
@@ -85,6 +107,9 @@ public class ResultTest
         result.PlainErrors.At(1).Is("another");
     }
 
+    /// <summary>
+    /// Tests that multiple plain errors can be added using collection syntax with duplicates removed.
+    /// </summary>
     [Fact]
     public void PlainErrors_Collection_IsAddedCorrectly()
     {
@@ -100,6 +125,9 @@ public class ResultTest
         result.PlainErrors.At(1).Is("another");
     }
 
+    /// <summary>
+    /// Tests that multiple labeled errors can be added using params syntax with proper grouping.
+    /// </summary>
     [Fact]
     public void LabeledErrors_Params_IsAddedCorrectly()
     {
@@ -116,6 +144,9 @@ public class ResultTest
         result.LabeledErrors.At("other").At(1).Is("another");
     }
 
+    /// <summary>
+    /// Tests that multiple labeled errors can be added using collection syntax.
+    /// </summary>
     [Fact]
     public void LabeledErrors_Collection_IsAddedCorrectly()
     {
@@ -137,6 +168,9 @@ public class ResultTest
         result.LabeledErrors.At("other").At(0).Is("another");
     }
 
+    /// <summary>
+    /// Tests that joining multiple Results using params syntax correctly merges all errors.
+    /// </summary>
     [Fact]
     public void Join_Params_IsDoneCorrectly()
     {
@@ -160,6 +194,9 @@ public class ResultTest
         result.LabeledErrors.At("b").At(0).Is("vb");
     }
 
+    /// <summary>
+    /// Tests that joining multiple Results using collection syntax correctly merges all errors.
+    /// </summary>
     [Fact]
     public void Join_Collection_IsDoneCorrectly()
     {
@@ -183,6 +220,9 @@ public class ResultTest
         result.LabeledErrors.At("b").At(0).Is("vb");
     }
 
+    /// <summary>
+    /// Tests that cloning a Result produces a valid copy with all errors preserved.
+    /// </summary>
     [Fact]
     public void Result_Clone_ReturnsValidClone()
     {
@@ -202,6 +242,9 @@ public class ResultTest
         clone.LabeledErrors.At("label").At(0).Is("value");
     }
 
+    /// <summary>
+    /// Tests that cloning a Result with data produces a valid copy with all errors and data preserved.
+    /// </summary>
     [Fact]
     public void Result_CloneWithData_ReturnsValidClone()
     {
@@ -222,6 +265,9 @@ public class ResultTest
         clone.Data.Is(10);
     }
 
+    /// <summary>
+    /// Tests that the static Join method with params correctly merges multiple Results.
+    /// </summary>
     [Fact]
     public void JoinStatic_Params_IsDoneCorrectly()
     {
@@ -245,6 +291,9 @@ public class ResultTest
         output.LabeledErrors.At("b").At(0).Is("vb");
     }
 
+    /// <summary>
+    /// Tests that the static Join method with collection correctly merges multiple Results.
+    /// </summary>
     [Fact]
     public void JoinStatic_Collection_IsDoneCorrectly()
     {

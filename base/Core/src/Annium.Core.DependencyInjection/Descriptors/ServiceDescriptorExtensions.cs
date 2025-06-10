@@ -2,11 +2,18 @@ using System;
 using MicrosoftServiceDescriptor = Microsoft.Extensions.DependencyInjection.ServiceDescriptor;
 using MicrosoftServiceLifetime = Microsoft.Extensions.DependencyInjection.ServiceLifetime;
 
-// ReSharper disable once CheckNamespace
-namespace Annium.Core.DependencyInjection;
+namespace Annium.Core.DependencyInjection.Descriptors;
 
+/// <summary>
+/// Extension methods for service descriptors
+/// </summary>
 public static class ServiceDescriptorExtensions
 {
+    /// <summary>
+    /// Converts a service descriptor to a human-readable string representation
+    /// </summary>
+    /// <param name="descriptor">Service descriptor to convert</param>
+    /// <returns>Human-readable string representation</returns>
     public static string ToReadableString(this IServiceDescriptor descriptor)
     {
         return descriptor switch
@@ -27,6 +34,11 @@ public static class ServiceDescriptorExtensions
         static string Name(Type type) => $"{type.Namespace}.{type.FriendlyName()}";
     }
 
+    /// <summary>
+    /// Converts a service descriptor to Microsoft service descriptor format
+    /// </summary>
+    /// <param name="descriptor">Service descriptor to convert</param>
+    /// <returns>Microsoft service descriptor</returns>
     public static MicrosoftServiceDescriptor ToMicrosoft(this IServiceDescriptor descriptor) =>
         descriptor switch
         {

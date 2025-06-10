@@ -4,16 +4,37 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Annium.Core.Mapper;
+using Annium.Extensions.Arguments.Attributes;
 
 namespace Annium.Extensions.Arguments.Internal;
 
+/// <summary>
+/// Builds typed configuration objects from command line arguments by processing raw arguments
+/// and mapping them to properties decorated with position, option, and raw attributes.
+/// </summary>
 internal class ConfigurationBuilder : IConfigurationBuilder
 {
+    /// <summary>
+    /// Processes raw command line arguments into structured data.
+    /// </summary>
     private readonly IArgumentProcessor _argumentProcessor;
 
+    /// <summary>
+    /// Processes configuration types to extract property metadata.
+    /// </summary>
     private readonly IConfigurationProcessor _configurationProcessor;
+
+    /// <summary>
+    /// Maps string values to appropriate target types.
+    /// </summary>
     private readonly IMapper _mapper;
 
+    /// <summary>
+    /// Initializes a new instance of the ConfigurationBuilder class with required dependencies.
+    /// </summary>
+    /// <param name="argumentProcessor">The processor for parsing raw command line arguments</param>
+    /// <param name="configurationProcessor">The processor for extracting property metadata from configuration types</param>
+    /// <param name="mapper">The mapper for converting string values to target types</param>
     public ConfigurationBuilder(
         IArgumentProcessor argumentProcessor,
         IConfigurationProcessor configurationProcessor,
@@ -25,6 +46,13 @@ internal class ConfigurationBuilder : IConfigurationBuilder
         _mapper = mapper;
     }
 
+    /// <summary>
+    /// Builds a typed configuration object from command line arguments by parsing and mapping
+    /// positional arguments, flags, options, and raw content to appropriate properties.
+    /// </summary>
+    /// <typeparam name="T">The configuration type to build, must have a parameterless constructor</typeparam>
+    /// <param name="args">Array of command line arguments to process</param>
+    /// <returns>A fully populated configuration object of type T</returns>
     public T Build<T>(string[] args)
         where T : new()
     {
@@ -40,6 +68,12 @@ internal class ConfigurationBuilder : IConfigurationBuilder
         return value;
     }
 
+    /// <summary>
+    /// Sets positional argument values on the configuration object based on position attributes.
+    /// </summary>
+    /// <typeparam name="T">The configuration type</typeparam>
+    /// <param name="value">The configuration object instance to populate</param>
+    /// <param name="positions">Array of positional argument values from command line</param>
     private void SetPositions<T>(T value, string[] positions)
     {
         var properties = _configurationProcessor
@@ -65,6 +99,12 @@ internal class ConfigurationBuilder : IConfigurationBuilder
         }
     }
 
+    /// <summary>
+    /// Sets flag values on boolean properties of the configuration object.
+    /// </summary>
+    /// <typeparam name="T">The configuration type</typeparam>
+    /// <param name="value">The configuration object instance to populate</param>
+    /// <param name="flags">Array of flag names that were present in command line</param>
     private void SetFlags<T>(T value, string[] flags)
     {
         var properties = _configurationProcessor
@@ -79,6 +119,13 @@ internal class ConfigurationBuilder : IConfigurationBuilder
         }
     }
 
+    /// <summary>
+    /// Sets option values on properties of the configuration object, handling both single and multi-value options.
+    /// </summary>
+    /// <typeparam name="T">The configuration type</typeparam>
+    /// <param name="value">The configuration object instance to populate</param>
+    /// <param name="plainOptions">Dictionary of single-value options from command line</param>
+    /// <param name="multiOptions">Dictionary of multi-value options from command line</param>
     private void SetOptions<T>(
         T value,
         IReadOnlyDictionary<string, string> plainOptions,
@@ -134,6 +181,12 @@ internal class ConfigurationBuilder : IConfigurationBuilder
         }
     }
 
+    /// <summary>
+    /// Sets the raw argument value on the property decorated with RawAttribute.
+    /// </summary>
+    /// <typeparam name="T">The configuration type</typeparam>
+    /// <param name="value">The configuration object instance to populate</param>
+    /// <param name="raw">The raw argument string from command line</param>
     private void SetRaw<T>(T value, string raw)
     {
         var (property, _) = _configurationProcessor
@@ -144,6 +197,13 @@ internal class ConfigurationBuilder : IConfigurationBuilder
             property.SetValue(value, GetValue(property, property.PropertyType, raw));
     }
 
+    /// <summary>
+    /// Finds the matching option name from available names, checking both the property name and alias.
+    /// </summary>
+    /// <param name="names">Collection of available option names</param>
+    /// <param name="name">The primary property name to search for</param>
+    /// <param name="alias">The optional alias name to search for</param>
+    /// <returns>The matching option name if found, null otherwise</returns>
     private string? FindOptionName(IReadOnlyCollection<string> names, string name, string? alias)
     {
         if (alias == null)
@@ -160,6 +220,13 @@ internal class ConfigurationBuilder : IConfigurationBuilder
         return null;
     }
 
+    /// <summary>
+    /// Converts a string value to the target type, validating against allowed values if specified.
+    /// </summary>
+    /// <param name="property">The property information for validation context</param>
+    /// <param name="type">The target type to convert to</param>
+    /// <param name="value">The string value to convert</param>
+    /// <returns>The converted value of the target type</returns>
     private object? GetValue(PropertyInfo property, Type type, string value)
     {
         var values = property.GetCustomAttribute<ValuesAttribute>()?.Values;

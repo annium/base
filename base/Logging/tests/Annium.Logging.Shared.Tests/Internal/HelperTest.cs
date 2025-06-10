@@ -1,12 +1,19 @@
 using System;
 using Annium.Logging.Shared.Internal;
 using Annium.Testing;
+using Annium.Testing.Collection;
 using Xunit;
 
 namespace Annium.Logging.Shared.Tests.Internal;
 
+/// <summary>
+/// Tests for the Helper class message template processing
+/// </summary>
 public class HelperTest
 {
+    /// <summary>
+    /// Tests that normal message template processing works correctly
+    /// </summary>
     [Fact]
     public void Normal_Works()
     {
@@ -24,6 +31,9 @@ public class HelperTest
         data.At("time").As<string>().Is(time);
     }
 
+    /// <summary>
+    /// Tests that corner case message template processing works correctly
+    /// </summary>
     [Fact]
     public void Corner_Works()
     {
@@ -41,6 +51,9 @@ public class HelperTest
         data.At("time").As<string>().Is(time);
     }
 
+    /// <summary>
+    /// Tests that nested placeholders without data are ignored correctly
+    /// </summary>
     [Fact]
     public void Nested_NoData_IgnoredCorrectly()
     {
@@ -52,6 +65,9 @@ public class HelperTest
         data.IsEmpty();
     }
 
+    /// <summary>
+    /// Tests that nested placeholders with data work correctly
+    /// </summary>
     [Fact]
     public void Nested_WithData_Works()
     {

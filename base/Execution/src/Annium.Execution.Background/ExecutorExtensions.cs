@@ -5,8 +5,17 @@ using OneOf;
 
 namespace Annium.Execution.Background;
 
+/// <summary>
+/// Extension methods for IExecutor to provide convenient execution patterns
+/// </summary>
 public static class ExecutorExtensions
 {
+    /// <summary>
+    /// Executes a synchronous task and waits for completion
+    /// </summary>
+    /// <param name="executor">The executor instance</param>
+    /// <param name="task">The task to execute</param>
+    /// <returns>True if the task was executed successfully, false if it could not be scheduled</returns>
     public static async ValueTask<bool> ExecuteAsync(this IExecutor executor, Action task)
     {
         var tcs = new TaskCompletionSource<bool>();
@@ -32,6 +41,12 @@ public static class ExecutorExtensions
         return await tcs.Task.ConfigureAwait(false);
     }
 
+    /// <summary>
+    /// Executes a synchronous task with cancellation support and waits for completion
+    /// </summary>
+    /// <param name="executor">The executor instance</param>
+    /// <param name="task">The task to execute</param>
+    /// <returns>True if the task was executed successfully, false if it could not be scheduled</returns>
     public static async ValueTask<bool> ExecuteAsync(this IExecutor executor, Action<CancellationToken> task)
     {
         var tcs = new TaskCompletionSource<bool>();
@@ -57,6 +72,12 @@ public static class ExecutorExtensions
         return await tcs.Task.ConfigureAwait(false);
     }
 
+    /// <summary>
+    /// Executes a synchronous function and waits for completion
+    /// </summary>
+    /// <param name="executor">The executor instance</param>
+    /// <param name="task">The function to execute</param>
+    /// <returns>The result of the function or None if it could not be scheduled</returns>
     public static async ValueTask<OneOf<T, None>> ExecuteAsync<T>(this IExecutor executor, Func<T> task)
     {
         var tcs = new TaskCompletionSource<OneOf<T, None>>();
@@ -81,6 +102,12 @@ public static class ExecutorExtensions
         return await tcs.Task.ConfigureAwait(false);
     }
 
+    /// <summary>
+    /// Executes a synchronous function with cancellation support and waits for completion
+    /// </summary>
+    /// <param name="executor">The executor instance</param>
+    /// <param name="task">The function to execute</param>
+    /// <returns>The result of the function or None if it could not be scheduled</returns>
     public static async ValueTask<OneOf<T, None>> ExecuteAsync<T>(
         this IExecutor executor,
         Func<CancellationToken, T> task
@@ -108,6 +135,12 @@ public static class ExecutorExtensions
         return await tcs.Task.ConfigureAwait(false);
     }
 
+    /// <summary>
+    /// Executes an asynchronous task and waits for completion
+    /// </summary>
+    /// <param name="executor">The executor instance</param>
+    /// <param name="task">The task to execute</param>
+    /// <returns>True if the task was executed successfully, false if it could not be scheduled</returns>
     public static async ValueTask<bool> ExecuteAsync(this IExecutor executor, Func<ValueTask> task)
     {
         var tcs = new TaskCompletionSource<bool>();
@@ -133,6 +166,12 @@ public static class ExecutorExtensions
         return await tcs.Task.ConfigureAwait(false);
     }
 
+    /// <summary>
+    /// Executes an asynchronous task with cancellation support and waits for completion
+    /// </summary>
+    /// <param name="executor">The executor instance</param>
+    /// <param name="task">The task to execute</param>
+    /// <returns>True if the task was executed successfully, false if it could not be scheduled</returns>
     public static async ValueTask<bool> ExecuteAsync(this IExecutor executor, Func<CancellationToken, ValueTask> task)
     {
         var tcs = new TaskCompletionSource<bool>();
@@ -158,6 +197,12 @@ public static class ExecutorExtensions
         return await tcs.Task.ConfigureAwait(false);
     }
 
+    /// <summary>
+    /// Executes an asynchronous function and waits for completion
+    /// </summary>
+    /// <param name="executor">The executor instance</param>
+    /// <param name="task">The function to execute</param>
+    /// <returns>The result of the function or None if it could not be scheduled</returns>
     public static async ValueTask<OneOf<T, None>> ExecuteAsync<T>(this IExecutor executor, Func<ValueTask<T>> task)
     {
         var tcs = new TaskCompletionSource<OneOf<T, None>>();
@@ -182,6 +227,12 @@ public static class ExecutorExtensions
         return await tcs.Task.ConfigureAwait(false);
     }
 
+    /// <summary>
+    /// Executes an asynchronous function with cancellation support and waits for completion
+    /// </summary>
+    /// <param name="executor">The executor instance</param>
+    /// <param name="task">The function to execute</param>
+    /// <returns>The result of the function or None if it could not be scheduled</returns>
     public static async ValueTask<OneOf<T, None>> ExecuteAsync<T>(
         this IExecutor executor,
         Func<CancellationToken, ValueTask<T>> task

@@ -8,10 +8,24 @@ using Xunit;
 
 namespace Annium.Net.WebSockets.Tests;
 
+/// <summary>
+/// Base class for WebSocket tests providing common server setup functionality
+/// </summary>
 public abstract class TestBase : Testing.TestBase
 {
+    /// <summary>
+    /// Base port number for test servers
+    /// </summary>
     private static int _basePort = 35000;
+
+    /// <summary>
+    /// URI of the test server for this test instance
+    /// </summary>
     protected readonly Uri ServerUri;
+
+    /// <summary>
+    /// Port number assigned to this test instance
+    /// </summary>
     private readonly int _port;
 
     protected TestBase(ITestOutputHelper outputHelper)
@@ -21,6 +35,11 @@ public abstract class TestBase : Testing.TestBase
         ServerUri = new Uri($"ws://127.0.0.1:{_port}");
     }
 
+    /// <summary>
+    /// Runs a base WebSocket server for testing
+    /// </summary>
+    /// <param name="handleWebSocket">Function to handle WebSocket connections</param>
+    /// <returns>Disposable representing the running server</returns>
     protected IAsyncDisposable RunServerBase(
         Func<IServiceProvider, HttpListenerWebSocketContext, CancellationToken, Task> handleWebSocket
     )
@@ -53,9 +72,19 @@ public abstract class TestBase : Testing.TestBase
     }
 }
 
+/// <summary>
+/// WebSocket handler implementation for test scenarios
+/// </summary>
 file class WebSocketHandler : IWebSocketHandler
 {
+    /// <summary>
+    /// Service provider for dependency injection
+    /// </summary>
     private readonly IServiceProvider _sp;
+
+    /// <summary>
+    /// Function to handle WebSocket connections
+    /// </summary>
     private readonly Func<IServiceProvider, HttpListenerWebSocketContext, CancellationToken, Task> _handle;
 
     public WebSocketHandler(
@@ -67,6 +96,12 @@ file class WebSocketHandler : IWebSocketHandler
         _handle = handle;
     }
 
+    /// <summary>
+    /// Handles incoming WebSocket connections
+    /// </summary>
+    /// <param name="ctx">WebSocket context</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Task representing the handling operation</returns>
     public Task HandleAsync(HttpListenerWebSocketContext ctx, CancellationToken ct)
     {
         return _handle(_sp, ctx, ct);

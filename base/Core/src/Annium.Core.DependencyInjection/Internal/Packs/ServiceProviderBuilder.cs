@@ -1,28 +1,54 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Annium.Core.DependencyInjection.Container;
+using Annium.Core.DependencyInjection.Packs;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Annium.Core.DependencyInjection.Internal.Packs;
 
+/// <summary>
+/// Internal implementation of service provider builder that manages service packs and builds service providers
+/// </summary>
 internal class ServiceProviderBuilder : IServiceProviderBuilder
 {
+    /// <summary>
+    /// Flag indicating whether the service provider has already been built
+    /// </summary>
     private bool _isAlreadyBuilt;
 
+    /// <summary>
+    /// The service container instance
+    /// </summary>
     private readonly IServiceContainer _container;
 
+    /// <summary>
+    /// The collection of service packs to be configured and registered
+    /// </summary>
     private readonly IList<ServicePackBase> _packs = new List<ServicePackBase>();
 
+    /// <summary>
+    /// Initializes a new instance of the ServiceProviderBuilder class with an empty service container
+    /// </summary>
     public ServiceProviderBuilder()
     {
         _container = new ServiceContainer();
     }
 
+    /// <summary>
+    /// Initializes a new instance of the ServiceProviderBuilder class with the specified service collection
+    /// </summary>
+    /// <param name="services">The service collection to initialize the container with</param>
     public ServiceProviderBuilder(IServiceCollection services)
     {
         _container = new ServiceContainer(services);
     }
 
+    /// <summary>
+    /// Adds a service pack of the specified type to the builder if not already added
+    /// </summary>
+    /// <typeparam name="TServicePack">The type of service pack to add</typeparam>
+    /// <returns>The current service provider builder instance</returns>
     public IServiceProviderBuilder UseServicePack<TServicePack>()
         where TServicePack : ServicePackBase, new()
     {
@@ -32,6 +58,11 @@ internal class ServiceProviderBuilder : IServiceProviderBuilder
         return this;
     }
 
+    /// <summary>
+    /// Adds the specified service pack instance to the builder
+    /// </summary>
+    /// <param name="servicePack">The service pack instance to add</param>
+    /// <returns>The current service provider builder instance</returns>
     public IServiceProviderBuilder UseServicePack(ServicePackBase servicePack)
     {
         _packs.Add(servicePack);
@@ -39,6 +70,10 @@ internal class ServiceProviderBuilder : IServiceProviderBuilder
         return this;
     }
 
+    /// <summary>
+    /// Builds the service provider by configuring, registering, and setting up all service packs
+    /// </summary>
+    /// <returns>The built service provider</returns>
     public ServiceProvider Build()
     {
         if (_isAlreadyBuilt)

@@ -2,16 +2,28 @@ using Annium.Net.Types.Extensions;
 using Annium.Net.Types.Models;
 using Annium.Net.Types.Refs;
 using Annium.Testing;
+using Annium.Testing.Collection;
 using Namotion.Reflection;
 using Xunit;
 
 namespace Annium.Net.Types.Tests.Lib.Mapper;
 
+/// <summary>
+/// Base class for testing enum type mapping functionality
+/// </summary>
 public abstract class MapperEnumTestsBase : TestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="MapperEnumTestsBase"/> class
+    /// </summary>
+    /// <param name="testProvider">The test provider for type mapping operations</param>
+    /// <param name="outputHelper">The test output helper</param>
     protected MapperEnumTestsBase(ITestProvider testProvider, ITestOutputHelper outputHelper)
         : base(testProvider, outputHelper) { }
 
+    /// <summary>
+    /// Tests mapping of enum types
+    /// </summary>
     protected void Enum_Base()
     {
         // arrange
@@ -33,6 +45,9 @@ public abstract class MapperEnumTestsBase : TestBase
     }
 }
 
+/// <summary>
+/// Sample enum for testing enum type mapping
+/// </summary>
 file enum Sample
 {
     A = 1,

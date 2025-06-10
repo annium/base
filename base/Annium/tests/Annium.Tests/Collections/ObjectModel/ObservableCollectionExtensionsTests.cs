@@ -5,8 +5,14 @@ using Xunit;
 
 namespace Annium.Tests.Collections.ObjectModel;
 
+/// <summary>
+/// Contains unit tests for <see cref="ObservableCollectionExtensions"/> to verify sorting behavior.
+/// </summary>
 public class ObservableCollectionExtensionsTests
 {
+    /// <summary>
+    /// Verifies that the Sort extension method correctly sorts an ObservableCollection.
+    /// </summary>
     [Fact]
     public void Sort()
     {

@@ -1,13 +1,23 @@
 using System.Text.Json.Serialization;
-using Annium.Core.DependencyInjection;
+using Annium.Core.DependencyInjection.Container;
+using Annium.Core.DependencyInjection.Extensions;
+using Annium.Core.Runtime;
+using Annium.Logging.InMemory;
+using Annium.Logging.Shared;
 using Annium.Serialization.Abstractions;
 using Annium.Testing;
 using Xunit;
 
 namespace Annium.Serialization.Json.Tests;
 
+/// <summary>
+/// Tests for JSON serialization configuration functionality
+/// </summary>
 public class ConfigurationTest
 {
+    /// <summary>
+    /// Tests that multiple JSON serialization configurations can coexist and work correctly
+    /// </summary>
     [Fact]
     public void MultipleConfigurations_Work()
     {

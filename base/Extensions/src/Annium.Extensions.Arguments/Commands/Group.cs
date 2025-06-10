@@ -3,17 +3,31 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Annium.Core.DependencyInjection;
+using Annium.Core.DependencyInjection.Extensions;
 using Annium.Extensions.Arguments.Internal;
 
-// ReSharper disable once CheckNamespace
-namespace Annium.Extensions.Arguments;
+namespace Annium.Extensions.Arguments.Commands;
 
+/// <summary>
+/// Base class for command groups that can contain multiple commands
+/// </summary>
 public abstract class Group : CommandBase
 {
+    /// <summary>
+    /// The name of the configuration types interface
+    /// </summary>
     private static readonly string _configurationTypesName = typeof(IConfigurationTypes<>).PureName();
+
+    /// <summary>
+    /// Collection of commands contained in this group
+    /// </summary>
     private readonly List<CommandInfo> _commands = new();
 
+    /// <summary>
+    /// Adds a command to the group
+    /// </summary>
+    /// <typeparam name="T">The command type that implements CommandBase and ICommandDescriptor</typeparam>
+    /// <returns>The current group instance for fluent configuration</returns>
     public Group Add<T>()
         where T : CommandBase, ICommandDescriptor
     {
@@ -27,6 +41,14 @@ public abstract class Group : CommandBase
         return this;
     }
 
+    /// <summary>
+    /// Processes the command arguments and executes the appropriate command
+    /// </summary>
+    /// <param name="id">The command identifier</param>
+    /// <param name="description">The command description</param>
+    /// <param name="args">The command line arguments</param>
+    /// <param name="ct">The cancellation token</param>
+    /// <returns>A task representing the asynchronous operation</returns>
     public override async Task ProcessAsync(string id, string description, string[] args, CancellationToken ct)
     {
         var (provider, configurationBuilder, helpBuilder) = Root;

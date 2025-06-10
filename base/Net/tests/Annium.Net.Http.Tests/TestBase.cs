@@ -8,12 +8,30 @@ using Xunit;
 
 namespace Annium.Net.Http.Tests;
 
+/// <summary>
+/// Base class for HTTP tests providing server setup functionality.
+/// </summary>
 public abstract class TestBase : Testing.TestBase
 {
+    /// <summary>
+    /// Base port number for test servers.
+    /// </summary>
     private static int _basePort = 40000;
+
+    /// <summary>
+    /// The server URI for the test server.
+    /// </summary>
     protected readonly Uri ServerUri;
+
+    /// <summary>
+    /// The port number used by this test instance.
+    /// </summary>
     private readonly int _port;
 
+    /// <summary>
+    /// Initializes a new instance of the TestBase class.
+    /// </summary>
+    /// <param name="outputHelper">The test output helper.</param>
     protected TestBase(ITestOutputHelper outputHelper)
         : base(outputHelper)
     {
@@ -21,6 +39,11 @@ public abstract class TestBase : Testing.TestBase
         ServerUri = new Uri($"http://127.0.0.1:{_port}");
     }
 
+    /// <summary>
+    /// Runs a test server with the specified request handler.
+    /// </summary>
+    /// <param name="handle">The function to handle HTTP requests.</param>
+    /// <returns>An IAsyncDisposable to stop the server.</returns>
     protected IAsyncDisposable RunServer(Func<HttpListenerRequest, HttpListenerResponse, Task> handle)
     {
         var handler = new HttpHandler(async ctx =>
@@ -60,15 +83,31 @@ public abstract class TestBase : Testing.TestBase
     }
 }
 
+/// <summary>
+/// HTTP handler implementation for test servers.
+/// </summary>
 file class HttpHandler : IHttpHandler
 {
+    /// <summary>
+    /// The function to handle HTTP requests.
+    /// </summary>
     private readonly Func<HttpListenerContext, Task> _handle;
 
+    /// <summary>
+    /// Initializes a new instance of the HttpHandler class.
+    /// </summary>
+    /// <param name="handle">The function to handle HTTP requests.</param>
     public HttpHandler(Func<HttpListenerContext, Task> handle)
     {
         _handle = handle;
     }
 
+    /// <summary>
+    /// Handles an incoming HTTP request.
+    /// </summary>
+    /// <param name="socket">The HTTP listener context.</param>
+    /// <param name="ct">The cancellation token.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
     public Task HandleAsync(HttpListenerContext socket, CancellationToken ct)
     {
         return _handle(socket);

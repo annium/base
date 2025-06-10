@@ -1,13 +1,24 @@
+using System;
 using System.Collections.Concurrent;
 using System.Reactive.Linq;
-using Annium;
 using NodaTime;
 
-// ReSharper disable once CheckNamespace
-namespace System;
+namespace Annium.Extensions.Reactive.Operators;
 
+/// <summary>
+/// Provides throttling operators that group values by key
+/// </summary>
 public static class ThrottleByOperatorExtensions
 {
+    /// <summary>
+    /// Throttles values emitted by the source observable by a key-based interval, allowing only the first occurrence of each key within the specified time window
+    /// </summary>
+    /// <typeparam name="TSource">The type of items emitted by the source observable</typeparam>
+    /// <typeparam name="TKey">The type of the key used for throttling</typeparam>
+    /// <param name="source">The source observable to throttle</param>
+    /// <param name="getKey">Function to extract the throttling key from each value</param>
+    /// <param name="interval">The time interval for throttling each key</param>
+    /// <returns>An observable that emits values throttled by key and interval</returns>
     public static IObservable<TSource> ThrottleBy<TSource, TKey>(
         this IObservable<TSource> source,
         Func<TSource, TKey> getKey,

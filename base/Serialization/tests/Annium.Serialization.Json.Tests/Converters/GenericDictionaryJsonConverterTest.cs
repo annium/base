@@ -1,12 +1,19 @@
 using System;
 using System.Collections.Generic;
 using Annium.Testing;
+using Annium.Testing.Collection;
 using Xunit;
 
 namespace Annium.Serialization.Json.Tests.Converters;
 
+/// <summary>
+/// Tests for generic dictionary JSON converter functionality
+/// </summary>
 public class GenericDictionaryJsonConverterTest : TestBase
 {
+    /// <summary>
+    /// Tests that basic dictionary serialization works correctly
+    /// </summary>
     [Fact]
     public void Serialization_Basic_Works()
     {
@@ -23,6 +30,9 @@ public class GenericDictionaryJsonConverterTest : TestBase
         result.Is($@"{{""{key}"":""{value}""}}");
     }
 
+    /// <summary>
+    /// Tests that dictionary serialization with object keys works correctly
+    /// </summary>
     [Fact]
     public void Serialization_ObjectKey_Works()
     {
@@ -39,6 +49,9 @@ public class GenericDictionaryJsonConverterTest : TestBase
         result.Is(@"{""{\""x\"":1,\""y\"":2}"":{""x"":3,""y"":4}}");
     }
 
+    /// <summary>
+    /// Tests that basic dictionary deserialization works correctly
+    /// </summary>
     [Fact]
     public void Deserialization_Basic_Works()
     {
@@ -56,6 +69,9 @@ public class GenericDictionaryJsonConverterTest : TestBase
         result.At(key).Is(value);
     }
 
+    /// <summary>
+    /// Tests that dictionary deserialization with object keys works correctly
+    /// </summary>
     [Fact]
     public void Deserialization_ObjectKey_Works()
     {
@@ -74,8 +90,18 @@ public class GenericDictionaryJsonConverterTest : TestBase
     }
 }
 
+/// <summary>
+/// Test key struct for dictionary key testing
+/// </summary>
 public struct Key
 {
+    /// <summary>
+    /// Gets or sets the X coordinate
+    /// </summary>
     public int X { get; set; }
+
+    /// <summary>
+    /// Gets or sets the Y coordinate
+    /// </summary>
     public int Y { get; set; }
 }

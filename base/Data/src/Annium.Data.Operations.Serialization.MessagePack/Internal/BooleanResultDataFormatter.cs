@@ -5,10 +5,23 @@ using MessagePack.Formatters;
 
 namespace Annium.Data.Operations.Serialization.MessagePack.Internal;
 
+/// <summary>
+/// MessagePack formatter for boolean result data types.
+/// </summary>
+/// <typeparam name="T">The data type.</typeparam>
 internal class BooleanResultDataFormatter<T> : IMessagePackFormatter<IBooleanResult<T>?>
 {
+    /// <summary>
+    /// Gets the singleton instance of the formatter.
+    /// </summary>
     public static IMessagePackFormatter Instance { get; } = new BooleanResultDataFormatter<T>();
 
+    /// <summary>
+    /// Deserializes a boolean result data from MessagePack format.
+    /// </summary>
+    /// <param name="reader">The MessagePack reader.</param>
+    /// <param name="options">The serializer options.</param>
+    /// <returns>The deserialized boolean result data.</returns>
     public IBooleanResult<T> Deserialize(ref MessagePackReader reader, MessagePackSerializerOptions options)
     {
         if (reader.TryReadNil())
@@ -55,6 +68,12 @@ internal class BooleanResultDataFormatter<T> : IMessagePackFormatter<IBooleanRes
         return result;
     }
 
+    /// <summary>
+    /// Serializes a boolean result data to MessagePack format.
+    /// </summary>
+    /// <param name="writer">The MessagePack writer.</param>
+    /// <param name="value">The boolean result data to serialize.</param>
+    /// <param name="options">The serializer options.</param>
     public void Serialize(ref MessagePackWriter writer, IBooleanResult<T>? value, MessagePackSerializerOptions options)
     {
         if (value == null!)

@@ -4,8 +4,14 @@ using Xunit;
 
 namespace Annium.Net.Types.Tests.Models;
 
+/// <summary>
+/// Tests for namespace model functionality
+/// </summary>
 public class NamespaceTests
 {
+    /// <summary>
+    /// Tests namespace equality comparison
+    /// </summary>
     [Fact]
     public void Equality()
     {
