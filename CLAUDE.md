@@ -11,6 +11,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `make test` - Run all tests with TRX logging
 - `make clean` - Clean solution and remove packages
 
+**Documentation Commands:**
+- `make docs-build` - Build documentation using DocFX
+- `make docs-serve` - Build and serve documentation locally at http://localhost:8080
+- `make docs-clean` - Clean documentation artifacts (_site, api, obj)
+- `make docs-watch` - Build and serve documentation with file watching
+
 **Single Test Execution:**
 ```bash
 dotnet test path/to/TestProject.csproj --filter "TestMethodName"

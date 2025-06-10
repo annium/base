@@ -38,6 +38,9 @@ jobs:
             exit 1
           fi
 
+      - name: Lint docs
+        run: make docs-lint
+
       - name: Build
         run: make build
 
@@ -51,6 +54,9 @@ jobs:
           name: test-results
           path: '**/*.trx'
           retention-days: 30
+
+      - name: Build Documentation
+        run: make docs-build
 
   report:
     runs-on: ubuntu-latest

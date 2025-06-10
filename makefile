@@ -30,6 +30,24 @@ publish:
 	dotnet nuget push "*.nupkg" --source https://api.nuget.org/v3/index.json --api-key $(apiKey)
 	find . -type f -name '*.nupkg' | xargs rm
 
+docs-lint:
+	dotnet tool run doclint lint -w . -i '**/*.cs' -e '**/obj/**/*.cs'
+
+docs-clean:
+	rm -rf _site api
+
+docs-metadata:
+	dotnet tool run docfx metadata docfx.json
+
+docs-build:
+	dotnet tool run docfx docfx.json
+
+docs-serve:
+	dotnet tool run docfx serve _site
+
+docs-watch:
+	dotnet tool run docfx docfx.json --serve
+
 gen-rsa-keys:
 	openssl req -x509 -noenc -days 3650 -keyout private.pem -out cert.pem
 	openssl rsa -in private.pem -pubout -out public.pem 
