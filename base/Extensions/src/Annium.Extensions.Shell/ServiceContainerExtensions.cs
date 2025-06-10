@@ -1,11 +1,11 @@
 using System;
-using Annium.Extensions.Shell;
+using Annium.Core.DependencyInjection.Container;
+using Annium.Core.DependencyInjection.Extensions;
 using Annium.Extensions.Shell.Internal;
 using Annium.Logging;
 using Microsoft.Extensions.DependencyInjection;
 
-// ReSharper disable once CheckNamespace
-namespace Annium.Core.DependencyInjection;
+namespace Annium.Extensions.Shell;
 
 /// <summary>
 /// Extension methods for registering shell command execution services
@@ -19,7 +19,7 @@ public static class ServiceContainerExtensions
     /// <returns>The service container for method chaining</returns>
     public static IServiceContainer AddShell(this IServiceContainer services)
     {
-        services.Add<IShell, Shell>().Singleton();
+        services.Add<IShell, Internal.Shell>().Singleton();
 
         if (OperatingSystem.IsWindows())
             services

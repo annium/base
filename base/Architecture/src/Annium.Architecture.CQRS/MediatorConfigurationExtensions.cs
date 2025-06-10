@@ -1,9 +1,9 @@
 using Annium.Architecture.CQRS.Commands;
 using Annium.Architecture.CQRS.Queries;
+using Annium.Core.Mediator;
 using Annium.Core.Runtime.Types;
 
-// ReSharper disable CheckNamespace
-namespace Annium.Core.Mediator;
+namespace Annium.Architecture.CQRS;
 
 /// <summary>
 /// Extension methods for configuring CQRS handlers in the mediator

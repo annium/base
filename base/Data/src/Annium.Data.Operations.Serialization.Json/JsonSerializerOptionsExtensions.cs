@@ -4,8 +4,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Annium.Data.Operations.Serialization.Json.Internal;
 
-// ReSharper disable once CheckNamespace
-namespace Annium.Core.DependencyInjection;
+namespace Annium.Data.Operations.Serialization.Json;
 
 /// <summary>
 /// Extensions for configuring JsonSerializerOptions to work with Data.Operations types

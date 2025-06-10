@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Annium.Core.DependencyInjection;
 using Annium.Linq;
 using Annium.Logging.Shared;
 using Annium.Testing;
+using Annium.Testing.Collection;
 using Annium.Threading.Tasks;
 using Xunit;
 

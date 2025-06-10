@@ -1,12 +1,11 @@
 using System.Net.Mime;
-using Annium.Graylog.Logging;
+using Annium.Core.DependencyInjection.Extensions;
 using Annium.Graylog.Logging.Internal;
 using Annium.Logging.Shared;
 using Annium.Net.Http;
 using Annium.Serialization.Abstractions;
 
-// ReSharper disable once CheckNamespace
-namespace Annium.Core.DependencyInjection;
+namespace Annium.Graylog.Logging;
 
 /// <summary>
 /// Extension methods for configuring Graylog logging integration within log routes.

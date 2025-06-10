@@ -4,6 +4,8 @@ using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using Annium.Extensions.Reactive;
+using Annium.Extensions.Reactive.Operators;
 
 namespace Annium.Logging.Shared.Internal;
 

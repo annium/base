@@ -5,7 +5,7 @@ using System.Linq.Expressions;
 using AgileObjects.ReadableExpressions;
 using Annium.Core.Runtime.Types;
 using Annium.Logging;
-using Annium.Reflection;
+using Annium.Reflection.Types;
 
 namespace Annium.Core.Mapper.Internal;
 

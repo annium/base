@@ -2,8 +2,7 @@ using System.Net.Http;
 using System.Net.Mime;
 using System.Text;
 
-// ReSharper disable once CheckNamespace
-namespace Annium.Net.Http;
+namespace Annium.Net.Http.Extensions;
 
 /// <summary>
 /// Extension methods for attaching content to HTTP requests

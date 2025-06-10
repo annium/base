@@ -11,7 +11,7 @@ using Xunit;
 namespace Annium.Tests.Collections.Generic;
 
 /// <summary>
-/// Contains unit tests for <see cref="ExpiringDictionary{TKey, TValue}"/> to verify expiration and dictionary behavior.
+/// Contains unit tests for <see cref="ExpiringDictionary{TKey,TValue}"/> to verify expiration and dictionary behavior.
 /// </summary>
 public class ExpiringDictionaryTest : TestBase
 {

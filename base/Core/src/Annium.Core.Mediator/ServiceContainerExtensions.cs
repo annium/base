@@ -1,10 +1,11 @@
 using System;
-using Annium.Core.Mediator;
+using Annium.Core.DependencyInjection.Container;
+using Annium.Core.DependencyInjection.Extensions;
 using Annium.Core.Mediator.Internal;
+using Annium.Core.Runtime;
 using Annium.Core.Runtime.Types;
 
-// ReSharper disable once CheckNamespace
-namespace Annium.Core.DependencyInjection;
+namespace Annium.Core.Mediator;
 
 /// <summary>
 /// Extension methods for configuring mediator services in the dependency injection container
@@ -55,7 +56,7 @@ public static class ServiceContainerExtensions
     {
         container.Add<ChainBuilder>().AsSelf().Singleton();
         container.Add<NextBuilder>().AsSelf().Singleton();
-        container.Add<IMediator, Mediator.Internal.Mediator>().AsSelf().Singleton();
+        container.Add<IMediator, Internal.Mediator>().AsSelf().Singleton();
 
         return container;
     }

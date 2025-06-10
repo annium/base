@@ -1,4 +1,3 @@
-using Annium.Core.DependencyInjection;
 using Annium.Core.Mapper.Attributes;
 using Annium.Testing;
 using Xunit;

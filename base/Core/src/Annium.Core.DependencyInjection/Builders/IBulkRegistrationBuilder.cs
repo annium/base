@@ -1,7 +1,8 @@
 using System;
+using Annium.Core.DependencyInjection.Container;
+using Annium.Core.DependencyInjection.Descriptors;
 
-// ReSharper disable once CheckNamespace
-namespace Annium.Core.DependencyInjection;
+namespace Annium.Core.DependencyInjection.Builders;
 
 /// <summary>
 /// Base interface for bulk registration builder.

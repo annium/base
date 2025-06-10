@@ -1,9 +1,7 @@
-using Annium.Logging.Microsoft;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-// ReSharper disable once CheckNamespace
-namespace Annium.Core.DependencyInjection;
+namespace Annium.Logging.Microsoft;
 
 /// <summary>
 /// Extensions for ILoggingBuilder to configure logging bridge

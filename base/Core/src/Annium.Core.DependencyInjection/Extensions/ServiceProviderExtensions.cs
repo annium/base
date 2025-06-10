@@ -1,8 +1,7 @@
 using System;
 using Microsoft.Extensions.DependencyInjection;
 
-// ReSharper disable once CheckNamespace
-namespace Annium.Core.DependencyInjection;
+namespace Annium.Core.DependencyInjection.Extensions;
 
 /// <summary>
 /// Extension methods for IServiceProvider to provide convenient service resolution methods

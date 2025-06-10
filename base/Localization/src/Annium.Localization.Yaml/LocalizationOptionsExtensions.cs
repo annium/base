@@ -1,8 +1,7 @@
+using Annium.Core.DependencyInjection.Extensions;
 using Annium.Localization.Abstractions;
-using Annium.Localization.Yaml;
 
-// ReSharper disable once CheckNamespace
-namespace Annium.Core.DependencyInjection;
+namespace Annium.Localization.Yaml;
 
 /// <summary>
 /// Extension methods for configuring YAML-based localization storage

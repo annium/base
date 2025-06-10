@@ -1,5 +1,7 @@
 using System;
-using Annium.Core.DependencyInjection;
+using Annium.Core.DependencyInjection.Container;
+using Annium.Core.DependencyInjection.Descriptors;
+using Annium.Core.DependencyInjection.Extensions;
 using Annium.Core.Runtime.Time;
 
 namespace Annium.Core.Runtime.Internal.Time;

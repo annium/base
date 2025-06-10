@@ -2,8 +2,7 @@ using System;
 using MicrosoftServiceDescriptor = Microsoft.Extensions.DependencyInjection.ServiceDescriptor;
 using MicrosoftServiceLifetime = Microsoft.Extensions.DependencyInjection.ServiceLifetime;
 
-// ReSharper disable once CheckNamespace
-namespace Annium.Core.DependencyInjection;
+namespace Annium.Core.DependencyInjection.Descriptors;
 
 /// <summary>
 /// Extension methods for service descriptors

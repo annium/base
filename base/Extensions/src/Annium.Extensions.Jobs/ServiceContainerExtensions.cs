@@ -1,8 +1,8 @@
-using Annium.Extensions.Jobs;
+using Annium.Core.DependencyInjection.Container;
+using Annium.Core.DependencyInjection.Extensions;
 using Annium.Extensions.Jobs.Internal;
 
-// ReSharper disable once CheckNamespace
-namespace Annium.Core.DependencyInjection;
+namespace Annium.Extensions.Jobs;
 
 /// <summary>
 /// Extension methods for registering job scheduling services in the dependency injection container

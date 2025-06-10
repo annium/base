@@ -2,9 +2,10 @@ using System.Net;
 using System.Net.Mime;
 using System.Text;
 using System.Threading.Tasks;
-using Annium.Core.DependencyInjection;
 using Annium.Logging;
+using Annium.Net.Http.Extensions;
 using Annium.Net.Http.Internal;
+using Annium.Serialization.Json;
 using Annium.Testing;
 using Xunit;
 
@@ -34,8 +35,8 @@ public class AsExtensionsTests : TestBase
     {
         Register(container =>
         {
-            container
-                .AddSerializers()
+            Serialization
+                .Abstractions.ServiceContainerExtensions.AddSerializers(container)
                 .WithJson(
                     opts =>
                     {

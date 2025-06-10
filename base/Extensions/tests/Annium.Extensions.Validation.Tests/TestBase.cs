@@ -1,5 +1,9 @@
 using System.Reflection;
-using Annium.Core.DependencyInjection;
+using Annium.Core.DependencyInjection.Container;
+using Annium.Core.DependencyInjection.Extensions;
+using Annium.Core.Runtime;
+using Annium.Localization.Abstractions;
+using Annium.Localization.InMemory;
 
 namespace Annium.Extensions.Validation.Tests;
 
@@ -20,7 +24,7 @@ public class TestBase
         new ServiceContainer()
             .AddRuntime(Assembly.GetCallingAssembly())
             .AddValidation()
-            .AddLocalization(opts => opts.UseInMemoryStorage())
+            .AddLocalization(opts => LocalizationOptionsExtensions.UseInMemoryStorage(opts))
             .BuildServiceProvider()
             .Resolve<IValidator<T>>();
 }

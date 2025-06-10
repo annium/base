@@ -2,8 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
-// ReSharper disable once CheckNamespace
-namespace Annium.Testing;
+namespace Annium.Testing.Collection;
 
 /// <summary>
 /// Provides extension methods for dictionary assertions in tests.

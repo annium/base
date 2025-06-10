@@ -1,12 +1,11 @@
 using System.Net.Mime;
+using Annium.Core.DependencyInjection.Extensions;
 using Annium.Logging.Shared;
 using Annium.Net.Http;
-using Annium.Seq.Logging;
 using Annium.Seq.Logging.Internal;
 using Annium.Serialization.Abstractions;
 
-// ReSharper disable once CheckNamespace
-namespace Annium.Core.DependencyInjection;
+namespace Annium.Seq.Logging;
 
 /// <summary>
 /// Extension methods for configuring Seq logging integration with the logging pipeline.

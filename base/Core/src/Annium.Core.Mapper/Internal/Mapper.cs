@@ -1,6 +1,6 @@
 using System;
 using System.Reflection;
-using Annium.Reflection;
+using Annium.Reflection.Types;
 
 namespace Annium.Core.Mapper.Internal;
 

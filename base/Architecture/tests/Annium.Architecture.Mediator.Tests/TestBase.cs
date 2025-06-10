@@ -1,6 +1,9 @@
 using System;
-using Annium.Core.DependencyInjection;
 using Annium.Core.Mediator;
+using Annium.Extensions.Composition;
+using Annium.Extensions.Validation;
+using Annium.Localization.Abstractions;
+using Annium.Localization.InMemory;
 using Xunit;
 
 namespace Annium.Architecture.Mediator.Tests;
@@ -20,7 +23,7 @@ public class TestBase : Testing.TestBase
     protected void RegisterMediator(Action<MediatorConfiguration> configure) =>
         Register(container =>
         {
-            container.AddLocalization(opts => opts.UseInMemoryStorage());
+            container.AddLocalization(opts => LocalizationOptionsExtensions.UseInMemoryStorage(opts));
 
             container.AddComposition();
             container.AddValidation();

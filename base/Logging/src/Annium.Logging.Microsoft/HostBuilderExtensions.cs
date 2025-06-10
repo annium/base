@@ -1,7 +1,6 @@
 using Microsoft.Extensions.Hosting;
 
-// ReSharper disable once CheckNamespace
-namespace Annium.Core.DependencyInjection;
+namespace Annium.Logging.Microsoft;
 
 /// <summary>
 /// Extensions for IHostBuilder to configure logging bridge

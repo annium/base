@@ -1,4 +1,5 @@
 ﻿using Annium.Testing;
+using Annium.Testing.Collection;
 using Xunit;
 
 // ReSharper disable AccessToModifiedClosure

@@ -3,7 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using Annium.Reflection;
+using Annium.Reflection.Members;
+using Annium.Reflection.Types;
 
 namespace Annium.Configuration.Abstractions.Internal;
 

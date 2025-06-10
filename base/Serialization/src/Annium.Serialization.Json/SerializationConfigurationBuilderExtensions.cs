@@ -2,13 +2,12 @@ using System;
 using System.Collections.Concurrent;
 using System.IO;
 using System.Text.Json;
+using Annium.Core.DependencyInjection.Extensions;
 using Annium.Core.Runtime.Types;
 using Annium.Serialization.Abstractions;
 using Annium.Serialization.Json.Internal;
-using Constants = Annium.Serialization.Json.Constants;
 
-// ReSharper disable once CheckNamespace
-namespace Annium.Core.DependencyInjection;
+namespace Annium.Serialization.Json;
 
 /// <summary>
 /// Delegate for configuring JSON serializer options with access to the service provider.

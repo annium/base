@@ -3,8 +3,7 @@ using Annium.Logging.Console.Internal;
 using Annium.Logging.Shared;
 using static Annium.Logging.Shared.LogMessageExtensions;
 
-// ReSharper disable once CheckNamespace
-namespace Annium.Core.DependencyInjection;
+namespace Annium.Logging.Console;
 
 /// <summary>
 /// Extension methods for configuring console log routing.

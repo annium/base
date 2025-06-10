@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Annium.Core.DependencyInjection.Descriptors;
 
 namespace Annium.Core.DependencyInjection.Internal.Builders.Registrations;
 

@@ -1,8 +1,8 @@
 using Annium.Architecture.Http.Internal.PipeHandlers.Request;
 using Annium.Architecture.Http.Internal.PipeHandlers.RequestResponse;
+using Annium.Core.Mediator;
 
-// ReSharper disable CheckNamespace
-namespace Annium.Core.Mediator;
+namespace Annium.Architecture.Http;
 
 /// <summary>
 /// Extension methods for configuring HTTP status pipe handlers in the mediator

@@ -1,7 +1,6 @@
-using IBuilderTarget = Annium.Core.DependencyInjection.ISingleRegistrationBuilderBase;
+using IBuilderTarget = Annium.Core.DependencyInjection.Builders.ISingleRegistrationBuilderBase;
 
-// ReSharper disable once CheckNamespace
-namespace Annium.Core.DependencyInjection;
+namespace Annium.Core.DependencyInjection.Builders;
 
 /// <summary>
 /// Provides extension methods for single registration builder.

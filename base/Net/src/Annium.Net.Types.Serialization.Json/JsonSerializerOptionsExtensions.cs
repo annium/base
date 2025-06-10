@@ -1,9 +1,7 @@
 using System.Text.Json;
 using Annium.Net.Types.Serialization.Json.Internal.Converters;
 
-// ReSharper disable CheckNamespace
-
-namespace Annium.Core.DependencyInjection;
+namespace Annium.Net.Types.Serialization.Json;
 
 /// <summary>
 /// Extension methods for configuring JsonSerializerOptions to support Net.Types serialization.

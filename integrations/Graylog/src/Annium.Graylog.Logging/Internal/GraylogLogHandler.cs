@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Annium.Linq;
 using Annium.Logging.Shared;
 using Annium.Net.Http;
+using Annium.Net.Http.Extensions;
 using Annium.Serialization.Abstractions;
 
 namespace Annium.Graylog.Logging.Internal;
@@ -20,17 +21,17 @@ internal class GraylogLogHandler<TContext> : BufferingLogHandler<TContext>
     /// Function that converts log messages to GELF format dictionaries for transmission.
     /// </summary>
     private readonly Func<LogMessage<TContext>, IReadOnlyDictionary<string, object?>> _format;
-    
+
     /// <summary>
     /// HTTP request factory used to create requests for sending GELF messages to Graylog.
     /// </summary>
     private readonly IHttpRequestFactory _httpRequestFactory;
-    
+
     /// <summary>
     /// JSON serializer used to convert GELF dictionaries to JSON strings for HTTP transmission.
     /// </summary>
     private readonly ISerializer<string> _serializer;
-    
+
     /// <summary>
     /// Configuration settings containing Graylog endpoint and project information.
     /// </summary>

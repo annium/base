@@ -1,10 +1,9 @@
+using System;
 using System.Collections.Concurrent;
 using System.Reactive.Linq;
-using Annium;
 using NodaTime;
 
-// ReSharper disable once CheckNamespace
-namespace System;
+namespace Annium.Extensions.Reactive.Operators;
 
 /// <summary>
 /// Provides throttling operators that group values by key

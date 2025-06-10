@@ -1,10 +1,11 @@
 using System.Collections.Generic;
-using Annium.Logging;
-using Annium.Logging.Shared;
+using Annium.Core.DependencyInjection.Builders;
+using Annium.Core.DependencyInjection.Container;
+using Annium.Core.DependencyInjection.Extensions;
+using Annium.Core.Mapper;
 using Annium.Logging.Shared.Internal;
 
-// ReSharper disable once CheckNamespace
-namespace Annium.Core.DependencyInjection;
+namespace Annium.Logging.Shared;
 
 /// <summary>
 /// Extensions for IServiceContainer to register logging services
@@ -57,7 +58,7 @@ public static class ServiceContainerExtensions
         container.AddProfile(p =>
         {
             p.Map<LogLevel, string>(x => x.ToString());
-            p.Map<string, LogLevel>(x => x.ParseEnum<LogLevel>());
+            p.Map<string, LogLevel>(x => EnumExtensions.ParseEnum<LogLevel>((string)x));
         });
 
         container.OnBuild += sp => sp.Resolve<LogRouter<TContext>>();

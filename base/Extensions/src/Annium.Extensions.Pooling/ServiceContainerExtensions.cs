@@ -1,8 +1,9 @@
-using Annium.Extensions.Pooling;
+using Annium.Core.DependencyInjection.Container;
+using Annium.Core.DependencyInjection.Descriptors;
+using Annium.Core.DependencyInjection.Extensions;
 using Annium.Extensions.Pooling.Internal;
 
-// ReSharper disable once CheckNamespace
-namespace Annium.Core.DependencyInjection;
+namespace Annium.Extensions.Pooling;
 
 /// <summary>
 /// Extension methods for configuring object pooling and caching services in the dependency injection container.

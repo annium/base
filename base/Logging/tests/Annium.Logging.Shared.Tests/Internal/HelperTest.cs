@@ -1,6 +1,7 @@
 using System;
 using Annium.Logging.Shared.Internal;
 using Annium.Testing;
+using Annium.Testing.Collection;
 using Xunit;
 
 namespace Annium.Logging.Shared.Tests.Internal;

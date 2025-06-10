@@ -1,7 +1,7 @@
+using System;
 using System.Threading;
 
-// ReSharper disable once CheckNamespace
-namespace System;
+namespace Annium.Extensions.Reactive;
 
 /// <summary>
 /// Represents an observer context that wraps observer callbacks with a cancellation token

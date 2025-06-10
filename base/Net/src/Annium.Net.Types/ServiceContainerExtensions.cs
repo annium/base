@@ -1,11 +1,11 @@
-using Annium.Net.Types;
+using Annium.Core.DependencyInjection.Container;
+using Annium.Core.DependencyInjection.Extensions;
 using Annium.Net.Types.Internal;
 using Annium.Net.Types.Internal.Config;
 using Annium.Net.Types.Internal.Processors;
 using Annium.Net.Types.Internal.Referrers;
 
-// ReSharper disable CheckNamespace
-namespace Annium.Core.DependencyInjection;
+namespace Annium.Net.Types;
 
 /// <summary>
 /// Extension methods for configuring the model mapper and related services in the dependency injection container.

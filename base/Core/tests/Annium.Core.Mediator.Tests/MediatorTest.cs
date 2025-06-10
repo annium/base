@@ -2,9 +2,11 @@ using System;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using Annium.Core.DependencyInjection;
 using Annium.Data.Operations;
+using Annium.Data.Operations.Serialization.Json;
 using Annium.Logging;
+using Annium.Logging.InMemory;
+using Annium.Logging.Shared;
 using Annium.Testing;
 using Xunit;
 
@@ -187,7 +189,7 @@ public class MediatorTest : TestBase
                         || m.SubjectType.StartsWith("OpenFinalHandler")
                         || m.SubjectType.StartsWith("ClosedFinalHandler")
                     )
-                    .UseInMemory()
+                    .UseInMemory<DefaultLogContext>()
             );
         });
 

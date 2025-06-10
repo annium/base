@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Annium.Logging;
 using Annium.Testing;
+using Annium.Testing.Collection;
 using Xunit;
 
 namespace Annium.Extensions.Reactive.Tests.Creation.ObservableInstance;

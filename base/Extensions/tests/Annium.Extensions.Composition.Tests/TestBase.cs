@@ -1,5 +1,9 @@
 using System.Reflection;
-using Annium.Core.DependencyInjection;
+using Annium.Core.DependencyInjection.Container;
+using Annium.Core.DependencyInjection.Extensions;
+using Annium.Core.Runtime;
+using Annium.Localization.Abstractions;
+using Annium.Localization.InMemory;
 
 namespace Annium.Extensions.Composition.Tests;
 
@@ -18,7 +22,7 @@ public class TestBase
         new ServiceContainer()
             .AddRuntime(Assembly.GetCallingAssembly())
             .AddComposition()
-            .AddLocalization(opts => opts.UseInMemoryStorage())
+            .AddLocalization(opts => LocalizationOptionsExtensions.UseInMemoryStorage(opts))
             .BuildServiceProvider()
             .Resolve<IComposer<T>>();
 }

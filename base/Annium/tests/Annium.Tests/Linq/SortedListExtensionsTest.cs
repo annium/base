@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using Annium.Linq;
 using Annium.Testing;
+using Annium.Testing.Collection;
 using Xunit;
 
 namespace Annium.Tests.Linq;

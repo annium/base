@@ -2,18 +2,19 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using Annium.Core.Mapper;
+using Annium.Core.DependencyInjection.Container;
+using Annium.Core.DependencyInjection.Extensions;
 using Annium.Core.Mapper.Attributes;
 using Annium.Core.Mapper.Internal;
 using Annium.Core.Mapper.Internal.DependencyInjection;
 using Annium.Core.Mapper.Internal.Profiles;
 using Annium.Core.Mapper.Internal.Resolvers;
+using Annium.Core.Runtime;
 using Annium.Core.Runtime.Types;
 using Annium.Logging;
-using Annium.Reflection;
+using Annium.Reflection.Types;
 
-// ReSharper disable once CheckNamespace
-namespace Annium.Core.DependencyInjection;
+namespace Annium.Core.Mapper;
 
 /// <summary>
 /// Extensions for configuring mapper services in the service container
@@ -31,7 +32,7 @@ public static class ServiceContainerExtensions
         // register base services
         container.Add<IRepacker, Repacker>().Singleton();
         container.Add<IMapBuilder, MapBuilder>().Singleton();
-        container.Add<IMapper, Mapper.Internal.Mapper>().Singleton();
+        container.Add<IMapper, Internal.Mapper>().Singleton();
         container
             .Add(sp => new Lazy<IMapContext>(() => new MapContext(sp.Resolve<IMapper>()), true))
             .AsSelf()

@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Annium.Core.DependencyInjection;
+using Annium.Core.DependencyInjection.Extensions;
 using Annium.Data.Operations;
 using Annium.Localization.Abstractions;
-using Annium.Reflection;
+using Annium.Reflection.Types;
 
 namespace Annium.Extensions.Validation.Internal;
 

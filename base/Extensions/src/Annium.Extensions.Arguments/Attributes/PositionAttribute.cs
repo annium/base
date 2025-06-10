@@ -1,7 +1,6 @@
 ﻿using System;
 
-// ReSharper disable once CheckNamespace
-namespace Annium.Extensions.Arguments;
+namespace Annium.Extensions.Arguments.Attributes;
 
 /// <summary>
 /// Attribute to mark a property as a positional command line argument

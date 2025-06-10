@@ -1,8 +1,7 @@
-using Annium.Serialization.Abstractions;
+using Annium.Core.DependencyInjection.Container;
 using Annium.Serialization.Abstractions.Internal;
 
-// ReSharper disable once CheckNamespace
-namespace Annium.Core.DependencyInjection;
+namespace Annium.Serialization.Abstractions;
 
 /// <summary>
 /// Extension methods for configuring serialization services in the service container.

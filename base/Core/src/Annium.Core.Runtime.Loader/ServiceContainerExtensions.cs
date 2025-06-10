@@ -1,8 +1,8 @@
-using Annium.Core.Runtime.Loader;
+using Annium.Core.DependencyInjection.Container;
+using Annium.Core.DependencyInjection.Extensions;
 using Annium.Core.Runtime.Loader.Internal;
 
-// ReSharper disable once CheckNamespace
-namespace Annium.Core.DependencyInjection;
+namespace Annium.Core.Runtime.Loader;
 
 /// <summary>
 /// Extension methods for IServiceContainer to register assembly loader services

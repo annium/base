@@ -3,8 +3,8 @@ using System.IO;
 using System.Linq;
 using Annium.Configuration.Abstractions;
 using Annium.Configuration.Tests.Lib;
-using Annium.Core.DependencyInjection;
 using Annium.Testing;
+using Annium.Testing.Collection;
 using Xunit;
 using YamlDotNet.Serialization;
 

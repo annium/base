@@ -1,11 +1,11 @@
 using System;
+using Annium.Core.DependencyInjection.Extensions;
 using Annium.Logging.Shared;
 using Annium.Logging.Xunit.Internal;
 using Xunit;
 using static Annium.Logging.Shared.LogMessageExtensions;
 
-// ReSharper disable once CheckNamespace
-namespace Annium.Core.DependencyInjection;
+namespace Annium.Logging.Xunit;
 
 /// <summary>
 /// Extensions for LogRoute to configure xUnit test output logging

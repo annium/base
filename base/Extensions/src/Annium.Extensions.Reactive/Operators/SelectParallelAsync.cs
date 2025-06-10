@@ -1,10 +1,10 @@
+using System;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Annium.Execution.Background;
 using Annium.Logging;
 
-// ReSharper disable once CheckNamespace
-namespace System;
+namespace Annium.Extensions.Reactive.Operators;
 
 /// <summary>
 /// Provides operators for transforming observable values asynchronously in parallel

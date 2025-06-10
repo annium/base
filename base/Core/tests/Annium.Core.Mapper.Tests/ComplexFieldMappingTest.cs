@@ -1,6 +1,5 @@
 using System.Text.Json;
-using Annium.Core.DependencyInjection;
-using Annium.Data.Models.Extensions;
+using Annium.Data.Models.Extensions.IsShallowEqual;
 using Annium.Testing;
 using Xunit;
 

@@ -1,10 +1,9 @@
 using System;
 using System.Collections.Generic;
-using Annium.Logging.Shared;
+using Annium.Core.DependencyInjection.Extensions;
 using Annium.Logging.Shared.Internal;
 
-// ReSharper disable once CheckNamespace
-namespace Annium.Core.DependencyInjection;
+namespace Annium.Logging.Shared;
 
 /// <summary>
 /// Extensions for IServiceProvider to configure logging routes

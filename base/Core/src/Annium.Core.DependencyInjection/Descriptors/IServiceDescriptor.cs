@@ -1,7 +1,6 @@
 using System;
 
-// ReSharper disable once CheckNamespace
-namespace Annium.Core.DependencyInjection;
+namespace Annium.Core.DependencyInjection.Descriptors;
 
 /// <summary>
 /// Base interface for service descriptors that define how services are registered and resolved

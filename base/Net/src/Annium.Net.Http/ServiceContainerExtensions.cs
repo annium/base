@@ -1,11 +1,12 @@
+using Annium.Core.DependencyInjection.Builders;
+using Annium.Core.DependencyInjection.Container;
+using Annium.Core.DependencyInjection.Extensions;
 using Annium.Logging;
-using Annium.Net.Http;
 using Annium.Net.Http.Internal;
 using Constants = Annium.Net.Http.Internal.Constants;
 using Serializer = Annium.Net.Http.Internal.Serializer;
 
-// ReSharper disable once CheckNamespace
-namespace Annium.Core.DependencyInjection;
+namespace Annium.Net.Http;
 
 /// <summary>
 /// Extensions for configuring HTTP request factory services

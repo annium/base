@@ -3,8 +3,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
 
-// ReSharper disable once CheckNamespace
-namespace Annium.Net.Http;
+namespace Annium.Net.Http.Extensions;
 
 /// <summary>
 /// Extension methods for setting HTTP request headers

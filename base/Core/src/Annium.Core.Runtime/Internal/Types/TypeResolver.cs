@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Annium.Core.Runtime.Types;
 using Annium.Logging;
-using Annium.Reflection;
+using Annium.Reflection.Types;
 
 namespace Annium.Core.Runtime.Internal.Types;
 

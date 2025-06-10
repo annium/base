@@ -1,8 +1,8 @@
-using Annium.Data.Tables;
+using Annium.Core.DependencyInjection.Container;
+using Annium.Core.DependencyInjection.Extensions;
 using Annium.Data.Tables.Internal;
 
-// ReSharper disable once CheckNamespace
-namespace Annium.Core.DependencyInjection;
+namespace Annium.Data.Tables;
 
 /// <summary>
 /// Extension methods for configuring table services in the dependency injection container.

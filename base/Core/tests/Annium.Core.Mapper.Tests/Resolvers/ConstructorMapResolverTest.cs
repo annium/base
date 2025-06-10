@@ -1,5 +1,5 @@
-using Annium.Core.DependencyInjection;
 using Annium.Testing;
+using Annium.Testing.Collection;
 using Xunit;
 
 namespace Annium.Core.Mapper.Tests.Resolvers;

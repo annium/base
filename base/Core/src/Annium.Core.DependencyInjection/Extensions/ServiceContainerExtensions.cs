@@ -1,5 +1,7 @@
-// ReSharper disable once CheckNamespace
-namespace Annium.Core.DependencyInjection;
+using Annium.Core.DependencyInjection.Builders;
+using Annium.Core.DependencyInjection.Container;
+
+namespace Annium.Core.DependencyInjection.Extensions;
 
 /// <summary>
 /// Extension methods for service containers

@@ -4,6 +4,7 @@ using Annium.Core.Mediator;
 using Annium.Data.Operations;
 using Annium.Extensions.Composition;
 using Annium.Testing;
+using Annium.Testing.Collection;
 using Xunit;
 
 namespace Annium.Architecture.Mediator.Tests;

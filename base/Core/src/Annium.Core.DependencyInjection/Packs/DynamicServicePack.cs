@@ -1,7 +1,7 @@
 using System;
+using Annium.Core.DependencyInjection.Container;
 
-// ReSharper disable once CheckNamespace
-namespace Annium.Core.DependencyInjection;
+namespace Annium.Core.DependencyInjection.Packs;
 
 /// <summary>
 /// A dynamic service pack that allows configuring services through delegate actions

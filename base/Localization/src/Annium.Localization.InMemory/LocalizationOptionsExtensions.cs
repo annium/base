@@ -1,10 +1,8 @@
 using System.Collections.Generic;
 using System.Globalization;
 using Annium.Localization.Abstractions;
-using Annium.Localization.InMemory;
 
-// ReSharper disable once CheckNamespace
-namespace Annium.Core.DependencyInjection;
+namespace Annium.Localization.InMemory;
 
 /// <summary>
 /// Extension methods for configuring in-memory localization storage

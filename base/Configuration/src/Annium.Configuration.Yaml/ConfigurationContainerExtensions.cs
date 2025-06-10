@@ -1,10 +1,10 @@
 using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Annium.Configuration.Abstractions;
 using Annium.Configuration.Yaml.Internal;
 
-// ReSharper disable once CheckNamespace
-namespace Annium.Configuration.Abstractions;
+namespace Annium.Configuration.Yaml;
 
 /// <summary>
 /// Extension methods for IConfigurationContainer to add YAML configuration

@@ -6,8 +6,7 @@ using System.Net.Http;
 using System.Text;
 using Annium.Logging;
 
-// ReSharper disable once CheckNamespace
-namespace Annium.Net.Http;
+namespace Annium.Net.Http.Extensions;
 
 /// <summary>
 /// Extension methods for adding logging to HTTP requests

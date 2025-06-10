@@ -2,8 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-// ReSharper disable once CheckNamespace
-namespace Annium.Data.Operations;
+namespace Annium.Data.Operations.Extensions;
 
 /// <summary>
 /// Extension methods for Task types containing result objects.

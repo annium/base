@@ -2,11 +2,14 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Annium.Core.DependencyInjection.Builders;
+using Annium.Core.DependencyInjection.Descriptors;
 using Annium.Core.DependencyInjection.Internal.Builders;
 using Microsoft.Extensions.DependencyInjection;
+using ServiceDescriptor = Annium.Core.DependencyInjection.Descriptors.ServiceDescriptor;
+using ServiceLifetime = Microsoft.Extensions.DependencyInjection.ServiceLifetime;
 
-// ReSharper disable once CheckNamespace
-namespace Annium.Core.DependencyInjection;
+namespace Annium.Core.DependencyInjection.Container;
 
 /// <summary>
 /// Implementation of the service container that manages service registrations.
@@ -144,7 +147,7 @@ public class ServiceContainer : IServiceContainer
     /// <exception cref="NotSupportedException"></exception>
     public bool Contains(IServiceDescriptor descriptor)
     {
-        var lifetime = (Microsoft.Extensions.DependencyInjection.ServiceLifetime)descriptor.Lifetime;
+        var lifetime = (ServiceLifetime)descriptor.Lifetime;
 
         return descriptor switch
         {

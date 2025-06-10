@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Annium.Linq;
 using Annium.Logging.Shared;
 using Annium.Net.Http;
+using Annium.Net.Http.Extensions;
 using Annium.Serialization.Abstractions;
 
 namespace Annium.Seq.Logging.Internal;
@@ -21,14 +22,17 @@ internal class SeqLogHandler<TContext> : BufferingLogHandler<TContext>
     /// The CLEF formatter function that converts log messages to dictionary format for Seq ingestion.
     /// </summary>
     private readonly Func<LogMessage<TContext>, IReadOnlyDictionary<string, string?>> _format;
+
     /// <summary>
     /// Factory for creating HTTP requests to send log events to the Seq server.
     /// </summary>
     private readonly IHttpRequestFactory _httpRequestFactory;
+
     /// <summary>
     /// JSON serializer for converting CLEF dictionaries to string format for HTTP transmission.
     /// </summary>
     private readonly ISerializer<string> _serializer;
+
     /// <summary>
     /// Configuration settings for the Seq server connection including endpoint and API key.
     /// </summary>

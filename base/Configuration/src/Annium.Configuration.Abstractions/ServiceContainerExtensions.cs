@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using Annium.Configuration.Abstractions;
 using Annium.Configuration.Abstractions.Internal;
-using Annium.Reflection;
+using Annium.Core.DependencyInjection.Builders;
+using Annium.Core.DependencyInjection.Container;
+using Annium.Core.DependencyInjection.Extensions;
+using Annium.Reflection.Types;
 
-// ReSharper disable once CheckNamespace
-namespace Annium.Core.DependencyInjection;
+namespace Annium.Configuration.Abstractions;
 
 /// <summary>
 /// Extension methods for IServiceContainer to register configuration services

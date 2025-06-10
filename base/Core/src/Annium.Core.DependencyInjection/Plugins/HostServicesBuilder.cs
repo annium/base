@@ -1,8 +1,8 @@
 using System;
 using Annium.Core.DependencyInjection.Internal.Packs;
+using Annium.Core.DependencyInjection.Packs;
 
-// ReSharper disable once CheckNamespace
-namespace Annium.Core.DependencyInjection;
+namespace Annium.Core.DependencyInjection.Plugins;
 
 /// <summary>
 /// This is emulation class for compatibility with extensions, expecting HostBuilder pattern implementation

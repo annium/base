@@ -1,7 +1,7 @@
 using Annium.Architecture.ViewModel.Internal.PipeHandlers.Request;
+using Annium.Core.Mediator;
 
-// ReSharper disable CheckNamespace
-namespace Annium.Core.Mediator;
+namespace Annium.Architecture.ViewModel;
 
 /// <summary>
 /// Extension methods for configuring view model mapping handlers in the mediator
@@ -17,8 +17,8 @@ public static class MediatorConfigurationExtensions
     {
         cfg.AddHandler(typeof(MappingEnumerablePipeHandler<,,>));
         cfg.AddHandler(typeof(MappingSinglePipeHandler<,,>));
-        cfg.AddHandler(typeof(Architecture.ViewModel.Internal.PipeHandlers.Response.MappingEnumerablePipeHandler<,,>));
-        cfg.AddHandler(typeof(Architecture.ViewModel.Internal.PipeHandlers.Response.MappingSinglePipeHandler<,,>));
+        cfg.AddHandler(typeof(Internal.PipeHandlers.Response.MappingEnumerablePipeHandler<,,>));
+        cfg.AddHandler(typeof(Internal.PipeHandlers.Response.MappingSinglePipeHandler<,,>));
 
         return cfg;
     }

@@ -1,8 +1,6 @@
-using Annium.Logging.InMemory;
 using Annium.Logging.Shared;
 
-// ReSharper disable once CheckNamespace
-namespace Annium.Core.DependencyInjection;
+namespace Annium.Logging.InMemory;
 
 /// <summary>
 /// Extension methods for configuring in-memory log routing.

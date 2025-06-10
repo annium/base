@@ -4,8 +4,11 @@ using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using Annium.Extensions.Reactive.Extensions;
+using Annium.Extensions.Reactive.Operators;
 using Annium.Logging;
 using Annium.Testing;
+using Annium.Testing.Collection;
 using Annium.Threading.Channels;
 using Xunit;
 

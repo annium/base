@@ -1,10 +1,10 @@
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Annium.Extensions.Reactive.Internal.Creation.Instance;
 using Annium.Logging;
 
-// ReSharper disable once CheckNamespace
-namespace System.Reactive.Linq;
+namespace Annium.Extensions.Reactive;
 
 /// <summary>
 /// Provides extension methods for creating custom observable instances

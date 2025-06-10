@@ -1,6 +1,10 @@
 using System;
 using System.Linq;
 using System.Reflection;
+using Annium.Core.DependencyInjection.Builders;
+using Annium.Core.DependencyInjection.Container;
+using Annium.Core.DependencyInjection.Descriptors;
+using Annium.Core.DependencyInjection.Extensions;
 using Annium.Core.Runtime.Internal.Resources;
 using Annium.Core.Runtime.Internal.Time;
 using Annium.Core.Runtime.Internal.Types;
@@ -9,8 +13,7 @@ using Annium.Core.Runtime.Time;
 using Annium.Core.Runtime.Types;
 using Annium.Logging;
 
-// ReSharper disable once CheckNamespace
-namespace Annium.Core.DependencyInjection;
+namespace Annium.Core.Runtime;
 
 /// <summary>
 /// Provides extension methods for configuring runtime services in the dependency injection container.

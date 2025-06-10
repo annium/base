@@ -1,7 +1,6 @@
-using IBuilderBase = Annium.Core.DependencyInjection.IKeyedFactoryRegistrationBuilderBase;
+using IBuilderBase = Annium.Core.DependencyInjection.Builders.IKeyedFactoryRegistrationBuilderBase;
 
-// ReSharper disable once CheckNamespace
-namespace Annium.Core.DependencyInjection;
+namespace Annium.Core.DependencyInjection.Builders;
 
 /// <summary>
 /// Provides extension methods for keyed factory registration builder.

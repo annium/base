@@ -1,6 +1,6 @@
 using System;
 using System.Globalization;
-using Annium.Core.DependencyInjection;
+using Annium.Core.DependencyInjection.Container;
 
 namespace Annium.Localization.Abstractions;
 

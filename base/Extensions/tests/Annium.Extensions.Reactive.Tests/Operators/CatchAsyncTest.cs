@@ -1,7 +1,9 @@
 using System;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
+using Annium.Extensions.Reactive.Operators;
 using Annium.Testing;
+using Annium.Testing.Collection;
 using Xunit;
 
 namespace Annium.Extensions.Reactive.Tests.Operators;

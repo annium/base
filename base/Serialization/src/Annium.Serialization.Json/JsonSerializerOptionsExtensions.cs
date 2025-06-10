@@ -5,12 +5,11 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Annium.Core.Runtime.Types;
-using Annium.Reflection;
+using Annium.Reflection.Types;
 using Annium.Serialization.Json.Converters;
 using Annium.Serialization.Json.Internal.Options;
 
-// ReSharper disable once CheckNamespace
-namespace Annium.Core.DependencyInjection;
+namespace Annium.Serialization.Json;
 
 /// <summary>
 /// Extension methods for JsonSerializerOptions providing convenient configuration and converter management.

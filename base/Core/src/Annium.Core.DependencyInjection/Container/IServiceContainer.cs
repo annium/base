@@ -1,9 +1,10 @@
 using System;
 using System.Collections.Generic;
+using Annium.Core.DependencyInjection.Builders;
+using Annium.Core.DependencyInjection.Descriptors;
 using Microsoft.Extensions.DependencyInjection;
 
-// ReSharper disable once CheckNamespace
-namespace Annium.Core.DependencyInjection;
+namespace Annium.Core.DependencyInjection.Container;
 
 /// <summary>
 /// Interface for service container that manages service registrations.

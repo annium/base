@@ -5,9 +5,10 @@ using System.Net.Sockets;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
-using Annium.Core.DependencyInjection;
+using Annium.Core.DependencyInjection.Extensions;
 using Annium.Logging;
 using Annium.Testing;
+using Annium.Testing.Collection;
 using Annium.Threading.Tasks;
 using Xunit;
 

@@ -2,12 +2,10 @@ using System.Collections.Generic;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Annium.NodaTime.Serialization.Json;
 using NodaTime;
 using NodaTime.Xml;
 
-// ReSharper disable once CheckNamespace
-namespace Annium.Core.DependencyInjection;
+namespace Annium.NodaTime.Serialization.Json;
 
 /// <summary>
 /// Extension methods for configuring JsonSerializerOptions with NodaTime converters.

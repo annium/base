@@ -1,6 +1,4 @@
-// ReSharper disable once CheckNamespace
-
-namespace Annium.Extensions.Arguments;
+namespace Annium.Extensions.Arguments.Commands;
 
 /// <summary>
 /// Marker interface for commands that use three configuration types

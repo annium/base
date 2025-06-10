@@ -1,6 +1,4 @@
-// ReSharper disable once CheckNamespace
-
-namespace Annium.Extensions.Arguments;
+namespace Annium.Extensions.Arguments.Commands;
 
 /// <summary>
 /// Interface that defines command metadata including identifier and description

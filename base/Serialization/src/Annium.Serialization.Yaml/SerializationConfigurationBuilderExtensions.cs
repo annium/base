@@ -3,10 +3,8 @@ using System.Collections.Concurrent;
 using Annium.Serialization.Abstractions;
 using Annium.Serialization.Yaml.Internal;
 using YamlDotNet.Serialization;
-using Constants = Annium.Serialization.Yaml.Constants;
 
-// ReSharper disable once CheckNamespace
-namespace Annium.Core.DependencyInjection;
+namespace Annium.Serialization.Yaml;
 
 /// <summary>
 /// Extension methods for configuring YAML serialization.

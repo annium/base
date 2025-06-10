@@ -1,7 +1,8 @@
 using System;
 using System.IO;
-using Annium.Core.DependencyInjection;
 using Annium.Data.Operations.Serialization.Tests.Base;
+using Annium.Serialization.Abstractions;
+using Annium.Serialization.Json;
 using Xunit;
 
 namespace Annium.Data.Operations.Serialization.Json.Tests;
@@ -14,7 +15,11 @@ public class StatusResultTest : StatusResultTestBase
     public StatusResultTest(ITestOutputHelper outputHelper)
         : base(outputHelper)
     {
-        Register(container => container.AddSerializers().WithJson(opts => opts.ConfigureForOperations(), true));
+        Register(container =>
+            container
+                .AddSerializers()
+                .WithJson(opts => JsonSerializerOptionsExtensions.ConfigureForOperations(opts), true)
+        );
     }
 
     /// <summary>

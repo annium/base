@@ -1,7 +1,7 @@
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using Annium.Core.Mapper;
-using Annium.Data.Models.Extensions;
+using Annium.Data.Models.Extensions.IsShallowEqual;
 
 namespace Annium.Testing;
 

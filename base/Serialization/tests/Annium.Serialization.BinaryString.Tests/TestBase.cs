@@ -1,4 +1,5 @@
-using Annium.Core.DependencyInjection;
+using Annium.Core.DependencyInjection.Container;
+using Annium.Core.Runtime;
 using Annium.Serialization.Abstractions;
 
 namespace Annium.Serialization.BinaryString.Tests;

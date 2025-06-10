@@ -1,10 +1,10 @@
 using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Annium.Configuration.Abstractions;
 using Annium.Configuration.Json.Internal;
 
-// ReSharper disable once CheckNamespace
-namespace Annium.Configuration.Abstractions;
+namespace Annium.Configuration.Json;
 
 /// <summary>
 /// Extension methods for IConfigurationContainer to add JSON configuration

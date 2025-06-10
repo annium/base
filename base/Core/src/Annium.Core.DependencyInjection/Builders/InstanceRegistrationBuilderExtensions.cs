@@ -1,7 +1,6 @@
-using IBuilderTarget = Annium.Core.DependencyInjection.IInstanceRegistrationBuilderBase;
+using IBuilderTarget = Annium.Core.DependencyInjection.Builders.IInstanceRegistrationBuilderBase;
 
-// ReSharper disable once CheckNamespace
-namespace Annium.Core.DependencyInjection;
+namespace Annium.Core.DependencyInjection.Builders;
 
 /// <summary>
 /// Provides extension methods for instance registration builder.

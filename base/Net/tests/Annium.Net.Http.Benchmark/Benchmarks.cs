@@ -1,8 +1,13 @@
 using System;
 using System.Net.Http;
 using System.Threading.Tasks;
-using Annium.Core.DependencyInjection;
+using Annium.Core.DependencyInjection.Container;
+using Annium.Core.DependencyInjection.Extensions;
+using Annium.Core.Runtime;
+using Annium.Logging.InMemory;
+using Annium.Logging.Shared;
 using Annium.Net.Http.Benchmark.Internal;
+using Annium.Net.Http.Extensions;
 using BenchmarkDotNet.Attributes;
 
 namespace Annium.Net.Http.Benchmark;

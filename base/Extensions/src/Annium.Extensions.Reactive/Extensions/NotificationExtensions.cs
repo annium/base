@@ -1,9 +1,11 @@
+using System;
 using System.ComponentModel;
 using System.Linq.Expressions;
+using System.Reactive;
+using System.Reactive.Linq;
 using Annium.Reflection;
 
-// ReSharper disable once CheckNamespace
-namespace System.Reactive.Linq;
+namespace Annium.Extensions.Reactive.Extensions;
 
 /// <summary>
 /// Provides extension methods for creating observables from property change notifications

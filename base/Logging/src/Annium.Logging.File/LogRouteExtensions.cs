@@ -1,11 +1,9 @@
 using System;
-using Annium.Logging.File;
 using Annium.Logging.File.Internal;
 using Annium.Logging.Shared;
 using static Annium.Logging.Shared.LogMessageExtensions;
 
-// ReSharper disable once CheckNamespace
-namespace Annium.Core.DependencyInjection;
+namespace Annium.Logging.File;
 
 /// <summary>
 /// Extension methods for configuring file-based log routing.

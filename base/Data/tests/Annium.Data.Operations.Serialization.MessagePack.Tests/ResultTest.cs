@@ -1,6 +1,7 @@
 using System;
-using Annium.Core.DependencyInjection;
 using Annium.Data.Operations.Serialization.Tests.Base;
+using Annium.Serialization.Abstractions;
+using Annium.Serialization.MessagePack;
 using MessagePack;
 using MessagePack.Resolvers;
 using Xunit;

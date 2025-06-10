@@ -3,10 +3,8 @@ using System.Collections.Concurrent;
 using Annium.Serialization.Abstractions;
 using Annium.Serialization.MessagePack.Internal;
 using MessagePack;
-using Constants = Annium.Serialization.MessagePack.Constants;
 
-// ReSharper disable once CheckNamespace
-namespace Annium.Core.DependencyInjection;
+namespace Annium.Serialization.MessagePack;
 
 /// <summary>
 /// Delegate for configuring MessagePack serializer options using a service provider.

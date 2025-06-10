@@ -1,7 +1,8 @@
-using Annium.Net.Mail;
+using Annium.Core.DependencyInjection.Builders;
+using Annium.Core.DependencyInjection.Container;
+using Annium.Core.DependencyInjection.Extensions;
 
-// ReSharper disable once CheckNamespace
-namespace Annium.Core.DependencyInjection;
+namespace Annium.Net.Mail;
 
 /// <summary>
 /// Extension methods for configuring email services in the service container

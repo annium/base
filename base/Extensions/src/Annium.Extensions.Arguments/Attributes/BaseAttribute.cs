@@ -1,7 +1,6 @@
 ﻿using System;
 
-// ReSharper disable once CheckNamespace
-namespace Annium.Extensions.Arguments;
+namespace Annium.Extensions.Arguments.Attributes;
 
 /// <summary>
 /// Base class for all argument-related attributes

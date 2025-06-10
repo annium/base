@@ -13,7 +13,7 @@ internal class SerializerInstance<TSource, TDestination> : ISerializer<TSource, 
     /// Function to serialize from source to destination type.
     /// </summary>
     private readonly Func<TSource, TDestination> _serialize;
-    
+
     /// <summary>
     /// Function to deserialize from destination to source type.
     /// </summary>
@@ -55,7 +55,7 @@ internal class SerializerInstance<TValue> : ISerializer<TValue>
     /// Function to serialize an object of any type to the serialization format.
     /// </summary>
     private readonly Func<Type, object?, TValue> _serialize;
-    
+
     /// <summary>
     /// Function to deserialize from the serialization format to an object of the specified type.
     /// </summary>

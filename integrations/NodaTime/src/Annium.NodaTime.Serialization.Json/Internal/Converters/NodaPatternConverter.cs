@@ -16,7 +16,7 @@ internal sealed class NodaPatternConverter<T> : ConverterBase<T>
     /// The pattern used for parsing and formatting values of type T.
     /// </summary>
     private readonly IPattern<T> _pattern;
-    
+
     /// <summary>
     /// The validator called before writing values to ensure they can be serialized.
     /// </summary>

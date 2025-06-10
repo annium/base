@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Annium.Core.DependencyInjection.Descriptors;
 using static Annium.Core.DependencyInjection.Internal.Builders.Registrations.Helper;
 
 namespace Annium.Core.DependencyInjection.Internal.Builders.Registrations;

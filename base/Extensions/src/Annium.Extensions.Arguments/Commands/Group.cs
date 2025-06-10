@@ -3,11 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Annium.Core.DependencyInjection;
+using Annium.Core.DependencyInjection.Extensions;
 using Annium.Extensions.Arguments.Internal;
 
-// ReSharper disable once CheckNamespace
-namespace Annium.Extensions.Arguments;
+namespace Annium.Extensions.Arguments.Commands;
 
 /// <summary>
 /// Base class for command groups that can contain multiple commands

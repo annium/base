@@ -1,9 +1,9 @@
 using System;
 using System.Linq;
+using Annium.Configuration.Abstractions;
 using Annium.Configuration.CommandLine.Internal;
 
-// ReSharper disable once CheckNamespace
-namespace Annium.Configuration.Abstractions;
+namespace Annium.Configuration.CommandLine;
 
 /// <summary>
 /// Extension methods for IConfigurationContainer to add command line arguments

@@ -1,8 +1,8 @@
-using Annium.Net.WebSockets;
+using Annium.Core.DependencyInjection.Container;
+using Annium.Core.DependencyInjection.Extensions;
 using Annium.Net.WebSockets.Internal;
 
-// ReSharper disable once CheckNamespace
-namespace Annium.Core.DependencyInjection;
+namespace Annium.Net.WebSockets;
 
 /// <summary>
 /// Extension methods for configuring WebSocket services in the dependency injection container
