@@ -2,11 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
-using Annium.Core.DependencyInjection.Container;
-using Annium.Core.DependencyInjection.Extensions;
+using Annium.Core.DependencyInjection;
 using Annium.Core.Runtime;
 using Annium.Testing;
-using Annium.Testing.Collection;
 using Xunit;
 
 namespace Annium.Core.Mapper.Tests;

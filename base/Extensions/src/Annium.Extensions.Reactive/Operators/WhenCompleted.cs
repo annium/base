@@ -1,8 +1,8 @@
-using System;
 using System.Threading.Tasks;
 using Annium.Logging;
 
-namespace Annium.Extensions.Reactive.Operators;
+// ReSharper disable once CheckNamespace
+namespace System;
 
 /// <summary>
 /// Provides extension methods for waiting on observable completion

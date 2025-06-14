@@ -1,6 +1,4 @@
 using System;
-using Annium.Core.DependencyInjection.Descriptors;
-using Annium.Core.DependencyInjection.Extensions;
 using Annium.Testing;
 using Xunit;
 

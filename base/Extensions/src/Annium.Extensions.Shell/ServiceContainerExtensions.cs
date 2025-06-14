@@ -1,6 +1,5 @@
 using System;
-using Annium.Core.DependencyInjection.Container;
-using Annium.Core.DependencyInjection.Extensions;
+using Annium.Core.DependencyInjection;
 using Annium.Extensions.Shell.Internal;
 using Annium.Logging;
 using Microsoft.Extensions.DependencyInjection;

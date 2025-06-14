@@ -22,8 +22,8 @@ public static class StringExtensions
         this string value,
         string data,
         string? message = null,
-        [CallerArgumentExpression(nameof(value))] string valueEx = default!,
-        [CallerArgumentExpression(nameof(data))] string dataEx = default!
+        [CallerArgumentExpression(nameof(value))] string valueEx = "",
+        [CallerArgumentExpression(nameof(data))] string dataEx = ""
     )
     {
         if (!value.Contains(data))
@@ -46,8 +46,8 @@ public static class StringExtensions
     public static string IsContainingAll(
         this string value,
         string[] messages,
-        [CallerArgumentExpression(nameof(value))] string valueEx = default!,
-        [CallerArgumentExpression(nameof(messages))] string messagesEx = default!
+        [CallerArgumentExpression(nameof(value))] string valueEx = "",
+        [CallerArgumentExpression(nameof(messages))] string messagesEx = ""
     )
     {
         if (!messages.All(value.Contains))
@@ -72,8 +72,8 @@ public static class StringExtensions
         this string value,
         string data,
         string? message = null,
-        [CallerArgumentExpression(nameof(value))] string valueEx = default!,
-        [CallerArgumentExpression(nameof(data))] string dataEx = default!
+        [CallerArgumentExpression(nameof(value))] string valueEx = "",
+        [CallerArgumentExpression(nameof(data))] string dataEx = ""
     )
     {
         if (!value.Contains(data))

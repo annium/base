@@ -1,7 +1,8 @@
 using System;
 using System.Runtime.CompilerServices;
 
-namespace Annium.Data.Operations.Extensions;
+// ReSharper disable once CheckNamespace
+namespace Annium.Data.Operations;
 
 /// <summary>
 /// Extension methods for boolean results
@@ -16,7 +17,7 @@ public static class BooleanResultExtensions
     /// <returns>The same result if successful</returns>
     public static IBooleanResult EnsureSuccess(
         this IBooleanResult result,
-        [CallerArgumentExpression(nameof(result))] string resultEx = default!
+        [CallerArgumentExpression(nameof(result))] string resultEx = ""
     )
     {
         if (result.IsFailure)
@@ -33,7 +34,7 @@ public static class BooleanResultExtensions
     /// <returns>The same result if failed</returns>
     public static IBooleanResult EnsureFailure(
         this IBooleanResult result,
-        [CallerArgumentExpression(nameof(result))] string resultEx = default!
+        [CallerArgumentExpression(nameof(result))] string resultEx = ""
     )
     {
         if (result.IsSuccess)
@@ -51,7 +52,7 @@ public static class BooleanResultExtensions
     /// <returns>The same result if successful</returns>
     public static IBooleanResult<T> EnsureSuccess<T>(
         this IBooleanResult<T> result,
-        [CallerArgumentExpression(nameof(result))] string resultEx = default!
+        [CallerArgumentExpression(nameof(result))] string resultEx = ""
     )
     {
         if (result.IsFailure)
@@ -69,7 +70,7 @@ public static class BooleanResultExtensions
     /// <returns>The same result if failed</returns>
     public static IBooleanResult<T> EnsureFailure<T>(
         this IBooleanResult<T> result,
-        [CallerArgumentExpression(nameof(result))] string resultEx = default!
+        [CallerArgumentExpression(nameof(result))] string resultEx = ""
     )
     {
         if (result.IsSuccess)

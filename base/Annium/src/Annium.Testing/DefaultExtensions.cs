@@ -21,7 +21,7 @@ public static class ValueExtensions
     public static T IsDefault<T>(
         this T value,
         string? message = null,
-        [CallerArgumentExpression(nameof(value))] string valueEx = default!
+        [CallerArgumentExpression(nameof(value))] string valueEx = ""
     )
     {
         value.Is(default, $"{value.WrapWithExpression(valueEx)} is not default");
@@ -43,7 +43,7 @@ public static class ValueExtensions
     public static T IsNotDefault<T>(
         [NotNull] this T value,
         string? message = null,
-        [CallerArgumentExpression(nameof(value))] string valueEx = default!
+        [CallerArgumentExpression(nameof(value))] string valueEx = ""
     )
     {
         value.IsNot(default, $"{value.WrapWithExpression(valueEx)} is default");

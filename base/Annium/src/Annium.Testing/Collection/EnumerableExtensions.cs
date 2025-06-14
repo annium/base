@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 
-namespace Annium.Testing.Collection;
+// ReSharper disable once CheckNamespace
+namespace Annium.Testing;
 
 /// <summary>
 /// Provides extension methods for enumerable assertions in tests.
@@ -24,8 +25,8 @@ public static class EnumerableExtensions
     public static IEnumerable<T> Has<T>(
         this IEnumerable<T> value,
         int count,
-        [CallerArgumentExpression(nameof(value))] string valueEx = default!,
-        [CallerArgumentExpression(nameof(count))] string countEx = default!
+        [CallerArgumentExpression(nameof(value))] string valueEx = "",
+        [CallerArgumentExpression(nameof(count))] string countEx = ""
     )
     {
         if (value is null)
@@ -48,7 +49,7 @@ public static class EnumerableExtensions
     /// <exception cref="AssertionFailedException">Thrown when the enumerable is not empty.</exception>
     public static IEnumerable<T> IsEmpty<T>(
         this IEnumerable<T> value,
-        [CallerArgumentExpression(nameof(value))] string valueEx = default!
+        [CallerArgumentExpression(nameof(value))] string valueEx = ""
     )
     {
         if (value is null)
@@ -71,7 +72,7 @@ public static class EnumerableExtensions
     /// <exception cref="AssertionFailedException">Thrown when the enumerable is empty.</exception>
     public static IEnumerable<T> IsNotEmpty<T>(
         this IEnumerable<T> value,
-        [CallerArgumentExpression(nameof(value))] string valueEx = default!
+        [CallerArgumentExpression(nameof(value))] string valueEx = ""!
     )
     {
         if (value is null)
@@ -96,8 +97,8 @@ public static class EnumerableExtensions
     public static T At<T>(
         this IEnumerable<T> value,
         int key,
-        [CallerArgumentExpression(nameof(value))] string valueEx = default!,
-        [CallerArgumentExpression(nameof(key))] string keyEx = default!
+        [CallerArgumentExpression(nameof(value))] string valueEx = ""!,
+        [CallerArgumentExpression(nameof(key))] string keyEx = ""!
     )
     {
         var val = value.ToArray();

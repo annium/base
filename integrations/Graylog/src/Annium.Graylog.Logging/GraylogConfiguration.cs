@@ -11,12 +11,12 @@ public record GraylogConfiguration : LogRouteConfiguration
     /// <summary>
     /// Gets a value indicating whether Graylog logging is enabled. When disabled, no log messages will be sent to Graylog.
     /// </summary>
-    public bool IsEnabled { get; init; } = default!;
+    public bool IsEnabled { get; init; }
 
     /// <summary>
     /// Gets the Graylog server endpoint URI where GELF messages will be transmitted via HTTP POST requests.
     /// </summary>
-    public Uri Endpoint { get; init; } = default!;
+    public Uri Endpoint { get; init; } = null!;
 
     /// <summary>
     /// Gets the project name used as the host identifier in GELF messages for grouping and filtering logs within Graylog.

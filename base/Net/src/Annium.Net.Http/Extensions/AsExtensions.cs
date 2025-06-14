@@ -4,7 +4,8 @@ using System.Threading.Tasks;
 using Annium.Net.Http.Internal;
 using OneOf;
 
-namespace Annium.Net.Http.Extensions;
+// ReSharper disable once CheckNamespace
+namespace Annium.Net.Http;
 
 /// <summary>
 /// Extension methods for converting HTTP request responses to typed objects

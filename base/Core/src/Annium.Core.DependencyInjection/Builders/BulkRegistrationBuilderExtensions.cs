@@ -1,9 +1,10 @@
 using System;
-using Annium.Reflection.Types;
-using IBuilderBase = Annium.Core.DependencyInjection.Builders.IBulkRegistrationBuilderBase;
-using IBuilderTarget = Annium.Core.DependencyInjection.Builders.IBulkRegistrationBuilderTarget;
+using Annium.Reflection;
+using IBuilderBase = Annium.Core.DependencyInjection.IBulkRegistrationBuilderBase;
+using IBuilderTarget = Annium.Core.DependencyInjection.IBulkRegistrationBuilderTarget;
 
-namespace Annium.Core.DependencyInjection.Builders;
+// ReSharper disable once CheckNamespace
+namespace Annium.Core.DependencyInjection;
 
 /// <summary>
 /// Provides extension methods for bulk registration builder configuration.

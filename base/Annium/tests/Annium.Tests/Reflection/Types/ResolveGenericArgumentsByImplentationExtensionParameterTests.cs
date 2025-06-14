@@ -1,7 +1,7 @@
 using System;
 using System.Collections;
 using System.IO;
-using Annium.Reflection.Types;
+using Annium.Reflection;
 using Annium.Testing;
 using Xunit;
 

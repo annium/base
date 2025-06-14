@@ -6,11 +6,9 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Annium.Logging;
-using Annium.Net.Http.Extensions;
 using Annium.Serialization.Abstractions;
 using Annium.Serialization.Json;
 using Annium.Testing;
-using Annium.Testing.Collection;
 using Xunit;
 
 namespace Annium.Net.Http.Tests;

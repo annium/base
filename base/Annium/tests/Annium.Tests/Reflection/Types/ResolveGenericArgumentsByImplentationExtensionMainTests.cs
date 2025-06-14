@@ -1,5 +1,5 @@
 using System;
-using Annium.Reflection.Types;
+using Annium.Reflection;
 using Annium.Testing;
 using Xunit;
 

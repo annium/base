@@ -1,8 +1,8 @@
-using System;
 using System.Reactive.Linq;
 using System.Threading.Channels;
 
-namespace Annium.Extensions.Reactive.Extensions;
+// ReSharper disable once CheckNamespace
+namespace System;
 
 /// <summary>
 /// Provides extension methods for converting channels to observables

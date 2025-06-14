@@ -1,8 +1,8 @@
-using System;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 
-namespace Annium.Extensions.Reactive.Operators;
+// ReSharper disable once CheckNamespace
+namespace System;
 
 /// <summary>
 /// Provides asynchronous error handling operators for observables

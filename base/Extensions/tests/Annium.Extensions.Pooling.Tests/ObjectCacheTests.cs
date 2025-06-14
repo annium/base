@@ -2,10 +2,9 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Annium.Core.DependencyInjection.Descriptors;
+using Annium.Core.DependencyInjection;
 using Annium.Logging;
 using Annium.Testing;
-using Annium.Testing.Collection;
 using OneOf;
 using Xunit;
 

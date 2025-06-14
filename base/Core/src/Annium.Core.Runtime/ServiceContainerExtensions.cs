@@ -1,10 +1,7 @@
 using System;
 using System.Linq;
 using System.Reflection;
-using Annium.Core.DependencyInjection.Builders;
-using Annium.Core.DependencyInjection.Container;
-using Annium.Core.DependencyInjection.Descriptors;
-using Annium.Core.DependencyInjection.Extensions;
+using Annium.Core.DependencyInjection;
 using Annium.Core.Runtime.Internal.Resources;
 using Annium.Core.Runtime.Internal.Time;
 using Annium.Core.Runtime.Internal.Types;

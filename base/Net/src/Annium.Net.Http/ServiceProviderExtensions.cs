@@ -1,5 +1,5 @@
 using System;
-using Annium.Core.DependencyInjection.Extensions;
+using Annium.Core.DependencyInjection;
 
 namespace Annium.Net.Http;
 

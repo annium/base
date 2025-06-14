@@ -2,8 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using Annium.Core.DependencyInjection.Container;
-using Annium.Core.DependencyInjection.Extensions;
+using Annium.Core.DependencyInjection;
 using Annium.Core.Mapper.Attributes;
 using Annium.Core.Mapper.Internal;
 using Annium.Core.Mapper.Internal.DependencyInjection;
@@ -12,7 +11,7 @@ using Annium.Core.Mapper.Internal.Resolvers;
 using Annium.Core.Runtime;
 using Annium.Core.Runtime.Types;
 using Annium.Logging;
-using Annium.Reflection.Types;
+using Annium.Reflection;
 
 namespace Annium.Core.Mapper;
 

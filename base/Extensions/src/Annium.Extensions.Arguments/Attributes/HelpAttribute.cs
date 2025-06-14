@@ -1,6 +1,7 @@
 ﻿using System;
 
-namespace Annium.Extensions.Arguments.Attributes;
+// ReSharper disable once CheckNamespace
+namespace Annium.Extensions.Arguments;
 
 /// <summary>
 /// Attribute to provide help text for command line arguments

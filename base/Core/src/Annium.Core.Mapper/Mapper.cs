@@ -1,7 +1,6 @@
 using System.Collections.Concurrent;
 using System.Reflection;
-using Annium.Core.DependencyInjection.Container;
-using Annium.Core.DependencyInjection.Extensions;
+using Annium.Core.DependencyInjection;
 using Annium.Core.Runtime;
 using Annium.Logging;
 

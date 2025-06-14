@@ -1,4 +1,4 @@
-using Annium.Core.DependencyInjection.Container;
+using Annium.Core.DependencyInjection;
 
 namespace Annium.Core.Runtime.Time;
 

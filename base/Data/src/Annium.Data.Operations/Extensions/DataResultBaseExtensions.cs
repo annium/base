@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 
-namespace Annium.Data.Operations.Extensions;
+// ReSharper disable once CheckNamespace
+namespace Annium.Data.Operations;
 
 /// <summary>
 /// Extension methods for data result base types
@@ -16,7 +17,7 @@ public static class DataResultBaseExtensions
     /// <returns>The data from the result</returns>
     public static T Unwrap<T>(
         this IDataResultBase<T> result,
-        [CallerArgumentExpression(nameof(result))] string resultEx = default!
+        [CallerArgumentExpression(nameof(result))] string resultEx = ""
     )
     {
         result.ThrowIfHasErrors(resultEx);

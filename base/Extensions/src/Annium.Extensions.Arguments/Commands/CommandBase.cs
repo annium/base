@@ -2,7 +2,8 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Annium.Extensions.Arguments.Commands;
+// ReSharper disable once CheckNamespace
+namespace Annium.Extensions.Arguments;
 
 /// <summary>
 /// Base class for all command implementations

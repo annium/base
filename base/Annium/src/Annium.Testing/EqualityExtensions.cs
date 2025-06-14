@@ -23,8 +23,8 @@ public static class EqualityExtensions
         this T value,
         T data,
         string? message = null,
-        [CallerArgumentExpression(nameof(value))] string valueEx = default!,
-        [CallerArgumentExpression(nameof(data))] string dataEx = default!
+        [CallerArgumentExpression(nameof(value))] string valueEx = "",
+        [CallerArgumentExpression(nameof(data))] string dataEx = ""
     )
     {
         if (!EqualityComparer<T>.Default.Equals(value, data))
@@ -50,8 +50,8 @@ public static class EqualityExtensions
         this T value,
         T data,
         string? message = null,
-        [CallerArgumentExpression(nameof(value))] string valueEx = default!,
-        [CallerArgumentExpression(nameof(data))] string dataEx = default!
+        [CallerArgumentExpression(nameof(value))] string valueEx = "",
+        [CallerArgumentExpression(nameof(data))] string dataEx = ""
     )
     {
         if (EqualityComparer<T>.Default.Equals(value, data))

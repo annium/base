@@ -3,14 +3,12 @@ using System.IO;
 using System.Linq;
 using Annium.Configuration.Abstractions;
 using Annium.Configuration.Tests.Lib;
-using Annium.Core.DependencyInjection.Container;
-using Annium.Core.DependencyInjection.Extensions;
+using Annium.Core.DependencyInjection;
 using Annium.Core.Runtime;
 using Annium.Logging.Shared;
 using Annium.Serialization.Abstractions;
 using Annium.Serialization.Json;
 using Annium.Testing;
-using Annium.Testing.Collection;
 using Xunit;
 
 namespace Annium.Configuration.Json.Tests;

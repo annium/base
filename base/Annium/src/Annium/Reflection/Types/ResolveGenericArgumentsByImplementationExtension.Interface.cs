@@ -1,7 +1,8 @@
 using System;
 using System.Linq;
 
-namespace Annium.Reflection.Types;
+// ReSharper disable once CheckNamespace
+namespace Annium.Reflection;
 
 /// <summary>
 /// Provides extension methods for resolving generic arguments for interface types based on target types.

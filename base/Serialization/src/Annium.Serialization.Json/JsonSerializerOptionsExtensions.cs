@@ -5,7 +5,7 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Annium.Core.Runtime.Types;
-using Annium.Reflection.Types;
+using Annium.Reflection;
 using Annium.Serialization.Json.Converters;
 using Annium.Serialization.Json.Internal.Options;
 

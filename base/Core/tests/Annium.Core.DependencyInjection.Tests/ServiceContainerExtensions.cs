@@ -1,7 +1,5 @@
 using System;
 using System.Linq;
-using Annium.Core.DependencyInjection.Container;
-using Annium.Core.DependencyInjection.Descriptors;
 using Annium.Testing;
 
 namespace Annium.Core.DependencyInjection.Tests;

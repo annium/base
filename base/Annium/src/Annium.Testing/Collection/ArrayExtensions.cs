@@ -1,7 +1,8 @@
 using System;
 using System.Runtime.CompilerServices;
 
-namespace Annium.Testing.Collection;
+// ReSharper disable once CheckNamespace
+namespace Annium.Testing;
 
 /// <summary>
 /// Provides extension methods for array assertions in tests.
@@ -22,8 +23,8 @@ public static class ArrayExtensions
     public static T At<T>(
         this T[] value,
         int key,
-        [CallerArgumentExpression(nameof(value))] string valueEx = default!,
-        [CallerArgumentExpression(nameof(key))] string keyEx = default!
+        [CallerArgumentExpression(nameof(value))] string valueEx = "",
+        [CallerArgumentExpression(nameof(key))] string keyEx = ""
     )
     {
         if (value is null)
@@ -51,8 +52,8 @@ public static class ArrayExtensions
     public static T[] Has<T>(
         this T[] value,
         int count,
-        [CallerArgumentExpression(nameof(value))] string valueEx = default!,
-        [CallerArgumentExpression(nameof(count))] string countEx = default!
+        [CallerArgumentExpression(nameof(value))] string valueEx = "",
+        [CallerArgumentExpression(nameof(count))] string countEx = ""
     )
     {
         if (value is null)
@@ -73,7 +74,7 @@ public static class ArrayExtensions
     /// <returns>The original array.</returns>
     /// <exception cref="ArgumentNullException">Thrown when the array is null.</exception>
     /// <exception cref="AssertionFailedException">Thrown when the array is not empty.</exception>
-    public static T[] IsEmpty<T>(this T[] value, [CallerArgumentExpression(nameof(value))] string valueEx = default!)
+    public static T[] IsEmpty<T>(this T[] value, [CallerArgumentExpression(nameof(value))] string valueEx = "")
     {
         if (value is null)
             throw new ArgumentNullException(nameof(value));
@@ -93,7 +94,7 @@ public static class ArrayExtensions
     /// <returns>The original array.</returns>
     /// <exception cref="ArgumentNullException">Thrown when the array is null.</exception>
     /// <exception cref="AssertionFailedException">Thrown when the array is empty.</exception>
-    public static T[] IsNotEmpty<T>(this T[] value, [CallerArgumentExpression(nameof(value))] string valueEx = default!)
+    public static T[] IsNotEmpty<T>(this T[] value, [CallerArgumentExpression(nameof(value))] string valueEx = "")
     {
         if (value is null)
             throw new ArgumentNullException(nameof(value));

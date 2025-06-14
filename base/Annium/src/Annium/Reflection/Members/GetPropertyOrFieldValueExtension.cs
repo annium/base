@@ -1,7 +1,8 @@
 using System;
 using System.Reflection;
 
-namespace Annium.Reflection.Members;
+// ReSharper disable once CheckNamespace
+namespace Annium.Reflection;
 
 /// <summary>
 /// Provides extension methods for retrieving the value of a property or field from a <see cref="MemberInfo"/>.

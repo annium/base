@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Annium.Core.DependencyInjection.Packs;
+// ReSharper disable once CheckNamespace
+namespace Annium.Core.DependencyInjection;
 
 /// <summary>
 /// Defines the contract for building service providers with service packs

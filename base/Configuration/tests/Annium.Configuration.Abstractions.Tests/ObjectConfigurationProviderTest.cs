@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Annium.Configuration.Tests.Lib;
 using Annium.Testing;
-using Annium.Testing.Collection;
 using Xunit;
 
 namespace Annium.Configuration.Abstractions.Tests;

@@ -1,9 +1,10 @@
-using System;
 using System.Threading.Tasks;
+using Annium;
 using Annium.Execution.Background;
 using Annium.Logging;
 
-namespace Annium.Extensions.Reactive.Operators;
+// ReSharper disable once CheckNamespace
+namespace System;
 
 /// <summary>
 /// Provides asynchronous subscription operators for observables

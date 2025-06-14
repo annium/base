@@ -5,7 +5,8 @@ using System.Reflection;
 using System.Threading;
 using Annium.Core.Mapper;
 
-namespace Annium.Data.Models.Extensions.IsShallowEqual;
+// ReSharper disable once CheckNamespace
+namespace Annium.Data.Models.Extensions;
 
 /// <summary>
 /// Extension methods for shallow equality comparison.

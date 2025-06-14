@@ -1,6 +1,5 @@
 using System.Reflection;
-using Annium.Core.DependencyInjection.Container;
-using Annium.Core.DependencyInjection.Extensions;
+using Annium.Core.DependencyInjection;
 using Annium.Core.Runtime;
 using Annium.Localization.Abstractions;
 using Annium.Localization.InMemory;

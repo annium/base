@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Annium.Net.Types.Internal.Extensions;
 using Annium.Net.Types.Refs;
-using Annium.Reflection.Types;
+using Annium.Reflection;
 using Namotion.Reflection;
 
 namespace Annium.Net.Types.Internal.Config;

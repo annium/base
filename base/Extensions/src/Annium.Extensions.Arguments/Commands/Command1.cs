@@ -3,7 +3,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Annium.Extensions.Arguments.Internal;
 
-namespace Annium.Extensions.Arguments.Commands;
+// ReSharper disable once CheckNamespace
+namespace Annium.Extensions.Arguments;
 
 /// <summary>
 /// Base class for synchronous commands with single configuration type

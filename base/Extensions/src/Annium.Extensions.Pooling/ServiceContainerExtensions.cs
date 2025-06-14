@@ -1,6 +1,4 @@
-using Annium.Core.DependencyInjection.Container;
-using Annium.Core.DependencyInjection.Descriptors;
-using Annium.Core.DependencyInjection.Extensions;
+using Annium.Core.DependencyInjection;
 using Annium.Extensions.Pooling.Internal;
 
 namespace Annium.Extensions.Pooling;

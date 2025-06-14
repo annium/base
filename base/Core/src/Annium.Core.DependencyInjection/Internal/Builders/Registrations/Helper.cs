@@ -2,10 +2,7 @@ using System;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using Annium.Core.DependencyInjection.Descriptors;
 using Microsoft.Extensions.DependencyInjection;
-using ServiceDescriptor = Annium.Core.DependencyInjection.Descriptors.ServiceDescriptor;
-using ServiceLifetime = Annium.Core.DependencyInjection.Descriptors.ServiceLifetime;
 
 namespace Annium.Core.DependencyInjection.Internal.Builders.Registrations;
 

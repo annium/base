@@ -23,8 +23,8 @@ public static class ExceptionExtensions
     public static T Reports<T>(
         this T value,
         string message,
-        [CallerArgumentExpression(nameof(value))] string valueEx = default!,
-        [CallerArgumentExpression(nameof(message))] string messageEx = default!
+        [CallerArgumentExpression(nameof(value))] string valueEx = "",
+        [CallerArgumentExpression(nameof(message))] string messageEx = ""
     )
         where T : Exception
     {
@@ -49,8 +49,8 @@ public static class ExceptionExtensions
     public static T ReportsAll<T>(
         this T value,
         string[] messages,
-        [CallerArgumentExpression(nameof(value))] string valueEx = default!,
-        [CallerArgumentExpression(nameof(messages))] string messagesEx = default!
+        [CallerArgumentExpression(nameof(value))] string valueEx = "",
+        [CallerArgumentExpression(nameof(messages))] string messagesEx = ""
     )
         where T : Exception
     {
@@ -75,8 +75,8 @@ public static class ExceptionExtensions
     public static T ReportsExactly<T>(
         this T value,
         string message,
-        [CallerArgumentExpression(nameof(value))] string valueEx = default!,
-        [CallerArgumentExpression(nameof(message))] string messageEx = default!
+        [CallerArgumentExpression(nameof(value))] string valueEx = "",
+        [CallerArgumentExpression(nameof(message))] string messageEx = ""
     )
         where T : Exception
     {
@@ -101,8 +101,8 @@ public static class ExceptionExtensions
     public static async Task<T> ReportsAsync<T>(
         this Task<T> value,
         string message,
-        [CallerArgumentExpression(nameof(value))] string valueEx = default!,
-        [CallerArgumentExpression(nameof(message))] string messageEx = default!
+        [CallerArgumentExpression(nameof(value))] string valueEx = "",
+        [CallerArgumentExpression(nameof(message))] string messageEx = ""
     )
         where T : Exception
     {
@@ -131,8 +131,8 @@ public static class ExceptionExtensions
     public static async Task<T> ReportsAllAsync<T>(
         this Task<T> value,
         string[] messages,
-        [CallerArgumentExpression(nameof(value))] string valueEx = default!,
-        [CallerArgumentExpression(nameof(messages))] string messagesEx = default!
+        [CallerArgumentExpression(nameof(value))] string valueEx = "",
+        [CallerArgumentExpression(nameof(messages))] string messagesEx = ""
     )
         where T : Exception
     {
@@ -161,8 +161,8 @@ public static class ExceptionExtensions
     public static async Task<T> ReportsExactlyAsync<T>(
         this Task<T> value,
         string message,
-        [CallerArgumentExpression(nameof(value))] string valueEx = default!,
-        [CallerArgumentExpression(nameof(message))] string messageEx = default!
+        [CallerArgumentExpression(nameof(value))] string valueEx = "",
+        [CallerArgumentExpression(nameof(message))] string messageEx = ""
     )
         where T : Exception
     {

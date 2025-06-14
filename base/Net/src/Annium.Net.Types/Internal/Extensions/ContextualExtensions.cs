@@ -4,7 +4,7 @@ using System.Reflection;
 using Annium.Linq;
 using Annium.Net.Types.Extensions;
 using Annium.Net.Types.Models;
-using Annium.Reflection.Types;
+using Annium.Reflection;
 using Namotion.Reflection;
 
 namespace Annium.Net.Types.Internal.Extensions;

@@ -1,6 +1,4 @@
 using System;
-using Annium.Core.DependencyInjection.Container;
-using Annium.Core.DependencyInjection.Extensions;
 
 namespace Annium.Core.DependencyInjection.Tests;
 
