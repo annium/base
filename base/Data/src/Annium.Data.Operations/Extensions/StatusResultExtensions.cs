@@ -1,7 +1,8 @@
 using System;
 using System.Runtime.CompilerServices;
 
-namespace Annium.Data.Operations.Extensions;
+// ReSharper disable once CheckNamespace
+namespace Annium.Data.Operations;
 
 /// <summary>
 /// Extension methods for status result types.
