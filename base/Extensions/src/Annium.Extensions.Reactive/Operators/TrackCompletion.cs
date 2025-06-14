@@ -1,10 +1,11 @@
-using System;
 using System.Collections.Generic;
 using System.Reactive.Linq;
 using System.Threading;
+using Annium;
 using Annium.Logging;
 
-namespace Annium.Extensions.Reactive.Operators;
+// ReSharper disable once CheckNamespace
+namespace System;
 
 /// <summary>
 /// Provides operators for tracking completion state of observables

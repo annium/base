@@ -1,9 +1,9 @@
-using System;
 using System.Threading;
 using System.Threading.Channels;
 using Annium.Threading.Channels;
 
-namespace Annium.Extensions.Reactive.Operators;
+// ReSharper disable once CheckNamespace
+namespace System;
 
 /// <summary>
 /// Provides extension methods for writing observable values to channels

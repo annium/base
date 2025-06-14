@@ -1,6 +1,6 @@
+using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Annium.Extensions.Reactive.Operators;
 using Annium.Logging;
 using Annium.Testing;
 using Xunit;

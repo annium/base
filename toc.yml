@@ -86,7 +86,7 @@
         - name: Annium.Extensions.Pooling
           href: api/base/Extensions/Annium.Extensions.Pooling/Annium.Extensions.Pooling.yml
         - name: Annium.Extensions.Reactive
-          href: api/base/Extensions/Annium.Extensions.Reactive/Annium.Extensions.Reactive.yml
+          href: api/base/Extensions/Annium.Extensions.Reactive/System.yml
         - name: Annium.Extensions.Shell
           href: api/base/Extensions/Annium.Extensions.Shell/Annium.Extensions.Shell.yml
         - name: Annium.Extensions.Validation

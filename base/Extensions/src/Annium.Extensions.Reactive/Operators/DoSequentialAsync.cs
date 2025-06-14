@@ -1,10 +1,10 @@
-using System;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Annium.Execution.Background;
 using Annium.Logging;
 
-namespace Annium.Extensions.Reactive.Operators;
+// ReSharper disable once CheckNamespace
+namespace System;
 
 /// <summary>
 /// Provides operators for executing side effects asynchronously in sequential order

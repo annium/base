@@ -70,7 +70,7 @@ Extended functionality for specialized use cases:
 - **[Annium.Extensions.Composition](api/base/Extensions/Annium.Extensions.Composition/Annium.Extensions.Composition.yml)** - Object composition and rule-based configuration
 - **[Annium.Extensions.Jobs](api/base/Extensions/Annium.Extensions.Jobs/Annium.Extensions.Jobs.yml)** - Job scheduling and interval management
 - **[Annium.Extensions.Pooling](api/base/Extensions/Annium.Extensions.Pooling/Annium.Extensions.Pooling.yml)** - Object pooling and caching mechanisms
-- **[Annium.Extensions.Reactive](api/base/Extensions/Annium.Extensions.Reactive/Annium.Extensions.Reactive.yml)** - Reactive programming extensions and observer utilities
+- **[Annium.Extensions.Reactive](api/base/Extensions/Annium.Extensions.Reactive/System.yml)** - Reactive programming extensions and observer utilities
 - **[Annium.Extensions.Shell](api/base/Extensions/Annium.Extensions.Shell/Annium.Extensions.Shell.yml)** - Shell command execution and process management
 - **[Annium.Extensions.Validation](api/base/Extensions/Annium.Extensions.Validation/Annium.Extensions.Validation.yml)** - Validation framework with rule builders
 - **[Annium.Extensions.Workers](api/base/Extensions/Annium.Extensions.Workers/Annium.Extensions.Workers.yml)** - Background worker management and lifecycle
