@@ -6,7 +6,6 @@ using Annium.Core.Runtime;
 using Annium.Logging.InMemory;
 using Annium.Logging.Shared;
 using Annium.Net.Http.Benchmark.Internal;
-using Annium.Net.Http.Extensions;
 using BenchmarkDotNet.Attributes;
 
 namespace Annium.Net.Http.Benchmark;

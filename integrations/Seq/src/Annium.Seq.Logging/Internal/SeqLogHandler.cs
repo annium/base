@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Annium.Linq;
 using Annium.Logging.Shared;
 using Annium.Net.Http;
-using Annium.Net.Http.Extensions;
 using Annium.Serialization.Abstractions;
 
 namespace Annium.Seq.Logging.Internal;

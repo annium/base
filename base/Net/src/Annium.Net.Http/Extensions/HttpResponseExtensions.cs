@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 
-namespace Annium.Net.Http.Extensions;
+// ReSharper disable once CheckNamespace
+namespace Annium.Net.Http;
 
 /// <summary>
 /// Extension methods for HTTP response processing

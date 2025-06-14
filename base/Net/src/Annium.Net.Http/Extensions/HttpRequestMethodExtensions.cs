@@ -1,7 +1,8 @@
 using System;
 using System.Net.Http;
 
-namespace Annium.Net.Http.Extensions;
+// ReSharper disable once CheckNamespace
+namespace Annium.Net.Http;
 
 /// <summary>
 /// Extension methods for setting HTTP request methods and URLs

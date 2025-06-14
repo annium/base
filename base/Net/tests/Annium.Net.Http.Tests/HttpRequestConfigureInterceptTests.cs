@@ -2,7 +2,6 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using Annium.Logging;
-using Annium.Net.Http.Extensions;
 using Annium.Serialization.Abstractions;
 using Annium.Serialization.Json;
 using Annium.Testing;

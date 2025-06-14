@@ -3,7 +3,6 @@ using System.Net.Mime;
 using System.Text;
 using System.Threading.Tasks;
 using Annium.Logging;
-using Annium.Net.Http.Extensions;
 using Annium.Net.Http.Internal;
 using Annium.Serialization.Json;
 using Annium.Testing;
