@@ -6,7 +6,8 @@ using System.Threading.Tasks;
 using Annium.Core.DependencyInjection;
 using Annium.Extensions.Arguments.Internal;
 
-namespace Annium.Extensions.Arguments.Commands;
+// ReSharper disable once CheckNamespace
+namespace Annium.Extensions.Arguments;
 
 /// <summary>
 /// Base class for command groups that can contain multiple commands
