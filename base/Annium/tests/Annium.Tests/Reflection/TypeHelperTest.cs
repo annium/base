@@ -1,7 +1,6 @@
 using System;
 using Annium.Reflection;
 using Annium.Testing;
-using Annium.Testing.Collection;
 using Xunit;
 
 namespace Annium.Tests.Reflection;

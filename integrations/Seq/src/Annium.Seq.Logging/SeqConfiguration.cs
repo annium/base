@@ -13,13 +13,13 @@ public record SeqConfiguration : LogRouteConfiguration
     /// Gets or sets a value indicating whether Seq logging is enabled.
     /// When false, the Seq log handler will not be registered in the logging pipeline.
     /// </summary>
-    public bool IsEnabled { get; init; } = default!;
+    public bool IsEnabled { get; init; }
 
     /// <summary>
     /// Gets or sets the base URI of the Seq server where log events will be sent.
     /// Should include the protocol and port (e.g., https://seq.example.com:5341).
     /// </summary>
-    public Uri Endpoint { get; init; } = default!;
+    public Uri Endpoint { get; init; } = null!;
 
     /// <summary>
     /// Gets or sets the API key for authenticating with the Seq server.

@@ -2,7 +2,6 @@ using System;
 using System.Threading.Tasks;
 using Annium.Data.Models.Extensions.IsShallowEqual;
 using Annium.Testing;
-using Annium.Testing.Collection;
 using Xunit;
 
 // ReSharper disable UnusedType.Local

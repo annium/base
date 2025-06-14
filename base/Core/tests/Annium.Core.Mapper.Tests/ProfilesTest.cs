@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using Annium.Testing;
-using Annium.Testing.Collection;
 using NodaTime;
 using Xunit;
 

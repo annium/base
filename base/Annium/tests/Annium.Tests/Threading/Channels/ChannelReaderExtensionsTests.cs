@@ -8,7 +8,6 @@ using Annium.Extensions.Reactive.Extensions;
 using Annium.Extensions.Reactive.Operators;
 using Annium.Logging;
 using Annium.Testing;
-using Annium.Testing.Collection;
 using Annium.Threading.Channels;
 using Xunit;
 

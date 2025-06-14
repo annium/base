@@ -2,7 +2,6 @@ using System;
 using System.Linq;
 using Annium.NodaTime.Extensions;
 using Annium.Testing;
-using Annium.Testing.Collection;
 using Microsoft.IdentityModel.Tokens;
 using NodaTime;
 

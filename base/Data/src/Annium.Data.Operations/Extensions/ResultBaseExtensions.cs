@@ -15,7 +15,7 @@ public static class ResultBaseExtensions
     /// <param name="resultEx">The expression that generated the result</param>
     public static void ThrowIfHasErrors(
         this IResultBase result,
-        [CallerArgumentExpression(nameof(result))] string resultEx = default!
+        [CallerArgumentExpression(nameof(result))] string resultEx = ""
     )
     {
         if (result.HasErrors)

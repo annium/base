@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using Annium.Core.DependencyInjection.Extensions;
 using Annium.Logging;
 using Annium.Testing;
-using Annium.Testing.Collection;
 using Annium.Threading.Tasks;
 using Xunit;
 

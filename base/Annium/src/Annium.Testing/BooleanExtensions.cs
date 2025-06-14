@@ -17,7 +17,7 @@ public static class BooleanExtensions
     public static void IsTrue(
         this bool value,
         string? message = null,
-        [CallerArgumentExpression(nameof(value))] string valueEx = default!
+        [CallerArgumentExpression(nameof(value))] string valueEx = ""
     )
     {
         if (!value)
@@ -34,7 +34,7 @@ public static class BooleanExtensions
     public static void IsFalse(
         this bool value,
         string? message = null,
-        [CallerArgumentExpression(nameof(value))] string valueEx = default!
+        [CallerArgumentExpression(nameof(value))] string valueEx = ""
     )
     {
         if (value)

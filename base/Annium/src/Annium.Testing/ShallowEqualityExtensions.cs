@@ -28,8 +28,8 @@ public static class ShallowEqualityExtensions
         TD data,
         string? message = null,
         IMapper? mapper = default,
-        [CallerArgumentExpression(nameof(value))] string valueEx = default!,
-        [CallerArgumentExpression(nameof(data))] string dataEx = default!
+        [CallerArgumentExpression(nameof(value))] string valueEx = "",
+        [CallerArgumentExpression(nameof(data))] string dataEx = ""
     )
     {
         if (!value.IsShallowEqual(data, mapper ?? Mapper.GetFor(Assembly.GetCallingAssembly())))
@@ -59,8 +59,8 @@ public static class ShallowEqualityExtensions
         TD data,
         string? message = null,
         IMapper? mapper = default,
-        [CallerArgumentExpression(nameof(value))] string valueEx = default!,
-        [CallerArgumentExpression(nameof(data))] string dataEx = default!
+        [CallerArgumentExpression(nameof(value))] string valueEx = "",
+        [CallerArgumentExpression(nameof(data))] string dataEx = ""
     )
     {
         if (value.IsShallowEqual(data, mapper ?? Mapper.GetFor(Assembly.GetCallingAssembly())))

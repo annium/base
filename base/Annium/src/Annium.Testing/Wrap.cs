@@ -15,10 +15,8 @@ public static class Wrap
     /// <param name="action">The action to wrap.</param>
     /// <param name="delegateEx">The expression that produced the action.</param>
     /// <returns>A wrapped action.</returns>
-    public static WrappedAction It(
-        Action action,
-        [CallerArgumentExpression(nameof(action))] string delegateEx = default!
-    ) => new(action, delegateEx);
+    public static WrappedAction It(Action action, [CallerArgumentExpression(nameof(action))] string delegateEx = "") =>
+        new(action, delegateEx);
 
     /// <summary>
     /// Wraps an asynchronous action with its expression for testing.
@@ -28,7 +26,7 @@ public static class Wrap
     /// <returns>A wrapped asynchronous action.</returns>
     public static WrappedTaskAction It(
         Func<Task> action,
-        [CallerArgumentExpression(nameof(action))] string delegateEx = default!
+        [CallerArgumentExpression(nameof(action))] string delegateEx = ""
     ) => new(action, delegateEx);
 }
 

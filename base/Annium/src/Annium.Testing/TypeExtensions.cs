@@ -19,7 +19,7 @@ public static class TypeExtensions
     public static T As<T>(
         this object? value,
         string? message = null,
-        [CallerArgumentExpression(nameof(value))] string valueEx = default!
+        [CallerArgumentExpression(nameof(value))] string valueEx = ""
     )
     {
         (value is T).IsTrue(message ?? $"{valueEx} is {value?.GetType()}, not {typeof(T)}");
@@ -39,7 +39,7 @@ public static class TypeExtensions
     public static T AsExact<T>(
         this object? value,
         string? message = null,
-        [CallerArgumentExpression(nameof(value))] string valueEx = default!
+        [CallerArgumentExpression(nameof(value))] string valueEx = ""
     )
     {
         (value?.GetType() == typeof(T)).IsTrue(message ?? $"{valueEx} is {value?.GetType()}, not {typeof(T)}");

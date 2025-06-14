@@ -20,7 +20,7 @@ public static class StatusResultExtensions
     public static IStatusResult<TS> EnsureHasStatus<TS>(
         this IStatusResult<TS> result,
         TS status,
-        [CallerArgumentExpression(nameof(result))] string resultEx = default!
+        [CallerArgumentExpression(nameof(result))] string resultEx = ""
     )
     {
         if (result.Status is null || !result.Status.Equals(status))
@@ -42,7 +42,7 @@ public static class StatusResultExtensions
     public static IStatusResult<TS, TD> EnsureHasStatus<TS, TD>(
         this IStatusResult<TS, TD> result,
         TS status,
-        [CallerArgumentExpression(nameof(result))] string resultEx = default!
+        [CallerArgumentExpression(nameof(result))] string resultEx = ""
     )
     {
         if (result.Status is null || !result.Status.Equals(status))

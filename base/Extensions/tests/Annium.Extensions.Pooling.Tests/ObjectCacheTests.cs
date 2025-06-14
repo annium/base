@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Annium.Core.DependencyInjection.Descriptors;
 using Annium.Logging;
 using Annium.Testing;
-using Annium.Testing.Collection;
 using OneOf;
 using Xunit;
 

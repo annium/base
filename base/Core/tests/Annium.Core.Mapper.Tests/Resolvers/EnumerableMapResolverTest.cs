@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using Annium.Testing;
-using Annium.Testing.Collection;
 using Xunit;
 
 namespace Annium.Core.Mapper.Tests.Resolvers;
