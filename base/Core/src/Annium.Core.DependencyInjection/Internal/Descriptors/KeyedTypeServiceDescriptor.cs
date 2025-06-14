@@ -1,5 +1,4 @@
 using System;
-using Annium.Core.DependencyInjection.Descriptors;
 
 namespace Annium.Core.DependencyInjection.Internal.Descriptors;
 

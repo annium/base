@@ -1,5 +1,4 @@
-using Annium.Core.DependencyInjection.Container;
-using Annium.Core.DependencyInjection.Extensions;
+using Annium.Core.DependencyInjection;
 using Annium.Net.WebSockets.Internal;
 
 namespace Annium.Net.WebSockets;

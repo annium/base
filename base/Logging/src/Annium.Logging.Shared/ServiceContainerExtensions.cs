@@ -1,7 +1,5 @@
 using System.Collections.Generic;
-using Annium.Core.DependencyInjection.Builders;
-using Annium.Core.DependencyInjection.Container;
-using Annium.Core.DependencyInjection.Extensions;
+using Annium.Core.DependencyInjection;
 using Annium.Core.Mapper;
 using Annium.Logging.Shared.Internal;
 

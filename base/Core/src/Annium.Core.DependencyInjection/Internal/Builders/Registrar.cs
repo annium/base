@@ -1,6 +1,5 @@
 using System;
 using System.Linq;
-using Annium.Core.DependencyInjection.Descriptors;
 
 namespace Annium.Core.DependencyInjection.Internal.Builders;
 

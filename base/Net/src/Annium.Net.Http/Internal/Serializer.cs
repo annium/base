@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Concurrent;
-using Annium.Core.DependencyInjection.Extensions;
+using Annium.Core.DependencyInjection;
 using Annium.Serialization.Abstractions;
 
 namespace Annium.Net.Http.Internal;

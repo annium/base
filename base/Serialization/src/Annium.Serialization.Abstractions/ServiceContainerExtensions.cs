@@ -1,4 +1,4 @@
-using Annium.Core.DependencyInjection.Container;
+using Annium.Core.DependencyInjection;
 using Annium.Serialization.Abstractions.Internal;
 
 namespace Annium.Serialization.Abstractions;

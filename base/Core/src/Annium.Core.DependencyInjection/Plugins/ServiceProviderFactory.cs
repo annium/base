@@ -1,9 +1,9 @@
 using System;
 using Annium.Core.DependencyInjection.Internal.Packs;
-using Annium.Core.DependencyInjection.Packs;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Annium.Core.DependencyInjection.Plugins;
+// ReSharper disable once CheckNamespace
+namespace Annium.Core.DependencyInjection;
 
 /// <summary>
 /// Factory for creating service provider builders and service providers

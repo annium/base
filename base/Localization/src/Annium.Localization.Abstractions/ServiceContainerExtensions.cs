@@ -1,5 +1,5 @@
 using System;
-using Annium.Core.DependencyInjection.Container;
+using Annium.Core.DependencyInjection;
 
 namespace Annium.Localization.Abstractions;
 

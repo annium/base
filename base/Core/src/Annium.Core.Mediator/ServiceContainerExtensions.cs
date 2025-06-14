@@ -1,6 +1,5 @@
 using System;
-using Annium.Core.DependencyInjection.Container;
-using Annium.Core.DependencyInjection.Extensions;
+using Annium.Core.DependencyInjection;
 using Annium.Core.Mediator.Internal;
 using Annium.Core.Runtime;
 using Annium.Core.Runtime.Types;

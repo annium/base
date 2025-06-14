@@ -1,5 +1,5 @@
 using System.Net.Mime;
-using Annium.Core.DependencyInjection.Extensions;
+using Annium.Core.DependencyInjection;
 using Annium.Graylog.Logging.Internal;
 using Annium.Logging.Shared;
 using Annium.Net.Http;

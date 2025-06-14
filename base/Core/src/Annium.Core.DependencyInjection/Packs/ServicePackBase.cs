@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using Annium.Core.DependencyInjection.Container;
 
-namespace Annium.Core.DependencyInjection.Packs;
+// ReSharper disable once CheckNamespace
+namespace Annium.Core.DependencyInjection;
 
 /// <summary>
 /// Base class for service packs that provide modular service configuration

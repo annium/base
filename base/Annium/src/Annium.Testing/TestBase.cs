@@ -1,8 +1,5 @@
 using System;
-using Annium.Core.DependencyInjection.Container;
-using Annium.Core.DependencyInjection.Extensions;
-using Annium.Core.DependencyInjection.Packs;
-using Annium.Core.DependencyInjection.Plugins;
+using Annium.Core.DependencyInjection;
 using Annium.Core.Mapper;
 using Annium.Core.Runtime;
 using Annium.Logging;
@@ -11,7 +8,7 @@ using Annium.Logging.Xunit;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 using AsyncServiceScope = Microsoft.Extensions.DependencyInjection.AsyncServiceScope;
-using ServiceLifetime = Annium.Core.DependencyInjection.Descriptors.ServiceLifetime;
+using ServiceLifetime = Annium.Core.DependencyInjection.ServiceLifetime;
 
 namespace Annium.Testing;
 

@@ -2,7 +2,8 @@ using System;
 using Annium.Core.DependencyInjection.Internal.Descriptors;
 using MicrosoftServiceDescriptor = Microsoft.Extensions.DependencyInjection.ServiceDescriptor;
 
-namespace Annium.Core.DependencyInjection.Descriptors;
+// ReSharper disable once CheckNamespace
+namespace Annium.Core.DependencyInjection;
 
 /// <summary>
 /// Factory class for creating service descriptors

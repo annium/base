@@ -1,4 +1,4 @@
-using Annium.Core.DependencyInjection.Extensions;
+using Annium.Core.DependencyInjection;
 using Annium.Localization.Abstractions;
 
 namespace Annium.Localization.Yaml;

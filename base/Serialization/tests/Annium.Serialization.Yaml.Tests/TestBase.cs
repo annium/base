@@ -1,5 +1,5 @@
 using System;
-using Annium.Core.DependencyInjection.Container;
+using Annium.Core.DependencyInjection;
 using Annium.Core.Runtime;
 using Annium.Serialization.Abstractions;
 using YamlDotNet.Serialization;

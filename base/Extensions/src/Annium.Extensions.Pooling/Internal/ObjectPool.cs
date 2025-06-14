@@ -1,6 +1,6 @@
 using System;
 using System.Threading;
-using Annium.Core.DependencyInjection.Extensions;
+using Annium.Core.DependencyInjection;
 using Annium.Extensions.Pooling.Internal.Loaders;
 using Annium.Extensions.Pooling.Internal.Storages;
 
