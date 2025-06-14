@@ -5,7 +5,8 @@ using System.Linq.Expressions;
 using Annium.Core.Mapper;
 using Annium.Reflection;
 
-namespace Annium.Data.Models.Extensions.IsShallowEqual;
+// ReSharper disable once CheckNamespace
+namespace Annium.Data.Models.Extensions;
 
 /// <summary>
 /// Extension methods for shallow equality comparison - generic enumerable support.

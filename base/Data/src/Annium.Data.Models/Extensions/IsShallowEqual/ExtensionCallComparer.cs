@@ -3,7 +3,8 @@ using System.Linq;
 using System.Linq.Expressions;
 using Annium.Core.Mapper;
 
-namespace Annium.Data.Models.Extensions.IsShallowEqual;
+// ReSharper disable once CheckNamespace
+namespace Annium.Data.Models.Extensions;
 
 /// <summary>
 /// Extension methods for shallow equality comparison - recursive call support.

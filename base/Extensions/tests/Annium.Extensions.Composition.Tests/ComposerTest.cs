@@ -1,6 +1,6 @@
 using System;
 using System.Threading.Tasks;
-using Annium.Data.Models.Extensions.IsShallowEqual;
+using Annium.Data.Models.Extensions;
 using Annium.Testing;
 using Xunit;
 
