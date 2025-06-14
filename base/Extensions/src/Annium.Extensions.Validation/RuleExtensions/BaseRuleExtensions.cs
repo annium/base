@@ -6,7 +6,8 @@ using System.Threading.Tasks;
 
 // ReSharper disable ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
 // ReSharper disable ConditionalAccessQualifierIsNonNullableAccordingToAPIContract
-namespace Annium.Extensions.Validation.RuleExtensions;
+// ReSharper disable once CheckNamespace
+namespace Annium.Extensions.Validation;
 
 /// <summary>
 /// Extension methods providing common validation rules for basic data types and scenarios.

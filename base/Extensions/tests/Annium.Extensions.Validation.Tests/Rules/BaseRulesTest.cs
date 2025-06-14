@@ -1,7 +1,6 @@
 using System;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Annium.Extensions.Validation.RuleExtensions;
 using Annium.Testing;
 using Xunit;
 

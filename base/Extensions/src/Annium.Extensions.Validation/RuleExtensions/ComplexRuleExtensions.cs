@@ -1,7 +1,8 @@
 using System;
 using System.Threading.Tasks;
 
-namespace Annium.Extensions.Validation.RuleExtensions;
+// ReSharper disable once CheckNamespace
+namespace Annium.Extensions.Validation;
 
 /// <summary>
 /// Extension methods providing complex validation rules that require more sophisticated logic or external dependencies
