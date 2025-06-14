@@ -7,7 +7,7 @@ using Annium.Configuration.Abstractions.Internal;
 using Annium.Core.DependencyInjection.Builders;
 using Annium.Core.DependencyInjection.Container;
 using Annium.Core.DependencyInjection.Extensions;
-using Annium.Reflection.Types;
+using Annium.Reflection;
 
 namespace Annium.Configuration.Abstractions;
 

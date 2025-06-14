@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using Annium.Core.Mapper;
-using Annium.Reflection.Types;
+using Annium.Reflection;
 
 namespace Annium.Data.Models.Extensions.IsShallowEqual;
 

@@ -2,7 +2,8 @@ using System;
 using System.Linq;
 using System.Reflection;
 
-namespace Annium.Reflection.Types;
+// ReSharper disable once CheckNamespace
+namespace Annium.Reflection;
 
 /// <summary>
 /// Provides extension methods for retrieving all methods from a <see cref="Type"/>.

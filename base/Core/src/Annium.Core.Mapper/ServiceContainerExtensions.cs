@@ -12,7 +12,7 @@ using Annium.Core.Mapper.Internal.Resolvers;
 using Annium.Core.Runtime;
 using Annium.Core.Runtime.Types;
 using Annium.Logging;
-using Annium.Reflection.Types;
+using Annium.Reflection;
 
 namespace Annium.Core.Mapper;
 

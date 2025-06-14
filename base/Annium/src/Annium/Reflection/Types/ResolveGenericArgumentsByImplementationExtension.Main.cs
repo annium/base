@@ -1,6 +1,7 @@
 using System;
 
-namespace Annium.Reflection.Types;
+// ReSharper disable once CheckNamespace
+namespace Annium.Reflection;
 
 /// <summary>
 /// Provides extension methods for resolving generic arguments of a <see cref="Type"/> by its implementation.

@@ -2,7 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Annium.Reflection.Types;
+// ReSharper disable once CheckNamespace
+namespace Annium.Reflection;
 
 /// <summary>
 /// Provides extension methods for retrieving the inheritance chain of a <see cref="Type"/>.

@@ -1,6 +1,7 @@
 using System;
 
-namespace Annium.Reflection.Types;
+// ReSharper disable once CheckNamespace
+namespace Annium.Reflection;
 
 /// <summary>
 /// Provides extension methods for determining if a <see cref="Type"/> is a nullable value type.

@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using Annium.Reflection.Types;
+using Annium.Reflection;
 using Annium.Testing;
 using Xunit;
 

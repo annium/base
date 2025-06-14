@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Annium.Core.Mapper;
 using Annium.Core.Runtime.Types;
-using Annium.Reflection.Types;
+using Annium.Reflection;
 
 namespace Annium.Configuration.Abstractions.Internal;
 

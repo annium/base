@@ -1,7 +1,8 @@
 using System;
 using System.Reflection;
 
-namespace Annium.Reflection.Types;
+// ReSharper disable once CheckNamespace
+namespace Annium.Reflection;
 
 /// <summary>
 /// Provides extension methods for checking if a <see cref="Type"/> has a default constructor.

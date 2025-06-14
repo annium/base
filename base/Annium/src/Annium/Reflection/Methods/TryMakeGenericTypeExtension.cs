@@ -1,7 +1,8 @@
 using System;
 using System.Reflection;
 
-namespace Annium.Reflection.Methods;
+// ReSharper disable once CheckNamespace
+namespace Annium.Reflection;
 
 /// <summary>
 /// Provides extension methods for attempting to make a generic method from a <see cref="MethodInfo"/>.

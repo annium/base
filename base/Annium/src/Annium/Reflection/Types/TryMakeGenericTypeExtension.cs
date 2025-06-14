@@ -1,6 +1,7 @@
 using System;
 
-namespace Annium.Reflection.Types;
+// ReSharper disable once CheckNamespace
+namespace Annium.Reflection;
 
 /// <summary>
 /// Provides extension methods for attempting to make a generic type from a <see cref="Type"/>.
