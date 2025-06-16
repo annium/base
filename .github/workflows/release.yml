@@ -16,6 +16,8 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
+    env:
+      run_ci: ${{ !contains(github.event.head_commit.message, 'skip ci') }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -32,6 +34,7 @@ jobs:
 
       - name: Get latest tag version
         id: get_version
+        if: ${{ env.run_ci == 'true' }}
         run: |
           TAG=$(git describe --tags --abbrev=0)
           echo "Last tag: $TAG"
@@ -43,30 +46,37 @@ jobs:
           echo "patch=$PATCH" >> $GITHUB_OUTPUT
 
       - name: Build
+        if: ${{ env.run_ci == 'true' }}
         run: make build buildNumber=${{ steps.get_version.outputs.patch }}
 
       - name: Pack
+        if: ${{ env.run_ci == 'true' }}
         run: make pack buildNumber=${{ steps.get_version.outputs.patch }}
 
       - name: Build Documentation
+        if: ${{ env.run_ci == 'true' }}
         run: make docs-build
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
+        if: ${{ env.run_ci == 'true' }}
         with:
           path: '_site'
 
       - name: Deploy to GitHub Pages
         id: deployment
+        if: ${{ env.run_ci == 'true' }}
         uses: actions/deploy-pages@v4
 
       - name: Publish NuGet packages
+        if: ${{ env.run_ci == 'true' }}
         run: make publish apiKey=${{ secrets.NUGET_API_KEY }}
 
       - name: Create Git tag
+        if: ${{ env.run_ci == 'true' }}
         run: |
           git config user.name "it"
           git config user.email "it@annium.com"
-          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/annium/base.git
+          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@${{ github.server_url }}/${{ github.repository }}.git
           git tag v${{ steps.get_version.outputs.new_version }}
           git push origin v${{ steps.get_version.outputs.new_version }}
