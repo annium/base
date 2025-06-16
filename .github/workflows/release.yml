@@ -21,7 +21,7 @@ jobs:
     steps:
       - name: Check if CI should run
         id: check
-        run: echo "run_ci=${{ !contains(github.event.pull_request.title, 'skip ci') }}" >> $GITHUB_OUTPUT
+        run: echo "run_ci=${{ !contains(github.event.head_commit.message, 'skip ci') }}" >> $GITHUB_OUTPUT
 
   release:
     runs-on: ubuntu-latest
