@@ -30,7 +30,7 @@ public class DynamicLogMessageTemplateAnalyzer : DiagnosticAnalyzer
     /// Gets the supported diagnostics for this analyzer.
     /// </summary>
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } =
-        [Descriptors.Log0001DynamicLogMessageTemplate];
+    [Descriptors.Log0001DynamicLogMessageTemplate];
 
     /// <summary>
     /// Initializes the analyzer by configuring concurrent execution and registering the operation action.
