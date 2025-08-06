@@ -16,7 +16,7 @@ public class ExceptionNameAnalyzer : DiagnosticAnalyzer
     /// Gets the supported diagnostics for this analyzer.
     /// </summary>
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } =
-        [Descriptors.Pg0001ExceptionNameFormat];
+    [Descriptors.Pg0001ExceptionNameFormat];
 
     /// <summary>
     /// Initializes the analyzer by configuring concurrent execution and registering the symbol action.

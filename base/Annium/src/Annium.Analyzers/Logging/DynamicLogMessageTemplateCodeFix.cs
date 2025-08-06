@@ -16,7 +16,7 @@ public class DynamicLogMessageTemplateCodeFix : CodeFixProvider
     /// Gets the diagnostic IDs that this code fix provider can handle.
     /// </summary>
     public override ImmutableArray<string> FixableDiagnosticIds { get; } =
-        [Descriptors.Log0001DynamicLogMessageTemplate.Id];
+    [Descriptors.Log0001DynamicLogMessageTemplate.Id];
 
     /// <summary>
     /// Gets the provider used to fix all occurrences of a diagnostic in a document/project/solution.
