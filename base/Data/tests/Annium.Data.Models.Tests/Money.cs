@@ -6,7 +6,7 @@ namespace Annium.Data.Models.Tests;
 /// <summary>
 /// Test class representing a money value with major and minor components, implementing comparable functionality.
 /// </summary>
-public class Money : Comparable<Money>
+public record Money : Comparable<Money>
 {
     /// <summary>
     /// Gets the major component of the money value.

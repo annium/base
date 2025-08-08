@@ -4,10 +4,10 @@ using System.Collections.Generic;
 namespace Annium.Data.Models;
 
 /// <summary>
-/// Abstract base class that provides comparison operations for derived types
+/// Abstract base record class that provides comparison operations for derived types
 /// </summary>
 /// <typeparam name="T">The type that derives from Comparable</typeparam>
-public abstract class Comparable<T> : IEquatable<T>, IComparable<T>, IComparable
+public abstract record Comparable<T> : IEquatable<T>, IComparable<T>, IComparable
     where T : Comparable<T>
 {
     /// <summary>
