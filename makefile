@@ -47,7 +47,7 @@ pack:
 publish:
 	$(call header)
 	dotnet nuget push "*.nupkg" --source https://api.nuget.org/v3/index.json --api-key $(apiKey)
-	find . -type f -name '*.nupkg' | xargs rm
+	find . -type f -name '*.nupkg' | xargs -I% rm %
 
 docs-lint:
 	$(call header)
