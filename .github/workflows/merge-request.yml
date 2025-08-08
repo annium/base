@@ -21,59 +21,52 @@ jobs:
         id: check
         run: echo "run_ci=${{ !contains(github.event.pull_request.title, 'skip ci') }}" >> $GITHUB_OUTPUT
 
-  build:
+  run-short:
     runs-on: ubuntu-latest
     needs: init
+    if: ${{ needs.init.outputs.run_ci != 'true' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '9.0.x'
 
-      - name: Setup
-        run: make setup
+      - name: Run
+        run: make ci-merge-request-short
 
-      - name: Format
-        run: make format
+  run-full:
+    runs-on: ubuntu-latest
+    needs: init
+    if: ${{ needs.init.outputs.run_ci == 'true' }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Check for uncommitted changes
-        run: |
-          if [[ -n "$(git status --porcelain)" ]]; then
-            echo "::error::Code formatting check failed. Please run 'make format' locally and commit the changes."
-            git status
-            git diff
-            exit 1
-          fi
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
 
-      - name: Lint docs
-        if: ${{ needs.init.outputs.run_ci == 'true' }}
-        run: make docs-lint
-
-      - name: Build
-        run: make build
-
-      - name: Test
-        if: ${{ needs.init.outputs.run_ci == 'true' }}
-        run: make test
+      - name: Run
+        run: make ci-merge-request-full
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
-        if: ${{ always() && needs.init.outputs.run_ci == 'true' }}
         with:
           name: test-results
           path: '**/*.trx'
           retention-days: 30
 
-      - name: Build Documentation
-        if: ${{ needs.init.outputs.run_ci == 'true' }}
-        run: make docs-build
-
   report:
     runs-on: ubuntu-latest
-    needs: [ init, build ]
+    needs: [ init, run-full ]
     if: ${{ always() && needs.init.outputs.run_ci == 'true' }}
     steps:
       - name: Checkout repository
@@ -84,9 +77,6 @@ jobs:
         with:
           name: test-results
           path: test-results
-
-      - name: List downloaded artifacts
-        run: ls -R test-results
 
       - name: Publish Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2.16.1

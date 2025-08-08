@@ -17,11 +17,7 @@
     <AnalysisMode>Default</AnalysisMode>
   </PropertyGroup>
   <PropertyGroup>
-    <VersionMajor>1</VersionMajor>
-    <VersionMinor>1</VersionMinor>
-    <BuildNumber>$(BuildNumber)</BuildNumber>
-    <BuildNumber Condition="'$(BuildNumber)' == ''">0</BuildNumber>
-    <PackageVersion>$(VersionMajor).$(VersionMinor).$(BuildNumber)$(VersionTag)</PackageVersion>
+    <PackageVersion>$(PackageVersion)</PackageVersion>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" PrivateAssets="all">
