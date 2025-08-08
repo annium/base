@@ -147,12 +147,12 @@ ci-release:
 
 ci-set-package-version:
 	$(call header)
+	git config user.name "it"
+	git config user.email "it@annium.com"
 	dotnet tool run versioning set-version -v $(shell cat version)
 
 ci-push-tag:
 	$(call header)
-	git config user.name "it"
-	git config user.email "it@annium.com"
 	git remote set-url origin https://x-access-token:$(3)@github.com/$(1).git
 	git push origin v$(2)
 
