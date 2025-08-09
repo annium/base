@@ -142,8 +142,8 @@ ci-release:
 	make pack
 	make docs-build
 	make publish apiKey=$(apiKey)
-	$(call get-package-version)
-	$(call ci-push-tag,$(repository),$(packageVersion),$(githubToken))
+	make ci-push-tag repository=$(repository) githubToken=$(githubToken)
+	echo "Release complete"
 
 ci-set-package-version:
 	$(call header)
@@ -153,8 +153,9 @@ ci-set-package-version:
 
 ci-push-tag:
 	$(call header)
-	git remote set-url origin https://x-access-token:$(3)@github.com/$(1).git
-	git push origin v$(2)
+	$(call get-package-version)
+	git remote set-url origin https://x-access-token:$(githubToken)@github.com/$(repository).git
+	git push origin v$(packageVersion)
 
 
 define header
