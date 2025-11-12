@@ -36,7 +36,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '9.0.x'
+          dotnet-version: '10.0.x'
 
       - name: Run
         run: make ci-release apiKey=${{ secrets.NUGET_API_KEY }} repository=${{ github.repository }} githubToken=${GITHUB_TOKEN}
