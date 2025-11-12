@@ -55,11 +55,11 @@ internal class DictionaryConstructorMapResolver : IMapResolver
 
             // get source accessor and constructor parameters
             var tryGetValue =
-                src.GetMethod(nameof(Dictionary<object, object>.TryGetValue))
+                src.GetMethod(nameof(Dictionary<,>.TryGetValue))
                 ?? throw new MappingException(
                     src,
                     tgt,
-                    $"Failed to resolve method {src.FriendlyName()}.{nameof(Dictionary<object, object>.TryGetValue)}"
+                    $"Failed to resolve method {src.FriendlyName()}.{nameof(Dictionary<,>.TryGetValue)}"
                 );
             var parameters = constructor.GetParameters();
 

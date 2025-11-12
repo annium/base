@@ -23,7 +23,7 @@ internal class BooleanResultConverter : ResultConverterBase<X>
         var (plainErrors, labeledErrors) = ReadErrors(
             ref reader,
             options,
-            (ref Utf8JsonReader r) =>
+            (ref r) =>
             {
                 if (r.HasProperty(nameof(X.IsSuccess)))
                     isSuccess = JsonSerializer.Deserialize<bool>(ref r, options);

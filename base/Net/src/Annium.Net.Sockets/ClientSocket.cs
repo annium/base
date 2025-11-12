@@ -42,8 +42,11 @@ public class ClientSocket : IClientSocket
     /// <summary>
     /// Gets the current connection configuration
     /// </summary>
-    private ConnectionConfig Config =>
-        _connectionConfig ?? throw new InvalidOperationException("Connection config is not set");
+    private ConnectionConfig Config
+    {
+        get => field ?? throw new InvalidOperationException("Connection config is not set");
+        set;
+    }
 
     /// <summary>
     /// Thread synchronization lock for connection operations
@@ -69,11 +72,6 @@ public class ClientSocket : IClientSocket
     /// Delay between reconnection attempts in milliseconds
     /// </summary>
     private readonly int _reconnectDelay;
-
-    /// <summary>
-    /// Current connection configuration including endpoint and SSL settings
-    /// </summary>
-    private ConnectionConfig? _connectionConfig;
 
     /// <summary>
     /// Cancellation token source for managing connection operations
@@ -254,7 +252,7 @@ public class ClientSocket : IClientSocket
             }
         }
 
-        _connectionConfig = config;
+        Config = config;
         this.Trace<IPEndPoint, string>(
             "connect to {endpoint} ({ssl})",
             config.Endpoint,

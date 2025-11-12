@@ -68,7 +68,7 @@ public class ContextualExtensionsTest
     public void Generic_Bound()
     {
         // arrange
-        var target = typeof(Sample<string>).ToContextualType().GetProperty(nameof(Sample<int>.Value))!.AccessorType;
+        var target = typeof(Sample<string>).ToContextualType().GetProperty(nameof(Sample<>.Value))!.AccessorType;
 
         // act
         var args = target.GetGenericArguments();

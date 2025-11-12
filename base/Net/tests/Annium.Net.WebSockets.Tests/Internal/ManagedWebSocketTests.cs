@@ -21,22 +21,20 @@ public class ManagedWebSocketTests : TestBase, IAsyncLifetime
     /// <summary>
     /// Gets the native client WebSocket instance
     /// </summary>
-    private NativeClientWebSocket ClientSocket => _clientSocket.NotNull();
+    private NativeClientWebSocket ClientSocket
+    {
+        get => field.NotNull();
+        set;
+    }
 
     /// <summary>
     /// Gets the managed WebSocket wrapper instance
     /// </summary>
-    private ManagedWebSocket ManagedSocket => _managedSocket.NotNull();
-
-    /// <summary>
-    /// The native client WebSocket instance
-    /// </summary>
-    private NativeClientWebSocket? _clientSocket;
-
-    /// <summary>
-    /// The managed WebSocket wrapper instance
-    /// </summary>
-    private ManagedWebSocket? _managedSocket;
+    private ManagedWebSocket ManagedSocket
+    {
+        get => field.NotNull();
+        set;
+    }
 
     /// <summary>
     /// Log for text messages received
@@ -691,8 +689,8 @@ public class ManagedWebSocketTests : TestBase, IAsyncLifetime
     {
         this.Trace("start");
 
-        _clientSocket = new NativeClientWebSocket();
-        _managedSocket = new ManagedWebSocket(ClientSocket, Logger);
+        ClientSocket = new NativeClientWebSocket();
+        ManagedSocket = new ManagedWebSocket(ClientSocket, Logger);
         this.Trace<string, string>(
             "created pair of {clientSocket} and {managedSocket}",
             ClientSocket.GetFullId(),

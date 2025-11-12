@@ -15,9 +15,7 @@ internal static class Constants
     /// <summary>
     /// Method name for pipe handler HandleAsync method
     /// </summary>
-    public static readonly string PipeHandlerHandleAsyncName = nameof(
-        IPipeRequestHandler<int, int, int, int>.HandleAsync
-    );
+    public static readonly string PipeHandlerHandleAsyncName = nameof(IPipeRequestHandler<,,,>.HandleAsync);
 
     /// <summary>
     /// Type definition for final request handlers
@@ -27,7 +25,7 @@ internal static class Constants
     /// <summary>
     /// Method name for final handler HandleAsync method
     /// </summary>
-    public static readonly string FinalHandlerHandleAsyncName = nameof(IFinalRequestHandler<int, int>.HandleAsync);
+    public static readonly string FinalHandlerHandleAsyncName = nameof(IFinalRequestHandler<,>.HandleAsync);
 
     /// <summary>
     /// Type definition for request handler input interface

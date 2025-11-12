@@ -24,12 +24,12 @@ internal class NextBuilder
     /// <summary>
     /// Cached reference to Task.GetAwaiter method
     /// </summary>
-    private readonly MethodInfo _getAwaiter = typeof(Task<object>).GetMethod(nameof(Task<int>.GetAwaiter))!;
+    private readonly MethodInfo _getAwaiter = typeof(Task<object>).GetMethod(nameof(Task<>.GetAwaiter))!;
 
     /// <summary>
     /// Cached reference to TaskAwaiter.GetResult method
     /// </summary>
-    private readonly MethodInfo _getResult = typeof(TaskAwaiter<object>).GetMethod(nameof(TaskAwaiter<int>.GetResult))!;
+    private readonly MethodInfo _getResult = typeof(TaskAwaiter<object>).GetMethod(nameof(TaskAwaiter<>.GetResult))!;
 
     /// <summary>
     /// Cached reference to Task.FromResult method

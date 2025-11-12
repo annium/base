@@ -31,7 +31,7 @@ internal class StatusDataResultConverter<TS, TD> : ResultConverterBase<IStatusRe
         var (plainErrors, labeledErrors) = ReadErrors(
             ref reader,
             options,
-            (ref Utf8JsonReader r) =>
+            (ref r) =>
             {
                 if (r.HasProperty(nameof(X.Status)))
                     status = JsonSerializer.Deserialize<TS>(ref r, options)!;

@@ -45,7 +45,11 @@ public class ClientWebSocket : IClientWebSocket
     /// <summary>
     /// Gets the current connection URI, throws if not set
     /// </summary>
-    private Uri Uri => _uri ?? throw new InvalidOperationException("Uri is not set");
+    private Uri Uri
+    {
+        get => field ?? throw new InvalidOperationException("Uri is not set");
+        set;
+    }
 
     /// <summary>
     /// Lock object for thread-safe status updates
@@ -71,11 +75,6 @@ public class ClientWebSocket : IClientWebSocket
     /// Delay in milliseconds before attempting to reconnect after connection loss
     /// </summary>
     private readonly int _reconnectDelay;
-
-    /// <summary>
-    /// The current connection URI, null if not connected
-    /// </summary>
-    private Uri? _uri;
 
     /// <summary>
     /// Cancellation token source for connection operations
@@ -258,7 +257,7 @@ public class ClientWebSocket : IClientWebSocket
             }
         }
 
-        _uri = uri;
+        Uri = uri;
         this.Trace("connect to {uri}", uri);
         var cts = new CancellationTokenSource(_connectTimeout);
         _connectionCts = cts;

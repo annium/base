@@ -21,7 +21,7 @@ internal class ResultConverter : ResultConverterBase<X>
     {
         var value = Result.New();
 
-        var (plainErrors, labeledErrors) = ReadErrors(ref reader, options, (ref Utf8JsonReader _) => { });
+        var (plainErrors, labeledErrors) = ReadErrors(ref reader, options, (ref _) => { });
 
         value.Errors(plainErrors);
         value.Errors(labeledErrors);

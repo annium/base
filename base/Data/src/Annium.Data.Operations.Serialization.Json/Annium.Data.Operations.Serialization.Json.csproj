@@ -8,7 +8,4 @@
   <ItemGroup>
     <ProjectReference Include="../Annium.Data.Operations/Annium.Data.Operations.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="System.Text.Json" />
-  </ItemGroup>
 </Project>

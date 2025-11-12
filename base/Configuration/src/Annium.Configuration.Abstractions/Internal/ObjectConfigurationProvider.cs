@@ -111,8 +111,8 @@ internal class ObjectConfigurationProvider : ConfigurationProviderBase
         var keyType = dictionaryType!.GetGenericArguments()[0];
         var valueType = dictionaryType.GetGenericArguments()[1];
         var keyValueType = typeof(KeyValuePair<,>).MakeGenericType(keyType, valueType);
-        var getKey = keyValueType.GetProperty(nameof(KeyValuePair<object, object>.Key))!.GetMethod!;
-        var getValue = keyValueType.GetProperty(nameof(KeyValuePair<object, object>.Value))!.GetMethod!;
+        var getKey = keyValueType.GetProperty(nameof(KeyValuePair<,>.Key))!.GetMethod!;
+        var getValue = keyValueType.GetProperty(nameof(KeyValuePair<,>.Value))!.GetMethod!;
 
         foreach (var item in (IEnumerable)value)
         {
@@ -157,7 +157,7 @@ internal class ObjectConfigurationProvider : ConfigurationProviderBase
     private void ProcessNullable(string[] prefix, Action<string[], string> addValue, object value)
     {
         var type = value.GetType();
-        var getValueOrDefault = type.GetMethod(nameof(Nullable<bool>.GetValueOrDefault), Type.EmptyTypes)!;
+        var getValueOrDefault = type.GetMethod(nameof(Nullable<>.GetValueOrDefault), Type.EmptyTypes)!;
         var innerValue = getValueOrDefault.Invoke(value, Array.Empty<object>());
         if (innerValue is null)
             return;

@@ -20,19 +20,15 @@ public sealed record Injected<T>
             if (_isInitialized == 0)
                 throw new InvalidOperationException($"{typeof(T).FriendlyName()} is not initialized");
 
-            return _value;
+            return field;
         }
-    }
+        private set;
+    } = default!;
 
     /// <summary>
     /// A flag indicating whether the value has been initialized (1) or not (0).
     /// </summary>
     private int _isInitialized;
-
-    /// <summary>
-    /// The stored value that can be initialized once.
-    /// </summary>
-    private T _value = default!;
 
     /// <summary>
     /// Initializes the container with the specified value.
@@ -44,6 +40,6 @@ public sealed record Injected<T>
         if (Interlocked.CompareExchange(ref _isInitialized, 1, 0) != 0)
             throw new InvalidOperationException($"{typeof(T).FriendlyName()} is already initialized");
 
-        _value = value;
+        Value = value;
     }
 }
