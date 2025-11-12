@@ -14,22 +14,17 @@ internal class RelativeTimeProvider : IInternalTimeProvider
     private readonly SystemClock _clock = SystemClock.Instance;
 
     /// <summary>
-    /// The instant when this provider was created
-    /// </summary>
-    private readonly Instant _since;
-
-    /// <summary>
     /// Initializes a new instance of RelativeTimeProvider with current time as reference
     /// </summary>
     public RelativeTimeProvider()
     {
-        _since = _clock.GetCurrentInstant();
+        Now = _clock.GetCurrentInstant();
     }
 
     /// <summary>
     /// The current instant relative to the initialization time
     /// </summary>
-    public Instant Now => NodaConstants.BclEpoch + (_clock.GetCurrentInstant() - _since);
+    public Instant Now => NodaConstants.BclEpoch + (_clock.GetCurrentInstant() - field);
 
     /// <summary>
     /// The current date and time as UTC DateTime

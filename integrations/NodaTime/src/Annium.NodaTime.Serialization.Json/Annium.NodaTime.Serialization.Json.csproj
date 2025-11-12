@@ -8,7 +8,4 @@
   <ItemGroup>
     <ProjectReference Include="../../../../base/Core/src/Annium.Core.Runtime/Annium.Core.Runtime.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="System.Text.Json" />
-  </ItemGroup>
 </Project>

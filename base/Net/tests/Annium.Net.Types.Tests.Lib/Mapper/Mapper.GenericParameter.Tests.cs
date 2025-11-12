@@ -41,7 +41,7 @@ public abstract class MapperGenericParameterTestsBase : TestBase
     protected void GenericParameter_Nullable_Base()
     {
         // arrange
-        var target = typeof(Sample<>).ToContextualType().GetProperty(nameof(Sample<string>.Value))!.AccessorType;
+        var target = typeof(Sample<>).ToContextualType().GetProperty(nameof(Sample<>.Value))!.AccessorType;
 
         // act
         var modelRef = Map(target);

@@ -69,7 +69,7 @@ public readonly struct ChangeEvent<T>
             if (Type is not (ChangeEventType.Set or ChangeEventType.Delete))
                 throw new InvalidOperationException($"this {typeof(T).FriendlyName()} is {Type}");
 
-            return _item!;
+            return field!;
         }
     }
 
@@ -84,19 +84,9 @@ public readonly struct ChangeEvent<T>
             if (Type is not ChangeEventType.Init)
                 throw new InvalidOperationException($"this {typeof(T).FriendlyName()} is {Type}");
 
-            return _items!;
+            return field!;
         }
     }
-
-    /// <summary>
-    /// The single item for Set and Delete events.
-    /// </summary>
-    private readonly T? _item;
-
-    /// <summary>
-    /// The collection of items for Init events.
-    /// </summary>
-    private readonly IReadOnlyCollection<T>? _items;
 
     /// <summary>
     /// Initializes a new change event for a single item operation (Set or Delete).
@@ -106,7 +96,7 @@ public readonly struct ChangeEvent<T>
     public ChangeEvent(ChangeEventType type, T item)
     {
         Type = type;
-        _item = item;
+        Item = item;
     }
 
     /// <summary>
@@ -116,7 +106,7 @@ public readonly struct ChangeEvent<T>
     internal ChangeEvent(IReadOnlyCollection<T> items)
     {
         Type = ChangeEventType.Init;
-        _items = items;
+        Items = items;
     }
 
     /// <summary>

@@ -13,12 +13,11 @@ public abstract class CommandBase
     /// <summary>
     /// Gets the root configuration instance
     /// </summary>
-    internal Root Root => _root ?? throw new InvalidOperationException("Root is not set");
-
-    /// <summary>
-    /// The root configuration instance
-    /// </summary>
-    private Root? _root;
+    internal Root Root
+    {
+        get => field ?? throw new InvalidOperationException("Root is not set");
+        private set;
+    }
 
     /// <summary>
     /// Processes the command with the specified arguments
@@ -36,6 +35,6 @@ public abstract class CommandBase
     /// <param name="root">The root configuration instance</param>
     internal void SetRoot(Root root)
     {
-        _root = root;
+        Root = root;
     }
 }

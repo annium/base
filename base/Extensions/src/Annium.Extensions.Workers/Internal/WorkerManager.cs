@@ -160,7 +160,7 @@ internal sealed class WorkerManager<TKey> : IWorkerManager<TKey>, IAsyncDisposab
     private void EnsureIsNotDisposed()
     {
         if (_isDisposed)
-            throw new ObjectDisposedException(nameof(WorkerManager<TKey>));
+            throw new ObjectDisposedException(nameof(WorkerManager<>));
     }
 
     /// <summary>

@@ -22,7 +22,11 @@ public class MessagingManagedSocketTests : TestBase, IAsyncLifetime
     /// <summary>
     /// Gets the client socket instance
     /// </summary>
-    private Socket ClientSocket => _clientSocket.NotNull();
+    private Socket ClientSocket
+    {
+        get => field.NotNull();
+        set;
+    }
 
     /// <summary>
     /// Gets the client stream instance
@@ -32,22 +36,16 @@ public class MessagingManagedSocketTests : TestBase, IAsyncLifetime
     /// <summary>
     /// Gets the managed socket instance
     /// </summary>
-    private IManagedSocket ManagedSocket => _managedSocket.NotNull();
-
-    /// <summary>
-    /// The client socket instance
-    /// </summary>
-    private Socket? _clientSocket;
+    private IManagedSocket ManagedSocket
+    {
+        get => field.NotNull();
+        set;
+    }
 
     /// <summary>
     /// The client stream instance
     /// </summary>
     private Stream? _clientStream;
-
-    /// <summary>
-    /// The managed socket instance
-    /// </summary>
-    private IManagedSocket? _managedSocket;
 
     /// <summary>
     /// Collection of received messages
@@ -744,7 +742,7 @@ public class MessagingManagedSocketTests : TestBase, IAsyncLifetime
     {
         this.Trace("start");
 
-        _clientSocket = new Socket(SocketType.Stream, ProtocolType.Tcp) { NoDelay = true };
+        ClientSocket = new Socket(SocketType.Stream, ProtocolType.Tcp) { NoDelay = true };
 
         this.Trace("connect");
         await ClientSocket.ConnectAsync(EndPoint, ct);
@@ -753,7 +751,7 @@ public class MessagingManagedSocketTests : TestBase, IAsyncLifetime
         _clientStream = await _createClientStreamAsync(ClientSocket);
 
         this.Trace("create managed socket");
-        _managedSocket = new MessagingManagedSocket(ClientStream, options ?? ManagedSocketOptionsBase.Default, Logger);
+        ManagedSocket = new MessagingManagedSocket(ClientStream, options ?? ManagedSocketOptionsBase.Default, Logger);
         this.Trace<string, string>(
             "created pair of {clientSocket} and {managedSocket}",
             ClientSocket.GetFullId(),

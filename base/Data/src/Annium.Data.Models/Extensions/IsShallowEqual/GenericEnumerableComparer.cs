@@ -38,9 +38,9 @@ public static partial class IsShallowEqualExtensions
         var enumerableType = typeof(IEnumerable<>).MakeGenericType(elementType);
         var enumeratorType = typeof(IEnumerator<>).MakeGenericType(elementType);
 
-        var getEnumerator = enumerableType.GetMethod(nameof(IEnumerable<object>.GetEnumerator))!;
+        var getEnumerator = enumerableType.GetMethod(nameof(IEnumerable<>.GetEnumerator))!;
         var moveNext = typeof(IEnumerator).GetMethod(nameof(IEnumerator.MoveNext))!;
-        var current = enumeratorType.GetProperty(nameof(IEnumerator<object>.Current))!;
+        var current = enumeratorType.GetProperty(nameof(IEnumerator<>.Current))!;
 
         // resolve enumerators
         var enumeratorAVar = Expression.Variable(enumeratorType);
