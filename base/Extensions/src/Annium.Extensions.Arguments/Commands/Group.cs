@@ -36,7 +36,8 @@ public abstract class Group : CommandBase
             typeof(T)
                 .GetInterfaces()
                 .SingleOrDefault(x => x.PureName() == _configurationTypesName)
-                ?.GetGenericArguments() ?? Type.EmptyTypes;
+                ?.GetGenericArguments()
+            ?? Type.EmptyTypes;
         _commands.Add(new CommandInfo(T.Id, T.Description, typeof(T), configurationTypes));
 
         return this;

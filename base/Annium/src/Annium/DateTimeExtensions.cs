@@ -145,9 +145,7 @@ public static class DateTimeExtensions
     /// <param name="m">The DateTime value to convert.</param>
     /// <returns>A DateTime value in UTC time.</returns>
     public static DateTime InUtc(this DateTime m) =>
-        m.Kind == DateTimeKind.Utc
-            ? m
-            : DateTime.SpecifyKind(m - TimeZoneInfo.Local.GetUtcOffset(m), DateTimeKind.Utc);
+        m.Kind == DateTimeKind.Utc ? m : DateTime.SpecifyKind(m - TimeZoneInfo.Local.GetUtcOffset(m), DateTimeKind.Utc);
 
     /// <summary>
     /// Converts a DateTime value to Unix time in minutes.
