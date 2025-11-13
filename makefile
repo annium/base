@@ -140,7 +140,7 @@ ci-release:
 	make clean
 	make build
 	make pack
-	make docs-build
+# 	make docs-build
 	make publish apiKey=$(apiKey)
 	make ci-push-tag repository=$(repository) githubToken=$(githubToken)
 	echo "Release complete"
