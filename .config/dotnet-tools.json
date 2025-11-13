@@ -3,21 +3,21 @@
   "isRoot": true,
   "tools": {
     "annium.doclint": {
-      "version": "1.1.12",
+      "version": "1.1.13",
       "commands": [
         "doclint"
       ],
       "rollForward": false
     },
     "annium.versioning": {
-      "version": "1.1.12",
+      "version": "1.1.13",
       "commands": [
         "versioning"
       ],
       "rollForward": false
     },
     "annium.xs.cli": {
-      "version": "1.1.11",
+      "version": "1.1.12",
       "commands": [
         "xs"
       ],

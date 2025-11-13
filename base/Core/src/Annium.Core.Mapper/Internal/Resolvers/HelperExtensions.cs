@@ -43,7 +43,8 @@ internal static class HelperExtensions
         type.GetConstructors(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
             .Where(x => x.GetParameters().Length > 0)
             .OrderByDescending(c => c.GetParameters().Length)
-            .FirstOrDefault() ?? throw new InvalidOperationException("Parameterized constructor not found");
+            .FirstOrDefault()
+        ?? throw new InvalidOperationException("Parameterized constructor not found");
 
     /// <summary>
     /// Gets the default parameterless constructor
