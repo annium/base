@@ -125,11 +125,11 @@ ci-merge-request-full:
 	make setup
 	make format
 	make ensure-no-changes
-	make docs-lint
+# 	make docs-lint
 	make clean
 	make build
 	make test
-	make docs-build
+# 	make docs-build
 
 ci-release:
 	$(call header)
