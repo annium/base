@@ -521,7 +521,7 @@ public class ClientServerManagedSocketTests : TestBase, IAsyncLifetime
 
         // assert
         this.Trace("assert data arrived");
-        await Expect.ToAsync(() => _messages.Has(messages.Count), 1000);
+        await Expect.ToAsync(() => _messages.Has(messages.Count));
 
         this.Trace("verify messages are valid");
         _messages.IsEqual(messages);

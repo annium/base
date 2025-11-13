@@ -567,7 +567,7 @@ public class ManagedWebSocketTests : TestBase, IAsyncLifetime
 
         // assert
         this.Trace("assert text messages arrive");
-        await Expect.ToAsync(() => _texts.IsEqual(messages), 1000);
+        await Expect.ToAsync(() => _texts.IsEqual(messages));
 
         this.Trace("done");
     }
@@ -610,7 +610,7 @@ public class ManagedWebSocketTests : TestBase, IAsyncLifetime
 
         // assert
         this.Trace("assert text messages arrive");
-        await Expect.ToAsync(() => _texts.IsEqual(messages), 1000);
+        await Expect.ToAsync(() => _texts.IsEqual(messages));
 
         this.Trace("await listen task");
         var result = await listenTask;
@@ -666,10 +666,10 @@ public class ManagedWebSocketTests : TestBase, IAsyncLifetime
 
         // assert
         this.Trace("assert text messages arrive");
-        await Expect.ToAsync(() => _texts.IsEqual(messages), 1000);
+        await Expect.ToAsync(() => _texts.IsEqual(messages));
 
         this.Trace("assert binary messages arrive");
-        await Expect.ToAsync(() => _binaries.IsEqual(messages), 1000);
+        await Expect.ToAsync(() => _binaries.IsEqual(messages));
 
         this.Trace("await listen task");
         var result = await listenTask;
