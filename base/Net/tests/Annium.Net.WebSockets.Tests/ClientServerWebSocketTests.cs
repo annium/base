@@ -347,7 +347,7 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
 
         // assert
         this.Trace("assert text message arrived");
-        await Expect.ToAsync(() => _texts.IsEqual(messages), 1000);
+        await Expect.ToAsync(() => _texts.IsEqual(messages));
         serverStopTcs.SetResult();
 
         this.Trace("done");
@@ -391,7 +391,7 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
 
         // assert
         this.Trace("assert text message arrived");
-        await Expect.ToAsync(() => _texts.IsEqual(messages), 1000);
+        await Expect.ToAsync(() => _texts.IsEqual(messages));
         serverStopTcs.SetResult();
 
         this.Trace("disconnect");
@@ -447,10 +447,10 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
 
         // assert
         this.Trace("assert text messages arrived");
-        await Expect.ToAsync(() => _texts.IsEqual(messages), 1000);
+        await Expect.ToAsync(() => _texts.IsEqual(messages));
 
         this.Trace("assert binary messages arrived");
-        await Expect.ToAsync(() => _binaries.IsEqual(messages), 1000);
+        await Expect.ToAsync(() => _binaries.IsEqual(messages));
         serverStopTcs.SetResult();
 
         this.Trace("disconnect");
@@ -536,7 +536,7 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
 
         // assert
         this.Trace("wait for {messagesCount} messages", messages.Length);
-        await Expect.ToAsync(() => _texts.IsEqual(messages), 1000);
+        await Expect.ToAsync(() => _texts.IsEqual(messages));
 
         this.Trace("send signal to stop server");
         serverStopTcs.SetResult();

@@ -400,7 +400,7 @@ public class RawManagedSocketTests : TestBase, IAsyncLifetime
 
         // assert
         this.Trace("assert data arrived");
-        await Expect.ToAsync(() => _stream.Has(message.Length), 1000);
+        await Expect.ToAsync(() => _stream.Has(message.Length));
 
         this.Trace("verify stream to be equal to message");
         _stream.IsEqual(message);

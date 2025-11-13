@@ -448,14 +448,11 @@ public class ClientServerManagedWebSocketTests : TestBase, IAsyncLifetime
 
         // assert
         this.Trace("assert text messages arrive");
-        await Expect.ToAsync(
-            () =>
-            {
-                _texts.Has(messages.Length);
-                _texts.IsEqual(messages);
-            },
-            1000
-        );
+        await Expect.ToAsync(() =>
+        {
+            _texts.Has(messages.Length);
+            _texts.IsEqual(messages);
+        });
 
         this.Trace("done");
     }
@@ -493,7 +490,7 @@ public class ClientServerManagedWebSocketTests : TestBase, IAsyncLifetime
 
         // assert
         this.Trace("assert text messages arrive");
-        await Expect.ToAsync(() => _texts.IsEqual(messages), 1000);
+        await Expect.ToAsync(() => _texts.IsEqual(messages));
 
         this.Trace("await closed state");
 #pragma warning disable VSTHRD003
@@ -545,10 +542,10 @@ public class ClientServerManagedWebSocketTests : TestBase, IAsyncLifetime
 
         // assert
         this.Trace("assert text messages arrive");
-        await Expect.ToAsync(() => _texts.IsEqual(messages), 1000);
+        await Expect.ToAsync(() => _texts.IsEqual(messages));
 
         this.Trace("assert binary messages arrive");
-        await Expect.ToAsync(() => _binaries.IsEqual(messages), 1000);
+        await Expect.ToAsync(() => _binaries.IsEqual(messages));
 
         this.Trace("await closed state");
 #pragma warning disable VSTHRD003
