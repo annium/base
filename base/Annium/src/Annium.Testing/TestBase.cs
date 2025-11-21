@@ -137,23 +137,11 @@ public abstract class TestBase : ILogSubject
         where T : notnull => _sp.Value.ResolveKeyed<T>(key);
 
     /// <summary>
-    /// Injects a value into the test's service provider.
-    /// </summary>
-    /// <typeparam name="T">The type of the value.</typeparam>
-    /// <param name="value">The value to inject.</param>
-    public void Inject<T>(T value)
-        where T : class
-    {
-        Get<Injected<T>>().Init(value);
-    }
-
-    /// <summary>
     /// Registers shared services for the test container.
     /// </summary>
     /// <param name="container">The service container to register services in.</param>
     private void SharedRegister(IServiceContainer container)
     {
-        container.AddInjectables();
         container.AddRuntime(GetType().Assembly);
         container.AddTime().WithManagedTime().WithRelativeTime().SetDefault();
         container.AddLogging();

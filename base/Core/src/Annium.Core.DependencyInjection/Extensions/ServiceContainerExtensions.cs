@@ -29,14 +29,4 @@ public static class ServiceContainerExtensions
     {
         return container.Add(typeof(TImplementation));
     }
-
-    /// <summary>
-    /// Adds injectable services to the container
-    /// </summary>
-    /// <param name="container">Service container</param>
-    /// <returns>Service container</returns>
-    public static IServiceContainer AddInjectables(this IServiceContainer container)
-    {
-        return container.Add(typeof(Injected<>)).AsSelf().Scoped();
-    }
 }
