@@ -26,16 +26,4 @@ public static class TestBaseExtensions
     {
         test.Register(container => container.Add(typeof(TestLog<>)).AsSelf().In(lifetime));
     }
-
-    /// <summary>
-    /// Injects a value into the test's service provider.
-    /// </summary>
-    /// <typeparam name="T">The type of the value.</typeparam>
-    /// <param name="test">Test instance</param>
-    /// <param name="value">The value to inject.</param>
-    public static void Inject<T>(this TestBase test, T value)
-        where T : class
-    {
-        test.Get<Injected<T>>().Init(value);
-    }
 }
