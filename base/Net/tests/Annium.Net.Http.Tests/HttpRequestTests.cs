@@ -55,7 +55,8 @@ public class HttpRequestTests : TestBase
             .RunAsync(TestContext.Current.CancellationToken);
 
         // assert
-        response.IsAbort.IsTrue();
+        response.IsNetworkError.IsTrue();
+        response.IsAbort.IsFalse();
         response.IsSuccess.IsFalse();
         response.IsFailure.IsFalse();
         response.StatusCode.Is(HttpStatusCode.ServiceUnavailable);
@@ -87,6 +88,7 @@ public class HttpRequestTests : TestBase
         var response = await _httpRequestFactory.New(ServerUri).Get("/").RunAsync(new CancellationToken(true));
 
         // assert
+        response.IsNetworkError.IsFalse();
         response.IsAbort.IsTrue();
         response.IsSuccess.IsFalse();
         response.IsFailure.IsFalse();
@@ -122,6 +124,7 @@ public class HttpRequestTests : TestBase
             .RunAsync(TestContext.Current.CancellationToken);
 
         // assert
+        response.IsNetworkError.IsFalse();
         response.IsAbort.IsTrue();
         response.IsSuccess.IsFalse();
         response.IsFailure.IsFalse();
@@ -157,6 +160,7 @@ public class HttpRequestTests : TestBase
             .RunAsync(TestContext.Current.CancellationToken);
 
         // assert
+        response.IsNetworkError.IsFalse();
         response.IsAbort.IsFalse();
         response.IsSuccess.IsTrue();
         response.IsFailure.IsFalse();
@@ -206,6 +210,7 @@ public class HttpRequestTests : TestBase
             .RunAsync(TestContext.Current.CancellationToken);
 
         // assert
+        response.IsNetworkError.IsFalse();
         response.IsAbort.IsFalse();
         response.IsSuccess.IsTrue();
         response.IsFailure.IsFalse();
@@ -247,6 +252,7 @@ public class HttpRequestTests : TestBase
             .RunAsync(TestContext.Current.CancellationToken);
 
         // assert
+        response.IsNetworkError.IsFalse();
         response.IsAbort.IsFalse();
         response.IsSuccess.IsTrue();
         response.IsFailure.IsFalse();
@@ -285,6 +291,7 @@ public class HttpRequestTests : TestBase
             .RunAsync(TestContext.Current.CancellationToken);
 
         // assert
+        response.IsNetworkError.IsFalse();
         response.IsAbort.IsFalse();
         response.IsSuccess.IsTrue();
         response.IsFailure.IsFalse();

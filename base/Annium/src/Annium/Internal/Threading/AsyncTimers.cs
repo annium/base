@@ -126,9 +126,10 @@ internal abstract class AsyncTimerBase : ISequentialTimer, ILogSubject
     /// </summary>
     /// <param name="dueTime">The amount of time to delay before the first execution.</param>
     /// <param name="period">The time interval between executions.</param>
-    public void Change(int dueTime, int period)
+    /// <returns>true if the timer was successfully updated; otherwise, false.</returns>
+    public bool Change(int dueTime, int period)
     {
-        Timer.Change(dueTime, period);
+        return Timer.Change(dueTime, period);
     }
 
     /// <summary>

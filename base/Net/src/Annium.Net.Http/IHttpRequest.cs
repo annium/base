@@ -60,13 +60,6 @@ public interface IHttpRequest : ILogSubject
     IHttpRequest Base(string baseUri);
 
     /// <summary>
-    /// Specifies the HttpClient to use for the request
-    /// </summary>
-    /// <param name="client">The HttpClient instance</param>
-    /// <returns>This request instance for method chaining</returns>
-    IHttpRequest UseClient(HttpClient client);
-
-    /// <summary>
     /// Sets the HTTP method and URI for the request
     /// </summary>
     /// <param name="method">The HTTP method</param>
