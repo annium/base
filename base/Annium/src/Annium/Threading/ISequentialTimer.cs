@@ -12,5 +12,14 @@ public interface ISequentialTimer : IDisposable
     /// </summary>
     /// <param name="dueTime">The amount of time to delay before the invoking the callback method, in milliseconds.</param>
     /// <param name="period">The time interval between invocations of the callback method, in milliseconds.</param>
-    void Change(int dueTime, int period);
+    /// <returns>true if the timer was successfully updated; otherwise, false.</returns>
+    bool Change(int dueTime, int period);
+
+    /// <summary>
+    /// Changes the start time and the interval between method invocations for a timer.
+    /// </summary>
+    /// <param name="dueTime">The amount of time to delay before the first execution.</param>
+    /// <param name="period">The time interval between executions.</param>
+    /// <returns>true if the timer was successfully updated; otherwise, false.</returns>
+    bool Change(TimeSpan dueTime, TimeSpan period);
 }
