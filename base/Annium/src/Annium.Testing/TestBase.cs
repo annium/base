@@ -135,7 +135,6 @@ public abstract class TestBase : ILogSubject
     /// <param name="container">The service container to register services in.</param>
     private void SharedRegister(IServiceContainer container)
     {
-        container.AddInjectables();
         container.AddRuntime(GetType().Assembly);
         container.AddTime().WithManagedTime().WithRelativeTime().SetDefault();
         container.AddLogging();
