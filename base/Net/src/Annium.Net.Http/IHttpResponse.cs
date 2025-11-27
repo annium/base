@@ -23,6 +23,11 @@ public interface IHttpResponse<T> : IHttpResponse
 public interface IHttpResponse
 {
     /// <summary>
+    /// Gets a value indicating whether the request was failed to be sent due to network error
+    /// </summary>
+    bool IsNetworkError { get; }
+
+    /// <summary>
     /// Gets a value indicating whether the request was aborted
     /// </summary>
     bool IsAbort { get; }

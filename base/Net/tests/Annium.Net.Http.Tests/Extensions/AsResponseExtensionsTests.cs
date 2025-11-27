@@ -226,7 +226,7 @@ public class AsResponseExtensionsTests : TestBase
         this.Trace("start");
 
         // arrange
-        var error = new Error(HttpFailureReason.Undefined, "some failure");
+        var error = new Error(HttpFailureReason.Network, "some failure");
         await using var _ = RunServer(
             async (_, response) =>
             {
@@ -275,7 +275,7 @@ public class AsResponseExtensionsTests : TestBase
             .New(ServerUri)
             .Get("/")
             .AsResponseAsync<Data, Error>(
-                (r, c, e) => Task.FromResult(new Error(r, e?.Message ?? "failure")),
+                (r, _, e) => Task.FromResult(new Error(r, e?.Message ?? "failure")),
                 ct: TestContext.Current.CancellationToken
             );
 
@@ -297,7 +297,7 @@ public class AsResponseExtensionsTests : TestBase
         this.Trace("start");
 
         // arrange
-        var error = new Error(HttpFailureReason.Undefined, "some failure");
+        var error = new Error(HttpFailureReason.Network, "some failure");
         await using var _ = RunServer(
             async (_, response) =>
             {
@@ -312,7 +312,7 @@ public class AsResponseExtensionsTests : TestBase
             .New(ServerUri)
             .Get("/")
             .AsResponseAsync<Data, Error>(
-                (r, c, e) => Task.FromResult(new Error(r, e?.Message ?? "failure")),
+                (r, _, e) => Task.FromResult(new Error(r, e?.Message ?? "failure")),
                 ct: TestContext.Current.CancellationToken
             );
 
@@ -348,7 +348,7 @@ public class AsResponseExtensionsTests : TestBase
             .New(ServerUri)
             .Get("/")
             .AsResponseAsync<Data, Error>(
-                (r, c, e) => Task.FromResult(new Error(r, e?.Message ?? "failure")),
+                (r, _, e) => Task.FromResult(new Error(r, e?.Message ?? "failure")),
                 ct: TestContext.Current.CancellationToken
             );
 

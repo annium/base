@@ -38,7 +38,7 @@ internal class ErrorConverter : JsonConverter<Error>
         {
             if (reader.TokenType == JsonTokenType.EndObject && reader.CurrentDepth == currentDepth)
             {
-                return canConvert ? new Error(HttpFailureReason.Undefined, message) : null;
+                return canConvert ? new Error(HttpFailureReason.Network, message) : null;
             }
 
             if (reader.TokenType == JsonTokenType.PropertyName)

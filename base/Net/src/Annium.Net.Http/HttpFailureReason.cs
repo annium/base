@@ -6,9 +6,9 @@ namespace Annium.Net.Http;
 public enum HttpFailureReason
 {
     /// <summary>
-    /// Undefined failure reason
+    /// Network problems
     /// </summary>
-    Undefined,
+    Network,
 
     /// <summary>
     /// Request was aborted

@@ -120,6 +120,13 @@ public static class AsResponseExtensions
     )
     {
         var response = await request.RunAsync(ct);
+
+        if (response.IsNetworkError)
+            return new HttpResponse<OneOf<TSuccess, TFailure>>(
+                response,
+                await getFailure(HttpFailureReason.Network, response, null)
+            );
+
         if (response.IsAbort)
             return new HttpResponse<OneOf<TSuccess, TFailure>>(
                 response,

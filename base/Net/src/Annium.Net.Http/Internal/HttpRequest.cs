@@ -32,11 +32,6 @@ internal class HttpRequest : IHttpRequest
     private delegate Task<IHttpResponse> Middleware(Func<Task<IHttpResponse>> next, IHttpRequest request);
 
     /// <summary>
-    /// Default HTTP client used when no specific client is provided
-    /// </summary>
-    private static readonly HttpClient _defaultClient = new();
-
-    /// <summary>
     /// Gets or sets the HTTP method for the request
     /// </summary>
     public HttpMethod Method { get; private set; } = HttpMethod.Get;
@@ -79,7 +74,7 @@ internal class HttpRequest : IHttpRequest
     /// <summary>
     /// The HTTP client to use for sending the request
     /// </summary>
-    private HttpClient _client = _defaultClient;
+    private readonly HttpClient _client;
 
     /// <summary>
     /// The base URI for the request
@@ -114,23 +109,25 @@ internal class HttpRequest : IHttpRequest
     /// <summary>
     /// Initializes a new instance of the HttpRequest class with a base URI
     /// </summary>
+    /// <param name="client">The HttpClient to handle request with</param>
     /// <param name="baseUri">The base URI for the request</param>
     /// <param name="httpContentSerializer">The serializer for HTTP content</param>
     /// <param name="logger">The logger instance</param>
-    internal HttpRequest(Uri baseUri, Serializer httpContentSerializer, ILogger logger)
-        : this(httpContentSerializer, logger)
+    internal HttpRequest(HttpClient client, Uri baseUri, Serializer httpContentSerializer, ILogger logger)
+        : this(client, httpContentSerializer, logger)
     {
-        Logger = logger;
         _baseUri = baseUri.NotNull();
     }
 
     /// <summary>
     /// Initializes a new instance of the HttpRequest class
     /// </summary>
+    /// <param name="client">The HttpClient to handle request with</param>
     /// <param name="httpContentSerializer">The serializer for HTTP content</param>
     /// <param name="logger">The logger instance</param>
-    internal HttpRequest(Serializer httpContentSerializer, ILogger logger)
+    internal HttpRequest(HttpClient client, Serializer httpContentSerializer, ILogger logger)
     {
+        _client = client;
         Serializer = httpContentSerializer;
         Logger = logger;
         using var message = new HttpRequestMessage();
@@ -155,18 +152,6 @@ internal class HttpRequest : IHttpRequest
     /// <param name="baseUri">The base URI string to set</param>
     /// <returns>The current request instance for method chaining</returns>
     public IHttpRequest Base(string baseUri) => Base(new Uri(baseUri));
-
-    /// <summary>
-    /// Sets the HTTP client to use for the request
-    /// </summary>
-    /// <param name="client">The HTTP client to use</param>
-    /// <returns>The current request instance for method chaining</returns>
-    public IHttpRequest UseClient(HttpClient client)
-    {
-        _client = client.NotNull();
-
-        return this;
-    }
 
     /// <summary>
     /// Sets the HTTP method and URI for the request
@@ -438,7 +423,13 @@ internal class HttpRequest : IHttpRequest
         if (ct.IsCancellationRequested)
         {
             this.Trace("canceled");
-            return new HttpResponse(Uri, HttpStatusCode.RequestTimeout, "Request canceled", string.Empty);
+            return HttpResponse.Abort(
+                Uri,
+                HttpStatusCode.RequestTimeout,
+                "Request canceled",
+                HttpResponse.EmptyHeaders,
+                HttpResponse.EmptyStringContent
+            );
         }
 
         var middleware = _middlewares[middlewareIndex];
@@ -471,7 +462,13 @@ internal class HttpRequest : IHttpRequest
         if (ct.IsCancellationRequested)
         {
             this.Trace("canceled");
-            return new HttpResponse(Uri, HttpStatusCode.RequestTimeout, "Request canceled", string.Empty);
+            return HttpResponse.Abort(
+                Uri,
+                HttpStatusCode.RequestTimeout,
+                "Request canceled",
+                HttpResponse.EmptyHeaders,
+                HttpResponse.EmptyStringContent
+            );
         }
 
         // call configuration exactly before run
@@ -499,7 +496,14 @@ internal class HttpRequest : IHttpRequest
                 .ConfigureAwait(false);
 
             this.Trace("prepare response");
-            var response = new HttpResponse(uri, responseMessage);
+            var response = HttpResponse.Result(
+                responseMessage.IsSuccessStatusCode,
+                uri,
+                responseMessage.StatusCode,
+                responseMessage.ReasonPhrase ?? string.Empty,
+                responseMessage.Headers,
+                responseMessage.Content
+            );
 
             this.Trace("done");
 
@@ -508,12 +512,24 @@ internal class HttpRequest : IHttpRequest
         catch (HttpRequestException e)
         {
             this.Trace("handle connection refused");
-            return new HttpResponse(uri, HttpStatusCode.ServiceUnavailable, "Connection refused", e.Message);
+            return HttpResponse.NetworkError(
+                Uri,
+                HttpStatusCode.ServiceUnavailable,
+                "Connection refused",
+                HttpResponse.EmptyHeaders,
+                new StringContent(e.Message)
+            );
         }
-        catch (OperationCanceledException e)
+        catch (OperationCanceledException)
         {
             this.Trace("handle task canceled");
-            return new HttpResponse(uri, HttpStatusCode.RequestTimeout, "Request canceled", e.Message);
+            return HttpResponse.Abort(
+                Uri,
+                HttpStatusCode.RequestTimeout,
+                "Request canceled",
+                HttpResponse.EmptyHeaders,
+                HttpResponse.EmptyStringContent
+            );
         }
     }
 }

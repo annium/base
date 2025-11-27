@@ -34,15 +34,87 @@ public class HttpResponse<T> : HttpResponse, IHttpResponse<T>
 public class HttpResponse : IHttpResponse
 {
     /// <summary>
-    /// Default HTTP response headers used for aborted requests
+    /// Default HTTP response headers, useful for network error / aborted requests
     /// </summary>
-    private static readonly HttpResponseHeaders _defaultHeaders;
+    public static readonly HttpResponseHeaders EmptyHeaders;
+
+    /// <summary>
+    /// Empty StringContent, useful for network error / aborted requests
+    /// </summary>
+    public static HttpContent EmptyStringContent => new StringContent(string.Empty);
 
     static HttpResponse()
     {
         using var message = new HttpResponseMessage();
-        _defaultHeaders = message.Headers;
+        EmptyHeaders = message.Headers;
     }
+
+    /// <summary>
+    /// Initializes a new instance of the HttpResponse class for a network failed request
+    /// </summary>
+    /// <param name="uri">The URI that generated this response</param>
+    /// <param name="statusCode">HTTP status code</param>
+    /// <param name="statusText">HTTP status text</param>
+    /// <param name="headers">HttpResponseHeaders for manually created NetworkError HttpResponse</param>
+    /// <param name="content">HttpContent for manually created NetworkError HttpResponse</param>
+    /// <returns>new HttpResponse with specified parameters</returns>
+    public static HttpResponse NetworkError(
+        Uri uri,
+        HttpStatusCode statusCode,
+        string statusText,
+        HttpResponseHeaders headers,
+        HttpContent content
+    )
+    {
+        return new HttpResponse(true, false, false, false, statusCode, statusText, uri, headers, content);
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the HttpResponse class for a client aborted request
+    /// </summary>
+    /// <param name="uri">The URI that generated this response</param>
+    /// <param name="statusCode">HTTP status code</param>
+    /// <param name="statusText">HTTP status text</param>
+    /// <param name="headers">HttpResponseHeaders for manually created Abort HttpResponse</param>
+    /// <param name="content">HttpContent for manually created Abort HttpResponse</param>
+    /// <returns>new HttpResponse with specified parameters</returns>
+    public static HttpResponse Abort(
+        Uri uri,
+        HttpStatusCode statusCode,
+        string statusText,
+        HttpResponseHeaders headers,
+        HttpContent content
+    )
+    {
+        return new HttpResponse(false, true, false, false, statusCode, statusText, uri, headers, content);
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the HttpResponse class for a successful response
+    /// </summary>
+    /// <param name="isSuccess">Flag indicating whether response is successful</param>
+    /// <param name="uri">The URI that generated this response</param>
+    /// <param name="statusCode">HTTP status code</param>
+    /// <param name="statusText">HTTP status text</param>
+    /// <param name="headers">HttpResponseHeaders from resulting HttpResponseMessage</param>
+    /// <param name="content">HttpContent from resulting HttpResponseMessage</param>
+    /// <returns>new HttpResponse with specified parameters</returns>
+    public static HttpResponse Result(
+        bool isSuccess,
+        Uri uri,
+        HttpStatusCode statusCode,
+        string statusText,
+        HttpResponseHeaders headers,
+        HttpContent content
+    )
+    {
+        return new HttpResponse(false, false, isSuccess, !isSuccess, statusCode, statusText, uri, headers, content);
+    }
+
+    /// <summary>
+    /// Gets a value indicating whether the request was failed to be sent due to network error
+    /// </summary>
+    public bool IsNetworkError { get; }
 
     /// <summary>
     /// Gets a value indicating whether the request was aborted
@@ -85,39 +157,38 @@ public class HttpResponse : IHttpResponse
     public HttpContent Content { get; }
 
     /// <summary>
-    /// Initializes a new instance of the HttpResponse class from an HttpResponseMessage
+    /// Initializes a new instance of the HttpResponse class from another response
     /// </summary>
-    /// <param name="uri">The URI that generated this response</param>
-    /// <param name="message">The HttpResponseMessage</param>
-    public HttpResponse(Uri uri, HttpResponseMessage message)
+    /// <param name="isNetworkError">Flag, indicating simulated response for network failure</param>
+    /// <param name="isAbort">Flag, indicating simulated response for request, aborted by client</param>
+    /// <param name="isSuccess">Flag, indicating successful response</param>
+    /// <param name="isFailure">Flag, indicating failed response</param>
+    /// <param name="statusCode">Response status code</param>
+    /// <param name="statusText">Response status text</param>
+    /// <param name="uri">Request original Uri</param>
+    /// <param name="headers">Response headers</param>
+    /// <param name="content">Response content</param>
+    private HttpResponse(
+        bool isNetworkError,
+        bool isAbort,
+        bool isSuccess,
+        bool isFailure,
+        HttpStatusCode statusCode,
+        string statusText,
+        Uri uri,
+        HttpResponseHeaders headers,
+        HttpContent content
+    )
     {
-        IsAbort = false;
-        IsSuccess = message.IsSuccessStatusCode;
-        IsFailure = !message.IsSuccessStatusCode;
-        StatusCode = message.StatusCode;
-        StatusText = message.ReasonPhrase ?? string.Empty;
-        Uri = uri;
-        Headers = message.Headers;
-        Content = message.Content;
-    }
-
-    /// <summary>
-    /// Initializes a new instance of the HttpResponse class for an aborted request
-    /// </summary>
-    /// <param name="uri">The URI that generated this response</param>
-    /// <param name="statusCode">The HTTP status code</param>
-    /// <param name="statusText">The status text</param>
-    /// <param name="message">The response message</param>
-    internal HttpResponse(Uri uri, HttpStatusCode statusCode, string statusText, string message)
-    {
-        IsAbort = true;
-        IsSuccess = false;
-        IsFailure = false;
+        IsNetworkError = isNetworkError;
+        IsAbort = isAbort;
+        IsSuccess = isSuccess;
+        IsFailure = isFailure;
         StatusCode = statusCode;
         StatusText = statusText;
         Uri = uri;
-        Headers = _defaultHeaders;
-        Content = new StringContent(message);
+        Headers = headers;
+        Content = content;
     }
 
     /// <summary>
@@ -125,6 +196,17 @@ public class HttpResponse : IHttpResponse
     /// </summary>
     /// <param name="response">The source response</param>
     protected HttpResponse(IHttpResponse response)
+        : this(
+            response.IsNetworkError,
+            response.IsAbort,
+            response.IsSuccess,
+            response.IsFailure,
+            response.StatusCode,
+            response.StatusText,
+            response.Uri,
+            response.Headers,
+            response.Content
+        )
     {
         IsAbort = response.IsAbort;
         IsSuccess = response.IsSuccess;
