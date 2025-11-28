@@ -19,7 +19,7 @@ public class SelectParallelAsyncTest : TestBase
     public SelectParallelAsyncTest(ITestOutputHelper outputHelper)
         : base(outputHelper)
     {
-        RegisterTestLogs();
+        this.RegisterTestLogs();
     }
 
     /// <summary>

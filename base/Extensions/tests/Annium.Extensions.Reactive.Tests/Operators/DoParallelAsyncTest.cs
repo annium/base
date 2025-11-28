@@ -19,7 +19,7 @@ public class DoParallelAsyncTest : TestBase
     public DoParallelAsyncTest(ITestOutputHelper outputHelper)
         : base(outputHelper)
     {
-        RegisterTestLogs();
+        this.RegisterTestLogs();
     }
 
     /// <summary>

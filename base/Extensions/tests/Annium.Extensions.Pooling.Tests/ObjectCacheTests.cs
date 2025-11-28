@@ -42,7 +42,7 @@ public class ObjectCacheTests : TestBase
         {
             container.AddObjectCache<ItemKey, Item, ItemProvider>(ServiceLifetime.Singleton);
         });
-        RegisterTestLogs();
+        this.RegisterTestLogs();
     }
 
     /// <summary>

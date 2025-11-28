@@ -14,7 +14,7 @@ public class ObjectConfigurationProviderTest : TestBase
     public ObjectConfigurationProviderTest(ITestOutputHelper outputHelper)
         : base(outputHelper)
     {
-        RegisterMapper();
+        this.RegisterMapper();
     }
 
     /// <summary>

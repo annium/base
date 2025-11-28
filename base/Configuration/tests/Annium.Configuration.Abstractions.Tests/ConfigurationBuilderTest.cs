@@ -13,7 +13,7 @@ public class ConfigurationBuilderTest : TestBase
     public ConfigurationBuilderTest(ITestOutputHelper outputHelper)
         : base(outputHelper)
     {
-        RegisterMapper();
+        this.RegisterMapper();
     }
 
     /// <summary>

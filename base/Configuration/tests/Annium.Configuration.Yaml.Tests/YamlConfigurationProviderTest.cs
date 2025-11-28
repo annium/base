@@ -17,7 +17,7 @@ public class YamlConfigurationProviderTest : TestBase
     public YamlConfigurationProviderTest(ITestOutputHelper outputHelper)
         : base(outputHelper)
     {
-        RegisterMapper();
+        this.RegisterMapper();
     }
 
     /// <summary>
