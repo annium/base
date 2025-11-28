@@ -21,7 +21,7 @@ public class JsonConfigurationProviderTest : TestBase
     public JsonConfigurationProviderTest(ITestOutputHelper outputHelper)
         : base(outputHelper)
     {
-        RegisterMapper();
+        this.RegisterMapper();
     }
 
     /// <summary>

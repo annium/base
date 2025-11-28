@@ -15,7 +15,7 @@ public class CommandLineConfigurationProviderTest : TestBase
     public CommandLineConfigurationProviderTest(ITestOutputHelper outputHelper)
         : base(outputHelper)
     {
-        RegisterMapper();
+        this.RegisterMapper();
     }
 
     /// <summary>
