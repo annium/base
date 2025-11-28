@@ -1,8 +1,10 @@
 using System;
+using System.Collections.Generic;
 using Annium.Core.DependencyInjection;
 using Annium.Core.Mapper;
 using Annium.Core.Runtime;
 using Annium.Logging;
+using Annium.Logging.InMemory;
 using Annium.Logging.Shared;
 using Annium.Logging.Xunit;
 using Microsoft.Extensions.DependencyInjection;
@@ -23,6 +25,11 @@ public abstract class TestBase : ILogSubject
     public ILogger Logger => _logger.Value;
 
     /// <summary>
+    /// Gets the captured logs.
+    /// </summary>
+    public IReadOnlyList<LogMessage<DefaultLogContext>> Logs => _inMemoryLogHandler.Logs;
+
+    /// <summary>
     /// Gets the service provider for resolving dependencies.
     /// </summary>
     public IServiceProvider Provider => _sp.Value;
@@ -41,6 +48,11 @@ public abstract class TestBase : ILogSubject
     /// The lazy-initialized logger.
     /// </summary>
     private readonly Lazy<ILogger> _logger;
+
+    /// <summary>
+    /// InMemory log handler.
+    /// </summary>
+    private readonly InMemoryLogHandler<DefaultLogContext> _inMemoryLogHandler = new();
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TestBase"/> class.
@@ -159,7 +171,7 @@ public abstract class TestBase : ILogSubject
     /// <param name="sp">The service provider.</param>
     private void SharedSetup(IServiceProvider sp)
     {
-        sp.UseLogging(x => x.UseTestOutput());
+        sp.UseLogging(x => x.UseTestOutput().UseInMemory(_inMemoryLogHandler));
     }
 
     /// <summary>
