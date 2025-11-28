@@ -28,11 +28,6 @@ public abstract class TestBase : ILogSubject
     public IServiceProvider Provider => _sp.Value;
 
     /// <summary>
-    /// Indicates whether the service provider has been built.
-    /// </summary>
-    private bool _isBuilt;
-
-    /// <summary>
     /// The builder for the service provider.
     /// </summary>
     private readonly IServiceProviderBuilder _builder;
@@ -53,14 +48,13 @@ public abstract class TestBase : ILogSubject
     /// <param name="outputHelper">The test output helper for logging.</param>
     protected TestBase(ITestOutputHelper outputHelper)
     {
-        _builder = new ServiceProviderFactory().CreateBuilder(new ServiceContainer().Collection);
+        _builder = new ServiceProviderFactory().CreateBuilder(new ServiceCollection());
+        _sp = new Lazy<IKeyedServiceProvider>(BuildServiceProvider, true);
+        _logger = new Lazy<ILogger>(Get<ILogger>, true);
 
         Register(container => container.Add(outputHelper).AsSelf().Singleton());
         Register(SharedRegister);
         Setup(SharedSetup);
-
-        _sp = new Lazy<IKeyedServiceProvider>(BuildServiceProvider, true);
-        _logger = new Lazy<ILogger>(Get<ILogger>, true);
     }
 
     /// <summary>
@@ -175,7 +169,6 @@ public abstract class TestBase : ILogSubject
     private IKeyedServiceProvider BuildServiceProvider()
     {
         EnsureNotBuilt();
-        _isBuilt = true;
 
         return _builder.Build();
     }
@@ -186,7 +179,7 @@ public abstract class TestBase : ILogSubject
     /// <exception cref="InvalidOperationException">Thrown if the service provider is already built.</exception>
     private void EnsureNotBuilt()
     {
-        if (_isBuilt)
+        if (_sp.IsValueCreated)
             throw new InvalidOperationException("ServiceProvider is already built");
     }
 }
