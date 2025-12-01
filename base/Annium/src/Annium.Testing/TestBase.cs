@@ -147,7 +147,7 @@ public abstract class TestBase : ILogSubject
     /// <param name="sp">The service provider.</param>
     private void SharedSetup(IServiceProvider sp)
     {
-        sp.UseLogging(x => x.UseTestOutput().UseInMemory(_inMemoryLogHandler));
+        sp.UseLogging(x => x.ForAll().UseTestOutput().ForAll().UseInMemory(_inMemoryLogHandler));
     }
 
     /// <summary>
