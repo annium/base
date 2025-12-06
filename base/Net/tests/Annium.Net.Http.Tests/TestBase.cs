@@ -14,38 +14,20 @@ namespace Annium.Net.Http.Tests;
 public abstract class TestBase : Testing.TestBase
 {
     /// <summary>
-    /// Base port number for test servers.
-    /// </summary>
-    private static int _basePort = 40000;
-
-    /// <summary>
-    /// The server URI for the test server.
-    /// </summary>
-    protected readonly Uri ServerUri;
-
-    /// <summary>
-    /// The port number used by this test instance.
-    /// </summary>
-    private readonly int _port;
-
-    /// <summary>
     /// Initializes a new instance of the TestBase class.
     /// </summary>
     /// <param name="outputHelper">The test output helper.</param>
     protected TestBase(ITestOutputHelper outputHelper)
-        : base(outputHelper)
-    {
-        _port = Interlocked.Increment(ref _basePort);
-        ServerUri = new Uri($"http://127.0.0.1:{_port}");
-    }
+        : base(outputHelper) { }
 
     /// <summary>
     /// Runs a test server with the specified request handler.
     /// </summary>
     /// <param name="handle">The function to handle HTTP requests.</param>
     /// <returns>An IAsyncDisposable to stop the server.</returns>
-    protected IAsyncDisposable RunServer(Func<HttpListenerRequest, HttpListenerResponse, Task> handle)
+    protected IServer RunServer(Func<HttpListenerRequest, HttpListenerResponse, Task> handle)
     {
+        var sp = Get<IServiceProvider>();
         var handler = new HttpHandler(async ctx =>
         {
             this.Trace("start");
@@ -67,19 +49,7 @@ public abstract class TestBase : Testing.TestBase
             this.Trace("done");
         });
 
-        var server = ServerBuilder.New(Get<IServiceProvider>(), _port).WithHttpHandler(handler).Build();
-        var cts = new CancellationTokenSource();
-        var serverTask = server.RunAsync(cts.Token);
-
-        return Disposable.Create(async () =>
-        {
-            // await before cancellation for a while
-            await Task.Delay(5, CancellationToken.None);
-            await cts.CancelAsync();
-#pragma warning disable VSTHRD003
-            await serverTask;
-#pragma warning restore VSTHRD003
-        });
+        return ServerBuilder.New(sp).WithHttpHandler(handler).Start().NotNull();
     }
 }
 

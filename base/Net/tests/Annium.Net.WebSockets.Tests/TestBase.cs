@@ -2,7 +2,6 @@ using System;
 using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
-using Annium.Logging;
 using Annium.Net.Servers.Web;
 using Xunit;
 
@@ -13,62 +12,22 @@ namespace Annium.Net.WebSockets.Tests;
 /// </summary>
 public abstract class TestBase : Testing.TestBase
 {
-    /// <summary>
-    /// Base port number for test servers
-    /// </summary>
-    private static int _basePort = 35000;
-
-    /// <summary>
-    /// URI of the test server for this test instance
-    /// </summary>
-    protected readonly Uri ServerUri;
-
-    /// <summary>
-    /// Port number assigned to this test instance
-    /// </summary>
-    private readonly int _port;
-
     protected TestBase(ITestOutputHelper outputHelper)
-        : base(outputHelper)
-    {
-        _port = Interlocked.Increment(ref _basePort);
-        ServerUri = new Uri($"ws://127.0.0.1:{_port}");
-    }
+        : base(outputHelper) { }
 
     /// <summary>
     /// Runs a base WebSocket server for testing
     /// </summary>
     /// <param name="handleWebSocket">Function to handle WebSocket connections</param>
     /// <returns>Disposable representing the running server</returns>
-    protected IAsyncDisposable RunServerBase(
+    protected IServer RunServerBase(
         Func<IServiceProvider, HttpListenerWebSocketContext, CancellationToken, Task> handleWebSocket
     )
     {
         var sp = Get<IServiceProvider>();
-        var server = ServerBuilder
-            .New(sp, _port)
-            .WithWebSocketHandler(new WebSocketHandler(sp, handleWebSocket))
-            .Build();
-        var cts = new CancellationTokenSource();
-        var serverTask = server.RunAsync(cts.Token);
+        var handler = new WebSocketHandler(sp, handleWebSocket);
 
-        return Disposable.Create(async () =>
-        {
-            this.Trace("start");
-
-            // await before cancellation for a while
-            await Task.Delay(5, CancellationToken.None);
-
-            this.Trace("cancel server run");
-            await cts.CancelAsync();
-
-            this.Trace("await server task");
-#pragma warning disable VSTHRD003
-            await serverTask;
-#pragma warning restore VSTHRD003
-
-            this.Trace("done");
-        });
+        return ServerBuilder.New(sp).WithWebSocketHandler(handler).Start().NotNull();
     }
 }
 

@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Annium.Core.DependencyInjection;
 using Annium.Logging;
+using Annium.Net.Servers.Web;
 using Annium.Testing;
 using Annium.Threading.Tasks;
 using Xunit;
@@ -75,10 +76,10 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
         const string message = "demo";
 
         this.Trace("run server");
-        await using var _ = RunServer(async serverSocket => await serverSocket.WhenDisconnectedAsync());
+        await using var server = RunServer(async serverSocket => await serverSocket.WhenDisconnectedAsync());
 
         this.Trace("connect");
-        await ConnectAsync();
+        await ConnectAsync(server);
 
         // act
         this.Trace("send text");
@@ -105,7 +106,7 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
         var serverConnectionTcs = new TaskCompletionSource();
 
         this.Trace("run server");
-        await using var _ = RunServer(async serverSocket =>
+        await using var server = RunServer(async serverSocket =>
         {
             this.Trace("send signal to client");
             var disconnectionTask = serverSocket.WhenDisconnectedAsync();
@@ -114,7 +115,7 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
         });
 
         this.Trace("connect");
-        await ConnectAsync();
+        await ConnectAsync(server);
 
         this.Trace("server connected");
         await serverConnectionTcs.Task;
@@ -146,7 +147,7 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
         const string message = "demo";
 
         this.Trace("run server");
-        await using var _ = RunServer(serverSocket =>
+        await using var server = RunServer(serverSocket =>
         {
             this.Trace("disconnect server socket");
             serverSocket.Disconnect();
@@ -156,7 +157,7 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
 
         this.Trace("connect");
         var disconnectionTask = ClientSocket.WhenDisconnectedAsync(ct: TestContext.Current.CancellationToken);
-        await ConnectAsync();
+        await ConnectAsync(server);
 
         this.Trace("await until disconnected");
         await disconnectionTask;
@@ -187,7 +188,7 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
         var serverConnectionTcs = new TaskCompletionSource();
 
         this.Trace("run server");
-        await using var _ = RunServer(async serverSocket =>
+        await using var server = RunServer(async serverSocket =>
         {
             this.Trace("subscribe to text messages");
             serverSocket.OnTextReceived += x => serverSocket.SendTextAsync(x.ToArray(), CancellationToken.None).Await();
@@ -207,7 +208,7 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
         });
 
         this.Trace("connect");
-        await ConnectAsync();
+        await ConnectAsync(server);
 
         this.Trace("server connected");
         await serverConnectionTcs.Task;
@@ -249,7 +250,7 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
         var serverConnectionTcs = new TaskCompletionSource();
 
         this.Trace("run server");
-        await using var _ = RunServer(async serverSocket =>
+        await using var server = RunServer(async serverSocket =>
         {
             this.Trace("subscribe to text messages");
             serverSocket.OnTextReceived += x => serverSocket.SendTextAsync(x.ToArray(), CancellationToken.None).Await();
@@ -269,7 +270,7 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
         });
 
         this.Trace("connect");
-        await ConnectAsync();
+        await ConnectAsync(server);
 
         this.Trace("server connected");
         await serverConnectionTcs.Task;
@@ -290,7 +291,7 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
         // act - send binary
         this.Trace("connect");
         serverConnectionTcs = new TaskCompletionSource();
-        await ConnectAsync();
+        await ConnectAsync(server);
 
         this.Trace("server connected");
         await serverConnectionTcs.Task;
@@ -324,7 +325,7 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
         var serverStopTcs = new TaskCompletionSource();
 
         this.Trace("run server");
-        await using var _ = RunServer(async serverSocket =>
+        await using var server = RunServer(async serverSocket =>
         {
             this.Trace("start sending messages");
 
@@ -343,7 +344,7 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
 
         // act
         this.Trace("connect");
-        await ConnectAsync();
+        await ConnectAsync(server);
 
         // assert
         this.Trace("assert text message arrived");
@@ -367,7 +368,7 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
         var serverStopTcs = new TaskCompletionSource();
 
         this.Trace("run server");
-        await using var _ = RunServer(async serverSocket =>
+        await using var server = RunServer(async serverSocket =>
         {
             this.Trace("start sending messages");
 
@@ -387,7 +388,7 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
         // act
         this.Trace("connect");
         var disconnectionTask = ClientSocket.WhenDisconnectedAsync(ct: TestContext.Current.CancellationToken);
-        await ConnectAsync();
+        await ConnectAsync(server);
 
         // assert
         this.Trace("assert text message arrived");
@@ -417,7 +418,7 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
         var serverStopTcs = new TaskCompletionSource();
 
         this.Trace("run server");
-        await using var _ = RunServer(async serverSocket =>
+        await using var server = RunServer(async serverSocket =>
         {
             this.Trace("start sending messages");
 
@@ -443,7 +444,7 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
         // act
         this.Trace("connect");
         var disconnectionTask = ClientSocket.WhenDisconnectedAsync(ct: TestContext.Current.CancellationToken);
-        await ConnectAsync();
+        await ConnectAsync(server);
 
         // assert
         this.Trace("assert text messages arrived");
@@ -478,7 +479,7 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
         var connectionsCount = 3;
 
         this.Trace("run server");
-        await using var _ = RunServer(async serverSocket =>
+        await using var server = RunServer(async serverSocket =>
         {
             connectionIndex++;
             if (connectionIndex > connectionsCount)
@@ -532,7 +533,7 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
         };
 
         this.Trace("connect");
-        await ConnectAsync();
+        await ConnectAsync(server);
 
         // assert
         this.Trace("wait for {messagesCount} messages", messages.Length);
@@ -596,7 +597,7 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
     /// </summary>
     /// <param name="handleWebSocket">Function to handle WebSocket connections</param>
     /// <returns>Disposable representing the running server</returns>
-    private IAsyncDisposable RunServer(Func<ServerWebSocket, Task> handleWebSocket)
+    private IServer RunServer(Func<ServerWebSocket, Task> handleWebSocket)
     {
         return RunServerBase(
             async (sp, ctx, ct) =>
@@ -619,8 +620,9 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
     /// <summary>
     /// Connects the client WebSocket to the test server
     /// </summary>
+    /// <param name="server">Server to connect to</param>
     /// <returns>Task representing the connection operation</returns>
-    private async Task ConnectAsync()
+    private async Task ConnectAsync(IServer server)
     {
         this.Trace("start");
 
@@ -637,7 +639,7 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
 
         ClientSocket.OnConnected += HandleConnected;
 
-        ClientSocket.Connect(ServerUri);
+        ClientSocket.Connect(new Uri($"ws://127.0.0.1:{server.Uri.Port}/"));
 
         await tcs.Task.WaitAsync(TimeSpan.FromSeconds(10));
 

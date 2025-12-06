@@ -1,4 +1,3 @@
-using System.Threading;
 using Annium.Net.Http.Benchmark.Internal;
 using BenchmarkDotNet.Columns;
 using BenchmarkDotNet.Configs;
@@ -11,8 +10,7 @@ using BenchmarkDotNet.Loggers;
 using BenchmarkDotNet.Running;
 using BenchmarkDotNet.Validators;
 
-var cts = new CancellationTokenSource();
-var serverTask = WorkloadServer.RunAsync(cts.Token);
+WorkloadServer.Start();
 
 var config = new ManualConfig()
     .AddExporter(MarkdownExporter.Default)
@@ -22,8 +20,8 @@ var config = new ManualConfig()
             .WithLaunchCount(3)
             .WithIterationCount(5)
             .WithStrategy(RunStrategy.Throughput)
-            .WithPlatform(Platform.X64)
-            .WithRuntime(CoreRuntime.Core70)
+            .WithPlatform(Platform.AnyCpu)
+            .WithRuntime(CoreRuntime.Latest)
     )
     .AddValidator(JitOptimizationsValidator.DontFailOnError)
     .AddLogger(ConsoleLogger.Default)
@@ -31,7 +29,4 @@ var config = new ManualConfig()
 
 BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args, config);
 
-cts.Cancel();
-#pragma warning disable VSTHRD003
-await serverTask;
-#pragma warning restore VSTHRD003
+await WorkloadServer.StopAsync();

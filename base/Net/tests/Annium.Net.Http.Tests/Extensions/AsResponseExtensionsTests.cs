@@ -62,7 +62,7 @@ public class AsResponseExtensionsTests : TestBase
 
         // arrange
         var data = new Data(5);
-        await using var _ = RunServer(
+        await using var server = RunServer(
             async (_, response) =>
             {
                 await WriteJsonAsync(response, data);
@@ -73,7 +73,7 @@ public class AsResponseExtensionsTests : TestBase
         // act
         this.Trace("send");
         var response = await _httpRequestFactory
-            .New(ServerUri)
+            .New(server.Uri)
             .Get("/")
             .AsResponseAsync<Data>(ct: TestContext.Current.CancellationToken);
 
@@ -94,7 +94,7 @@ public class AsResponseExtensionsTests : TestBase
         this.Trace("start");
 
         // arrange
-        await using var _ = RunServer(
+        await using var server = RunServer(
             async (_, response) =>
             {
                 await WriteInvalidJsonAsync(response);
@@ -105,7 +105,7 @@ public class AsResponseExtensionsTests : TestBase
         // act
         this.Trace("send");
         var response = await _httpRequestFactory
-            .New(ServerUri)
+            .New(server.Uri)
             .Get("/")
             .AsResponseAsync<Data>(ct: TestContext.Current.CancellationToken);
 
@@ -127,7 +127,7 @@ public class AsResponseExtensionsTests : TestBase
         // arrange
         var data = new Data(5);
         var defaultData = new Data(7);
-        await using var _ = RunServer(
+        await using var server = RunServer(
             async (_, response) =>
             {
                 await WriteJsonAsync(response, data);
@@ -138,7 +138,7 @@ public class AsResponseExtensionsTests : TestBase
         // act
         this.Trace("send");
         var response = await _httpRequestFactory
-            .New(ServerUri)
+            .New(server.Uri)
             .Get("/")
             .AsResponseAsync(defaultData, ct: TestContext.Current.CancellationToken);
 
@@ -160,7 +160,7 @@ public class AsResponseExtensionsTests : TestBase
 
         // arrange
         var defaultData = new Data(7);
-        await using var _ = RunServer(
+        await using var server = RunServer(
             async (_, response) =>
             {
                 await WriteInvalidJsonAsync(response);
@@ -171,7 +171,7 @@ public class AsResponseExtensionsTests : TestBase
         // act
         this.Trace("send");
         var response = await _httpRequestFactory
-            .New(ServerUri)
+            .New(server.Uri)
             .Get("/")
             .AsResponseAsync(defaultData, ct: TestContext.Current.CancellationToken);
 
@@ -193,7 +193,7 @@ public class AsResponseExtensionsTests : TestBase
 
         // arrange
         var data = new Data(5);
-        await using var _ = RunServer(
+        await using var server = RunServer(
             async (_, response) =>
             {
                 await WriteJsonAsync(response, data);
@@ -204,7 +204,7 @@ public class AsResponseExtensionsTests : TestBase
         // act
         this.Trace("send");
         var response = await _httpRequestFactory
-            .New(ServerUri)
+            .New(server.Uri)
             .Get("/")
             .AsResponseAsync<Data, Error>(ct: TestContext.Current.CancellationToken);
 
@@ -227,7 +227,7 @@ public class AsResponseExtensionsTests : TestBase
 
         // arrange
         var error = new Error(HttpFailureReason.Network, "some failure");
-        await using var _ = RunServer(
+        await using var server = RunServer(
             async (_, response) =>
             {
                 await WriteJsonAsync(response, error);
@@ -238,7 +238,7 @@ public class AsResponseExtensionsTests : TestBase
         // act
         this.Trace("send");
         var response = await _httpRequestFactory
-            .New(ServerUri)
+            .New(server.Uri)
             .Get("/")
             .AsResponseAsync<Data, Error>(ct: TestContext.Current.CancellationToken);
 
@@ -261,7 +261,7 @@ public class AsResponseExtensionsTests : TestBase
 
         // arrange
         var data = new Data(5);
-        await using var _ = RunServer(
+        await using var server = RunServer(
             async (_, response) =>
             {
                 await WriteJsonAsync(response, data);
@@ -272,7 +272,7 @@ public class AsResponseExtensionsTests : TestBase
         // act
         this.Trace("send");
         var response = await _httpRequestFactory
-            .New(ServerUri)
+            .New(server.Uri)
             .Get("/")
             .AsResponseAsync<Data, Error>(
                 (r, _, e) => Task.FromResult(new Error(r, e?.Message ?? "failure")),
@@ -298,7 +298,7 @@ public class AsResponseExtensionsTests : TestBase
 
         // arrange
         var error = new Error(HttpFailureReason.Network, "some failure");
-        await using var _ = RunServer(
+        await using var server = RunServer(
             async (_, response) =>
             {
                 await WriteJsonAsync(response, error);
@@ -309,7 +309,7 @@ public class AsResponseExtensionsTests : TestBase
         // act
         this.Trace("send");
         var response = await _httpRequestFactory
-            .New(ServerUri)
+            .New(server.Uri)
             .Get("/")
             .AsResponseAsync<Data, Error>(
                 (r, _, e) => Task.FromResult(new Error(r, e?.Message ?? "failure")),
@@ -334,7 +334,7 @@ public class AsResponseExtensionsTests : TestBase
         this.Trace("start");
 
         // arrange
-        await using var _ = RunServer(
+        await using var server = RunServer(
             async (_, response) =>
             {
                 await WriteInvalidJsonAsync(response);
@@ -345,7 +345,7 @@ public class AsResponseExtensionsTests : TestBase
         // act
         this.Trace("send");
         var response = await _httpRequestFactory
-            .New(ServerUri)
+            .New(server.Uri)
             .Get("/")
             .AsResponseAsync<Data, Error>(
                 (r, _, e) => Task.FromResult(new Error(r, e?.Message ?? "failure")),

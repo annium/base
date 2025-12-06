@@ -17,12 +17,12 @@ public partial class Benchmarks
     /// <summary>
     /// Cancellation token source for observable benchmark
     /// </summary>
-    private CancellationTokenSource _observableCts = default!;
+    private CancellationTokenSource _observableCts = null!;
 
     /// <summary>
     /// Manual reset event for synchronizing observable benchmark completion
     /// </summary>
-    private ManualResetEventSlim _observableGate = default!;
+    private ManualResetEventSlim _observableGate = null!;
 
     /// <summary>
     /// Counter for observable events received
@@ -32,12 +32,12 @@ public partial class Benchmarks
     /// <summary>
     /// Native client WebSocket for observable benchmark
     /// </summary>
-    private NativeClientWebSocket _observableSocket = default!;
+    private NativeClientWebSocket _observableSocket = null!;
 
     /// <summary>
     /// Task for listening to observable WebSocket messages
     /// </summary>
-    private Task<WebSocketCloseResult> _observableListenTask = default!;
+    private Task<WebSocketCloseResult> _observableListenTask = null!;
 
     /// <summary>
     /// Sets up the observable benchmark iteration
@@ -52,11 +52,9 @@ public partial class Benchmarks
         _observableSocket = new NativeClientWebSocket();
         var client = new ManagedWebSocket(_observableSocket, VoidLogger.Instance);
         client.ObserveText().Subscribe(HandleMessage_Observable);
-        _observableSocket
-            .ConnectAsync(new Uri($"ws://127.0.0.1:{Constants.Port}/"), CancellationToken.None)
-            .GetAwaiter()
+        _observableSocket.ConnectAsync(WorkloadServer.Uri, CancellationToken.None).GetAwaiter()
 #pragma warning disable VSTHRD002
-            .GetResult();
+        .GetResult();
 #pragma warning restore VSTHRD002
         _observableListenTask = client.ListenAsync(_observableCts.Token);
     }

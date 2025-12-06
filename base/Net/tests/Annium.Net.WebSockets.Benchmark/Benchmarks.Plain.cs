@@ -18,12 +18,12 @@ public partial class Benchmarks
     /// <summary>
     /// Cancellation token source for plain benchmark
     /// </summary>
-    private CancellationTokenSource _plainCts = default!;
+    private CancellationTokenSource _plainCts = null!;
 
     /// <summary>
     /// Manual reset event for synchronizing plain benchmark completion
     /// </summary>
-    private ManualResetEventSlim _plainGate = default!;
+    private ManualResetEventSlim _plainGate = null!;
 
     /// <summary>
     /// Counter for plain events received
@@ -33,12 +33,12 @@ public partial class Benchmarks
     /// <summary>
     /// Native client WebSocket for plain benchmark
     /// </summary>
-    private NativeClientWebSocket _plainSocket = default!;
+    private NativeClientWebSocket _plainSocket = null!;
 
     /// <summary>
     /// Task for listening to plain WebSocket messages
     /// </summary>
-    private Task<WebSocketCloseResult> _plainListenTask = default!;
+    private Task<WebSocketCloseResult> _plainListenTask = null!;
 
     /// <summary>
     /// Sets up the plain benchmark iteration
@@ -53,11 +53,9 @@ public partial class Benchmarks
         _plainSocket = new NativeClientWebSocket();
         var client = new ManagedWebSocket(_plainSocket, VoidLogger.Instance);
         client.OnTextReceived += HandleMessage_Plain;
-        _plainSocket
-            .ConnectAsync(new Uri($"ws://127.0.0.1:{Constants.Port}/"), CancellationToken.None)
-            .GetAwaiter()
+        _plainSocket.ConnectAsync(WorkloadServer.Uri, CancellationToken.None).GetAwaiter()
 #pragma warning disable VSTHRD002
-            .GetResult();
+        .GetResult();
 #pragma warning restore VSTHRD002
         _plainListenTask = client.ListenAsync(_plainCts.Token);
     }

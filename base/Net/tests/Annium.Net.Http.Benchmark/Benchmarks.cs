@@ -29,11 +29,6 @@ public class Benchmarks
     public int Size { get; set; }
 
     /// <summary>
-    /// The server URI for benchmark requests.
-    /// </summary>
-    private static readonly Uri _serverUri = new($"http://127.0.0.1:{Constants.Port}/");
-
-    /// <summary>
     /// The HTTP request factory for creating requests.
     /// </summary>
     private readonly IHttpRequestFactory _httpRequestFactory;
@@ -60,7 +55,7 @@ public class Benchmarks
     {
         for (var i = 0; i < TotalRequests; i++)
         {
-            var request = _httpRequestFactory.New(_serverUri).Get("/params");
+            var request = _httpRequestFactory.New(WorkloadServer.Uri).Get("/params");
             for (var j = 0; j < Size; j++)
                 request.Param($"x{j}", j);
             var response = await request.RunAsync();
@@ -79,7 +74,7 @@ public class Benchmarks
         for (var i = 0; i < TotalRequests; i++)
         {
             var request = _httpRequestFactory
-                .New(_serverUri)
+                .New(WorkloadServer.Uri)
                 .Get("/upload")
                 .Attach(new ByteArrayContent(Helper.GetContent(Size)));
             var response = await request.RunAsync();
@@ -97,7 +92,7 @@ public class Benchmarks
     {
         for (var i = 0; i < TotalRequests; i++)
         {
-            var request = _httpRequestFactory.New(_serverUri).Get("/download").Param("size", Size);
+            var request = _httpRequestFactory.New(WorkloadServer.Uri).Get("/download").Param("size", Size);
             var response = await request.RunAsync();
             if (response.IsFailure)
                 throw new Exception($"Response #{i} failed");

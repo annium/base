@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Annium.Core.DependencyInjection;
 using Annium.Logging;
 using Annium.Net.Servers.Web.Internal;
@@ -14,54 +15,14 @@ public static class ServerBuilder
     /// Creates a new server builder instance configured for the specified port.
     /// </summary>
     /// <param name="sp">The service provider for dependency injection.</param>
-    /// <param name="port">The port number the server will listen on.</param>
+    /// <param name="isSecure">Whether to use https:// or http:// scheme in listener</param>
+    /// <param name="host">host name to listen on</param>
+    /// <param name="port">The port number the server will listen on (0 - for random free port).</param>
     /// <returns>A new server builder instance.</returns>
-    public static IServerBuilder New(IServiceProvider sp, int port)
+    public static IServerBuilder New(IServiceProvider sp, bool isSecure = false, string host = "*", ushort port = 0)
     {
-        return new ServerBuilderInstance(sp, port);
+        return new ServerBuilderInstance(sp, isSecure, host, port);
     }
-}
-
-/// <summary>
-/// Defines a contract for building web servers with configurable HTTP and WebSocket handlers.
-/// </summary>
-public interface IServerBuilder
-{
-    /// <summary>
-    /// Configures the server to use a specific HTTP handler type resolved from the service provider.
-    /// </summary>
-    /// <typeparam name="THandler">The type of HTTP handler to use.</typeparam>
-    /// <returns>The server builder instance for method chaining.</returns>
-    IServerBuilder WithHttpHandler<THandler>()
-        where THandler : IHttpHandler;
-
-    /// <summary>
-    /// Configures the server to use a specific HTTP handler instance.
-    /// </summary>
-    /// <param name="handler">The HTTP handler instance to use.</param>
-    /// <returns>The server builder instance for method chaining.</returns>
-    IServerBuilder WithHttpHandler(IHttpHandler handler);
-
-    /// <summary>
-    /// Configures the server to use a specific WebSocket handler type resolved from the service provider.
-    /// </summary>
-    /// <typeparam name="THandler">The type of WebSocket handler to use.</typeparam>
-    /// <returns>The server builder instance for method chaining.</returns>
-    IServerBuilder WithWebSocketHandler<THandler>()
-        where THandler : IWebSocketHandler;
-
-    /// <summary>
-    /// Configures the server to use a specific WebSocket handler instance.
-    /// </summary>
-    /// <param name="handler">The WebSocket handler instance to use.</param>
-    /// <returns>The server builder instance for method chaining.</returns>
-    IServerBuilder WithWebSocketHandler(IWebSocketHandler handler);
-
-    /// <summary>
-    /// Builds and returns the configured server instance.
-    /// </summary>
-    /// <returns>The configured server instance.</returns>
-    IServer Build();
 }
 
 /// <summary>
@@ -75,9 +36,19 @@ file class ServerBuilderInstance : IServerBuilder
     private readonly IServiceProvider _sp;
 
     /// <summary>
-    /// The port number the server will listen on.
+    /// Whether to use https:// or http:// scheme in listener.
     /// </summary>
-    private readonly int _port;
+    private readonly bool _isSecure;
+
+    /// <summary>
+    /// IP Address to listen on.
+    /// </summary>
+    private readonly string _host;
+
+    /// <summary>
+    /// The port number the server will listen on (0 - for random free port).
+    /// </summary>
+    private readonly ushort _port;
 
     /// <summary>
     /// The configured HTTP handler instance.
@@ -98,10 +69,14 @@ file class ServerBuilderInstance : IServerBuilder
     /// Initializes a new instance of the ServerBuilderInstance class.
     /// </summary>
     /// <param name="sp">The service provider for dependency injection.</param>
-    /// <param name="port">The port number the server will listen on.</param>
-    public ServerBuilderInstance(IServiceProvider sp, int port)
+    /// <param name="isSecure">Whether to use https:// or http:// scheme in listener</param>
+    /// <param name="host">host name to listen on</param>
+    /// <param name="port">The port number the server will listen on (0 - for random free port).</param>
+    public ServerBuilderInstance(IServiceProvider sp, bool isSecure, string host, ushort port)
     {
         _sp = sp;
+        _isSecure = isSecure;
+        _host = host;
         _port = port;
         _logger = sp.Resolve<ILogger>();
     }
@@ -159,9 +134,16 @@ file class ServerBuilderInstance : IServerBuilder
     /// <summary>
     /// Builds and returns the configured server instance.
     /// </summary>
-    /// <returns>The configured server instance.</returns>
-    public IServer Build()
+    /// <returns>The configured server instance. Null if failed to start http listener</returns>
+    public IServer? Start()
     {
-        return new Server(_port, _httpHandler, _webSocketHandler, _logger);
+        var listener = HttpListenerResolver.Instance.Resolve(_isSecure, _host, _port);
+        if (listener is null)
+            return null;
+
+        var prefix = listener.Prefixes.First();
+        var uri = new Uri(_host is "*" or "+" ? prefix.Replace(_host, "127.0.0.1") : prefix);
+
+        return new Server(listener, _httpHandler, _webSocketHandler, uri, _logger);
     }
 }

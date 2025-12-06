@@ -3,10 +3,10 @@ using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Annium.Core.DependencyInjection;
 using Annium.Logging;
 using Annium.Net.Servers.Web;
 using Annium.Net.WebSockets.Internal;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Annium.Net.WebSockets.Benchmark.Internal;
 
@@ -16,17 +16,43 @@ namespace Annium.Net.WebSockets.Benchmark.Internal;
 internal static class WorkloadServer
 {
     /// <summary>
-    /// Runs the workload server
+    /// Workload server Uri
     /// </summary>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>Task representing the server operation</returns>
-    public static async Task RunAsync(CancellationToken ct)
+    public static Uri Uri => new($"ws://127.0.0.1:{_server.Uri.Port}/");
+
+    /// <summary>
+    /// Underlying server instance that powers the benchmark workload.
+    /// </summary>
+    private static readonly IServer _server;
+
+    /// <summary>
+    /// Creates and starts workload server
+    /// </summary>
+    static WorkloadServer()
     {
-        var services = new ServiceCollection();
-        services.AddSingleton<WebSocketHandler>();
+        var services = new ServiceContainer();
+        services.Add<WebSocketHandler>().AsSelf().Singleton();
+        services.Add(VoidLogger.Instance).AsSelf().Singleton();
         var sp = services.BuildServiceProvider();
-        var server = ServerBuilder.New(sp, Constants.Port).WithWebSocketHandler<WebSocketHandler>().Build();
-        await server.RunAsync(ct);
+
+        _server = ServerBuilder.New(sp).WithWebSocketHandler<WebSocketHandler>().Start().NotNull();
+    }
+
+    /// <summary>
+    /// Starts the workload server by triggering initialization.
+    /// </summary>
+    public static void Start()
+    {
+        // NOOP, needed to trigger static constructor
+    }
+
+    /// <summary>
+    /// Stops the workload server and disposes underlying resources.
+    /// </summary>
+    /// <returns>A task that completes when the server shuts down.</returns>
+    public static async Task StopAsync()
+    {
+        await _server.DisposeAsync();
     }
 }
 

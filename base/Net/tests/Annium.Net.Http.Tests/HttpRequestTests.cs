@@ -47,10 +47,21 @@ public class HttpRequestTests : TestBase
     {
         this.Trace("start");
 
+        // arrange
+        var server = RunServer(
+            async (request, response) =>
+            {
+                var data = Encoding.UTF8.GetBytes(request.Url.NotNull().Query);
+                await response.OutputStream.WriteAsync(data);
+                response.Ok();
+            }
+        );
+        await server.DisposeAsync();
+
         // act
         this.Trace("send text");
         var response = await _httpRequestFactory
-            .New(ServerUri)
+            .New(server.Uri)
             .Get("/")
             .RunAsync(TestContext.Current.CancellationToken);
 
@@ -74,7 +85,7 @@ public class HttpRequestTests : TestBase
         this.Trace("start");
 
         // arrange
-        await using var _ = RunServer(
+        await using var server = RunServer(
             (_, response) =>
             {
                 response.Ok();
@@ -85,7 +96,7 @@ public class HttpRequestTests : TestBase
 
         // act
         this.Trace("send");
-        var response = await _httpRequestFactory.New(ServerUri).Get("/").RunAsync(new CancellationToken(true));
+        var response = await _httpRequestFactory.New(server.Uri).Get("/").RunAsync(new CancellationToken(true));
 
         // assert
         response.IsNetworkError.IsFalse();
@@ -107,7 +118,7 @@ public class HttpRequestTests : TestBase
         this.Trace("start");
 
         // arrange
-        await using var _ = RunServer(
+        await using var server = RunServer(
             async (_, response) =>
             {
                 await Task.Delay(100);
@@ -118,7 +129,7 @@ public class HttpRequestTests : TestBase
         // act
         this.Trace("send");
         var response = await _httpRequestFactory
-            .New(ServerUri)
+            .New(server.Uri)
             .Get("/")
             .Timeout(TimeSpan.FromMilliseconds(50))
             .RunAsync(TestContext.Current.CancellationToken);
@@ -143,7 +154,7 @@ public class HttpRequestTests : TestBase
         this.Trace("start");
 
         // arrange
-        await using var _ = RunServer(
+        await using var server = RunServer(
             async (request, response) =>
             {
                 var data = Encoding.UTF8.GetBytes(request.HttpMethod);
@@ -155,7 +166,7 @@ public class HttpRequestTests : TestBase
         // act
         this.Trace("send");
         var response = await _httpRequestFactory
-            .New(ServerUri)
+            .New(server.Uri)
             .With(HttpMethod.Patch, "/")
             .RunAsync(TestContext.Current.CancellationToken);
 
@@ -184,7 +195,7 @@ public class HttpRequestTests : TestBase
         const string headerPrefix = "custom";
         const string headerKey = $"{headerPrefix}-header";
         const string headerValue = $"{headerPrefix} content";
-        await using var _ = RunServer(
+        await using var server = RunServer(
             (request, response) =>
             {
                 var targetHeaders = request
@@ -204,7 +215,7 @@ public class HttpRequestTests : TestBase
         // act
         this.Trace("send");
         var response = await _httpRequestFactory
-            .New(ServerUri)
+            .New(server.Uri)
             .Head("/")
             .Header(headerKey, headerValue)
             .RunAsync(TestContext.Current.CancellationToken);
@@ -233,7 +244,7 @@ public class HttpRequestTests : TestBase
         this.Trace("start");
 
         // arrange
-        await using var _ = RunServer(
+        await using var server = RunServer(
             async (request, response) =>
             {
                 var data = Encoding.UTF8.GetBytes(request.Url.NotNull().Query);
@@ -245,7 +256,7 @@ public class HttpRequestTests : TestBase
         // act
         this.Trace("send");
         var response = await _httpRequestFactory
-            .New(ServerUri)
+            .New(server.Uri)
             .Get("/")
             .Param("x", "a")
             .Param("y", new[] { "b", "c" })
@@ -274,7 +285,7 @@ public class HttpRequestTests : TestBase
 
         // arrange
         const string message = "demo";
-        await using var _ = RunServer(
+        await using var server = RunServer(
             async (request, response) =>
             {
                 await request.InputStream.CopyToAsync(response.OutputStream);
@@ -285,7 +296,7 @@ public class HttpRequestTests : TestBase
         // act
         this.Trace("send");
         var response = await _httpRequestFactory
-            .New(ServerUri)
+            .New(server.Uri)
             .Post("/")
             .StringContent(message)
             .RunAsync(TestContext.Current.CancellationToken);

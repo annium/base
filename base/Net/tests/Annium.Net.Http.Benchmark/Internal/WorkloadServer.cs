@@ -1,10 +1,12 @@
+using System;
 using System.Globalization;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+using Annium.Core.DependencyInjection;
+using Annium.Logging;
 using Annium.Net.Base;
 using Annium.Net.Servers.Web;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Annium.Net.Http.Benchmark.Internal;
 
@@ -14,17 +16,43 @@ namespace Annium.Net.Http.Benchmark.Internal;
 internal static class WorkloadServer
 {
     /// <summary>
-    /// Runs the workload server asynchronously.
+    /// Workload server Uri
     /// </summary>
-    /// <param name="ct">Cancellation token to stop the server.</param>
-    /// <returns>A task representing the asynchronous operation.</returns>
-    public static async Task RunAsync(CancellationToken ct)
+    public static Uri Uri => _server.Uri;
+
+    /// <summary>
+    /// Underlying server instance used for benchmark requests.
+    /// </summary>
+    private static readonly IServer _server;
+
+    /// <summary>
+    /// Creates and starts workload server
+    /// </summary>
+    static WorkloadServer()
     {
-        var services = new ServiceCollection();
-        services.AddSingleton<HttpHandler>();
+        var services = new ServiceContainer();
+        services.Add<HttpHandler>().AsSelf().Singleton();
+        services.Add(VoidLogger.Instance).AsSelf().Singleton();
         var sp = services.BuildServiceProvider();
-        var server = ServerBuilder.New(sp, Constants.Port).WithHttpHandler<HttpHandler>().Build();
-        await server.RunAsync(ct);
+
+        _server = ServerBuilder.New(sp).WithHttpHandler<HttpHandler>().Start().NotNull();
+    }
+
+    /// <summary>
+    /// Starts the workload server by triggering the static constructor.
+    /// </summary>
+    public static void Start()
+    {
+        // NOOP, needed to trigger static constructor
+    }
+
+    /// <summary>
+    /// Stops the workload server and releases resources.
+    /// </summary>
+    /// <returns>A task that completes when the server is disposed.</returns>
+    public static async Task StopAsync()
+    {
+        await _server.DisposeAsync();
     }
 }
 

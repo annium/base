@@ -44,7 +44,7 @@ public class HttpRequestConfigureInterceptTests : TestBase
         this.Trace("start");
 
         // arrange
-        await using var _ = RunServer(
+        await using var server = RunServer(
             async (request, response) =>
             {
                 var data = Encoding.UTF8.GetBytes(request.Url.NotNull().Query);
@@ -56,7 +56,7 @@ public class HttpRequestConfigureInterceptTests : TestBase
         // act
         this.Trace("send");
         var response = await _httpRequestFactory
-            .New(ServerUri)
+            .New(server.Uri)
             .Get("/")
             .Configure(req => req.Param("x", "a"))
             .RunAsync(TestContext.Current.CancellationToken);
@@ -83,7 +83,7 @@ public class HttpRequestConfigureInterceptTests : TestBase
         // arrange
         var message = "demo";
         var log = new TestLog<string>();
-        await using var _ = RunServer(
+        await using var server = RunServer(
             async (request, response) =>
             {
                 await request.InputStream.CopyToAsync(response.OutputStream);
@@ -94,7 +94,7 @@ public class HttpRequestConfigureInterceptTests : TestBase
         // act
         this.Trace("send");
         var response = await _httpRequestFactory
-            .New(ServerUri)
+            .New(server.Uri)
             .Get("/")
             .Intercept(async next =>
             {
@@ -130,7 +130,7 @@ public class HttpRequestConfigureInterceptTests : TestBase
         // arrange
         var message = "demo";
         var log = new TestLog<string>();
-        await using var _ = RunServer(
+        await using var server = RunServer(
             async (request, response) =>
             {
                 await request.InputStream.CopyToAsync(response.OutputStream);
@@ -141,7 +141,7 @@ public class HttpRequestConfigureInterceptTests : TestBase
         // act
         this.Trace("send");
         var response = await _httpRequestFactory
-            .New(ServerUri)
+            .New(server.Uri)
             .Get("/")
             .Intercept(
                 async (next, req) =>

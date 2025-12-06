@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Annium.Core.DependencyInjection;
 using Annium.Logging;
+using Annium.Net.Servers.Web;
 using Annium.Net.WebSockets.Internal;
 using Annium.Testing;
 using Annium.Threading.Tasks;
@@ -76,10 +77,10 @@ public class ClientServerManagedWebSocketTests : TestBase, IAsyncLifetime
         const string message = "demo";
 
         this.Trace("run server");
-        await using var _ = RunServer(async serverSocket => await serverSocket.IsClosed);
+        await using var server = RunServer(async serverSocket => await serverSocket.IsClosed);
 
         this.Trace("connect");
-        await ConnectAsync(TestContext.Current.CancellationToken);
+        await ConnectAsync(server, TestContext.Current.CancellationToken);
 
         // act
         this.Trace("send message");
@@ -105,10 +106,10 @@ public class ClientServerManagedWebSocketTests : TestBase, IAsyncLifetime
         const string message = "demo";
 
         this.Trace("run server");
-        await using var _ = RunServer(async serverSocket => await serverSocket.IsClosed);
+        await using var server = RunServer(async serverSocket => await serverSocket.IsClosed);
 
         this.Trace("connect");
-        await ConnectAsync(TestContext.Current.CancellationToken);
+        await ConnectAsync(server, TestContext.Current.CancellationToken);
 
         // act
         this.Trace("disconnect client socket");
@@ -138,7 +139,7 @@ public class ClientServerManagedWebSocketTests : TestBase, IAsyncLifetime
         var serverTcs = new TaskCompletionSource();
 
         this.Trace("run server");
-        await using var _ = RunServer(async serverSocket =>
+        await using var server = RunServer(async serverSocket =>
         {
             this.Trace("disconnect server socket");
             await serverSocket.DisconnectAsync();
@@ -156,7 +157,7 @@ public class ClientServerManagedWebSocketTests : TestBase, IAsyncLifetime
         });
 
         this.Trace("connect");
-        await ConnectAsync(TestContext.Current.CancellationToken);
+        await ConnectAsync(server, TestContext.Current.CancellationToken);
 
         // delay to let server close connection
         this.Trace("await server signal");
@@ -188,7 +189,7 @@ public class ClientServerManagedWebSocketTests : TestBase, IAsyncLifetime
         var serverTcs = new TaskCompletionSource();
 
         this.Trace("run server");
-        await using var _ = RunServer(async serverSocket =>
+        await using var server = RunServer(async serverSocket =>
         {
             this.Trace("subscribe to text messages");
             serverSocket.OnTextReceived += x => serverSocket.SendTextAsync(x.ToArray(), CancellationToken.None).Await();
@@ -217,7 +218,7 @@ public class ClientServerManagedWebSocketTests : TestBase, IAsyncLifetime
         });
 
         this.Trace("connect");
-        await ConnectAsync(TestContext.Current.CancellationToken);
+        await ConnectAsync(server, TestContext.Current.CancellationToken);
 
         // delay to let server close connection
         this.Trace("await server signal");
@@ -261,7 +262,7 @@ public class ClientServerManagedWebSocketTests : TestBase, IAsyncLifetime
         var serverConnectionTcs = new TaskCompletionSource();
 
         this.Trace("run server");
-        await using var _ = RunServer(async serverSocket =>
+        await using var server = RunServer(async serverSocket =>
         {
             this.Trace("subscribe to text messages");
             serverSocket.OnTextReceived += x => serverSocket.SendTextAsync(x.ToArray(), CancellationToken.None).Await();
@@ -283,7 +284,7 @@ public class ClientServerManagedWebSocketTests : TestBase, IAsyncLifetime
 
         // act - send text
         this.Trace("connect");
-        await ConnectAsync(TestContext.Current.CancellationToken);
+        await ConnectAsync(server, TestContext.Current.CancellationToken);
 
         this.Trace("await server signal");
         await serverConnectionTcs.Task;
@@ -301,7 +302,7 @@ public class ClientServerManagedWebSocketTests : TestBase, IAsyncLifetime
         // act - send binary
         this.Trace("connect");
         serverConnectionTcs = new TaskCompletionSource();
-        await ConnectAsync(TestContext.Current.CancellationToken);
+        await ConnectAsync(server, TestContext.Current.CancellationToken);
 
         this.Trace("await server signal");
         await serverConnectionTcs.Task;
@@ -330,11 +331,11 @@ public class ClientServerManagedWebSocketTests : TestBase, IAsyncLifetime
 
         // arrange
         this.Trace("run server");
-        await using var _ = RunServer(async serverSocket => await serverSocket.IsClosed);
+        await using var server = RunServer(async serverSocket => await serverSocket.IsClosed);
 
         this.Trace("connect");
         var cts = new CancellationTokenSource();
-        await ConnectAsync(cts.Token);
+        await ConnectAsync(server, cts.Token);
 
         this.Trace("disconnect");
         await ClientSocket.DisconnectAsync();
@@ -364,10 +365,10 @@ public class ClientServerManagedWebSocketTests : TestBase, IAsyncLifetime
 
         // arrange
         this.Trace("run server");
-        await using var _ = RunServer(async serverSocket => await serverSocket.IsClosed);
+        await using var server = RunServer(async serverSocket => await serverSocket.IsClosed);
 
         this.Trace("connect");
-        await ConnectAsync(TestContext.Current.CancellationToken);
+        await ConnectAsync(server, TestContext.Current.CancellationToken);
 
         this.Trace("disconnect client socket");
         await ClientSocket.DisconnectAsync();
@@ -397,10 +398,10 @@ public class ClientServerManagedWebSocketTests : TestBase, IAsyncLifetime
 
         // arrange
         this.Trace("run server");
-        await using var _ = RunServer(async serverSocket => await serverSocket.DisconnectAsync());
+        await using var server = RunServer(async serverSocket => await serverSocket.DisconnectAsync());
 
         this.Trace("connect");
-        await ConnectAsync(TestContext.Current.CancellationToken);
+        await ConnectAsync(server, TestContext.Current.CancellationToken);
 
         // act
         this.Trace("await closed state");
@@ -429,7 +430,7 @@ public class ClientServerManagedWebSocketTests : TestBase, IAsyncLifetime
         var messages = Enumerable.Range(0, 3).Select(x => $"msg {x}").ToArray();
 
         this.Trace("run server");
-        await using var _ = RunServer(async serverSocket =>
+        await using var server = RunServer(async serverSocket =>
         {
             this.Trace("start sending messages");
 
@@ -444,7 +445,7 @@ public class ClientServerManagedWebSocketTests : TestBase, IAsyncLifetime
 
         // act
         this.Trace("connect");
-        await ConnectAsync(TestContext.Current.CancellationToken);
+        await ConnectAsync(server, TestContext.Current.CancellationToken);
 
         // assert
         this.Trace("assert text messages arrive");
@@ -471,7 +472,7 @@ public class ClientServerManagedWebSocketTests : TestBase, IAsyncLifetime
         var messages = Enumerable.Range(0, 3).Select(x => new string((char)x, 1_000_000)).ToArray();
 
         this.Trace("run server");
-        await using var _ = RunServer(async serverSocket =>
+        await using var server = RunServer(async serverSocket =>
         {
             this.Trace("start sending messages");
 
@@ -486,7 +487,7 @@ public class ClientServerManagedWebSocketTests : TestBase, IAsyncLifetime
 
         // act
         this.Trace("connect");
-        await ConnectAsync(TestContext.Current.CancellationToken);
+        await ConnectAsync(server, TestContext.Current.CancellationToken);
 
         // assert
         this.Trace("assert text messages arrive");
@@ -518,7 +519,7 @@ public class ClientServerManagedWebSocketTests : TestBase, IAsyncLifetime
         var messages = Enumerable.Range(0, 3).Select(x => new string((char)x, 10)).ToArray();
 
         this.Trace("run server");
-        await using var _ = RunServer(async serverSocket =>
+        await using var server = RunServer(async serverSocket =>
         {
             this.Trace("start sending messages");
 
@@ -538,7 +539,7 @@ public class ClientServerManagedWebSocketTests : TestBase, IAsyncLifetime
         });
 
         // act
-        await ConnectAsync(TestContext.Current.CancellationToken);
+        await ConnectAsync(server, TestContext.Current.CancellationToken);
 
         // assert
         this.Trace("assert text messages arrive");
@@ -603,7 +604,7 @@ public class ClientServerManagedWebSocketTests : TestBase, IAsyncLifetime
     /// </summary>
     /// <param name="handleWebSocket">Function to handle managed WebSocket connections</param>
     /// <returns>Disposable representing the running server</returns>
-    private IAsyncDisposable RunServer(Func<IServerManagedWebSocket, Task> handleWebSocket)
+    private IServer RunServer(Func<IServerManagedWebSocket, Task> handleWebSocket)
     {
         return RunServerBase(
             async (sp, ctx, ct) =>
@@ -626,13 +627,14 @@ public class ClientServerManagedWebSocketTests : TestBase, IAsyncLifetime
     /// <summary>
     /// Connects the client managed WebSocket to the test server
     /// </summary>
+    /// <param name="server">Server to connect to</param>
     /// <param name="ct">Cancellation token</param>
     /// <returns>Task representing the connection operation</returns>
-    private async Task ConnectAsync(CancellationToken ct = default)
+    private async Task ConnectAsync(IServer server, CancellationToken ct = default)
     {
         this.Trace("start");
 
-        await ClientSocket.ConnectAsync(ServerUri, ct);
+        await ClientSocket.ConnectAsync(new Uri($"ws://127.0.0.1:{server.Uri.Port}/"), ct);
 
         this.Trace("done");
     }

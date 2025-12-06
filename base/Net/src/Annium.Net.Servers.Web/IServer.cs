@@ -1,17 +1,14 @@
-using System.Threading;
-using System.Threading.Tasks;
+using System;
 
 namespace Annium.Net.Servers.Web;
 
 /// <summary>
-/// Defines a contract for a web server that can be started and stopped.
+/// Defines a contract for a minimalistic web server that can be connected and awaited.
 /// </summary>
-public interface IServer
+public interface IServer : IAsyncDisposable
 {
     /// <summary>
-    /// Starts the web server and runs it until cancellation is requested.
+    /// Uri, that may be used to connect to server
     /// </summary>
-    /// <param name="ct">The cancellation token to stop the server.</param>
-    /// <returns>A task representing the asynchronous operation.</returns>
-    Task RunAsync(CancellationToken ct = default);
+    Uri Uri { get; }
 }
