@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Annium.Core.DependencyInjection;
 using Annium.Logging;
+using Annium.Net.Servers.Sockets;
 using Annium.Net.Sockets.Internal;
 using Annium.Testing;
 using Xunit;
@@ -63,7 +64,7 @@ public class MessagingManagedSocketTests : TestBase, IAsyncLifetime
     /// <summary>
     /// Function to run the server with a handler
     /// </summary>
-    private Func<Func<IManagedSocket, CancellationToken, Task>, IAsyncDisposable> _runServer = delegate
+    private Func<Func<IManagedSocket, CancellationToken, Task>, IServer> _runServer = delegate
     {
         throw new NotImplementedException();
     };
@@ -93,10 +94,10 @@ public class MessagingManagedSocketTests : TestBase, IAsyncLifetime
         var message = "demo"u8.ToArray();
 
         this.Trace("run server");
-        await using var _ = _runServer(async (serverSocket, ct) => await serverSocket.ListenAsync(ct));
+        await using var server = _runServer(async (serverSocket, ct) => await serverSocket.ListenAsync(ct));
 
         this.Trace("connect and start listening");
-        await ConnectAndStartListenAsync(TestContext.Current.CancellationToken);
+        await ConnectAndStartListenAsync(server, TestContext.Current.CancellationToken);
 
         // act
         this.Trace("send message with canceled flag");
@@ -127,10 +128,10 @@ public class MessagingManagedSocketTests : TestBase, IAsyncLifetime
         var message = "demo"u8.ToArray();
 
         this.Trace("run server");
-        await using var _ = _runServer(async (serverSocket, ct) => await serverSocket.ListenAsync(ct));
+        await using var server = _runServer(async (serverSocket, ct) => await serverSocket.ListenAsync(ct));
 
         this.Trace("connect and start listening");
-        await ConnectAndStartListenAsync(TestContext.Current.CancellationToken);
+        await ConnectAndStartListenAsync(server, TestContext.Current.CancellationToken);
 
         // act
         this.Trace("close client socket");
@@ -163,7 +164,7 @@ public class MessagingManagedSocketTests : TestBase, IAsyncLifetime
         var serverTcs = new TaskCompletionSource();
 
         this.Trace("run server");
-        await using var _ = RunServerBase(
+        await using var server = RunServerBase(
             async (_, socket, _) =>
             {
                 await Task.Delay(50, CancellationToken.None);
@@ -175,7 +176,7 @@ public class MessagingManagedSocketTests : TestBase, IAsyncLifetime
         );
 
         this.Trace("connect and start listening");
-        await ConnectAndStartListenAsync(TestContext.Current.CancellationToken);
+        await ConnectAndStartListenAsync(server, TestContext.Current.CancellationToken);
 
         // delay to let server close connection
         this.Trace("await server signal");
@@ -217,7 +218,7 @@ public class MessagingManagedSocketTests : TestBase, IAsyncLifetime
         var serverTcs = new TaskCompletionSource();
 
         this.Trace("run server");
-        await using var _ = _runServer(
+        await using var server = _runServer(
             async (serverSocket, ct) =>
             {
                 serverSocket.OnReceived += x =>
@@ -234,7 +235,7 @@ public class MessagingManagedSocketTests : TestBase, IAsyncLifetime
         );
 
         this.Trace("connect");
-        await ConnectAsync(TestContext.Current.CancellationToken);
+        await ConnectAsync(server, TestContext.Current.CancellationToken);
 
         this.Trace("start listening");
         var listenTask = ListenAsync(TestContext.Current.CancellationToken);
@@ -279,7 +280,7 @@ public class MessagingManagedSocketTests : TestBase, IAsyncLifetime
         var serverTcs = new TaskCompletionSource();
 
         this.Trace("run server");
-        await using var _ = _runServer(
+        await using var server = _runServer(
             async (serverSocket, ct) =>
             {
                 serverSocket.OnReceived += x =>
@@ -296,7 +297,7 @@ public class MessagingManagedSocketTests : TestBase, IAsyncLifetime
         );
 
         this.Trace("connect and start listening");
-        await ConnectAndStartListenAsync(TestContext.Current.CancellationToken);
+        await ConnectAndStartListenAsync(server, TestContext.Current.CancellationToken);
 
         // delay to let server setup connection
         this.Trace("await server signal");
@@ -334,10 +335,10 @@ public class MessagingManagedSocketTests : TestBase, IAsyncLifetime
         Configure(streamType);
 
         this.Trace("run server");
-        await using var _ = _runServer(async (serverSocket, ct) => await serverSocket.ListenAsync(ct));
+        await using var server = _runServer(async (serverSocket, ct) => await serverSocket.ListenAsync(ct));
 
         this.Trace("connect");
-        await ConnectAsync(TestContext.Current.CancellationToken);
+        await ConnectAsync(server, TestContext.Current.CancellationToken);
 
         // act
         this.Trace("listen with canceled token");
@@ -366,10 +367,10 @@ public class MessagingManagedSocketTests : TestBase, IAsyncLifetime
         Configure(streamType);
 
         this.Trace("run server");
-        await using var _ = _runServer(async (serverSocket, ct) => await serverSocket.ListenAsync(ct));
+        await using var server = _runServer(async (serverSocket, ct) => await serverSocket.ListenAsync(ct));
 
         this.Trace("connect");
-        await ConnectAsync(TestContext.Current.CancellationToken);
+        await ConnectAsync(server, TestContext.Current.CancellationToken);
 
         this.Trace("close client socket");
         ClientSocket.Close();
@@ -400,7 +401,7 @@ public class MessagingManagedSocketTests : TestBase, IAsyncLifetime
         Configure(streamType);
 
         this.Trace("run server");
-        await using var _ = RunServerBase(
+        await using var server = RunServerBase(
             async (_, socket, _) =>
             {
                 await Task.Delay(50, CancellationToken.None);
@@ -410,7 +411,7 @@ public class MessagingManagedSocketTests : TestBase, IAsyncLifetime
         );
 
         this.Trace("connect");
-        await ConnectAsync(TestContext.Current.CancellationToken);
+        await ConnectAsync(server, TestContext.Current.CancellationToken);
 
         // act
         this.Trace("listen");
@@ -442,7 +443,7 @@ public class MessagingManagedSocketTests : TestBase, IAsyncLifetime
         var messages = GenerateMessages(1, 5 * 1024 * 1024);
 
         this.Trace("run server");
-        await using var _ = _runServer(
+        await using var server = _runServer(
             async (serverSocket, ct) =>
             {
                 this.Trace("start sending chunks");
@@ -461,7 +462,7 @@ public class MessagingManagedSocketTests : TestBase, IAsyncLifetime
 
         // act
         this.Trace("connect");
-        await ConnectAsync(TestContext.Current.CancellationToken);
+        await ConnectAsync(server, TestContext.Current.CancellationToken);
 
         this.Trace("await listen result");
         var listenResult = await ListenAsync(TestContext.Current.CancellationToken);
@@ -495,7 +496,7 @@ public class MessagingManagedSocketTests : TestBase, IAsyncLifetime
         var messages = GenerateMessages(10, 100);
 
         this.Trace("run server");
-        await using var _ = _runServer(
+        await using var server = _runServer(
             async (serverSocket, ct) =>
             {
                 this.Trace("start sending chunks");
@@ -514,7 +515,7 @@ public class MessagingManagedSocketTests : TestBase, IAsyncLifetime
 
         // act
         this.Trace("connect");
-        await ConnectAsync(TestContext.Current.CancellationToken);
+        await ConnectAsync(server, TestContext.Current.CancellationToken);
 
         this.Trace("listen detached");
         ListenAsync(TestContext.Current.CancellationToken).GetAwaiter();
@@ -547,7 +548,7 @@ public class MessagingManagedSocketTests : TestBase, IAsyncLifetime
         var messages = GenerateMessages(10, 100_000);
 
         this.Trace("run server");
-        await using var _ = _runServer(
+        await using var server = _runServer(
             async (serverSocket, ct) =>
             {
                 this.Trace("start sending chunks");
@@ -566,7 +567,7 @@ public class MessagingManagedSocketTests : TestBase, IAsyncLifetime
 
         // act
         this.Trace("connect");
-        await ConnectAsync(TestContext.Current.CancellationToken);
+        await ConnectAsync(server, TestContext.Current.CancellationToken);
 
         this.Trace("listen detached");
         var listenTask = ListenAsync(TestContext.Current.CancellationToken);
@@ -720,13 +721,14 @@ public class MessagingManagedSocketTests : TestBase, IAsyncLifetime
     /// <summary>
     /// Connects the client and starts listening asynchronously
     /// </summary>
+    /// <param name="server">Server, to connect to</param>
     /// <param name="ct">The cancellation token</param>
     /// <returns>A task representing the operation</returns>
-    private async Task ConnectAndStartListenAsync(CancellationToken ct = default)
+    private async Task ConnectAndStartListenAsync(IServer server, CancellationToken ct = default)
     {
         this.Trace("start");
 
-        await ConnectAsync(ct);
+        await ConnectAsync(server, ct);
         ListenAsync(ct).GetAwaiter();
 
         this.Trace("done");
@@ -735,17 +737,22 @@ public class MessagingManagedSocketTests : TestBase, IAsyncLifetime
     /// <summary>
     /// Connects the client socket asynchronously
     /// </summary>
+    /// <param name="server">Server, to connect to</param>
     /// <param name="ct">The cancellation token</param>
     /// <param name="options">Optional managed socket options</param>
     /// <returns>A task representing the connection operation</returns>
-    private async Task ConnectAsync(CancellationToken ct = default, ManagedSocketOptionsBase? options = null)
+    private async Task ConnectAsync(
+        IServer server,
+        CancellationToken ct = default,
+        ManagedSocketOptionsBase? options = null
+    )
     {
         this.Trace("start");
 
         ClientSocket = new Socket(SocketType.Stream, ProtocolType.Tcp) { NoDelay = true };
 
         this.Trace("connect");
-        await ClientSocket.ConnectAsync(EndPoint, ct);
+        await ClientSocket.ConnectAsync(server.EndPoint(), ct);
 
         this.Trace("create client stream");
         _clientStream = await _createClientStreamAsync(ClientSocket);
