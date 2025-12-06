@@ -1,5 +1,4 @@
 using System;
-using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -19,14 +18,14 @@ internal class Server : IServer, ILogSubject
     public ILogger Logger { get; }
 
     /// <summary>
+    /// Uri, that may be used to connect to server
+    /// </summary>
+    public Uri Uri { get; }
+
+    /// <summary>
     /// TCP listener for accepting incoming connections
     /// </summary>
     private readonly TcpListener _listener;
-
-    /// <summary>
-    /// Background executor for handling connections in parallel
-    /// </summary>
-    private readonly IExecutor _executor;
 
     /// <summary>
     /// Handler instance for processing incoming connections
@@ -34,76 +33,88 @@ internal class Server : IServer, ILogSubject
     private readonly IHandler _handler;
 
     /// <summary>
-    /// Thread-safe flag indicating whether the server is currently listening
+    /// Cancellation token source, that will trigger server to stop
     /// </summary>
-    private int _isListening;
+    private readonly CancellationTokenSource _cts;
+
+    /// <summary>
+    /// Task, that will be completed, when server is stopped
+    /// </summary>
+    private readonly Task _whenStopped;
 
     /// <summary>
     /// Initializes a new instance of the Server class
     /// </summary>
-    /// <param name="port">Port number to listen on</param>
+    /// <param name="listener">TcpListener, server will be working with</param>
     /// <param name="handler">Handler instance for processing connections</param>
+    /// <param name="uri">Uri, that will be exposed as base connection address of server</param>
     /// <param name="logger">Logger instance for logging server events</param>
-    public Server(int port, IHandler handler, ILogger logger)
+    public Server(TcpListener listener, IHandler handler, Uri uri, ILogger logger)
     {
         Logger = logger;
-        _listener = new TcpListener(IPAddress.Any, port);
-        _listener.Server.NoDelay = true;
-        _executor = Executor.Parallel<Server>(Logger);
+        Uri = uri;
+
+        _listener = listener;
+        _cts = new CancellationTokenSource();
         _handler = handler;
+        _whenStopped = Task.Factory.StartNew(RunAsync, TaskCreationOptions.LongRunning);
+    }
+
+    /// <summary>
+    /// Stops the server by canceling execution and awaiting shutdown completion.
+    /// </summary>
+    /// <returns>A task that completes when the server has finished disposing.</returns>
+    public async ValueTask DisposeAsync()
+    {
+        await _cts.CancelAsync();
+#pragma warning disable VSTHRD003
+        await _whenStopped;
+#pragma warning restore VSTHRD003
     }
 
     /// <summary>
     /// Starts and runs the server asynchronously, listening for incoming connections
     /// </summary>
-    /// <param name="ct">Cancellation token to stop the server</param>
-    /// <returns>A task that represents the asynchronous server operation</returns>
-    /// <exception cref="InvalidOperationException">Thrown when the server is already running</exception>
-    public async Task RunAsync(CancellationToken ct = default)
+    /// <returns>A task, completed when server is stopped.</returns>
+    private async Task RunAsync()
     {
-        this.Trace("start");
-
-        if (Interlocked.CompareExchange(ref _isListening, 1, 0) == 1)
-            throw new InvalidOperationException("Server is already started");
-
-        this.Trace("start executor");
-        _executor.Start(ct);
-
-        this.Trace("start listener");
-        _listener.Start();
-
-        while (!ct.IsCancellationRequested)
+        this.Trace("create executor");
+        await using (var executor = Executor.Parallel<Server>(Logger))
         {
-            Socket socket;
-            try
-            {
-                // await for connection
-                socket = await _listener.AcceptSocketAsync(ct);
-                socket.NoDelay = true;
-                socket.LingerState = new LingerOption(true, 0);
-                this.Trace("socket accepted");
-            }
-            catch (OperationCanceledException)
-            {
-                this.Trace("break, operation canceled");
-                break;
-            }
+            this.Trace("start executor");
+            executor.Start(_cts.Token);
 
-            // try schedule socket handling
-            if (_executor.Schedule(HandleSocket(socket, ct)))
-            {
-                this.Trace("socket handle scheduled");
-                continue;
-            }
+            this.Trace("handle listener at: {endpoint}", _listener.LocalEndpoint);
 
-            this.Trace("closed and dispose socket (server is already stopping)");
-            socket.Close();
-            await socket.DisposeAsync();
+            while (!_cts.Token.IsCancellationRequested)
+            {
+                Socket socket;
+                try
+                {
+                    // await for connection
+                    socket = await _listener.AcceptSocketAsync(_cts.Token);
+                    socket.NoDelay = true;
+                    socket.LingerState = new LingerOption(true, 0);
+                    this.Trace("socket accepted");
+                }
+                catch (OperationCanceledException)
+                {
+                    this.Trace("break, operation canceled");
+                    break;
+                }
+
+                // try schedule socket handling
+                if (executor.Schedule(HandleSocket(socket, _cts.Token)))
+                {
+                    this.Trace("socket handle scheduled");
+                    continue;
+                }
+
+                this.Trace("closed and dispose socket (server is already stopping)");
+                socket.Close();
+                await socket.DisposeAsync();
+            }
         }
-
-        // when cancelled - await connections processing and stop listener
-        this.Trace("dispose executor");
-        await _executor.DisposeAsync().ConfigureAwait(false);
 
         this.Trace("stop listener");
         _listener.Stop();

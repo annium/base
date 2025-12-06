@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -17,26 +16,6 @@ namespace Annium.Net.Sockets.Tests;
 public abstract class TestBase : Testing.TestBase
 {
     /// <summary>
-    /// Base port number for test servers
-    /// </summary>
-    private static int _basePort = 30000;
-
-    /// <summary>
-    /// The server URI for testing
-    /// </summary>
-    protected readonly Uri ServerUri;
-
-    /// <summary>
-    /// The endpoint for the test server
-    /// </summary>
-    protected readonly IPEndPoint EndPoint;
-
-    /// <summary>
-    /// The port number for this test instance
-    /// </summary>
-    private readonly int _port;
-
-    /// <summary>
     /// Random number generator for test data
     /// </summary>
     private readonly Random _random = new();
@@ -46,48 +25,21 @@ public abstract class TestBase : Testing.TestBase
     /// </summary>
     /// <param name="outputHelper">The test output helper</param>
     protected TestBase(ITestOutputHelper outputHelper)
-        : base(outputHelper)
-    {
-        _port = Interlocked.Increment(ref _basePort);
-        ServerUri = new Uri($"tcp://127.0.0.1:{_port}");
-        EndPoint = new IPEndPoint(IPAddress.Loopback, _port);
-    }
+        : base(outputHelper) { }
 
     /// <summary>
     /// Runs a base server with the specified handler
     /// </summary>
     /// <param name="handle">The handler function for processing connections</param>
     /// <returns>An async disposable that stops the server when disposed</returns>
-    protected IAsyncDisposable RunServerBase(Func<IServiceProvider, Socket, CancellationToken, Task> handle)
+    protected IServer RunServerBase(Func<IServiceProvider, Socket, CancellationToken, Task> handle)
     {
         this.Trace("start");
 
         var sp = Get<IServiceProvider>();
-        var server = ServerBuilder.New(sp, _port).WithHandler(new Handler(sp, handle)).Build();
-        var cts = new CancellationTokenSource();
+        var handler = new Handler(sp, handle);
 
-        this.Trace("run server");
-        var serverTask = server.RunAsync(cts.Token);
-
-        this.Trace("done");
-
-        return Disposable.Create(async () =>
-        {
-            this.Trace("start");
-
-            // await before cancellation for a while
-            await Task.Delay(5, CancellationToken.None);
-
-            this.Trace("cancel server run");
-            await cts.CancelAsync();
-
-            this.Trace("await server task");
-#pragma warning disable VSTHRD003
-            await serverTask;
-#pragma warning restore VSTHRD003
-
-            this.Trace("done");
-        });
+        return ServerBuilder.New(sp).WithHandler(handler).Start().NotNull();
     }
 
     /// <summary>

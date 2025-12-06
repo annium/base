@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Annium.Core.DependencyInjection;
 using Annium.Logging;
+using Annium.Net.Servers.Sockets;
 using Annium.Testing;
 using Annium.Threading.Tasks;
 using Xunit;
@@ -36,7 +37,7 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
     /// <summary>
     /// Action to handle client connection
     /// </summary>
-    private Action<IClientSocket> _handleConnect = delegate
+    private Action<IClientSocket, IServer> _handleConnect = delegate
     {
         throw new NotImplementedException();
     };
@@ -44,7 +45,7 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
     /// <summary>
     /// Function to run the server with a handler
     /// </summary>
-    private Func<Func<IServerSocket, CancellationToken, Task>, IAsyncDisposable> _runServer = delegate
+    private Func<Func<IServerSocket, CancellationToken, Task>, IServer> _runServer = delegate
     {
         throw new NotImplementedException();
     };
@@ -105,10 +106,10 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
         var message = "demo"u8.ToArray();
 
         this.Trace("run server");
-        await using var _ = _runServer(async (serverSocket, ct) => await serverSocket.WhenDisconnectedAsync(ct));
+        await using var server = _runServer(async (serverSocket, ct) => await serverSocket.WhenDisconnectedAsync(ct));
 
         this.Trace("connect");
-        await ConnectAsync();
+        await ConnectAsync(server);
 
         // act
         this.Trace("send text");
@@ -140,7 +141,7 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
         var serverConnectionTcs = new TaskCompletionSource();
 
         this.Trace("run server");
-        await using var _ = _runServer(
+        await using var server = _runServer(
             async (serverSocket, ct) =>
             {
                 this.Trace("send signal to client");
@@ -151,7 +152,7 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
         );
 
         this.Trace("connect");
-        await ConnectAsync();
+        await ConnectAsync(server);
 
         this.Trace("server connected");
         await serverConnectionTcs.Task;
@@ -189,7 +190,7 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
         var clientConnectionTcs = new TaskCompletionSource();
 
         this.Trace("run server");
-        await using var _ = _runServer(
+        await using var server = _runServer(
             async (serverSocket, _) =>
             {
                 this.Trace("wait until client connected");
@@ -204,7 +205,7 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
 
         this.Trace("connect");
         var disconnectionTask = ClientSocket.WhenDisconnectedAsync(ct: TestContext.Current.CancellationToken);
-        await ConnectAsync();
+        await ConnectAsync(server);
 
         this.Trace("set client connection tcs");
         clientConnectionTcs.SetResult();
@@ -242,7 +243,7 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
         var serverConnectionTcs = new TaskCompletionSource();
 
         this.Trace("run server");
-        await using var _ = _runServer(
+        await using var server = _runServer(
             async (serverSocket, ct) =>
             {
                 this.Trace("subscribe to messages");
@@ -259,7 +260,7 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
         );
 
         this.Trace("connect");
-        await ConnectAsync();
+        await ConnectAsync(server);
 
         this.Trace("server connected");
         await serverConnectionTcs.Task;
@@ -299,7 +300,7 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
         var serverConnectionTcs = new TaskCompletionSource();
 
         this.Trace("run server");
-        await using var _ = _runServer(
+        await using var server = _runServer(
             async (serverSocket, ct) =>
             {
                 this.Trace("subscribe to messages");
@@ -317,7 +318,7 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
 
         // act - send text
         this.Trace("connect");
-        await ConnectAsync();
+        await ConnectAsync(server);
 
         this.Trace("server connected");
         await serverConnectionTcs.Task;
@@ -341,7 +342,7 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
         _messages.Clear();
         this.Trace("connect");
         serverConnectionTcs = new TaskCompletionSource();
-        await ConnectAsync();
+        await ConnectAsync(server);
 
         this.Trace("server connected");
         await serverConnectionTcs.Task;
@@ -384,7 +385,7 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
         var clientTcs = new TaskCompletionSource();
 
         this.Trace("run server");
-        await using var _ = _runServer(
+        await using var server = _runServer(
             async (serverSocket, _) =>
             {
                 this.Trace("start sending messages");
@@ -407,7 +408,7 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
 
         // act
         this.Trace("connect");
-        await ConnectAsync();
+        await ConnectAsync(server);
 
         // assert
         this.Trace("assert data arrived");
@@ -441,7 +442,7 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
         var clientTcs = new TaskCompletionSource();
 
         this.Trace("run server");
-        await using var _ = _runServer(
+        await using var server = _runServer(
             async (serverSocket, _) =>
             {
                 this.Trace("start sending messages");
@@ -465,7 +466,7 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
         // act
         this.Trace("connect");
         var disconnectionTask = ClientSocket.WhenDisconnectedAsync(ct: TestContext.Current.CancellationToken);
-        await ConnectAsync();
+        await ConnectAsync(server);
 
         // assert
         this.Trace("assert data arrived");
@@ -506,7 +507,7 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
         var connectionsCount = 3;
 
         this.Trace("run server");
-        await using var _ = _runServer(
+        await using var server = _runServer(
             async (serverSocket, _) =>
             {
                 this.Trace("start sending messages");
@@ -557,7 +558,7 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
         };
 
         this.Trace("connect");
-        await ConnectAsync();
+        await ConnectAsync(server);
 
         // assert
         this.Trace("assert data arrived");
@@ -604,7 +605,7 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
         var disconnectCounter = 0;
 
         this.Trace("run server");
-        await using var _ = _runServer(
+        await using var server = _runServer(
             async (serverSocket, ct) =>
             {
                 this.Trace("start, await until disconnected");
@@ -623,7 +624,7 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
         };
 
         this.Trace("connect");
-        await ConnectAsync();
+        await ConnectAsync(server);
 
         this.Trace("wait");
         await Task.Delay(700, TestContext.Current.CancellationToken);
@@ -692,11 +693,11 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
         switch (streamType)
         {
             case StreamType.Plain:
-                _handleConnect = socket =>
+                _handleConnect = (socket, server) =>
                 {
                     this.Trace("start");
 
-                    socket.Connect(ServerUri);
+                    socket.Connect(server.Uri);
 
                     this.Trace("done");
                 };
@@ -737,7 +738,7 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
                 };
                 break;
             case StreamType.Ssl:
-                _handleConnect = socket =>
+                _handleConnect = (socket, server) =>
                 {
                     this.Trace("start");
 
@@ -746,7 +747,7 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
                         RemoteCertificateValidationCallback = (_, _, _, _) => true,
                     };
 
-                    socket.Connect(ServerUri, authOptions);
+                    socket.Connect(server.Uri, authOptions);
 
                     this.Trace("done");
                 };
@@ -800,8 +801,9 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
     /// <summary>
     /// Connects the client socket asynchronously
     /// </summary>
+    /// <param name="server">Server, to connect to</param>
     /// <returns>A task representing the connection operation</returns>
-    private async Task ConnectAsync()
+    private async Task ConnectAsync(IServer server)
     {
         this.Trace("start");
 
@@ -818,7 +820,7 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
 
         ClientSocket.OnConnected += HandleConnected;
 
-        _handleConnect(ClientSocket);
+        _handleConnect(ClientSocket, server);
 
         await tcs.Task.WaitAsync(TimeSpan.FromSeconds(10));
 

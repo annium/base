@@ -1,17 +1,14 @@
-using System.Threading;
-using System.Threading.Tasks;
+using System;
 
 namespace Annium.Net.Servers.Sockets;
 
 /// <summary>
 /// Defines a contract for a socket server that can be started and run asynchronously
 /// </summary>
-public interface IServer
+public interface IServer : IAsyncDisposable
 {
     /// <summary>
-    /// Starts and runs the server asynchronously, listening for incoming connections
+    /// Uri, that may be used to connect to server
     /// </summary>
-    /// <param name="ct">Cancellation token to stop the server</param>
-    /// <returns>A task that represents the asynchronous server operation</returns>
-    Task RunAsync(CancellationToken ct = default);
+    Uri Uri { get; }
 }
