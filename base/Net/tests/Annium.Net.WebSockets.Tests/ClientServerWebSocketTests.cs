@@ -639,7 +639,7 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
 
         ClientSocket.OnConnected += HandleConnected;
 
-        ClientSocket.Connect(new Uri($"ws://127.0.0.1:{server.Uri.Port}/"));
+        ClientSocket.Connect(server.WebSocketsUri());
 
         await tcs.Task.WaitAsync(TimeSpan.FromSeconds(10));
 

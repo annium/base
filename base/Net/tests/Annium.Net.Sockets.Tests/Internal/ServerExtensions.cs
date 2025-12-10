@@ -15,6 +15,6 @@ internal static class ServerExtensions
     /// <returns>Loopback endpoint pointing to the server instance.</returns>
     public static IPEndPoint EndPoint(this IServer server)
     {
-        return new IPEndPoint(IPAddress.Loopback, server.Uri.Port);
+        return new IPEndPoint(IPAddress.Loopback, server.Port);
     }
 }

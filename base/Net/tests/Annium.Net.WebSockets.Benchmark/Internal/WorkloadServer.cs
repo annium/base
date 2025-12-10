@@ -18,7 +18,7 @@ internal static class WorkloadServer
     /// <summary>
     /// Workload server Uri
     /// </summary>
-    public static Uri Uri => new($"ws://127.0.0.1:{_server.Uri.Port}/");
+    public static Uri Uri => _server.WebSocketsUri();
 
     /// <summary>
     /// Underlying server instance that powers the benchmark workload.

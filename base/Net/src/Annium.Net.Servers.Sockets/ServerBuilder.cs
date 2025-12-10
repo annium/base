@@ -138,8 +138,10 @@ file class ServerBuilderInstance : IServerBuilder
         if (listener is null)
             return null;
 
-        var uri = new Uri($"tcp://{listener.LocalEndpoint}");
+        var parts = listener.LocalEndpoint.ToString().NotNull().Split(':');
+        var host = parts[0];
+        var port = ushort.Parse(parts[1]);
 
-        return new Server(listener, _handler, uri, _logger);
+        return new Server(listener, _handler, host, port, _logger);
     }
 }

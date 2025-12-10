@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Annium.Logging;
+using Annium.Net.Servers.Web;
 using Annium.Serialization.Abstractions;
 using Annium.Serialization.Json;
 using Annium.Testing;
@@ -61,7 +62,7 @@ public class HttpRequestTests : TestBase
         // act
         this.Trace("send text");
         var response = await _httpRequestFactory
-            .New(server.Uri)
+            .New(server.HttpUri())
             .Get("/")
             .RunAsync(TestContext.Current.CancellationToken);
 
@@ -96,7 +97,7 @@ public class HttpRequestTests : TestBase
 
         // act
         this.Trace("send");
-        var response = await _httpRequestFactory.New(server.Uri).Get("/").RunAsync(new CancellationToken(true));
+        var response = await _httpRequestFactory.New(server.HttpUri()).Get("/").RunAsync(new CancellationToken(true));
 
         // assert
         response.IsNetworkError.IsFalse();
@@ -129,7 +130,7 @@ public class HttpRequestTests : TestBase
         // act
         this.Trace("send");
         var response = await _httpRequestFactory
-            .New(server.Uri)
+            .New(server.HttpUri())
             .Get("/")
             .Timeout(TimeSpan.FromMilliseconds(50))
             .RunAsync(TestContext.Current.CancellationToken);
@@ -166,7 +167,7 @@ public class HttpRequestTests : TestBase
         // act
         this.Trace("send");
         var response = await _httpRequestFactory
-            .New(server.Uri)
+            .New(server.HttpUri())
             .With(HttpMethod.Patch, "/")
             .RunAsync(TestContext.Current.CancellationToken);
 
@@ -215,7 +216,7 @@ public class HttpRequestTests : TestBase
         // act
         this.Trace("send");
         var response = await _httpRequestFactory
-            .New(server.Uri)
+            .New(server.HttpUri())
             .Head("/")
             .Header(headerKey, headerValue)
             .RunAsync(TestContext.Current.CancellationToken);
@@ -256,7 +257,7 @@ public class HttpRequestTests : TestBase
         // act
         this.Trace("send");
         var response = await _httpRequestFactory
-            .New(server.Uri)
+            .New(server.HttpUri())
             .Get("/")
             .Param("x", "a")
             .Param("y", new[] { "b", "c" })
@@ -296,7 +297,7 @@ public class HttpRequestTests : TestBase
         // act
         this.Trace("send");
         var response = await _httpRequestFactory
-            .New(server.Uri)
+            .New(server.HttpUri())
             .Post("/")
             .StringContent(message)
             .RunAsync(TestContext.Current.CancellationToken);

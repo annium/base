@@ -18,9 +18,14 @@ internal class Server : IServer, ILogSubject
     public ILogger Logger { get; }
 
     /// <summary>
-    /// Uri, that may be used to connect to server
+    /// Host, server is listening at
     /// </summary>
-    public Uri Uri { get; }
+    public string Host { get; }
+
+    /// <summary>
+    /// Port, server is listening at
+    /// </summary>
+    public ushort Port { get; }
 
     /// <summary>
     /// TCP listener for accepting incoming connections
@@ -47,12 +52,14 @@ internal class Server : IServer, ILogSubject
     /// </summary>
     /// <param name="listener">TcpListener, server will be working with</param>
     /// <param name="handler">Handler instance for processing connections</param>
-    /// <param name="uri">Uri, that will be exposed as base connection address of server</param>
+    /// <param name="host">Host, server is listening at</param>
+    /// <param name="port">Port, server is listening at</param>
     /// <param name="logger">Logger instance for logging server events</param>
-    public Server(TcpListener listener, IHandler handler, Uri uri, ILogger logger)
+    public Server(TcpListener listener, IHandler handler, string host, ushort port, ILogger logger)
     {
         Logger = logger;
-        Uri = uri;
+        Host = host;
+        Port = port;
 
         _listener = listener;
         _cts = new CancellationTokenSource();

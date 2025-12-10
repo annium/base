@@ -8,7 +8,17 @@ namespace Annium.Net.Servers.Web;
 public interface IServer : IAsyncDisposable
 {
     /// <summary>
-    /// Uri, that may be used to connect to server
+    /// Whether server uses secure connection or not
     /// </summary>
-    Uri Uri { get; }
+    bool IsSecure { get; }
+
+    /// <summary>
+    /// Host, server is listening at
+    /// </summary>
+    string Host { get; }
+
+    /// <summary>
+    /// Port, server is listening at
+    /// </summary>
+    ushort Port { get; }
 }

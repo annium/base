@@ -4,6 +4,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Annium.Logging;
 using Annium.Net.Http.Internal;
+using Annium.Net.Servers.Web;
 using Annium.Serialization.Json;
 using Annium.Testing;
 using Xunit;
@@ -73,7 +74,7 @@ public class AsExtensionsTests : TestBase
         // act
         this.Trace("send");
         var response = await _httpRequestFactory
-            .New(server.Uri)
+            .New(server.HttpUri())
             .Get("/")
             .AsAsync<Data>(ct: TestContext.Current.CancellationToken);
 
@@ -105,7 +106,7 @@ public class AsExtensionsTests : TestBase
         // act
         this.Trace("send");
         var response = await _httpRequestFactory
-            .New(server.Uri)
+            .New(server.HttpUri())
             .Get("/")
             .AsAsync<Data>(ct: TestContext.Current.CancellationToken);
 
@@ -138,7 +139,7 @@ public class AsExtensionsTests : TestBase
         // act
         this.Trace("send");
         var response = await _httpRequestFactory
-            .New(server.Uri)
+            .New(server.HttpUri())
             .Get("/")
             .AsAsync(defaultData, ct: TestContext.Current.CancellationToken);
 
@@ -171,7 +172,7 @@ public class AsExtensionsTests : TestBase
         // act
         this.Trace("send");
         var response = await _httpRequestFactory
-            .New(server.Uri)
+            .New(server.HttpUri())
             .Get("/")
             .AsAsync(defaultData, ct: TestContext.Current.CancellationToken);
 
@@ -204,7 +205,7 @@ public class AsExtensionsTests : TestBase
         // act
         this.Trace("send");
         var response = await _httpRequestFactory
-            .New(server.Uri)
+            .New(server.HttpUri())
             .Get("/")
             .AsAsync<Data, Error>(ct: TestContext.Current.CancellationToken);
 
@@ -238,7 +239,7 @@ public class AsExtensionsTests : TestBase
         // act
         this.Trace("send");
         var response = await _httpRequestFactory
-            .New(server.Uri)
+            .New(server.HttpUri())
             .Get("/")
             .AsAsync<Data, Error>(ct: TestContext.Current.CancellationToken);
 
@@ -272,7 +273,7 @@ public class AsExtensionsTests : TestBase
         // act
         this.Trace("send");
         var response = await _httpRequestFactory
-            .New(server.Uri)
+            .New(server.HttpUri())
             .Get("/")
             .AsAsync<Data, Error>(
                 (r, _, e) => Task.FromResult(new Error(r, e?.Message ?? "failure")),
@@ -309,7 +310,7 @@ public class AsExtensionsTests : TestBase
         // act
         this.Trace("send");
         var response = await _httpRequestFactory
-            .New(server.Uri)
+            .New(server.HttpUri())
             .Get("/")
             .AsAsync<Data, Error>(
                 (r, _, e) => Task.FromResult(new Error(r, e?.Message ?? "failure")),
@@ -345,7 +346,7 @@ public class AsExtensionsTests : TestBase
         // act
         this.Trace("send");
         var response = await _httpRequestFactory
-            .New(server.Uri)
+            .New(server.HttpUri())
             .Get("/")
             .AsAsync<Data, Error>(
                 (r, _, e) => Task.FromResult(new Error(r, e?.Message ?? "failure")),

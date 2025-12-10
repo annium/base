@@ -8,7 +8,12 @@ namespace Annium.Net.Servers.Sockets;
 public interface IServer : IAsyncDisposable
 {
     /// <summary>
-    /// Uri, that may be used to connect to server
+    /// Host, server is listening at
     /// </summary>
-    Uri Uri { get; }
+    string Host { get; }
+
+    /// <summary>
+    /// Port, server is listening at
+    /// </summary>
+    ushort Port { get; }
 }

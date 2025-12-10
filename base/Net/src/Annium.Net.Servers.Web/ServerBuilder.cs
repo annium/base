@@ -142,8 +142,10 @@ file class ServerBuilderInstance : IServerBuilder
             return null;
 
         var prefix = listener.Prefixes.First();
-        var uri = new Uri(_host is "*" or "+" ? prefix.Replace(_host, "127.0.0.1") : prefix);
+        var host = _host is "*" or "+" ? "127.0.0.1" : _host;
+        var uri = new Uri(prefix.Replace(_host, host));
+        var port = (ushort)uri.Port;
 
-        return new Server(listener, _httpHandler, _webSocketHandler, uri, _logger);
+        return new Server(listener, _httpHandler, _webSocketHandler, _isSecure, host, port, _logger);
     }
 }

@@ -18,7 +18,7 @@ internal static class WorkloadServer
     /// <summary>
     /// Workload server Uri
     /// </summary>
-    public static Uri Uri => _server.Uri;
+    public static Uri Uri => _server.HttpUri();
 
     /// <summary>
     /// Underlying server instance used for benchmark requests.

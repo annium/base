@@ -21,9 +21,19 @@ internal class Server : IServer, ILogSubject
     public ILogger Logger { get; }
 
     /// <summary>
-    /// Uri, that may be used to connect to server
+    /// Whether server uses secure connection or not
     /// </summary>
-    public Uri Uri { get; }
+    public bool IsSecure { get; }
+
+    /// <summary>
+    /// Host, server is listening at
+    /// </summary>
+    public string Host { get; }
+
+    /// <summary>
+    /// Port, server is listening at
+    /// </summary>
+    public ushort Port { get; }
 
     /// <summary>
     /// Whether to use https:// or http:// scheme in listener.
@@ -66,18 +76,24 @@ internal class Server : IServer, ILogSubject
     /// <param name="listener">HttpListener, server will be working with</param>
     /// <param name="httpHandler">The HTTP handler to process HTTP requests, or null to return 404 for all HTTP requests.</param>
     /// <param name="webSocketHandler">The WebSocket handler to process WebSocket connections, or null to reject WebSocket upgrades.</param>
-    /// <param name="uri">Uri, that will be exposed as base connection address of server</param>
+    /// <param name="isSecure">Whether server uses secure connection or not</param>
+    /// <param name="host">Host, server is listening at</param>
+    /// <param name="port">Port, server is listening at</param>
     /// <param name="logger">The logger instance for this server.</param>
     public Server(
         HttpListener listener,
         IHttpHandler? httpHandler,
         IWebSocketHandler? webSocketHandler,
-        Uri uri,
+        bool isSecure,
+        string host,
+        ushort port,
         ILogger logger
     )
     {
         Logger = logger;
-        Uri = uri;
+        IsSecure = isSecure;
+        Host = host;
+        Port = port;
 
         _listener = listener;
         _cts = new CancellationTokenSource();

@@ -2,6 +2,7 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using Annium.Logging;
+using Annium.Net.Servers.Web;
 using Annium.Serialization.Abstractions;
 using Annium.Serialization.Json;
 using Annium.Testing;
@@ -56,7 +57,7 @@ public class HttpRequestConfigureInterceptTests : TestBase
         // act
         this.Trace("send");
         var response = await _httpRequestFactory
-            .New(server.Uri)
+            .New(server.HttpUri())
             .Get("/")
             .Configure(req => req.Param("x", "a"))
             .RunAsync(TestContext.Current.CancellationToken);
@@ -94,7 +95,7 @@ public class HttpRequestConfigureInterceptTests : TestBase
         // act
         this.Trace("send");
         var response = await _httpRequestFactory
-            .New(server.Uri)
+            .New(server.HttpUri())
             .Get("/")
             .Intercept(async next =>
             {
@@ -141,7 +142,7 @@ public class HttpRequestConfigureInterceptTests : TestBase
         // act
         this.Trace("send");
         var response = await _httpRequestFactory
-            .New(server.Uri)
+            .New(server.HttpUri())
             .Get("/")
             .Intercept(
                 async (next, req) =>

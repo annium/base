@@ -771,7 +771,7 @@ public class ManagedWebSocketTests : TestBase, IAsyncLifetime
     {
         this.Trace("start");
 
-        await ClientSocket.ConnectAsync(new Uri($"ws://127.0.0.1:{server.Uri.Port}/"), ct);
+        await ClientSocket.ConnectAsync(server.WebSocketsUri(), ct);
 
         this.Trace("done");
     }
