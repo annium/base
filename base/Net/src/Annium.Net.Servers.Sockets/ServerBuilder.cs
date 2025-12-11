@@ -138,9 +138,9 @@ file class ServerBuilderInstance : IServerBuilder
         if (listener is null)
             return null;
 
-        var parts = listener.LocalEndpoint.ToString().NotNull().Split(':');
-        var host = parts[0];
-        var port = ushort.Parse(parts[1]);
+        var endpoint = (IPEndPoint)listener.LocalEndpoint;
+        var host = endpoint.Address.ToString();
+        var port = (ushort)endpoint.Port;
 
         return new Server(listener, _handler, host, port, _logger);
     }
