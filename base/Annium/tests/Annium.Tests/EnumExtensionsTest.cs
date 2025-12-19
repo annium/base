@@ -121,6 +121,46 @@ public class EnumExtensionsTest
         invalid.ParseFlags(",", TestEnum.One).Is(TestEnum.One | TestEnum.Two);
     }
 
+    /// <summary>
+    /// Verifies that flags enumeration works.
+    /// </summary>
+    [Fact]
+    public void EnumerateFlags_FlagsEnum_Works()
+    {
+        // arrange
+        var value = TestEnum.One | TestEnum.Two;
+
+        // assert
+        var result = value.EnumerateFlags();
+        result.Has(3);
+        result.At(0).Is(TestEnum.None);
+        result.At(1).Is(TestEnum.One);
+        result.At(2).Is(TestEnum.Two);
+    }
+
+    /// <summary>
+    /// Verifies that non-flags enumeration works.
+    /// </summary>
+    [Fact]
+    public void EnumerateFlags_NonFlagsEnum_Works()
+    {
+        // arrange
+        var value = NonFlagsSimpleEnum.One;
+
+        // assert
+        var result = value.EnumerateFlags();
+        result.Has(2);
+        result.At(0).Is(NonFlagsSimpleEnum.None);
+        result.At(1).Is(NonFlagsSimpleEnum.One);
+    }
+
+    private enum NonFlagsSimpleEnum
+    {
+        None = 0,
+        One = 1,
+        Two = 2,
+    }
+
     [Flags]
     private enum TestEnum
     {
