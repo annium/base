@@ -5,7 +5,7 @@ namespace Annium.Threading;
 /// <summary>
 /// Represents a timer that debounces requests by waiting for a specified period before executing.
 /// </summary>
-public interface IDebounceTimer : IDisposable, IAsyncDisposable
+public interface IDebounceTimer : IDisposable
 {
     /// <summary>
     /// Changes the period of the debounce timer.
