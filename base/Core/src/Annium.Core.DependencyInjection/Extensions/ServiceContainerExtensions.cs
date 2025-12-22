@@ -20,6 +20,23 @@ public static class ServiceContainerExtensions
     }
 
     /// <summary>
+    /// Adds a service with its implementation to the container as keyed registration
+    /// </summary>
+    /// <typeparam name="TService">Service type</typeparam>
+    /// <typeparam name="TImplementation">Implementation type</typeparam>
+    /// <param name="container">Service container</param>
+    /// <param name="key">Key to resolve service by</param>
+    /// <returns>Registration builder</returns>
+    public static ISingleRegistrationBuilderBase Add<TService, TImplementation>(
+        this IServiceContainer container,
+        object key
+    )
+        where TImplementation : TService
+    {
+        return container.Add(typeof(TImplementation)).AsKeyed<TService>(key);
+    }
+
+    /// <summary>
     /// Adds an implementation type to the container
     /// </summary>
     /// <typeparam name="TImplementation">Implementation type</typeparam>
