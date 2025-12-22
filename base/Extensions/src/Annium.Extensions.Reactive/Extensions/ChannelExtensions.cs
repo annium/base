@@ -23,16 +23,14 @@ public static class ChannelExtensions
             {
                 try
                 {
-                    while (!ct.IsCancellationRequested)
+                    while (await reader.WaitToReadAsync(ct))
                     {
-                        while (await reader.WaitToReadAsync(ct))
-                        {
-                            var data = await reader.ReadAsync(ct);
-                            observer.OnNext(data);
-                        }
+                        var data = await reader.ReadAsync(ct);
+                        observer.OnNext(data);
                     }
                 }
                 catch (OperationCanceledException) { }
+                catch (ChannelClosedException) { }
                 catch (Exception)
                 {
                     //
