@@ -126,7 +126,6 @@ internal abstract class DebounceTimerBase : IDebounceTimer, ILogSubject
     public void Dispose()
     {
         _timer.Dispose();
-        GC.SuppressFinalize(this);
     }
 
     /// <summary>

@@ -197,7 +197,6 @@ internal class MessagingManagedSocket : IManagedSocket, ILogSubject
         _isDisposed = true;
 
         _gate.Dispose();
-        GC.SuppressFinalize(this);
 
         this.Trace("done");
     }
