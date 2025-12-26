@@ -115,7 +115,6 @@ internal abstract class SyncTimerBase : ISequentialTimer, ILogSubject
     public void Dispose()
     {
         Timer.Dispose();
-        GC.SuppressFinalize(this);
     }
 
     /// <summary>

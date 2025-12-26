@@ -126,19 +126,6 @@ internal abstract class DebounceTimerBase : IDebounceTimer, ILogSubject
     public void Dispose()
     {
         _timer.Dispose();
-        GC.SuppressFinalize(this);
-    }
-
-    /// <summary>
-    /// Asynchronously releases all resources used by the timer.
-    /// </summary>
-    /// <returns>A task representing the asynchronous operation.</returns>
-    public ValueTask DisposeAsync()
-    {
-        _timer.Dispose();
-        GC.SuppressFinalize(this);
-
-        return ValueTask.CompletedTask;
     }
 
     /// <summary>

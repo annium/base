@@ -47,13 +47,10 @@ public static class ChannelReaderExtensions
                 {
                     try
                     {
-                        while (!cts.IsCancellationRequested)
+                        while (await reader.WaitToReadAsync(cts.Token))
                         {
-                            while (await reader.WaitToReadAsync(cts.Token))
-                            {
-                                var data = await reader.ReadAsync(cts.Token);
-                                writer.Write(data);
-                            }
+                            var data = await reader.ReadAsync(cts.Token);
+                            writer.Write(data);
                         }
                     }
                     catch (OperationCanceledException) { }

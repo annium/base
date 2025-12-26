@@ -130,11 +130,11 @@ internal class BackgroundLogScheduler<TContext> : ILogScheduler<TContext>, ILogS
                 var message = await _messageReader.ReadAsync(ctx.Ct);
                 ctx.OnNext(message);
             }
-            catch (ChannelClosedException)
+            catch (OperationCanceledException)
             {
                 break;
             }
-            catch (OperationCanceledException)
+            catch (ChannelClosedException)
             {
                 break;
             }

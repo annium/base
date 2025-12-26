@@ -332,7 +332,7 @@ internal sealed class Table<T> : ITable<T>, ILogSubject
             {
                 try
                 {
-                    while (!ctx.Ct.IsCancellationRequested)
+                    while (await _eventReader.WaitToReadAsync(ctx.Ct))
                     {
                         var message = await _eventReader.ReadAsync(ctx.Ct);
 

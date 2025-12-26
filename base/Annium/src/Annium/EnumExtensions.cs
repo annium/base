@@ -251,7 +251,23 @@ public static class EnumExtensions
 
     #endregion
 
-    # region helpers
+    #region falgs
+
+    /// <summary>
+    /// Enumerate enum values. Returns single value if enum doesn't have flags attribute
+    /// </summary>
+    /// <typeparam name="T">The enumeration type.</typeparam>
+    /// <param name="value">Value to enumerate.</param>
+    /// <returns>Enumerable of values, source value contains.</returns>
+    public static IReadOnlyCollection<T> EnumerateFlags<T>(this T value)
+        where T : struct, Enum
+    {
+        return Enum.GetValues<T>().Where(x => value.HasFlag(x)).ToArray();
+    }
+
+    #endregion
+
+    #region helpers
 
     /// <summary>
     /// Combines multiple enumeration values into a single value.
