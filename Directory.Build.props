@@ -7,7 +7,7 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <WarningsAsErrors>true</WarningsAsErrors>
     <NoWarn>AD0001</NoWarn>
-    <WarningsNotAsErrors>NU1901;NU1902;NU1903;NU1904</WarningsNotAsErrors>
+    <WarningsNotAsErrors>NU1901;NU1902;NU1903;NU1904;IDE0370</WarningsNotAsErrors>
   </PropertyGroup>
   <PropertyGroup Label="Analyzers">
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
