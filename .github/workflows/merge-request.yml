@@ -36,8 +36,11 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
+      - name: Setup just
+        uses: extractions/setup-just@v2
+
       - name: Run
-        run: make ci-merge-request-short
+        run: just ci-merge-request-short
 
   run-full:
     runs-on: ubuntu-latest
@@ -54,8 +57,11 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
+      - name: Setup just
+        uses: extractions/setup-just@v2
+
       - name: Run
-        run: make ci-merge-request-full
+        run: just ci-merge-request-full
 
       - name: Upload test results
         uses: actions/upload-artifact@v4

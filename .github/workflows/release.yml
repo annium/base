@@ -38,8 +38,11 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
+      - name: Setup just
+        uses: extractions/setup-just@v2
+
       - name: Run
-        run: make ci-release apiKey=${{ secrets.NUGET_API_KEY }} repository=${{ github.repository }} githubToken=${GITHUB_TOKEN}
+        run: just ci-release "${{ secrets.NUGET_API_KEY }}" "${{ github.repository }}" "${GITHUB_TOKEN}"
 
 #      - name: Upload Pages artifact
 #        uses: actions/upload-pages-artifact@v3
