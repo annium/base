@@ -69,38 +69,69 @@ internal class ServiceProviderBuilder : IServiceProviderBuilder
     }
 
     /// <summary>
-    /// Builds the service provider by configuring, registering, and setting up all service packs
+    /// Builds the service provider by configuring, registering, and setting up all service packs.
+    /// <para>
+    /// The three-phase <see cref="ServicePackBase"/> model is preserved: <c>Configure</c> populates
+    /// a staging container, a transient provider is materialized for <c>Register</c> (so packs can
+    /// consume Configure-phase services), then a final provider is built for <c>Setup</c>. The
+    /// transient provider is disposed before <c>Setup</c> runs to release any singletons it
+    /// materialized.
+    /// </para>
+    /// <para>
+    /// The builder is single-use: a second call throws <see cref="InvalidOperationException"/>.
+    /// A throw during Configure or Register leaves the builder in its pre-build state (the
+    /// "already built" flag is only set after a successful build), so the caller can retry after
+    /// addressing the fault or diagnose with fresh context.
+    /// </para>
     /// </summary>
     /// <returns>The built service provider</returns>
+    /// <exception cref="InvalidOperationException">Thrown when the builder has already produced a provider successfully.</exception>
     public ServiceProvider Build()
     {
         if (_isAlreadyBuilt)
-            throw new InvalidOperationException("Entrypoint is already built");
+            throw new InvalidOperationException("ServiceProviderBuilder is already built");
+
+        ServiceProvider? transientProvider = null;
+        ServiceProvider finalProvider;
+        try
+        {
+            // Phase 1: Configure — accumulate in a staging container so a throw leaves _container intact
+            var configurationContainer = new ServiceContainer();
+            foreach (var pack in _packs)
+                pack.InternalConfigure(configurationContainer);
+
+            // merge staging → main container
+            foreach (var descriptor in configurationContainer)
+                _container.Add(descriptor);
+
+            // Phase 2: build transient provider for Register's provider parameter
+            transientProvider = _container.BuildServiceProvider();
+
+            // Phase 3: Register — packs may consume Configure-phase services via transientProvider
+            // while adding additional registrations to _container
+            foreach (var pack in _packs)
+                pack.InternalRegister(_container, transientProvider);
+
+            // Phase 4: build the final provider capturing both Configure and Register registrations
+            finalProvider = _container.BuildServiceProvider();
+        }
+        catch
+        {
+            // leave _isAlreadyBuilt false so the caller can retry after addressing the fault
+            transientProvider?.Dispose();
+            throw;
+        }
+
+        // transient is no longer needed — dispose it before Setup runs to release any singletons
+        // it materialized during Register
+        transientProvider.Dispose();
+
         _isAlreadyBuilt = true;
 
-        // configure all packs
-        var configurationContainer = new ServiceContainer();
+        // Phase 5: Setup on the final provider
         foreach (var pack in _packs)
-            pack.InternalConfigure(configurationContainer);
+            pack.InternalSetup(finalProvider);
 
-        // copy all configuration services to services
-        foreach (var descriptor in configurationContainer)
-            _container.Add(descriptor);
-
-        // create provider from configurationServices
-        var provider = _container.BuildServiceProvider();
-
-        // register all services from packs
-        foreach (var pack in _packs)
-            pack.InternalRegister(_container, provider);
-
-        // create provider from actual services
-        provider = _container.BuildServiceProvider();
-
-        // setup all services from packs
-        foreach (var pack in _packs)
-            pack.InternalSetup(provider);
-
-        return provider;
+        return finalProvider;
     }
 }
