@@ -105,8 +105,10 @@ public class WhenDisconnectedAsyncTests
 
         public void Disconnect() => throw new NotImplementedException();
 
-        public ValueTask<WebSocketSendStatus> SendTextAsync(ReadOnlyMemory<byte> text, CancellationToken ct = default) =>
-            throw new NotImplementedException();
+        public ValueTask<WebSocketSendStatus> SendTextAsync(
+            ReadOnlyMemory<byte> text,
+            CancellationToken ct = default
+        ) => throw new NotImplementedException();
 
         public ValueTask<WebSocketSendStatus> SendBinaryAsync(
             ReadOnlyMemory<byte> data,
@@ -144,8 +146,10 @@ public class WhenDisconnectedAsyncTests
 
         public void Disconnect() => throw new NotImplementedException();
 
-        public ValueTask<WebSocketSendStatus> SendTextAsync(ReadOnlyMemory<byte> text, CancellationToken ct = default) =>
-            throw new NotImplementedException();
+        public ValueTask<WebSocketSendStatus> SendTextAsync(
+            ReadOnlyMemory<byte> text,
+            CancellationToken ct = default
+        ) => throw new NotImplementedException();
 
         public ValueTask<WebSocketSendStatus> SendBinaryAsync(
             ReadOnlyMemory<byte> data,

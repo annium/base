@@ -321,6 +321,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Annium.Tests", "base\Annium
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Annium.Execution.Flow.Tests", "base\Execution\tests\Annium.Execution.Flow.Tests\Annium.Execution.Flow.Tests.csproj", "{7AF0E4D1-C211-482E-9B65-07574C92C2AC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Annium.Core.Entrypoint.Tests", "base\Core\tests\Annium.Core.Entrypoint.Tests\Annium.Core.Entrypoint.Tests.csproj", "{E6D84A03-B2FE-4DA2-B125-D7ED2ACE7D72}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -1699,6 +1701,18 @@ Global
 		{7AF0E4D1-C211-482E-9B65-07574C92C2AC}.Release|x64.Build.0 = Release|Any CPU
 		{7AF0E4D1-C211-482E-9B65-07574C92C2AC}.Release|x86.ActiveCfg = Release|Any CPU
 		{7AF0E4D1-C211-482E-9B65-07574C92C2AC}.Release|x86.Build.0 = Release|Any CPU
+		{E6D84A03-B2FE-4DA2-B125-D7ED2ACE7D72}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E6D84A03-B2FE-4DA2-B125-D7ED2ACE7D72}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E6D84A03-B2FE-4DA2-B125-D7ED2ACE7D72}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{E6D84A03-B2FE-4DA2-B125-D7ED2ACE7D72}.Debug|x64.Build.0 = Debug|Any CPU
+		{E6D84A03-B2FE-4DA2-B125-D7ED2ACE7D72}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{E6D84A03-B2FE-4DA2-B125-D7ED2ACE7D72}.Debug|x86.Build.0 = Debug|Any CPU
+		{E6D84A03-B2FE-4DA2-B125-D7ED2ACE7D72}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E6D84A03-B2FE-4DA2-B125-D7ED2ACE7D72}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E6D84A03-B2FE-4DA2-B125-D7ED2ACE7D72}.Release|x64.ActiveCfg = Release|Any CPU
+		{E6D84A03-B2FE-4DA2-B125-D7ED2ACE7D72}.Release|x64.Build.0 = Release|Any CPU
+		{E6D84A03-B2FE-4DA2-B125-D7ED2ACE7D72}.Release|x86.ActiveCfg = Release|Any CPU
+		{E6D84A03-B2FE-4DA2-B125-D7ED2ACE7D72}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -1861,5 +1875,6 @@ Global
 		{047C8029-1159-4BAC-8182-2BC73BD21985} = {5A844EC2-68F6-40D1-ABAE-4F4C00ECE230}
 		{45EF621E-6893-4890-9DE4-5BE5EA12B7AD} = {8BF73ED2-B7D6-46AF-B9E4-5608B60C7C01}
 		{7AF0E4D1-C211-482E-9B65-07574C92C2AC} = {22EAE7A9-0D3D-4716-A650-1A16D5CA03F2}
+		{E6D84A03-B2FE-4DA2-B125-D7ED2ACE7D72} = {1D15FF0A-9E9A-4E0E-8EB9-18D438510DAF}
 	EndGlobalSection
 EndGlobal

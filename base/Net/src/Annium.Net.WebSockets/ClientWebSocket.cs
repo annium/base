@@ -260,7 +260,8 @@ public class ClientWebSocket : IClientWebSocket
         Uri = uri;
         this.Trace("connect to {uri}", uri);
         var cts = new CancellationTokenSource(_connectTimeout);
-        _connectionCts = cts;
+        var oldCts = Interlocked.Exchange(ref _connectionCts, cts);
+        oldCts.Dispose();
         _socket.ConnectAsync(uri, cts.Token).ContinueWith(HandleConnected, uri, CancellationToken.None).GetAwaiter();
 
         this.Trace("done");

@@ -86,43 +86,44 @@ internal class Server : IServer, ILogSubject
     private async Task RunAsync()
     {
         this.Trace("create executor");
-        await using (var executor = Executor.Parallel<Server>(Logger))
+        await using var executor = Executor.Parallel<Server>(Logger);
+
+        this.Trace("start executor");
+        executor.Start(_cts.Token);
+
+        this.Trace("handle listener at: {endpoint}", _listener.LocalEndpoint);
+
+        while (!_cts.Token.IsCancellationRequested)
         {
-            this.Trace("start executor");
-            executor.Start(_cts.Token);
-
-            this.Trace("handle listener at: {endpoint}", _listener.LocalEndpoint);
-
-            while (!_cts.Token.IsCancellationRequested)
+            Socket socket;
+            try
             {
-                Socket socket;
-                try
-                {
-                    // await for connection
-                    socket = await _listener.AcceptSocketAsync(_cts.Token);
-                    socket.NoDelay = true;
-                    socket.LingerState = new LingerOption(true, 0);
-                    this.Trace("socket accepted");
-                }
-                catch (OperationCanceledException)
-                {
-                    this.Trace("break, operation canceled");
-                    break;
-                }
-
-                // try schedule socket handling
-                if (executor.Schedule(HandleSocket(socket, _cts.Token)))
-                {
-                    this.Trace("socket handle scheduled");
-                    continue;
-                }
-
-                this.Trace("closed and dispose socket (server is already stopping)");
-                socket.Close();
-                await socket.DisposeAsync();
+                // await for connection
+                socket = await _listener.AcceptSocketAsync(_cts.Token);
+                socket.NoDelay = true;
+                socket.LingerState = new LingerOption(true, 0);
+                this.Trace("socket accepted");
             }
+            catch (OperationCanceledException)
+            {
+                this.Trace("break, operation canceled");
+                break;
+            }
+
+            // try schedule socket handling
+            if (executor.Schedule(HandleSocket(socket, _cts.Token)))
+            {
+                this.Trace("socket handle scheduled");
+                continue;
+            }
+
+            this.Trace("closed and dispose socket (server is already stopping)");
+            socket.Close();
+            await socket.DisposeAsync();
         }
 
+        // stop listener to release the port BEFORE the executor drains in-flight handlers;
+        // variable scope ends at method exit so executor.DisposeAsync() runs after this line
         this.Trace("stop listener");
         _listener.Stop();
     }

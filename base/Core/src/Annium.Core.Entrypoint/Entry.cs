@@ -9,9 +9,12 @@ namespace Annium.Core.Entrypoint;
 /// <summary>
 /// Represents an application entry point with service provider, cancellation token, and synchronization gate
 /// </summary>
-public readonly record struct Entry(IServiceProvider Provider, CancellationToken Ct, ManualResetEventSlim _gate)
-    : ILogSubject,
-        IAsyncDisposable
+public readonly record struct Entry(
+    IServiceProvider Provider,
+    CancellationToken Ct,
+    ManualResetEventSlim _gate,
+    Action _cleanup
+) : ILogSubject, IAsyncDisposable
 {
     /// <summary>
     /// Gets the logger instance resolved from the service provider
@@ -32,6 +35,11 @@ public readonly record struct Entry(IServiceProvider Provider, CancellationToken
     /// Gets the synchronization gate for shutdown coordination
     /// </summary>
     private readonly ManualResetEventSlim _gate = _gate;
+
+    /// <summary>
+    /// Cleanup action that unsubscribes static event handlers and disposes owned resources
+    /// </summary>
+    private readonly Action _cleanup = _cleanup;
 
     /// <summary>
     /// Deconstructs the entry into its core components
@@ -60,6 +68,10 @@ public readonly record struct Entry(IServiceProvider Provider, CancellationToken
         this.Trace("set gate");
 
         _gate.Set();
+
+        this.Trace("unsubscribe handlers");
+
+        _cleanup();
 
         this.Trace("done");
     }

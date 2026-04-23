@@ -170,10 +170,7 @@ public class StageExecutorTests
         // act
         var result = await Executor
             .Staged()
-            .Stage(
-                commit: () => throw new InvalidOperationException("boom"),
-                rollback: () => rollbackCount++
-            )
+            .Stage(commit: () => throw new InvalidOperationException("boom"), rollback: () => rollbackCount++)
             .Stage(commit: () => { }, rollback: () => rollbackCount++)
             .RunAsync();
 

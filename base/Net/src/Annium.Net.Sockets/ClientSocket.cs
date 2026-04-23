@@ -259,7 +259,8 @@ public class ClientSocket : IClientSocket
             config.AuthOptions is not null ? "ssl" : "plaintext"
         );
         var cts = new CancellationTokenSource(_connectTimeout);
-        _connectionCts = cts;
+        var oldCts = Interlocked.Exchange(ref _connectionCts, cts);
+        oldCts.Dispose();
         _socket
             .ConnectAsync(config.Endpoint, config.AuthOptions, cts.Token)
             .ContinueWith(HandleConnected, config, CancellationToken.None)
