@@ -37,15 +37,21 @@ public static class JwtReader
             handler.ValidateToken(raw, opts, out var securityToken);
             var token = (JwtSecurityToken)securityToken;
 
-            // if expiration window has value - expiration is already validated,
-            if (opts.ValidateLifetime)
-                return Result.Status<JwtReadStatus, OneOf<JwtSecurityToken, Exception>>(JwtReadStatus.Ok, token);
+            // When ValidateLifetime is true, handler.ValidateToken has already checked ValidFrom
+            // and ValidTo under the configured ClockSkew — doing it again here with raw nowUtc
+            // would incorrectly reject tokens the ClockSkew was meant to allow. When
+            // ValidateLifetime is false (expirationWindow == null), MS skips the lifetime check
+            // entirely and this code enforces ValidFrom/ValidTo directly.
+            if (!opts.ValidateLifetime)
+            {
+                var nowUtc = now.ToDateTimeUtc();
 
-            var nowUtc = now.ToDateTimeUtc();
+                if (token.ValidFrom > nowUtc)
+                    return Fail(JwtReadStatus.Failed, "Token is not yet valid");
 
-            // ensure token is already valid
-            if (token.ValidFrom > nowUtc)
-                return Fail(JwtReadStatus.Failed, "Token is not yet valid");
+                if (token.ValidTo <= nowUtc)
+                    return Fail(JwtReadStatus.Failed, "Token is expired");
+            }
 
             return Result.Status<JwtReadStatus, OneOf<JwtSecurityToken, Exception>>(JwtReadStatus.Ok, token);
         }

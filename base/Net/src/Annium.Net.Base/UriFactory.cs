@@ -234,7 +234,7 @@ public class UriFactory
             if (Uri.TryCreate(_uri, UriKind.Absolute, out _))
                 throw new UriFormatException("Both base and path are absolute URI");
 
-            return new Uri($"{_baseUri.ToString().TrimEnd('/')}/{_uri.TrimStart('/')}");
+            return new Uri($"{_baseUri.GetLeftPart(UriPartial.Path).TrimEnd('/')}/{_uri.TrimStart('/')}");
         }
 
         var sb = new StringBuilder();

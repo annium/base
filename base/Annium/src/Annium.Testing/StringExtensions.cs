@@ -76,7 +76,7 @@ public static class StringExtensions
         [CallerArgumentExpression(nameof(data))] string dataEx = ""
     )
     {
-        if (!value.Contains(data))
+        if (value.Contains(data))
             throw new AssertionFailedException(
                 message ?? $"{value.WrapWithExpression(valueEx)} contains {data.WrapWithExpression(dataEx)}"
             );

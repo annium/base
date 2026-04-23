@@ -438,10 +438,7 @@ internal class HttpRequest : IHttpRequest
                 ? () => InternalRunAsync(middlewareIndex + 1, completionOption, ct)
                 : () => InternalRunAsync(completionOption, ct);
 
-        // call configuration before middleware
-        foreach (var configure in _configurations)
-            configure(this);
-
+        // configurations run once at the terminal InternalRunAsync call, not per middleware hop.
         var response = await middleware(next, this).ConfigureAwait(false);
 
         this.Trace("done {index}/{total}", middlewareIndex + 1, _middlewares.Count);

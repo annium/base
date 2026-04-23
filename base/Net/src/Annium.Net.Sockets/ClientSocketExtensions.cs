@@ -47,7 +47,7 @@ public static class ClientSocketExtensions
         void HandleConnected()
         {
             socket.Trace<string>("set {tcs} to signaled state", tcs.GetFullId());
-            tcs.SetResult();
+            tcs.TrySetResult();
             socket.OnConnected -= HandleConnected;
         }
 
@@ -69,12 +69,12 @@ public static class ClientSocketExtensions
     {
         var tcs = new TaskCompletionSource<SocketCloseStatus>();
 
-        socket.Trace<string>("subscribe {tcs} to OnConnected", tcs.GetFullId());
+        socket.Trace<string>("subscribe {tcs} to OnDisconnected", tcs.GetFullId());
 
         void HandleDisconnected(SocketCloseStatus status)
         {
             socket.Trace<string>("set {tcs} to signaled state", tcs.GetFullId());
-            tcs.SetResult(status);
+            tcs.TrySetResult(status);
             socket.OnDisconnected -= HandleDisconnected;
         }
 

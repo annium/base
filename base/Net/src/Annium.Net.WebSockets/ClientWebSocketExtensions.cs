@@ -24,7 +24,7 @@ public static class ClientWebSocketExtensions
         void HandleConnected()
         {
             socket.Trace<string>("set {tcs} to signaled state", tcs.GetFullId());
-            tcs.SetResult();
+            tcs.TrySetResult();
             socket.OnConnected -= HandleConnected;
         }
 
@@ -46,12 +46,12 @@ public static class ClientWebSocketExtensions
     {
         var tcs = new TaskCompletionSource<WebSocketCloseStatus>();
 
-        socket.Trace<string>("subscribe {tcs} to OnConnected", tcs.GetFullId());
+        socket.Trace<string>("subscribe {tcs} to OnDisconnected", tcs.GetFullId());
 
         void HandleDisconnected(WebSocketCloseStatus status)
         {
             socket.Trace<string>("set {tcs} to signaled state", tcs.GetFullId());
-            tcs.SetResult(status);
+            tcs.TrySetResult(status);
             socket.OnDisconnected -= HandleDisconnected;
         }
 

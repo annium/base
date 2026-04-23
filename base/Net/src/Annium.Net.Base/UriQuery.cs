@@ -82,7 +82,7 @@ public sealed record UriQuery
     /// </summary>
     /// <param name="array">The array to copy to</param>
     /// <param name="arrayIndex">The starting index in the array</param>
-    public void CopyTo(KeyValuePair<string, StringValues>[] array, int arrayIndex) => _data.Clear();
+    public void CopyTo(KeyValuePair<string, StringValues>[] array, int arrayIndex) => _data.CopyTo(array, arrayIndex);
 
     /// <summary>
     /// Removes a specific key-value pair from the query

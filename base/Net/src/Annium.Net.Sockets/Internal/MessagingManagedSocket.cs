@@ -93,9 +93,11 @@ internal class MessagingManagedSocket : IManagedSocket, ILogSubject
             return SocketSendStatus.Canceled;
         }
 
+        var acquired = false;
         try
         {
             await _gate.WaitAsync(ct);
+            acquired = true;
 
             var messageSize = BitConverter.GetBytes(data.Length);
 
@@ -140,7 +142,8 @@ internal class MessagingManagedSocket : IManagedSocket, ILogSubject
         }
         finally
         {
-            _gate.Release();
+            if (acquired)
+                _gate.Release();
         }
     }
 

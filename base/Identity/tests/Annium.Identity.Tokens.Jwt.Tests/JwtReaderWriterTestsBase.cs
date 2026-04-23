@@ -76,4 +76,91 @@ public class JwtReaderWriterTestsBase
         restored.AsT0.ValidTo.Is(expiresUtc);
         restored.AsT0.Claims.FirstOrDefault(x => x.Type == key).IsNotDefault().Value.Is(data);
     }
+
+    /// <summary>
+    /// Regression base for plan §2.9: reading an already-expired token must fail regardless of
+    /// whether the caller passed an <c>expirationWindow</c>. Previously the reader returned
+    /// <see cref="JwtReadStatus.Ok"/> when <see cref="TokenValidationParameters.ValidateLifetime"/>
+    /// was false (i.e., the caller passed <c>null</c> for <c>expirationWindow</c>), silently
+    /// accepting expired tokens.
+    /// </summary>
+    /// <param name="privateKey">The private key used for token signing</param>
+    /// <param name="publicKey">The public key used for token validation</param>
+    /// <param name="signatureAlgorithm">The cryptographic algorithm for signing</param>
+    protected void Expired_ExpirationWindowNull_Base(
+        SecurityKey privateKey,
+        SecurityKey publicKey,
+        string signatureAlgorithm
+    )
+    {
+        // arrange — token whose ValidTo is 1 hour in the past
+        var issuer = "service";
+        var audience = "audience";
+        var issuedAt = SystemClock.Instance.GetCurrentInstant().FloorToSecond() - Duration.FromHours(2);
+        var lifetime = Duration.FromHours(1);
+        var now = issuedAt + Duration.FromHours(2); // 1 hour past expiry
+        var token = JwtWriter.Create(
+            privateKey,
+            signatureAlgorithm,
+            Guid.NewGuid().ToString(),
+            issuer,
+            audience,
+            issuedAt,
+            lifetime,
+            ("k", "v")
+        );
+        var encoded = token.GetString();
+
+        // act — expirationWindow = null disables the MS library's lifetime check; the reader
+        // must still reject on its own.
+        var opts = JwtReader.GetValidationParameters(publicKey, issuer, audience, expirationWindow: null);
+        var result = JwtReader.Read(encoded, opts, now);
+
+        // assert
+        var (status, _) = result;
+        status.Is(JwtReadStatus.Failed);
+    }
+
+    /// <summary>
+    /// Regression base for plan §2.9: reading an already-expired token with a non-null
+    /// <c>expirationWindow</c> also fails — the MS library throws and the reader maps the
+    /// exception to <see cref="JwtReadStatus.Failed"/>. This mirrors
+    /// <see cref="Expired_ExpirationWindowNull_Base"/> to confirm the post-check is consistent
+    /// across both configurations.
+    /// </summary>
+    /// <param name="privateKey">The private key used for token signing</param>
+    /// <param name="publicKey">The public key used for token validation</param>
+    /// <param name="signatureAlgorithm">The cryptographic algorithm for signing</param>
+    protected void Expired_ExpirationWindow_Base(
+        SecurityKey privateKey,
+        SecurityKey publicKey,
+        string signatureAlgorithm
+    )
+    {
+        // arrange — same expired token as above
+        var issuer = "service";
+        var audience = "audience";
+        var issuedAt = SystemClock.Instance.GetCurrentInstant().FloorToSecond() - Duration.FromHours(2);
+        var lifetime = Duration.FromHours(1);
+        var now = issuedAt + Duration.FromHours(2);
+        var token = JwtWriter.Create(
+            privateKey,
+            signatureAlgorithm,
+            Guid.NewGuid().ToString(),
+            issuer,
+            audience,
+            issuedAt,
+            lifetime,
+            ("k", "v")
+        );
+        var encoded = token.GetString();
+
+        // act — expirationWindow = 10s (less than the 1-hour past-expiry margin so MS throws)
+        var opts = JwtReader.GetValidationParameters(publicKey, issuer, audience, Duration.FromSeconds(10));
+        var result = JwtReader.Read(encoded, opts, now);
+
+        // assert
+        var (status, _) = result;
+        status.Is(JwtReadStatus.Failed);
+    }
 }

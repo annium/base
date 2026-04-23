@@ -23,4 +23,28 @@ public class JwtReaderWriterRsaTests : JwtReaderWriterTestsBase
 
         Works_Base(privateKey, publicKey, SecurityAlgorithms.RsaSha256);
     }
+
+    /// <summary>
+    /// Regression test: expired token + expirationWindow=null must still return Failed.
+    /// </summary>
+    [Fact]
+    public void Expired_ExpirationWindowNull_Fails()
+    {
+        var privateKey = RSA.Create().ImportPem(File.ReadAllText(Path.Combine("keys", "rsa_private.pem"))).GetKey();
+        var publicKey = RSA.Create().ImportPem(File.ReadAllText(Path.Combine("keys", "rsa_public.pem"))).GetKey();
+
+        Expired_ExpirationWindowNull_Base(privateKey, publicKey, SecurityAlgorithms.RsaSha256);
+    }
+
+    /// <summary>
+    /// Regression test: expired token + non-null expirationWindow must also return Failed.
+    /// </summary>
+    [Fact]
+    public void Expired_ExpirationWindow_Fails()
+    {
+        var privateKey = RSA.Create().ImportPem(File.ReadAllText(Path.Combine("keys", "rsa_private.pem"))).GetKey();
+        var publicKey = RSA.Create().ImportPem(File.ReadAllText(Path.Combine("keys", "rsa_public.pem"))).GetKey();
+
+        Expired_ExpirationWindow_Base(privateKey, publicKey, SecurityAlgorithms.RsaSha256);
+    }
 }

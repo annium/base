@@ -87,15 +87,16 @@ internal class IntervalParser : IIntervalParser
 
         if (intervals[4] == EveryMoment)
         {
-            // day of month
+            // day of month — LocalDateTime.Day is 1-based (1..31); bounds must match or
+            // cron expressions targeting days 30 and 31 silently never fire.
             HandleRepeatablePartExpression(
                 Property(dateTime, nameof(LocalDateTime.Day)),
                 FromInt(nameof(Duration.FromDays)),
                 "day",
                 intervals[3],
-                0,
-                29,
-                30,
+                1,
+                31,
+                31,
                 expressions.Add,
                 result,
                 null

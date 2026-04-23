@@ -103,6 +103,32 @@ public class IntervalParserTest
     }
 
     /// <summary>
+    /// Regression test for day-of-month parsing at the boundaries. Previously the bounds were
+    /// <c>(min=0, max=29, size=30)</c> while <see cref="LocalDateTime.Day"/> is 1-based (1..31),
+    /// so cron expressions pinning days 30 or 31 silently never fired and day 0 was wrongly
+    /// accepted. After the fix, bounds are <c>(1, 31, 31)</c> and expressions like
+    /// <c>"0 0 0 31 *"</c> compile and resolve correctly.
+    /// </summary>
+    [Fact]
+    public void DayOfMonth_31_Works()
+    {
+        // arrange
+        var parser = GetParser();
+
+        // act — "at 00:00:00 on day 31 of month"; 5-part cron is "second minute hour day day-of-week"
+        var resolver = parser.GetDelayResolver("0 0 0 31 *");
+
+        // assert — from January 2000 (year 2000 January has 31 days)
+        // day 30, 23:00:00 → 1 hour until day 31, 00:00:00
+        resolver(GetDate(30, 23, 0, 0)).Is(Hour(1));
+        // day 31, 00:00:00 → already aligned, zero delay
+        resolver(GetDate(31, 0, 0, 0)).Is(Zero);
+        // negative assertion: on day 1 of a month, the delay to day 31 is NOT zero. This would
+        // silently resolve to zero under the buggy (0, 29, 30) bounds where 31 was out of range.
+        resolver(GetDate(1, 0, 0, 0)).Is(Day(30));
+    }
+
+    /// <summary>
     /// Tests that the parser works with full combination patterns
     /// </summary>
     [Fact]
