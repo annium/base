@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Annium.Logging;
 using NodaTime;
 
 namespace Annium.Core.Runtime.Internal.Time;
@@ -8,8 +9,22 @@ namespace Annium.Core.Runtime.Internal.Time;
 /// <summary>
 /// Internal implementation of action scheduler for real-time scheduling
 /// </summary>
-internal class ActionScheduler : IActionScheduler
+internal class ActionScheduler : IActionScheduler, ILogSubject
 {
+    /// <summary>
+    /// Gets the logger instance used for surfacing scheduled-action failures.
+    /// </summary>
+    public ILogger Logger { get; }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ActionScheduler"/> class.
+    /// </summary>
+    /// <param name="logger">Logger used to report unhandled exceptions from scheduled actions.</param>
+    public ActionScheduler(ILogger logger)
+    {
+        Logger = logger;
+    }
+
     /// <summary>
     /// Schedules an action to be executed after a specified timeout in milliseconds
     /// </summary>
@@ -19,7 +34,8 @@ internal class ActionScheduler : IActionScheduler
     public Action Delay(Action handle, int timeout) => Delay(handle, Duration.FromMilliseconds(timeout));
 
     /// <summary>
-    /// Schedules an action to be executed after a specified timeout duration
+    /// Schedules an action to be executed after a specified timeout duration.
+    /// Runs the callback on a background task; exceptions are surfaced via <see cref="Logger"/>.
     /// </summary>
     /// <param name="handle">The action to execute</param>
     /// <param name="timeout">The timeout duration</param>
@@ -27,13 +43,20 @@ internal class ActionScheduler : IActionScheduler
     public Action Delay(Action handle, Duration timeout)
     {
         var execute = true;
-        Task.Delay(timeout.ToTimeSpan())
-            .ContinueWith(_ =>
+        _ = Task.Run(async () =>
+        {
+            try
             {
+                await Task.Delay(timeout.ToTimeSpan());
                 if (execute)
                     handle();
-            })
-            .GetAwaiter();
+            }
+            catch (OperationCanceledException) { }
+            catch (Exception ex)
+            {
+                this.Error(ex, "scheduled action failed");
+            }
+        });
 
         return () => execute = false;
     }

@@ -68,14 +68,16 @@ internal class StaticObservableInstance<T> : ObservableInstanceBase<T>, IObserva
     }
 
     /// <summary>
-    /// Starts the observable execution, either synchronously or asynchronously
+    /// Starts the observable execution, either synchronously or asynchronously.
+    /// <see cref="RunAsync"/> contains its own try/catch that surfaces failures via
+    /// <c>ctx.OnError</c>, so the discarded task handle cannot silently drop an exception.
     /// </summary>
     private void Start()
     {
         if (_isAsync)
-            Task.Run(RunAsync, _ct).GetAwaiter();
+            _ = Task.Run(RunAsync, _ct);
         else
-            RunAsync().GetAwaiter();
+            _ = RunAsync();
     }
 
     /// <summary>

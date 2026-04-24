@@ -30,7 +30,23 @@ public static class DoParallelAsyncOperatorExtensions
                         await handle(x);
                         observer.OnNext(x);
                     }),
-                () => executor.DisposeAsync().AsTask().ContinueWith(_ => observer.OnCompleted()).GetAwaiter()
+                () =>
+                    _ = Task.Run(async () =>
+                    {
+                        try
+                        {
+                            await executor.DisposeAsync();
+                            observer.OnCompleted();
+                        }
+                        catch (OperationCanceledException)
+                        {
+                            observer.OnCompleted();
+                        }
+                        catch (Exception ex)
+                        {
+                            observer.OnError(ex);
+                        }
+                    })
             );
         });
     }

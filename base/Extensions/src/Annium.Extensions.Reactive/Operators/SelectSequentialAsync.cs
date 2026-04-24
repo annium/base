@@ -33,7 +33,23 @@ public static class SelectSequentialAsyncOperatorExtensions
                     {
                         observer.OnNext(await selector(x));
                     }),
-                () => executor.DisposeAsync().AsTask().ContinueWith(_ => observer.OnCompleted()).GetAwaiter()
+                () =>
+                    _ = Task.Run(async () =>
+                    {
+                        try
+                        {
+                            await executor.DisposeAsync();
+                            observer.OnCompleted();
+                        }
+                        catch (OperationCanceledException)
+                        {
+                            observer.OnCompleted();
+                        }
+                        catch (Exception ex)
+                        {
+                            observer.OnError(ex);
+                        }
+                    })
             );
         });
     }
