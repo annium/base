@@ -1,6 +1,7 @@
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Annium.Execution.Background;
+using Annium.Extensions.Reactive.Internal;
 using Annium.Logging;
 
 // ReSharper disable once CheckNamespace
@@ -33,23 +34,7 @@ public static class SelectParallelAsyncOperatorExtensions
                     {
                         observer.OnNext(await selector(x));
                     }),
-                () =>
-                    _ = Task.Run(async () =>
-                    {
-                        try
-                        {
-                            await executor.DisposeAsync();
-                            observer.OnCompleted();
-                        }
-                        catch (OperationCanceledException)
-                        {
-                            observer.OnCompleted();
-                        }
-                        catch (Exception ex)
-                        {
-                            observer.OnError(ex);
-                        }
-                    })
+                () => ExecutorTeardown.CompleteInBackground(executor, observer)
             );
         });
     }
