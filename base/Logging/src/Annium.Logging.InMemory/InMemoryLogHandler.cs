@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using Annium.Logging.Shared;
 
@@ -6,20 +7,21 @@ namespace Annium.Logging.InMemory;
 /// <summary>
 /// Log handler that stores log messages in memory for testing and debugging purposes.
 /// Provides access to all logged messages through a read-only collection.
+/// Thread-safe for concurrent producers.
 /// </summary>
 /// <typeparam name="TContext">The type of the log context</typeparam>
 public class InMemoryLogHandler<TContext> : ILogHandler<TContext>
     where TContext : class
 {
     /// <summary>
-    /// Gets the collection of all logged messages.
+    /// Gets a snapshot of all logged messages observed so far.
     /// </summary>
-    public IReadOnlyList<LogMessage<TContext>> Logs => _logs;
+    public IReadOnlyList<LogMessage<TContext>> Logs => _logs.ToArray();
 
     /// <summary>
-    /// Internal storage for logged messages.
+    /// Internal thread-safe storage for logged messages.
     /// </summary>
-    private readonly List<LogMessage<TContext>> _logs = new();
+    private readonly ConcurrentQueue<LogMessage<TContext>> _logs = new();
 
     /// <summary>
     /// Handles a log message by storing it in memory.
@@ -27,6 +29,6 @@ public class InMemoryLogHandler<TContext> : ILogHandler<TContext>
     /// <param name="message">The log message to store</param>
     public void Handle(LogMessage<TContext> message)
     {
-        _logs.Add(message);
+        _logs.Enqueue(message);
     }
 }

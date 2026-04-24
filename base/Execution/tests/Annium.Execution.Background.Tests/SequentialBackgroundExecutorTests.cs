@@ -128,7 +128,7 @@ public class SequentialBackgroundExecutorTests : BackgroundExecutorTestBase
     {
         this.Trace("start");
 
-        await ExceptionInTask_LogsError_Base(Logs);
+        await ExceptionInTask_LogsError_Base(() => Logs);
 
         this.Trace("done");
     }

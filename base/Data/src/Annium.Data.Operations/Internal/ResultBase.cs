@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -16,30 +17,67 @@ internal abstract record ResultBase<T> : IResultBase<T>, IResultBase, ICopyable<
     where T : class, IResultBase<T>
 {
     /// <summary>
-    /// Gets a read-only collection of plain error messages that are not associated with any specific label.
+    /// Gets a snapshot of all plain error messages that are not associated with any specific label.
     /// </summary>
-    public IReadOnlyCollection<string> PlainErrors => _plainErrors;
+    public IReadOnlyCollection<string> PlainErrors
+    {
+        get
+        {
+            lock (_locker)
+                return _plainErrors.ToArray();
+        }
+    }
 
     /// <summary>
     /// Gets a concatenated string of all plain errors separated by "; ".
     /// </summary>
-    public string PlainError => _plainErrors.Join("; ");
+    public string PlainError
+    {
+        get
+        {
+            lock (_locker)
+                return _plainErrors.Join("; ");
+        }
+    }
 
     /// <summary>
-    /// Gets a read-only dictionary of labeled errors, where each label maps to a collection of error messages.
+    /// Gets a snapshot dictionary of labeled errors, where each label maps to a snapshot collection of error messages.
     /// </summary>
-    public IReadOnlyDictionary<string, IReadOnlyCollection<string>> LabeledErrors =>
-        _labeledErrors.ToDictionary(pair => pair.Key, pair => pair.Value as IReadOnlyCollection<string>);
+    public IReadOnlyDictionary<string, IReadOnlyCollection<string>> LabeledErrors
+    {
+        get
+        {
+            lock (_locker)
+                return _labeledErrors.ToImmutableDictionary(
+                    pair => pair.Key,
+                    pair => (IReadOnlyCollection<string>)pair.Value.ToArray()
+                );
+        }
+    }
 
     /// <summary>
     /// Gets a value indicating whether this result has no errors (both plain and labeled).
     /// </summary>
-    public bool IsOk => _plainErrors.Count == 0 && _labeledErrors.Count == 0;
+    public bool IsOk
+    {
+        get
+        {
+            lock (_locker)
+                return _plainErrors.Count == 0 && _labeledErrors.Count == 0;
+        }
+    }
 
     /// <summary>
     /// Gets a value indicating whether this result has any errors (either plain or labeled).
     /// </summary>
-    public bool HasErrors => _plainErrors.Count > 0 || _labeledErrors.Count > 0;
+    public bool HasErrors
+    {
+        get
+        {
+            lock (_locker)
+                return _plainErrors.Count > 0 || _labeledErrors.Count > 0;
+        }
+    }
 
     /// <summary>
     /// Thread synchronization lock for ensuring thread-safe access to error collections.

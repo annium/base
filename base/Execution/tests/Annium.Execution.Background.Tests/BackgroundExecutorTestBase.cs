@@ -318,9 +318,9 @@ public abstract class BackgroundExecutorTestBase : TestBase
     /// rather than silently dropped. Guards against regressions of the fire-and-forget fix
     /// that wrapped <c>RunTaskAsync</c> with a try/log block.
     /// </summary>
-    /// <param name="logs">The captured logs from the test's <see cref="TestBase"/></param>
+    /// <param name="getLogs">Accessor that snapshots the test's <see cref="TestBase.Logs"/> at call time</param>
     /// <returns>A task representing the test operation</returns>
-    protected async Task ExceptionInTask_LogsError_Base(IReadOnlyList<LogMessage<DefaultLogContext>> logs)
+    protected async Task ExceptionInTask_LogsError_Base(Func<IReadOnlyList<LogMessage<DefaultLogContext>>> getLogs)
     {
         this.Trace("start");
 
@@ -337,8 +337,9 @@ public abstract class BackgroundExecutorTestBase : TestBase
         this.Trace("dispose executor");
         await _executor.DisposeAsync();
 
-        // assert
+        // assert — take snapshot AFTER dispose so the logs reflect the completed work
         this.Trace("ensure error logged with exception");
+        var logs = getLogs();
         logs.Any(x => x.Level == LogLevel.Error && x.Exception is { Message: marker }).IsTrue();
 
         this.Trace("done");

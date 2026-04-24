@@ -87,6 +87,75 @@ public class ObjectPoolTests
     }
 
     /// <summary>
+    /// Verifies that a factory-throwing <c>Get</c> does not leak a semaphore permit: after
+    /// several intentionally-faulting calls, the pool's capacity is still fully available.
+    /// Each Get is paired with a Return so capacity is never exhausted; only the fault path
+    /// exercised is the leak case.
+    /// </summary>
+    [Fact]
+    public void Get_FactoryThrows_SemaphorePermitsPreserved()
+    {
+        // arrange — pool whose loader throws while a flag is set. Capacity is larger than the
+        // test's Get count so that Return is not needed to demonstrate the permit-release
+        // invariant; any permit leaked by a faulting Get would block subsequent successful Gets.
+        const int capacity = 10;
+        var factoryCount = 0;
+        var shouldThrow = false;
+        var sp = new ServiceContainer()
+            .AddObjectPool<FaultyItem>(capacity, ServiceLifetime.Singleton, PoolLoadMode.Lazy, PoolStorageMode.Lifo)
+            .Add(_ =>
+            {
+                var n = Interlocked.Increment(ref factoryCount);
+                if (Volatile.Read(ref shouldThrow))
+                    throw new InvalidOperationException($"injected failure #{n}");
+                return new FaultyItem(n);
+            })
+            .AsSelf()
+            .Transient()
+            .BuildServiceProvider();
+        var pool = sp.Resolve<IObjectPool<FaultyItem>>();
+
+        // act — 5 faulting Gets
+        Volatile.Write(ref shouldThrow, true);
+        var faults = 0;
+        for (var i = 0; i < 5; i++)
+        {
+            try
+            {
+                pool.Get();
+            }
+            catch (InvalidOperationException)
+            {
+                faults++;
+            }
+        }
+        faults.Is(5);
+
+        // assert — without the permit-release fix, all 5 permits would be leaked and the
+        // pool would have 0 permits left. With the fix, all 10 permits remain available:
+        // we can now Get `capacity` times without blocking.
+        Volatile.Write(ref shouldThrow, false);
+        var spin = new ManualResetEventSlim();
+        var ct = TestContext.Current.CancellationToken;
+        _ = Task.Run(
+            () =>
+            {
+                for (var i = 0; i < capacity; i++)
+                    pool.Get();
+                spin.Set();
+            },
+            ct
+        );
+        spin.Wait(TimeSpan.FromSeconds(5), ct).IsTrue();
+    }
+
+    /// <summary>
+    /// Test item used exclusively by the faulting-factory test.
+    /// </summary>
+    /// <param name="Id">Identifier for diagnostic output.</param>
+    private sealed record FaultyItem(int Id);
+
+    /// <summary>
     /// Creates an object pool with the specified configuration and returns it along with a log collection
     /// </summary>
     /// <param name="loadMode">The pool loading strategy (eager or lazy)</param>

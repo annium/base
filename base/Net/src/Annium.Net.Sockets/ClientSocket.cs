@@ -166,8 +166,16 @@ public class ClientSocket : IClientSocket
             }
 
             SetStatus(Status.Disconnected);
-            _connectionCts.Cancel();
-            _connectionCts.Dispose();
+            var oldCts = _connectionCts;
+            // replace with a fresh cancelled CTS BEFORE disposing the old one; keeps the
+            // invariant that _connectionCts never points to a disposed instance, so a
+            // racing ConnectPrivate (or anyone reading _connectionCts.Token) sees a safe
+            // already-cancelled source rather than ObjectDisposedException
+            var replacement = new CancellationTokenSource();
+            replacement.Cancel();
+            _connectionCts = replacement;
+            oldCts.Cancel();
+            oldCts.Dispose();
         }
 
         this.Trace("stop monitor");
@@ -260,6 +268,7 @@ public class ClientSocket : IClientSocket
     {
         this.Trace("start");
 
+        CancellationTokenSource cts;
         lock (_locker)
         {
             if (_status is Status.Disconnected)
@@ -267,17 +276,21 @@ public class ClientSocket : IClientSocket
                 this.Trace("skip - already {status}", _status);
                 return;
             }
+
+            Config = config;
+            // rotate _connectionCts under lock so a racing Disconnect can't double-dispose
+            // the CTS between our Interlocked.Exchange and Dispose
+            cts = new CancellationTokenSource(_connectTimeout);
+            var oldCts = _connectionCts;
+            _connectionCts = cts;
+            oldCts.Dispose();
         }
 
-        Config = config;
         this.Trace<IPEndPoint, string>(
             "connect to {endpoint} ({ssl})",
             config.Endpoint,
             config.AuthOptions is not null ? "ssl" : "plaintext"
         );
-        var cts = new CancellationTokenSource(_connectTimeout);
-        var oldCts = Interlocked.Exchange(ref _connectionCts, cts);
-        oldCts.Dispose();
         _ = Task.Run(async () =>
         {
             try

@@ -36,19 +36,22 @@ internal class ActionScheduler : IActionScheduler, ILogSubject
     /// <summary>
     /// Schedules an action to be executed after a specified timeout duration.
     /// Runs the callback on a background task; exceptions are surfaced via <see cref="Logger"/>.
+    /// The execute/cancel flag uses <see cref="Interlocked"/> + <see cref="Volatile"/> reads
+    /// so the cancellation Action's write is observed by the background task on weakly-ordered
+    /// memory models.
     /// </summary>
     /// <param name="handle">The action to execute</param>
     /// <param name="timeout">The timeout duration</param>
     /// <returns>A cancellation action</returns>
     public Action Delay(Action handle, Duration timeout)
     {
-        var execute = true;
+        var executeFlag = 1;
         _ = Task.Run(async () =>
         {
             try
             {
                 await Task.Delay(timeout.ToTimeSpan());
-                if (execute)
+                if (Volatile.Read(ref executeFlag) == 1)
                     handle();
             }
             catch (OperationCanceledException) { }
@@ -58,7 +61,7 @@ internal class ActionScheduler : IActionScheduler, ILogSubject
             }
         });
 
-        return () => execute = false;
+        return () => Interlocked.Exchange(ref executeFlag, 0);
     }
 
     /// <summary>

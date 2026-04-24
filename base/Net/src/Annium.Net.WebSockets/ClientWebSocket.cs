@@ -163,8 +163,14 @@ public class ClientWebSocket : IClientWebSocket
             }
 
             SetStatus(Status.Disconnected);
-            _connectionCts.Cancel();
-            _connectionCts.Dispose();
+            var oldCts = _connectionCts;
+            // replace with a fresh cancelled CTS BEFORE disposing the old one; keeps the
+            // invariant that _connectionCts never points to a disposed instance
+            var replacement = new CancellationTokenSource();
+            replacement.Cancel();
+            _connectionCts = replacement;
+            oldCts.Cancel();
+            oldCts.Dispose();
         }
 
         this.Trace("stop monitor");
@@ -269,6 +275,7 @@ public class ClientWebSocket : IClientWebSocket
     {
         this.Trace("start");
 
+        CancellationTokenSource cts;
         lock (_locker)
         {
             if (_status is Status.Disconnected)
@@ -276,13 +283,17 @@ public class ClientWebSocket : IClientWebSocket
                 this.Trace("skip - already {status}", _status);
                 return;
             }
+
+            Uri = uri;
+            // rotate _connectionCts under lock so a racing Disconnect can't double-dispose
+            // the CTS between our Interlocked.Exchange and Dispose
+            cts = new CancellationTokenSource(_connectTimeout);
+            var oldCts = _connectionCts;
+            _connectionCts = cts;
+            oldCts.Dispose();
         }
 
-        Uri = uri;
         this.Trace("connect to {uri}", uri);
-        var cts = new CancellationTokenSource(_connectTimeout);
-        var oldCts = Interlocked.Exchange(ref _connectionCts, cts);
-        oldCts.Dispose();
         _ = Task.Run(async () =>
         {
             try

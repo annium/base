@@ -155,8 +155,10 @@ internal abstract class ShellInstanceBase : IShellInstance, ILogSubject
         // as far as there's no way to know if process was killed or finished on it's own - track it manually
         var killed = false;
 
-        // this will be called when process finished on it's own, or is killed
-        var exitHandled = false;
+        // gate for exactly-once HandleExit invocation; both the CT-registration callback
+        // and the process.Exited event can fire concurrently — Interlocked.CompareExchange
+        // ensures only the first entry proceeds
+        var exitHandledFlag = 0;
 
         // setup output capture
         var stdout = new StringBuilder();
@@ -204,9 +206,8 @@ internal abstract class ShellInstanceBase : IShellInstance, ILogSubject
 
         void HandleExit()
         {
-            if (exitHandled)
+            if (Interlocked.CompareExchange(ref exitHandledFlag, 1, 0) != 0)
                 return;
-            exitHandled = true;
 
             // background work so we don't block the cancellation-token callback or Process.Exited
             // event; the tcs is only completed after both pipes drain
