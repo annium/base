@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Annium.Logging;
+using Annium.Logging.Shared;
 using Annium.Testing;
 using Xunit;
 
@@ -308,6 +309,37 @@ public abstract class BackgroundExecutorTestBase : TestBase
         // assert
         this.Trace("ensure work is canceled");
         isCancelled.IsTrue();
+
+        this.Trace("done");
+    }
+
+    /// <summary>
+    /// Verifies that an exception thrown by a scheduled task is surfaced through the logger
+    /// rather than silently dropped. Guards against regressions of the fire-and-forget fix
+    /// that wrapped <c>RunTaskAsync</c> with a try/log block.
+    /// </summary>
+    /// <param name="logs">The captured logs from the test's <see cref="TestBase"/></param>
+    /// <returns>A task representing the test operation</returns>
+    protected async Task ExceptionInTask_LogsError_Base(IReadOnlyList<LogMessage<DefaultLogContext>> logs)
+    {
+        this.Trace("start");
+
+        // arrange
+        const string marker = "boom-from-scheduled-task";
+
+        // act
+        this.Trace("schedule throwing work");
+        _executor.Schedule(() => throw new InvalidOperationException(marker));
+
+        this.Trace("start executor");
+        _executor.Start();
+
+        this.Trace("dispose executor");
+        await _executor.DisposeAsync();
+
+        // assert
+        this.Trace("ensure error logged with exception");
+        logs.Any(x => x.Level == LogLevel.Error && x.Exception is { Message: marker }).IsTrue();
 
         this.Trace("done");
     }
