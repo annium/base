@@ -145,7 +145,7 @@ public class ClientServerManagedSocketTests : TestBase, IAsyncLifetime
 
         // act
         this.Trace("disconnect client socket");
-        ClientSocket.DisconnectAsync().GetAwaiter();
+        _ = ClientSocket.DisconnectAsync();
 
         this.Trace("send message");
         var result = await SendAsync(message, TestContext.Current.CancellationToken);
@@ -177,12 +177,12 @@ public class ClientServerManagedSocketTests : TestBase, IAsyncLifetime
 
         this.Trace("run server");
         await using var server = _runServer(
-            async (serverSocket, _) =>
+            async (serverSocket, ct) =>
             {
                 this.Trace("disconnect server socket");
                 await serverSocket.DisconnectAsync();
 
-                Task.Delay(50, CancellationToken.None)
+                _ = Task.Delay(50, CancellationToken.None)
                     .ContinueWith(
                         _ =>
                         {
@@ -190,8 +190,7 @@ public class ClientServerManagedSocketTests : TestBase, IAsyncLifetime
                             serverTcs.SetResult();
                         },
                         CancellationToken.None
-                    )
-                    .GetAwaiter();
+                    );
             }
         );
 
@@ -233,13 +232,13 @@ public class ClientServerManagedSocketTests : TestBase, IAsyncLifetime
 
         this.Trace("run server");
         await using var server = _runServer(
-            async (serverSocket, _) =>
+            async (serverSocket, ct) =>
             {
                 this.Trace("subscribe to messages");
                 serverSocket.OnReceived += x => serverSocket.SendAsync(x.ToArray(), CancellationToken.None).Await();
                 this.Trace("server subscribed to messages");
 
-                Task.Delay(10, CancellationToken.None)
+                _ = Task.Delay(10, CancellationToken.None)
                     .ContinueWith(
                         _ =>
                         {
@@ -247,8 +246,7 @@ public class ClientServerManagedSocketTests : TestBase, IAsyncLifetime
                             serverTcs.SetResult();
                         },
                         CancellationToken.None
-                    )
-                    .GetAwaiter();
+                    );
 
                 this.Trace("listen server socket");
                 await serverSocket.IsClosed;

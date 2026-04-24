@@ -678,7 +678,6 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
         _clientSocket?.Disconnect();
 
         this.Trace("done");
-
         return ValueTask.CompletedTask;
     }
 
