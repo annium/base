@@ -151,7 +151,6 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
         {
             this.Trace("disconnect server socket");
             serverSocket.Disconnect();
-
             return Task.CompletedTask;
         });
 
@@ -588,7 +587,6 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
         _clientSocket?.Disconnect();
 
         this.Trace("done");
-
         return ValueTask.CompletedTask;
     }
 

@@ -144,7 +144,7 @@ public class ClientServerManagedWebSocketTests : TestBase, IAsyncLifetime
             this.Trace("disconnect server socket");
             await serverSocket.DisconnectAsync();
 
-            Task.Delay(10, CancellationToken.None)
+            _ = Task.Delay(10, CancellationToken.None)
                 .ContinueWith(
                     _ =>
                     {
@@ -152,8 +152,7 @@ public class ClientServerManagedWebSocketTests : TestBase, IAsyncLifetime
                         serverTcs.SetResult();
                     },
                     CancellationToken.None
-                )
-                .GetAwaiter();
+                );
         });
 
         this.Trace("connect");
@@ -200,7 +199,7 @@ public class ClientServerManagedWebSocketTests : TestBase, IAsyncLifetime
                 serverSocket.SendBinaryAsync(x.ToArray(), CancellationToken.None).Await();
             this.Trace("server subscribed to binary");
 
-            Task.Delay(10, CancellationToken.None)
+            _ = Task.Delay(10, CancellationToken.None)
                 .ContinueWith(
                     _ =>
                     {
@@ -208,8 +207,7 @@ public class ClientServerManagedWebSocketTests : TestBase, IAsyncLifetime
                         serverTcs.SetResult();
                     },
                     CancellationToken.None
-                )
-                .GetAwaiter();
+                );
 
             this.Trace("listen server socket");
             await serverSocket.IsClosed;

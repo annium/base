@@ -122,9 +122,11 @@ public class ManagedWebSocketTests : TestBase, IAsyncLifetime
 
         // act
         this.Trace("close output");
-        ClientSocket
-            .CloseOutputAsync(System.Net.WebSockets.WebSocketCloseStatus.Empty, string.Empty, CancellationToken.None)
-            .GetAwaiter();
+        _ = ClientSocket.CloseOutputAsync(
+            System.Net.WebSockets.WebSocketCloseStatus.Empty,
+            string.Empty,
+            CancellationToken.None
+        );
 
         this.Trace("send message");
         var result = await SendTextAsync(message, TestContext.Current.CancellationToken);
@@ -158,9 +160,8 @@ public class ManagedWebSocketTests : TestBase, IAsyncLifetime
                     string.Empty,
                     default
                 );
-                Task.Delay(10, CancellationToken.None)
-                    .ContinueWith(_ => serverTcs.SetResult(), CancellationToken.None)
-                    .GetAwaiter();
+                _ = Task.Delay(10, CancellationToken.None)
+                    .ContinueWith(_ => serverTcs.SetResult(), CancellationToken.None);
             }
         );
 
@@ -236,7 +237,7 @@ public class ManagedWebSocketTests : TestBase, IAsyncLifetime
 
                 await Task.CompletedTask;
 
-                Task.Delay(10, CancellationToken.None)
+                _ = Task.Delay(10, CancellationToken.None)
                     .ContinueWith(
                         _ =>
                         {
@@ -244,8 +245,7 @@ public class ManagedWebSocketTests : TestBase, IAsyncLifetime
                             serverTcs.SetResult();
                         },
                         CancellationToken.None
-                    )
-                    .GetAwaiter();
+                    );
             }
         );
 
@@ -293,7 +293,7 @@ public class ManagedWebSocketTests : TestBase, IAsyncLifetime
                 serverSocket.OnBinaryReceived += x =>
                     serverSocket.SendBinaryAsync(x.ToArray(), CancellationToken.None).Await();
 
-                Task.Delay(10, CancellationToken.None)
+                _ = Task.Delay(10, CancellationToken.None)
                     .ContinueWith(
                         _ =>
                         {
@@ -301,8 +301,7 @@ public class ManagedWebSocketTests : TestBase, IAsyncLifetime
                             serverTcs.SetResult();
                         },
                         CancellationToken.None
-                    )
-                    .GetAwaiter();
+                    );
 
                 this.Trace("listen server socket");
                 await serverSocket.ListenAsync(ct);
@@ -494,7 +493,7 @@ public class ManagedWebSocketTests : TestBase, IAsyncLifetime
 
                 await Task.CompletedTask;
 
-                Task.Delay(10, CancellationToken.None)
+                _ = Task.Delay(10, CancellationToken.None)
                     .ContinueWith(
                         _ =>
                         {
@@ -502,8 +501,7 @@ public class ManagedWebSocketTests : TestBase, IAsyncLifetime
                             serverTcs.SetResult();
                         },
                         CancellationToken.None
-                    )
-                    .GetAwaiter();
+                    );
             }
         );
 
@@ -564,7 +562,7 @@ public class ManagedWebSocketTests : TestBase, IAsyncLifetime
         await ConnectAsync(server, TestContext.Current.CancellationToken);
 
         this.Trace("listen detached");
-        ListenAsync(TestContext.Current.CancellationToken).GetAwaiter();
+        _ = ListenAsync(TestContext.Current.CancellationToken);
 
         // assert
         this.Trace("assert text messages arrive");
@@ -756,7 +754,7 @@ public class ManagedWebSocketTests : TestBase, IAsyncLifetime
         this.Trace("start");
 
         await ConnectAsync(server, ct);
-        ListenAsync(ct).GetAwaiter();
+        _ = ListenAsync(ct);
 
         this.Trace("done");
     }
