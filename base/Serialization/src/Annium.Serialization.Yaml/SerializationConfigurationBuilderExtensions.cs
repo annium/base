@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.IO;
 using Annium.Serialization.Abstractions;
 using Annium.Serialization.Yaml.Internal;
 using YamlDotNet.Serialization;
@@ -20,7 +21,9 @@ public static class SerializationConfigurationBuilderExtensions
     > _options = new();
 
     /// <summary>
-    /// Adds YAML serialization support with default configuration.
+    /// Adds YAML serialization support with default configuration. Registers serializers for the
+    /// <see cref="string"/>, <see cref="byte"/>[], <see cref="ReadOnlyMemory{T}"/> of <see cref="byte"/>,
+    /// and <see cref="Stream"/> surfaces, all backed by UTF-8 encoding of the same YAML text.
     /// </summary>
     /// <param name="builder">The serialization configuration builder.</param>
     /// <param name="isDefault">Whether this should be the default serializer.</param>
@@ -32,11 +35,7 @@ public static class SerializationConfigurationBuilderExtensions
     {
         static void Configure(IServiceProvider sp, SerializerBuilder serializer, DeserializerBuilder deserializer) { }
 
-        return builder.Register<string, StringSerializer>(
-            Constants.MediaType,
-            isDefault,
-            ResolveSerializer(builder.Key, Configure, CreateString)
-        );
+        return RegisterAll(builder, isDefault, Configure);
     }
 
     /// <summary>
@@ -55,11 +54,7 @@ public static class SerializationConfigurationBuilderExtensions
         void Configure(IServiceProvider sp, SerializerBuilder serializer, DeserializerBuilder deserializer) =>
             configure(serializer, deserializer);
 
-        return builder.Register<string, StringSerializer>(
-            Constants.MediaType,
-            isDefault,
-            ResolveSerializer(builder.Key, Configure, CreateString)
-        );
+        return RegisterAll(builder, isDefault, Configure);
     }
 
     /// <summary>
@@ -75,11 +70,43 @@ public static class SerializationConfigurationBuilderExtensions
         bool isDefault = false
     )
     {
-        return builder.Register<string, StringSerializer>(
-            Constants.MediaType,
-            isDefault,
-            ResolveSerializer(builder.Key, configure, CreateString)
-        );
+        return RegisterAll(builder, isDefault, configure);
+    }
+
+    /// <summary>
+    /// Registers all four YAML serializer surfaces against the supplied configuration delegate.
+    /// </summary>
+    /// <param name="builder">The serialization configuration builder.</param>
+    /// <param name="isDefault">Whether this should be the default serializer.</param>
+    /// <param name="configure">The configuration action.</param>
+    /// <returns>The configuration builder for method chaining.</returns>
+    private static ISerializationConfigurationBuilder RegisterAll(
+        ISerializationConfigurationBuilder builder,
+        bool isDefault,
+        Action<IServiceProvider, SerializerBuilder, DeserializerBuilder> configure
+    )
+    {
+        return builder
+            .Register<string, StringSerializer>(
+                Constants.MediaType,
+                isDefault,
+                ResolveSerializer(builder.Key, configure, CreateString)
+            )
+            .Register<byte[], ByteArraySerializer>(
+                Constants.MediaType,
+                isDefault,
+                ResolveSerializer(builder.Key, configure, CreateByteArray)
+            )
+            .Register<ReadOnlyMemory<byte>, ReadOnlyMemoryByteSerializer>(
+                Constants.MediaType,
+                isDefault,
+                ResolveSerializer(builder.Key, configure, CreateReadOnlyMemoryByte)
+            )
+            .Register<Stream, StreamSerializer>(
+                Constants.MediaType,
+                isDefault,
+                ResolveSerializer(builder.Key, configure, CreateStream)
+            );
     }
 
     /// <summary>
@@ -114,11 +141,40 @@ public static class SerializationConfigurationBuilderExtensions
         };
 
     /// <summary>
-    /// Creates a StringSerializer instance with the specified YAML serializer and deserializer.
+    /// Creates a <see cref="StringSerializer"/> instance with the specified YAML serializer and deserializer.
     /// </summary>
     /// <param name="serializer">The YAML serializer.</param>
     /// <param name="deserializer">The YAML deserializer.</param>
-    /// <returns>A new StringSerializer instance.</returns>
+    /// <returns>A new <see cref="StringSerializer"/> instance.</returns>
     private static StringSerializer CreateString(ISerializer serializer, IDeserializer deserializer) =>
+        new(serializer, deserializer);
+
+    /// <summary>
+    /// Creates a <see cref="ByteArraySerializer"/> instance.
+    /// </summary>
+    /// <param name="serializer">The YAML serializer.</param>
+    /// <param name="deserializer">The YAML deserializer.</param>
+    /// <returns>A new <see cref="ByteArraySerializer"/> instance.</returns>
+    private static ByteArraySerializer CreateByteArray(ISerializer serializer, IDeserializer deserializer) =>
+        new(serializer, deserializer);
+
+    /// <summary>
+    /// Creates a <see cref="ReadOnlyMemoryByteSerializer"/> instance.
+    /// </summary>
+    /// <param name="serializer">The YAML serializer.</param>
+    /// <param name="deserializer">The YAML deserializer.</param>
+    /// <returns>A new <see cref="ReadOnlyMemoryByteSerializer"/> instance.</returns>
+    private static ReadOnlyMemoryByteSerializer CreateReadOnlyMemoryByte(
+        ISerializer serializer,
+        IDeserializer deserializer
+    ) => new(serializer, deserializer);
+
+    /// <summary>
+    /// Creates a <see cref="StreamSerializer"/> instance.
+    /// </summary>
+    /// <param name="serializer">The YAML serializer.</param>
+    /// <param name="deserializer">The YAML deserializer.</param>
+    /// <returns>A new <see cref="StreamSerializer"/> instance.</returns>
+    private static StreamSerializer CreateStream(ISerializer serializer, IDeserializer deserializer) =>
         new(serializer, deserializer);
 }

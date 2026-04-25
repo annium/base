@@ -68,7 +68,7 @@ internal class StageExecutor : IStageExecutor
     /// <returns>The result of the staged execution</returns>
     public async Task<IResult> RunAsync()
     {
-        var result = Result.New();
+        var result = Result.Create();
         var executedStages = await CommitAsync(_stages, result);
 
         // if no exceptions - done

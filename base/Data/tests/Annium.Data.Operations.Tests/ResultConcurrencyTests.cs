@@ -21,7 +21,7 @@ public class ResultConcurrencyTests
     {
         // arrange
         const int iterations = 1000;
-        var result = Result.New();
+        var result = Result.Create();
 
         // act — writer mutates plain and labeled errors continuously; readers iterate snapshots
         var ct = TestContext.Current.CancellationToken;

@@ -75,7 +75,7 @@ internal class CompositionExecutor<TValue> : IComposer<TValue>
         if (_composers.Length == 0)
             return Result.Status(OperationStatus.Ok);
 
-        var result = Result.New();
+        var result = Result.Create();
 
         foreach (var composer in _composers)
             result.Join(await composer.ComposeAsync(value, label, _localizer));

@@ -24,7 +24,7 @@ public abstract class ResultTestBase : TestBase
     {
         // arrange
         var serializer = Get<ISerializer<T>>();
-        var result = Result.New().Error("plain").Error("label", "another");
+        var result = Result.Create().Error("plain").Error("label", "another");
 
         // act
         var serialized = serializer.Serialize(result);
@@ -46,7 +46,7 @@ public abstract class ResultTestBase : TestBase
         // arrange
         var serializer = Get<ISerializer<T>>();
         var value = 5;
-        var result = Result.New(value).Error("plain").Error("label", "another");
+        var result = Result.Create(value).Error("plain").Error("label", "another");
 
         // act
         var serialized = serializer.Serialize(result);

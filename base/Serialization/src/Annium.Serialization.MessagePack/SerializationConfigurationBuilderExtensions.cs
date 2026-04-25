@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.IO;
 using Annium.Serialization.Abstractions;
 using Annium.Serialization.MessagePack.Internal;
 using MessagePack;
@@ -37,11 +38,7 @@ public static class SerializationConfigurationBuilderExtensions
         static MessagePackSerializerOptions Configure(IServiceProvider sp) =>
             MessagePackSerializerOptions.Standard.WithCompression(MessagePackCompression.Lz4BlockArray);
 
-        return builder.Register<ReadOnlyMemory<byte>, ReadOnlyMemoryByteSerializer>(
-            Constants.MediaType,
-            isDefault,
-            ResolveSerializer(builder.Key, Configure, CreateReadOnlyMemoryByte)
-        );
+        return RegisterAll(builder, isDefault, Configure);
     }
 
     /// <summary>
@@ -59,11 +56,7 @@ public static class SerializationConfigurationBuilderExtensions
     {
         MessagePackSerializerOptions Configure(IServiceProvider sp) => configure();
 
-        return builder.Register<ReadOnlyMemory<byte>, ReadOnlyMemoryByteSerializer>(
-            Constants.MediaType,
-            isDefault,
-            ResolveSerializer(builder.Key, Configure, CreateReadOnlyMemoryByte)
-        );
+        return RegisterAll(builder, isDefault, Configure);
     }
 
     /// <summary>
@@ -79,11 +72,7 @@ public static class SerializationConfigurationBuilderExtensions
         bool isDefault = false
     )
     {
-        return builder.Register<ReadOnlyMemory<byte>, ReadOnlyMemoryByteSerializer>(
-            Constants.MediaType,
-            isDefault,
-            ResolveSerializer(builder.Key, configure, CreateReadOnlyMemoryByte)
-        );
+        return RegisterAll(builder, isDefault, configure);
     }
 
     /// <summary>
@@ -120,11 +109,57 @@ public static class SerializationConfigurationBuilderExtensions
         bool isDefault = false
     )
     {
-        return builder.Register<ReadOnlyMemory<byte>, ReadOnlyMemoryByteSerializer>(
-            Constants.MediaType,
-            isDefault,
-            ResolveSerializer(opts, CreateReadOnlyMemoryByte)
-        );
+        return builder
+            .Register<ReadOnlyMemory<byte>, ReadOnlyMemoryByteSerializer>(
+                Constants.MediaType,
+                isDefault,
+                ResolveSerializer(opts, CreateReadOnlyMemoryByte)
+            )
+            .Register<byte[], ByteArraySerializer>(
+                Constants.MediaType,
+                isDefault,
+                ResolveSerializer(opts, CreateByteArray)
+            )
+            .Register<string, StringSerializer>(Constants.MediaType, isDefault, ResolveSerializer(opts, CreateString))
+            .Register<Stream, StreamSerializer>(Constants.MediaType, isDefault, ResolveSerializer(opts, CreateStream));
+    }
+
+    /// <summary>
+    /// Registers all four MessagePack serializer surfaces (<see cref="ReadOnlyMemory{T}"/> of
+    /// <see cref="byte"/>, <see cref="byte"/>[], <see cref="string"/>, and <see cref="Stream"/>)
+    /// against the supplied configuration delegate.
+    /// </summary>
+    /// <param name="builder">The serialization configuration builder.</param>
+    /// <param name="isDefault">Whether this should be the default serializer.</param>
+    /// <param name="configure">The configuration delegate.</param>
+    /// <returns>The configuration builder for method chaining.</returns>
+    private static ISerializationConfigurationBuilder RegisterAll(
+        ISerializationConfigurationBuilder builder,
+        bool isDefault,
+        ConfigureSerializer configure
+    )
+    {
+        return builder
+            .Register<ReadOnlyMemory<byte>, ReadOnlyMemoryByteSerializer>(
+                Constants.MediaType,
+                isDefault,
+                ResolveSerializer(builder.Key, configure, CreateReadOnlyMemoryByte)
+            )
+            .Register<byte[], ByteArraySerializer>(
+                Constants.MediaType,
+                isDefault,
+                ResolveSerializer(builder.Key, configure, CreateByteArray)
+            )
+            .Register<string, StringSerializer>(
+                Constants.MediaType,
+                isDefault,
+                ResolveSerializer(builder.Key, configure, CreateString)
+            )
+            .Register<Stream, StreamSerializer>(
+                Constants.MediaType,
+                isDefault,
+                ResolveSerializer(builder.Key, configure, CreateStream)
+            );
     }
 
     /// <summary>
@@ -146,6 +181,27 @@ public static class SerializationConfigurationBuilderExtensions
     /// <returns>A new ReadOnlyMemoryByteSerializer instance.</returns>
     private static ReadOnlyMemoryByteSerializer CreateReadOnlyMemoryByte(MessagePackSerializerOptions opts) =>
         new(opts);
+
+    /// <summary>
+    /// Creates a <see cref="ByteArraySerializer"/> instance with the specified options.
+    /// </summary>
+    /// <param name="opts">The MessagePack serializer options.</param>
+    /// <returns>A new <see cref="ByteArraySerializer"/> instance.</returns>
+    private static ByteArraySerializer CreateByteArray(MessagePackSerializerOptions opts) => new(opts);
+
+    /// <summary>
+    /// Creates a <see cref="StringSerializer"/> instance with the specified options.
+    /// </summary>
+    /// <param name="opts">The MessagePack serializer options.</param>
+    /// <returns>A new <see cref="StringSerializer"/> instance.</returns>
+    private static StringSerializer CreateString(MessagePackSerializerOptions opts) => new(opts);
+
+    /// <summary>
+    /// Creates a <see cref="StreamSerializer"/> instance with the specified options.
+    /// </summary>
+    /// <param name="opts">The MessagePack serializer options.</param>
+    /// <returns>A new <see cref="StreamSerializer"/> instance.</returns>
+    private static StreamSerializer CreateStream(MessagePackSerializerOptions opts) => new(opts);
 
     //
 

@@ -19,7 +19,7 @@ internal class ResultConverter : ResultConverterBase<X>
     /// <returns>The deserialized result.</returns>
     public override X Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        var value = Result.New();
+        var value = Result.Create();
 
         var (plainErrors, labeledErrors) = ReadErrors(ref reader, options, (ref _) => { });
 

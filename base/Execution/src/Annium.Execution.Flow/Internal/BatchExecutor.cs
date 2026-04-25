@@ -47,7 +47,7 @@ internal class BatchExecutor : IBatchExecutor
     /// <returns>The result of the batch execution</returns>
     public async Task<IResult> RunAsync()
     {
-        var result = Result.New();
+        var result = Result.Create();
 
         // run each stage
         foreach (var handler in _handlers)
