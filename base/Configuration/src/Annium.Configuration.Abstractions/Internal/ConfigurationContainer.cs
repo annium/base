@@ -13,6 +13,27 @@ public class ConfigurationContainer : IConfigurationContainer
     private readonly IDictionary<string[], string> _config = new Dictionary<string[], string>(new KeyComparer());
 
     /// <summary>
+    /// Backing list for registered deferred sources, in registration order.
+    /// </summary>
+    private readonly List<IConfigurationSource> _sources = new();
+
+    /// <summary>
+    /// Sources registered for deferred loading, in registration order.
+    /// </summary>
+    public IReadOnlyList<IConfigurationSource> Sources => _sources;
+
+    /// <summary>
+    /// Registers a deferred configuration source.
+    /// </summary>
+    /// <param name="source">Source to register</param>
+    /// <returns>The container for method chaining</returns>
+    public IConfigurationContainer AddSource(IConfigurationSource source)
+    {
+        _sources.Add(source);
+        return this;
+    }
+
+    /// <summary>
     /// Adds configuration data to the container
     /// </summary>
     /// <param name="config">Configuration data to add</param>
