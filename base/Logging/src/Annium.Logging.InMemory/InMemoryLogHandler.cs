@@ -1,5 +1,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using Annium.Logging.Shared;
 
 namespace Annium.Logging.InMemory;
@@ -24,11 +26,16 @@ public class InMemoryLogHandler<TContext> : ILogHandler<TContext>
     private readonly ConcurrentQueue<LogMessage<TContext>> _logs = new();
 
     /// <summary>
-    /// Handles a log message by storing it in memory.
+    /// Stores each message in the batch into the in-memory queue.
     /// </summary>
-    /// <param name="message">The log message to store</param>
-    public void Handle(LogMessage<TContext> message)
+    /// <param name="messages">The log messages to store</param>
+    /// <param name="ct">Cancellation token (unused — storage is synchronous)</param>
+    /// <returns>A completed value task</returns>
+    public ValueTask HandleAsync(IReadOnlyList<LogMessage<TContext>> messages, CancellationToken ct)
     {
-        _logs.Enqueue(message);
+        foreach (var msg in messages)
+            _logs.Enqueue(msg);
+
+        return ValueTask.CompletedTask;
     }
 }

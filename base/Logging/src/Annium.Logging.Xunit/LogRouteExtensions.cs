@@ -17,8 +17,8 @@ public static class LogRouteExtensions
     /// </summary>
     /// <typeparam name="TContext">The type of log context</typeparam>
     /// <param name="route">The log route to configure</param>
-    /// <returns>The configured log route</returns>
-    public static LogRoute<TContext> UseTestOutput<TContext>(this LogRoute<TContext> route)
+    /// <returns>A builder exposing scheduler-override fluent hooks</returns>
+    public static LogRouteBuilder<TContext> UseTestOutput<TContext>(this LogRoute<TContext> route)
         where TContext : class => route.UseTestOutput(DefaultFormat<TContext>(UtcTime));
 
     /// <summary>
@@ -27,18 +27,11 @@ public static class LogRouteExtensions
     /// <typeparam name="TContext">The type of log context</typeparam>
     /// <param name="route">The log route to configure</param>
     /// <param name="format">The custom format function for log messages</param>
-    /// <returns>The configured log route</returns>
-    public static LogRoute<TContext> UseTestOutput<TContext>(
+    /// <returns>A builder exposing scheduler-override fluent hooks</returns>
+    public static LogRouteBuilder<TContext> UseTestOutput<TContext>(
         this LogRoute<TContext> route,
         Func<LogMessage<TContext>, string> format
     )
-        where TContext : class
-    {
-        route.UseFactory(
-            sp => new XunitLogHandler<TContext>(sp.Resolve<ITestOutputHelper>(), format),
-            new LogRouteConfiguration()
-        );
-
-        return route;
-    }
+        where TContext : class =>
+        route.Use(sp => new XunitLogHandler<TContext>(sp.Resolve<ITestOutputHelper>(), format));
 }

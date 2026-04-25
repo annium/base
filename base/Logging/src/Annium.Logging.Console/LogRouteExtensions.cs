@@ -17,8 +17,8 @@ public static class LogRouteExtensions
     /// <typeparam name="TContext">The type of the log context</typeparam>
     /// <param name="route">The log route to configure</param>
     /// <param name="color">Whether to enable color formatting</param>
-    /// <returns>The configured log route</returns>
-    public static LogRoute<TContext> UseConsole<TContext>(this LogRoute<TContext> route, bool color = false)
+    /// <returns>A builder exposing scheduler-override fluent hooks</returns>
+    public static LogRouteBuilder<TContext> UseConsole<TContext>(this LogRoute<TContext> route, bool color = false)
         where TContext : class => route.UseConsole(DefaultFormat<TContext>(LocalTime), color);
 
     /// <summary>
@@ -28,16 +28,11 @@ public static class LogRouteExtensions
     /// <param name="route">The log route to configure</param>
     /// <param name="format">Custom formatting function for log messages</param>
     /// <param name="color">Whether to enable color formatting</param>
-    /// <returns>The configured log route</returns>
-    public static LogRoute<TContext> UseConsole<TContext>(
+    /// <returns>A builder exposing scheduler-override fluent hooks</returns>
+    public static LogRouteBuilder<TContext> UseConsole<TContext>(
         this LogRoute<TContext> route,
         Func<LogMessage<TContext>, string> format,
         bool color = false
     )
-        where TContext : class
-    {
-        route.UseInstance(new ConsoleLogHandler<TContext>(format, color), new LogRouteConfiguration());
-
-        return route;
-    }
+        where TContext : class => route.Use(new ConsoleLogHandler<TContext>(format, color));
 }

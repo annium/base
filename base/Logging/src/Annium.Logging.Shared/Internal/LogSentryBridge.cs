@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading;
+using NodaTime;
 
 namespace Annium.Logging.Shared.Internal;
 
@@ -28,11 +30,53 @@ internal class LogSentryBridge<TContext> : ILogSentryBridge
     /// </summary>
     private readonly ILogSentry<TContext> _logSentry;
 
-    public LogSentryBridge(ITimeProvider timeProvider, TContext context, ILogSentry<TContext> logSentry)
+    /// <summary>
+    /// Snapshot of registered schedulers used to evaluate <see cref="IsLevelEnabled"/>.
+    /// </summary>
+    private readonly IReadOnlyCollection<ILogScheduler<TContext>> _schedulers;
+
+    public LogSentryBridge(
+        ITimeProvider timeProvider,
+        TContext context,
+        ILogSentry<TContext> logSentry,
+        IReadOnlyCollection<ILogScheduler<TContext>> schedulers
+    )
     {
         _timeProvider = timeProvider;
         _context = context;
         _logSentry = logSentry;
+        _schedulers = schedulers;
+    }
+
+    /// <summary>
+    /// Reports whether any registered scheduler's filter would accept a message at the given level.
+    /// </summary>
+    /// <param name="level">The level to test</param>
+    /// <returns>True if at least one scheduler's filter accepts; false otherwise</returns>
+    public bool IsLevelEnabled(LogLevel level)
+    {
+        if (_schedulers.Count == 0)
+            return false;
+
+        // Synthetic message — only Level is meaningful. Filters that key off non-Level fields
+        // evaluate against empty/default values (intentional — IsEnabled is an optimization hint).
+        var synthetic = new LogMessage<TContext>(
+            _context,
+            Instant.MinValue,
+            string.Empty,
+            string.Empty,
+            level,
+            0,
+            string.Empty,
+            null,
+            string.Empty,
+            new Dictionary<string, object?>(),
+            string.Empty,
+            string.Empty,
+            0
+        );
+
+        return _schedulers.Any(s => s.Filter(synthetic));
     }
 
     /// <summary>

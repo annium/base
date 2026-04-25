@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Annium.Logging;
 using Annium.Logging.Shared;
@@ -36,7 +37,10 @@ public class InMemoryLogHandlerStressTests
                 Task.Run(() =>
                 {
                     for (var seq = 0; seq < messagesPerWriter; seq++)
-                        handler.Handle(BuildMessage(writerIndex, seq));
+                        handler
+                            .HandleAsync(new[] { BuildMessage(writerIndex, seq) }, CancellationToken.None)
+                            .GetAwaiter()
+                            .GetResult();
                 })
             )
             .ToArray();

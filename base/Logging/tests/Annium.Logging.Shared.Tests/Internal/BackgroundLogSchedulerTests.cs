@@ -76,14 +76,16 @@ public class BackgroundLogSchedulerTests
     /// Deliberately slow async log handler — each batch call blocks for a fixed duration.
     /// Thread-safe batch counter for assertion.
     /// </summary>
-    private sealed class SlowSink(TimeSpan perBatch) : IAsyncLogHandler<DefaultLogContext>
+    private sealed class SlowSink(TimeSpan perBatch) : ILogHandler<DefaultLogContext>
     {
         private int _batchCount;
 
         public int BatchCount => Volatile.Read(ref _batchCount);
 
-        public async ValueTask HandleAsync(IReadOnlyList<LogMessage<DefaultLogContext>> messages)
+        public async ValueTask HandleAsync(IReadOnlyList<LogMessage<DefaultLogContext>> messages, CancellationToken ct)
         {
+            // intentionally ignore CT — the test asserts that DisposeAsync waits for the
+            // sink to finish naturally even after the observable CT is cancelled
             await Task.Delay(perBatch);
             Interlocked.Increment(ref _batchCount);
         }

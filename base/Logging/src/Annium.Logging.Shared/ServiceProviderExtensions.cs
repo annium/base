@@ -102,18 +102,22 @@ public static class ServiceProviderExtensions
             if (route.Handler is null)
                 continue;
 
-            var handler = route.Handler.NotNull();
+            var handler = route.Handler;
             var cfg = route.Configuration.NotNull();
 
-            handler.Switch(
-                x =>
-                {
-                    schedulers.Add(new ImmediateLogScheduler<TContext>(route.Filter, x));
-                },
-                x =>
-                {
-                    schedulers.Add(new BackgroundLogScheduler<TContext>(route.Filter, x, cfg));
-                }
+            // Default selection: BufferingLogHandler-derived → background, everything else → immediate.
+            var kind =
+                route.SchedulerOverride
+                ?? (
+                    handler is BufferingLogHandler<TContext>
+                        ? LogRouteSchedulerKind.Background
+                        : LogRouteSchedulerKind.Immediate
+                );
+
+            schedulers.Add(
+                kind == LogRouteSchedulerKind.Immediate
+                    ? new ImmediateLogScheduler<TContext>(route.Filter, handler)
+                    : new BackgroundLogScheduler<TContext>(route.Filter, handler, cfg)
             );
         }
 

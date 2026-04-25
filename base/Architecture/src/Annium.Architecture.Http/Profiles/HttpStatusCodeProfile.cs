@@ -25,11 +25,15 @@ public class HttpStatusCodeProfile : Profile
     private OperationStatus Map(HttpStatusCode x) =>
         x switch
         {
+            HttpStatusCode.OK => OperationStatus.Ok,
             HttpStatusCode.BadRequest => OperationStatus.BadRequest,
-            HttpStatusCode.Conflict => OperationStatus.Conflict,
             HttpStatusCode.Forbidden => OperationStatus.Forbidden,
             HttpStatusCode.NotFound => OperationStatus.NotFound,
-            HttpStatusCode.OK => OperationStatus.Ok,
+            HttpStatusCode.Conflict => OperationStatus.Conflict,
+            HttpStatusCode.BadGateway => OperationStatus.NetworkError,
+            HttpStatusCode.ServiceUnavailable => OperationStatus.Aborted,
+            HttpStatusCode.GatewayTimeout => OperationStatus.Timeout,
+            HttpStatusCode.InternalServerError => OperationStatus.UncaughtError,
             _ => OperationStatus.UncaughtError,
         };
 }

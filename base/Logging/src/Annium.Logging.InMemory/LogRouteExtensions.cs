@@ -13,14 +13,9 @@ public static class LogRouteExtensions
     /// </summary>
     /// <typeparam name="TContext">The type of the log context</typeparam>
     /// <param name="route">The log route to configure</param>
-    /// <returns>The configured log route</returns>
-    public static LogRoute<TContext> UseInMemory<TContext>(this LogRoute<TContext> route)
-        where TContext : class
-    {
-        route.UseInstance(new InMemoryLogHandler<TContext>(), new LogRouteConfiguration());
-
-        return route;
-    }
+    /// <returns>A builder exposing scheduler-override fluent hooks</returns>
+    public static LogRouteBuilder<TContext> UseInMemory<TContext>(this LogRoute<TContext> route)
+        where TContext : class => route.Use(new InMemoryLogHandler<TContext>());
 
     /// <summary>
     /// Configures the log route to use in-memory storage with a specific handler instance.
@@ -28,15 +23,10 @@ public static class LogRouteExtensions
     /// <typeparam name="TContext">The type of the log context</typeparam>
     /// <param name="route">The log route to configure</param>
     /// <param name="handler">The specific in-memory log handler to use</param>
-    /// <returns>The configured log route</returns>
-    public static LogRoute<TContext> UseInMemory<TContext>(
+    /// <returns>A builder exposing scheduler-override fluent hooks</returns>
+    public static LogRouteBuilder<TContext> UseInMemory<TContext>(
         this LogRoute<TContext> route,
         InMemoryLogHandler<TContext> handler
     )
-        where TContext : class
-    {
-        route.UseInstance(handler, new LogRouteConfiguration());
-
-        return route;
-    }
+        where TContext : class => route.Use(handler);
 }

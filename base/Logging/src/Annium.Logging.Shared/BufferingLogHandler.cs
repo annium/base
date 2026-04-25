@@ -1,14 +1,17 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Annium.Logging.Shared;
 
 /// <summary>
-/// Abstract base class for buffering log handlers that queue messages when sending fails
+/// Abstract base class for buffering log handlers that queue messages when sending fails.
+/// Implements the canonical <see cref="ILogHandler{TContext}"/> contract; concrete subclasses
+/// override <see cref="SendEventsAsync"/> to deliver to their target.
 /// </summary>
 /// <typeparam name="TContext">The type of log context</typeparam>
-public abstract class BufferingLogHandler<TContext> : IAsyncLogHandler<TContext>
+public abstract class BufferingLogHandler<TContext> : ILogHandler<TContext>
     where TContext : class
 {
     /// <summary>
@@ -31,11 +34,12 @@ public abstract class BufferingLogHandler<TContext> : IAsyncLogHandler<TContext>
     }
 
     /// <summary>
-    /// Handles log messages with buffering support for failed sends
+    /// Handles log messages with buffering support for failed sends.
     /// </summary>
     /// <param name="messages">The log messages to handle</param>
+    /// <param name="ct">Cancellation token signalled when the scheduler is shutting down</param>
     /// <returns>A task representing the handling operation</returns>
-    public async ValueTask HandleAsync(IReadOnlyList<LogMessage<TContext>> messages)
+    public async ValueTask HandleAsync(IReadOnlyList<LogMessage<TContext>> messages, CancellationToken ct)
     {
         var events = new List<LogMessage<TContext>>(messages);
 
@@ -46,7 +50,7 @@ public abstract class BufferingLogHandler<TContext> : IAsyncLogHandler<TContext>
             return;
         }
 
-        while (true)
+        while (!ct.IsCancellationRequested)
         {
             // pick slice to send
             lock (_eventsBuffer)

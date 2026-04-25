@@ -68,7 +68,7 @@ internal class BackgroundLogScheduler<TContext> : ILogScheduler<TContext>, ILogS
 
     public BackgroundLogScheduler(
         Func<LogMessage<TContext>, bool> filter,
-        IAsyncLogHandler<TContext> handler,
+        ILogHandler<TContext> handler,
         LogRouteConfiguration configuration
     )
     {
@@ -103,7 +103,7 @@ internal class BackgroundLogScheduler<TContext> : ILogScheduler<TContext>, ILogS
         _subscription = _observable
             .Buffer(configuration.BufferTime, configuration.BufferCount)
             .Where(x => x.Count > 0)
-            .DoSequentialAsync(async x => await handler.HandleAsync(x.AsReadOnly()))
+            .DoSequentialAsync(async x => await handler.HandleAsync(x.AsReadOnly(), _observableCts.Token))
             .Subscribe(_ => { }, () => _pipelineDrained.TrySetResult());
     }
 
