@@ -87,6 +87,20 @@ public class ClientWebSocket : IClientWebSocket
     private Status _status = Status.Disconnected;
 
     /// <summary>
+    /// True when the WebSocket has finished connecting and not yet started disconnecting. Goes
+    /// false synchronously inside <see cref="Disconnect"/> (under <c>_locker</c>) — handlers
+    /// firing later from the background teardown observe the disconnected state.
+    /// </summary>
+    public bool IsConnected
+    {
+        get
+        {
+            lock (_locker)
+                return _status == Status.Connected;
+        }
+    }
+
+    /// <summary>
     /// Initializes a new instance of the ClientWebSocket with specified options and logger
     /// </summary>
     /// <param name="options">Configuration options for the WebSocket client</param>

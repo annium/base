@@ -548,6 +548,40 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
     }
 
     /// <summary>
+    /// Verifies the disconnect ordering invariant: when the <c>OnDisconnected</c> handler runs,
+    /// the underlying WebSocket teardown has already completed, so the public
+    /// <see cref="IClientWebSocket.IsConnected"/> surface reports false. Spec test for AC#2 of T8.
+    /// </summary>
+    [Fact]
+    public async Task Disconnect_OnDisconnectedFires_HandlerObservesIsConnectedFalse()
+    {
+        this.Trace("start");
+
+        await using var server = RunServer(async serverSocket => await serverSocket.WhenDisconnectedAsync());
+
+        var capturedIsConnected = new TaskCompletionSource<bool>();
+        ClientSocket.OnDisconnected += _ => capturedIsConnected.TrySetResult(ClientSocket.IsConnected);
+
+        this.Trace("connect");
+        await ConnectAsync(server);
+
+        ClientSocket.IsConnected.IsTrue();
+
+        this.Trace("dispose");
+#pragma warning disable VSTHRD103
+        ClientSocket.Dispose();
+#pragma warning restore VSTHRD103
+
+        var observedIsConnected = await capturedIsConnected.Task.WaitAsync(
+            TimeSpan.FromSeconds(5),
+            TestContext.Current.CancellationToken
+        );
+        observedIsConnected.IsFalse();
+
+        this.Trace("done");
+    }
+
+    /// <summary>
     /// Initializes the test instance and sets up WebSocket client
     /// </summary>
     /// <returns>Task representing the initialization operation</returns>

@@ -637,6 +637,47 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
     }
 
     /// <summary>
+    /// Verifies the disconnect ordering invariant: when the <c>OnDisconnected</c> handler runs,
+    /// the underlying socket teardown has already completed, so the public <see cref="IClientSocket.IsConnected"/>
+    /// surface reports false. This is the spec test for AC#2 of T8 — the ordering guarantee
+    /// (await-then-event) made explicit through the public API.
+    /// </summary>
+    [Fact]
+    public async Task Disconnect_OnDisconnectedFires_HandlerObservesIsConnectedFalse()
+    {
+        this.Trace("start");
+
+        Configure(StreamType.Plain);
+
+        await using var server = _runServer(async (serverSocket, ct) => await serverSocket.WhenDisconnectedAsync(ct));
+
+        // arrange — connect, then capture IsConnected from inside the OnDisconnected handler.
+        var capturedIsConnected = new TaskCompletionSource<bool>();
+        ClientSocket.OnDisconnected += _ => capturedIsConnected.TrySetResult(ClientSocket.IsConnected);
+
+        this.Trace("connect");
+        await ConnectAsync(server);
+
+        // sanity — confirm IsConnected is true while connected.
+        ClientSocket.IsConnected.IsTrue();
+
+        // act — call Dispose() (delegates to Disconnect()).
+        this.Trace("dispose");
+#pragma warning disable VSTHRD103
+        ClientSocket.Dispose();
+#pragma warning restore VSTHRD103
+
+        // assert — handler observes IsConnected == false (the disconnected state).
+        var observedIsConnected = await capturedIsConnected.Task.WaitAsync(
+            TimeSpan.FromSeconds(5),
+            TestContext.Current.CancellationToken
+        );
+        observedIsConnected.IsFalse();
+
+        this.Trace("done");
+    }
+
+    /// <summary>
     /// Initializes the test asynchronously
     /// </summary>
     /// <returns>A task representing the initialization</returns>

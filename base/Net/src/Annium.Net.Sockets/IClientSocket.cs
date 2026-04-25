@@ -11,6 +11,14 @@ namespace Annium.Net.Sockets;
 public interface IClientSocket : ISendingReceivingSocket, IDisposable, ILogSubject
 {
     /// <summary>
+    /// Indicates whether the socket is currently connected to a remote endpoint. Goes false
+    /// synchronously when <see cref="Disconnect"/> begins; remains false through the
+    /// background teardown and the eventual <see cref="OnDisconnected"/> firing — handlers
+    /// observe a disconnected socket.
+    /// </summary>
+    bool IsConnected { get; }
+
+    /// <summary>
     /// Event raised when the socket successfully connects to a remote endpoint
     /// </summary>
     event Action OnConnected;

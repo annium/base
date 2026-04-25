@@ -79,6 +79,8 @@ public class WhenDisconnectedAsyncTests
     {
         public ILogger Logger { get; } = VoidLogger.Instance;
 
+        public bool IsConnected => false;
+
         public event Action? OnConnected;
         public event Action<WebSocketCloseStatus>? OnDisconnected;
         public event Action<Exception>? OnError
