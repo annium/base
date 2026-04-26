@@ -40,8 +40,6 @@ internal class IntervalParser : IIntervalParser
         var expressions = new List<Expression>();
 
         var result = Expression.Variable(typeof(Duration), "result");
-        // expressions.Add(result);
-        // expressions.Add(Expression.Assign(result, Expression.Constant(Duration.Zero)));
 
         // seconds
         HandleRepeatablePartExpression(

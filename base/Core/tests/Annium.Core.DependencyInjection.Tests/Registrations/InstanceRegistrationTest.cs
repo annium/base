@@ -9,6 +9,10 @@ namespace Annium.Core.DependencyInjection.Tests.Registrations;
 /// </summary>
 public class InstanceRegistrationTest : TestBase
 {
+
+    public InstanceRegistrationTest(ITestOutputHelper outputHelper)
+        : base(outputHelper) { }
+
     /// <summary>
     /// Verifies that instance registration as self works correctly
     /// </summary>

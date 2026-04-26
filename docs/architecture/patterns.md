@@ -123,3 +123,43 @@ Testing conventions enforced across the repo:
 - xunit.v3 is the sole runner; `xunit.runner.visualstudio` wires it into `dotnet test`.
 
 See the practical walkthrough in [Testing guide](../guides/testing.md).
+
+## 5. Disconnect lifecycle
+
+`Annium.Net.Sockets` and `Annium.Net.WebSockets` expose synchronous public `Disconnect()` /
+`Dispose()` methods, but the underlying socket teardown is async. The clients reconcile this
+with a fixed lifecycle invariant — added during T3, made observable from the public surface
+during T8:
+
+1. The caller invokes `socket.Disconnect()` (or `Dispose()`).
+2. The status transitions to `Disconnected` *synchronously*, under the internal lock —
+   `IsConnected` reports `false` from this moment.
+3. `_socket.DisconnectAsync()` runs in a background `Task.Run` — the caller does not block.
+4. After the underlying disconnect completes, the `OnDisconnected` event fires on the
+   background continuation — handlers observe `IsConnected == false`.
+
+This means: subscribers to `OnDisconnected` can rely on the underlying transport being torn
+down by the time their handler runs, and `IsConnected` is a safe synchronous check at any
+point. Async callers that need to wait for the event use the `WhenDisconnectedAsync`
+extension; sync callers (e.g., resource-disposal handlers in `DisposableBox`) call
+`Disconnect()` and continue without awaiting.
+
+## 6. Testing: TestBase variants
+
+The canonical fixture is `Annium.Testing.TestBase` (`base/Annium/src/Annium.Testing/TestBase.cs:18`).
+Module-specific test projects subclass it where they need additional fixture scaffolding —
+e.g., `Annium.Net.Sockets.Tests.TestBase` adds `RunServerBase(...)` for spinning up a real
+loopback server. The hierarchy:
+
+- **`Annium.Testing.TestBase`** — DI container with `AddRuntime` + time + logging
+  pre-registered; exposes `Provider`, `Logger`, `Logs`, `OutputHelper`. Default for any unit
+  test that needs DI.
+- **`Annium.Net.Sockets.Tests.TestBase` / `Annium.Net.WebSockets.Tests.TestBase`** —
+  inherits the canonical, adds `RunServerBase`/`RunServer` helpers and message-generation
+  utilities for socket/websocket integration tests.
+- **`Annium.Core.DependencyInjection.Tests.TestBase`** — inherits the canonical (T9
+  consolidation); keeps a local `protected ServiceContainer Container` so DI-package tests
+  can mutate the container directly without touching the inherited services.
+
+When writing a new test class, prefer the canonical `Annium.Testing.TestBase` unless your
+module already ships a subclass with relevant scaffolding.

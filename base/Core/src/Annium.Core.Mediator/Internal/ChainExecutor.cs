@@ -37,7 +37,9 @@ internal static class ChainExecutor
             parameters.Add(element.Next!.DynamicInvoke(provider, chain, index + 1)!);
 
         var handler = element.Handler;
-        var handleMethodName = hasNext ? Constants.FinalHandlerHandleAsyncName : Constants.PipeHandlerHandleAsyncName;
+        // hasNext=true means the current handler is a Pipe handler (3 params: request, ct, next);
+        // hasNext=false means it's the Final handler (2 params: request, ct).
+        var handleMethodName = hasNext ? Constants.PipeHandlerHandleAsyncName : Constants.FinalHandlerHandleAsyncName;
         var handleMethod = handler.GetMethod(handleMethodName, parameters.Select(p => p.GetType()).ToArray())!;
         var result = handleMethod.Invoke(provider.Resolve(handler), parameters.ToArray())!;
         await (Task)result;

@@ -46,6 +46,23 @@ Exposed surface (see `TestBase.cs` for full doc):
 
 Override `ConfigureContainer(IServiceContainer)` to add test-scoped registrations. The base class pre-registers runtime, logging (routed through `Annium.Logging.Xunit` to `OutputHelper` and mirrored into `Annium.Logging.InMemory`), and DI plumbing.
 
+## TestBase variants
+
+The canonical `Annium.Testing.TestBase` covers most unit tests. A few modules ship subclasses
+that add fixture-heavy scaffolding for integration tests:
+
+| Class | Adds | When to use |
+|-------|------|-------------|
+| `Annium.Testing.TestBase` | DI + runtime + time + logging | Default for any test that needs DI |
+| `Annium.Net.Sockets.Tests.TestBase` | `RunServerBase(handle)` to spin up a loopback server, `GenerateMessage(s)` utilities | Socket integration tests against a real server |
+| `Annium.Net.WebSockets.Tests.TestBase` | Same shape as the sockets variant for WebSockets | WebSocket integration tests |
+| `Annium.Core.DependencyInjection.Tests.TestBase` | Local `Container` field for direct mutation; `Build()` and `Get<T>()` helpers | Tests that mutate a container without touching the inherited services |
+
+When writing a new test class, prefer the canonical base unless your module already ships a
+subclass with relevant scaffolding. New module-specific subclasses should inherit
+`Annium.Testing.TestBase` (not `xunit.v3` directly) so they pick up the canonical DI/logging
+plumbing for free.
+
 ## Fluent assertions
 
 Located in `base/Annium/src/Annium.Testing/*Extensions.cs`.

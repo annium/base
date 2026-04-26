@@ -9,6 +9,10 @@ namespace Annium.Core.DependencyInjection.Tests.Registrations;
 /// </summary>
 public class KeyedFactoryRegistrationTest : TestBase
 {
+
+    public KeyedFactoryRegistrationTest(ITestOutputHelper outputHelper)
+        : base(outputHelper) { }
+
     /// <summary>
     /// Verifies that keyed factory registration as self works correctly
     /// </summary>

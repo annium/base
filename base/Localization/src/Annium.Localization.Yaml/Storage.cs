@@ -34,9 +34,11 @@ internal class Storage : ILocaleStorage
     /// <returns>A dictionary containing the locale entries for the specified culture</returns>
     public IReadOnlyDictionary<string, string> LoadLocale(Type target, CultureInfo culture)
     {
-        // TODO: upgrade to load locales from current directory (will require build task?)
+        // AppContext.BaseDirectory is the trim/single-file-safe replacement for Assembly.Location
+        // (which returns empty under those publish modes); resolves to the process's runtime
+        // directory — the same place locale YAMLs ship into.
         var assembly = target.GetTypeInfo().Assembly;
-        var location = Path.GetDirectoryName(assembly.Location);
+        var location = AppContext.BaseDirectory;
 
         var assemblyNamePath = Path.Combine(assembly.ShortName().Split('.'));
         var targetNamespacePath = Path.Combine(target.Namespace?.Split('.') ?? Array.Empty<string>());

@@ -9,6 +9,10 @@ namespace Annium.Core.DependencyInjection.Tests.Registrations;
 /// </summary>
 public class SingleRegistrationTest : TestBase
 {
+
+    public SingleRegistrationTest(ITestOutputHelper outputHelper)
+        : base(outputHelper) { }
+
     /// <summary>
     /// Verifies that single type registration as self works correctly
     /// </summary>

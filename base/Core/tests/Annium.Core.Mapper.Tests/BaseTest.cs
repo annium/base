@@ -1,3 +1,4 @@
+using System;
 using Annium.Testing;
 using Xunit;
 
@@ -75,6 +76,19 @@ public class BaseTest : TestBase
         // assert
         result.Inner!.Name.Is(value.Inner!.Name);
         result.Value.Is(value.Value);
+    }
+
+    /// <summary>
+    /// Verifies T9 null-source unification: both <c>Map&lt;T&gt;(null)</c> and
+    /// <c>Map(null, type)</c> throw <see cref="ArgumentNullException"/>.
+    /// </summary>
+    [Fact]
+    public void Map_NullSource_BothOverloadsThrow()
+    {
+        var mapper = Get<IMapper>();
+
+        Wrap.It(() => mapper.Map<A>(null!)).Throws<ArgumentNullException>();
+        Wrap.It(() => mapper.Map(null!, typeof(A))).Throws<ArgumentNullException>();
     }
 
     /// <summary>

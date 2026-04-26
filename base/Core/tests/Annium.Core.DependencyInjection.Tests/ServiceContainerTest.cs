@@ -9,6 +9,9 @@ namespace Annium.Core.DependencyInjection.Tests;
 /// </summary>
 public class ServiceContainerTest : TestBase
 {
+    public ServiceContainerTest(ITestOutputHelper outputHelper)
+        : base(outputHelper) { }
+
     /// <summary>
     /// Verifies that adding a service to the container writes to collection immediately
     /// </summary>
