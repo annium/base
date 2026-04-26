@@ -11,7 +11,6 @@ namespace Annium.Core.DependencyInjection.Tests.Registrations;
 /// </summary>
 public class BulkRegistrationTest : TestBase
 {
-
     public BulkRegistrationTest(ITestOutputHelper outputHelper)
         : base(outputHelper) { }
 

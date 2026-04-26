@@ -101,7 +101,6 @@ public class BuildAsyncMergeOrderTests
 
         public bool Optional { get; }
 
-        public ValueTask<IReadOnlyDictionary<string[], string>> LoadAsync(CancellationToken ct) =>
-            throw _ex;
+        public ValueTask<IReadOnlyDictionary<string[], string>> LoadAsync(CancellationToken ct) => throw _ex;
     }
 }

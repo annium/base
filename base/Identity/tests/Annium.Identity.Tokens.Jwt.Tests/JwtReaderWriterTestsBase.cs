@@ -30,7 +30,11 @@ public class JwtReaderWriterTestsBase
     /// <param name="expirationWindow">Optional clock-skew tolerance.</param>
     /// <param name="lifetime">Token lifetime applied by the writer.</param>
     /// <returns>Tuple of resolved reader, writer, and the container's time provider.</returns>
-    private static (ITokenReader<ClaimsPrincipal> reader, ITokenWriter<ClaimsPrincipal> writer, ITimeProvider time) Resolve(
+    private static (
+        ITokenReader<ClaimsPrincipal> reader,
+        ITokenWriter<ClaimsPrincipal> writer,
+        ITimeProvider time
+    ) Resolve(
         SecurityKey signingKey,
         string algorithm,
         string issuer,
@@ -53,7 +57,11 @@ public class JwtReaderWriterTestsBase
         });
 
         var sp = container.BuildServiceProvider();
-        return (sp.Resolve<ITokenReader<ClaimsPrincipal>>(), sp.Resolve<ITokenWriter<ClaimsPrincipal>>(), sp.Resolve<ITimeProvider>());
+        return (
+            sp.Resolve<ITokenReader<ClaimsPrincipal>>(),
+            sp.Resolve<ITokenWriter<ClaimsPrincipal>>(),
+            sp.Resolve<ITimeProvider>()
+        );
     }
 
     /// <summary>
@@ -72,8 +80,22 @@ public class JwtReaderWriterTestsBase
         var key = "sample";
         var data = "g87asgdf";
 
-        var (_, writer, _) = Resolve(privateKey, signatureAlgorithm, issuer, audience, Duration.FromSeconds(10), lifetime);
-        var (reader, _, _) = Resolve(publicKey, signatureAlgorithm, issuer, audience, Duration.FromSeconds(10), lifetime);
+        var (_, writer, _) = Resolve(
+            privateKey,
+            signatureAlgorithm,
+            issuer,
+            audience,
+            Duration.FromSeconds(10),
+            lifetime
+        );
+        var (reader, _, _) = Resolve(
+            publicKey,
+            signatureAlgorithm,
+            issuer,
+            audience,
+            Duration.FromSeconds(10),
+            lifetime
+        );
 
         var inputClaims = new ClaimsIdentity(new[] { new Claim("jti", tokenId), new Claim(key, data) }, "JWT");
         var inputPrincipal = new ClaimsPrincipal(inputClaims);
@@ -118,7 +140,14 @@ public class JwtReaderWriterTestsBase
         var audience = "audience";
         var lifetime = Duration.FromMilliseconds(1); // immediately expires
 
-        var (_, writer, _) = Resolve(privateKey, signatureAlgorithm, issuer, audience, Duration.FromSeconds(10), lifetime);
+        var (_, writer, _) = Resolve(
+            privateKey,
+            signatureAlgorithm,
+            issuer,
+            audience,
+            Duration.FromSeconds(10),
+            lifetime
+        );
         var encoded = writer.Write(new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim("k", "v") }, "JWT")));
 
         // wait so the token's ValidTo (now + 1ms) is in the past
@@ -150,7 +179,14 @@ public class JwtReaderWriterTestsBase
         var audience = "audience";
         var lifetime = Duration.FromMilliseconds(1);
 
-        var (_, writer, _) = Resolve(privateKey, signatureAlgorithm, issuer, audience, Duration.FromSeconds(10), lifetime);
+        var (_, writer, _) = Resolve(
+            privateKey,
+            signatureAlgorithm,
+            issuer,
+            audience,
+            Duration.FromSeconds(10),
+            lifetime
+        );
         var encoded = writer.Write(new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim("k", "v") }, "JWT")));
 
         // wait so the token expires (lifetime 1ms) plus ClockSkew (10s applied below) — need

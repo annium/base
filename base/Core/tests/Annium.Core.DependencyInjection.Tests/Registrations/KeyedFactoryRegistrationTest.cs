@@ -9,7 +9,6 @@ namespace Annium.Core.DependencyInjection.Tests.Registrations;
 /// </summary>
 public class KeyedFactoryRegistrationTest : TestBase
 {
-
     public KeyedFactoryRegistrationTest(ITestOutputHelper outputHelper)
         : base(outputHelper) { }
 

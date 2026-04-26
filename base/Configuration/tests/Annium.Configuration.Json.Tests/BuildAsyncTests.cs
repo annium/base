@@ -170,8 +170,12 @@ public class BuildAsyncTests
                             _accepted.Add(client);
                     }
                 }
-                catch (OperationCanceledException) { /* expected on dispose */ }
-                catch (ObjectDisposedException) { /* expected on dispose */ }
+                catch (OperationCanceledException)
+                { /* expected on dispose */
+                }
+                catch (ObjectDisposedException)
+                { /* expected on dispose */
+                }
             });
         }
 
