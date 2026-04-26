@@ -155,12 +155,21 @@ internal abstract class ShellInstanceBase : IShellInstance, ILogSubject
         // as far as there's no way to know if process was killed or finished on it's own - track it manually
         var killed = false;
 
-        // this will be called when process finished on it's own, or is killed
-        var exitHandled = false;
+        // gate for exactly-once HandleExit invocation; both the CT-registration callback
+        // and the process.Exited event can fire concurrently — Interlocked.CompareExchange
+        // ensures only the first entry proceeds
+        var exitHandledFlag = 0;
 
         // setup output capture
         var stdout = new StringBuilder();
         var stderr = new StringBuilder();
+
+        // pipe tasks are assigned after process.Start(); HandleExit may fire from either
+        // the cancellation token or the Exited event and must await them before reporting
+        // the result — initialise to CompletedTask so the closure sees a non-null task even
+        // in the extremely rare case of exit firing before pipe setup
+        Task stdoutTask = Task.CompletedTask;
+        Task stderrTask = Task.CompletedTask;
 
         // track token cancellation and kill process if requested
         var registration = ct.Register(() =>
@@ -187,49 +196,72 @@ internal abstract class ShellInstanceBase : IShellInstance, ILogSubject
 
         process.Start();
 
-        // setup output capture
-        PipeOut(process.StandardOutput, stdout, Console.Out, _print, ct);
-        PipeOut(process.StandardError, stderr, Console.Error, _print, ct);
+        // setup output capture — capture the pipe tasks so HandleExit can await them
+        // before reporting the result; prevents stdout/stderr truncation when the process
+        // exits while pipe drains are still in flight
+        stdoutTask = PipeOutAsync(process.StandardOutput, stdout, Console.Out, _print, ct);
+        stderrTask = PipeOutAsync(process.StandardError, stderr, Console.Error, _print, ct);
 
         return tcs;
 
         void HandleExit()
         {
-            if (exitHandled)
+            if (Interlocked.CompareExchange(ref exitHandledFlag, 1, 0) != 0)
                 return;
-            exitHandled = true;
 
-            if (killed)
-                tcs.TrySetCanceled();
-            else
-                tcs.TrySetResult(GetResult(process.ExitCode, stdout, stderr));
-            try
+            // background work so we don't block the cancellation-token callback or Process.Exited
+            // event; the tcs is only completed after both pipes drain
+            _ = Task.Run(async () =>
             {
-                process.Dispose();
-            }
-            catch (Exception ex)
-            {
-                this.Warn("Process.Dispose() failed: {e}", ex);
-            }
+                try
+                {
+#pragma warning disable VSTHRD003
+                    await Task.WhenAll(stdoutTask, stderrTask);
+#pragma warning restore VSTHRD003
+                }
+                catch
+                {
+                    // drain failures should not suppress result reporting — the captured bytes so
+                    // far are still valuable
+                }
+
+                if (killed)
+                    tcs.TrySetCanceled();
+                else
+                    tcs.TrySetResult(GetResult(process.ExitCode, stdout, stderr));
+
+                try
+                {
+                    await process.DisposeAsync();
+                }
+                catch (Exception ex)
+                {
+                    this.Warn("Process.Dispose() failed: {e}", ex);
+                }
+            });
         }
 
-        static void PipeOut(StreamReader src, StringBuilder result, TextWriter dst, bool print, CancellationToken ct)
+        static Task PipeOutAsync(
+            StreamReader src,
+            StringBuilder result,
+            TextWriter dst,
+            bool print,
+            CancellationToken ct
+        )
         {
-            Task.Run(() =>
-                {
-                    if (print)
-                        while (!src.EndOfStream && !ct.IsCancellationRequested)
-                        {
-                            var c = (char)src.Read();
-                            result.Append(c);
-                            dst.Write(c);
-                        }
-                    else
-                        while (!src.EndOfStream && !ct.IsCancellationRequested)
-                            result.Append((char)src.Read());
-                })
-                .ConfigureAwait(false)
-                .GetAwaiter();
+            return Task.Run(() =>
+            {
+                if (print)
+                    while (!src.EndOfStream && !ct.IsCancellationRequested)
+                    {
+                        var c = (char)src.Read();
+                        result.Append(c);
+                        dst.Write(c);
+                    }
+                else
+                    while (!src.EndOfStream && !ct.IsCancellationRequested)
+                        result.Append((char)src.Read());
+            });
         }
 
         static ShellResult GetResult(int exitCode, StringBuilder stdout, StringBuilder stderr)

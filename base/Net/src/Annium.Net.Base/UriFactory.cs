@@ -161,16 +161,6 @@ public class UriFactory
         return this;
     }
 
-    // public UriFactory Param(string key, object? value)
-    // {
-    //     if (value is System.Collections.IEnumerable enumerable)
-    //         _query[key] = new StringValues((from object? item in enumerable select item?.ToString() ?? string.Empty).ToArray());
-    //     else
-    //         _query[key] = value?.ToString() ?? string.Empty;
-    //
-    //     return this;
-    // }
-
     /// <summary>
     /// Adds a query parameter with StringValues
     /// </summary>
@@ -234,7 +224,7 @@ public class UriFactory
             if (Uri.TryCreate(_uri, UriKind.Absolute, out _))
                 throw new UriFormatException("Both base and path are absolute URI");
 
-            return new Uri($"{_baseUri.ToString().TrimEnd('/')}/{_uri.TrimStart('/')}");
+            return new Uri($"{_baseUri.GetLeftPart(UriPartial.Path).TrimEnd('/')}/{_uri.TrimStart('/')}");
         }
 
         var sb = new StringBuilder();

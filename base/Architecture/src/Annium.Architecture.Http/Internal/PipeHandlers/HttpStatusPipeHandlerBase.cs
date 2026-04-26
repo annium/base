@@ -41,29 +41,30 @@ internal abstract class HttpStatusPipeHandlerBase<TRequest, TResponseIn, TRespon
     protected abstract TResponseOut GetResponse(TResponseIn response);
 
     /// <summary>
-    /// Handles operation status by throwing appropriate HTTP exceptions for error statuses
+    /// Handles operation status by throwing the matching HTTP exception. The mapping is
+    /// total over <see cref="OperationStatus"/>: <c>Ok</c> is a no-op; every other defined
+    /// member maps to a dedicated exception (4xx for client errors, 5xx for server/upstream
+    /// errors). Future enum members fall through to <see cref="ServerException"/> (HTTP 500)
+    /// rather than going unhandled.
     /// </summary>
     /// <param name="status">The operation status to handle</param>
     /// <param name="result">The result containing error information</param>
     protected void HandleStatus(OperationStatus status, IResultBase result)
     {
-        if (status == OperationStatus.BadRequest)
-            throw new ValidationException(result);
+        Exception? toThrow = status switch
+        {
+            OperationStatus.Ok => null,
+            OperationStatus.BadRequest => new ValidationException(result),
+            OperationStatus.Forbidden => new ForbiddenException(result),
+            OperationStatus.NotFound => new NotFoundException(result),
+            OperationStatus.Conflict => new ConflictException(result),
+            OperationStatus.NetworkError => new BadGatewayException(result),
+            OperationStatus.Aborted => new ServiceUnavailableException(result),
+            OperationStatus.Timeout => new GatewayTimeoutException(result),
+            _ => new ServerException(result),
+        };
 
-        if (status == OperationStatus.Forbidden)
-            throw new ForbiddenException(result);
-
-        if (status == OperationStatus.NotFound)
-            throw new NotFoundException(result);
-
-        if (status == OperationStatus.Conflict)
-            throw new ConflictException(result);
-
-        if (status == OperationStatus.UncaughtError)
-            throw new ServerException(result);
-
-        // if mapping fails - it's critical error
-        if (status != OperationStatus.Ok)
-            throw new ServerException(result);
+        if (toThrow is not null)
+            throw toThrow;
     }
 }

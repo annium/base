@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using Annium.Core.DependencyInjection;
 using Annium.Core.Runtime;
 using Annium.Testing;
@@ -181,9 +183,7 @@ public class BaseLoggerTest : TestBase
 
         var provider = container.BuildServiceProvider();
 
-        provider.UseLogging<Context>(route =>
-            route.For(m => m.Level >= minLogLevel).UseInstance(new LogHandler(_messages), new LogRouteConfiguration())
-        );
+        provider.UseLogging<Context>(route => route.For(m => m.Level >= minLogLevel).Use(new LogHandler(_messages)));
 
         return provider;
     }
@@ -204,12 +204,17 @@ public class BaseLoggerTest : TestBase
         }
 
         /// <summary>
-        /// Handles a log message by adding it to the messages collection
+        /// Stores each message in the batch into the captured collection.
         /// </summary>
-        /// <param name="message">The log message to handle</param>
-        public void Handle(LogMessage<Context> message)
+        /// <param name="messages">The log messages to store</param>
+        /// <param name="ct">Cancellation token (unused)</param>
+        /// <returns>A completed value task</returns>
+        public ValueTask HandleAsync(IReadOnlyList<LogMessage<Context>> messages, CancellationToken ct)
         {
-            Messages.Add(message);
+            foreach (var msg in messages)
+                Messages.Add(msg);
+
+            return ValueTask.CompletedTask;
         }
     }
 

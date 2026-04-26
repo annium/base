@@ -62,13 +62,13 @@ public abstract class Composer<TValue> : ICompositionContainer<TValue>
     /// <returns>The result of the composition operation</returns>
     public async Task<IStatusResult<OperationStatus>> ComposeAsync(TValue value, string label, ILocalizer localizer)
     {
-        var result = Result.New();
+        var result = Result.Create();
         var hasLabel = !string.IsNullOrWhiteSpace(label);
 
         foreach (var (property, rule) in _rules)
         {
             var propertyLabel = hasLabel ? $"{label}.{property.Name}" : property.Name;
-            var ruleResult = Result.New();
+            var ruleResult = Result.Create();
             var context = new CompositionContext<TValue>(value, propertyLabel, property.Name, ruleResult, localizer);
 
             await rule.ComposeAsync(context, value);

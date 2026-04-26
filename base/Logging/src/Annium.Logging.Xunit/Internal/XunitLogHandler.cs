@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using Annium.Logging.Shared;
 using Xunit;
 
@@ -28,18 +31,26 @@ internal class XunitLogHandler<TContext> : ILogHandler<TContext>
     }
 
     /// <summary>
-    /// Handles a log message by writing it to the test output
+    /// Writes each message in the batch to the xUnit test output. Failures (e.g., output disposed
+    /// after the test ends) are swallowed because xUnit otherwise treats them as fatal.
     /// </summary>
-    /// <param name="msg">The log message to handle</param>
-    public void Handle(LogMessage<TContext> msg)
+    /// <param name="messages">The log messages to write</param>
+    /// <param name="ct">Cancellation token (unused — output writes are synchronous)</param>
+    /// <returns>A completed value task</returns>
+    public ValueTask HandleAsync(IReadOnlyList<LogMessage<TContext>> messages, CancellationToken ct)
     {
-        try
+        foreach (var msg in messages)
         {
-            _outputHelper.WriteLine(_format(msg));
+            try
+            {
+                _outputHelper.WriteLine(_format(msg));
+            }
+            catch
+            {
+                // ignored — test output may be unavailable after the test completes
+            }
         }
-        catch
-        {
-            // ignored
-        }
+
+        return ValueTask.CompletedTask;
     }
 }

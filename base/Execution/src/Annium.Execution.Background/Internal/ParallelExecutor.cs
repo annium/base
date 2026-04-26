@@ -19,13 +19,27 @@ internal class ParallelExecutor<TSource> : ExecutorBase
         : base(logger) { }
 
     /// <summary>
-    /// Runs a task asynchronously in parallel
+    /// Runs a task asynchronously in parallel.
+    /// Schedules background work so exceptions surface via the injected logger rather than
+    /// being silently dropped.
     /// </summary>
     /// <param name="task">The task to run</param>
     /// <returns>A completed task</returns>
     protected override Task RunTaskAsync(Delegate task)
     {
-        StartTaskAsync(task).ContinueWith(_ => CompleteTask(task)).GetAwaiter();
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await StartTaskAsync(task);
+                CompleteTask(task);
+            }
+            catch (OperationCanceledException) { }
+            catch (Exception ex)
+            {
+                this.Error(ex);
+            }
+        });
 
         return Task.CompletedTask;
     }

@@ -56,8 +56,7 @@ internal class Mapper : IMapper
     /// <returns>The mapped object of type T</returns>
     public T Map<T>(object? source)
     {
-        if (source is null)
-            return default!;
+        ArgumentNullException.ThrowIfNull(source);
 
         return (T)Map(source, typeof(T));
     }
@@ -70,23 +69,8 @@ internal class Mapper : IMapper
     /// <returns>The mapped object of the specified type</returns>
     public object Map(object? source, Type type)
     {
-        if (type is null)
-            throw new ArgumentNullException(nameof(type));
-
-        if (source is null)
-        {
-            if (!type.IsConstructable())
-                throw new InvalidOperationException(
-                    $"Can't convert null to {type.FriendlyName()}, that is not constructable"
-                );
-
-            if (!type.HasDefaultConstructor())
-                throw new InvalidOperationException(
-                    $"Can't convert null to {type.FriendlyName()}, that has no default constructor"
-                );
-
-            return Activator.CreateInstance(type)!;
-        }
+        ArgumentNullException.ThrowIfNull(source);
+        ArgumentNullException.ThrowIfNull(type);
 
         var map = _mapBuilder.GetMap(source.GetType(), type);
 

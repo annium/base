@@ -68,7 +68,7 @@ internal class StageExecutor : IStageExecutor
     /// <returns>The result of the staged execution</returns>
     public async Task<IResult> RunAsync()
     {
-        var result = Result.New();
+        var result = Result.Create();
         var executedStages = await CommitAsync(_stages, result);
 
         // if no exceptions - done
@@ -95,11 +95,13 @@ internal class StageExecutor : IStageExecutor
     }
 
     /// <summary>
-    /// Commits all stages and returns the number of executed stages
+    /// Commits stages in order and returns the number that completed successfully. On the first
+    /// commit failure the loop stops — subsequent stages are neither committed nor counted. The
+    /// returned count is the number of stages the caller must roll back.
     /// </summary>
     /// <param name="stages">The stages to commit</param>
     /// <param name="result">The result to store errors in</param>
-    /// <returns>The number of executed stages</returns>
+    /// <returns>The number of stages that committed successfully</returns>
     private static async Task<int> CommitAsync(IEnumerable<StageInfo> stages, IResult result)
     {
         var i = 0;
@@ -108,14 +110,13 @@ internal class StageExecutor : IStageExecutor
         {
             try
             {
-                // count before stage run to include failed stage
-                i++;
-
                 await ExecuteAsync(stage.Commit);
+                i++;
             }
             catch (Exception exception)
             {
                 result.Error(exception.Message);
+                return i;
             }
         }
 
@@ -152,7 +153,7 @@ internal class StageExecutor : IStageExecutor
     {
         if (task is Func<Task> commitAsync)
             await commitAsync();
-        if (task is Action commitSync)
+        else if (task is Action commitSync)
             commitSync();
     }
 

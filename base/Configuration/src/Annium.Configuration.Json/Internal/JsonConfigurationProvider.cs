@@ -31,9 +31,9 @@ internal class JsonConfigurationProvider : ConfigurationProviderBase
     {
         Init();
 
-        var element = JsonDocument.Parse(_raw).RootElement;
+        using var doc = JsonDocument.Parse(_raw);
 
-        Process(element);
+        Process(doc.RootElement);
 
         return Data;
     }

@@ -46,6 +46,12 @@ public static class ServiceContainerExtensions
 
         var cfgContainer = new ConfigurationContainer();
         configure(cfgContainer);
+        // Flush any deferred sources synchronously. All in-process sources (Object/Json file/
+        // Yaml file/CommandLine) complete on a hot path; remote sources should use the async
+        // entry point below to avoid blocking on I/O.
+#pragma warning disable VSTHRD002
+        cfgContainer.BuildAsync().GetAwaiter().GetResult();
+#pragma warning restore VSTHRD002
 
         container
             .Add(sp =>
@@ -79,6 +85,8 @@ public static class ServiceContainerExtensions
 
         var cfgContainer = new ConfigurationContainer();
         await configure(cfgContainer);
+        // Flush any deferred sources — including remote ones — without blocking the calling thread.
+        await cfgContainer.BuildAsync();
 
         container
             .Add(sp =>

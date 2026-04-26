@@ -11,6 +11,9 @@ namespace Annium.Core.DependencyInjection.Tests.Registrations;
 /// </summary>
 public class BulkRegistrationTest : TestBase
 {
+    public BulkRegistrationTest(ITestOutputHelper outputHelper)
+        : base(outputHelper) { }
+
     /// <summary>
     /// Verifies that filtering types with Where clause during bulk registration works correctly
     /// </summary>

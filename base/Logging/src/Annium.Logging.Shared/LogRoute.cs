@@ -1,10 +1,9 @@
 using System;
-using OneOf;
 
 namespace Annium.Logging.Shared;
 
 /// <summary>
-/// Represents a logging route configuration for a specific context type
+/// Represents a logging route configuration for a specific context type.
 /// </summary>
 /// <typeparam name="TContext">The type of log context</typeparam>
 public class LogRoute<TContext>
@@ -23,12 +22,19 @@ public class LogRoute<TContext>
     /// <summary>
     /// Gets the handler for this route
     /// </summary>
-    internal OneOf<ILogHandler<TContext>, IAsyncLogHandler<TContext>>? Handler { get; private set; }
+    internal ILogHandler<TContext>? Handler { get; private set; }
 
     /// <summary>
     /// Gets the configuration for this route
     /// </summary>
     internal LogRouteConfiguration? Configuration { get; private set; }
+
+    /// <summary>
+    /// Optional override for scheduler selection. When <c>null</c>, the route picks
+    /// <see cref="LogRouteSchedulerKind.Background"/> for handlers derived from
+    /// <see cref="BufferingLogHandler{TContext}"/> and <see cref="LogRouteSchedulerKind.Immediate"/> otherwise.
+    /// </summary>
+    internal LogRouteSchedulerKind? SchedulerOverride { get; set; }
 
     /// <summary>
     /// The service provider for dependency resolution
@@ -63,59 +69,33 @@ public class LogRoute<TContext>
         new(_sp, _registerRoute) { Filter = filter };
 
     /// <summary>
-    /// Configures the route to use a specific log handler instance
+    /// Configures the route to use the given log handler instance.
+    /// Scheduler is auto-picked from the handler type unless overridden via the returned builder.
     /// </summary>
-    /// <typeparam name="T">The type of the log handler</typeparam>
-    /// <param name="instance">The handler instance to use</param>
-    /// <param name="configuration">The route configuration</param>
-    /// <returns>The configured log route</returns>
-    public LogRoute<TContext> UseInstance<T>(T instance, LogRouteConfiguration configuration)
-        where T : class, ILogHandler<TContext> => Use(instance, configuration);
-
-    /// <summary>
-    /// Configures the route to use a log handler created by a factory function
-    /// </summary>
-    /// <typeparam name="T">The type of the log handler</typeparam>
-    /// <param name="factory">The factory function to create the handler</param>
-    /// <param name="configuration">The route configuration</param>
-    /// <returns>The configured log route</returns>
-    public LogRoute<TContext> UseFactory<T>(Func<IServiceProvider, T> factory, LogRouteConfiguration configuration)
-        where T : class, ILogHandler<TContext> => Use(factory(_sp), configuration);
-
-    /// <summary>
-    /// Configures the route to use a specific async log handler instance
-    /// </summary>
-    /// <typeparam name="T">The type of the async log handler</typeparam>
-    /// <param name="instance">The handler instance to use</param>
-    /// <param name="configuration">The route configuration</param>
-    /// <returns>The configured log route</returns>
-    public LogRoute<TContext> UseAsyncInstance<T>(T instance, LogRouteConfiguration configuration)
-        where T : class, IAsyncLogHandler<TContext> => Use(instance, configuration);
-
-    /// <summary>
-    /// Configures the route to use an async log handler created by a factory function
-    /// </summary>
-    /// <typeparam name="T">The type of the async log handler</typeparam>
-    /// <param name="factory">The factory function to create the handler</param>
-    /// <param name="configuration">The route configuration</param>
-    /// <returns>The configured log route</returns>
-    public LogRoute<TContext> UseAsyncFactory<T>(Func<IServiceProvider, T> factory, LogRouteConfiguration configuration)
-        where T : class, IAsyncLogHandler<TContext> => Use(factory(_sp), configuration);
-
-    /// <summary>
-    /// Internal method to configure the route with a handler and configuration
-    /// </summary>
-    /// <param name="handler">The handler to use</param>
-    /// <param name="configuration">The route configuration</param>
-    /// <returns>The configured log route</returns>
-    private LogRoute<TContext> Use(
-        OneOf<ILogHandler<TContext>, IAsyncLogHandler<TContext>> handler,
-        LogRouteConfiguration configuration
-    )
+    /// <param name="handler">The handler instance to use</param>
+    /// <param name="configuration">Optional route configuration; defaults to a new <see cref="LogRouteConfiguration"/></param>
+    /// <returns>A builder exposing scheduler-override fluent hooks</returns>
+    public LogRouteBuilder<TContext> Use(ILogHandler<TContext> handler, LogRouteConfiguration? configuration = null)
     {
         Handler = handler;
-        Configuration = configuration;
+        Configuration = configuration ?? new LogRouteConfiguration();
+        return new LogRouteBuilder<TContext>(this);
+    }
 
-        return this;
+    /// <summary>
+    /// Configures the route to use a log handler created by a factory function.
+    /// Scheduler is auto-picked from the handler type unless overridden via the returned builder.
+    /// </summary>
+    /// <param name="factory">The factory function to create the handler</param>
+    /// <param name="configuration">Optional route configuration; defaults to a new <see cref="LogRouteConfiguration"/></param>
+    /// <returns>A builder exposing scheduler-override fluent hooks</returns>
+    public LogRouteBuilder<TContext> Use(
+        Func<IServiceProvider, ILogHandler<TContext>> factory,
+        LogRouteConfiguration? configuration = null
+    )
+    {
+        Handler = factory(_sp);
+        Configuration = configuration ?? new LogRouteConfiguration();
+        return new LogRouteBuilder<TContext>(this);
     }
 }

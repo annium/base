@@ -17,8 +17,8 @@ public static class LogRouteExtensions
     /// <typeparam name="TContext">The type of the log context</typeparam>
     /// <param name="route">The log route to configure</param>
     /// <param name="cfg">File logging configuration</param>
-    /// <returns>The configured log route</returns>
-    public static LogRoute<TContext> UseFile<TContext>(
+    /// <returns>A builder exposing scheduler-override fluent hooks</returns>
+    public static LogRouteBuilder<TContext> UseFile<TContext>(
         this LogRoute<TContext> route,
         FileLoggingConfiguration<TContext> cfg
     )
@@ -31,16 +31,11 @@ public static class LogRouteExtensions
     /// <param name="route">The log route to configure</param>
     /// <param name="format">Custom formatting function for log messages</param>
     /// <param name="cfg">File logging configuration</param>
-    /// <returns>The configured log route</returns>
-    public static LogRoute<TContext> UseFile<TContext>(
+    /// <returns>A builder exposing scheduler-override fluent hooks</returns>
+    public static LogRouteBuilder<TContext> UseFile<TContext>(
         this LogRoute<TContext> route,
         Func<LogMessage<TContext>, string> format,
         FileLoggingConfiguration<TContext> cfg
     )
-        where TContext : class
-    {
-        route.UseAsyncInstance(new FileLogHandler<TContext>(format, cfg), cfg);
-
-        return route;
-    }
+        where TContext : class => route.Use(new FileLogHandler<TContext>(format, cfg), cfg);
 }

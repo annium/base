@@ -32,7 +32,7 @@ internal class ResultDataConverter<TD> : ResultConverterBase<IResult<TD>>
             }
         );
 
-        var value = Result.New(data);
+        var value = Result.Create(data);
 
         value.Errors(plainErrors);
         value.Errors(labeledErrors);

@@ -162,16 +162,26 @@ internal sealed class Table<T> : ITable<T>, ILogSubject
     }
 
     /// <summary>
-    /// Subscribes an observer to receive change events from this table.
+    /// Subscribes an observer to receive change events from this table. The observer is
+    /// subscribed to the live stream BEFORE the initial-state snapshot is taken, so no
+    /// intervening mutations are lost: any <c>Set</c>/<c>Delete</c> that publishes an event
+    /// after the subscription is active — but before this method returns — will be delivered.
     /// </summary>
     /// <param name="observer">The observer to subscribe.</param>
     /// <returns>A disposable subscription.</returns>
     public IDisposable Subscribe(IObserver<ChangeEvent<T>> observer)
     {
-        var init = ChangeEvent.Init(Get());
-        observer.OnNext(init);
+        IDisposable subscription;
+        ChangeEvent<T> initial;
+        lock (_locker)
+        {
+            subscription = _observable.Subscribe(observer);
+            initial = ChangeEvent.Init(_table.Values.ToArray());
+        }
 
-        return _observable.Subscribe(observer);
+        // dispatch initial event OUTSIDE the lock so observer code never runs under _locker
+        observer.OnNext(initial);
+        return subscription;
     }
 
     /// <summary>
@@ -182,7 +192,9 @@ internal sealed class Table<T> : ITable<T>, ILogSubject
     public int GetKey(T value) => _getKey(value);
 
     /// <summary>
-    /// Initializes the table with the specified collection of entries.
+    /// Initializes the table with the specified collection of entries. The <c>_isActive</c>
+    /// filter is applied OUTSIDE the lock so that user delegates never run under <c>_locker</c>
+    /// (which is a non-reentrant <see cref="Lock"/>).
     /// </summary>
     /// <param name="entries">The entries to initialize the table with.</param>
     /// <exception cref="InvalidOperationException">Thrown when the table does not have Init permission.</exception>
@@ -190,22 +202,24 @@ internal sealed class Table<T> : ITable<T>, ILogSubject
     {
         EnsurePermission(TablePermission.Init);
 
+        // filter and key-extract outside the lock — user delegates must never run under _locker
+        var activeByKey = entries.Where(x => _isActive(x)).Select(x => (Key: _getKey(x), Value: x)).ToArray();
+
+        T[] snapshot;
         lock (_locker)
         {
             _table.Clear();
-
-            foreach (var entry in entries.Where(x => _isActive(x)))
-            {
-                var key = _getKey(entry);
-                _table[key] = entry;
-            }
-
-            AddEvent(ChangeEvent.Init(_table.Values.ToArray()));
+            foreach (var (key, value) in activeByKey)
+                _table[key] = value;
+            snapshot = _table.Values.ToArray();
+            AddEvent(ChangeEvent.Init(snapshot));
         }
     }
 
     /// <summary>
-    /// Sets (adds or updates) an entry in the table.
+    /// Sets (adds or updates) an entry in the table. User delegates (<c>_hasChanged</c>,
+    /// <c>_update</c>, <c>_isActive</c>) are invoked OUTSIDE <c>_locker</c> so a delegate that
+    /// re-enters the table (e.g. calls <c>Set</c> recursively) does not deadlock.
     /// </summary>
     /// <param name="entry">The entry to set.</param>
     /// <exception cref="InvalidOperationException">Thrown when the table does not have the required permissions.</exception>
@@ -213,30 +227,40 @@ internal sealed class Table<T> : ITable<T>, ILogSubject
     {
         var key = _getKey(entry);
 
+        T? existing;
+        bool exists;
         lock (_locker)
         {
-            var exists = _table.ContainsKey(key);
-            if (exists)
-            {
-                EnsurePermission(TablePermission.Update);
-                var value = _table[key];
-                var hasChanged = _hasChanged(value, entry);
-                if (hasChanged)
-                {
-                    _update(value, entry);
-                    if (_isActive(value))
-                        AddEvent(ChangeEvent.Set(value));
-                }
-            }
-            else
-            {
-                EnsurePermission(TablePermission.Add);
-                var value = _table[key] = entry;
-                AddEvent(ChangeEvent.Set(value));
-            }
-
-            Cleanup();
+            exists = _table.TryGetValue(key, out existing);
         }
+
+        if (exists)
+        {
+            EnsurePermission(TablePermission.Update);
+            if (!_hasChanged(existing!, entry))
+            {
+                CleanupOutsideLock();
+                return;
+            }
+            _update(existing!, entry);
+            var isActive = _isActive(existing!);
+            if (isActive)
+            {
+                lock (_locker)
+                    AddEvent(ChangeEvent.Set(existing!));
+            }
+        }
+        else
+        {
+            EnsurePermission(TablePermission.Add);
+            lock (_locker)
+            {
+                _table[key] = entry;
+                AddEvent(ChangeEvent.Set(entry));
+            }
+        }
+
+        CleanupOutsideLock();
     }
 
     /// <summary>
@@ -253,9 +277,9 @@ internal sealed class Table<T> : ITable<T>, ILogSubject
         {
             if (_table.Remove(key, out var item))
                 AddEvent(ChangeEvent.Delete(item));
-
-            Cleanup();
         }
+
+        CleanupOutsideLock();
     }
 
     /// <summary>
@@ -303,21 +327,31 @@ internal sealed class Table<T> : ITable<T>, ILogSubject
     }
 
     /// <summary>
-    /// Removes inactive items from the table and sends delete events for them.
+    /// Removes inactive items from the table and sends delete events for them. The
+    /// <c>_isActive</c> delegate is invoked OUTSIDE <c>_locker</c>; only the dictionary
+    /// access and event publication run under the lock.
     /// </summary>
-    private void Cleanup()
+    private void CleanupOutsideLock()
     {
-        var removed = new List<T>();
+        // snapshot current values under lock; filter outside lock (user delegate)
+        T[] snapshot;
+        lock (_locker)
+            snapshot = _table.Values.ToArray();
 
-        var entries = _table.Values.Except(_table.Values.Where(_isActive)).ToArray();
-        foreach (var entry in entries)
+        var inactive = snapshot.Where(x => !_isActive(x)).Select(x => (Key: _getKey(x), Value: x)).ToArray();
+        if (inactive.Length == 0)
+            return;
+
+        var removed = new List<T>(inactive.Length);
+        lock (_locker)
         {
-            var key = _getKey(entry);
-            _table.Remove(key, out var item);
-            removed.Add(item!);
+            foreach (var (key, _) in inactive)
+            {
+                if (_table.Remove(key, out var item))
+                    removed.Add(item!);
+            }
+            AddEvents(removed.Select(ChangeEvent.Delete).ToArray());
         }
-
-        AddEvents(removed.Select(ChangeEvent.Delete).ToArray());
     }
 
     /// <summary>

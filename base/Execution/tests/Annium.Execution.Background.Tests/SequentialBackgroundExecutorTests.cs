@@ -119,4 +119,17 @@ public class SequentialBackgroundExecutorTests : BackgroundExecutorTestBase
 
         this.Trace("done");
     }
+
+    /// <summary>
+    /// Verifies that an exception thrown by a scheduled task is surfaced through the logger.
+    /// </summary>
+    [Fact]
+    public async Task ExceptionInTask_LogsError()
+    {
+        this.Trace("start");
+
+        await ExceptionInTask_LogsError_Base(() => Logs);
+
+        this.Trace("done");
+    }
 }

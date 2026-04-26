@@ -1,164 +1,142 @@
 using System;
 using System.IdentityModel.Tokens.Jwt;
-using Annium.Data.Operations;
+using System.Security.Claims;
 using Microsoft.IdentityModel.Tokens;
-using NodaTime;
-using OneOf;
 
 namespace Annium.Identity.Tokens.Jwt;
 
 /// <summary>
-/// Provides functionality for reading and validating JWT tokens
+/// JWT-backed implementation of <see cref="ITokenReader{ClaimsPrincipal}"/>. Configured via
+/// <see cref="JwtTokensOptions"/>; current time supplied by <see cref="ITimeProvider"/> for
+/// the manual ValidFrom/ValidTo check that runs when <see cref="JwtTokensOptions.ExpirationWindow"/>
+/// is null.
 /// </summary>
-public static class JwtReader
+public sealed class JwtReader : ITokenReader<ClaimsPrincipal>
 {
-    /// <summary>
-    /// Reads and validates a JWT token
-    /// </summary>
-    /// <param name="raw">The raw JWT token string</param>
-    /// <param name="opts">The token validation parameters</param>
-    /// <param name="now">The current time for validation</param>
-    /// <returns>The result containing either the token or an exception</returns>
-    public static IStatusResult<JwtReadStatus, OneOf<JwtSecurityToken, Exception>> Read(
-        string raw,
-        TokenValidationParameters opts,
-        Instant now
-    )
-    {
-        var handler = new JwtSecurityTokenHandler();
+    /// <summary>Reader configuration — signing key, issuer, audience, expiration window.</summary>
+    private readonly JwtTokensOptions _options;
 
-        // ensure token is readable
-        if (!handler.CanReadToken(raw))
-            return Fail(JwtReadStatus.BadSource, "Token is not valid JWT");
+    /// <summary>Time provider for the manual ValidFrom/ValidTo check.</summary>
+    private readonly ITimeProvider _time;
+
+    /// <summary>Per-instance handler — <see cref="JwtSecurityTokenHandler"/> read paths are thread-safe.</summary>
+    private readonly JwtSecurityTokenHandler _handler = new();
+
+    public JwtReader(JwtTokensOptions options, ITimeProvider time)
+    {
+        _options = options;
+        _time = time;
+    }
+
+    /// <summary>
+    /// Reads and validates the token, mapping any failure to a <see cref="TokenReadStatus"/>.
+    /// Builds a <see cref="ClaimsPrincipal"/> from the parsed token's claims on success.
+    /// </summary>
+    /// <param name="token">String-encoded JWT to read.</param>
+    /// <returns>The read result.</returns>
+    public TokenReadResult<ClaimsPrincipal> Read(string token)
+    {
+        if (!_handler.CanReadToken(token))
+            return new TokenReadResult<ClaimsPrincipal>(TokenReadStatus.Malformed, null, "Token is not valid JWT");
+
+        var validationParameters = BuildValidationParameters();
 
         try
         {
-            // execute validation
-            handler.ValidateToken(raw, opts, out var securityToken);
-            var token = (JwtSecurityToken)securityToken;
+            _handler.ValidateToken(token, validationParameters, out var securityToken);
+            var jwt = (JwtSecurityToken)securityToken;
 
-            // if expiration window has value - expiration is already validated,
-            if (opts.ValidateLifetime)
-                return Result.Status<JwtReadStatus, OneOf<JwtSecurityToken, Exception>>(JwtReadStatus.Ok, token);
+            // When ValidateLifetime is false (ExpirationWindow == null), MS skips the lifetime
+            // check entirely; this code enforces ValidFrom/ValidTo with the configured time.
+            if (!validationParameters.ValidateLifetime)
+            {
+                var nowUtc = _time.Now.ToDateTimeUtc();
+                if (jwt.ValidFrom > nowUtc)
+                    return new TokenReadResult<ClaimsPrincipal>(
+                        TokenReadStatus.NotYetValid,
+                        null,
+                        "Token is not yet valid"
+                    );
 
-            var nowUtc = now.ToDateTimeUtc();
+                if (jwt.ValidTo <= nowUtc)
+                    return new TokenReadResult<ClaimsPrincipal>(TokenReadStatus.Expired, null, "Token is expired");
+            }
 
-            // ensure token is already valid
-            if (token.ValidFrom > nowUtc)
-                return Fail(JwtReadStatus.Failed, "Token is not yet valid");
-
-            return Result.Status<JwtReadStatus, OneOf<JwtSecurityToken, Exception>>(JwtReadStatus.Ok, token);
+            var identity = new ClaimsIdentity(jwt.Claims, "JWT");
+            var principal = new ClaimsPrincipal(identity);
+            return new TokenReadResult<ClaimsPrincipal>(TokenReadStatus.Ok, principal, null);
         }
-        catch (Exception exception)
+        catch (Exception ex)
         {
-            var (status, error) = HandleValidationFailure(exception);
-
-            return Fail(status, exception, error);
+            var (status, message) = MapValidationFailure(ex);
+            return new TokenReadResult<ClaimsPrincipal>(status, null, message);
         }
     }
 
     /// <summary>
-    /// Creates token validation parameters for JWT validation
+    /// Builds <see cref="TokenValidationParameters"/> from the configured options.
     /// </summary>
-    /// <param name="securityKey">The security key for validation</param>
-    /// <param name="issuer">The expected issuer</param>
-    /// <param name="audience">The expected audience</param>
-    /// <param name="expirationWindow">The clock skew tolerance</param>
-    /// <returns>The configured validation parameters</returns>
-    public static TokenValidationParameters GetValidationParameters(
-        SecurityKey securityKey,
-        string issuer,
-        string? audience,
-        Duration? expirationWindow
-    )
+    /// <returns>The validation parameters.</returns>
+    private TokenValidationParameters BuildValidationParameters()
     {
-        var validationParameters = new TokenValidationParameters
+        var parameters = new TokenValidationParameters
         {
-            IssuerSigningKey = securityKey,
+            IssuerSigningKey = _options.SigningKey,
             RequireSignedTokens = true,
             ValidateIssuer = true,
-            ValidIssuer = issuer,
+            ValidIssuer = _options.Issuer,
             ValidateIssuerSigningKey = true,
         };
 
-        if (!string.IsNullOrWhiteSpace(audience))
+        if (!string.IsNullOrWhiteSpace(_options.Audience))
         {
-            validationParameters.ValidateAudience = true;
-            validationParameters.ValidAudience = audience;
+            parameters.ValidateAudience = true;
+            parameters.ValidAudience = _options.Audience;
         }
         else
         {
-            validationParameters.ValidateAudience = false;
+            parameters.ValidateAudience = false;
         }
 
-        if (expirationWindow.HasValue)
+        if (_options.ExpirationWindow.HasValue)
         {
-            validationParameters.ClockSkew = expirationWindow.Value.ToTimeSpan();
-            validationParameters.RequireExpirationTime = true;
-            validationParameters.ValidateLifetime = true;
+            parameters.ClockSkew = _options.ExpirationWindow.Value.ToTimeSpan();
+            parameters.RequireExpirationTime = true;
+            parameters.ValidateLifetime = true;
         }
         else
         {
-            validationParameters.RequireExpirationTime = false;
-            validationParameters.ValidateLifetime = false;
+            parameters.RequireExpirationTime = false;
+            parameters.ValidateLifetime = false;
         }
 
-        return validationParameters;
+        return parameters;
     }
 
     /// <summary>
-    /// Handles JWT validation failures by mapping exceptions to status codes and error messages
+    /// Maps the platform-specific exception thrown by <c>JwtSecurityTokenHandler.ValidateToken</c>
+    /// to the provider-neutral <see cref="TokenReadStatus"/>.
     /// </summary>
-    /// <param name="exception">The exception that occurred during validation</param>
-    /// <returns>A tuple containing the status code and error message</returns>
-    private static ValueTuple<JwtReadStatus, string> HandleValidationFailure(Exception exception)
-    {
-        return exception switch
+    /// <param name="ex">The exception thrown during validation.</param>
+    /// <returns>Tuple of mapped status and human-readable message.</returns>
+    private static (TokenReadStatus status, string message) MapValidationFailure(Exception ex) =>
+        ex switch
         {
-            SecurityTokenDecompressionFailedException => (JwtReadStatus.Failed, "Token decompression failed"),
-            SecurityTokenEncryptionKeyNotFoundException => (JwtReadStatus.Failed, "Token decryption failed"),
-            SecurityTokenDecryptionFailedException => (JwtReadStatus.Failed, "Token decryption failed"),
-            SecurityTokenNoExpirationException => (JwtReadStatus.Failed, "Token has no expiration claim"),
-            SecurityTokenExpiredException => (JwtReadStatus.Failed, "Token is expired"),
-            SecurityTokenNotYetValidException => (JwtReadStatus.Failed, "Token is not yet valid"),
-            SecurityTokenInvalidLifetimeException => (JwtReadStatus.Failed, "Token has invalid lifetime"),
-            SecurityTokenInvalidAudienceException => (JwtReadStatus.Failed, "Token has invalid audience"),
-            SecurityTokenInvalidIssuerException => (JwtReadStatus.Failed, "Token has invalid issuer"),
-            SecurityTokenSignatureKeyNotFoundException => (JwtReadStatus.Failed, "Token has invalid signature"),
-            SecurityTokenInvalidSignatureException => (JwtReadStatus.Failed, "Token has invalid signature"),
-            _ => (JwtReadStatus.BadSource, "Token is invalid"),
+            SecurityTokenExpiredException => (TokenReadStatus.Expired, "Token is expired"),
+            SecurityTokenNotYetValidException => (TokenReadStatus.NotYetValid, "Token is not yet valid"),
+            // SignatureKeyNotFound derives from InvalidSignature, so the more-specific arm comes first.
+            SecurityTokenSignatureKeyNotFoundException => (
+                TokenReadStatus.InvalidSignature,
+                "Token has invalid signature"
+            ),
+            SecurityTokenInvalidSignatureException => (TokenReadStatus.InvalidSignature, "Token has invalid signature"),
+            SecurityTokenInvalidAudienceException => (TokenReadStatus.InvalidClaims, "Token has invalid audience"),
+            SecurityTokenInvalidIssuerException => (TokenReadStatus.InvalidClaims, "Token has invalid issuer"),
+            SecurityTokenInvalidLifetimeException => (TokenReadStatus.InvalidClaims, "Token has invalid lifetime"),
+            SecurityTokenNoExpirationException => (TokenReadStatus.InvalidClaims, "Token has no expiration claim"),
+            SecurityTokenDecompressionFailedException => (TokenReadStatus.Malformed, "Token decompression failed"),
+            SecurityTokenEncryptionKeyNotFoundException => (TokenReadStatus.Malformed, "Token decryption failed"),
+            SecurityTokenDecryptionFailedException => (TokenReadStatus.Malformed, "Token decryption failed"),
+            _ => (TokenReadStatus.Unknown, ex.Message),
         };
-    }
-
-    /// <summary>
-    /// Creates a failure result with the specified status and error message
-    /// </summary>
-    /// <param name="status">The JWT read status indicating the type of failure</param>
-    /// <param name="error">The error message describing the failure</param>
-    /// <returns>A status result indicating failure with an exception</returns>
-    private static IStatusResult<JwtReadStatus, OneOf<JwtSecurityToken, Exception>> Fail(
-        JwtReadStatus status,
-        string error
-    )
-    {
-        return Result
-            .Status<JwtReadStatus, OneOf<JwtSecurityToken, Exception>>(status, new InvalidOperationException(error))
-            .Error(error);
-    }
-
-    /// <summary>
-    /// Creates a failure result with the specified status, exception, and error message
-    /// </summary>
-    /// <param name="status">The JWT read status indicating the type of failure</param>
-    /// <param name="exception">The exception that caused the failure</param>
-    /// <param name="error">The error message describing the failure</param>
-    /// <returns>A status result indicating failure with the provided exception</returns>
-    private static IStatusResult<JwtReadStatus, OneOf<JwtSecurityToken, Exception>> Fail(
-        JwtReadStatus status,
-        Exception exception,
-        string error
-    )
-    {
-        return Result.Status<JwtReadStatus, OneOf<JwtSecurityToken, Exception>>(status, exception).Error(error);
-    }
 }

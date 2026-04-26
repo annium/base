@@ -290,7 +290,9 @@ public abstract class DisposableBoxBase<TBox> : ILogSubject
     }
 
     /// <summary>
-    /// Adds a single entry to the specified list.
+    /// Adds a single entry to the specified list. The disposed check is repeated INSIDE
+    /// the lock so a concurrent dispose cannot strand the entry in the list after
+    /// <see cref="DisposeBase"/> has already pulled the snapshot.
     /// </summary>
     /// <typeparam name="T">The type of the entry.</typeparam>
     /// <param name="entries">The list to add the entry to.</param>
@@ -298,10 +300,9 @@ public abstract class DisposableBoxBase<TBox> : ILogSubject
     /// <returns>The current box instance for method chaining.</returns>
     protected TBox Add<T>(List<T> entries, T entry)
     {
-        EnsureNotDisposed();
-
         lock (_locker)
         {
+            EnsureNotDisposed();
             this.Trace<string>("add {entry}", entry.GetFullId());
             entries.Add(entry);
         }
@@ -310,7 +311,8 @@ public abstract class DisposableBoxBase<TBox> : ILogSubject
     }
 
     /// <summary>
-    /// Adds a collection of entries to the specified list.
+    /// Adds a collection of entries to the specified list. The disposed check is repeated
+    /// INSIDE the lock so a concurrent dispose cannot strand any entry.
     /// </summary>
     /// <typeparam name="T">The type of the entries.</typeparam>
     /// <param name="entries">The list to add the entries to.</param>
@@ -318,14 +320,15 @@ public abstract class DisposableBoxBase<TBox> : ILogSubject
     /// <returns>The current box instance for method chaining.</returns>
     protected TBox Add<T>(List<T> entries, IEnumerable<T> items)
     {
-        EnsureNotDisposed();
-
         lock (_locker)
+        {
+            EnsureNotDisposed();
             foreach (var entry in items)
             {
                 this.Trace<string>("add {entry}", entry.GetFullId());
                 entries.Add(entry);
             }
+        }
 
         return (TBox)this;
     }
@@ -372,17 +375,19 @@ public abstract class DisposableBoxBase<TBox> : ILogSubject
     }
 
     /// <summary>
-    /// Pulls all entries from the specified list and returns them as a read-only collection.
+    /// Atomically snapshots and clears the specified list under <c>_locker</c>.
     /// </summary>
     /// <typeparam name="T">The type of the entries.</typeparam>
     /// <param name="entries">The list to pull entries from.</param>
-    /// <returns>A read-only collection containing all entries from the list.</returns>
+    /// <returns>A read-only collection containing all entries that were in the list at the time of the call.</returns>
     protected IReadOnlyCollection<T> Pull<T>(List<T> entries)
     {
-        var slice = entries.ToArray();
-        entries.Clear();
-
-        return slice;
+        lock (_locker)
+        {
+            var slice = entries.ToArray();
+            entries.Clear();
+            return slice;
+        }
     }
 
     /// <summary>

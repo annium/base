@@ -217,12 +217,11 @@ public class RawManagedSocketTests : TestBase, IAsyncLifetime
             {
                 serverSocket.OnReceived += x =>
                 {
-                    serverSocket.SendAsync(x.ToArray(), CancellationToken.None).GetAwaiter();
+                    _ = serverSocket.SendAsync(x.ToArray(), CancellationToken.None);
                 };
 
-                Task.Delay(10, CancellationToken.None)
-                    .ContinueWith(_ => serverTcs.SetResult(), CancellationToken.None)
-                    .GetAwaiter();
+                _ = Task.Delay(10, CancellationToken.None)
+                    .ContinueWith(_ => serverTcs.SetResult(), CancellationToken.None);
 
                 await serverSocket.ListenAsync(ct);
             }
@@ -397,7 +396,7 @@ public class RawManagedSocketTests : TestBase, IAsyncLifetime
         await ConnectAsync(server, TestContext.Current.CancellationToken);
 
         this.Trace("listen detached");
-        ListenAsync(TestContext.Current.CancellationToken).GetAwaiter();
+        _ = ListenAsync(TestContext.Current.CancellationToken);
 
         // assert
         this.Trace("assert data arrived");
@@ -607,7 +606,7 @@ public class RawManagedSocketTests : TestBase, IAsyncLifetime
         this.Trace("start");
 
         await ConnectAsync(server, ct);
-        ListenAsync(ct).GetAwaiter();
+        _ = ListenAsync(ct);
 
         this.Trace("done");
     }

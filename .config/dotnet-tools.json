@@ -3,35 +3,35 @@
   "isRoot": true,
   "tools": {
     "annium.doclint": {
-      "version": "1.1.16",
+      "version": "1.1.18",
       "commands": [
         "doclint"
       ],
       "rollForward": false
     },
     "annium.versioning": {
-      "version": "1.1.16",
+      "version": "1.1.18",
       "commands": [
         "versioning"
       ],
       "rollForward": false
     },
     "annium.xs.cli": {
-      "version": "1.1.16",
+      "version": "1.1.18",
       "commands": [
         "xs"
       ],
       "rollForward": false
     },
     "csharpier": {
-      "version": "1.2.1",
+      "version": "1.2.6",
       "commands": [
         "csharpier"
       ],
       "rollForward": false
     },
     "docfx": {
-      "version": "2.78.4",
+      "version": "2.78.5",
       "commands": [
         "docfx"
       ],

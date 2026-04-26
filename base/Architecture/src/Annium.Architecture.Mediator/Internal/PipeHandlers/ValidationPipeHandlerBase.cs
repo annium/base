@@ -53,7 +53,7 @@ internal abstract class ValidationPipeHandlerBase<TRequest, TResponse> : ILogSub
         {
             this.Trace("Validation of {request} failed - request is null", typeof(TRequest));
 
-            return GetResponse(Result.New().Error("Request is empty"));
+            return GetResponse(Result.Create().Error("Request is empty"));
         }
 
         var result = await _validator.ValidateAsync(request);

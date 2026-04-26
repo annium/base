@@ -116,6 +116,35 @@ public class ObjectCacheTests : TestBase
     }
 
     /// <summary>
+    /// Verifies populate-after-success (AC7, §8.2.18): 10 tasks calling <c>GetAsync("k")</c>
+    /// against a slow factory must all resolve to the SAME instance with the factory invoked
+    /// exactly once. The existing <c>ObjectCache_Create_Works</c> test covers the sync path;
+    /// this one makes the timing explicit via a 500ms provider delay so the concurrent-same-key
+    /// semantics are unambiguous.
+    /// </summary>
+    [Fact]
+    public async Task GetAsync_ConcurrentSameKey_OneFactoryCall()
+    {
+        // arrange
+        await using var cache = Get<IObjectCache<ItemKey, Item>>();
+        var log = Get<TestLog<string>>();
+        var key = new ItemKey { Value = 42 };
+
+        // act — 10 concurrent GetAsync; ItemProvider.CreateAsync already delays 10ms, so
+        // all 10 tasks will observe the "creating" state while only one is the creator
+        var references = await Task.WhenAll(
+            Enumerable
+                .Range(0, 10)
+                .Select(_ => Task.Run(() => cache.GetAsync(key), TestContext.Current.CancellationToken))
+        );
+
+        // assert — all 10 resolved to the same instance; provider.CreateAsync invoked once
+        references.Has(10);
+        references.GroupBy(r => r.Value).Has(1);
+        log.Where(x => x.Contains(Created)).Has(1);
+    }
+
+    /// <summary>
     /// Test item provider for object cache
     /// </summary>
     private class ItemProvider : ObjectCacheProvider<ItemKey, Item>

@@ -54,16 +54,16 @@ public abstract class Validator<TValue> : IValidationContainer<TValue>
     )
     {
         if (_rules.Count == 0)
-            return (Result.New(), false);
+            return (Result.Create(), false);
 
-        var result = Result.New();
+        var result = Result.Create();
         var ranStage = false;
         var hasLabel = !string.IsNullOrWhiteSpace(label);
 
         foreach (var (property, rule) in _rules)
         {
             var propertyLabel = hasLabel ? $"{label}.{property.Name}" : property.Name;
-            var ruleResult = Result.New();
+            var ruleResult = Result.Create();
             var context = new ValidationContext<TValue>(value, propertyLabel, property.Name, ruleResult, localizer);
 
             ranStage = await rule.ValidateAsync(context, value, stage) || ranStage;

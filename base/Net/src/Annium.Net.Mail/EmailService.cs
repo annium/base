@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Net;
 using System.Net.Mail;
@@ -48,8 +49,11 @@ internal class EmailService : IEmailService
 
             return Result.Success();
         }
-        catch (SmtpException ex)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
+            // Widened from SmtpException: SmtpClient.SendMailAsync also throws IOException,
+            // ObjectDisposedException, InvalidOperationException, and others. OCE is excluded
+            // so cooperative cancellation propagates as expected.
             return Result.Failure().Error(ex.Message);
         }
     }

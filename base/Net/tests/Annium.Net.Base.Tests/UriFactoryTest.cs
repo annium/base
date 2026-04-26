@@ -212,6 +212,24 @@ public class UriFactoryTest
     }
 
     /// <summary>
+    /// Regression test: when the base URI carries a query string, a relative <c>Path</c> call
+    /// plus new <c>Param</c> calls must replace — not concatenate with — the base's query. The
+    /// previous implementation concatenated via <c>_baseUri.ToString()</c>, producing malformed
+    /// URIs where the base's existing query bled into the new one.
+    /// </summary>
+    [Fact]
+    public void Path_BaseWithQuery_BaseQueryDropped()
+    {
+        // act
+        var uri = UriFactory.Base("https://x/?a=1").Path("p").Param("b", "2").Build();
+
+        // assert
+        uri.Query.IsNotContaining("a=1");
+        uri.Query.IsContaining("b=2");
+        uri.AbsolutePath.Is("/p");
+    }
+
+    /// <summary>
     /// Tests that cloning a URI factory works correctly.
     /// </summary>
     [Fact]

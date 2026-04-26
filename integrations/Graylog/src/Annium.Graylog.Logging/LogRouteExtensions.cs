@@ -31,7 +31,7 @@ public static class LogRouteExtensions
         var filter = route.Filter;
         route
             .For(m => m.SubjectType != "HttpRequest" && filter(m))
-            .UseAsyncFactory(
+            .Use(
                 sp =>
                 {
                     var httpRequestFactory = sp.Resolve<IHttpRequestFactory>();

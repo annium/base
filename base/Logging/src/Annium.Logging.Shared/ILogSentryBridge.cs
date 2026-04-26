@@ -9,6 +9,17 @@ namespace Annium.Logging.Shared;
 public interface ILogSentryBridge
 {
     /// <summary>
+    /// Reports whether any registered route would accept a message at the given level.
+    /// Used by external-bridge implementations (e.g., the Microsoft.Extensions.Logging bridge)
+    /// to short-circuit log construction when no sink is interested. Filters that key off
+    /// non-Level fields evaluate against an empty synthetic message — this is an optimization
+    /// hint, not a strict gate; the actual filter still runs on real messages in the router.
+    /// </summary>
+    /// <param name="level">The level to test</param>
+    /// <returns>True if at least one route accepts a message of this level; false otherwise</returns>
+    bool IsLevelEnabled(LogLevel level);
+
+    /// <summary>
     /// Registers a log message with the sentry
     /// </summary>
     /// <param name="subjectType">The type of the logging subject</param>

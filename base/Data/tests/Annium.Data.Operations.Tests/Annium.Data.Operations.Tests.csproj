@@ -8,6 +8,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../../../Annium/src/Annium.Testing/Annium.Testing.csproj" />
+    <ProjectReference Include="../../src/Annium.Data.Operations.Testing/Annium.Data.Operations.Testing.csproj" />
     <ProjectReference Include="../../src/Annium.Data.Operations/Annium.Data.Operations.csproj" />
   </ItemGroup>
   <ItemGroup>

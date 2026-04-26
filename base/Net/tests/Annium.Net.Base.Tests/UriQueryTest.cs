@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Annium.Testing;
+using Microsoft.Extensions.Primitives;
 using Xunit;
 
 namespace Annium.Net.Base.Tests;
@@ -28,6 +29,37 @@ public class UriQueryTest
         q2.ToString().Is("?value=");
         q3.ToString().Is("?a=1&b=2&b=3");
         q4.ToString().Is("?a=1&b=2%2C3");
+    }
+
+    /// <summary>
+    /// Regression test for <c>UriQuery.CopyTo</c> which previously called <c>_data.Clear()</c>,
+    /// wiping the query instead of copying its contents to the supplied array. Any LINQ operator
+    /// or serializer walking the <see cref="System.Collections.Generic.ICollection{T}"/> contract
+    /// silently destroyed the query.
+    /// </summary>
+    [Fact]
+    public void CopyTo_FillsArrayAndPreservesOriginal()
+    {
+        // arrange
+        var query = UriQuery.Parse("a=1&b=2");
+        var originalCount = ((ICollection<KeyValuePair<string, StringValues>>)query).Count;
+        var array = new KeyValuePair<string, StringValues>[originalCount];
+
+        // act
+        query.CopyTo(array, 0);
+
+        // assert — original is intact
+        ((ICollection<KeyValuePair<string, StringValues>>)query).Count.Is(originalCount);
+        query["a"].ToString().Is("1");
+        query["b"].ToString().Is("2");
+
+        // assert — destination array is populated
+        array.Length.Is(originalCount);
+        var byKey = new Dictionary<string, string>();
+        foreach (var kv in array)
+            byKey[kv.Key] = kv.Value.ToString();
+        byKey["a"].Is("1");
+        byKey["b"].Is("2");
     }
 
     /// <summary>

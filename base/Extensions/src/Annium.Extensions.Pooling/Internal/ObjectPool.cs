@@ -48,13 +48,23 @@ internal class ObjectPool<T> : IObjectPool<T>
 
     /// <summary>
     /// Gets an object from the pool. Blocks if no objects are available until one becomes free.
+    /// Releases the semaphore permit on factory exception so a faulting loader does not leak
+    /// capacity.
     /// </summary>
     /// <returns>An object from the pool.</returns>
     public T Get()
     {
         _semaphore.WaitOne();
-        lock (_locker)
-            return _loader.Get();
+        try
+        {
+            lock (_locker)
+                return _loader.Get();
+        }
+        catch
+        {
+            _semaphore.Release();
+            throw;
+        }
     }
 
     /// <summary>

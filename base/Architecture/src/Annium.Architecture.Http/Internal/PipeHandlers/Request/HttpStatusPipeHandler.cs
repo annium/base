@@ -21,6 +21,6 @@ internal class HttpStatusPipeHandler<TRequest>
     {
         HandleStatus(response.Status, response);
 
-        return Result.New().Join(response);
+        return Result.Create().Join(response);
     }
 }

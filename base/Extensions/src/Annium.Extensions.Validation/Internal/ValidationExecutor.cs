@@ -60,12 +60,12 @@ internal class ValidationExecutor<TValue> : IValidator<TValue>
         var hasLabel = !string.IsNullOrWhiteSpace(label);
 
         if (value == null)
-            return hasLabel ? Result.New().Error(label!, "Value is null") : Result.New().Error("Value is null");
+            return hasLabel ? Result.Create().Error(label!, "Value is null") : Result.Create().Error("Value is null");
 
         if (_validators.Length == 0)
-            return Result.New();
+            return Result.Create();
 
-        var result = Result.New();
+        var result = Result.Create();
         var stage = 0;
         bool ranStage;
         do

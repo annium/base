@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -48,23 +49,15 @@ public class HttpRequestTests : TestBase
     {
         this.Trace("start");
 
-        // arrange
-        var server = RunServer(
-            async (request, response) =>
-            {
-                var data = Encoding.UTF8.GetBytes(request.Url.NotNull().Query);
-                await response.OutputStream.WriteAsync(data);
-                response.Ok();
-            }
-        );
-        await server.DisposeAsync();
+        // arrange — target the IANA-assigned "discard" port on loopback (RFC 863). The
+        // service it describes exists only by convention; it is not started by any modern
+        // OS out of the box and requires root to bind on Linux, so connect attempts get
+        // an immediate ECONNREFUSED on every platform without any bind/race dance.
+        var uri = new Uri("http://127.0.0.1:9/");
 
         // act
-        this.Trace("send text");
-        var response = await _httpRequestFactory
-            .New(server.HttpUri())
-            .Get("/")
-            .RunAsync(TestContext.Current.CancellationToken);
+        this.Trace("send to discard port {uri}", uri);
+        var response = await _httpRequestFactory.New(uri).Get("/").RunAsync(TestContext.Current.CancellationToken);
 
         // assert
         response.IsNetworkError.IsTrue();

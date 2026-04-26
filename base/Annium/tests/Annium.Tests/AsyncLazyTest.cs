@@ -110,4 +110,51 @@ public class AsyncLazyTest
         foreach (var value in values)
             value.Is(subject);
     }
+
+    /// <summary>
+    /// Verifies that <c>GetValueAsync</c> returns the lazily-produced value (T8 — replaces the
+    /// removed <c>Value</c> sync trapdoor as the explicit accessor).
+    /// </summary>
+    [Fact]
+    public async Task GetValueAsync_SyncFactory_ReturnsValue()
+    {
+        // arrange
+        var lazy = new AsyncLazy<int>(() => 42);
+
+        // act
+        var value = await lazy.GetValueAsync(TestContext.Current.CancellationToken);
+
+        // assert
+        value.Is(42);
+    }
+
+    /// <summary>
+    /// Verifies that <c>GetValueAsync</c> works for an async factory.
+    /// </summary>
+    [Fact]
+    public async Task GetValueAsync_AsyncFactory_ReturnsValue()
+    {
+        // arrange
+        var lazy = new AsyncLazy<int>(async () =>
+        {
+            await Task.Delay(5);
+            return 99;
+        });
+
+        // act
+        var value = await lazy.GetValueAsync(TestContext.Current.CancellationToken);
+
+        // assert
+        value.Is(99);
+    }
+
+    /// <summary>
+    /// Verifies the <c>Value</c> property has been removed (T8 — sync trapdoor closed).
+    /// </summary>
+    [Fact]
+    public void Value_PropertyDoesNotExist()
+    {
+        var prop = typeof(AsyncLazy<int>).GetProperty("Value");
+        prop.Is(null);
+    }
 }

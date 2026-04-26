@@ -68,15 +68,29 @@ internal sealed class ObjectCache<TKey, TValue> : IObjectCache<TKey, TValue>, IL
             if (isNew)
             {
                 this.Trace("Get by {key}: initialize entry {entry}", key, entry);
-                var value = await _provider.CreateAsync(key, ct);
-                value.Switch(
-                    x => entry.SetValue(x),
-                    x =>
-                    {
-                        reference = x;
-                        entry.SetValue(x.Value);
-                    }
-                );
+                try
+                {
+                    var value = await _provider.CreateAsync(key, ct);
+                    value.Switch(
+                        x => entry.SetValue(x),
+                        x =>
+                        {
+                            reference = x;
+                            entry.SetValue(x.Value);
+                        }
+                    );
+                }
+                catch
+                {
+                    // factory failure — populate-after-success invariant requires removing the
+                    // placeholder so that a subsequent GetAsync(key) triggers a FRESH factory
+                    // call. Release any waiters first so they observe the missing value and
+                    // throw, rather than hanging forever on WaitAsync. The orphaned entry
+                    // (its AutoResetEvent) is GC-collectable once no waiters reference it.
+                    _entries.TryRemove(key, out _);
+                    entry.Release();
+                    throw;
+                }
 
                 this.Trace("Get by {key}: entry {entry} ready", key, entry);
             }

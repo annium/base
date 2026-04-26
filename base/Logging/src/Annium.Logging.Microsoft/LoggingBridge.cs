@@ -37,11 +37,14 @@ internal class LoggingBridge : IMicrosoftLogger
         where TState : notnull => Disposable.Empty;
 
     /// <summary>
-    /// Checks if the given logLevel is enabled
+    /// Checks if the given logLevel is enabled by consulting the sentry's level gate, which
+    /// evaluates the configured route filters. Returns false when no route would accept a
+    /// message at this level — letting Microsoft.Extensions.Logging short-circuit log
+    /// construction.
     /// </summary>
     /// <param name="logLevel">Level to be checked</param>
-    /// <returns>True if enabled</returns>
-    public bool IsEnabled(MicrosoftLogLevel logLevel) => true;
+    /// <returns>True if any registered route accepts this level</returns>
+    public bool IsEnabled(MicrosoftLogLevel logLevel) => _sentryBridge.IsLevelEnabled(Map(logLevel));
 
     /// <summary>
     /// Writes a log entry

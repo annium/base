@@ -1,4 +1,7 @@
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using Annium.Logging.Shared;
 
 namespace Annium.Logging.InMemory;
@@ -6,27 +9,33 @@ namespace Annium.Logging.InMemory;
 /// <summary>
 /// Log handler that stores log messages in memory for testing and debugging purposes.
 /// Provides access to all logged messages through a read-only collection.
+/// Thread-safe for concurrent producers.
 /// </summary>
 /// <typeparam name="TContext">The type of the log context</typeparam>
 public class InMemoryLogHandler<TContext> : ILogHandler<TContext>
     where TContext : class
 {
     /// <summary>
-    /// Gets the collection of all logged messages.
+    /// Gets a snapshot of all logged messages observed so far.
     /// </summary>
-    public IReadOnlyList<LogMessage<TContext>> Logs => _logs;
+    public IReadOnlyList<LogMessage<TContext>> Logs => _logs.ToArray();
 
     /// <summary>
-    /// Internal storage for logged messages.
+    /// Internal thread-safe storage for logged messages.
     /// </summary>
-    private readonly List<LogMessage<TContext>> _logs = new();
+    private readonly ConcurrentQueue<LogMessage<TContext>> _logs = new();
 
     /// <summary>
-    /// Handles a log message by storing it in memory.
+    /// Stores each message in the batch into the in-memory queue.
     /// </summary>
-    /// <param name="message">The log message to store</param>
-    public void Handle(LogMessage<TContext> message)
+    /// <param name="messages">The log messages to store</param>
+    /// <param name="ct">Cancellation token (unused — storage is synchronous)</param>
+    /// <returns>A completed value task</returns>
+    public ValueTask HandleAsync(IReadOnlyList<LogMessage<TContext>> messages, CancellationToken ct)
     {
-        _logs.Add(message);
+        foreach (var msg in messages)
+            _logs.Enqueue(msg);
+
+        return ValueTask.CompletedTask;
     }
 }

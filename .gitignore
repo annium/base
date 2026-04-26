@@ -3,6 +3,7 @@
 *.DotSettings*
 
 # artifacts
+/chat/*.txt
 *.log
 *.nupkg
 *.trx

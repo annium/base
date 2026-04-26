@@ -87,6 +87,20 @@ public class ClientWebSocket : IClientWebSocket
     private Status _status = Status.Disconnected;
 
     /// <summary>
+    /// True when the WebSocket has finished connecting and not yet started disconnecting. Goes
+    /// false synchronously inside <see cref="Disconnect"/> (under <c>_locker</c>) — handlers
+    /// firing later from the background teardown observe the disconnected state.
+    /// </summary>
+    public bool IsConnected
+    {
+        get
+        {
+            lock (_locker)
+                return _status == Status.Connected;
+        }
+    }
+
+    /// <summary>
     /// Initializes a new instance of the ClientWebSocket with specified options and logger
     /// </summary>
     /// <param name="options">Configuration options for the WebSocket client</param>
@@ -144,7 +158,11 @@ public class ClientWebSocket : IClientWebSocket
     }
 
     /// <summary>
-    /// Disconnects the WebSocket client from the server
+    /// Disconnects the WebSocket client from the server. The state transition and monitor stop
+    /// happen synchronously; the underlying managed-socket teardown and <see cref="OnDisconnected"/>
+    /// event fire on a background task so that the event is raised only after the teardown
+    /// completes. Callers that need to observe completion can subscribe to
+    /// <see cref="OnDisconnected"/> or use the <c>WhenDisconnectedAsync</c> extension.
     /// </summary>
     public void Disconnect()
     {
@@ -159,18 +177,35 @@ public class ClientWebSocket : IClientWebSocket
             }
 
             SetStatus(Status.Disconnected);
-            _connectionCts.Cancel();
-            _connectionCts.Dispose();
+            var oldCts = _connectionCts;
+            // replace with a fresh cancelled CTS BEFORE disposing the old one; keeps the
+            // invariant that _connectionCts never points to a disposed instance
+            var replacement = new CancellationTokenSource();
+            replacement.Cancel();
+            _connectionCts = replacement;
+            oldCts.Cancel();
+            oldCts.Dispose();
         }
 
         this.Trace("stop monitor");
         _connectionMonitor.Stop();
 
         this.Trace("disconnect managed socket");
-        _socket.DisconnectAsync().GetAwaiter();
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await _socket.DisconnectAsync();
 
-        this.Trace("fire disconnected");
-        OnDisconnected(WebSocketCloseStatus.ClosedLocal);
+                this.Trace("fire disconnected");
+                OnDisconnected(WebSocketCloseStatus.ClosedLocal);
+            }
+            catch (OperationCanceledException) { }
+            catch (Exception ex)
+            {
+                this.Error(ex, "Disconnect background teardown failed");
+            }
+        });
 
         this.Trace("done");
     }
@@ -200,7 +235,7 @@ public class ClientWebSocket : IClientWebSocket
     }
 
     /// <summary>
-    /// Disposes the WebSocket client and releases all resources
+    /// Disposes the WebSocket client by triggering <see cref="Disconnect"/>.
     /// </summary>
     public void Dispose()
     {
@@ -229,15 +264,21 @@ public class ClientWebSocket : IClientWebSocket
         OnDisconnected(result.Status);
 
         this.Trace("schedule connection in {reconnectDelay}ms", _reconnectDelay);
-        Task.Delay(_reconnectDelay)
-            .ContinueWith(_ =>
+        _ = Task.Run(async () =>
+        {
+            try
             {
+                await Task.Delay(_reconnectDelay);
                 this.Trace("trigger connect");
                 ConnectPrivate(uri);
-
                 this.Trace("done");
-            })
-            .GetAwaiter();
+            }
+            catch (OperationCanceledException) { }
+            catch (Exception ex)
+            {
+                this.Error(ex, "scheduled reconnect failed");
+            }
+        });
     }
 
     /// <summary>
@@ -248,6 +289,7 @@ public class ClientWebSocket : IClientWebSocket
     {
         this.Trace("start");
 
+        CancellationTokenSource cts;
         lock (_locker)
         {
             if (_status is Status.Disconnected)
@@ -255,13 +297,30 @@ public class ClientWebSocket : IClientWebSocket
                 this.Trace("skip - already {status}", _status);
                 return;
             }
+
+            Uri = uri;
+            // rotate _connectionCts under lock so a racing Disconnect can't double-dispose
+            // the CTS between our Interlocked.Exchange and Dispose
+            cts = new CancellationTokenSource(_connectTimeout);
+            var oldCts = _connectionCts;
+            _connectionCts = cts;
+            oldCts.Dispose();
         }
 
-        Uri = uri;
         this.Trace("connect to {uri}", uri);
-        var cts = new CancellationTokenSource(_connectTimeout);
-        _connectionCts = cts;
-        _socket.ConnectAsync(uri, cts.Token).ContinueWith(HandleConnected, uri, CancellationToken.None).GetAwaiter();
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                var task = _socket.ConnectAsync(uri, cts.Token);
+                await task.ContinueWith(HandleConnected, uri, CancellationToken.None);
+            }
+            catch (OperationCanceledException) { }
+            catch (Exception ex)
+            {
+                this.Error(ex, "ConnectPrivate background connect failed");
+            }
+        });
 
         this.Trace("done");
     }
@@ -305,7 +364,21 @@ public class ClientWebSocket : IClientWebSocket
 #pragma warning restore VSTHRD002
 
         this.Trace("subscribe to IsClosed");
-        _socket.IsClosed.ContinueWith(HandleClosed, CancellationToken.None).GetAwaiter();
+        _ = _socket.IsClosed.ContinueWith(
+            task =>
+            {
+                try
+                {
+                    HandleClosed(task);
+                }
+                catch (OperationCanceledException) { }
+                catch (Exception ex)
+                {
+                    this.Error(ex, "HandleClosed failed");
+                }
+            },
+            CancellationToken.None
+        );
 
         this.Trace("start monitor");
         _connectionMonitor.Start();
@@ -317,7 +390,9 @@ public class ClientWebSocket : IClientWebSocket
     }
 
     /// <summary>
-    /// Handles the event when the connection monitor detects a lost connection
+    /// Handles the event when the connection monitor detects a lost connection. Kicks off the
+    /// managed socket disconnect in fire-and-forget mode because the monitor's event is
+    /// synchronous; exceptions surface through <see cref="Logger"/>.
     /// </summary>
     private void HandleConnectionLost()
     {
@@ -335,7 +410,18 @@ public class ClientWebSocket : IClientWebSocket
         }
 
         this.Trace("disconnect managed socket");
-        _socket.DisconnectAsync().GetAwaiter();
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await _socket.DisconnectAsync();
+            }
+            catch (OperationCanceledException) { }
+            catch (Exception ex)
+            {
+                this.Error(ex, "HandleConnectionLost disconnect failed");
+            }
+        });
 
         this.Trace("done");
     }

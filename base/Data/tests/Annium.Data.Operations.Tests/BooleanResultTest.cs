@@ -1,3 +1,4 @@
+using Annium.Data.Operations.Testing;
 using Annium.Testing;
 using Xunit;
 
@@ -18,8 +19,7 @@ public class BooleanResultTest
         var result = Result.Success();
 
         // assert
-        result.IsSuccess.IsTrue();
-        result.IsFailure.IsFalse();
+        result.IsSuccess();
     }
 
     /// <summary>
@@ -46,8 +46,7 @@ public class BooleanResultTest
         var result = Result.Failure();
 
         // assert
-        result.IsSuccess.IsFalse();
-        result.IsFailure.IsTrue();
+        result.IsFailure();
     }
 
     /// <summary>

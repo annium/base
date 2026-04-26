@@ -9,6 +9,13 @@ namespace Annium.Net.WebSockets;
 public interface IClientWebSocket : ISendingReceivingWebSocket, IDisposable, ILogSubject
 {
     /// <summary>
+    /// Indicates whether the WebSocket is currently connected. Goes false synchronously when
+    /// <see cref="Disconnect"/> begins; remains false through the background teardown and the
+    /// eventual <see cref="OnDisconnected"/> firing — handlers observe a disconnected socket.
+    /// </summary>
+    bool IsConnected { get; }
+
+    /// <summary>
     /// Event triggered when the WebSocket connection is established
     /// </summary>
     event Action OnConnected;

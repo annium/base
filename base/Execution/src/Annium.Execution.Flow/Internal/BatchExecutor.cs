@@ -47,7 +47,7 @@ internal class BatchExecutor : IBatchExecutor
     /// <returns>The result of the batch execution</returns>
     public async Task<IResult> RunAsync()
     {
-        var result = Result.New();
+        var result = Result.Create();
 
         // run each stage
         foreach (var handler in _handlers)
@@ -56,7 +56,7 @@ internal class BatchExecutor : IBatchExecutor
             {
                 if (handler is Func<Task> handleAsync)
                     await handleAsync();
-                if (handler is Action handleSync)
+                else if (handler is Action handleSync)
                     handleSync();
             }
             catch (Exception exception)

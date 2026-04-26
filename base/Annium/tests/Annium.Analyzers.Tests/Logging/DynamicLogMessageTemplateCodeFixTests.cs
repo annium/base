@@ -10,17 +10,17 @@ using Xunit;
 namespace Annium.Analyzers.Tests.Logging;
 
 /// <summary>
-/// Contains unit tests for <see cref="DynamicLogMessageTemplateCodeFix"/> to verify code fix for dynamic log message templates.
+/// Verifies <see cref="DynamicLogMessageTemplateCodeFix"/> rewrites interpolated log calls
+/// into the static-template / named-args form.
 /// </summary>
 public class DynamicLogMessageTemplateCodeFixTests
     : CSharpCodeFixTest<DynamicLogMessageTemplateAnalyzer, DynamicLogMessageTemplateCodeFix, DefaultVerifier>
 {
     /// <summary>
-    /// Verifies that the code fix converts dynamic string interpolation to a static template with parameters.
+    /// Single interpolation: <c>$"run for {id}"</c> becomes <c>"run for {id}", id</c>.
     /// </summary>
-    /// <returns>True if the code fix converts a dynamic template to a static template; otherwise, false.</returns>
     [Fact]
-    public async Task WhenDynamicTemplate_ConvertsToStaticTmplate()
+    public async Task WhenDynamicTemplate_ConvertsToStaticTemplate()
     {
         ReferenceAssemblies = new ReferenceAssemblies(
             ReferenceAssemblies.NetStandard.NetStandard21.TargetFramework,
@@ -76,6 +76,6 @@ public class Sample : ILogSubject
 }
 """;
 
-        // await RunAsync();
+        await RunAsync(TestContext.Current.CancellationToken);
     }
 }

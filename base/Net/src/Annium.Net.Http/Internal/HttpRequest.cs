@@ -438,10 +438,7 @@ internal class HttpRequest : IHttpRequest
                 ? () => InternalRunAsync(middlewareIndex + 1, completionOption, ct)
                 : () => InternalRunAsync(completionOption, ct);
 
-        // call configuration before middleware
-        foreach (var configure in _configurations)
-            configure(this);
-
+        // configurations run once at the terminal InternalRunAsync call, not per middleware hop.
         var response = await middleware(next, this).ConfigureAwait(false);
 
         this.Trace("done {index}/{total}", middlewareIndex + 1, _middlewares.Count);
@@ -485,10 +482,8 @@ internal class HttpRequest : IHttpRequest
 
         try
         {
-            using var cts = CancellationTokenSource.CreateLinkedTokenSource(
-                new CancellationTokenSource(_timeout).Token,
-                ct
-            );
+            using var timeoutCts = new CancellationTokenSource(_timeout);
+            using var cts = CancellationTokenSource.CreateLinkedTokenSource(timeoutCts.Token, ct);
 
             this.Trace("send request");
             var responseMessage = await _client

@@ -168,4 +168,50 @@ public class HttpRequestConfigureInterceptTests : TestBase
 
         this.Trace("done");
     }
+
+    /// <summary>
+    /// Regression test: the <c>Configure</c> action must run exactly once per request regardless of
+    /// how many <c>Intercept</c> middlewares are chained. Previously the request iterated
+    /// <c>_configurations</c> both per-middleware hop AND again inside the terminal
+    /// <c>InternalRunAsync</c>, producing N+1 invocations for N middlewares (plan §2.5).
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact]
+    public async Task Configure_WithTwoMiddlewares_RunsConfigureActionExactlyOnce()
+    {
+        this.Trace("start");
+
+        // arrange
+        await using var server = RunServer(
+            async (request, response) =>
+            {
+                var data = Encoding.UTF8.GetBytes(request.Url.NotNull().Query);
+                await response.OutputStream.WriteAsync(data);
+                response.Ok();
+            }
+        );
+
+        var configureCount = 0;
+
+        // act — two Intercept middlewares chained with one Configure action
+        var response = await _httpRequestFactory
+            .New(server.HttpUri())
+            .Get("/")
+            .Configure(req =>
+            {
+                configureCount++;
+                req.Param("n", configureCount.ToString());
+            })
+            .Intercept(async next => await next())
+            .Intercept(async next => await next())
+            .RunAsync(TestContext.Current.CancellationToken);
+
+        // assert
+        response.StatusCode.Is(HttpStatusCode.OK);
+        configureCount.Is(1);
+        var responseContent = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        responseContent.Is("?n=1");
+
+        this.Trace("done");
+    }
 }

@@ -44,7 +44,7 @@ public static class EnumerableExtensions
     /// <returns>A new sequence with the elements randomly reordered.</returns>
     public static IEnumerable<T> Shuffle<T>(this IEnumerable<T> src)
     {
-        return src.OrderBy(_ => _random.Next(0, 1) == 1);
+        return src.OrderBy(_ => _random.NextDouble());
     }
 
     /// <summary>

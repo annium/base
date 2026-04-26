@@ -52,27 +52,27 @@ public class Entrypoint
         _isAlreadyBuilt = true;
 
         var gate = new ManualResetEventSlim(false);
+        var cts = new CancellationTokenSource();
+
+        Action<AssemblyLoadContext> onUnloading = _ => HandleEnd(cts, gate);
+        ConsoleCancelEventHandler onCancelKeyPress = (_, _) => HandleEnd(cts, gate);
+
+        AssemblyLoadContext.Default.Unloading += onUnloading;
+        Console.CancelKeyPress += onCancelKeyPress;
+
+        Action cleanup = () =>
+        {
+            AssemblyLoadContext.Default.Unloading -= onUnloading;
+            Console.CancelKeyPress -= onCancelKeyPress;
+            cts.Dispose();
+        };
 
         return new Entry(
             new ServiceProviderFactory().CreateServiceProvider(_serviceProviderBuilder),
-            GetCancellationToken(gate),
-            gate
+            cts.Token,
+            gate,
+            cleanup
         );
-    }
-
-    /// <summary>
-    /// Creates a cancellation token that responds to application shutdown signals
-    /// </summary>
-    /// <param name="gate">The manual reset event for synchronization</param>
-    /// <returns>A cancellation token that will be cancelled on shutdown</returns>
-    private static CancellationToken GetCancellationToken(ManualResetEventSlim gate)
-    {
-        var cts = new CancellationTokenSource();
-
-        AssemblyLoadContext.Default.Unloading += _ => HandleEnd(cts, gate);
-        Console.CancelKeyPress += (_, _) => HandleEnd(cts, gate);
-
-        return cts.Token;
     }
 
     /// <summary>

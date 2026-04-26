@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using Annium.Logging.Shared;
 
 namespace Annium.Logging.Console.Internal;
@@ -28,20 +31,25 @@ internal class ConsoleLogHandler<TContext> : ILogHandler<TContext>
     }
 
     /// <summary>
-    /// Handles a log message by writing it to the console with optional color formatting.
+    /// Writes the batch of log messages to the console under the shared console lock.
     /// </summary>
-    /// <param name="msg">The log message to handle</param>
-    public void Handle(LogMessage<TContext> msg)
+    /// <param name="messages">The log messages to write</param>
+    /// <param name="ct">Cancellation token (unused — console writes are synchronous)</param>
+    /// <returns>A completed value task</returns>
+    public ValueTask HandleAsync(IReadOnlyList<LogMessage<TContext>> messages, CancellationToken ct)
     {
         lock (StaticState.ConsoleLock)
         {
             var currentColor = _color ? System.Console.ForegroundColor : default;
             try
             {
-                if (_color)
-                    System.Console.ForegroundColor = StaticState.LevelColors[msg.Level];
+                foreach (var msg in messages)
+                {
+                    if (_color)
+                        System.Console.ForegroundColor = StaticState.LevelColors[msg.Level];
 
-                System.Console.WriteLine(_format(msg));
+                    System.Console.WriteLine(_format(msg));
+                }
             }
             finally
             {
@@ -49,5 +57,7 @@ internal class ConsoleLogHandler<TContext> : ILogHandler<TContext>
                     System.Console.ForegroundColor = currentColor;
             }
         }
+
+        return ValueTask.CompletedTask;
     }
 }

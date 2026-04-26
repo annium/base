@@ -50,6 +50,18 @@ internal class ConfigurationBuilder : IConfigurationBuilder
     }
 
     /// <summary>
+    /// Sources registered for deferred loading on the underlying container.
+    /// </summary>
+    public IReadOnlyList<IConfigurationSource> Sources => _container.Sources;
+
+    /// <summary>
+    /// Registers a deferred configuration source on the underlying container.
+    /// </summary>
+    /// <param name="source">Source to register</param>
+    /// <returns>The container for method chaining</returns>
+    public IConfigurationContainer AddSource(IConfigurationSource source) => _container.AddSource(source);
+
+    /// <summary>
     /// Adds configuration data to the container
     /// </summary>
     /// <param name="config">Configuration data to add</param>

@@ -31,7 +31,7 @@ public static class Result
     /// Creates a new empty result
     /// </summary>
     /// <returns>A new empty result</returns>
-    public static IResult New() => new Internal.Result();
+    public static IResult Create() => new Internal.Result();
 
     /// <summary>
     /// Creates a new result with the specified data
@@ -39,7 +39,7 @@ public static class Result
     /// <typeparam name="TD">The type of the data</typeparam>
     /// <param name="data">The data to associate with the result</param>
     /// <returns>A new result with the specified data</returns>
-    public static IResult<TD> New<TD>(TD data) => new Result<TD>(data);
+    public static IResult<TD> Create<TD>(TD data) => new Result<TD>(data);
 
     /// <summary>
     /// Creates a successful boolean result

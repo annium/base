@@ -53,7 +53,7 @@ internal class ResultFormatter : IMessagePackFormatter<IResult?>
 
         reader.Depth--;
 
-        var result = Result.New().Errors(plainErrors).Errors(labeledErrors);
+        var result = Result.Create().Errors(plainErrors).Errors(labeledErrors);
 
         return result;
     }

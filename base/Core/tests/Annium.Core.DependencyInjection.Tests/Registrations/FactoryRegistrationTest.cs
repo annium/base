@@ -8,6 +8,9 @@ namespace Annium.Core.DependencyInjection.Tests.Registrations;
 /// </summary>
 public class FactoryRegistrationTest : TestBase
 {
+    public FactoryRegistrationTest(ITestOutputHelper outputHelper)
+        : base(outputHelper) { }
+
     /// <summary>
     /// Verifies that factory registration as self works correctly
     /// </summary>

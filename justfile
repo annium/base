@@ -68,7 +68,7 @@ publish apiKey:
 
 docs-lint:
     @echo "=== $0 ==="
-    dotnet tool run doclint lint -w . -i '**/*.cs' -e '**/obj/**/*.cs'
+    dotnet tool run doclint lint -w . -i '**/*.cs' -e '**/obj/**/*.cs' -e '**/tests/**/*.cs'
 
 docs-clean:
     @echo "=== $0 ==="

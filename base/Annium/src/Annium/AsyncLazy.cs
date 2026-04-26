@@ -2,7 +2,6 @@ using System;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
-using Annium.Threading.Tasks;
 
 namespace Annium;
 
@@ -18,9 +17,20 @@ public sealed class AsyncLazy<T>
     public bool IsValueCreated => _isValueCreated;
 
     /// <summary>
-    /// Gets the value of the asynchronous operation.
+    /// Asynchronously gets the value, kicking off the underlying factory the first time it is
+    /// accessed. The cancellation token cancels the wait, not the underlying factory (which
+    /// <see cref="Lazy{T}"/> guarantees runs at most once).
     /// </summary>
-    public T Value => _instance.Value.Await();
+    /// <param name="ct">Cancellation token for the wait.</param>
+    /// <returns>A value task that completes with the lazy's value.</returns>
+    public ValueTask<T> GetValueAsync(CancellationToken ct = default)
+    {
+        var task = _instance.Value;
+        // task.Result on a completed task is non-blocking — analyzer is being conservative here.
+#pragma warning disable VSTHRD103
+        return task.IsCompleted ? new ValueTask<T>(task.Result) : new ValueTask<T>(task.WaitAsync(ct));
+#pragma warning restore VSTHRD103
+    }
 
     /// <summary>
     /// The underlying lazy task.

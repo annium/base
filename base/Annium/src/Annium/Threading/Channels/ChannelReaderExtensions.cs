@@ -42,31 +42,30 @@ public static class ChannelReaderExtensions
         var bridge = new LogBridge(typeof(ChannelReader<T>).FriendlyName(), logger);
         var cts = new CancellationTokenSource();
         var gate = new ManualResetEventSlim();
-        Task.Run(
-                async () =>
+        _ = Task.Run(
+            async () =>
+            {
+                try
                 {
-                    try
+                    while (await reader.WaitToReadAsync(cts.Token))
                     {
-                        while (await reader.WaitToReadAsync(cts.Token))
-                        {
-                            var data = await reader.ReadAsync(cts.Token);
-                            writer.Write(data);
-                        }
+                        var data = await reader.ReadAsync(cts.Token);
+                        writer.Write(data);
                     }
-                    catch (OperationCanceledException) { }
-                    catch (ChannelClosedException) { }
-                    catch (Exception e)
-                    {
-                        bridge.Error(e);
-                    }
-                    finally
-                    {
-                        gate.Set();
-                    }
-                },
-                CancellationToken.None
-            )
-            .GetAwaiter();
+                }
+                catch (OperationCanceledException) { }
+                catch (ChannelClosedException) { }
+                catch (Exception e)
+                {
+                    bridge.Error(e);
+                }
+                finally
+                {
+                    gate.Set();
+                }
+            },
+            CancellationToken.None
+        );
 
         return Disposable.Create(() =>
         {

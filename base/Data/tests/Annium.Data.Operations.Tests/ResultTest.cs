@@ -16,7 +16,7 @@ public class ResultTest
     public void Blank_HasNoErrors()
     {
         // arrange
-        var result = Result.New();
+        var result = Result.Create();
 
         // assert
         result.IsOk.IsTrue();
@@ -29,7 +29,7 @@ public class ResultTest
     public void Blank_WithData_IsCorrect()
     {
         // arrange
-        var result = Result.New(5);
+        var result = Result.Create(5);
 
         // assert
         result.IsOk.IsTrue();
@@ -43,7 +43,7 @@ public class ResultTest
     public void Clear_RemovesErrors()
     {
         // arrange
-        var result = Result.New().Error("plain").Error("label", "value");
+        var result = Result.Create().Error("plain").Error("label", "value");
 
         // act
         result.Clear();
@@ -59,7 +59,7 @@ public class ResultTest
     public void PlainError_IsAddedToPlainErrors()
     {
         // arrange
-        var result = Result.New();
+        var result = Result.Create();
 
         // act
         result.Error("plain");
@@ -77,7 +77,7 @@ public class ResultTest
     public void LabeledError_IsAddedToLabeledErrors()
     {
         // arrange
-        var result = Result.New();
+        var result = Result.Create();
 
         // act
         result.Error("label", "plain");
@@ -95,7 +95,7 @@ public class ResultTest
     public void PlainErrors_Params_IsAddedCorrectly()
     {
         // arrange
-        var result = Result.New();
+        var result = Result.Create();
 
         // act
         result.Errors("plain", "another", "another");
@@ -113,7 +113,7 @@ public class ResultTest
     public void PlainErrors_Collection_IsAddedCorrectly()
     {
         // arrange
-        var result = Result.New();
+        var result = Result.Create();
 
         // act
         result.Errors(new List<string> { "plain", "another", "another" });
@@ -131,7 +131,7 @@ public class ResultTest
     public void LabeledErrors_Params_IsAddedCorrectly()
     {
         // arrange
-        var result = Result.New();
+        var result = Result.Create();
 
         // act
         result.Errors(("label", new[] { "plain" }), ("other", new[] { "prev" }), ("other", new[] { "another" }));
@@ -150,7 +150,7 @@ public class ResultTest
     public void LabeledErrors_Collection_IsAddedCorrectly()
     {
         // arrange
-        var result = Result.New();
+        var result = Result.Create();
 
         // act
         result.Errors(
@@ -174,9 +174,9 @@ public class ResultTest
     public void Join_Params_IsDoneCorrectly()
     {
         // arrange
-        var result = Result.New().Error("own").Error("label", "mine");
-        var plain = Result.New().Errors("plain", "another");
-        var labeled = Result.New().Errors(("a", new[] { "va" }), ("b", new[] { "vb" }));
+        var result = Result.Create().Error("own").Error("label", "mine");
+        var plain = Result.Create().Errors("plain", "another");
+        var labeled = Result.Create().Errors(("a", new[] { "va" }), ("b", new[] { "vb" }));
 
         // act
         result.Join(plain, labeled);
@@ -200,9 +200,9 @@ public class ResultTest
     public void Join_Collection_IsDoneCorrectly()
     {
         // arrange
-        var result = Result.New().Error("own").Error("label", "mine");
-        var plain = Result.New().Errors("plain", "another");
-        var labeled = Result.New().Errors(("a", new[] { "va" }), ("b", new[] { "vb" }));
+        var result = Result.Create().Error("own").Error("label", "mine");
+        var plain = Result.Create().Errors("plain", "another");
+        var labeled = Result.Create().Errors(("a", new[] { "va" }), ("b", new[] { "vb" }));
 
         // act
         result.Join(new List<IResult> { plain, labeled });
@@ -226,7 +226,7 @@ public class ResultTest
     public void Result_Clone_ReturnsValidClone()
     {
         // arrange
-        var result = Result.New().Error("plain").Error("label", "value");
+        var result = Result.Create().Error("plain").Error("label", "value");
 
         // act
         var clone = result.Copy();
@@ -248,7 +248,7 @@ public class ResultTest
     public void Result_CloneWithData_ReturnsValidClone()
     {
         // arrange
-        var result = Result.New(10).Error("plain").Error("label", "value");
+        var result = Result.Create(10).Error("plain").Error("label", "value");
 
         // act
         var clone = result.Copy();
@@ -271,9 +271,9 @@ public class ResultTest
     public void JoinStatic_Params_IsDoneCorrectly()
     {
         // arrange
-        var result = Result.New().Error("own").Error("label", "mine");
-        var plain = Result.New().Errors("plain", "another");
-        var labeled = Result.New().Errors(("a", new[] { "va" }), ("b", new[] { "vb" }));
+        var result = Result.Create().Error("own").Error("label", "mine");
+        var plain = Result.Create().Errors("plain", "another");
+        var labeled = Result.Create().Errors(("a", new[] { "va" }), ("b", new[] { "vb" }));
 
         // act
         var output = Result.Join(result, plain, labeled);
@@ -297,9 +297,9 @@ public class ResultTest
     public void JoinStatic_Collection_IsDoneCorrectly()
     {
         // arrange
-        var result = Result.New().Error("own").Error("label", "mine");
-        var plain = Result.New().Errors("plain", "another");
-        var labeled = Result.New().Errors(("a", new[] { "va" }), ("b", new[] { "vb" }));
+        var result = Result.Create().Error("own").Error("label", "mine");
+        var plain = Result.Create().Errors("plain", "another");
+        var labeled = Result.Create().Errors(("a", new[] { "va" }), ("b", new[] { "vb" }));
 
         // act
         var output = Result.Join(new List<IResult> { result, plain, labeled });

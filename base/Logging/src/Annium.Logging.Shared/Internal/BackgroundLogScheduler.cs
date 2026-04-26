@@ -59,9 +59,16 @@ internal class BackgroundLogScheduler<TContext> : ILogScheduler<TContext>, ILogS
     /// </summary>
     private readonly IDisposable _subscription;
 
+    /// <summary>
+    /// Completion source signalled when the sink pipeline (Buffer → DoSequentialAsync → handler)
+    /// has fully drained. <see cref="DisposeAsync"/> awaits this before disposing the subscription,
+    /// so a slow sink never has queued batches dropped on dispose.
+    /// </summary>
+    private readonly TaskCompletionSource _pipelineDrained = new();
+
     public BackgroundLogScheduler(
         Func<LogMessage<TContext>, bool> filter,
-        IAsyncLogHandler<TContext> handler,
+        ILogHandler<TContext> handler,
         LogRouteConfiguration configuration
     )
     {
@@ -96,8 +103,8 @@ internal class BackgroundLogScheduler<TContext> : ILogScheduler<TContext>, ILogS
         _subscription = _observable
             .Buffer(configuration.BufferTime, configuration.BufferCount)
             .Where(x => x.Count > 0)
-            .DoSequentialAsync(async x => await handler.HandleAsync(x.AsReadOnly()))
-            .Subscribe();
+            .DoSequentialAsync(async x => await handler.HandleAsync(x.AsReadOnly(), _observableCts.Token))
+            .Subscribe(_ => { }, () => _pipelineDrained.TrySetResult());
     }
 
     /// <summary>
@@ -156,7 +163,9 @@ internal class BackgroundLogScheduler<TContext> : ILogScheduler<TContext>, ILogS
     }
 
     /// <summary>
-    /// Disposes the scheduler and completes any remaining log processing
+    /// Disposes the scheduler and completes any remaining log processing — canonical order
+    /// per §8.2.17: stop accepting writes → drain channel → stop observable → await pipeline
+    /// drain (so slow sinks finish their queued batches) → dispose subscription.
     /// </summary>
     /// <returns>A task that represents the disposal operation</returns>
     public async ValueTask DisposeAsync()
@@ -174,6 +183,10 @@ internal class BackgroundLogScheduler<TContext> : ILogScheduler<TContext>, ILogS
         await _observableCts.CancelAsync();
         this.Trace("await observable");
         await _observable.WhenCompletedAsync(Logger);
+        this.Trace("await pipeline drain");
+#pragma warning disable VSTHRD003
+        await _pipelineDrained.Task;
+#pragma warning restore VSTHRD003
         this.Trace("dispose subscription");
         _subscription.Dispose();
         this.Trace("done");

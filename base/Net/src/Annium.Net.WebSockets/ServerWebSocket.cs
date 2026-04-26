@@ -80,7 +80,23 @@ public class ServerWebSocket : IServerWebSocket
         this.Trace<string>("paired with {socket}", _socket.GetFullId());
 
         this.Trace("subscribe to IsClosed");
-        _socket.IsClosed.ContinueWith(HandleClosed, CancellationToken.None).GetAwaiter();
+#pragma warning disable VSTHRD003
+        _ = _socket.IsClosed.ContinueWith(
+            async task =>
+            {
+                try
+                {
+                    await HandleClosedAsync(task);
+                }
+                catch (OperationCanceledException) { }
+                catch (Exception ex)
+                {
+                    this.Error(ex, "HandleClosed failed");
+                }
+            },
+            CancellationToken.None
+        );
+#pragma warning restore VSTHRD003
 
         this.Trace("init monitor");
         _connectionMonitor =
@@ -104,7 +120,11 @@ public class ServerWebSocket : IServerWebSocket
         : this(nativeSocket, ServerWebSocketOptions.Default, logger, ct) { }
 
     /// <summary>
-    /// Disconnects the WebSocket server from the client
+    /// Disconnects the WebSocket server from the client. The state transition and monitor stop
+    /// happen synchronously; the underlying managed-socket teardown and <see cref="OnDisconnected"/>
+    /// event fire on a background task so that the event is raised only after the teardown
+    /// completes. Callers that need to observe completion can subscribe to
+    /// <see cref="OnDisconnected"/> or use the <c>WhenDisconnectedAsync</c> extension.
     /// </summary>
     public void Disconnect()
     {
@@ -125,10 +145,21 @@ public class ServerWebSocket : IServerWebSocket
         _connectionMonitor.Stop();
 
         this.Trace("disconnect managed socket");
-        _socket.DisconnectAsync().GetAwaiter();
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await _socket.DisconnectAsync();
 
-        this.Trace("fire disconnected");
-        OnDisconnected(WebSocketCloseStatus.ClosedLocal);
+                this.Trace("fire disconnected");
+                OnDisconnected(WebSocketCloseStatus.ClosedLocal);
+            }
+            catch (OperationCanceledException) { }
+            catch (Exception ex)
+            {
+                this.Error(ex, "Disconnect background teardown failed");
+            }
+        });
 
         this.Trace("done");
     }
@@ -158,10 +189,11 @@ public class ServerWebSocket : IServerWebSocket
     }
 
     /// <summary>
-    /// Handles the completion of the WebSocket closure and manages cleanup
+    /// Handles the completion of the WebSocket closure and manages cleanup.
     /// </summary>
     /// <param name="task">The task representing the closure operation with its result</param>
-    private void HandleClosed(Task<WebSocketCloseResult> task)
+    /// <returns>A task that completes after subscribers have been notified.</returns>
+    private async Task HandleClosedAsync(Task<WebSocketCloseResult> task)
     {
         this.Trace("start");
 
@@ -182,9 +214,9 @@ public class ServerWebSocket : IServerWebSocket
         this.Trace("stop monitor");
         _connectionMonitor.Stop();
 
-#pragma warning disable VSTHRD002
-        var result = task.Result;
-#pragma warning restore VSTHRD002
+#pragma warning disable VSTHRD003
+        var result = await task;
+#pragma warning restore VSTHRD003
         if (result.Exception is not null)
         {
             this.Trace("fire error: {exception}", result.Exception);

@@ -84,6 +84,20 @@ public class ClientSocket : IClientSocket
     private Status _status = Status.Disconnected;
 
     /// <summary>
+    /// True when the socket has finished connecting and not yet started disconnecting. Goes
+    /// false synchronously inside <see cref="Disconnect"/> (under <c>_locker</c>) — handlers
+    /// firing later from the background teardown observe the disconnected state.
+    /// </summary>
+    public bool IsConnected
+    {
+        get
+        {
+            lock (_locker)
+                return _status == Status.Connected;
+        }
+    }
+
+    /// <summary>
     /// Initializes a new instance of the ClientSocket class with specified options
     /// </summary>
     /// <param name="options">Configuration options for the socket</param>
@@ -147,7 +161,11 @@ public class ClientSocket : IClientSocket
     }
 
     /// <summary>
-    /// Disconnects from the remote endpoint
+    /// Disconnects from the remote endpoint. The state transition and monitor stop happen
+    /// synchronously; the underlying managed-socket teardown and <see cref="OnDisconnected"/>
+    /// event fire on a background task so that the event is raised only after the teardown
+    /// completes. Callers that need to observe completion can subscribe to
+    /// <see cref="OnDisconnected"/> or use the <c>WhenDisconnectedAsync</c> extension.
     /// </summary>
     public void Disconnect()
     {
@@ -162,22 +180,37 @@ public class ClientSocket : IClientSocket
             }
 
             SetStatus(Status.Disconnected);
-            _connectionCts.Cancel();
-            _connectionCts.Dispose();
+            var oldCts = _connectionCts;
+            // replace with a fresh cancelled CTS BEFORE disposing the old one; keeps the
+            // invariant that _connectionCts never points to a disposed instance, so a
+            // racing ConnectPrivate (or anyone reading _connectionCts.Token) sees a safe
+            // already-cancelled source rather than ObjectDisposedException
+            var replacement = new CancellationTokenSource();
+            replacement.Cancel();
+            _connectionCts = replacement;
+            oldCts.Cancel();
+            oldCts.Dispose();
         }
 
         this.Trace("stop monitor");
         _connectionMonitor.Stop();
 
         this.Trace("disconnect managed socket");
-        _socket
-            .DisconnectAsync()
-            .ContinueWith(_ =>
+        _ = Task.Run(async () =>
+        {
+            try
             {
+                await _socket.DisconnectAsync();
+
                 this.Trace("fire disconnected");
                 OnDisconnected(SocketCloseStatus.ClosedLocal);
-            })
-            .GetAwaiter();
+            }
+            catch (OperationCanceledException) { }
+            catch (Exception ex)
+            {
+                this.Error(ex, "Disconnect background teardown failed");
+            }
+        });
 
         this.Trace("done");
     }
@@ -195,7 +228,7 @@ public class ClientSocket : IClientSocket
     }
 
     /// <summary>
-    /// Disposes the socket and releases all resources
+    /// Disposes the socket by triggering <see cref="Disconnect"/>.
     /// </summary>
     public void Dispose()
     {
@@ -224,15 +257,21 @@ public class ClientSocket : IClientSocket
         OnDisconnected(result.Status);
 
         this.Trace("schedule connection in {reconnectDelay}ms", _reconnectDelay);
-        Task.Delay(_reconnectDelay)
-            .ContinueWith(_ =>
+        _ = Task.Run(async () =>
+        {
+            try
             {
+                await Task.Delay(_reconnectDelay);
                 this.Trace("trigger connect");
                 ConnectPrivate(config);
-
                 this.Trace("done");
-            })
-            .GetAwaiter();
+            }
+            catch (OperationCanceledException) { }
+            catch (Exception ex)
+            {
+                this.Error(ex, "scheduled reconnect failed");
+            }
+        });
     }
 
     /// <summary>
@@ -243,6 +282,7 @@ public class ClientSocket : IClientSocket
     {
         this.Trace("start");
 
+        CancellationTokenSource cts;
         lock (_locker)
         {
             if (_status is Status.Disconnected)
@@ -250,20 +290,34 @@ public class ClientSocket : IClientSocket
                 this.Trace("skip - already {status}", _status);
                 return;
             }
+
+            Config = config;
+            // rotate _connectionCts under lock so a racing Disconnect can't double-dispose
+            // the CTS between our Interlocked.Exchange and Dispose
+            cts = new CancellationTokenSource(_connectTimeout);
+            var oldCts = _connectionCts;
+            _connectionCts = cts;
+            oldCts.Dispose();
         }
 
-        Config = config;
         this.Trace<IPEndPoint, string>(
             "connect to {endpoint} ({ssl})",
             config.Endpoint,
             config.AuthOptions is not null ? "ssl" : "plaintext"
         );
-        var cts = new CancellationTokenSource(_connectTimeout);
-        _connectionCts = cts;
-        _socket
-            .ConnectAsync(config.Endpoint, config.AuthOptions, cts.Token)
-            .ContinueWith(HandleConnected, config, CancellationToken.None)
-            .GetAwaiter();
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                var task = _socket.ConnectAsync(config.Endpoint, config.AuthOptions, cts.Token);
+                await task.ContinueWith(HandleConnected, config, CancellationToken.None);
+            }
+            catch (OperationCanceledException) { }
+            catch (Exception ex)
+            {
+                this.Error(ex, "ConnectPrivate background connect failed");
+            }
+        });
 
         this.Trace("done");
     }
@@ -307,7 +361,21 @@ public class ClientSocket : IClientSocket
 #pragma warning restore VSTHRD002
 
         this.Trace("subscribe to IsClosed");
-        _socket.IsClosed.ContinueWith(HandleClosed, CancellationToken.None).GetAwaiter();
+        _ = _socket.IsClosed.ContinueWith(
+            task =>
+            {
+                try
+                {
+                    HandleClosed(task);
+                }
+                catch (OperationCanceledException) { }
+                catch (Exception ex)
+                {
+                    this.Error(ex, "HandleClosed failed");
+                }
+            },
+            CancellationToken.None
+        );
 
         this.Trace("start monitor");
         _connectionMonitor.Start();
@@ -319,7 +387,9 @@ public class ClientSocket : IClientSocket
     }
 
     /// <summary>
-    /// Handles when the connection monitor detects a lost connection
+    /// Handles when the connection monitor detects a lost connection. Kicks off the managed
+    /// socket disconnect in fire-and-forget mode because the monitor's event is synchronous;
+    /// exceptions surface through <see cref="Logger"/>.
     /// </summary>
     private void HandleConnectionLost()
     {
@@ -337,7 +407,18 @@ public class ClientSocket : IClientSocket
         }
 
         this.Trace("disconnect managed socket");
-        _socket.DisconnectAsync().GetAwaiter();
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await _socket.DisconnectAsync();
+            }
+            catch (OperationCanceledException) { }
+            catch (Exception ex)
+            {
+                this.Error(ex, "HandleConnectionLost disconnect failed");
+            }
+        });
 
         this.Trace("done");
     }
