@@ -27,6 +27,7 @@ public class HttpStatusCodeProfile : Profile
         {
             HttpStatusCode.OK => OperationStatus.Ok,
             HttpStatusCode.BadRequest => OperationStatus.BadRequest,
+            HttpStatusCode.Unauthorized => OperationStatus.Unauthorized,
             HttpStatusCode.Forbidden => OperationStatus.Forbidden,
             HttpStatusCode.NotFound => OperationStatus.NotFound,
             HttpStatusCode.Conflict => OperationStatus.Conflict,

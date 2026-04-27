@@ -38,13 +38,7 @@ public static class ServiceProviderExtensions
     public static IServiceProvider UseLogging(
         this IServiceProvider provider,
         Action<LogRoute<DefaultLogContext>> configure
-    )
-    {
-        var routes = new List<LogRoute<DefaultLogContext>>();
-        configure(new LogRoute<DefaultLogContext>(provider, routes.Add));
-
-        return provider.UseLoggingBase(routes);
-    }
+    ) => provider.UseLogging<DefaultLogContext>(configure);
 
     /// <summary>
     /// Configures logging for a specific context type with route and service provider access
@@ -57,13 +51,7 @@ public static class ServiceProviderExtensions
         this IServiceProvider provider,
         Action<LogRoute<TContext>, IServiceProvider> configure
     )
-        where TContext : class
-    {
-        var routes = new List<LogRoute<TContext>>();
-        configure(new LogRoute<TContext>(provider, routes.Add), provider);
-
-        return provider.UseLoggingBase(routes);
-    }
+        where TContext : class => provider.UseLogging<TContext>(route => configure(route, provider));
 
     /// <summary>
     /// Configures logging using the default log context with route and service provider access
@@ -74,13 +62,7 @@ public static class ServiceProviderExtensions
     public static IServiceProvider UseLogging(
         this IServiceProvider provider,
         Action<LogRoute<DefaultLogContext>, IServiceProvider> configure
-    )
-    {
-        var routes = new List<LogRoute<DefaultLogContext>>();
-        configure(new LogRoute<DefaultLogContext>(provider, routes.Add), provider);
-
-        return provider.UseLoggingBase(routes);
-    }
+    ) => provider.UseLogging<DefaultLogContext>((route, sp) => configure(route, sp));
 
     /// <summary>
     /// Internal method to configure logging base functionality with the provided routes
@@ -99,10 +81,7 @@ public static class ServiceProviderExtensions
 
         foreach (var route in routes)
         {
-            if (route.Handler is null)
-                continue;
-
-            var handler = route.Handler;
+            var handler = route.Handler.NotNull();
             var cfg = route.Configuration.NotNull();
 
             // Default selection: BufferingLogHandler-derived → background, everything else → immediate.

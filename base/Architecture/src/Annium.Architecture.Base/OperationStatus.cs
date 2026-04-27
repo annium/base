@@ -14,4 +14,5 @@ public enum OperationStatus
     NotFound,
     Ok,
     UncaughtError,
+    Unauthorized,
 }

@@ -37,6 +37,13 @@ public class LogRoute<TContext>
     internal LogRouteSchedulerKind? SchedulerOverride { get; set; }
 
     /// <summary>
+    /// Tracks whether <see cref="Use(ILogHandler{TContext}, LogRouteConfiguration?)"/>
+    /// or its factory overload has already been called on this instance. Each
+    /// <see cref="LogRoute{TContext}"/> may be configured (and registered) at most once.
+    /// </summary>
+    private bool _isConfigured;
+
+    /// <summary>
     /// The service provider for dependency resolution
     /// </summary>
     private readonly IServiceProvider _sp;
@@ -50,8 +57,6 @@ public class LogRoute<TContext>
     {
         _sp = sp;
         _registerRoute = registerRoute;
-
-        registerRoute(this);
     }
 
     /// <summary>
@@ -69,33 +74,49 @@ public class LogRoute<TContext>
         new(_sp, _registerRoute) { Filter = filter };
 
     /// <summary>
-    /// Configures the route to use the given log handler instance.
+    /// Configures the route to use the given log handler instance and registers it
+    /// into the parent provider's routes list. Must be called exactly once per route
+    /// instance — a second call throws <see cref="InvalidOperationException"/>.
     /// Scheduler is auto-picked from the handler type unless overridden via the returned builder.
     /// </summary>
     /// <param name="handler">The handler instance to use</param>
     /// <param name="configuration">Optional route configuration; defaults to a new <see cref="LogRouteConfiguration"/></param>
     /// <returns>A builder exposing scheduler-override fluent hooks</returns>
+    /// <exception cref="InvalidOperationException">Thrown when <c>Use</c> has already been called on this instance</exception>
     public LogRouteBuilder<TContext> Use(ILogHandler<TContext> handler, LogRouteConfiguration? configuration = null)
     {
+        if (_isConfigured)
+            throw new InvalidOperationException("LogRoute is already configured");
+
         Handler = handler;
         Configuration = configuration ?? new LogRouteConfiguration();
+        _isConfigured = true;
+        _registerRoute(this);
         return new LogRouteBuilder<TContext>(this);
     }
 
     /// <summary>
-    /// Configures the route to use a log handler created by a factory function.
+    /// Configures the route to use a log handler created by a factory function and registers
+    /// it into the parent provider's routes list. Must be called exactly once per route
+    /// instance — a second call throws <see cref="InvalidOperationException"/>.
     /// Scheduler is auto-picked from the handler type unless overridden via the returned builder.
     /// </summary>
     /// <param name="factory">The factory function to create the handler</param>
     /// <param name="configuration">Optional route configuration; defaults to a new <see cref="LogRouteConfiguration"/></param>
     /// <returns>A builder exposing scheduler-override fluent hooks</returns>
+    /// <exception cref="InvalidOperationException">Thrown when <c>Use</c> has already been called on this instance</exception>
     public LogRouteBuilder<TContext> Use(
         Func<IServiceProvider, ILogHandler<TContext>> factory,
         LogRouteConfiguration? configuration = null
     )
     {
+        if (_isConfigured)
+            throw new InvalidOperationException("LogRoute is already configured");
+
         Handler = factory(_sp);
         Configuration = configuration ?? new LogRouteConfiguration();
+        _isConfigured = true;
+        _registerRoute(this);
         return new LogRouteBuilder<TContext>(this);
     }
 }

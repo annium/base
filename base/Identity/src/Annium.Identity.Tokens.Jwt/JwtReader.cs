@@ -29,26 +29,41 @@ public sealed class JwtReader : ITokenReader<ClaimsPrincipal>
     }
 
     /// <summary>
-    /// Reads and validates the token, mapping any failure to a <see cref="TokenReadStatus"/>.
-    /// Builds a <see cref="ClaimsPrincipal"/> from the parsed token's claims on success.
+    /// Reads and validates the token using the configured options without per-call overrides.
+    /// Thin call-through to <see cref="Read(string, JwtReadOverrides?)"/> with null overrides.
     /// </summary>
     /// <param name="token">String-encoded JWT to read.</param>
     /// <returns>The read result.</returns>
-    public TokenReadResult<ClaimsPrincipal> Read(string token)
+    public TokenReadResult<ClaimsPrincipal> Read(string token) => Read(token, null);
+
+    /// <summary>
+    /// Reads and validates the token, mapping any failure to a <see cref="TokenReadStatus"/>.
+    /// Builds a <see cref="ClaimsPrincipal"/> from the parsed token's claims on success.
+    /// Optional <paramref name="overrides"/> let the caller force audience or lifetime
+    /// validation on/off for this call only — null fields fall back to <see cref="JwtTokensOptions"/>.
+    /// </summary>
+    /// <param name="token">String-encoded JWT to read.</param>
+    /// <param name="overrides">Optional per-call validation toggles; null preserves the no-override path.</param>
+    /// <returns>The read result.</returns>
+    public TokenReadResult<ClaimsPrincipal> Read(string token, JwtReadOverrides? overrides)
     {
         if (!_handler.CanReadToken(token))
             return new TokenReadResult<ClaimsPrincipal>(TokenReadStatus.Malformed, null, "Token is not valid JWT");
 
-        var validationParameters = BuildValidationParameters();
+        var validationParameters = BuildValidationParameters(overrides);
 
         try
         {
             _handler.ValidateToken(token, validationParameters, out var securityToken);
             var jwt = (JwtSecurityToken)securityToken;
 
-            // When ValidateLifetime is false (ExpirationWindow == null), MS skips the lifetime
-            // check entirely; this code enforces ValidFrom/ValidTo with the configured time.
-            if (!validationParameters.ValidateLifetime)
+            // Manual ValidFrom/ValidTo enforcement runs when MS lifetime check is off
+            // AND the caller hasn't explicitly disabled lifetime validation. The latter
+            // matters for refresh-token validation where the caller wants to accept an
+            // expired token.
+            var manualLifetimeCheck = !validationParameters.ValidateLifetime && overrides?.ValidateLifetime != false;
+
+            if (manualLifetimeCheck)
             {
                 var nowUtc = _time.Now.ToDateTimeUtc();
                 if (jwt.ValidFrom > nowUtc)
@@ -74,10 +89,17 @@ public sealed class JwtReader : ITokenReader<ClaimsPrincipal>
     }
 
     /// <summary>
-    /// Builds <see cref="TokenValidationParameters"/> from the configured options.
+    /// Builds <see cref="TokenValidationParameters"/> from the configured options, applying
+    /// optional per-call overrides on top.
     /// </summary>
+    /// <param name="overrides">Optional per-call validation toggles; null preserves the no-override path.</param>
     /// <returns>The validation parameters.</returns>
-    private TokenValidationParameters BuildValidationParameters()
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when <paramref name="overrides"/> forces <c>ValidateAudience: true</c> but
+    /// <see cref="JwtTokensOptions.Audience"/> is not configured, or forces
+    /// <c>ValidateLifetime: true</c> but <see cref="JwtTokensOptions.ExpirationWindow"/> is null.
+    /// </exception>
+    private TokenValidationParameters BuildValidationParameters(JwtReadOverrides? overrides)
     {
         var parameters = new TokenValidationParameters
         {
@@ -88,8 +110,13 @@ public sealed class JwtReader : ITokenReader<ClaimsPrincipal>
             ValidateIssuerSigningKey = true,
         };
 
-        if (!string.IsNullOrWhiteSpace(_options.Audience))
+        var validateAudience = overrides?.ValidateAudience ?? !string.IsNullOrWhiteSpace(_options.Audience);
+        if (validateAudience)
         {
+            if (string.IsNullOrWhiteSpace(_options.Audience))
+                throw new InvalidOperationException(
+                    "Cannot validate audience: JwtTokensOptions.Audience is not configured"
+                );
             parameters.ValidateAudience = true;
             parameters.ValidAudience = _options.Audience;
         }
@@ -98,8 +125,13 @@ public sealed class JwtReader : ITokenReader<ClaimsPrincipal>
             parameters.ValidateAudience = false;
         }
 
-        if (_options.ExpirationWindow.HasValue)
+        var validateLifetime = overrides?.ValidateLifetime ?? _options.ExpirationWindow.HasValue;
+        if (validateLifetime)
         {
+            if (!_options.ExpirationWindow.HasValue)
+                throw new InvalidOperationException(
+                    "Cannot validate lifetime: JwtTokensOptions.ExpirationWindow is not configured"
+                );
             parameters.ClockSkew = _options.ExpirationWindow.Value.ToTimeSpan();
             parameters.RequireExpirationTime = true;
             parameters.ValidateLifetime = true;

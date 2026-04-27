@@ -1,8 +1,10 @@
+using System.Threading.Tasks;
 using Annium.Core.DependencyInjection;
 using Annium.Core.Runtime;
 using Annium.Logging.InMemory;
 using Annium.Logging.Shared;
 using Annium.Testing;
+using Annium.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Xunit;
@@ -55,6 +57,53 @@ public class LoggingBridgeTests
         logger.Log(MicrosoftLogLevel.Information, "should be dropped");
 
         sink.Logs.Count.Is(0);
+    }
+
+    /// <summary>
+    /// Per Microsoft.Extensions.Logging convention, <see cref="MicrosoftLogLevel.None"/>
+    /// means "no log". The bridge must report it as disabled directly, even with the
+    /// most permissive (Trace-or-above) route filter — without consulting the sentry.
+    /// </summary>
+    [Fact]
+    public void IsEnabled_None_ReturnsFalseWithoutSentry()
+    {
+        var (logger, _) = BuildBridge(filterMinLevel: AnniumLogLevel.Trace);
+
+        logger.IsEnabled(MicrosoftLogLevel.None).IsFalse();
+    }
+
+    /// <summary>
+    /// Per Microsoft.Extensions.Logging convention, <see cref="MicrosoftLogLevel.None"/>
+    /// is a sentinel that should never produce a log entry. Even with the most permissive
+    /// (Trace-or-above) route filter, calls at <c>None</c> level must be a no-op and never
+    /// reach the in-memory sink.
+    /// </summary>
+    [Fact]
+    public void Log_None_DoesNotReachSink()
+    {
+        var (logger, sink) = BuildBridge(filterMinLevel: AnniumLogLevel.Trace);
+
+        logger.Log(MicrosoftLogLevel.None, "should be dropped");
+
+        sink.Logs.Count.Is(0);
+    }
+
+    /// <summary>
+    /// Positive dispatch: with a Trace-or-above route filter, an MS-Information log call
+    /// must reach the in-memory sink. Confirms <see cref="LoggingBridge.Log{TState}"/>
+    /// actually invokes <c>_sentryBridge.Register(...)</c> on the non-short-circuit path —
+    /// guards against silent regressions where the early-return inadvertently captures a
+    /// non-<c>None</c> level.
+    /// </summary>
+    [Fact]
+    public async Task Log_AboveFilterLevel_ReachesInMemorySink()
+    {
+        var (logger, sink) = BuildBridge(filterMinLevel: AnniumLogLevel.Trace);
+
+        logger.LogInformation("should be delivered");
+
+        await Wait.UntilAsync(() => sink.Logs.Count == 1);
+        sink.Logs.At(0).Message.Is("should be delivered");
     }
 
     /// <summary>
