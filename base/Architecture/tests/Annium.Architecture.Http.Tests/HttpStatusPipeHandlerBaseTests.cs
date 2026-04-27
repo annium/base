@@ -28,6 +28,13 @@ public class HttpStatusPipeHandlerBaseTests
         Wrap.It(() => new TestPipeHandler().Invoke(OperationStatus.BadRequest)).Throws<ValidationException>();
     }
 
+    /// <summary>Unauthorized → UnauthorizedException (HTTP 401).</summary>
+    [Fact]
+    public void HandleStatus_Unauthorized_ThrowsUnauthorizedException()
+    {
+        Wrap.It(() => new TestPipeHandler().Invoke(OperationStatus.Unauthorized)).Throws<UnauthorizedException>();
+    }
+
     /// <summary>Forbidden → ForbiddenException.</summary>
     [Fact]
     public void HandleStatus_Forbidden_ThrowsForbiddenException()

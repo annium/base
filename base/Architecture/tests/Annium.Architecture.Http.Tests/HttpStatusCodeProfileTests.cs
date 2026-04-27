@@ -29,6 +29,11 @@ public class HttpStatusCodeProfileTests : TestBase
     public void Map_BadGateway_NetworkError() =>
         Mapper().Map<OperationStatus>(HttpStatusCode.BadGateway).Is(OperationStatus.NetworkError);
 
+    /// <summary>Unauthorized → Unauthorized.</summary>
+    [Fact]
+    public void Map_Unauthorized_ReturnsUnauthorized() =>
+        Mapper().Map<OperationStatus>(HttpStatusCode.Unauthorized).Is(OperationStatus.Unauthorized);
+
     /// <summary>ServiceUnavailable → Aborted.</summary>
     [Fact]
     public void Map_ServiceUnavailable_Aborted() =>

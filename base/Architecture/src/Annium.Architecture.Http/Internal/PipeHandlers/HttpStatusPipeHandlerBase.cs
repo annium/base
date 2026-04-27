@@ -55,6 +55,7 @@ internal abstract class HttpStatusPipeHandlerBase<TRequest, TResponseIn, TRespon
         {
             OperationStatus.Ok => null,
             OperationStatus.BadRequest => new ValidationException(result),
+            OperationStatus.Unauthorized => new UnauthorizedException(result),
             OperationStatus.Forbidden => new ForbiddenException(result),
             OperationStatus.NotFound => new NotFoundException(result),
             OperationStatus.Conflict => new ConflictException(result),
