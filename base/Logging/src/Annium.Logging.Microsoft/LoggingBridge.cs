@@ -21,6 +21,11 @@ internal class LoggingBridge : IMicrosoftLogger
     /// </summary>
     private readonly string _source;
 
+    /// <summary>
+    /// Initializes a new instance of <see cref="LoggingBridge"/>.
+    /// </summary>
+    /// <param name="sentryBridge">The Annium log sentry bridge to forward log records to.</param>
+    /// <param name="source">The source identifier attached to every dispatched log record.</param>
     public LoggingBridge(ILogSentryBridge sentryBridge, string source)
     {
         _sentryBridge = sentryBridge;
@@ -38,16 +43,24 @@ internal class LoggingBridge : IMicrosoftLogger
 
     /// <summary>
     /// Checks if the given logLevel is enabled by consulting the sentry's level gate, which
-    /// evaluates the configured route filters. Returns false when no route would accept a
-    /// message at this level — letting Microsoft.Extensions.Logging short-circuit log
-    /// construction.
+    /// evaluates the configured route filters. Returns false directly for
+    /// <see cref="MicrosoftLogLevel.None"/> per Microsoft.Extensions.Logging convention
+    /// (None means "no log"). Returns false when no route would accept a message at this level —
+    /// letting Microsoft.Extensions.Logging short-circuit log construction.
     /// </summary>
     /// <param name="logLevel">Level to be checked</param>
-    /// <returns>True if any registered route accepts this level</returns>
-    public bool IsEnabled(MicrosoftLogLevel logLevel) => _sentryBridge.IsLevelEnabled(Map(logLevel));
+    /// <returns>True if any registered route accepts this level; false for <see cref="MicrosoftLogLevel.None"/></returns>
+    public bool IsEnabled(MicrosoftLogLevel logLevel)
+    {
+        if (logLevel == MicrosoftLogLevel.None)
+            return false;
+        return _sentryBridge.IsLevelEnabled(Map(logLevel));
+    }
 
     /// <summary>
-    /// Writes a log entry
+    /// Writes a log entry. Returns immediately without dispatching to the sentry when
+    /// <paramref name="logLevel"/> is <see cref="MicrosoftLogLevel.None"/>, per
+    /// Microsoft.Extensions.Logging convention (None means "no log").
     /// </summary>
     /// <typeparam name="TState">The type of the object to be written</typeparam>
     /// <param name="logLevel">Entry will be written on this level</param>
@@ -63,6 +76,9 @@ internal class LoggingBridge : IMicrosoftLogger
         Func<TState, Exception?, string> formatter
     )
     {
+        if (logLevel == MicrosoftLogLevel.None)
+            return;
+
         _sentryBridge.Register(
             _source,
             string.Empty,
@@ -72,7 +88,7 @@ internal class LoggingBridge : IMicrosoftLogger
             Map(logLevel),
             formatter(state, exception),
             exception,
-            Array.Empty<object>()
+            Array.Empty<object?>()
         );
     }
 
@@ -81,23 +97,15 @@ internal class LoggingBridge : IMicrosoftLogger
     /// </summary>
     /// <param name="level">The Microsoft log level to map</param>
     /// <returns>The corresponding Annium log level</returns>
-    private LogLevel Map(MicrosoftLogLevel level)
-    {
-        switch (level)
+    private static LogLevel Map(MicrosoftLogLevel level) =>
+        level switch
         {
-            case MicrosoftLogLevel.Trace:
-                return LogLevel.Trace;
-            case MicrosoftLogLevel.Debug:
-                return LogLevel.Debug;
-            case MicrosoftLogLevel.Information:
-                return LogLevel.Info;
-            case MicrosoftLogLevel.Warning:
-                return LogLevel.Warn;
-            case MicrosoftLogLevel.Error:
-            case MicrosoftLogLevel.Critical:
-                return LogLevel.Error;
-            default:
-                return LogLevel.None;
-        }
-    }
+            MicrosoftLogLevel.Trace => LogLevel.Trace,
+            MicrosoftLogLevel.Debug => LogLevel.Debug,
+            MicrosoftLogLevel.Information => LogLevel.Info,
+            MicrosoftLogLevel.Warning => LogLevel.Warn,
+            MicrosoftLogLevel.Error => LogLevel.Error,
+            MicrosoftLogLevel.Critical => LogLevel.Error,
+            _ => LogLevel.None,
+        };
 }

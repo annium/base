@@ -72,10 +72,10 @@ internal class BackgroundLogScheduler<TContext> : ILogScheduler<TContext>, ILogS
         LogRouteConfiguration configuration
     )
     {
-        if (configuration.BufferTime < TimeSpan.Zero)
+        if (configuration.BufferTime <= TimeSpan.Zero)
             throw new ArgumentOutOfRangeException(
                 nameof(configuration.BufferTime),
-                "Buffer time is expected to be non-zero"
+                "Buffer time is expected to be positive"
             );
 
         if (configuration.BufferCount <= 0)
@@ -149,13 +149,8 @@ internal class BackgroundLogScheduler<TContext> : ILogScheduler<TContext>, ILogS
 
         // shutdown mode - handle only left tasks
         this.Trace("handle {count} messages left", Count);
-        while (true)
-        {
-            if (_messageReader.TryRead(out var message))
-                ctx.OnNext(message);
-            else
-                break;
-        }
+        while (_messageReader.TryRead(out var message))
+            ctx.OnNext(message);
 
         this.Trace("done");
 

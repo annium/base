@@ -35,7 +35,7 @@ public class LoggerTests : TestBase
                 route.UseFile(
                     new FileLoggingConfiguration<DefaultLogContext>
                     {
-                        BufferTime = TimeSpan.Zero,
+                        BufferTime = TimeSpan.FromMilliseconds(10),
                         BufferCount = 1,
                         GetFile = _ => _logFile,
                     }

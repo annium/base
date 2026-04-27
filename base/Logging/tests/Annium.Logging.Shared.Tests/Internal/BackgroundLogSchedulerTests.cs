@@ -51,6 +51,32 @@ public class BackgroundLogSchedulerTests
     }
 
     /// <summary>
+    /// <see cref="LogRouteConfiguration.BufferTime"/> equal to <see cref="TimeSpan.Zero"/>
+    /// is degenerate (buffer-by-count-only is invalid). The constructor must reject it.
+    /// </summary>
+    [Fact]
+    public void Ctor_BufferTimeZero_Throws()
+    {
+        var config = new LogRouteConfiguration { BufferTime = TimeSpan.Zero, BufferCount = 1 };
+
+        Wrap.It(() => new BackgroundLogScheduler<DefaultLogContext>(_ => true, new NoOpSink(), config))
+            .Throws<ArgumentOutOfRangeException>();
+    }
+
+    /// <summary>
+    /// Negative <see cref="LogRouteConfiguration.BufferTime"/> remains invalid after the
+    /// guard tightening (originally <c>&lt; Zero</c>; now <c>&lt;= Zero</c>).
+    /// </summary>
+    [Fact]
+    public void Ctor_BufferTimeNegative_Throws()
+    {
+        var config = new LogRouteConfiguration { BufferTime = TimeSpan.FromMilliseconds(-1), BufferCount = 1 };
+
+        Wrap.It(() => new BackgroundLogScheduler<DefaultLogContext>(_ => true, new NoOpSink(), config))
+            .Throws<ArgumentOutOfRangeException>();
+    }
+
+    /// <summary>
     /// Constructs a synthetic log message for scheduler plumbing.
     /// </summary>
     /// <param name="seq">Sequence number</param>
@@ -89,5 +115,15 @@ public class BackgroundLogSchedulerTests
             await Task.Delay(perBatch);
             Interlocked.Increment(ref _batchCount);
         }
+    }
+
+    /// <summary>
+    /// Minimal handler that ignores incoming batches — used by ctor-guard tests where the
+    /// scheduler is expected to fail before any handler call is made.
+    /// </summary>
+    private sealed class NoOpSink : ILogHandler<DefaultLogContext>
+    {
+        public ValueTask HandleAsync(IReadOnlyList<LogMessage<DefaultLogContext>> messages, CancellationToken ct) =>
+            ValueTask.CompletedTask;
     }
 }
