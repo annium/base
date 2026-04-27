@@ -28,27 +28,32 @@ public sealed class JwtWriter : ITokenWriter<ClaimsPrincipal>
     }
 
     /// <summary>
-    /// Encodes the given claims as a signed JWT string. Standard claims (<c>iat</c>,
-    /// <c>nbf</c>, <c>exp</c>, <c>iss</c>, <c>aud</c>) are populated from the configured
-    /// <see cref="JwtTokensOptions"/>; principal-supplied claims are appended.
+    /// Encodes the given claims as a signed JWT using the configured options without per-call
+    /// overrides. Thin call-through to <see cref="Write(ClaimsPrincipal, JwtWriteOverrides?)"/>.
     /// </summary>
     /// <param name="claims">Claims principal whose claims will be added to the JWT payload.</param>
     /// <returns>The encoded JWT.</returns>
-    public string Write(ClaimsPrincipal claims)
+    public string Write(ClaimsPrincipal claims) => Write(claims, null);
+
+    /// <summary>
+    /// Encodes the given claims as a signed JWT string. Standard claims (<c>iat</c>,
+    /// <c>nbf</c>, <c>exp</c>, <c>iss</c>, <c>aud</c>) are populated from the configured
+    /// <see cref="JwtTokensOptions"/>; <paramref name="overrides"/> override audience and/or
+    /// lifetime per-call. Principal-supplied claims are appended.
+    /// </summary>
+    /// <param name="claims">Claims principal whose claims will be added to the JWT payload.</param>
+    /// <param name="overrides">Optional per-call audience/lifetime overrides; null preserves the no-override path.</param>
+    /// <returns>The encoded JWT.</returns>
+    public string Write(ClaimsPrincipal claims, JwtWriteOverrides? overrides)
     {
         var now = _time.Now;
+        var lifetime = overrides?.Lifetime ?? _options.Lifetime;
+        var audience = overrides?.Audience ?? _options.Audience ?? string.Empty;
         var issuedAt = now.ToDateTimeUtc();
-        var expires = (now + _options.Lifetime).ToDateTimeUtc();
+        var expires = (now + lifetime).ToDateTimeUtc();
 
         var header = new JwtHeader(new SigningCredentials(_options.SigningKey, _options.Algorithm));
-        var payload = new JwtPayload(
-            _options.Issuer,
-            _options.Audience ?? string.Empty,
-            claims.Claims.ToArray(),
-            issuedAt,
-            expires,
-            issuedAt
-        );
+        var payload = new JwtPayload(_options.Issuer, audience, claims.Claims.ToArray(), issuedAt, expires, issuedAt);
         var jwt = new JwtSecurityToken(header, payload);
 
         return _handler.WriteToken(jwt);

@@ -1,4 +1,5 @@
 using System;
+using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
 using Annium;
@@ -208,5 +209,197 @@ public class JwtReaderWriterTestsBase
 
         // assert
         result.Status.Is(TokenReadStatus.Expired);
+    }
+
+    /// <summary>
+    /// T6.A — <see cref="JwtReadOverrides.ValidateAudience"/> = <c>false</c> must accept a token
+    /// whose audience does not match the reader-configured audience. Validates the per-call
+    /// override path on top of the otherwise-strict audience check.
+    /// </summary>
+    /// <param name="privateKey">The private key used for token signing.</param>
+    /// <param name="publicKey">The public key used for token validation.</param>
+    /// <param name="signatureAlgorithm">The cryptographic algorithm for signing.</param>
+    protected void Read_WithAudienceValidationDisabled_AcceptsAudienceMismatch_Base(
+        SecurityKey privateKey,
+        SecurityKey publicKey,
+        string signatureAlgorithm
+    )
+    {
+        // arrange — writer signs with audience-A, reader configured with audience-B
+        var time = ResolveTime();
+        var writer = new JwtWriter(
+            new JwtTokensOptions
+            {
+                SigningKey = privateKey,
+                Algorithm = signatureAlgorithm,
+                Issuer = "service",
+                Audience = "audience-A",
+                Lifetime = Duration.FromSeconds(45),
+            },
+            time
+        );
+        var reader = new JwtReader(
+            new JwtTokensOptions
+            {
+                SigningKey = publicKey,
+                Algorithm = signatureAlgorithm,
+                Issuer = "service",
+                Audience = "audience-B",
+                ExpirationWindow = Duration.FromSeconds(10),
+                Lifetime = Duration.FromSeconds(45),
+            },
+            time
+        );
+
+        var encoded = writer.Write(new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim("k", "v") }, "JWT")));
+
+        // sanity — without override the read must fail (audience mismatch)
+        reader.Read(encoded).Status.Is(TokenReadStatus.InvalidClaims);
+
+        // act — with the override the read must succeed
+        var result = reader.Read(encoded, new JwtReadOverrides(ValidateAudience: false));
+
+        // assert
+        result.Status.Is(TokenReadStatus.Ok);
+    }
+
+    /// <summary>
+    /// T6.A — <see cref="JwtReadOverrides.ValidateLifetime"/> = <c>false</c> must accept an
+    /// already-expired token. This is the refresh-token validation use case.
+    /// </summary>
+    /// <param name="privateKey">The private key used for token signing.</param>
+    /// <param name="publicKey">The public key used for token validation.</param>
+    /// <param name="signatureAlgorithm">The cryptographic algorithm for signing.</param>
+    protected void Read_WithLifetimeValidationDisabled_AcceptsExpiredToken_Base(
+        SecurityKey privateKey,
+        SecurityKey publicKey,
+        string signatureAlgorithm
+    )
+    {
+        // arrange — writer issues a 1-ms-lifetime token; reader has the strict ExpirationWindow
+        var time = ResolveTime();
+        var lifetime = Duration.FromMilliseconds(1);
+        var writer = new JwtWriter(
+            new JwtTokensOptions
+            {
+                SigningKey = privateKey,
+                Algorithm = signatureAlgorithm,
+                Issuer = "service",
+                Audience = "audience",
+                Lifetime = lifetime,
+            },
+            time
+        );
+        var reader = new JwtReader(
+            new JwtTokensOptions
+            {
+                SigningKey = publicKey,
+                Algorithm = signatureAlgorithm,
+                Issuer = "service",
+                Audience = "audience",
+                // tight ClockSkew so the 50ms sleep below is enough to expire the token
+                ExpirationWindow = Duration.FromMilliseconds(1),
+                Lifetime = lifetime,
+            },
+            time
+        );
+
+        var encoded = writer.Write(new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim("k", "v") }, "JWT")));
+
+        // wait long enough that ValidTo + ClockSkew has passed even under concurrent test load
+        System.Threading.Thread.Sleep(500);
+
+        // sanity — without override the read must fail (expired)
+        reader.Read(encoded).Status.Is(TokenReadStatus.Expired);
+
+        // act — with the override the read must succeed
+        var result = reader.Read(encoded, new JwtReadOverrides(ValidateLifetime: false));
+
+        // assert
+        result.Status.Is(TokenReadStatus.Ok);
+    }
+
+    /// <summary>
+    /// T6.A — <see cref="JwtWriteOverrides.Audience"/> must override the configured audience
+    /// in the emitted token's <c>aud</c> claim for that single call.
+    /// </summary>
+    /// <param name="privateKey">The private key used for token signing.</param>
+    /// <param name="signatureAlgorithm">The cryptographic algorithm for signing.</param>
+    protected void Write_WithAudienceOverride_EmitsAudienceClaim_Base(SecurityKey privateKey, string signatureAlgorithm)
+    {
+        // arrange — configured audience is "default-aud"; override per-call to "per-call-aud"
+        var time = ResolveTime();
+        var writer = new JwtWriter(
+            new JwtTokensOptions
+            {
+                SigningKey = privateKey,
+                Algorithm = signatureAlgorithm,
+                Issuer = "service",
+                Audience = "default-aud",
+                Lifetime = Duration.FromSeconds(45),
+            },
+            time
+        );
+
+        // act
+        var encoded = writer.Write(
+            new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim("k", "v") }, "JWT")),
+            new JwtWriteOverrides(Audience: "per-call-aud")
+        );
+
+        // assert — decoded aud claim is the per-call override
+        var jwt = new JwtSecurityTokenHandler().ReadJwtToken(encoded);
+        jwt.Audiences.Single().Is("per-call-aud");
+    }
+
+    /// <summary>
+    /// T6.A — <see cref="JwtWriteOverrides.Lifetime"/> must drive the emitted token's
+    /// <c>exp - iat</c> for that single call, overriding <see cref="JwtTokensOptions.Lifetime"/>.
+    /// </summary>
+    /// <param name="privateKey">The private key used for token signing.</param>
+    /// <param name="signatureAlgorithm">The cryptographic algorithm for signing.</param>
+    protected void Write_WithLifetimeOverride_EmitsCorrectExpClaim_Base(
+        SecurityKey privateKey,
+        string signatureAlgorithm
+    )
+    {
+        // arrange — configured lifetime 15 minutes; override per-call to 2 hours
+        var time = ResolveTime();
+        var writer = new JwtWriter(
+            new JwtTokensOptions
+            {
+                SigningKey = privateKey,
+                Algorithm = signatureAlgorithm,
+                Issuer = "service",
+                Audience = "audience",
+                Lifetime = Duration.FromMinutes(15),
+            },
+            time
+        );
+
+        // act
+        var encoded = writer.Write(
+            new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim("k", "v") }, "JWT")),
+            new JwtWriteOverrides(Lifetime: Duration.FromHours(2))
+        );
+
+        // assert — decoded ValidTo - ValidFrom matches the per-call override (modulo 1s rounding)
+        var jwt = new JwtSecurityTokenHandler().ReadJwtToken(encoded);
+        var span = jwt.ValidTo - jwt.ValidFrom;
+        // JWT exp/iat are in seconds since epoch — allow ±1s for floor rounding on either side
+        ((int)span.TotalHours).Is(2);
+    }
+
+    /// <summary>
+    /// Resolves a real-time provider for the override-test scenarios. Mirrors the configuration
+    /// used by <see cref="Resolve"/> but returns just the time provider so each test can wire
+    /// concrete <see cref="JwtReader"/> / <see cref="JwtWriter"/> instances directly.
+    /// </summary>
+    /// <returns>The resolved time provider.</returns>
+    private static ITimeProvider ResolveTime()
+    {
+        var container = new ServiceContainer();
+        container.AddTime().WithRealTime().SetDefault();
+        return container.BuildServiceProvider().Resolve<ITimeProvider>();
     }
 }
