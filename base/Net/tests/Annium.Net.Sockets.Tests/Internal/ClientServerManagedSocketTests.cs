@@ -694,22 +694,13 @@ public class ClientServerManagedSocketTests : TestBase, IAsyncLifetime
 
                 _runServer = handleSocket =>
                 {
-                    var cert = X509CertificateLoader.LoadPkcs12FromFile("keys/ecdsa_cert.pfx", []);
-
                     return RunServerBase(
                         async (sp, raw, ct) =>
                         {
                             this.Trace("start");
 
                             this.Trace<string>("wrap {raw} into ssl stream", raw.GetFullId());
-                            await using var sslStream = new SslStream(new NetworkStream(raw), false);
-
-                            this.Trace("authenticate as server");
-                            await sslStream.AuthenticateAsServerAsync(
-                                cert,
-                                clientCertificateRequired: false,
-                                checkCertificateRevocation: true
-                            );
+                            await using var sslStream = await WrapAsServerSslStreamAsync(raw, ct);
 
                             this.Trace("create managed socket");
                             var options = ManagedSocketOptions.Default with { Mode = SocketMode.Messaging };

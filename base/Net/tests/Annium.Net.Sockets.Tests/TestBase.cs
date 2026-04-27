@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Security;
 using System.Net.Sockets;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 using Annium.Logging;
@@ -40,6 +42,27 @@ public abstract class TestBase : Testing.TestBase
         var handler = new Handler(sp, handle);
 
         return ServerBuilder.New(sp).WithHandler(handler).Start().NotNull();
+    }
+
+    /// <summary>
+    /// Wraps the raw server-side socket in an authenticated <see cref="SslStream"/> using the
+    /// shared test cert (<c>keys/ecdsa_cert.pfx</c>). Caller takes ownership of the returned
+    /// stream and must dispose it (typically via <c>await using</c>).
+    /// </summary>
+    /// <param name="raw">The raw server-side socket accepted by <see cref="RunServerBase"/>.</param>
+    /// <param name="ct">Cancellation token (reserved for future use; current ssl authenticate overload does not accept one).</param>
+    /// <returns>An authenticated <see cref="SslStream"/> wrapping <paramref name="raw"/>.</returns>
+    protected async Task<SslStream> WrapAsServerSslStreamAsync(Socket raw, CancellationToken ct)
+    {
+        _ = ct;
+        var cert = X509CertificateLoader.LoadPkcs12FromFile("keys/ecdsa_cert.pfx", []);
+        var sslStream = new SslStream(new NetworkStream(raw), false);
+        await sslStream.AuthenticateAsServerAsync(
+            cert,
+            clientCertificateRequired: false,
+            checkCertificateRevocation: true
+        );
+        return sslStream;
     }
 
     /// <summary>
