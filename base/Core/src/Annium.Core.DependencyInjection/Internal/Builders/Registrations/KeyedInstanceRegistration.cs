@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq.Expressions;
-using static Annium.Core.DependencyInjection.Internal.Builders.Registrations.Helper;
 
 namespace Annium.Core.DependencyInjection.Internal.Builders.Registrations;
 
@@ -45,6 +43,11 @@ internal class KeyedInstanceRegistration : IRegistration
     /// <returns>The collection of service descriptors</returns>
     public IEnumerable<IServiceDescriptor> ResolveServiceDescriptors(ServiceLifetime lifetime)
     {
-        yield return Factory(_serviceType, _key, (_, _) => Expression.Constant(_instance), lifetime);
+        // Mirror non-keyed InstanceRegistration: produce a true keyed-instance descriptor.
+        // The previous factory-wrapped path turned an instance into a keyed-factory descriptor,
+        // which made the IKeyedInstanceServiceDescriptor branch of ServiceContainer.Contains
+        // unreachable for builder-created keyed instances (every re-registration was treated
+        // as new and inserted as a duplicate).
+        yield return ServiceDescriptor.KeyedInstance(_serviceType, _key, _instance, lifetime);
     }
 }

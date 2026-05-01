@@ -238,11 +238,12 @@ public static class ServiceDescriptor
     /// </summary>
     /// <typeparam name="T">Service type</typeparam>
     /// <param name="implementationInstance">Service instance</param>
-    /// <param name="lifetime">Service lifetime</param>
+    /// <param name="lifetime">Service lifetime (must be Singleton)</param>
     /// <returns>Instance service descriptor</returns>
     public static IInstanceServiceDescriptor Instance<T>(T implementationInstance, ServiceLifetime lifetime)
         where T : notnull
     {
+        EnsureSingleton(typeof(T), lifetime);
         return new InstanceServiceDescriptor
         {
             ServiceType = typeof(T),
@@ -257,7 +258,7 @@ public static class ServiceDescriptor
     /// <typeparam name="T">Service type</typeparam>
     /// <param name="key">Service key</param>
     /// <param name="implementationInstance">Service instance</param>
-    /// <param name="lifetime">Service lifetime</param>
+    /// <param name="lifetime">Service lifetime (must be Singleton)</param>
     /// <returns>Keyed instance service descriptor</returns>
     public static IKeyedInstanceServiceDescriptor KeyedInstance<T>(
         object key,
@@ -266,6 +267,7 @@ public static class ServiceDescriptor
     )
         where T : notnull
     {
+        EnsureSingleton(typeof(T), lifetime);
         return new KeyedInstanceServiceDescriptor
         {
             ServiceType = typeof(T),
@@ -280,7 +282,7 @@ public static class ServiceDescriptor
     /// </summary>
     /// <param name="serviceType">Service type</param>
     /// <param name="implementationInstance">Service instance</param>
-    /// <param name="lifetime">Service lifetime</param>
+    /// <param name="lifetime">Service lifetime (must be Singleton)</param>
     /// <returns>Instance service descriptor</returns>
     public static IInstanceServiceDescriptor Instance(
         Type serviceType,
@@ -288,6 +290,7 @@ public static class ServiceDescriptor
         ServiceLifetime lifetime
     )
     {
+        EnsureSingleton(serviceType, lifetime);
         return new InstanceServiceDescriptor
         {
             ServiceType = serviceType,
@@ -302,7 +305,7 @@ public static class ServiceDescriptor
     /// <param name="serviceType">Service type</param>
     /// <param name="key">Service key</param>
     /// <param name="implementationInstance">Service instance</param>
-    /// <param name="lifetime">Service lifetime</param>
+    /// <param name="lifetime">Service lifetime (must be Singleton)</param>
     /// <returns>Keyed instance service descriptor</returns>
     public static IKeyedInstanceServiceDescriptor KeyedInstance(
         Type serviceType,
@@ -311,6 +314,7 @@ public static class ServiceDescriptor
         ServiceLifetime lifetime
     )
     {
+        EnsureSingleton(serviceType, lifetime);
         return new KeyedInstanceServiceDescriptor
         {
             ServiceType = serviceType,
@@ -318,5 +322,23 @@ public static class ServiceDescriptor
             ImplementationInstance = implementationInstance,
             Lifetime = lifetime,
         };
+    }
+
+    /// <summary>
+    /// Guards instance-style descriptors against non-Singleton lifetimes.
+    /// MS DI's <c>ServiceDescriptor(Type, object instance)</c> hardcodes Singleton, and the
+    /// runtime call-site factory ignores the Lifetime field for instance descriptors entirely
+    /// (see dotnet/runtime <c>CallSiteFactory</c>). A Scoped/Transient instance descriptor
+    /// would therefore be silently coerced to Singleton at provider build, masking the caller's
+    /// intent. Reject it at construction so the mistake surfaces immediately.
+    /// </summary>
+    private static void EnsureSingleton(Type serviceType, ServiceLifetime lifetime)
+    {
+        if (lifetime != ServiceLifetime.Singleton)
+            throw new NotSupportedException(
+                $"Instance service descriptors only support Singleton lifetime; "
+                    + $"got {lifetime} for {serviceType.FriendlyName()}. "
+                    + "Microsoft.Extensions.DependencyInjection ignores the lifetime for instance descriptors at runtime."
+            );
     }
 }

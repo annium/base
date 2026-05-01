@@ -31,6 +31,14 @@ internal class BulkRegistrationBuilder : IBulkRegistrationBuilderBase
     private readonly RegistrationsCollection _registrations = new();
 
     /// <summary>
+    /// Whether the caller already registered all types as themselves via <see cref="AsSelf"/>.
+    /// Tracked so that <see cref="In"/>'s implicit self-registration (needed for factory-style
+    /// descriptors produced by <c>As</c>/<c>AsInterfaces</c>/<c>AsKeyed*</c> to resolve each
+    /// implementation type) does not double-register when the caller already asked for it.
+    /// </summary>
+    private bool _selfAdded;
+
+    /// <summary>
     /// Initializes a new instance of the BulkRegistrationBuilder class
     /// </summary>
     /// <param name="container">The service container</param>
@@ -61,6 +69,7 @@ internal class BulkRegistrationBuilder : IBulkRegistrationBuilderBase
     /// <returns>The bulk registration builder target for method chaining</returns>
     public IBulkRegistrationBuilderTarget AsSelf()
     {
+        _selfAdded = true;
         return WithRegistration(type => new TypeRegistration(type, type));
     }
 
@@ -145,13 +154,21 @@ internal class BulkRegistrationBuilder : IBulkRegistrationBuilderBase
     }
 
     /// <summary>
-    /// Completes the registration with the specified lifetime
+    /// Completes the registration with the specified lifetime.
+    /// <para>
+    /// Each type is implicitly registered as itself unless the caller already did so via
+    /// <see cref="AsSelf"/>. Factory-style descriptors produced by <c>As</c>,
+    /// <c>AsInterfaces</c>, <c>AsKeyed*</c> resolve their implementation through the service
+    /// provider, so each implementation type must be registered as itself for those
+    /// descriptors to resolve.
+    /// </para>
     /// </summary>
     /// <param name="lifetime">The service lifetime</param>
     /// <returns>The service container</returns>
     public IServiceContainer In(ServiceLifetime lifetime)
     {
-        _registrations.AddRange(_types.Select(x => new TypeRegistration(x, x)));
+        if (!_selfAdded)
+            _registrations.AddRange(_types.Select(x => new TypeRegistration(x, x)));
         _registrar.Register(_registrations, lifetime);
 
         return _container;

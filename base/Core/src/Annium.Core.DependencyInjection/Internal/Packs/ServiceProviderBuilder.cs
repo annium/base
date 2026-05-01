@@ -128,9 +128,20 @@ internal class ServiceProviderBuilder : IServiceProviderBuilder
 
         _isAlreadyBuilt = true;
 
-        // Phase 5: Setup on the final provider
-        foreach (var pack in _packs)
-            pack.InternalSetup(finalProvider);
+        // Phase 5: Setup on the final provider. If a pack throws here, finalProvider
+        // is already constructed and would otherwise leak (it isn't returned to the
+        // caller). Dispose it so the caller doesn't have to chase a hidden leak after
+        // a Setup failure.
+        try
+        {
+            foreach (var pack in _packs)
+                pack.InternalSetup(finalProvider);
+        }
+        catch
+        {
+            finalProvider.Dispose();
+            throw;
+        }
 
         return finalProvider;
     }
