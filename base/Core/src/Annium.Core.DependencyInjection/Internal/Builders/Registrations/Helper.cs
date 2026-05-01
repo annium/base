@@ -42,26 +42,39 @@ namespace Annium.Core.DependencyInjection.Internal.Builders.Registrations;
 internal static class Helper
 {
     /// <summary>
-    /// Cached method info for GetRequiredService method
+    /// Cached method info for the GetRequiredService&lt;T&gt;(IServiceProvider) overload.
+    /// Looked up by exact signature (1 generic parameter, IServiceProvider parameter) so that
+    /// future overloads with the same name don't break the lookup.
     /// </summary>
-    private static readonly MethodInfo _getRequiredServiceMethod = typeof(ServiceProviderServiceExtensions)
-        .GetMethods()
-        .Single(x =>
-            x.Name == nameof(ServiceProviderServiceExtensions.GetRequiredService)
-            && x.GetParameters().Length == 1
-            && x.GetParameters()[0].ParameterType == typeof(IServiceProvider)
+    private static readonly MethodInfo _getRequiredServiceMethod =
+        typeof(ServiceProviderServiceExtensions).GetMethod(
+            nameof(ServiceProviderServiceExtensions.GetRequiredService),
+            genericParameterCount: 1,
+            bindingAttr: BindingFlags.Public | BindingFlags.Static,
+            binder: null,
+            types: [typeof(IServiceProvider)],
+            modifiers: null
+        )
+        ?? throw new MissingMethodException(
+            $"{nameof(ServiceProviderServiceExtensions)}.{nameof(ServiceProviderServiceExtensions.GetRequiredService)}<T>(IServiceProvider) not found"
         );
 
     /// <summary>
-    /// Cached method info for GetRequiredKeyedService method
+    /// Cached method info for the GetRequiredKeyedService&lt;T&gt;(IServiceProvider, object?) overload.
+    /// Looked up by exact signature (1 generic parameter, IServiceProvider + object parameters) so
+    /// that future overloads with the same name don't break the lookup.
     /// </summary>
-    private static readonly MethodInfo _getRequiredKeyedServiceMethod = typeof(ServiceProviderKeyedServiceExtensions)
-        .GetMethods()
-        .Single(x =>
-            x.Name == nameof(ServiceProviderKeyedServiceExtensions.GetRequiredKeyedService)
-            && x.GetParameters().Length == 2
-            && x.GetParameters()[0].ParameterType == typeof(IServiceProvider)
-            && x.GetParameters()[1].ParameterType == typeof(object)
+    private static readonly MethodInfo _getRequiredKeyedServiceMethod =
+        typeof(ServiceProviderKeyedServiceExtensions).GetMethod(
+            nameof(ServiceProviderKeyedServiceExtensions.GetRequiredKeyedService),
+            genericParameterCount: 1,
+            bindingAttr: BindingFlags.Public | BindingFlags.Static,
+            binder: null,
+            types: [typeof(IServiceProvider), typeof(object)],
+            modifiers: null
+        )
+        ?? throw new MissingMethodException(
+            $"{nameof(ServiceProviderKeyedServiceExtensions)}.{nameof(ServiceProviderKeyedServiceExtensions.GetRequiredKeyedService)}<T>(IServiceProvider, object) not found"
         );
 
     /// <summary>

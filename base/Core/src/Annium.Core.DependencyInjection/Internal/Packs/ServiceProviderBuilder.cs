@@ -78,13 +78,20 @@ internal class ServiceProviderBuilder : IServiceProviderBuilder
     /// materialized.
     /// </para>
     /// <para>
-    /// The builder is single-use: a second call throws <see cref="InvalidOperationException"/>.
-    /// A throw during Configure or Register leaves the builder in its pre-build state (the
-    /// "already built" flag is only set after a successful build), so the caller can retry after
-    /// addressing the fault or diagnose with fresh context.
+    /// The builder is single-use: a second successful call throws <see cref="InvalidOperationException"/>.
+    /// A throw during Configure or Register leaves <see cref="_container"/> unchanged from its
+    /// pre-build state — Configure-phase additions are accumulated in a working clone that is
+    /// discarded on failure — so the caller can retry from a clean baseline after addressing the
+    /// fault.
+    /// </para>
+    /// <para>
+    /// Pack authors: services materialized via the transient provider passed to <c>Register</c>
+    /// are released when the transient provider is disposed (immediately before <c>Setup</c> runs).
+    /// Do not cache references obtained from the transient provider beyond <c>Register</c>;
+    /// resolve again from the final provider in <c>Setup</c> if needed.
     /// </para>
     /// </summary>
-    /// <returns>The built service provider</returns>
+    /// <returns>The built service provider.</returns>
     /// <exception cref="InvalidOperationException">Thrown when the builder has already produced a provider successfully.</exception>
     public ServiceProvider Build()
     {
@@ -93,31 +100,35 @@ internal class ServiceProviderBuilder : IServiceProviderBuilder
 
         ServiceProvider? transientProvider = null;
         ServiceProvider finalProvider;
+
+        // Work on a clone of _container so a Configure/Register failure leaves _container
+        // unchanged — the caller can retry from a clean baseline.
+        var workingContainer = _container.Clone();
+
         try
         {
-            // Phase 1: Configure — accumulate in a staging container so a throw leaves _container intact
+            // Phase 1: Configure — accumulate in a staging container, then merge into the working clone
             var configurationContainer = new ServiceContainer();
             foreach (var pack in _packs)
                 pack.InternalConfigure(configurationContainer);
 
-            // merge staging → main container
             foreach (var descriptor in configurationContainer)
-                _container.Add(descriptor);
+                workingContainer.Add(descriptor);
 
             // Phase 2: build transient provider for Register's provider parameter
-            transientProvider = _container.BuildServiceProvider();
+            transientProvider = workingContainer.BuildServiceProvider();
 
             // Phase 3: Register — packs may consume Configure-phase services via transientProvider
-            // while adding additional registrations to _container
+            // while adding additional registrations to workingContainer
             foreach (var pack in _packs)
-                pack.InternalRegister(_container, transientProvider);
+                pack.InternalRegister(workingContainer, transientProvider);
 
             // Phase 4: build the final provider capturing both Configure and Register registrations
-            finalProvider = _container.BuildServiceProvider();
+            finalProvider = workingContainer.BuildServiceProvider();
         }
         catch
         {
-            // leave _isAlreadyBuilt false so the caller can retry after addressing the fault
+            // workingContainer is discarded; _container remains untouched so the caller can retry
             transientProvider?.Dispose();
             throw;
         }
@@ -128,9 +139,20 @@ internal class ServiceProviderBuilder : IServiceProviderBuilder
 
         _isAlreadyBuilt = true;
 
-        // Phase 5: Setup on the final provider
-        foreach (var pack in _packs)
-            pack.InternalSetup(finalProvider);
+        // Phase 5: Setup on the final provider. If a pack throws here, finalProvider
+        // is already constructed and would otherwise leak (it isn't returned to the
+        // caller). Dispose it so the caller doesn't have to chase a hidden leak after
+        // a Setup failure.
+        try
+        {
+            foreach (var pack in _packs)
+                pack.InternalSetup(finalProvider);
+        }
+        catch
+        {
+            finalProvider.Dispose();
+            throw;
+        }
 
         return finalProvider;
     }

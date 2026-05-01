@@ -215,7 +215,7 @@ public class ServiceContainer : IServiceContainer
     /// Returns an enumerator that iterates through the service descriptors.
     /// </summary>
     /// <returns>An enumerator that can be used to iterate through the service descriptors.</returns>
-    IEnumerator IEnumerable.GetEnumerator() => Collection.GetEnumerator();
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
     /// <summary>
     /// Registers a service descriptor in the container.
