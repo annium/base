@@ -4,19 +4,6 @@ using System;
 namespace Annium.Core.DependencyInjection;
 
 /// <summary>
-/// Base interface for bulk registration builder.
-/// </summary>
-public interface IBulkRegistrationBuilderBase : IBulkRegistrationBuilderTarget
-{
-    /// <summary>
-    /// Filter types for registration
-    /// </summary>
-    /// <param name="predicate">type filter</param>
-    /// <returns>builder with applied filter</returns>
-    IBulkRegistrationBuilderBase Where(Func<Type, bool> predicate);
-}
-
-/// <summary>
 /// Interface for bulk registration builder target operations.
 /// </summary>
 public interface IBulkRegistrationBuilderTarget : IBulkRegistrationBuilderLifetime
@@ -82,35 +69,4 @@ public interface IBulkRegistrationBuilderTarget : IBulkRegistrationBuilderLifeti
     /// <param name="getKey">Function to get key for each type</param>
     /// <returns>target builder</returns>
     IBulkRegistrationBuilderTarget AsKeyedFactory(Type serviceType, Func<Type, object> getKey);
-}
-
-/// <summary>
-/// Interface for bulk registration builder lifetime operations.
-/// </summary>
-public interface IBulkRegistrationBuilderLifetime
-{
-    /// <summary>
-    /// Sets the service lifetime for all registrations.
-    /// </summary>
-    /// <param name="lifetime">The service lifetime to use</param>
-    /// <returns>The service container instance</returns>
-    IServiceContainer In(ServiceLifetime lifetime);
-
-    /// <summary>
-    /// Sets the service lifetime to scoped for all registrations.
-    /// </summary>
-    /// <returns>The service container instance</returns>
-    IServiceContainer Scoped();
-
-    /// <summary>
-    /// Sets the service lifetime to singleton for all registrations.
-    /// </summary>
-    /// <returns>The service container instance</returns>
-    IServiceContainer Singleton();
-
-    /// <summary>
-    /// Sets the service lifetime to transient for all registrations.
-    /// </summary>
-    /// <returns>The service container instance</returns>
-    IServiceContainer Transient();
 }

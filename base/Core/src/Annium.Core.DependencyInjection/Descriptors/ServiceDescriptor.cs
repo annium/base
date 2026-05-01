@@ -335,10 +335,11 @@ public static class ServiceDescriptor
     private static void EnsureSingleton(Type serviceType, ServiceLifetime lifetime)
     {
         if (lifetime != ServiceLifetime.Singleton)
-            throw new NotSupportedException(
+            throw new ArgumentException(
                 $"Instance service descriptors only support Singleton lifetime; "
                     + $"got {lifetime} for {serviceType.FriendlyName()}. "
-                    + "Microsoft.Extensions.DependencyInjection ignores the lifetime for instance descriptors at runtime."
+                    + "Microsoft.Extensions.DependencyInjection ignores the lifetime for instance descriptors at runtime.",
+                nameof(lifetime)
             );
     }
 }

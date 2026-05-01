@@ -22,9 +22,9 @@ public static class ServiceDescriptorExtensions
             ITypeServiceDescriptor x => $"type {Name(x.ServiceType)} -> {Name(x.ImplementationType)}",
             IKeyedTypeServiceDescriptor x => $"type {Name(x.ServiceType)} [{x.Key}] -> {Name(x.ImplementationType)}",
             IFactoryServiceDescriptor x =>
-                $"factory {Name(x.ServiceType)} ->  {Name(x.ImplementationFactory.GetType())}",
+                $"factory {Name(x.ServiceType)} -> {Name(x.ImplementationFactory.GetType())}",
             IKeyedFactoryServiceDescriptor x =>
-                $"factory {Name(x.ServiceType)} [{x.Key}] ->  {Name(x.ImplementationFactory.GetType())}",
+                $"factory {Name(x.ServiceType)} [{x.Key}] -> {Name(x.ImplementationFactory.GetType())}",
             IInstanceServiceDescriptor x =>
                 $"instance {Name(x.ServiceType)} -> {Name(x.ImplementationInstance.GetType())}",
             IKeyedInstanceServiceDescriptor x =>
