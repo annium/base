@@ -9,64 +9,64 @@ namespace Annium.Core.DependencyInjection;
 public interface IBulkRegistrationBuilderTarget : IBulkRegistrationBuilderLifetime
 {
     /// <summary>
-    /// Register all types as themselves
+    /// Registers all types as themselves.
     /// </summary>
-    /// <returns>target builder</returns>
+    /// <returns>Target builder.</returns>
     IBulkRegistrationBuilderTarget AsSelf();
 
     /// <summary>
-    /// Register all types as given service type
+    /// Registers all types as the given service type.
     /// </summary>
-    /// <param name="serviceType">service type</param>
-    /// <returns>target builder</returns>
+    /// <param name="serviceType">Service type.</param>
+    /// <returns>Target builder.</returns>
     IBulkRegistrationBuilderTarget As(Type serviceType);
 
     /// <summary>
-    /// Register all types as each of their interfaces
+    /// Registers each type as each of its interfaces.
     /// </summary>
-    /// <returns>target builder</returns>
+    /// <returns>Target builder.</returns>
     IBulkRegistrationBuilderTarget AsInterfaces();
 
     /// <summary>
-    /// Register all types as themselves with key resolution function
+    /// Registers all types as themselves with a key resolution function.
     /// </summary>
-    /// <param name="getKey">Function to get key for each type</param>
-    /// <returns>target builder</returns>
+    /// <param name="getKey">Function to compute the key for each type.</param>
+    /// <returns>Target builder.</returns>
     IBulkRegistrationBuilderTarget AsKeyedSelf(Func<Type, object> getKey);
 
     /// <summary>
-    /// Register all types as given service type with key resolution function
+    /// Registers all types as the given service type with a key resolution function.
     /// </summary>
-    /// <param name="serviceType">service type</param>
-    /// <param name="getKey">Function to get key for each type</param>
-    /// <returns>target builder</returns>
+    /// <param name="serviceType">Service type.</param>
+    /// <param name="getKey">Function to compute the key for each type.</param>
+    /// <returns>Target builder.</returns>
     IBulkRegistrationBuilderTarget AsKeyed(Type serviceType, Func<Type, object> getKey);
 
     /// <summary>
-    /// Register all types as self factories
+    /// Registers all types as self factories.
     /// </summary>
-    /// <returns>target builder</returns>
+    /// <returns>Target builder.</returns>
     IBulkRegistrationBuilderTarget AsSelfFactory();
 
     /// <summary>
-    /// Register all types as factories of given service type
+    /// Registers all types as factories of the given service type.
     /// </summary>
-    /// <param name="serviceType">service type</param>
-    /// <returns>target builder</returns>
+    /// <param name="serviceType">Service type.</param>
+    /// <returns>Target builder.</returns>
     IBulkRegistrationBuilderTarget AsFactory(Type serviceType);
 
     /// <summary>
-    /// Register all types as self factories with key resolution function
+    /// Registers all types as self factories with a key resolution function.
     /// </summary>
-    /// <param name="getKey">Function to get key for each type</param>
-    /// <returns>target builder</returns>
+    /// <param name="getKey">Function to compute the key for each type.</param>
+    /// <returns>Target builder.</returns>
     IBulkRegistrationBuilderTarget AsKeyedSelfFactory(Func<Type, object> getKey);
 
     /// <summary>
-    /// Register all types as factories of given service type with key resolution function
+    /// Registers all types as factories of the given service type with a key resolution function.
     /// </summary>
-    /// <param name="serviceType">service type</param>
-    /// <param name="getKey">Function to get key for each type</param>
-    /// <returns>target builder</returns>
+    /// <param name="serviceType">Service type.</param>
+    /// <param name="getKey">Function to compute the key for each type.</param>
+    /// <returns>Target builder.</returns>
     IBulkRegistrationBuilderTarget AsKeyedFactory(Type serviceType, Func<Type, object> getKey);
 }

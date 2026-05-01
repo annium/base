@@ -9,21 +9,21 @@ namespace Annium.Core.DependencyInjection;
 public interface IFactoryRegistrationBuilderBase : IFactoryRegistrationBuilderLifetime
 {
     /// <summary>
-    /// Register type factory as factory of type itself
+    /// Registers the type factory as a factory of the type itself.
     /// </summary>
-    /// <returns>builder</returns>
+    /// <returns>Builder.</returns>
     IFactoryRegistrationBuilderBase AsSelf();
 
     /// <summary>
-    /// Register type factory as factory of given service type
+    /// Registers the type factory as a factory of the given service type.
     /// </summary>
-    /// <param name="serviceType">The service type to register</param>
-    /// <returns>builder</returns>
+    /// <param name="serviceType">The service type to register.</param>
+    /// <returns>Builder.</returns>
     IFactoryRegistrationBuilderBase As(Type serviceType);
 
     /// <summary>
-    /// Register type factory as factory of type interfaces
+    /// Registers the type factory as a factory of each interface implemented by the type.
     /// </summary>
-    /// <returns>builder</returns>
+    /// <returns>Builder.</returns>
     IFactoryRegistrationBuilderBase AsInterfaces();
 }

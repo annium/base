@@ -26,9 +26,9 @@ public static class ServiceDescriptorExtensions
             IKeyedFactoryServiceDescriptor x =>
                 $"factory {Name(x.ServiceType)} [{x.Key}] -> {Name(x.ImplementationFactory.GetType())}",
             IInstanceServiceDescriptor x =>
-                $"instance {Name(x.ServiceType)} -> {Name(x.ImplementationInstance.GetType())}",
+                $"instance {Name(x.ServiceType)} -> {Name(x.ImplementationInstance?.GetType() ?? typeof(object))}",
             IKeyedInstanceServiceDescriptor x =>
-                $"instance {Name(x.ServiceType)} [{x.Key}] -> {Name(x.ImplementationInstance.GetType())}",
+                $"instance {Name(x.ServiceType)} [{x.Key}] -> {Name(x.ImplementationInstance?.GetType() ?? typeof(object))}",
             _ => throw new NotSupportedException($"{descriptor.GetType().FriendlyName()} is not supported"),
         };
 

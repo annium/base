@@ -6,7 +6,7 @@ namespace Annium.Core.DependencyInjection;
 /// <summary>
 /// This is emulation class for compatibility with extensions, expecting HostBuilder pattern implementation
 /// </summary>
-/// <typeparam name="TServicePack"></typeparam>
+/// <typeparam name="TServicePack">The service pack type used to register host services.</typeparam>
 public class HostServicesBuilder<TServicePack>
     where TServicePack : ServicePackBase, new()
 {

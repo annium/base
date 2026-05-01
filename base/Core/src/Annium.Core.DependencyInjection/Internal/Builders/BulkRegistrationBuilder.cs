@@ -6,29 +6,35 @@ using Annium.Core.DependencyInjection.Internal.Builders.Registrations;
 namespace Annium.Core.DependencyInjection.Internal.Builders;
 
 /// <summary>
-/// Builder for bulk service registrations that allows filtering and configuration of multiple types
+/// Builder for bulk service registrations that allows filtering and configuration of multiple types.
 /// </summary>
 internal class BulkRegistrationBuilder : IBulkRegistrationBuilderBase
 {
     /// <summary>
-    /// The collection of types to register
+    /// The collection of types to register.
     /// </summary>
     private readonly List<Type> _types;
 
     /// <summary>
-    /// The service container instance
+    /// The service container instance.
     /// </summary>
     private readonly IServiceContainer _container;
 
     /// <summary>
-    /// The registrar for handling service registrations
+    /// The registrar for handling service registrations.
     /// </summary>
     private readonly Registrar _registrar;
 
     /// <summary>
-    /// The collection of registrations to be processed
+    /// The collection of registrations accumulated during the AsX phase.
     /// </summary>
-    private readonly RegistrationsCollection _registrations = new();
+    private readonly List<IRegistration> _registrations = new();
+
+    /// <summary>
+    /// Whether at least one <c>AsX</c> call has populated the registrations. Used by
+    /// <see cref="In"/> to fail fast if the caller forgot to specify registration targets.
+    /// </summary>
+    private bool _registrationsInitiated;
 
     /// <summary>
     /// Whether the caller already registered all types as themselves via <see cref="AsSelf"/>.
@@ -39,11 +45,11 @@ internal class BulkRegistrationBuilder : IBulkRegistrationBuilderBase
     private bool _selfAdded;
 
     /// <summary>
-    /// Initializes a new instance of the BulkRegistrationBuilder class
+    /// Initializes a new instance of the BulkRegistrationBuilder class.
     /// </summary>
-    /// <param name="container">The service container</param>
-    /// <param name="types">The types to register</param>
-    /// <param name="registrar">The registrar for handling registrations</param>
+    /// <param name="container">The service container.</param>
+    /// <param name="types">The types to register.</param>
+    /// <param name="registrar">The registrar for handling registrations.</param>
     public BulkRegistrationBuilder(IServiceContainer container, IEnumerable<Type> types, Registrar registrar)
     {
         _types = types.ToList();
@@ -52,10 +58,10 @@ internal class BulkRegistrationBuilder : IBulkRegistrationBuilderBase
     }
 
     /// <summary>
-    /// Filters the types to register based on the specified predicate
+    /// Filters the types to register based on the specified predicate.
     /// </summary>
-    /// <param name="predicate">The predicate to filter types</param>
-    /// <returns>The bulk registration builder for method chaining</returns>
+    /// <param name="predicate">The predicate to filter types.</param>
+    /// <returns>The bulk registration builder for method chaining.</returns>
     public IBulkRegistrationBuilderBase Where(Func<Type, bool> predicate)
     {
         _types.RemoveAll(x => !predicate(x));
@@ -64,9 +70,9 @@ internal class BulkRegistrationBuilder : IBulkRegistrationBuilderBase
     }
 
     /// <summary>
-    /// Registers each type as itself
+    /// Registers each type as itself.
     /// </summary>
-    /// <returns>The bulk registration builder target for method chaining</returns>
+    /// <returns>The bulk registration builder target for method chaining.</returns>
     public IBulkRegistrationBuilderTarget AsSelf()
     {
         _selfAdded = true;
@@ -74,80 +80,80 @@ internal class BulkRegistrationBuilder : IBulkRegistrationBuilderBase
     }
 
     /// <summary>
-    /// Registers all types as the specified service type
+    /// Registers all types as the specified service type.
     /// </summary>
-    /// <param name="serviceType">The service type to register as</param>
-    /// <returns>The bulk registration builder target for method chaining</returns>
+    /// <param name="serviceType">The service type to register as.</param>
+    /// <returns>The bulk registration builder target for method chaining.</returns>
     public IBulkRegistrationBuilderTarget As(Type serviceType)
     {
         return WithRegistration(type => new TypeRegistration(serviceType, type));
     }
 
     /// <summary>
-    /// Registers each type as all of its implemented interfaces
+    /// Registers each type as all of its implemented interfaces.
     /// </summary>
-    /// <returns>The bulk registration builder target for method chaining</returns>
+    /// <returns>The bulk registration builder target for method chaining.</returns>
     public IBulkRegistrationBuilderTarget AsInterfaces()
     {
         return WithRegistrations(type => type.GetInterfaces().Select(x => new TypeRegistration(x, type)));
     }
 
     /// <summary>
-    /// Registers each type as itself with a key generated by the specified function
+    /// Registers each type as itself with a key generated by the specified function.
     /// </summary>
-    /// <param name="getKey">The function to generate keys for each type</param>
-    /// <returns>The bulk registration builder target for method chaining</returns>
+    /// <param name="getKey">The function to generate keys for each type.</param>
+    /// <returns>The bulk registration builder target for method chaining.</returns>
     public IBulkRegistrationBuilderTarget AsKeyedSelf(Func<Type, object> getKey)
     {
         return WithRegistration(type => new KeyedTypeRegistration(type, getKey(type), type));
     }
 
     /// <summary>
-    /// Registers all types as the specified service type with keys generated by the specified function
+    /// Registers all types as the specified service type with keys generated by the specified function.
     /// </summary>
-    /// <param name="serviceType">The service type to register as</param>
-    /// <param name="getKey">The function to generate keys for each type</param>
-    /// <returns>The bulk registration builder target for method chaining</returns>
+    /// <param name="serviceType">The service type to register as.</param>
+    /// <param name="getKey">The function to generate keys for each type.</param>
+    /// <returns>The bulk registration builder target for method chaining.</returns>
     public IBulkRegistrationBuilderTarget AsKeyed(Type serviceType, Func<Type, object> getKey)
     {
         return WithRegistration(type => new KeyedTypeRegistration(serviceType, getKey(type), type));
     }
 
     /// <summary>
-    /// Registers each type as a factory that returns itself
+    /// Registers each type as a factory that returns itself.
     /// </summary>
-    /// <returns>The bulk registration builder target for method chaining</returns>
+    /// <returns>The bulk registration builder target for method chaining.</returns>
     public IBulkRegistrationBuilderTarget AsSelfFactory()
     {
         return WithRegistration(type => new TypeFactoryRegistration(type, type));
     }
 
     /// <summary>
-    /// Registers all types as factories that return the specified service type
+    /// Registers all types as factories that return the specified service type.
     /// </summary>
-    /// <param name="serviceType">The service type the factory should return</param>
-    /// <returns>The bulk registration builder target for method chaining</returns>
+    /// <param name="serviceType">The service type the factory should return.</param>
+    /// <returns>The bulk registration builder target for method chaining.</returns>
     public IBulkRegistrationBuilderTarget AsFactory(Type serviceType)
     {
         return WithRegistration(type => new TypeFactoryRegistration(serviceType, type));
     }
 
     /// <summary>
-    /// Registers each type as a keyed factory that returns itself
+    /// Registers each type as a keyed factory that returns itself.
     /// </summary>
-    /// <param name="getKey">The function to generate keys for each type</param>
-    /// <returns>The bulk registration builder target for method chaining</returns>
+    /// <param name="getKey">The function to generate keys for each type.</param>
+    /// <returns>The bulk registration builder target for method chaining.</returns>
     public IBulkRegistrationBuilderTarget AsKeyedSelfFactory(Func<Type, object> getKey)
     {
         return WithRegistration(type => new KeyedTypeFactoryRegistration(type, getKey(type), type));
     }
 
     /// <summary>
-    /// Registers all types as keyed factories that return the specified service type
+    /// Registers all types as keyed factories that return the specified service type.
     /// </summary>
-    /// <param name="serviceType">The service type the factory should return</param>
-    /// <param name="getKey">The function to generate keys for each type</param>
-    /// <returns>The bulk registration builder target for method chaining</returns>
+    /// <param name="serviceType">The service type the factory should return.</param>
+    /// <param name="getKey">The function to generate keys for each type.</param>
+    /// <returns>The bulk registration builder target for method chaining.</returns>
     public IBulkRegistrationBuilderTarget AsKeyedFactory(Type serviceType, Func<Type, object> getKey)
     {
         return WithRegistration(type => new KeyedTypeFactoryRegistration(serviceType, getKey(type), type));
@@ -163,10 +169,13 @@ internal class BulkRegistrationBuilder : IBulkRegistrationBuilderBase
     /// descriptors to resolve.
     /// </para>
     /// </summary>
-    /// <param name="lifetime">The service lifetime</param>
-    /// <returns>The service container</returns>
+    /// <param name="lifetime">The service lifetime.</param>
+    /// <returns>The service container.</returns>
     public IServiceContainer In(ServiceLifetime lifetime)
     {
+        if (!_registrationsInitiated)
+            throw new InvalidOperationException("Specify registration targets");
+
         if (!_selfAdded)
             _registrations.AddRange(_types.Select(x => new TypeRegistration(x, x)));
         _registrar.Register(_registrations, lifetime);
@@ -175,44 +184,44 @@ internal class BulkRegistrationBuilder : IBulkRegistrationBuilderBase
     }
 
     /// <summary>
-    /// Completes the registration with scoped lifetime
+    /// Completes the registration with scoped lifetime.
     /// </summary>
-    /// <returns>The service container</returns>
+    /// <returns>The service container.</returns>
     public IServiceContainer Scoped() => In(ServiceLifetime.Scoped);
 
     /// <summary>
-    /// Completes the registration with singleton lifetime
+    /// Completes the registration with singleton lifetime.
     /// </summary>
-    /// <returns>The service container</returns>
+    /// <returns>The service container.</returns>
     public IServiceContainer Singleton() => In(ServiceLifetime.Singleton);
 
     /// <summary>
-    /// Completes the registration with transient lifetime
+    /// Completes the registration with transient lifetime.
     /// </summary>
-    /// <returns>The service container</returns>
+    /// <returns>The service container.</returns>
     public IServiceContainer Transient() => In(ServiceLifetime.Transient);
 
     /// <summary>
-    /// Creates multiple registrations for each type using the specified factory function
+    /// Creates multiple registrations for each type using the specified factory function.
     /// </summary>
-    /// <param name="createRegistrations">The function to create registrations for each type</param>
-    /// <returns>The bulk registration builder target for method chaining</returns>
+    /// <param name="createRegistrations">The function to create registrations for each type.</param>
+    /// <returns>The bulk registration builder target for method chaining.</returns>
     private IBulkRegistrationBuilderTarget WithRegistrations(Func<Type, IEnumerable<IRegistration>> createRegistrations)
     {
-        _registrations.Init();
+        _registrationsInitiated = true;
         _registrations.AddRange(_types.SelectMany(createRegistrations));
 
         return this;
     }
 
     /// <summary>
-    /// Creates a single registration for each type using the specified factory function
+    /// Creates a single registration for each type using the specified factory function.
     /// </summary>
-    /// <param name="createRegistration">The function to create a registration for each type</param>
-    /// <returns>The bulk registration builder target for method chaining</returns>
+    /// <param name="createRegistration">The function to create a registration for each type.</param>
+    /// <returns>The bulk registration builder target for method chaining.</returns>
     private IBulkRegistrationBuilderTarget WithRegistration(Func<Type, IRegistration> createRegistration)
     {
-        _registrations.Init();
+        _registrationsInitiated = true;
         _registrations.AddRange(_types.Select(createRegistration));
 
         return this;

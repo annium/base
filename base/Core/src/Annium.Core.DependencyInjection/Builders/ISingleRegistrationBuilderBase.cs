@@ -9,64 +9,64 @@ namespace Annium.Core.DependencyInjection;
 public interface ISingleRegistrationBuilderBase : ISingleRegistrationBuilderLifetime
 {
     /// <summary>
-    /// Register type as self
+    /// Registers the type as itself.
     /// </summary>
-    /// <returns>builder</returns>
+    /// <returns>Builder.</returns>
     ISingleRegistrationBuilderBase AsSelf();
 
     /// <summary>
-    /// Register type as given service type
+    /// Registers the type as the given service type.
     /// </summary>
-    /// <param name="serviceType">The service type to register</param>
-    /// <returns>builder</returns>
+    /// <param name="serviceType">The service type to register.</param>
+    /// <returns>Builder.</returns>
     ISingleRegistrationBuilderBase As(Type serviceType);
 
     /// <summary>
-    /// Register type as its interfaces
+    /// Registers the type as each of its implemented interfaces.
     /// </summary>
-    /// <returns>builder</returns>
+    /// <returns>Builder.</returns>
     ISingleRegistrationBuilderBase AsInterfaces();
 
     /// <summary>
-    /// Register type as self with given key
+    /// Registers the type as itself with the given key.
     /// </summary>
-    /// <param name="key">The key for registration</param>
-    /// <returns>builder</returns>
+    /// <param name="key">The key for registration.</param>
+    /// <returns>Builder.</returns>
     ISingleRegistrationBuilderBase AsKeyedSelf(object key);
 
     /// <summary>
-    /// Register type as given service type with given key
+    /// Registers the type as the given service type with the given key.
     /// </summary>
-    /// <param name="serviceType">The service type to register</param>
-    /// <param name="key">The key for registration</param>
-    /// <returns>builder</returns>
+    /// <param name="serviceType">The service type to register.</param>
+    /// <param name="key">The key for registration.</param>
+    /// <returns>Builder.</returns>
     ISingleRegistrationBuilderBase AsKeyed(Type serviceType, object key);
 
     /// <summary>
-    /// Register type as self factory
+    /// Registers the type as a self factory.
     /// </summary>
-    /// <returns>builder</returns>
+    /// <returns>Builder.</returns>
     ISingleRegistrationBuilderBase AsSelfFactory();
 
     /// <summary>
-    /// Register type as factory of given service type
+    /// Registers the type as a factory of the given service type.
     /// </summary>
-    /// <param name="serviceType">The service type to register</param>
-    /// <returns>builder</returns>
+    /// <param name="serviceType">The service type to register.</param>
+    /// <returns>Builder.</returns>
     ISingleRegistrationBuilderBase AsFactory(Type serviceType);
 
     /// <summary>
-    /// Register type as self factory with given key
+    /// Registers the type as a self factory with the given key.
     /// </summary>
-    /// <param name="key">The key for registration</param>
-    /// <returns>builder</returns>
+    /// <param name="key">The key for registration.</param>
+    /// <returns>Builder.</returns>
     ISingleRegistrationBuilderBase AsKeyedSelfFactory(object key);
 
     /// <summary>
-    /// Register type as factory of given service type with given key
+    /// Registers the type as a factory of the given service type with the given key.
     /// </summary>
-    /// <param name="serviceType">The service type to register</param>
-    /// <param name="key">The key for registration</param>
-    /// <returns>builder</returns>
+    /// <param name="serviceType">The service type to register.</param>
+    /// <param name="key">The key for registration.</param>
+    /// <returns>Builder.</returns>
     ISingleRegistrationBuilderBase AsKeyedFactory(Type serviceType, object key);
 }

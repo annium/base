@@ -9,24 +9,24 @@ namespace Annium.Core.DependencyInjection;
 public interface IKeyedFactoryRegistrationBuilderBase : IKeyedFactoryRegistrationBuilderLifetime
 {
     /// <summary>
-    /// Register type factory as factory of type itself with given key
+    /// Registers the type factory as a factory of the type itself with the given key.
     /// </summary>
-    /// <param name="key">The key for registration</param>
-    /// <returns>builder</returns>
+    /// <param name="key">The key for registration.</param>
+    /// <returns>Builder.</returns>
     IKeyedFactoryRegistrationBuilderBase AsKeyedSelf(object key);
 
     /// <summary>
-    /// Register type factory as factory of given service type with given key
+    /// Registers the type factory as a factory of the given service type with the given key.
     /// </summary>
-    /// <param name="serviceType">The service type to register</param>
-    /// <param name="key">The key for registration</param>
-    /// <returns>builder</returns>
+    /// <param name="serviceType">The service type to register.</param>
+    /// <param name="key">The key for registration.</param>
+    /// <returns>Builder.</returns>
     IKeyedFactoryRegistrationBuilderBase AsKeyed(Type serviceType, object key);
 
     /// <summary>
-    /// Register type factory as factory of type interfaces with given key
+    /// Registers the type factory as a factory of each interface implemented by the type with the given key.
     /// </summary>
-    /// <param name="key">The key for registration</param>
-    /// <returns>builder</returns>
+    /// <param name="key">The key for registration.</param>
+    /// <returns>Builder.</returns>
     IKeyedFactoryRegistrationBuilderBase AsKeyedInterfaces(object key);
 }

@@ -6,7 +6,7 @@ using MicrosoftServiceDescriptor = Microsoft.Extensions.DependencyInjection.Serv
 namespace Annium.Core.DependencyInjection;
 
 /// <summary>
-/// Factory class for creating service descriptors
+/// Factory class for creating service descriptors.
 /// </summary>
 public static class ServiceDescriptor
 {
@@ -36,12 +36,18 @@ public static class ServiceDescriptor
                 );
 
             if (descriptor.KeyedImplementationInstance is not null)
-                return KeyedInstance(
-                    descriptor.ServiceType,
-                    descriptor.ServiceKey,
-                    descriptor.KeyedImplementationInstance,
-                    (ServiceLifetime)descriptor.Lifetime
-                );
+                // Bypass the public KeyedInstance factory's EnsureSingleton guard: this
+                // descriptor came from MS DI which already enforces Singleton on instance
+                // descriptors at construction. If the guard ever fires from this path the
+                // ArgumentException's paramName="lifetime" would be meaningless to the caller
+                // (they passed a MicrosoftServiceDescriptor, not a lifetime).
+                return new KeyedInstanceServiceDescriptor
+                {
+                    ServiceType = descriptor.ServiceType,
+                    Key = descriptor.ServiceKey,
+                    ImplementationInstance = descriptor.KeyedImplementationInstance,
+                    Lifetime = (ServiceLifetime)descriptor.Lifetime,
+                };
         }
 
         if (descriptor.ImplementationType is not null)
@@ -55,11 +61,13 @@ public static class ServiceDescriptor
             );
 
         if (descriptor.ImplementationInstance is not null)
-            return Instance(
-                descriptor.ServiceType,
-                descriptor.ImplementationInstance,
-                (ServiceLifetime)descriptor.Lifetime
-            );
+            // Bypass Instance factory's EnsureSingleton guard — see the keyed branch above.
+            return new InstanceServiceDescriptor
+            {
+                ServiceType = descriptor.ServiceType,
+                ImplementationInstance = descriptor.ImplementationInstance,
+                Lifetime = (ServiceLifetime)descriptor.Lifetime,
+            };
 
         throw new NotSupportedException($"{descriptor} has unsupported configuration");
     }

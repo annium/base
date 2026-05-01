@@ -9,9 +9,9 @@ namespace Annium.Core.DependencyInjection;
 public interface IBulkRegistrationBuilderBase : IBulkRegistrationBuilderTarget
 {
     /// <summary>
-    /// Filter types for registration
+    /// Filters types for registration.
     /// </summary>
-    /// <param name="predicate">type filter</param>
-    /// <returns>builder with applied filter</returns>
+    /// <param name="predicate">Type filter predicate.</param>
+    /// <returns>Builder with the applied filter.</returns>
     IBulkRegistrationBuilderBase Where(Func<Type, bool> predicate);
 }
