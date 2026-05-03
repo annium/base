@@ -10,48 +10,48 @@ using Annium.Logging;
 namespace Annium.Net.Sockets.Internal;
 
 /// <summary>
-/// Internal implementation of a client-side managed socket that handles connection, SSL, and data transmission
+/// Internal implementation of a client-side managed socket that handles connection, SSL, and data transmission.
 /// </summary>
 internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
 {
     /// <summary>
-    /// Gets the logger instance
+    /// Gets the logger instance.
     /// </summary>
     public ILogger Logger { get; }
 
     /// <summary>
-    /// Event raised when data is received from the remote endpoint
+    /// Event raised when data is received from the remote endpoint.
     /// </summary>
     public event Action<ReadOnlyMemory<byte>> OnReceived = delegate { };
 
     /// <summary>
-    /// Gets a task that completes when the socket is closed
+    /// Gets a task that completes when the socket is closed.
     /// </summary>
     public Task<SocketCloseResult> IsClosed { get; private set; } =
         Task.FromResult(new SocketCloseResult(SocketCloseStatus.ClosedLocal, null));
 
     /// <summary>
-    /// Configuration options for the managed socket
+    /// Configuration options for the managed socket.
     /// </summary>
     private readonly ManagedSocketOptions _options;
 
     /// <summary>
-    /// Thread synchronization lock for connection operations
+    /// Thread synchronization lock for connection operations.
     /// </summary>
     private readonly Lock _locker = new();
 
     /// <summary>
-    /// Current connection state including stream and cancellation token
+    /// Current connection state including stream and cancellation token.
     /// </summary>
     private Connection? _cn;
 
     /// <summary>
-    /// Cancellation token source for listening operations
+    /// Cancellation token source for listening operations.
     /// </summary>
     private CancellationTokenSource _listenCts = new();
 
     /// <summary>
-    /// Initializes a new instance of the ClientManagedSocket class
+    /// Initializes a new instance of the ClientManagedSocket class.
     /// </summary>
     /// <param name="options">Configuration options for the socket</param>
     /// <param name="logger">Logger instance for diagnostics</param>
@@ -62,37 +62,19 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
     }
 
     /// <summary>
-    /// Disposes the socket and releases all resources
+    /// Disposes the socket and releases all resources.
     /// </summary>
     public void Dispose()
     {
         this.Trace("start");
 
-        lock (_locker)
-        {
-            var cn = Interlocked.Exchange(ref _cn, null);
-            if (cn is null)
-            {
-                this.Trace("skip - not connected");
-                return;
-            }
-
-            this.Trace("unbind events");
-            cn.Socket.OnReceived -= HandleOnReceived;
-
-            this.Trace("cancel listen cts");
-            _listenCts.Cancel();
-            _listenCts.Dispose();
-
-            this.Trace("dispose connection");
-            cn.Dispose();
-        }
+        TeardownUnderLock();
 
         this.Trace("done");
     }
 
     /// <summary>
-    /// Connects to the specified remote endpoint asynchronously
+    /// Connects to the specified remote endpoint asynchronously.
     /// </summary>
     /// <param name="endpoint">The remote endpoint to connect to</param>
     /// <param name="authOptions">Optional SSL client authentication options</param>
@@ -195,20 +177,39 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
     }
 
     /// <summary>
-    /// Disconnects from the remote endpoint asynchronously
+    /// Disconnects from the remote endpoint asynchronously.
     /// </summary>
-    /// <returns>A task that completes when disconnection is finished</returns>
+    /// <returns>A task that completes when disconnection is finished.</returns>
     public async Task DisconnectAsync()
     {
         this.Trace("start");
 
+        if (!TeardownUnderLock())
+            return;
+
+        this.Trace("await listen task");
+#pragma warning disable VSTHRD003
+        await IsClosed;
+#pragma warning restore VSTHRD003
+
+        this.Trace("done");
+    }
+
+    /// <summary>
+    /// Performs the synchronous teardown shared by <see cref="Dispose"/> and <see cref="DisconnectAsync"/>:
+    /// claim the live connection under <c>_locker</c>, unbind events, cancel + dispose the listen CTS, and
+    /// dispose the connection.
+    /// </summary>
+    /// <returns>True if a live connection was torn down, false if the socket was not connected.</returns>
+    private bool TeardownUnderLock()
+    {
         lock (_locker)
         {
             var cn = Interlocked.Exchange(ref _cn, null);
             if (cn is null)
             {
                 this.Trace("skip - not connected");
-                return;
+                return false;
             }
 
             this.Trace("unbind events");
@@ -222,18 +223,12 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
             this.Trace("dispose connection");
             cn.Dispose();
 #pragma warning restore VSTHRD103
+            return true;
         }
-
-        this.Trace("await listen task");
-#pragma warning disable VSTHRD003
-        await IsClosed;
-#pragma warning restore VSTHRD003
-
-        this.Trace("done");
     }
 
     /// <summary>
-    /// Sends data to the remote endpoint asynchronously
+    /// Sends data to the remote endpoint asynchronously.
     /// </summary>
     /// <param name="data">The data to send</param>
     /// <param name="ct">Cancellation token</param>
@@ -246,7 +241,7 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
     }
 
     /// <summary>
-    /// Handles when the underlying socket is closed
+    /// Handles when the underlying socket is closed.
     /// </summary>
     /// <param name="task">The socket close task result</param>
     /// <returns>The socket close result</returns>
@@ -281,7 +276,7 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
     }
 
     /// <summary>
-    /// Handles received data from the underlying socket
+    /// Handles received data from the underlying socket.
     /// </summary>
     /// <param name="data">The received data</param>
     private void HandleOnReceived(ReadOnlyMemory<byte> data)
@@ -291,7 +286,7 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
     }
 
     /// <summary>
-    /// Cleans up resources when connection fails
+    /// Cleans up resources when connection fails.
     /// </summary>
     /// <param name="stream">The stream to dispose</param>
     /// <param name="socket">The socket to dispose</param>
@@ -316,7 +311,7 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
     }
 
     /// <summary>
-    /// Represents a connection with its stream and socket
+    /// Represents a connection with its stream and socket.
     /// </summary>
     /// <param name="Stream">The network stream</param>
     /// <param name="Socket">The managed socket</param>
@@ -324,7 +319,7 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
     private sealed record Connection(Stream Stream, IManagedSocket Socket, ILogger Logger) : IDisposable, ILogSubject
     {
         /// <summary>
-        /// Disposes the connection resources
+        /// Disposes the connection resources.
         /// </summary>
         public void Dispose()
         {

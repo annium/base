@@ -4,12 +4,12 @@ using System.Reactive.Linq;
 namespace Annium.Net.Sockets;
 
 /// <summary>
-/// Extension methods for receiving socket operations
+/// Extension methods for receiving socket operations.
 /// </summary>
 public static class ReceivingSocketExtensions
 {
     /// <summary>
-    /// Creates an observable stream of received data from the socket
+    /// Creates an observable stream of received data from the socket.
     /// </summary>
     /// <param name="socket">The receiving socket to observe</param>
     /// <returns>An observable stream of received binary data</returns>

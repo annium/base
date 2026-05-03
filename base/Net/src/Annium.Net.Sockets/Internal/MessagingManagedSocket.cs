@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,56 +8,47 @@ using Annium.Logging;
 namespace Annium.Net.Sockets.Internal;
 
 /// <summary>
-/// A managed socket implementation that handles framed messaging over a stream with length prefixes
+/// A managed socket implementation that handles framed messaging over a stream with length prefixes.
 /// </summary>
 internal class MessagingManagedSocket : IManagedSocket, ILogSubject
 {
     /// <summary>
-    /// Logger for tracing socket operations
+    /// Logger for tracing socket operations.
     /// </summary>
     public ILogger Logger { get; }
 
     /// <summary>
-    /// Event raised when data is received from the socket
+    /// Event raised when data is received from the socket.
     /// </summary>
     public event Action<ReadOnlyMemory<byte>> OnReceived = delegate { };
 
     /// <summary>
-    /// The underlying stream for socket communication
+    /// The underlying stream for socket communication.
     /// </summary>
     private readonly Stream _stream;
 
     /// <summary>
-    /// Configuration options for the managed socket
+    /// Configuration options for the managed socket.
     /// </summary>
     private readonly ManagedSocketOptionsBase _options;
 
     /// <summary>
-    /// Semaphore to ensure thread-safe sending operations
+    /// Semaphore to ensure thread-safe sending operations.
     /// </summary>
     private readonly SemaphoreSlim _gate = new(1, 1);
 
     /// <summary>
-    /// Flag indicating whether the socket has been disposed
+    /// Flag indicating whether the socket has been disposed. Volatile so a concurrent
+    /// SendAsync observes the write set by Dispose() before attempting to acquire _gate.
     /// </summary>
-    private bool _isDisposed;
+    private volatile bool _isDisposed;
 
     /// <summary>
-    /// Counter tracking total bytes sent
+    /// Initializes a new instance of the MessagingManagedSocket class.
     /// </summary>
-    private long _sendCounter;
-
-    /// <summary>
-    /// Counter tracking total bytes received
-    /// </summary>
-    private long _recvCounter;
-
-    /// <summary>
-    /// Initializes a new instance of the MessagingManagedSocket class
-    /// </summary>
-    /// <param name="stream">The underlying stream for socket communication</param>
-    /// <param name="options">Configuration options for the managed socket</param>
-    /// <param name="logger">Logger for tracing socket operations</param>
+    /// <param name="stream">The underlying stream for socket communication.</param>
+    /// <param name="options">Configuration options for the managed socket.</param>
+    /// <param name="logger">Logger for tracing socket operations.</param>
     public MessagingManagedSocket(Stream stream, ManagedSocketOptionsBase options, ILogger logger)
     {
         Logger = logger;
@@ -72,11 +62,11 @@ internal class MessagingManagedSocket : IManagedSocket, ILogSubject
     }
 
     /// <summary>
-    /// Sends data through the socket with a length prefix frame
+    /// Sends data through the socket with a length prefix frame.
     /// </summary>
-    /// <param name="data">The data to send</param>
-    /// <param name="ct">Cancellation token for the operation</param>
-    /// <returns>The status of the send operation</returns>
+    /// <param name="data">The data to send.</param>
+    /// <param name="ct">Cancellation token for the operation.</param>
+    /// <returns>The status of the send operation.</returns>
     public async ValueTask<SocketSendStatus> SendAsync(ReadOnlyMemory<byte> data, CancellationToken ct = default)
     {
         this.Trace("{dataLength} - start", data.Length);
@@ -96,49 +86,33 @@ internal class MessagingManagedSocket : IManagedSocket, ILogSubject
         var acquired = false;
         try
         {
-            await _gate.WaitAsync(ct);
-            acquired = true;
+            try
+            {
+                await _gate.WaitAsync(ct);
+                acquired = true;
+            }
+            catch (ObjectDisposedException)
+            {
+                // Dispose() raced ahead and disposed _gate after we passed the _isDisposed check.
+                this.Trace("{dataLength} - disposed during gate acquisition, return closed", data.Length);
+                return SocketSendStatus.Closed;
+            }
 
             var messageSize = BitConverter.GetBytes(data.Length);
 
-            this.Trace(
-                "{dataLength} - send message size (total: {total})",
-                data.Length,
-                _sendCounter += messageSize.Length
-            );
+            this.Trace("{dataLength} - send message size", data.Length);
             await _stream.WriteAsync(messageSize, ct).ConfigureAwait(false);
 
-            this.Trace("{dataLength} - message itself (total: {total})", data.Length, _sendCounter += data.Length);
+            this.Trace("{dataLength} - message itself", data.Length);
             await _stream.WriteAsync(data, ct).ConfigureAwait(false);
 
-            this.Trace("{dataLength} - send succeed (total: {total})", data.Length, _sendCounter);
+            this.Trace("{dataLength} - send succeed", data.Length);
 
             return SocketSendStatus.Ok;
         }
-        catch (OperationCanceledException)
-        {
-            this.Trace("{dataLength} - canceled with OperationCanceledException", data.Length);
-            return SocketSendStatus.Canceled;
-        }
-        catch (InvalidOperationException e)
-        {
-            this.Trace("{dataLength} - closed with InvalidOperationException: {e}", data.Length, e);
-            return SocketSendStatus.Closed;
-        }
-        catch (IOException e) when (e.InnerException is ObjectDisposedException)
-        {
-            this.Trace("{dataLength} - closed with IOException(ObjectDisposedException)", data.Length);
-            return SocketSendStatus.Closed;
-        }
-        catch (IOException e) when (e.InnerException is SocketException)
-        {
-            this.Trace("{dataLength} - closed with IOException(SocketException)", data.Length);
-            return SocketSendStatus.Closed;
-        }
         catch (Exception e)
         {
-            this.Error("{dataLength} - closed with {error}", data.Length, e);
-            return SocketSendStatus.Closed;
+            return Helper.ClassifySendException(e, this);
         }
         finally
         {
@@ -148,44 +122,23 @@ internal class MessagingManagedSocket : IManagedSocket, ILogSubject
     }
 
     /// <summary>
-    /// Starts listening for incoming messages on the socket
+    /// Starts listening for incoming messages on the socket.
     /// </summary>
-    /// <param name="ct">Cancellation token for the listening operation</param>
-    /// <returns>The result of the socket close operation when listening ends</returns>
-    public Task<SocketCloseResult> ListenAsync(CancellationToken ct) =>
-        Task.Run(
-            async () =>
-            {
-                if (_isDisposed)
-                {
-                    this.Trace("disposed, return closed local");
-                    return new SocketCloseResult(SocketCloseStatus.ClosedLocal, null);
-                }
-
-                using var buffer = new MessagingBuffer(_options.BufferSize, _options.ExtremeMessageSize);
-
-                this.Trace("start");
-
-                while (true)
-                {
-                    this.Trace("next");
-                    var (isClosed, result) = await ReceiveAsync(buffer, ct);
-                    if (isClosed)
-                    {
-                        this.Trace(
-                            result.Exception is not null
-                                ? $"stop with {result.Status}: {result.Exception}"
-                                : $"stop with {result.Status}"
-                        );
-                        return result;
-                    }
-                }
-            },
-            CancellationToken.None
+    /// <param name="ct">Cancellation token for the listening operation.</param>
+    /// <returns>The result of the socket close operation when listening ends.</returns>
+    public Task<SocketCloseResult> ListenAsync(CancellationToken ct)
+    {
+        var buffer = new MessagingBuffer(_options.BufferSize, _options.ExtremeMessageSize);
+        return Helper.RunListenLoopAsync(
+            () => ReceiveAsync(buffer, ct),
+            this,
+            resource: buffer,
+            initialClosedCheck: () => _isDisposed ? new SocketCloseResult(SocketCloseStatus.ClosedLocal, null) : null
         );
+    }
 
     /// <summary>
-    /// Disposes the managed socket and releases associated resources
+    /// Disposes the managed socket and releases associated resources.
     /// </summary>
     public void Dispose()
     {
@@ -197,6 +150,10 @@ internal class MessagingManagedSocket : IManagedSocket, ILogSubject
             return;
         }
 
+        // mark disposed BEFORE releasing _gate so a concurrent SendAsync that just passed
+        // the _isDisposed check observes the write the next time it reads the field. The
+        // remaining race (SendAsync calls _gate.WaitAsync on a disposed semaphore) is handled
+        // by the inner ObjectDisposedException catch in SendAsync.
         _isDisposed = true;
 
         _gate.Dispose();
@@ -205,11 +162,11 @@ internal class MessagingManagedSocket : IManagedSocket, ILogSubject
     }
 
     /// <summary>
-    /// Receives data from the stream into the buffer and processes complete messages
+    /// Receives data from the stream into the buffer and processes complete messages.
     /// </summary>
-    /// <param name="buffer">The buffer to receive data into</param>
-    /// <param name="ct">Cancellation token for the operation</param>
-    /// <returns>A tuple indicating if the socket is closed and the close result</returns>
+    /// <param name="buffer">The buffer to receive data into.</param>
+    /// <param name="ct">Cancellation token for the operation.</param>
+    /// <returns>A tuple indicating if the socket is closed and the close result.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private async ValueTask<(bool IsClosed, SocketCloseResult Result)> ReceiveAsync(
         MessagingBuffer buffer,
@@ -227,7 +184,7 @@ internal class MessagingManagedSocket : IManagedSocket, ILogSubject
 
         // read chunk into buffer
         this.Trace("receive data chunk into buffer {buffer}", buffer);
-        var receiveResult = await ReceiveChunkAsync(buffer, ct).ConfigureAwait(false);
+        var receiveResult = await Helper.ReceiveChunkAsync(_stream, buffer.FreeSpace, ct, this).ConfigureAwait(false);
 
         // if close received - return false, indicating socket is closed
         if (receiveResult.Status.HasValue)
@@ -242,6 +199,18 @@ internal class MessagingManagedSocket : IManagedSocket, ILogSubject
 
         while (true)
         {
+            if (buffer.HasInvalidHeader)
+            {
+                this.Trace("buffer {buffer} reported invalid (negative) header length, close with error", buffer);
+                return (
+                    true,
+                    new SocketCloseResult(
+                        SocketCloseStatus.Error,
+                        new InvalidDataException("Negative message length in frame header")
+                    )
+                );
+            }
+
             if (buffer.ExtremeMessageExpected)
             {
                 this.Trace("buffer {buffer} has extreme message expected, close with error", buffer);
@@ -265,60 +234,5 @@ internal class MessagingManagedSocket : IManagedSocket, ILogSubject
         this.Trace("buffer {buffer} doesn't contain full message, done", buffer);
 
         return (false, new SocketCloseResult(SocketCloseStatus.ClosedRemote, null));
-    }
-
-    /// <summary>
-    /// Receives a chunk of data from the stream into the buffer
-    /// </summary>
-    /// <param name="buffer">The buffer to receive data into</param>
-    /// <param name="ct">Cancellation token for the operation</param>
-    /// <returns>The result of the receive operation</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private async ValueTask<ReceiveResult> ReceiveChunkAsync(MessagingBuffer buffer, CancellationToken ct)
-    {
-        this.Trace("start");
-
-        try
-        {
-            if (ct.IsCancellationRequested)
-            {
-                this.Trace("canceled with cancellation token");
-                return new ReceiveResult(0, SocketCloseStatus.ClosedLocal, null);
-            }
-
-            this.Trace("wait for message");
-            var bytesRead = await _stream.ReadAsync(buffer.FreeSpace, ct).ConfigureAwait(false);
-            this.Trace("received {bytesRead} bytes (total: {total})", bytesRead, _recvCounter += bytesRead);
-
-            return new ReceiveResult(bytesRead, bytesRead <= 0 ? SocketCloseStatus.ClosedRemote : null, null);
-        }
-        catch (OperationCanceledException)
-        {
-            this.Trace("closed locally with cancellation: {isCancellationRequested}", ct.IsCancellationRequested);
-            return new ReceiveResult(0, SocketCloseStatus.ClosedLocal, null);
-        }
-        catch (IOException e) when (e.InnerException is ObjectDisposedException)
-        {
-            this.Trace("closed with ObjectDisposedException");
-            return new ReceiveResult(0, SocketCloseStatus.ClosedLocal, null);
-        }
-        catch (IOException e) when (e.InnerException is SocketException se)
-        {
-            var status =
-                se.SocketErrorCode is SocketError.OperationAborted
-                    ? SocketCloseStatus.ClosedLocal
-                    : SocketCloseStatus.ClosedRemote;
-            this.Trace("{status} with SocketException (code: {code}): {e}", status, se.SocketErrorCode, se);
-            return new ReceiveResult(0, status, null);
-        }
-        catch (Exception e)
-        {
-            this.Trace("Error: {e}", e);
-            return new ReceiveResult(0, SocketCloseStatus.Error, e);
-        }
-        finally
-        {
-            this.Trace("done");
-        }
     }
 }

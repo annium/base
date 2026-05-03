@@ -7,37 +7,37 @@ using Annium.Logging;
 namespace Annium.Net.Sockets.Internal;
 
 /// <summary>
-/// Server-side managed socket that wraps a client connection and handles messaging
+/// Server-side managed socket that wraps a client connection and handles messaging.
 /// </summary>
 internal class ServerManagedSocket : IServerManagedSocket, ILogSubject
 {
     /// <summary>
-    /// Logger for tracing socket operations
+    /// Logger for tracing socket operations.
     /// </summary>
     public ILogger Logger { get; }
 
     /// <summary>
-    /// Event raised when data is received from the client
+    /// Event raised when data is received from the client.
     /// </summary>
     public event Action<ReadOnlyMemory<byte>> OnReceived = delegate { };
 
     /// <summary>
-    /// Task that completes when the socket is closed
+    /// Task that completes when the socket is closed.
     /// </summary>
     public Task<SocketCloseResult> IsClosed { get; }
 
     /// <summary>
-    /// The underlying stream for client communication
+    /// The underlying stream for client communication.
     /// </summary>
     private readonly Stream _stream;
 
     /// <summary>
-    /// The managed socket wrapper for the client connection
+    /// The managed socket wrapper for the client connection.
     /// </summary>
     private readonly IManagedSocket _socket;
 
     /// <summary>
-    /// Initializes a new instance of the ServerManagedSocket class
+    /// Initializes a new instance of the ServerManagedSocket class.
     /// </summary>
     /// <param name="stream">The client connection stream</param>
     /// <param name="options">Configuration options for the managed socket</param>
@@ -57,11 +57,18 @@ internal class ServerManagedSocket : IServerManagedSocket, ILogSubject
         _socket.OnReceived += HandleOnReceived;
 
         this.Trace("start listen");
-        IsClosed = _socket.ListenAsync(ct).ContinueWith(HandleClosed);
+        IsClosed = _socket
+            .ListenAsync(ct)
+            .ContinueWith(
+                HandleClosed,
+                CancellationToken.None,
+                TaskContinuationOptions.ExecuteSynchronously,
+                TaskScheduler.Default
+            );
     }
 
     /// <summary>
-    /// Disposes the server managed socket and its underlying resources
+    /// Disposes the server managed socket and its underlying resources.
     /// </summary>
     public void Dispose()
     {
@@ -73,7 +80,7 @@ internal class ServerManagedSocket : IServerManagedSocket, ILogSubject
     }
 
     /// <summary>
-    /// Disconnects the client socket and cleans up resources
+    /// Disconnects the client socket and cleans up resources.
     /// </summary>
     /// <returns>A task representing the asynchronous disconnect operation</returns>
     public async Task DisconnectAsync()
@@ -100,7 +107,7 @@ internal class ServerManagedSocket : IServerManagedSocket, ILogSubject
     }
 
     /// <summary>
-    /// Sends data to the connected client
+    /// Sends data to the connected client.
     /// </summary>
     /// <param name="data">The data to send</param>
     /// <param name="ct">Cancellation token for the operation</param>
@@ -113,10 +120,10 @@ internal class ServerManagedSocket : IServerManagedSocket, ILogSubject
     }
 
     /// <summary>
-    /// Handles the socket closure and cleans up event subscriptions
+    /// Handles the socket closure and cleans up event subscriptions.
     /// </summary>
-    /// <param name="task">The task containing the socket close result</param>
-    /// <returns>The socket close result</returns>
+    /// <param name="task">The task containing the socket close result.</param>
+    /// <returns>The socket close result.</returns>
     private SocketCloseResult HandleClosed(Task<SocketCloseResult> task)
     {
         this.Trace("start, unsubscribe from managed socket");
@@ -128,13 +135,22 @@ internal class ServerManagedSocket : IServerManagedSocket, ILogSubject
 
         this.Trace("done");
 
+        // Guard task.Result against a faulted antecedent: rethrowing here would propagate the
+        // original exception into the IsClosed task and silently lose the close result. The
+        // sibling ClientManagedSocket.HandleClosed has the same shape and benefits from the
+        // same guard.
+        if (task.IsFaulted)
+        {
+            return new SocketCloseResult(SocketCloseStatus.Error, task.Exception?.GetBaseException());
+        }
+
 #pragma warning disable VSTHRD002
         return task.Result;
 #pragma warning restore VSTHRD002
     }
 
     /// <summary>
-    /// Handles data received from the underlying socket and forwards it to subscribers
+    /// Handles data received from the underlying socket and forwards it to subscribers.
     /// </summary>
     /// <param name="data">The received data</param>
     private void HandleOnReceived(ReadOnlyMemory<byte> data)
