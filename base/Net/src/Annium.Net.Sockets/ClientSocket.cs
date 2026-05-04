@@ -206,7 +206,7 @@ public class ClientSocket : IClientSocket
             catch (OperationCanceledException) { }
             catch (Exception ex)
             {
-                this.Error(ex, "background disconnect teardown failed");
+                this.Error("background disconnect teardown failed: {exception}", ex);
             }
         });
 
@@ -359,11 +359,11 @@ public class ClientSocket : IClientSocket
 
         this.Trace("subscribe to IsClosed");
         _ = _socket.IsClosed.ContinueWith(
-            task =>
+            t =>
             {
                 try
                 {
-                    HandleClosed(task);
+                    HandleClosed(t);
                 }
                 catch (OperationCanceledException) { }
                 catch (Exception ex)

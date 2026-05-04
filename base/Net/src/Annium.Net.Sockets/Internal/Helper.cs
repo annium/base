@@ -33,7 +33,7 @@ internal static class Helper
     /// </summary>
     /// <param name="e">The exception thrown by the send path.</param>
     /// <param name="log">Log subject for tracing.</param>
-    /// <returns>The corresponding send status.</returns>
+    /// <returns>The corresponding to send status.</returns>
     public static SocketSendStatus ClassifySendException(Exception e, ILogSubject log)
     {
         switch (e)
@@ -49,10 +49,10 @@ internal static class Helper
             case InvalidOperationException:
                 log.Trace("send closed with InvalidOperationException: {e}", e);
                 return SocketSendStatus.Closed;
-            case IOException io1 when io1.InnerException is ObjectDisposedException:
+            case IOException { InnerException: ObjectDisposedException }:
                 log.Trace("send closed with IOException(ObjectDisposedException)");
                 return SocketSendStatus.Closed;
-            case IOException io2 when io2.InnerException is SocketException:
+            case IOException { InnerException: SocketException }:
                 log.Trace("send closed with IOException(SocketException)");
                 return SocketSendStatus.Closed;
             default:
@@ -70,7 +70,7 @@ internal static class Helper
     /// <param name="freeSpace">The buffer slice to receive into.</param>
     /// <param name="ct">Cancellation token for the read.</param>
     /// <param name="log">Log subject for tracing.</param>
-    /// <returns>The receive result.</returns>
+    /// <returns>The reception result.</returns>
     public static async ValueTask<ReceiveResult> ReceiveChunkAsync(
         Stream stream,
         Memory<byte> freeSpace,
@@ -127,45 +127,33 @@ internal static class Helper
     /// <summary>
     /// Runs a managed-socket listen loop on a background <see cref="Task"/>.
     /// The supplied <paramref name="receive"/> delegate performs one receive iteration and reports whether
-    /// the socket has closed. <paramref name="resource"/>, if supplied, is disposed when the loop exits.
+    /// the socket has closed.
     /// </summary>
     /// <param name="receive">Per-iteration receive delegate.</param>
     /// <param name="log">Log subject for tracing.</param>
-    /// <param name="resource">Optional resource to dispose after the loop ends.</param>
     /// <returns>The terminal close result.</returns>
     public static Task<SocketCloseResult> RunListenLoopAsync(
         Func<ValueTask<(bool IsClosed, SocketCloseResult Result)>> receive,
-        ILogSubject log,
-        IDisposable? resource = null
+        ILogSubject log
     ) =>
         Task.Run(
             async () =>
             {
-                try
-                {
-                    log.Trace("start");
+                log.Trace("start");
 
-                    while (true)
-                    {
-                        log.Trace("next");
-                        var (isClosed, result) = await receive();
-                        if (isClosed)
-                        {
-                            log.Trace(
-                                result.Exception is not null
-                                    ? $"stop with {result.Status}: {result.Exception}"
-                                    : $"stop with {result.Status}"
-                            );
-                            return result;
-                        }
-                    }
-                }
-                finally
+                while (true)
                 {
-                    // Sync disposable; both buffer types implement IDisposable, not IAsyncDisposable.
-#pragma warning disable VSTHRD103
-                    resource?.Dispose();
-#pragma warning restore VSTHRD103
+                    log.Trace("next");
+                    var (isClosed, result) = await receive();
+                    if (isClosed)
+                    {
+                        log.Trace(
+                            result.Exception is not null
+                                ? $"stop with {result.Status}: {result.Exception}"
+                                : $"stop with {result.Status}"
+                        );
+                        return result;
+                    }
                 }
             },
             CancellationToken.None

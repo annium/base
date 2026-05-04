@@ -80,10 +80,10 @@ internal class RawManagedSocket : IManagedSocket, ILogSubject
     /// </summary>
     /// <param name="ct">Cancellation token.</param>
     /// <returns>A task that completes with the socket close result when listening ends.</returns>
-    public Task<SocketCloseResult> ListenAsync(CancellationToken ct)
+    public async Task<SocketCloseResult> ListenAsync(CancellationToken ct)
     {
-        var buffer = new RawBuffer(_options.BufferSize);
-        return Helper.RunListenLoopAsync(() => ReceiveAsync(buffer, ct), this, resource: buffer);
+        using var buffer = new RawBuffer(_options.BufferSize);
+        return await Helper.RunListenLoopAsync(() => ReceiveAsync(buffer, ct), this);
     }
 
     /// <summary>
