@@ -57,7 +57,7 @@ internal class ActionScheduler : IActionScheduler, ILogSubject
             catch (OperationCanceledException) { }
             catch (Exception ex)
             {
-                this.Error(ex, "scheduled action failed");
+                this.Error("scheduled action failed: {exception}", ex);
             }
         });
 
