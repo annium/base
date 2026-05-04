@@ -10,37 +10,37 @@ using Annium.Net.Sockets.Internal;
 namespace Annium.Net.Sockets;
 
 /// <summary>
-/// Implementation of a client socket that can connect to remote endpoints and automatically reconnect on connection loss
+/// Implementation of a client socket that can connect to remote endpoints and automatically reconnect on connection loss.
 /// </summary>
 public class ClientSocket : IClientSocket
 {
     /// <summary>
-    /// Gets the logger instance
+    /// Gets the logger instance.
     /// </summary>
     public ILogger Logger { get; }
 
     /// <summary>
-    /// Event raised when binary data is received from the remote endpoint
+    /// Event raised when binary data is received from the remote endpoint.
     /// </summary>
     public event Action<ReadOnlyMemory<byte>> OnReceived = delegate { };
 
     /// <summary>
-    /// Event raised when the socket successfully connects to a remote endpoint
+    /// Event raised when the socket successfully connects to a remote endpoint.
     /// </summary>
     public event Action OnConnected = delegate { };
 
     /// <summary>
-    /// Event raised when the socket is disconnected from the remote endpoint
+    /// Event raised when the socket is disconnected from the remote endpoint.
     /// </summary>
     public event Action<SocketCloseStatus> OnDisconnected = delegate { };
 
     /// <summary>
-    /// Event raised when an error occurs during socket operations
+    /// Event raised when an error occurs during socket operations.
     /// </summary>
     public event Action<Exception> OnError = delegate { };
 
     /// <summary>
-    /// Gets the current connection configuration
+    /// Gets the current connection configuration.
     /// </summary>
     private ConnectionConfig Config
     {
@@ -49,37 +49,37 @@ public class ClientSocket : IClientSocket
     }
 
     /// <summary>
-    /// Thread synchronization lock for connection operations
+    /// Thread synchronization lock for connection operations.
     /// </summary>
     private readonly Lock _locker = new();
 
     /// <summary>
-    /// The underlying managed socket for actual network operations
+    /// The underlying managed socket for actual network operations.
     /// </summary>
     private readonly IClientManagedSocket _socket;
 
     /// <summary>
-    /// Connection monitor for health checking and reconnection logic
+    /// Connection monitor for health checking and reconnection logic.
     /// </summary>
     private readonly ConnectionMonitorBase _connectionMonitor;
 
     /// <summary>
-    /// Timeout for connection attempts in milliseconds
+    /// Timeout for connection attempts in milliseconds.
     /// </summary>
     private readonly int _connectTimeout;
 
     /// <summary>
-    /// Delay between reconnection attempts in milliseconds
+    /// Delay between reconnection attempts in milliseconds.
     /// </summary>
     private readonly int _reconnectDelay;
 
     /// <summary>
-    /// Cancellation token source for managing connection operations
+    /// Cancellation token source for managing connection operations.
     /// </summary>
     private CancellationTokenSource _connectionCts = new();
 
     /// <summary>
-    /// Current connection status of the socket
+    /// Current connection status of the socket.
     /// </summary>
     private Status _status = Status.Disconnected;
 
@@ -98,10 +98,10 @@ public class ClientSocket : IClientSocket
     }
 
     /// <summary>
-    /// Initializes a new instance of the ClientSocket class with specified options
+    /// Initializes a new instance of the ClientSocket class with specified options.
     /// </summary>
-    /// <param name="options">Configuration options for the socket</param>
-    /// <param name="logger">Logger instance for diagnostics</param>
+    /// <param name="options">Configuration options for the socket.</param>
+    /// <param name="logger">Logger instance for diagnostics.</param>
     public ClientSocket(ClientSocketOptions options, ILogger logger)
     {
         Logger = logger;
@@ -129,17 +129,17 @@ public class ClientSocket : IClientSocket
     }
 
     /// <summary>
-    /// Initializes a new instance of the ClientSocket class with default options
+    /// Initializes a new instance of the ClientSocket class with default options.
     /// </summary>
-    /// <param name="logger">Logger instance for diagnostics</param>
+    /// <param name="logger">Logger instance for diagnostics.</param>
     public ClientSocket(ILogger logger)
         : this(ClientSocketOptions.Default, logger) { }
 
     /// <summary>
-    /// Connects to the specified remote endpoint
+    /// Connects to the specified remote endpoint.
     /// </summary>
-    /// <param name="endpoint">The remote endpoint to connect to</param>
-    /// <param name="authOptions">Optional SSL client authentication options for secure connections</param>
+    /// <param name="endpoint">The remote endpoint to connect to.</param>
+    /// <param name="authOptions">Optional SSL client authentication options for secure connections.</param>
     public void Connect(IPEndPoint endpoint, SslClientAuthenticationOptions? authOptions = null)
     {
         this.Trace("start");
@@ -180,14 +180,12 @@ public class ClientSocket : IClientSocket
             }
 
             SetStatus(Status.Disconnected);
-            var oldCts = _connectionCts;
-            // replace with a fresh cancelled CTS BEFORE disposing the old one; keeps the
-            // invariant that _connectionCts never points to a disposed instance, so a
-            // racing ConnectPrivate (or anyone reading _connectionCts.Token) sees a safe
-            // already-cancelled source rather than ObjectDisposedException
+            // rotate via Interlocked.Exchange so the swap+dispose is atomic relative to
+            // any other reader; keep the invariant that _connectionCts never points to a
+            // disposed instance by installing a fresh, already-cancelled replacement.
             var replacement = new CancellationTokenSource();
             replacement.Cancel();
-            _connectionCts = replacement;
+            var oldCts = Interlocked.Exchange(ref _connectionCts, replacement);
             oldCts.Cancel();
             oldCts.Dispose();
         }
@@ -208,7 +206,7 @@ public class ClientSocket : IClientSocket
             catch (OperationCanceledException) { }
             catch (Exception ex)
             {
-                this.Error("Disconnect background teardown failed: {exception}", ex);
+                this.Error("background disconnect teardown failed: {exception}", ex);
             }
         });
 
@@ -216,11 +214,11 @@ public class ClientSocket : IClientSocket
     }
 
     /// <summary>
-    /// Sends binary data to the remote endpoint asynchronously
+    /// Sends binary data to the remote endpoint asynchronously.
     /// </summary>
-    /// <param name="data">The data to send</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>The status of the send operation</returns>
+    /// <param name="data">The data to send.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>The status of the send operation.</returns>
     public ValueTask<SocketSendStatus> SendAsync(ReadOnlyMemory<byte> data, CancellationToken ct = default)
     {
         this.Trace("send binary");
@@ -236,10 +234,10 @@ public class ClientSocket : IClientSocket
     }
 
     /// <summary>
-    /// Handles reconnection logic after a connection is lost
+    /// Handles reconnection logic after a connection is lost.
     /// </summary>
-    /// <param name="config">The connection configuration to use for reconnection</param>
-    /// <param name="result">The result of the previous connection close</param>
+    /// <param name="config">The connection configuration to use for reconnection.</param>
+    /// <param name="result">The result of the previous connection close.</param>
     private void ReconnectPrivate(ConnectionConfig config, SocketCloseResult result)
     {
         this.Trace("start");
@@ -275,9 +273,9 @@ public class ClientSocket : IClientSocket
     }
 
     /// <summary>
-    /// Performs the actual connection logic
+    /// Performs the actual connection logic.
     /// </summary>
-    /// <param name="config">The connection configuration</param>
+    /// <param name="config">The connection configuration.</param>
     private void ConnectPrivate(ConnectionConfig config)
     {
         this.Trace("start");
@@ -292,11 +290,10 @@ public class ClientSocket : IClientSocket
             }
 
             Config = config;
-            // rotate _connectionCts under lock so a racing Disconnect can't double-dispose
-            // the CTS between our Interlocked.Exchange and Dispose
+            // rotate via Interlocked.Exchange so a racing Disconnect can't double-dispose
+            // the CTS between our swap and Dispose. Same pattern as Disconnect() above.
             cts = new CancellationTokenSource(_connectTimeout);
-            var oldCts = _connectionCts;
-            _connectionCts = cts;
+            var oldCts = Interlocked.Exchange(ref _connectionCts, cts);
             oldCts.Dispose();
         }
 
@@ -323,10 +320,10 @@ public class ClientSocket : IClientSocket
     }
 
     /// <summary>
-    /// Handles the result of a connection attempt
+    /// Handles the result of a connection attempt.
     /// </summary>
-    /// <param name="task">The connection task result</param>
-    /// <param name="state">The connection configuration state</param>
+    /// <param name="task">The connection task result.</param>
+    /// <param name="state">The connection configuration state.</param>
     private void HandleConnected(Task<Exception?> task, object? state)
     {
         this.Trace("start");
@@ -362,11 +359,11 @@ public class ClientSocket : IClientSocket
 
         this.Trace("subscribe to IsClosed");
         _ = _socket.IsClosed.ContinueWith(
-            task =>
+            t =>
             {
                 try
                 {
-                    HandleClosed(task);
+                    HandleClosed(t);
                 }
                 catch (OperationCanceledException) { }
                 catch (Exception ex)
@@ -424,9 +421,9 @@ public class ClientSocket : IClientSocket
     }
 
     /// <summary>
-    /// Handles when the underlying socket is closed
+    /// Handles when the underlying socket is closed.
     /// </summary>
-    /// <param name="task">The socket close task result</param>
+    /// <param name="task">The socket close task result.</param>
     private void HandleClosed(Task<SocketCloseResult> task)
     {
         this.Trace("start");
@@ -453,9 +450,9 @@ public class ClientSocket : IClientSocket
     }
 
     /// <summary>
-    /// Updates the internal connection status
+    /// Updates the internal connection status.
     /// </summary>
-    /// <param name="status">The new status to set</param>
+    /// <param name="status">The new status to set.</param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void SetStatus(Status status)
     {
@@ -464,12 +461,12 @@ public class ClientSocket : IClientSocket
     }
 
     /// <summary>
-    /// Handles received data from the underlying socket, filtering out protocol frames
+    /// Handles received data from the underlying socket, filtering out protocol frames.
     /// </summary>
-    /// <param name="data">The received data</param>
+    /// <param name="data">The received data.</param>
     private void HandleOnReceived(ReadOnlyMemory<byte> data)
     {
-        if (data.Span.SequenceEqual(ProtocolFrames.Ping.Span))
+        if (ProtocolFrames.IsPingFrame(data))
         {
             this.Trace("skip ping frame");
             return;
@@ -480,29 +477,29 @@ public class ClientSocket : IClientSocket
     }
 
     /// <summary>
-    /// Configuration for a socket connection
+    /// Configuration for a socket connection.
     /// </summary>
-    /// <param name="Endpoint">The remote endpoint to connect to</param>
-    /// <param name="AuthOptions">Optional SSL authentication options</param>
+    /// <param name="Endpoint">The remote endpoint to connect to.</param>
+    /// <param name="AuthOptions">Optional SSL authentication options.</param>
     private record ConnectionConfig(IPEndPoint Endpoint, SslClientAuthenticationOptions? AuthOptions);
 
     /// <summary>
-    /// Internal connection status
+    /// Internal connection status.
     /// </summary>
     private enum Status
     {
         /// <summary>
-        /// Socket is disconnected
+        /// Socket is disconnected.
         /// </summary>
         Disconnected,
 
         /// <summary>
-        /// Socket is in the process of connecting
+        /// Socket is in the process of connecting.
         /// </summary>
         Connecting,
 
         /// <summary>
-        /// Socket is connected and ready for communication
+        /// Socket is connected and ready for communication.
         /// </summary>
         Connected,
     }

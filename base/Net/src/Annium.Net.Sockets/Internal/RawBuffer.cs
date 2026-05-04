@@ -4,29 +4,29 @@ using System.Buffers;
 namespace Annium.Net.Sockets.Internal;
 
 /// <summary>
-/// A buffer implementation for raw socket operations that uses pooled arrays
+/// A buffer implementation for raw socket operations that uses pooled arrays.
 /// </summary>
 internal struct RawBuffer : IDisposable
 {
     /// <summary>
-    /// The underlying byte buffer from the array pool
+    /// The underlying byte buffer from the array pool.
     /// </summary>
     private readonly byte[] _buffer;
 
     /// <summary>
-    /// The current length of valid data in the buffer
+    /// The current length of valid data in the buffer.
     /// </summary>
     private int _dataLength;
 
     /// <summary>
-    /// Indicates whether the buffer has been disposed
+    /// Indicates whether the buffer has been disposed.
     /// </summary>
     private bool _isDisposed;
 
     /// <summary>
-    /// Wrap buffer free space as Memory
+    /// Wrap buffer free space as Memory.
     /// </summary>
-    /// <returns>Buffer free space as Memory</returns>
+    /// <returns>Buffer free space as Memory.</returns>
     public Memory<byte> FreeSpace
     {
         get
@@ -38,9 +38,9 @@ internal struct RawBuffer : IDisposable
     }
 
     /// <summary>
-    /// Wrap buffer message as ReadOnlyMemory
+    /// Wrap buffer message as ReadOnlyMemory.
     /// </summary>
-    /// <returns>Buffer data as ReadOnlyMemory</returns>
+    /// <returns>Buffer data as ReadOnlyMemory.</returns>
     public ReadOnlyMemory<byte> Data
     {
         get
@@ -52,9 +52,9 @@ internal struct RawBuffer : IDisposable
     }
 
     /// <summary>
-    /// Initializes a new instance of the RawBuffer struct
+    /// Initializes a new instance of the RawBuffer struct.
     /// </summary>
-    /// <param name="size">The minimum size of the buffer to rent from the array pool</param>
+    /// <param name="size">The minimum size of the buffer to rent from the array pool.</param>
     public RawBuffer(int size)
     {
         _buffer = ArrayPool<byte>.Shared.Rent(size);
@@ -63,7 +63,7 @@ internal struct RawBuffer : IDisposable
     }
 
     /// <summary>
-    /// Reset buffer internal data length to 0, allowing write from start
+    /// Reset buffer internal data length to 0, allowing write from start.
     /// </summary>
     public void Reset()
     {
@@ -73,7 +73,7 @@ internal struct RawBuffer : IDisposable
     }
 
     /// <summary>
-    /// Track data size, written to buffer
+    /// Track data size, written to buffer.
     /// </summary>
     /// <param name="dataSize">
     /// count of elements, written to buffer
@@ -84,7 +84,7 @@ internal struct RawBuffer : IDisposable
     }
 
     /// <summary>
-    /// Disposes the buffer and returns it to the array pool
+    /// Disposes the buffer and returns it to the array pool.
     /// </summary>
     public void Dispose()
     {
@@ -95,7 +95,7 @@ internal struct RawBuffer : IDisposable
     }
 
     /// <summary>
-    /// Ensures the buffer has not been disposed
+    /// Ensures the buffer has not been disposed.
     /// </summary>
     /// <exception cref="ObjectDisposedException">Thrown when the buffer is disposed</exception>
     private void EnsureNotDisposed()

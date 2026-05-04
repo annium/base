@@ -2,8 +2,6 @@ name: Merge Request
 
 on:
   pull_request:
-    branches:
-      - main
 
 permissions:
   contents: read

@@ -5,42 +5,51 @@ using Annium.Logging;
 namespace Annium.Net.Sockets;
 
 /// <summary>
-/// Base class for connection monitors that detect when socket connections are lost
+/// Base class for connection monitors that detect when socket connections are lost.
 /// </summary>
 public abstract class ConnectionMonitorBase : ILogSubject
 {
     /// <summary>
-    /// Gets the logger instance
+    /// Gets the logger instance.
     /// </summary>
     public ILogger Logger { get; }
 
     /// <summary>
-    /// Event raised when the connection is detected as lost
+    /// Event raised when the connection is detected as lost.
     /// </summary>
     public event Action OnConnectionLost = delegate { };
 
     /// <summary>
-    /// Indicates whether the monitor is currently running (1) or stopped (0)
+    /// Backing field for the running flag (1 = running, 0 = stopped).
+    /// Reads must use <see cref="Volatile"/>.Read or <see cref="Interlocked"/>.CompareExchange;
+    /// writes go through Interlocked.CompareExchange in <see cref="Start"/> / <see cref="Stop"/>.
     /// </summary>
-    protected int IsRunning;
+    private int _isRunning;
 
     /// <summary>
-    /// Initializes a new instance of the ConnectionMonitorBase class
+    /// Returns the current running flag using a volatile read so background callers (e.g. timer
+    /// callbacks) observe the latest write made by <see cref="Start"/> / <see cref="Stop"/>.
     /// </summary>
-    /// <param name="logger">Logger instance for diagnostics</param>
+    /// <returns>1 when the monitor is running, 0 otherwise.</returns>
+    protected int ReadIsRunning() => Volatile.Read(ref _isRunning);
+
+    /// <summary>
+    /// Initializes a new instance of the ConnectionMonitorBase class.
+    /// </summary>
+    /// <param name="logger">Logger instance for diagnostics.</param>
     protected ConnectionMonitorBase(ILogger logger)
     {
         Logger = logger;
     }
 
     /// <summary>
-    /// Starts the connection monitor
+    /// Starts the connection monitor.
     /// </summary>
     public void Start()
     {
         this.Trace("start");
 
-        if (Interlocked.CompareExchange(ref IsRunning, 1, 0) == 1)
+        if (Interlocked.CompareExchange(ref _isRunning, 1, 0) == 1)
         {
             this.Trace("skip - already started");
             return;
@@ -52,13 +61,13 @@ public abstract class ConnectionMonitorBase : ILogSubject
     }
 
     /// <summary>
-    /// Stops the connection monitor
+    /// Stops the connection monitor.
     /// </summary>
     public void Stop()
     {
         this.Trace("start");
 
-        if (Interlocked.CompareExchange(ref IsRunning, 0, 1) == 0)
+        if (Interlocked.CompareExchange(ref _isRunning, 0, 1) == 0)
         {
             this.Trace("skip - already stopped");
             return;
@@ -70,7 +79,7 @@ public abstract class ConnectionMonitorBase : ILogSubject
     }
 
     /// <summary>
-    /// Fires the connection lost event
+    /// Fires the connection lost event.
     /// </summary>
     protected void FireConnectionLost()
     {
@@ -78,12 +87,12 @@ public abstract class ConnectionMonitorBase : ILogSubject
     }
 
     /// <summary>
-    /// Handles the start logic for the specific monitor implementation
+    /// Handles the start logic for the specific monitor implementation.
     /// </summary>
     protected abstract void HandleStart();
 
     /// <summary>
-    /// Handles the stop logic for the specific monitor implementation
+    /// Handles the stop logic for the specific monitor implementation.
     /// </summary>
     protected abstract void HandleStop();
 }
