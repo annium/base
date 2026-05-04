@@ -111,6 +111,14 @@ public class ServerWebSocket : IServerWebSocket
     }
 
     /// <summary>
+    /// Disposes the WebSocket server by triggering <see cref="Disconnect"/>.
+    /// </summary>
+    public void Dispose()
+    {
+        Disconnect();
+    }
+
+    /// <summary>
     /// Initializes a new instance of the ServerWebSocket with default options.
     /// </summary>
     /// <param name="nativeSocket">The underlying native WebSocket instance.</param>
@@ -244,19 +252,17 @@ public class ServerWebSocket : IServerWebSocket
     /// Handles text messages received from the managed WebSocket and forwards them to event subscribers.
     /// </summary>
     /// <param name="data">The received text message data.</param>
-    private void HandleOnTextReceived(ReadOnlyMemory<byte> data)
-    {
-        this.Trace("trigger text received");
-        OnTextReceived(data);
-    }
+    private void HandleOnTextReceived(ReadOnlyMemory<byte> data) => OnTextReceived(data);
 
     /// <summary>
     /// Handles binary messages received from the managed WebSocket and forwards them to event subscribers.
+    /// Filters out ping protocol frames so they don't surface as application data.
     /// </summary>
     /// <param name="data">The received binary message data.</param>
     private void HandleOnBinaryReceived(ReadOnlyMemory<byte> data)
     {
-        this.Trace("trigger binary received");
+        if (ProtocolFrames.IsPingFrame(data))
+            return;
         OnBinaryReceived(data);
     }
 

@@ -71,26 +71,12 @@ internal class ClientManagedWebSocket : IClientManagedWebSocket, ILogSubject
     {
         this.Trace("start");
 
-        lock (_locker)
-        {
-            var cn = Interlocked.Exchange(ref _cn, null);
-            if (cn is null)
-            {
-                this.Trace("skip - not connected");
-                return;
-            }
+        var cn = TeardownUnderLock();
+#pragma warning disable VSTHRD103
+        cn?.Dispose();
+#pragma warning restore VSTHRD103
 
-            this.Trace("unbind events");
-            cn.Managed.OnBinaryReceived -= HandleOnBinaryReceived;
-            cn.Managed.OnTextReceived -= HandleOnTextReceived;
-
-            this.Trace("cancel listen cts");
-            _listenCts.Cancel();
-            _listenCts.Dispose();
-
-            this.Trace("dispose connection");
-            cn.Dispose();
-        }
+        this.Trace("done");
     }
 
     /// <summary>
@@ -145,12 +131,23 @@ internal class ClientManagedWebSocket : IClientManagedWebSocket, ILogSubject
                 _cn = cn;
 
                 this.Trace("create listen cts");
+                // dispose the outgoing CTS before installing the new one (the field initializer
+                // creates an instance that is otherwise leaked on first connect).
+                var oldListenCts = _listenCts;
                 _listenCts = new CancellationTokenSource();
+#pragma warning disable VSTHRD103
+                oldListenCts.Dispose();
+#pragma warning restore VSTHRD103
 
                 this.Trace("create listen task");
                 IsClosed = managedSocket
                     .ListenAsync(_listenCts.Token)
-                    .ContinueWith(HandleClosed, CancellationToken.None);
+                    .ContinueWith(
+                        HandleClosed,
+                        CancellationToken.None,
+                        TaskContinuationOptions.ExecuteSynchronously,
+                        TaskScheduler.Default
+                    );
             }
 
             this.Trace("done (connected)");
@@ -177,26 +174,9 @@ internal class ClientManagedWebSocket : IClientManagedWebSocket, ILogSubject
     {
         this.Trace("start");
 
-        Connection? cn;
-        lock (_locker)
-        {
-            cn = Interlocked.Exchange(ref _cn, null);
-            if (cn is null)
-            {
-                this.Trace("skip - not connected");
-                return;
-            }
-
-            this.Trace("unbind events");
-            cn.Managed.OnTextReceived -= HandleOnTextReceived;
-            cn.Managed.OnBinaryReceived -= HandleOnBinaryReceived;
-
-            this.Trace("cancel listen cts");
-#pragma warning disable VSTHRD103
-            _listenCts.Cancel();
-            _listenCts.Dispose();
-#pragma warning restore VSTHRD103
-        }
+        var cn = TeardownUnderLock();
+        if (cn is null)
+            return;
 
         try
         {
@@ -219,6 +199,37 @@ internal class ClientManagedWebSocket : IClientManagedWebSocket, ILogSubject
 #pragma warning restore VSTHRD003
 
         this.Trace("done");
+    }
+
+    /// <summary>
+    /// Performs the synchronous teardown shared by <see cref="Dispose"/> and <see cref="DisconnectAsync"/>:
+    /// claim the live connection under <c>_locker</c>, unbind events, cancel + dispose the listen CTS.
+    /// </summary>
+    /// <returns>The torn-down connection, or null if the socket was not connected. <c>DisconnectAsync</c>
+    /// uses the returned <c>Native</c> reference to send the close-output frame.</returns>
+    private Connection? TeardownUnderLock()
+    {
+        lock (_locker)
+        {
+            var cn = Interlocked.Exchange(ref _cn, null);
+            if (cn is null)
+            {
+                this.Trace("skip - not connected");
+                return null;
+            }
+
+            this.Trace("unbind events");
+            cn.Managed.OnTextReceived -= HandleOnTextReceived;
+            cn.Managed.OnBinaryReceived -= HandleOnBinaryReceived;
+
+            this.Trace("cancel listen cts");
+#pragma warning disable VSTHRD103
+            _listenCts.Cancel();
+            _listenCts.Dispose();
+#pragma warning restore VSTHRD103
+
+            return cn;
+        }
     }
 
     /// <summary>
@@ -259,6 +270,12 @@ internal class ClientManagedWebSocket : IClientManagedWebSocket, ILogSubject
         if (task.Exception is not null)
             this.Error(task.Exception);
 
+        // Guard task.Result against a faulted antecedent: rethrowing here would propagate the
+        // original exception into IsClosed and silently lose the close result.
+        var faultedResult = task.IsFaulted
+            ? new WebSocketCloseResult(WebSocketCloseStatus.Error, task.Exception?.GetBaseException())
+            : (WebSocketCloseResult?)null;
+
 #pragma warning disable VSTHRD002
         lock (_locker)
         {
@@ -266,7 +283,7 @@ internal class ClientManagedWebSocket : IClientManagedWebSocket, ILogSubject
             if (cn is null)
             {
                 this.Trace("already not connected");
-                return task.Result;
+                return faultedResult ?? task.Result;
             }
 
             this.Trace("start, unsubscribe from managed socket");
@@ -276,7 +293,7 @@ internal class ClientManagedWebSocket : IClientManagedWebSocket, ILogSubject
 
         this.Trace("done");
 
-        return task.Result;
+        return faultedResult ?? task.Result;
 #pragma warning restore VSTHRD002
     }
 
@@ -284,21 +301,13 @@ internal class ClientManagedWebSocket : IClientManagedWebSocket, ILogSubject
     /// Handles text messages received from the managed WebSocket and forwards them to event subscribers.
     /// </summary>
     /// <param name="data">The received text message data.</param>
-    private void HandleOnTextReceived(ReadOnlyMemory<byte> data)
-    {
-        this.Trace("trigger text received");
-        OnTextReceived(data);
-    }
+    private void HandleOnTextReceived(ReadOnlyMemory<byte> data) => OnTextReceived(data);
 
     /// <summary>
     /// Handles binary messages received from the managed WebSocket and forwards them to event subscribers.
     /// </summary>
     /// <param name="data">The received binary message data.</param>
-    private void HandleOnBinaryReceived(ReadOnlyMemory<byte> data)
-    {
-        this.Trace("trigger binary received");
-        OnBinaryReceived(data);
-    }
+    private void HandleOnBinaryReceived(ReadOnlyMemory<byte> data) => OnBinaryReceived(data);
 
     /// <summary>
     /// Cleans up resources when connection fails, disposing native socket and unbinding events.

@@ -1,6 +1,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Annium.Logging;
+using Annium.Net.WebSockets.Internal;
 
 namespace Annium.Net.WebSockets;
 
@@ -18,21 +19,11 @@ public static class ServerWebSocketExtensions
     public static Task<WebSocketCloseStatus> WhenDisconnectedAsync(
         this IServerWebSocket socket,
         CancellationToken ct = default
-    )
-    {
-        var tcs = new TaskCompletionSource<WebSocketCloseStatus>();
-
-        socket.Trace<string>("subscribe {tcs} to OnDisconnected", tcs.GetFullId());
-
-        void HandleDisconnected(WebSocketCloseStatus status)
-        {
-            socket.Trace<string>("set {tcs} to signaled state", tcs.GetFullId());
-            tcs.TrySetResult(status);
-            socket.OnDisconnected -= HandleDisconnected;
-        }
-
-        socket.OnDisconnected += HandleDisconnected;
-
-        return tcs.Task.WaitAsync(ct);
-    }
+    ) =>
+        WebSocketEventHelpers.WaitForDisconnectAsync(
+            handler => socket.OnDisconnected += handler,
+            handler => socket.OnDisconnected -= handler,
+            socket,
+            ct
+        );
 }

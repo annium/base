@@ -6,7 +6,7 @@ namespace Annium.Net.WebSockets;
 /// <summary>
 /// Represents a server-side WebSocket connection for handling client connections.
 /// </summary>
-public interface IServerWebSocket : ISendingReceivingWebSocket, ILogSubject
+public interface IServerWebSocket : ISendingReceivingWebSocket, IDisposable, ILogSubject
 {
     /// <summary>
     /// Event triggered when the WebSocket connection is closed.

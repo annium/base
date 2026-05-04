@@ -63,7 +63,12 @@ internal class ServerManagedWebSocket : IServerManagedWebSocket, ILogSubject
         _managedSocket.OnBinaryReceived += HandleOnBinaryReceived;
 
         this.Trace("start listen");
-        IsClosed = _managedSocket.ListenAsync(ct).ContinueWith(HandleClosed);
+        IsClosed = _managedSocket.ListenAsync(ct).ContinueWith(
+            HandleClosed,
+            CancellationToken.None,
+            TaskContinuationOptions.ExecuteSynchronously,
+            TaskScheduler.Default
+        );
     }
 
     /// <summary>
@@ -71,6 +76,24 @@ internal class ServerManagedWebSocket : IServerManagedWebSocket, ILogSubject
     /// </summary>
     public void Dispose()
     {
+        this.Trace("start");
+
+        _managedSocket.OnTextReceived -= HandleOnTextReceived;
+        _managedSocket.OnBinaryReceived -= HandleOnBinaryReceived;
+
+        try
+        {
+            // synchronous abort; Dispose cannot await CloseOutputAsync
+            if (_nativeSocket.State is WebSocketState.Open or WebSocketState.CloseReceived)
+                _nativeSocket.Abort();
+        }
+        catch (Exception e)
+        {
+            this.Trace("abort failed: {e}", e);
+        }
+
+        _nativeSocket.Dispose();
+
         this.Trace("done");
     }
 
@@ -147,6 +170,13 @@ internal class ServerManagedWebSocket : IServerManagedWebSocket, ILogSubject
 
         this.Trace("done");
 
+        // Guard task.Result against a faulted antecedent: rethrowing here would propagate the
+        // original exception into IsClosed and silently lose the close result.
+        if (task.IsFaulted)
+        {
+            return new WebSocketCloseResult(WebSocketCloseStatus.Error, task.Exception?.GetBaseException());
+        }
+
 #pragma warning disable VSTHRD002
         return task.Result;
 #pragma warning restore VSTHRD002
@@ -156,19 +186,11 @@ internal class ServerManagedWebSocket : IServerManagedWebSocket, ILogSubject
     /// Handles text messages received from the managed WebSocket and forwards them to event subscribers.
     /// </summary>
     /// <param name="data">The received text message data.</param>
-    private void HandleOnTextReceived(ReadOnlyMemory<byte> data)
-    {
-        this.Trace("trigger text received");
-        OnTextReceived(data);
-    }
+    private void HandleOnTextReceived(ReadOnlyMemory<byte> data) => OnTextReceived(data);
 
     /// <summary>
     /// Handles binary messages received from the managed WebSocket and forwards them to event subscribers.
     /// </summary>
     /// <param name="data">The received binary message data.</param>
-    private void HandleOnBinaryReceived(ReadOnlyMemory<byte> data)
-    {
-        this.Trace("trigger binary received");
-        OnBinaryReceived(data);
-    }
+    private void HandleOnBinaryReceived(ReadOnlyMemory<byte> data) => OnBinaryReceived(data);
 }

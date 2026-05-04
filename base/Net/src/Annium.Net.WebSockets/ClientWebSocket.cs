@@ -264,11 +264,16 @@ public class ClientWebSocket : IClientWebSocket
         OnDisconnected(result.Status);
 
         this.Trace("schedule connection in {reconnectDelay}ms", _reconnectDelay);
+        // capture the active token under _locker so the background reconnect task observes a
+        // Disconnect() that lands during the delay (the field is rotated under the same lock).
+        CancellationToken reconnectCt;
+        lock (_locker)
+            reconnectCt = _connectionCts.Token;
         _ = Task.Run(async () =>
         {
             try
             {
-                await Task.Delay(_reconnectDelay);
+                await Task.Delay(_reconnectDelay, reconnectCt);
                 this.Trace("trigger connect");
                 ConnectPrivate(uri);
                 this.Trace("done");
@@ -470,19 +475,17 @@ public class ClientWebSocket : IClientWebSocket
     /// Handles text messages received from the managed WebSocket and forwards them to event subscribers.
     /// </summary>
     /// <param name="data">The received text message data.</param>
-    private void HandleOnTextReceived(ReadOnlyMemory<byte> data)
-    {
-        this.Trace("trigger text received");
-        OnTextReceived(data);
-    }
+    private void HandleOnTextReceived(ReadOnlyMemory<byte> data) => OnTextReceived(data);
 
     /// <summary>
     /// Handles binary messages received from the managed WebSocket and forwards them to event subscribers.
+    /// Filters out ping protocol frames so they don't surface as application data.
     /// </summary>
     /// <param name="data">The received binary message data.</param>
     private void HandleOnBinaryReceived(ReadOnlyMemory<byte> data)
     {
-        this.Trace("trigger binary received");
+        if (ProtocolFrames.IsPingFrame(data))
+            return;
         OnBinaryReceived(data);
     }
 

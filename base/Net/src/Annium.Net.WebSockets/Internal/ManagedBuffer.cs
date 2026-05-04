@@ -24,9 +24,9 @@ internal struct ManagedBuffer : IDisposable
     private bool _isDisposed;
 
     /// <summary>
-    /// Wrap buffer free space as ArraySegment.
+    /// Gets the buffer free space as a <see cref="Memory{T}"/> of bytes.
     /// </summary>
-    /// <returns>Buffer free space as ArraySegment.</returns>
+    /// <returns>Buffer free space as a <see cref="Memory{T}"/> of bytes.</returns>
     public Memory<byte> FreeSpace
     {
         get
@@ -38,9 +38,9 @@ internal struct ManagedBuffer : IDisposable
     }
 
     /// <summary>
-    /// Wrap buffer data as ReadOnlySpan.
+    /// Gets the buffer data as a <see cref="ReadOnlyMemory{T}"/> of bytes.
     /// </summary>
-    /// <returns>Buffer data as ReadOnlySpan.</returns>
+    /// <returns>Buffer data as a <see cref="ReadOnlyMemory{T}"/> of bytes.</returns>
     public ReadOnlyMemory<byte> Data
     {
         get
@@ -80,9 +80,6 @@ internal struct ManagedBuffer : IDisposable
         _dataLength += dataSize;
     }
 
-    /// <summary>
-    /// Resize buffer up due to not enough capacity and track count of elements, written to buffer.
-    /// </summary>
     /// <summary>
     /// Resize buffer up due to not enough capacity and track count of elements, written to buffer.
     /// </summary>

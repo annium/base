@@ -21,7 +21,7 @@ internal class ManagedWebSocket : ISendingReceivingWebSocket, ILogSubject
     /// <summary>
     /// Default buffer size for WebSocket message receiving operations.
     /// </summary>
-    private const int BufferSize = 65_536;
+    private const int BufferSize = ManagedWebSocketDefaults.BufferSize;
 
     /// <summary>
     /// Event triggered when a text message is received.

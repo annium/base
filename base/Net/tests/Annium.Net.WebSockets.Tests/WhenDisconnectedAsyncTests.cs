@@ -144,6 +144,8 @@ public class WhenDisconnectedAsyncTests
             remove { }
         }
 
+        public void Dispose() { }
+
         public void RaiseDisconnected(WebSocketCloseStatus status) => OnDisconnected?.Invoke(status);
 
         public void Disconnect() => throw new NotImplementedException();
