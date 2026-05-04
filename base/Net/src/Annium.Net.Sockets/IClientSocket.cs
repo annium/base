@@ -36,8 +36,8 @@ public interface IClientSocket : ISendingReceivingSocket, IDisposable, ILogSubje
     /// <summary>
     /// Connects to the specified remote endpoint.
     /// </summary>
-    /// <param name="endpoint">The remote endpoint to connect to</param>
-    /// <param name="authOptions">Optional SSL client authentication options for secure connections</param>
+    /// <param name="endpoint">The remote endpoint to connect to.</param>
+    /// <param name="authOptions">Optional SSL client authentication options for secure connections.</param>
     void Connect(IPEndPoint endpoint, SslClientAuthenticationOptions? authOptions = null);
 
     /// <summary>

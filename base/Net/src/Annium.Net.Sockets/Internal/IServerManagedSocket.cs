@@ -16,6 +16,6 @@ internal interface IServerManagedSocket : ISendingReceivingSocket, IDisposable
     /// <summary>
     /// Disconnects from the client asynchronously.
     /// </summary>
-    /// <returns>A task that completes when disconnection is finished</returns>
+    /// <returns>A task that completes when disconnection is finished.</returns>
     Task DisconnectAsync();
 }

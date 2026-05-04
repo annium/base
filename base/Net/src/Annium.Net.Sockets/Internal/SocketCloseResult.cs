@@ -20,8 +20,8 @@ internal readonly struct SocketCloseResult
     /// <summary>
     /// Initializes a new instance of the SocketCloseResult struct.
     /// </summary>
-    /// <param name="status">The close status</param>
-    /// <param name="exception">The exception that caused the close, if any</param>
+    /// <param name="status">The close status.</param>
+    /// <param name="exception">The exception that caused the close, if any.</param>
     public SocketCloseResult(SocketCloseStatus status, Exception? exception)
     {
         Status = status;

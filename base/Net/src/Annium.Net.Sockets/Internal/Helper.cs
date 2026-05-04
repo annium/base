@@ -132,26 +132,17 @@ internal static class Helper
     /// <param name="receive">Per-iteration receive delegate.</param>
     /// <param name="log">Log subject for tracing.</param>
     /// <param name="resource">Optional resource to dispose after the loop ends.</param>
-    /// <param name="initialClosedCheck">Optional pre-loop guard returning a close result if the socket is already torn down.</param>
     /// <returns>The terminal close result.</returns>
     public static Task<SocketCloseResult> RunListenLoopAsync(
         Func<ValueTask<(bool IsClosed, SocketCloseResult Result)>> receive,
         ILogSubject log,
-        IDisposable? resource = null,
-        Func<SocketCloseResult?>? initialClosedCheck = null
+        IDisposable? resource = null
     ) =>
         Task.Run(
             async () =>
             {
                 try
                 {
-                    var initial = initialClosedCheck?.Invoke();
-                    if (initial.HasValue)
-                    {
-                        log.Trace("disposed, return closed local");
-                        return initial.Value;
-                    }
-
                     log.Trace("start");
 
                     while (true)

@@ -34,9 +34,9 @@ internal class DefaultConnectionMonitor : ConnectionMonitorBase
     /// <summary>
     /// Initializes a new instance of the DefaultConnectionMonitor class.
     /// </summary>
-    /// <param name="socket">The socket to monitor for connection health</param>
-    /// <param name="options">Configuration options for the monitor</param>
-    /// <param name="logger">Logger for tracing monitor operations</param>
+    /// <param name="socket">The socket to monitor for connection health.</param>
+    /// <param name="options">Configuration options for the monitor.</param>
+    /// <param name="logger">Logger for tracing monitor operations.</param>
     public DefaultConnectionMonitor(ISendingReceivingSocket socket, ConnectionMonitorOptions options, ILogger logger)
         : base(logger)
     {
@@ -86,7 +86,7 @@ internal class DefaultConnectionMonitor : ConnectionMonitorBase
     /// <summary>
     /// Handles the periodic ping-pong cycle by sending ping frames and checking for connection timeout.
     /// </summary>
-    /// <returns>A task representing the asynchronous ping-pong operation</returns>
+    /// <returns>A task representing the asynchronous ping-pong operation.</returns>
     private async ValueTask HandlePingPongAsync()
     {
         this.Trace("start");
@@ -119,7 +119,7 @@ internal class DefaultConnectionMonitor : ConnectionMonitorBase
     /// <summary>
     /// Handles received data from the socket and resets the ping timer if a ping frame is received.
     /// </summary>
-    /// <param name="data">The data received from the socket</param>
+    /// <param name="data">The data received from the socket.</param>
     private void HandleOnReceived(ReadOnlyMemory<byte> data)
     {
         if (!data.Span.SequenceEqual(ProtocolFrames.Ping.Span))

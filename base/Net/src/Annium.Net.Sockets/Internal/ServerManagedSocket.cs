@@ -39,10 +39,10 @@ internal class ServerManagedSocket : IServerManagedSocket, ILogSubject
     /// <summary>
     /// Initializes a new instance of the ServerManagedSocket class.
     /// </summary>
-    /// <param name="stream">The client connection stream</param>
-    /// <param name="options">Configuration options for the managed socket</param>
-    /// <param name="logger">Logger for tracing socket operations</param>
-    /// <param name="ct">Cancellation token for the socket lifetime</param>
+    /// <param name="stream">The client connection stream.</param>
+    /// <param name="options">Configuration options for the managed socket.</param>
+    /// <param name="logger">Logger for tracing socket operations.</param>
+    /// <param name="ct">Cancellation token for the socket lifetime.</param>
     public ServerManagedSocket(Stream stream, ManagedSocketOptions options, ILogger logger, CancellationToken ct)
     {
         Logger = logger;
@@ -82,7 +82,7 @@ internal class ServerManagedSocket : IServerManagedSocket, ILogSubject
     /// <summary>
     /// Disconnects the client socket and cleans up resources.
     /// </summary>
-    /// <returns>A task representing the asynchronous disconnect operation</returns>
+    /// <returns>A task representing the asynchronous disconnect operation.</returns>
     public async Task DisconnectAsync()
     {
         this.Trace("start");
@@ -109,9 +109,9 @@ internal class ServerManagedSocket : IServerManagedSocket, ILogSubject
     /// <summary>
     /// Sends data to the connected client.
     /// </summary>
-    /// <param name="data">The data to send</param>
-    /// <param name="ct">Cancellation token for the operation</param>
-    /// <returns>The status of the send operation</returns>
+    /// <param name="data">The data to send.</param>
+    /// <param name="ct">Cancellation token for the operation.</param>
+    /// <returns>The status of the send operation.</returns>
     public ValueTask<SocketSendStatus> SendAsync(ReadOnlyMemory<byte> data, CancellationToken ct = default)
     {
         this.Trace("send binary");
@@ -152,7 +152,7 @@ internal class ServerManagedSocket : IServerManagedSocket, ILogSubject
     /// <summary>
     /// Handles data received from the underlying socket and forwards it to subscribers.
     /// </summary>
-    /// <param name="data">The received data</param>
+    /// <param name="data">The received data.</param>
     private void HandleOnReceived(ReadOnlyMemory<byte> data)
     {
         this.Trace("trigger binary received");

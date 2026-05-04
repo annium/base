@@ -128,13 +128,14 @@ internal class MessagingManagedSocket : IManagedSocket, ILogSubject
     /// <returns>The result of the socket close operation when listening ends.</returns>
     public Task<SocketCloseResult> ListenAsync(CancellationToken ct)
     {
+        if (_isDisposed)
+        {
+            this.Trace("disposed, return closed local");
+            return Task.FromResult(new SocketCloseResult(SocketCloseStatus.ClosedLocal, null));
+        }
+
         var buffer = new MessagingBuffer(_options.BufferSize, _options.ExtremeMessageSize);
-        return Helper.RunListenLoopAsync(
-            () => ReceiveAsync(buffer, ct),
-            this,
-            resource: buffer,
-            initialClosedCheck: () => _isDisposed ? new SocketCloseResult(SocketCloseStatus.ClosedLocal, null) : null
-        );
+        return Helper.RunListenLoopAsync(() => ReceiveAsync(buffer, ct), this, resource: buffer);
     }
 
     /// <summary>

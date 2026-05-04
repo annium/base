@@ -16,7 +16,7 @@ internal class MessagingBuffer : IDisposable
     /// <summary>
     /// Wrap buffer free space as Memory.
     /// </summary>
-    /// <returns>Buffer free space as Memory</returns>
+    /// <returns>Buffer free space as Memory.</returns>
     public Memory<byte> FreeSpace
     {
         get
@@ -30,13 +30,13 @@ internal class MessagingBuffer : IDisposable
     /// <summary>
     /// Returns whether buffer is full.
     /// </summary>
-    /// <returns>Whether buffer is full</returns>
+    /// <returns>Whether buffer is full.</returns>
     public bool IsFull => _buffer.Length == DataEnd;
 
     /// <summary>
     /// Returns whether buffer contains full message.
     /// </summary>
-    /// <returns>Whether buffer contains full message</returns>
+    /// <returns>Whether buffer contains full message.</returns>
     public bool ContainsFullMessage
     {
         get
@@ -50,7 +50,7 @@ internal class MessagingBuffer : IDisposable
     /// <summary>
     /// Returns whether the resolved message size exceeds the configured maximum.
     /// </summary>
-    /// <returns>Whether the resolved message size exceeds the configured maximum</returns>
+    /// <returns>Whether the resolved message size exceeds the configured maximum.</returns>
     public bool ExtremeMessageExpected
     {
         get
@@ -69,7 +69,7 @@ internal class MessagingBuffer : IDisposable
     /// <summary>
     /// Wrap buffer message as ReadOnlyMemory.
     /// </summary>
-    /// <returns>Buffer data as ReadOnlyMemory</returns>
+    /// <returns>Buffer data as ReadOnlyMemory.</returns>
     public ReadOnlyMemory<byte> Message
     {
         get
@@ -120,8 +120,8 @@ internal class MessagingBuffer : IDisposable
     /// <summary>
     /// Initializes a new instance of the MessagingBuffer class.
     /// </summary>
-    /// <param name="size">The buffer size</param>
-    /// <param name="maxMessageSize">The maximum expected message size</param>
+    /// <param name="size">The buffer size.</param>
+    /// <param name="maxMessageSize">The maximum expected message size.</param>
     public MessagingBuffer(int size, int maxMessageSize)
     {
         _maxMessageSize = maxMessageSize;
@@ -134,6 +134,9 @@ internal class MessagingBuffer : IDisposable
     public void Reset()
     {
         EnsureNotDisposed();
+
+        // any prior invalid-header observation is tied to the bytes we are about to drop.
+        HasInvalidHeader = false;
 
         // if no data - simply reset state
         if (_dataLength == 0)
@@ -215,7 +218,7 @@ internal class MessagingBuffer : IDisposable
     /// <summary>
     /// Returns a string representation of the buffer state.
     /// </summary>
-    /// <returns>A string describing the buffer state</returns>
+    /// <returns>A string describing the buffer state.</returns>
     public override string ToString() =>
         $"{_dataStart}->{_dataLength} [{(_messageSize > 0 ? HeaderSize + _messageSize : 0)} | {_buffer.Length}] {{max:{_maxMessageSize}}}";
 

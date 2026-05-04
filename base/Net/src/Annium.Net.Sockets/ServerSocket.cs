@@ -56,10 +56,10 @@ public class ServerSocket : IServerSocket
     /// <summary>
     /// Initializes a new instance of the ServerSocket class with specified options.
     /// </summary>
-    /// <param name="stream">The network stream for communication</param>
-    /// <param name="options">Configuration options for the socket</param>
-    /// <param name="logger">Logger instance for diagnostics</param>
-    /// <param name="ct">Cancellation token for the socket lifetime</param>
+    /// <param name="stream">The network stream for communication.</param>
+    /// <param name="options">Configuration options for the socket.</param>
+    /// <param name="logger">Logger instance for diagnostics.</param>
+    /// <param name="ct">Cancellation token for the socket lifetime.</param>
     public ServerSocket(Stream stream, ServerSocketOptions options, ILogger logger, CancellationToken ct = default)
     {
         Logger = logger;
@@ -108,9 +108,9 @@ public class ServerSocket : IServerSocket
     /// <summary>
     /// Initializes a new instance of the ServerSocket class with default options.
     /// </summary>
-    /// <param name="stream">The network stream for communication</param>
-    /// <param name="logger">Logger instance for diagnostics</param>
-    /// <param name="ct">Cancellation token for the socket lifetime</param>
+    /// <param name="stream">The network stream for communication.</param>
+    /// <param name="logger">Logger instance for diagnostics.</param>
+    /// <param name="ct">Cancellation token for the socket lifetime.</param>
     public ServerSocket(Stream stream, ILogger logger, CancellationToken ct = default)
         : this(stream, ServerSocketOptions.Default, logger, ct) { }
 
@@ -140,7 +140,21 @@ public class ServerSocket : IServerSocket
         _connectionMonitor.Stop();
 
         this.Trace("disconnect managed socket");
-        ClientSocket.FireDisconnectInBackground(_socket, OnDisconnected, this);
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await _socket.DisconnectAsync();
+
+                this.Trace("fire disconnected");
+                OnDisconnected(SocketCloseStatus.ClosedLocal);
+            }
+            catch (OperationCanceledException) { }
+            catch (Exception ex)
+            {
+                this.Error<string>("background disconnect teardown failed: {error}", ex.ToString());
+            }
+        });
 
         this.Trace("done");
     }
@@ -148,9 +162,9 @@ public class ServerSocket : IServerSocket
     /// <summary>
     /// Sends binary data to the client asynchronously.
     /// </summary>
-    /// <param name="data">The data to send</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>The status of the send operation</returns>
+    /// <param name="data">The data to send.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>The status of the send operation.</returns>
     public ValueTask<SocketSendStatus> SendAsync(ReadOnlyMemory<byte> data, CancellationToken ct = default)
     {
         this.Trace("send");
@@ -168,7 +182,7 @@ public class ServerSocket : IServerSocket
     /// <summary>
     /// Handles when the underlying socket is closed.
     /// </summary>
-    /// <param name="task">The socket close task result</param>
+    /// <param name="task">The socket close task result.</param>
     /// <returns>A task that completes after subscribers have been notified.</returns>
     private async Task HandleClosedAsync(Task<SocketCloseResult> task)
     {
@@ -209,7 +223,7 @@ public class ServerSocket : IServerSocket
     /// <summary>
     /// Updates the internal connection status.
     /// </summary>
-    /// <param name="status">The new status to set</param>
+    /// <param name="status">The new status to set.</param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void SetStatus(Status status)
     {

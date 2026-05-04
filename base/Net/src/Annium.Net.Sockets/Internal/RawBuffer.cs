@@ -26,7 +26,7 @@ internal struct RawBuffer : IDisposable
     /// <summary>
     /// Wrap buffer free space as Memory.
     /// </summary>
-    /// <returns>Buffer free space as Memory</returns>
+    /// <returns>Buffer free space as Memory.</returns>
     public Memory<byte> FreeSpace
     {
         get
@@ -40,7 +40,7 @@ internal struct RawBuffer : IDisposable
     /// <summary>
     /// Wrap buffer message as ReadOnlyMemory.
     /// </summary>
-    /// <returns>Buffer data as ReadOnlyMemory</returns>
+    /// <returns>Buffer data as ReadOnlyMemory.</returns>
     public ReadOnlyMemory<byte> Data
     {
         get
@@ -54,7 +54,7 @@ internal struct RawBuffer : IDisposable
     /// <summary>
     /// Initializes a new instance of the RawBuffer struct.
     /// </summary>
-    /// <param name="size">The minimum size of the buffer to rent from the array pool</param>
+    /// <param name="size">The minimum size of the buffer to rent from the array pool.</param>
     public RawBuffer(int size)
     {
         _buffer = ArrayPool<byte>.Shared.Rent(size);

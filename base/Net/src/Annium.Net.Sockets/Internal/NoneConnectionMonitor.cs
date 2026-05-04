@@ -10,7 +10,7 @@ internal class NoneConnectionMonitor : ConnectionMonitorBase
     /// <summary>
     /// Initializes a new instance of the NoneConnectionMonitor class.
     /// </summary>
-    /// <param name="logger">Logger instance for diagnostics</param>
+    /// <param name="logger">Logger instance for diagnostics.</param>
     public NoneConnectionMonitor(ILogger logger)
         : base(logger) { }
 

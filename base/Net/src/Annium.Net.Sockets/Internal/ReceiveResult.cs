@@ -25,9 +25,9 @@ internal readonly struct ReceiveResult
     /// <summary>
     /// Initializes a new instance of the ReceiveResult struct.
     /// </summary>
-    /// <param name="count">The number of bytes received</param>
-    /// <param name="status">The socket close status, if applicable</param>
-    /// <param name="exception">The exception that occurred, if any</param>
+    /// <param name="count">The number of bytes received.</param>
+    /// <param name="status">The socket close status, if applicable.</param>
+    /// <param name="exception">The exception that occurred, if any.</param>
     public ReceiveResult(int count, SocketCloseStatus? status, Exception? exception)
     {
         Count = count;

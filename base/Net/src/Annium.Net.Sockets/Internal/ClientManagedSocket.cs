@@ -53,8 +53,8 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
     /// <summary>
     /// Initializes a new instance of the ClientManagedSocket class.
     /// </summary>
-    /// <param name="options">Configuration options for the socket</param>
-    /// <param name="logger">Logger instance for diagnostics</param>
+    /// <param name="options">Configuration options for the socket.</param>
+    /// <param name="logger">Logger instance for diagnostics.</param>
     public ClientManagedSocket(ManagedSocketOptions options, ILogger logger)
     {
         _options = options;
@@ -76,10 +76,10 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
     /// <summary>
     /// Connects to the specified remote endpoint asynchronously.
     /// </summary>
-    /// <param name="endpoint">The remote endpoint to connect to</param>
-    /// <param name="authOptions">Optional SSL client authentication options</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>A task that completes with null on success or an exception on failure</returns>
+    /// <param name="endpoint">The remote endpoint to connect to.</param>
+    /// <param name="authOptions">Optional SSL client authentication options.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>A task that completes with null on success or an exception on failure.</returns>
     public async Task<Exception?> ConnectAsync(
         IPEndPoint endpoint,
         SslClientAuthenticationOptions? authOptions,
@@ -157,7 +157,14 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
                 _listenCts = new CancellationTokenSource();
 
                 this.Trace("create listen task");
-                IsClosed = socket.ListenAsync(_listenCts.Token).ContinueWith(HandleClosed, CancellationToken.None);
+                IsClosed = socket
+                    .ListenAsync(_listenCts.Token)
+                    .ContinueWith(
+                        HandleClosed,
+                        CancellationToken.None,
+                        TaskContinuationOptions.ExecuteSynchronously,
+                        TaskScheduler.Default
+                    );
             }
 
             this.Trace("done (connected)");
@@ -230,9 +237,9 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
     /// <summary>
     /// Sends data to the remote endpoint asynchronously.
     /// </summary>
-    /// <param name="data">The data to send</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>The status of the send operation</returns>
+    /// <param name="data">The data to send.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>The status of the send operation.</returns>
     public ValueTask<SocketSendStatus> SendAsync(ReadOnlyMemory<byte> data, CancellationToken ct = default)
     {
         this.Trace("send");
@@ -243,14 +250,41 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
     /// <summary>
     /// Handles when the underlying socket is closed.
     /// </summary>
-    /// <param name="task">The socket close task result</param>
-    /// <returns>The socket close result</returns>
+    /// <param name="task">The socket close task result.</param>
+    /// <returns>The socket close result.</returns>
     private SocketCloseResult HandleClosed(Task<SocketCloseResult> task)
     {
         this.Trace("start");
 
         if (task.Exception is not null)
             this.Error(task.Exception);
+
+        // Guard task.Result against a faulted antecedent (mirror of ServerManagedSocket.HandleClosed):
+        // accessing task.Result on a faulted Task throws AggregateException, which would propagate
+        // into IsClosed and silently lose the close result.
+        if (task.IsFaulted)
+        {
+            var faultedResult = new SocketCloseResult(SocketCloseStatus.Error, task.Exception?.GetBaseException());
+
+            lock (_locker)
+            {
+                var cn = Interlocked.Exchange(ref _cn, null);
+                if (cn is null)
+                {
+                    this.Trace("skip - not connected (faulted)");
+                    return faultedResult;
+                }
+
+                this.Trace("unbind events (faulted)");
+                cn.Socket.OnReceived -= HandleOnReceived;
+
+                this.Trace("dispose connection (faulted)");
+                cn.Dispose();
+            }
+
+            this.Trace("done (faulted)");
+            return faultedResult;
+        }
 
 #pragma warning disable VSTHRD002
         lock (_locker)
@@ -278,7 +312,7 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
     /// <summary>
     /// Handles received data from the underlying socket.
     /// </summary>
-    /// <param name="data">The received data</param>
+    /// <param name="data">The received data.</param>
     private void HandleOnReceived(ReadOnlyMemory<byte> data)
     {
         this.Trace("trigger binary received");
@@ -288,8 +322,8 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
     /// <summary>
     /// Cleans up resources when connection fails.
     /// </summary>
-    /// <param name="stream">The stream to dispose</param>
-    /// <param name="socket">The socket to dispose</param>
+    /// <param name="stream">The stream to dispose.</param>
+    /// <param name="socket">The socket to dispose.</param>
     private void Cleanup(Stream? stream, IManagedSocket? socket)
     {
         this.Trace("start");
@@ -313,9 +347,9 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
     /// <summary>
     /// Represents a connection with its stream and socket.
     /// </summary>
-    /// <param name="Stream">The network stream</param>
-    /// <param name="Socket">The managed socket</param>
-    /// <param name="Logger">The logger instance</param>
+    /// <param name="Stream">The network stream.</param>
+    /// <param name="Socket">The managed socket.</param>
+    /// <param name="Logger">The logger instance.</param>
     private sealed record Connection(Stream Stream, IManagedSocket Socket, ILogger Logger) : IDisposable, ILogSubject
     {
         /// <summary>

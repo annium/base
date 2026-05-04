@@ -100,8 +100,8 @@ public class ClientSocket : IClientSocket
     /// <summary>
     /// Initializes a new instance of the ClientSocket class with specified options.
     /// </summary>
-    /// <param name="options">Configuration options for the socket</param>
-    /// <param name="logger">Logger instance for diagnostics</param>
+    /// <param name="options">Configuration options for the socket.</param>
+    /// <param name="logger">Logger instance for diagnostics.</param>
     public ClientSocket(ClientSocketOptions options, ILogger logger)
     {
         Logger = logger;
@@ -131,15 +131,15 @@ public class ClientSocket : IClientSocket
     /// <summary>
     /// Initializes a new instance of the ClientSocket class with default options.
     /// </summary>
-    /// <param name="logger">Logger instance for diagnostics</param>
+    /// <param name="logger">Logger instance for diagnostics.</param>
     public ClientSocket(ILogger logger)
         : this(ClientSocketOptions.Default, logger) { }
 
     /// <summary>
     /// Connects to the specified remote endpoint.
     /// </summary>
-    /// <param name="endpoint">The remote endpoint to connect to</param>
-    /// <param name="authOptions">Optional SSL client authentication options for secure connections</param>
+    /// <param name="endpoint">The remote endpoint to connect to.</param>
+    /// <param name="authOptions">Optional SSL client authentication options for secure connections.</param>
     public void Connect(IPEndPoint endpoint, SslClientAuthenticationOptions? authOptions = null)
     {
         this.Trace("start");
@@ -194,7 +194,21 @@ public class ClientSocket : IClientSocket
         _connectionMonitor.Stop();
 
         this.Trace("disconnect managed socket");
-        FireDisconnectInBackground(_socket, OnDisconnected, this);
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await _socket.DisconnectAsync();
+
+                this.Trace("fire disconnected");
+                OnDisconnected(SocketCloseStatus.ClosedLocal);
+            }
+            catch (OperationCanceledException) { }
+            catch (Exception ex)
+            {
+                this.Error(ex, "background disconnect teardown failed");
+            }
+        });
 
         this.Trace("done");
     }
@@ -202,9 +216,9 @@ public class ClientSocket : IClientSocket
     /// <summary>
     /// Sends binary data to the remote endpoint asynchronously.
     /// </summary>
-    /// <param name="data">The data to send</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>The status of the send operation</returns>
+    /// <param name="data">The data to send.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>The status of the send operation.</returns>
     public ValueTask<SocketSendStatus> SendAsync(ReadOnlyMemory<byte> data, CancellationToken ct = default)
     {
         this.Trace("send binary");
@@ -222,8 +236,8 @@ public class ClientSocket : IClientSocket
     /// <summary>
     /// Handles reconnection logic after a connection is lost.
     /// </summary>
-    /// <param name="config">The connection configuration to use for reconnection</param>
-    /// <param name="result">The result of the previous connection close</param>
+    /// <param name="config">The connection configuration to use for reconnection.</param>
+    /// <param name="result">The result of the previous connection close.</param>
     private void ReconnectPrivate(ConnectionConfig config, SocketCloseResult result)
     {
         this.Trace("start");
@@ -261,7 +275,7 @@ public class ClientSocket : IClientSocket
     /// <summary>
     /// Performs the actual connection logic.
     /// </summary>
-    /// <param name="config">The connection configuration</param>
+    /// <param name="config">The connection configuration.</param>
     private void ConnectPrivate(ConnectionConfig config)
     {
         this.Trace("start");
@@ -308,8 +322,8 @@ public class ClientSocket : IClientSocket
     /// <summary>
     /// Handles the result of a connection attempt.
     /// </summary>
-    /// <param name="task">The connection task result</param>
-    /// <param name="state">The connection configuration state</param>
+    /// <param name="task">The connection task result.</param>
+    /// <param name="state">The connection configuration state.</param>
     private void HandleConnected(Task<Exception?> task, object? state)
     {
         this.Trace("start");
@@ -409,7 +423,7 @@ public class ClientSocket : IClientSocket
     /// <summary>
     /// Handles when the underlying socket is closed.
     /// </summary>
-    /// <param name="task">The socket close task result</param>
+    /// <param name="task">The socket close task result.</param>
     private void HandleClosed(Task<SocketCloseResult> task)
     {
         this.Trace("start");
@@ -438,7 +452,7 @@ public class ClientSocket : IClientSocket
     /// <summary>
     /// Updates the internal connection status.
     /// </summary>
-    /// <param name="status">The new status to set</param>
+    /// <param name="status">The new status to set.</param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void SetStatus(Status status)
     {
@@ -463,71 +477,10 @@ public class ClientSocket : IClientSocket
     }
 
     /// <summary>
-    /// Fires the managed-socket disconnect on a background task and raises <paramref name="onDisconnected"/> with
-    /// <see cref="SocketCloseStatus.ClosedLocal"/> after teardown completes. Shared between client and server
-    /// sockets to remove the duplicated fire-and-forget block.
-    /// </summary>
-    /// <param name="socket">The managed socket to disconnect.</param>
-    /// <param name="onDisconnected">Invoked once teardown finishes.</param>
-    /// <param name="log">Log subject for tracing failures.</param>
-    internal static void FireDisconnectInBackground(
-        IClientManagedSocket socket,
-        Action<SocketCloseStatus> onDisconnected,
-        ILogSubject log
-    )
-    {
-        _ = Task.Run(async () =>
-        {
-            try
-            {
-                await socket.DisconnectAsync();
-
-                log.Trace("fire disconnected");
-                onDisconnected(SocketCloseStatus.ClosedLocal);
-            }
-            catch (OperationCanceledException) { }
-            catch (Exception ex)
-            {
-                log.Error(ex, "background disconnect teardown failed");
-            }
-        });
-    }
-
-    /// <summary>
-    /// Same as <see cref="FireDisconnectInBackground(IClientManagedSocket, Action{SocketCloseStatus}, ILogSubject)"/>
-    /// but for server-side managed sockets.
-    /// </summary>
-    /// <param name="socket">The managed socket to disconnect.</param>
-    /// <param name="onDisconnected">Invoked once teardown finishes.</param>
-    /// <param name="log">Log subject for tracing failures.</param>
-    internal static void FireDisconnectInBackground(
-        IServerManagedSocket socket,
-        Action<SocketCloseStatus> onDisconnected,
-        ILogSubject log
-    )
-    {
-        _ = Task.Run(async () =>
-        {
-            try
-            {
-                await socket.DisconnectAsync();
-
-                log.Trace("fire disconnected");
-                onDisconnected(SocketCloseStatus.ClosedLocal);
-            }
-            catch (OperationCanceledException) { }
-            catch (Exception ex)
-            {
-                log.Error(ex, "background disconnect teardown failed");
-            }
-        });
-    }
-
-    /// <summary>
     /// Configuration for a socket connection.
     /// </summary>
-    /// <param name="Endpoint">The remote endpoint to connect to</param>
-    /// <param name="AuthOptions">Optional SSL authentication options</param>
+    /// <param name="Endpoint">The remote endpoint to connect to.</param>
+    /// <param name="AuthOptions">Optional SSL authentication options.</param>
     private record ConnectionConfig(IPEndPoint Endpoint, SslClientAuthenticationOptions? AuthOptions);
 
     /// <summary>

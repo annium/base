@@ -19,10 +19,10 @@ internal interface IClientManagedSocket : ISendingReceivingSocket, IDisposable
     /// <summary>
     /// Connects to the specified remote endpoint asynchronously.
     /// </summary>
-    /// <param name="endpoint">The remote endpoint to connect to</param>
-    /// <param name="authOptions">Optional SSL client authentication options</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>A task that completes with null on success or an exception on failure</returns>
+    /// <param name="endpoint">The remote endpoint to connect to.</param>
+    /// <param name="authOptions">Optional SSL client authentication options.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>A task that completes with null on success or an exception on failure.</returns>
     Task<Exception?> ConnectAsync(
         IPEndPoint endpoint,
         SslClientAuthenticationOptions? authOptions = null,
@@ -32,6 +32,6 @@ internal interface IClientManagedSocket : ISendingReceivingSocket, IDisposable
     /// <summary>
     /// Disconnects from the remote endpoint asynchronously.
     /// </summary>
-    /// <returns>A task that completes when disconnection is finished</returns>
+    /// <returns>A task that completes when disconnection is finished.</returns>
     Task DisconnectAsync();
 }
