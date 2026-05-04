@@ -20,6 +20,18 @@ internal static class Descriptors
     );
 
     /// <summary>
+    /// Diagnostic descriptor for detecting explicit values passed to caller-info parameters of logging extension methods.
+    /// </summary>
+    public static readonly DiagnosticDescriptor Log0002ExplicitCallerArgument = new(
+        id: "LOG0002",
+        title: "Caller-info argument must not be specified explicitly",
+        messageFormat: "Argument bound to '{0}' overrides a compiler-injected caller-info value",
+        category: "Logging",
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true
+    );
+
+    /// <summary>
     /// Diagnostic descriptor for enforcing exception class naming convention.
     /// </summary>
     public static readonly DiagnosticDescriptor Pg0001ExceptionNameFormat = new(

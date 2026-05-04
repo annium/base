@@ -208,7 +208,7 @@ public class ClientSocket : IClientSocket
             catch (OperationCanceledException) { }
             catch (Exception ex)
             {
-                this.Error(ex, "Disconnect background teardown failed");
+                this.Error("Disconnect background teardown failed: {exception}", ex);
             }
         });
 
@@ -269,7 +269,7 @@ public class ClientSocket : IClientSocket
             catch (OperationCanceledException) { }
             catch (Exception ex)
             {
-                this.Error(ex, "scheduled reconnect failed");
+                this.Error("scheduled reconnect failed: {exception}", ex);
             }
         });
     }
@@ -315,7 +315,7 @@ public class ClientSocket : IClientSocket
             catch (OperationCanceledException) { }
             catch (Exception ex)
             {
-                this.Error(ex, "ConnectPrivate background connect failed");
+                this.Error("ConnectPrivate background connect failed: {exception}", ex);
             }
         });
 
@@ -371,7 +371,7 @@ public class ClientSocket : IClientSocket
                 catch (OperationCanceledException) { }
                 catch (Exception ex)
                 {
-                    this.Error(ex, "HandleClosed failed");
+                    this.Error("HandleClosed failed: {exception}", ex);
                 }
             },
             CancellationToken.None
@@ -416,7 +416,7 @@ public class ClientSocket : IClientSocket
             catch (OperationCanceledException) { }
             catch (Exception ex)
             {
-                this.Error(ex, "HandleConnectionLost disconnect failed");
+                this.Error("HandleConnectionLost disconnect failed: {exception}", ex);
             }
         });
 

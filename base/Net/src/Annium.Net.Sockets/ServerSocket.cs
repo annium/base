@@ -86,7 +86,7 @@ public class ServerSocket : IServerSocket
                 catch (OperationCanceledException) { }
                 catch (Exception ex)
                 {
-                    this.Error(ex, "HandleClosed failed");
+                    this.Error("HandleClosed failed: {exception}", ex);
                 }
             },
             CancellationToken.None
@@ -152,7 +152,7 @@ public class ServerSocket : IServerSocket
             catch (OperationCanceledException) { }
             catch (Exception ex)
             {
-                this.Error(ex, "Disconnect background teardown failed");
+                this.Error("Disconnect background teardown failed: {exception}", ex);
             }
         });
 
