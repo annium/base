@@ -122,7 +122,7 @@ internal class DefaultConnectionMonitor : ConnectionMonitorBase
     /// <param name="data">The received binary data to check for ping frames.</param>
     private void HandleOnReceived(ReadOnlyMemory<byte> data)
     {
-        if (!data.Span.SequenceEqual(ProtocolFrames.Ping.Span))
+        if (!ProtocolFrames.IsPingFrame(data))
             return;
 
         if (ReadIsRunning() == 0)

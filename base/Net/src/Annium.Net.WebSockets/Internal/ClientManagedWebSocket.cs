@@ -198,6 +198,13 @@ internal class ClientManagedWebSocket : IClientManagedWebSocket, ILogSubject
         await IsClosed;
 #pragma warning restore VSTHRD003
 
+        // dispose the connection now that the close-output handshake is done and the listen
+        // loop has terminated. Without this, every clean DisconnectAsync leaks the native
+        // ClientWebSocket — only the GC finalizer would reclaim it.
+#pragma warning disable VSTHRD103
+        cn.Dispose();
+#pragma warning restore VSTHRD103
+
         this.Trace("done");
     }
 
@@ -272,18 +279,19 @@ internal class ClientManagedWebSocket : IClientManagedWebSocket, ILogSubject
 
         // Guard task.Result against a faulted antecedent: rethrowing here would propagate the
         // original exception into IsClosed and silently lose the close result.
-        var faultedResult = task.IsFaulted
-            ? new WebSocketCloseResult(WebSocketCloseStatus.Error, task.Exception?.GetBaseException())
-            : (WebSocketCloseResult?)null;
-
 #pragma warning disable VSTHRD002
+        var result = task.IsFaulted
+            ? new WebSocketCloseResult(WebSocketCloseStatus.Error, task.Exception?.GetBaseException())
+            : task.Result;
+#pragma warning restore VSTHRD002
+
         lock (_locker)
         {
             var cn = Interlocked.Exchange(ref _cn, null);
             if (cn is null)
             {
                 this.Trace("already not connected");
-                return faultedResult ?? task.Result;
+                return result;
             }
 
             this.Trace("start, unsubscribe from managed socket");
@@ -293,8 +301,7 @@ internal class ClientManagedWebSocket : IClientManagedWebSocket, ILogSubject
 
         this.Trace("done");
 
-        return faultedResult ?? task.Result;
-#pragma warning restore VSTHRD002
+        return result;
     }
 
     /// <summary>

@@ -111,11 +111,14 @@ public class ServerWebSocket : IServerWebSocket
     }
 
     /// <summary>
-    /// Disposes the WebSocket server by triggering <see cref="Disconnect"/>.
+    /// Disposes the WebSocket server: triggers <see cref="Disconnect"/> for graceful close
+    /// and disposes the underlying managed socket so the native <c>System.Net.WebSockets.WebSocket</c>
+    /// is reclaimed deterministically rather than via the GC finalizer.
     /// </summary>
     public void Dispose()
     {
         Disconnect();
+        _socket.Dispose();
     }
 
     /// <summary>

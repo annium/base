@@ -43,6 +43,13 @@ internal class ServerManagedWebSocket : IServerManagedWebSocket, ILogSubject
     private readonly ManagedWebSocket _managedSocket;
 
     /// <summary>
+    /// Once-only teardown guard (1 = teardown ran). Set via <see cref="Interlocked"/>.CompareExchange
+    /// so the unbind/close sequence runs at most once across <see cref="Dispose"/>,
+    /// <see cref="DisconnectAsync"/>, and <see cref="HandleClosed"/>.
+    /// </summary>
+    private int _tornDown;
+
+    /// <summary>
     /// Initializes a new instance of the ServerManagedWebSocket.
     /// </summary>
     /// <param name="nativeSocket">The native WebSocket instance from the server.</param>
@@ -78,8 +85,14 @@ internal class ServerManagedWebSocket : IServerManagedWebSocket, ILogSubject
     {
         this.Trace("start");
 
-        _managedSocket.OnTextReceived -= HandleOnTextReceived;
-        _managedSocket.OnBinaryReceived -= HandleOnBinaryReceived;
+        if (!TryClaimTeardown())
+        {
+            this.Trace("skip - already torn down");
+            _nativeSocket.Dispose();
+            return;
+        }
+
+        UnbindEvents();
 
         try
         {
@@ -105,9 +118,14 @@ internal class ServerManagedWebSocket : IServerManagedWebSocket, ILogSubject
     {
         this.Trace("start");
 
+        if (!TryClaimTeardown())
+        {
+            this.Trace("skip - already torn down");
+            return;
+        }
+
         this.Trace("unbind events");
-        _managedSocket.OnTextReceived -= HandleOnTextReceived;
-        _managedSocket.OnBinaryReceived -= HandleOnBinaryReceived;
+        UnbindEvents();
 
         try
         {
@@ -165,8 +183,14 @@ internal class ServerManagedWebSocket : IServerManagedWebSocket, ILogSubject
         if (task.Exception is not null)
             this.Error(task.Exception);
 
-        _managedSocket.OnTextReceived -= HandleOnTextReceived;
-        _managedSocket.OnBinaryReceived -= HandleOnBinaryReceived;
+        if (TryClaimTeardown())
+        {
+            UnbindEvents();
+        }
+        else
+        {
+            this.Trace("skip - already torn down");
+        }
 
         this.Trace("done");
 
@@ -180,6 +204,23 @@ internal class ServerManagedWebSocket : IServerManagedWebSocket, ILogSubject
 #pragma warning disable VSTHRD002
         return task.Result;
 #pragma warning restore VSTHRD002
+    }
+
+    /// <summary>
+    /// Atomically claims the once-only teardown right. Returns true for the first caller and
+    /// false for every subsequent caller (Dispose/DisconnectAsync/HandleClosed all race for it).
+    /// </summary>
+    /// <returns>True if this caller won the race and should perform teardown.</returns>
+    private bool TryClaimTeardown() => Interlocked.CompareExchange(ref _tornDown, 1, 0) == 0;
+
+    /// <summary>
+    /// Unsubscribes the trampoline handlers from the managed socket. Idempotent on its own,
+    /// but only called by the teardown winner so the unsubscribe runs exactly once.
+    /// </summary>
+    private void UnbindEvents()
+    {
+        _managedSocket.OnTextReceived -= HandleOnTextReceived;
+        _managedSocket.OnBinaryReceived -= HandleOnBinaryReceived;
     }
 
     /// <summary>

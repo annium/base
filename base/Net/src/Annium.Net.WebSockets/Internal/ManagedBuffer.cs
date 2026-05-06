@@ -26,7 +26,7 @@ internal struct ManagedBuffer : IDisposable
     /// <summary>
     /// Gets the buffer free space as a <see cref="Memory{T}"/> of bytes.
     /// </summary>
-    /// <returns>Buffer free space as a <see cref="Memory{T}"/> of bytes.</returns>
+    /// <value>Buffer free space as a <see cref="Memory{T}"/> of bytes.</value>
     public Memory<byte> FreeSpace
     {
         get
@@ -40,7 +40,7 @@ internal struct ManagedBuffer : IDisposable
     /// <summary>
     /// Gets the buffer data as a <see cref="ReadOnlyMemory{T}"/> of bytes.
     /// </summary>
-    /// <returns>Buffer data as a <see cref="ReadOnlyMemory{T}"/> of bytes.</returns>
+    /// <value>Buffer data as a <see cref="ReadOnlyMemory{T}"/> of bytes.</value>
     public ReadOnlyMemory<byte> Data
     {
         get
@@ -113,7 +113,7 @@ internal struct ManagedBuffer : IDisposable
     /// <summary>
     /// Ensures the buffer has not been disposed, throws exception if it has.
     /// </summary>
-    /// <exception cref="ObjectDisposedException">Thrown when the buffer is already disposed</exception>
+    /// <exception cref="ObjectDisposedException">Thrown when the buffer is already disposed.</exception>
     private void EnsureNotDisposed()
     {
         if (_isDisposed)
