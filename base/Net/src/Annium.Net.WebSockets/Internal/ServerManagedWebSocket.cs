@@ -85,24 +85,29 @@ internal class ServerManagedWebSocket : IServerManagedWebSocket, ILogSubject
     {
         this.Trace("start");
 
-        if (!TryClaimTeardown())
+        // Gate abort + unbind on the once-only teardown claim. Native disposal is
+        // unconditional (and idempotent per WebSocket.Dispose semantics): if a winner
+        // already ran (HandleClosed or DisconnectAsync), the native socket has not been
+        // disposed yet — those paths only unbind and (for DisconnectAsync) send the
+        // close-output frame. Dispose is the sole owner of native disposal.
+        if (TryClaimTeardown())
         {
-            this.Trace("skip - already torn down");
-            _nativeSocket.Dispose();
-            return;
-        }
+            UnbindEvents();
 
-        UnbindEvents();
-
-        try
-        {
-            // synchronous abort; Dispose cannot await CloseOutputAsync
-            if (_nativeSocket.State is WebSocketState.Open or WebSocketState.CloseReceived)
-                _nativeSocket.Abort();
+            try
+            {
+                // synchronous abort; Dispose cannot await CloseOutputAsync
+                if (_nativeSocket.State is WebSocketState.Open or WebSocketState.CloseReceived)
+                    _nativeSocket.Abort();
+            }
+            catch (Exception e)
+            {
+                this.Trace("abort failed: {e}", e);
+            }
         }
-        catch (Exception e)
+        else
         {
-            this.Trace("abort failed: {e}", e);
+            this.Trace("teardown already claimed; skip abort + unbind");
         }
 
         _nativeSocket.Dispose();

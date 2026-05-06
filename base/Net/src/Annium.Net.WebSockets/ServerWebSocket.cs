@@ -111,13 +111,16 @@ public class ServerWebSocket : IServerWebSocket
     }
 
     /// <summary>
-    /// Disposes the WebSocket server: triggers <see cref="Disconnect"/> for graceful close
-    /// and disposes the underlying managed socket so the native <c>System.Net.WebSockets.WebSocket</c>
-    /// is reclaimed deterministically rather than via the GC finalizer.
+    /// Disposes the WebSocket server with **forced-close** semantics: aborts the underlying
+    /// native socket and reclaims it deterministically. Does NOT send a graceful close-output
+    /// frame — callers wanting graceful close should call <see cref="Disconnect"/> first and
+    /// wait for <see cref="OnDisconnected"/> to fire (or use the <c>WhenDisconnectedAsync</c>
+    /// extension) before invoking <see cref="Dispose"/>. Mixing graceful and forced close in a
+    /// single <see cref="Dispose"/> body would race the synchronous abort against the
+    /// fire-and-forget <see cref="Disconnect"/> background task.
     /// </summary>
     public void Dispose()
     {
-        Disconnect();
         _socket.Dispose();
     }
 

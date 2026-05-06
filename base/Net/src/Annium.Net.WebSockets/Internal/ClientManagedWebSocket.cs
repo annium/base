@@ -285,11 +285,13 @@ internal class ClientManagedWebSocket : IClientManagedWebSocket, ILogSubject
             : task.Result;
 #pragma warning restore VSTHRD002
 
+        Connection? capturedCn;
         lock (_locker)
         {
             var cn = Interlocked.Exchange(ref _cn, null);
             if (cn is null)
             {
+                // DisconnectAsync already claimed and will dispose; nothing to do here.
                 this.Trace("already not connected");
                 return result;
             }
@@ -297,7 +299,16 @@ internal class ClientManagedWebSocket : IClientManagedWebSocket, ILogSubject
             this.Trace("start, unsubscribe from managed socket");
             cn.Managed.OnTextReceived -= HandleOnTextReceived;
             cn.Managed.OnBinaryReceived -= HandleOnBinaryReceived;
+            capturedCn = cn;
         }
+
+        // Dispose outside the lock — Connection.Dispose disposes the native socket and we
+        // don't want to hold _locker through that. Without this dispose, every remote-close
+        // path would leak the native ClientWebSocket (DisconnectAsync handles the
+        // locally-initiated path; HandleClosed handles the remote-close path).
+#pragma warning disable VSTHRD103
+        capturedCn.Dispose();
+#pragma warning restore VSTHRD103
 
         this.Trace("done");
 
