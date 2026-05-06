@@ -68,13 +68,35 @@ internal class ServerManagedSocket : IServerManagedSocket, ILogSubject
     }
 
     /// <summary>
-    /// Disposes the server managed socket and its underlying resources.
+    /// Disposes the server managed socket with forced-close semantics: unbinds the receive
+    /// trampoline, disposes the inner managed socket, and closes the stream. Idempotent: a
+    /// follow-up <see cref="DisconnectAsync"/> is safe (its event unsubscribe is a no-op
+    /// after the first one; <see cref="Stream.Close"/> is idempotent; the inner socket's
+    /// <see cref="IDisposable.Dispose"/> is idempotent).
     /// </summary>
     public void Dispose()
     {
-        this.Trace("start, dispose socket");
+        this.Trace("start");
 
-        _socket.Dispose();
+        _socket.OnReceived -= HandleOnReceived;
+
+        try
+        {
+            _socket.Dispose();
+        }
+        catch (Exception e)
+        {
+            this.Trace("inner socket dispose failed: {e}", e);
+        }
+
+        try
+        {
+            _stream.Close();
+        }
+        catch (Exception e)
+        {
+            this.Trace("stream close failed: {e}", e);
+        }
 
         this.Trace("done");
     }

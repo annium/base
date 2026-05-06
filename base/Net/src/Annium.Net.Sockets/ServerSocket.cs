@@ -172,11 +172,18 @@ public class ServerSocket : IServerSocket
     }
 
     /// <summary>
-    /// Disposes the socket by triggering <see cref="Disconnect"/>.
+    /// Disposes the socket with **forced-close** semantics: synchronously disposes the
+    /// underlying managed socket so the stream is closed deterministically rather than via
+    /// the GC finalizer. Does NOT trigger a graceful disconnect — callers wanting graceful
+    /// close should call <see cref="Disconnect"/> first and wait for <see cref="OnDisconnected"/>
+    /// to fire (or use the <c>WhenDisconnectedAsync</c> extension) before invoking
+    /// <see cref="Dispose"/>. Mixing graceful and forced close in a single <see cref="Dispose"/>
+    /// body would race the synchronous teardown against the fire-and-forget
+    /// <see cref="Disconnect"/> background task.
     /// </summary>
     public void Dispose()
     {
-        Disconnect();
+        _socket.Dispose();
     }
 
     /// <summary>
