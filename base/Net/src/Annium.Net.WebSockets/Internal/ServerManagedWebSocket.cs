@@ -70,12 +70,14 @@ internal class ServerManagedWebSocket : IServerManagedWebSocket, ILogSubject
         _managedSocket.OnBinaryReceived += HandleOnBinaryReceived;
 
         this.Trace("start listen");
-        IsClosed = _managedSocket.ListenAsync(ct).ContinueWith(
-            HandleClosed,
-            CancellationToken.None,
-            TaskContinuationOptions.ExecuteSynchronously,
-            TaskScheduler.Default
-        );
+        IsClosed = _managedSocket
+            .ListenAsync(ct)
+            .ContinueWith(
+                HandleClosed,
+                CancellationToken.None,
+                TaskContinuationOptions.ExecuteSynchronously,
+                TaskScheduler.Default
+            );
     }
 
     /// <summary>
