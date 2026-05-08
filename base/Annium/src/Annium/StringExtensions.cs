@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -121,12 +122,15 @@ public static class StringExtensions
     /// Repeats the string a specified number of times.
     /// </summary>
     /// <param name="value">The string to repeat.</param>
-    /// <param name="count">The number of times to repeat the string.</param>
-    /// <returns>A string that is the result of repeating the input string the specified number of times.</returns>
+    /// <param name="count">The number of times to repeat the string. Must be non-negative.</param>
+    /// <returns>An empty string when <paramref name="count"/> is zero or <paramref name="value"/> is empty; otherwise the input repeated <paramref name="count"/> times.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="count"/> is negative.</exception>
     public static string Repeat(this string value, int count)
     {
-        if (string.IsNullOrEmpty(value) || count <= 0)
-            return value;
+        ArgumentOutOfRangeException.ThrowIfNegative(count);
+
+        if (count == 0 || string.IsNullOrEmpty(value))
+            return string.Empty;
 
         return new StringBuilder(value.Length * count).AppendJoin(value, new string[count + 1]).ToString();
     }
@@ -271,16 +275,21 @@ public static class StringExtensions
 
     #region Like
 
+    private static readonly ConcurrentDictionary<string, Regex> _likeCache = new();
+
     /// <summary>
     /// Compares the string against a given pattern.
     /// </summary>
     /// <param name="str">The string.</param>
     /// <param name="pattern">The pattern to match, where "*" means any sequence of characters, and "?" means any single character.</param>
     /// <returns><c>true</c> if the string matches the given pattern; otherwise <c>false</c>.</returns>
-    public static bool IsLike(this string str, string pattern)
+    public static bool IsLike(this string str, string pattern) =>
+        _likeCache.GetOrAdd(pattern, BuildLikeRegex).IsMatch(str);
+
+    private static Regex BuildLikeRegex(string pattern)
     {
         var rePattern = "^" + Regex.Escape(pattern).Replace(@"\*", ".*").Replace(@"\?", ".") + "$";
-        return new Regex(rePattern, RegexOptions.IgnoreCase | RegexOptions.Singleline).IsMatch(str);
+        return new Regex(rePattern, RegexOptions.IgnoreCase | RegexOptions.Singleline | RegexOptions.Compiled);
     }
 
     #endregion

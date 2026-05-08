@@ -15,6 +15,11 @@ public static class SecureStringExtensions
     /// </summary>
     /// <param name="source">The secure string to convert.</param>
     /// <returns>A byte array containing the UTF-8 encoded characters from the secure string.</returns>
+    /// <remarks>
+    /// The intermediate <c>char[]</c> buffer is zeroed before this method returns so plaintext does not survive on
+    /// the managed heap. Callers are responsible for zeroing the returned <c>byte[]</c> after use, e.g. via
+    /// <c>Array.Clear(bytes, 0, bytes.Length)</c>.
+    /// </remarks>
     public static byte[] AsBytes(this SecureString source)
     {
         lock (source)
@@ -32,6 +37,7 @@ public static class SecureStringExtensions
             }
             finally
             {
+                Array.Clear(symbols, 0, symbols.Length);
                 if (pointer != IntPtr.Zero)
                 {
                     Marshal.ZeroFreeBSTR(pointer);

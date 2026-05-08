@@ -38,14 +38,14 @@ public static class SortedListGetChunksExtensions
         var prevKey = start;
         var key = start;
         // detect initial state - in or out of chunk
-        var index = source.Keys.IndexOf(key);
+        var index = source.IndexOfKey(key);
         var inSource = index >= 0;
         var size = 0;
 
         while (true)
         {
             // get index of current key
-            index = source.Keys.IndexOf(key);
+            index = source.IndexOfKey(key);
 
             // go to next key if state is same (in or out)
             if (inSource == index >= 0)

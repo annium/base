@@ -59,7 +59,7 @@ public static partial class ResolveGenericArgumentsByImplementationExtension
             return BuildArgs(type, baseType, target);
 
         // try resolve base type
-        return Helper.ResolveBase(type, target);
+        return ClassHelper.ResolveBase(type, target);
     }
 
     /// <summary>
@@ -93,14 +93,14 @@ public static partial class ResolveGenericArgumentsByImplementationExtension
             return null;
 
         // try resolve base type
-        return Helper.ResolveBase(type, target);
+        return ClassHelper.ResolveBase(type, target);
     }
 }
 
 /// <summary>
-/// Helper class for resolving generic arguments by implementation.
+/// Helper class for resolving generic arguments by implementation for class types.
 /// </summary>
-file class Helper
+file class ClassHelper
 {
     /// <summary>
     /// Resolves generic arguments for a base type.

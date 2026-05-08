@@ -31,7 +31,7 @@ public static partial class ResolveGenericArgumentsByImplementationExtension
             return type.ResolveClassArgumentsByTarget(target);
 
         if (type.IsValueType)
-            return type.ResolveStructArgumentsByByTarget(target);
+            return type.ResolveStructArgumentsByTarget(target);
 
         if (type.IsInterface)
             return type.ResolveInterfaceArgumentsByTarget(target);
@@ -95,7 +95,7 @@ public static partial class ResolveGenericArgumentsByImplementationExtension
     /// <param name="target">The target type to resolve against.</param>
     /// <returns>An array of resolved type arguments, or null if resolution fails.</returns>
     /// <exception cref="NotImplementedException">Thrown if the resolution logic is not implemented for the given types.</exception>
-    private static Type[]? ResolveStructArgumentsByByTarget(this Type type, Type target)
+    private static Type[]? ResolveStructArgumentsByTarget(this Type type, Type target)
     {
         if (target.IsGenericParameter)
             return type.ResolveStructArgumentsByGenericParameter(target);

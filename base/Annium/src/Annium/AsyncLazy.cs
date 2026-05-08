@@ -40,7 +40,7 @@ public sealed class AsyncLazy<T>
     /// <summary>
     /// Indicates whether the value has been created.
     /// </summary>
-    private bool _isValueCreated;
+    private volatile bool _isValueCreated;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AsyncLazy{T}"/> class with a synchronous factory.
@@ -54,7 +54,7 @@ public sealed class AsyncLazy<T>
             async () =>
             {
                 var value = await Task.Run(factory).ConfigureAwait(false);
-                Volatile.Write(ref _isValueCreated, true);
+                _isValueCreated = true;
                 return value;
             },
             isThreadSafe: true
@@ -73,7 +73,7 @@ public sealed class AsyncLazy<T>
             async () =>
             {
                 var value = await Task.Run(factory).ConfigureAwait(false);
-                Volatile.Write(ref _isValueCreated, true);
+                _isValueCreated = true;
                 return value;
             },
             isThreadSafe: true

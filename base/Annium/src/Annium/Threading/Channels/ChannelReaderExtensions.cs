@@ -23,7 +23,7 @@ public static class ChannelReaderExtensions
     public static T Read<T>(this ChannelReader<T> reader)
     {
         if (!reader.TryRead(out var item))
-            throw new InvalidOperationException($"Failed to write to channel {item.GetFullId()}");
+            throw new InvalidOperationException("Failed to read from channel");
 
         return item;
     }

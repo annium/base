@@ -334,7 +334,8 @@ public abstract class DisposableBoxBase<TBox> : ILogSubject
     }
 
     /// <summary>
-    /// Removes a single entry from the specified list.
+    /// Removes a single entry from the specified list. The disposed check runs INSIDE
+    /// the lock to prevent a TOCTOU race against <see cref="DisposeBase"/>.
     /// </summary>
     /// <typeparam name="T">The type of the entry.</typeparam>
     /// <param name="entries">The list to remove the entry from.</param>
@@ -342,10 +343,9 @@ public abstract class DisposableBoxBase<TBox> : ILogSubject
     /// <returns>The current box instance for method chaining.</returns>
     protected TBox Remove<T>(List<T> entries, T item)
     {
-        EnsureNotDisposed();
-
         lock (_locker)
         {
+            EnsureNotDisposed();
             this.Trace<string>("remove {entry}", item.GetFullId());
             entries.Remove(item);
         }
@@ -354,7 +354,8 @@ public abstract class DisposableBoxBase<TBox> : ILogSubject
     }
 
     /// <summary>
-    /// Removes a collection of entries from the specified list.
+    /// Removes a collection of entries from the specified list. The disposed check runs
+    /// INSIDE the lock to prevent a TOCTOU race against <see cref="DisposeBase"/>.
     /// </summary>
     /// <typeparam name="T">The type of the entries.</typeparam>
     /// <param name="entries">The list to remove the entries from.</param>
@@ -362,14 +363,15 @@ public abstract class DisposableBoxBase<TBox> : ILogSubject
     /// <returns>The current box instance for method chaining.</returns>
     protected TBox Remove<T>(List<T> entries, IEnumerable<T> items)
     {
-        EnsureNotDisposed();
-
         lock (_locker)
+        {
+            EnsureNotDisposed();
             foreach (var item in items)
             {
                 this.Trace<string>("remove {entry}", item.GetFullId());
                 entries.Remove(item);
             }
+        }
 
         return (TBox)this;
     }

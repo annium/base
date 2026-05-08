@@ -3,9 +3,9 @@ using System.Collections.Generic;
 namespace Annium.Linq;
 
 /// <summary>
-/// Provides extension methods for working with enumerable sequences.
+/// Provides static factory methods for generating enumerable sequences.
 /// </summary>
-public static class EnumerableExt
+public static class Enumerables
 {
     /// <summary>
     /// Generates a sequence of integers within a specified range with a given step.

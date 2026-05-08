@@ -396,11 +396,11 @@ public static class GetTargetImplementationExtension
     }
 
     /// <summary>
-    /// Gets a <see cref="NotImplementedException"/> for the case when the implementation cannot be resolved.
+    /// Builds a <see cref="NotImplementedException"/> for the case when the implementation cannot be resolved.
     /// </summary>
     /// <param name="type">The type for which the implementation was attempted.</param>
     /// <param name="target">The target type for which the implementation was attempted.</param>
     /// <returns>A <see cref="NotImplementedException"/> with a descriptive message.</returns>
     private static NotImplementedException GetException(Type type, Type target) =>
-        throw new NotImplementedException($"Can't resolve {type.Name} implementation of {target.Name}");
+        new($"Can't resolve {type.Name} implementation of {target.Name}");
 }

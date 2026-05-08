@@ -10,11 +10,6 @@ namespace Annium.Linq;
 public static class EnumerableExtensions
 {
     /// <summary>
-    /// Random number generator used for shuffling collections.
-    /// </summary>
-    private static readonly Random _random = new();
-
-    /// <summary>
     /// Concatenates the elements of a string collection, using the specified separator between each element.
     /// </summary>
     /// <param name="src">The collection of strings to concatenate.</param>
@@ -44,7 +39,7 @@ public static class EnumerableExtensions
     /// <returns>A new sequence with the elements randomly reordered.</returns>
     public static IEnumerable<T> Shuffle<T>(this IEnumerable<T> src)
     {
-        return src.OrderBy(_ => _random.NextDouble());
+        return src.OrderBy(_ => Random.Shared.NextDouble());
     }
 
     /// <summary>

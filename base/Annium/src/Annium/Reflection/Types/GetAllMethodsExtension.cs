@@ -11,11 +11,11 @@ namespace Annium.Reflection;
 public static class GetAllMethodsExtension
 {
     /// <summary>
-    /// Gets all methods of the specified type using the default binding flags.
+    /// Gets all public instance and static methods of the specified type.
     /// </summary>
     /// <param name="type">The type to get all methods from.</param>
     /// <returns>An array of <see cref="MethodInfo"/> representing all methods of the type.</returns>
-    public static MethodInfo[] GetAllMethods(this Type type) => type.GetAllMethods(Constants.DefaultBindingFlags);
+    public static MethodInfo[] GetAllMethods(this Type type) => type.GetAllMethods(Constants.PublicBindingFlags);
 
     /// <summary>
     /// Gets all methods of the specified type using the specified binding flags.

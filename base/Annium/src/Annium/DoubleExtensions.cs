@@ -180,11 +180,17 @@ public static class DoubleExtensions
     /// <summary>
     /// Rounds a value down to the nearest multiple of a specified step.
     /// </summary>
-    /// <param name="value">The value to round.</param>
-    /// <param name="step">The step size to round to.</param>
+    /// <param name="value">The value to round. <see cref="double.NaN"/> and infinities propagate to the result.</param>
+    /// <param name="step">The step size to round to. Must be a positive, finite number.</param>
     /// <returns>The rounded value as a double.</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static double FloorTo(this double value, double step) => value - value % step;
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="step"/> is non-finite or not positive.</exception>
+    public static double FloorTo(this double value, double step)
+    {
+        if (!double.IsFinite(step) || step <= 0d)
+            throw new ArgumentOutOfRangeException(nameof(step), step, "Step must be a positive, finite number.");
+
+        return value - value % step;
+    }
 
     /// <summary>
     /// Rounds a value to the nearest multiple of a specified step.
@@ -202,9 +208,15 @@ public static class DoubleExtensions
     /// <summary>
     /// Rounds a value up to the nearest multiple of a specified step.
     /// </summary>
-    /// <param name="value">The value to round.</param>
-    /// <param name="step">The step size to round to.</param>
+    /// <param name="value">The value to round. <see cref="double.NaN"/> and infinities propagate to the result.</param>
+    /// <param name="step">The step size to round to. Must be a positive, finite number.</param>
     /// <returns>The rounded value as a double.</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static double CeilTo(this double value, double step) => value + step - value % step;
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="step"/> is non-finite or not positive.</exception>
+    public static double CeilTo(this double value, double step)
+    {
+        if (!double.IsFinite(step) || step <= 0d)
+            throw new ArgumentOutOfRangeException(nameof(step), step, "Step must be a positive, finite number.");
+
+        return value + step - value % step;
+    }
 }

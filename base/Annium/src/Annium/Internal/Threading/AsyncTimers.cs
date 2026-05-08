@@ -89,6 +89,11 @@ internal class AsyncTimer : AsyncTimerBase
 internal abstract class AsyncTimerBase : ISequentialTimer, ILogSubject
 {
     /// <summary>
+    /// Maximum time <see cref="Dispose"/> waits for an in-flight callback before returning.
+    /// </summary>
+    private static readonly TimeSpan _disposeWaitBudget = TimeSpan.FromSeconds(5);
+
+    /// <summary>
     /// Gets the logger instance for tracing operations.
     /// </summary>
     public ILogger Logger { get; }
@@ -104,6 +109,12 @@ internal abstract class AsyncTimerBase : ISequentialTimer, ILogSubject
     private volatile int _isHandling;
 
     /// <summary>
+    /// Signals that no callback is currently running. Reset by an entering callback, set on completion.
+    /// <see cref="Dispose"/> waits on this so it does not return while a handler is mid-await.
+    /// </summary>
+    private readonly ManualResetEventSlim _idle = new(initialState: true);
+
+    /// <summary>
     /// Initializes a new instance of the <see cref="AsyncTimerBase"/> class.
     /// </summary>
     /// <param name="logger">The logger instance for tracing operations.</param>
@@ -113,11 +124,16 @@ internal abstract class AsyncTimerBase : ISequentialTimer, ILogSubject
     }
 
     /// <summary>
-    /// Releases all resources used by the timer.
+    /// Releases all resources used by the timer. Best-effort waits for an in-flight callback to complete (bounded
+    /// by <see cref="_disposeWaitBudget"/>) so that the callback finishes before owned state is reclaimed. The
+    /// <see cref="_idle"/> event is intentionally not disposed: if the wait times out, the still-running callback
+    /// will set it on completion, and the GC reclaims it later.
     /// </summary>
     public void Dispose()
     {
         Timer.Dispose();
+        if (_isHandling != 0)
+            _idle.Wait(_disposeWaitBudget);
     }
 
     /// <summary>
@@ -161,6 +177,8 @@ internal abstract class AsyncTimerBase : ISequentialTimer, ILogSubject
             return;
         }
 
+        _idle.Reset();
+
         try
         {
             await HandleAsync();
@@ -171,7 +189,8 @@ internal abstract class AsyncTimerBase : ISequentialTimer, ILogSubject
         }
         finally
         {
-            _isHandling = 0;
+            Interlocked.Exchange(ref _isHandling, 0);
+            _idle.Set();
         }
     }
 }

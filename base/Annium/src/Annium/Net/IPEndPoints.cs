@@ -6,9 +6,9 @@ using System.Net.Sockets;
 namespace Annium.Net;
 
 /// <summary>
-/// Provides extension methods for working with <see cref="IPEndPoint"/>.
+/// Provides static factory methods for working with <see cref="IPEndPoint"/>.
 /// </summary>
-public static class IPEndPointExt
+public static class IPEndPoints
 {
     /// <summary>
     /// The prefix used for TCP endpoints in URI format.

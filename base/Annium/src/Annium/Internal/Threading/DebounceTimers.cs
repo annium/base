@@ -163,7 +163,8 @@ internal abstract class DebounceTimerBase : IDebounceTimer, ILogSubject
         if (Interlocked.CompareExchange(ref _isHandling, 1, 0) == 1)
             return;
 
-        _isRequested = 0;
+        // Claim the pending request that triggered this callback.
+        Interlocked.Exchange(ref _isRequested, 0);
 
         try
         {
@@ -175,9 +176,10 @@ internal abstract class DebounceTimerBase : IDebounceTimer, ILogSubject
         }
         finally
         {
-            _isHandling = 0;
+            Interlocked.Exchange(ref _isHandling, 0);
 
-            if (_isRequested == 1)
+            // Atomically consume any request that arrived during HandleAsync; if claimed, re-fire.
+            if (Interlocked.CompareExchange(ref _isRequested, 0, 1) == 1)
                 Request();
         }
     }
