@@ -143,7 +143,7 @@ internal abstract class DebounceTimerBase : IDebounceTimer, ILogSubject
     public void Request()
     {
         _timer.Change(_period, Timeout.Infinite);
-        _isRequested = 1;
+        Interlocked.Exchange(ref _isRequested, 1);
     }
 
     /// <summary>

@@ -104,15 +104,11 @@ internal abstract class AsyncTimerBase : ISequentialTimer, ILogSubject
     protected Timer Timer { get; init; } = default!;
 
     /// <summary>
-    /// A flag indicating whether the timer is currently handling a callback (1) or not (0).
+    /// Mutex + in-flight signal. The single permit is held for the duration of an executing callback;
+    /// <see cref="Callback"/> uses non-blocking acquisition (skips overlapping ticks), and <see cref="Dispose"/>
+    /// uses a bounded blocking acquisition to drain any in-flight callback before reclaiming owned state.
     /// </summary>
-    private volatile int _isHandling;
-
-    /// <summary>
-    /// Signals that no callback is currently running. Reset by an entering callback, set on completion.
-    /// <see cref="Dispose"/> waits on this so it does not return while a handler is mid-await.
-    /// </summary>
-    private readonly ManualResetEventSlim _idle = new(initialState: true);
+    private readonly SemaphoreSlim _gate = new(initialCount: 1, maxCount: 1);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AsyncTimerBase"/> class.
@@ -124,16 +120,16 @@ internal abstract class AsyncTimerBase : ISequentialTimer, ILogSubject
     }
 
     /// <summary>
-    /// Releases all resources used by the timer. Best-effort waits for an in-flight callback to complete (bounded
-    /// by <see cref="_disposeWaitBudget"/>) so that the callback finishes before owned state is reclaimed. The
-    /// <see cref="_idle"/> event is intentionally not disposed: if the wait times out, the still-running callback
-    /// will set it on completion, and the GC reclaims it later.
+    /// Releases all resources used by the timer. After disposing the underlying timer (stopping new firings),
+    /// drains any in-flight callback by acquiring the gate's permit (bounded by <see cref="_disposeWaitBudget"/>).
+    /// On success, the gate is disposed; on timeout, the gate is intentionally leaked so the still-running callback
+    /// can release without raising <see cref="ObjectDisposedException"/>.
     /// </summary>
     public void Dispose()
     {
         Timer.Dispose();
-        if (_isHandling != 0)
-            _idle.Wait(_disposeWaitBudget);
+        if (_gate.Wait(_disposeWaitBudget))
+            _gate.Dispose();
     }
 
     /// <summary>
@@ -172,12 +168,9 @@ internal abstract class AsyncTimerBase : ISequentialTimer, ILogSubject
     protected async void Callback(object? _)
 #pragma warning restore VSTHRD100
     {
-        if (Interlocked.CompareExchange(ref _isHandling, 1, 0) == 1)
-        {
+        // Non-blocking acquisition: if another callback is in flight (or Dispose is draining), skip this tick.
+        if (!_gate.Wait(0))
             return;
-        }
-
-        _idle.Reset();
 
         try
         {
@@ -189,8 +182,9 @@ internal abstract class AsyncTimerBase : ISequentialTimer, ILogSubject
         }
         finally
         {
-            Interlocked.Exchange(ref _isHandling, 0);
-            _idle.Set();
+            // Race with Dispose: if Dispose acquired and disposed the gate while we held the permit,
+            // it cannot — Dispose only proceeds once it owns the permit. Release here is always safe.
+            _gate.Release();
         }
     }
 }
