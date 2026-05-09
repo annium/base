@@ -63,10 +63,7 @@ public record SortedListSpan<TKey, TValue> : ISortedListSpan<TKey, TValue>
         get
         {
             if (index < 0 || index >= Count)
-                throw new ArgumentOutOfRangeException(
-                    nameof(index),
-                    $"Index {index} is out of range [0;{Count - 1}]"
-                );
+                throw new ArgumentOutOfRangeException(nameof(index), $"Index {index} is out of range [0;{Count - 1}]");
 
             var key = _collection.Keys[Start + index];
 

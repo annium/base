@@ -69,10 +69,7 @@ public class FixedIndexedQueue<T> : IFixedIndexedQueue<T>
         get
         {
             if (index < 0 || index >= Count)
-                throw new ArgumentOutOfRangeException(
-                    nameof(index),
-                    $"Index {index} is out of range [0;{Count - 1}]"
-                );
+                throw new ArgumentOutOfRangeException(nameof(index), $"Index {index} is out of range [0;{Count - 1}]");
 
             return _data[(_index + index) % Capacity];
         }

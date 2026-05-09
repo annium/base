@@ -33,7 +33,12 @@ internal sealed class ExpiringStore<TKey, TValue> : IDisposable
     public ExpiringStore(ITimeProvider timeProvider, TimeSpan evictionInterval)
     {
         _timeProvider = timeProvider;
-        _evictionTimer = new Timer(static state => ((ExpiringStore<TKey, TValue>)state!).Evict(), this, evictionInterval, evictionInterval);
+        _evictionTimer = new Timer(
+            static state => ((ExpiringStore<TKey, TValue>)state!).Evict(),
+            this,
+            evictionInterval,
+            evictionInterval
+        );
     }
 
     /// <summary>

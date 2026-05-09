@@ -61,10 +61,7 @@ public record ListSpan<T> : IListSpan<T>
         get
         {
             if (index < 0 || index >= Count)
-                throw new ArgumentOutOfRangeException(
-                    nameof(index),
-                    $"Index {index} is out of range [0;{Count - 1}]"
-                );
+                throw new ArgumentOutOfRangeException(nameof(index), $"Index {index} is out of range [0;{Count - 1}]");
 
             return _collection[Start + index];
         }

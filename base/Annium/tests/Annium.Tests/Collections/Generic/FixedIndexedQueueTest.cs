@@ -81,9 +81,21 @@ public class FixedIndexedQueueTest
         // assert
         queue.Count.Is(1);
         queue[0].Is(42);
-        Wrap.It(() => { _ = queue[1]; }).Throws<ArgumentOutOfRangeException>();
-        Wrap.It(() => { _ = queue[2]; }).Throws<ArgumentOutOfRangeException>();
-        Wrap.It(() => { _ = queue[-1]; }).Throws<ArgumentOutOfRangeException>();
+        Wrap.It(() =>
+            {
+                _ = queue[1];
+            })
+            .Throws<ArgumentOutOfRangeException>();
+        Wrap.It(() =>
+            {
+                _ = queue[2];
+            })
+            .Throws<ArgumentOutOfRangeException>();
+        Wrap.It(() =>
+            {
+                _ = queue[-1];
+            })
+            .Throws<ArgumentOutOfRangeException>();
     }
 
     /// <summary>
