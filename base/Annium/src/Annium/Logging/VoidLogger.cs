@@ -7,7 +7,7 @@ namespace Annium.Logging;
 /// Represents a logger that does not perform any logging operations.
 /// This class is used as a singleton instance when logging is disabled or not required.
 /// </summary>
-public class VoidLogger : ILogger
+public sealed class VoidLogger : ILogger
 {
     /// <summary>
     /// Gets the singleton instance of the void logger.

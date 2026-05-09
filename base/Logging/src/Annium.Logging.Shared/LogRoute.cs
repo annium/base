@@ -6,7 +6,7 @@ namespace Annium.Logging.Shared;
 /// Represents a logging route configuration for a specific context type.
 /// </summary>
 /// <typeparam name="TContext">The type of log context</typeparam>
-public class LogRoute<TContext>
+public sealed class LogRoute<TContext>
     where TContext : class
 {
     /// <summary>

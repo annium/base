@@ -67,9 +67,7 @@ public static class TypeNameExtensions
         if (type.IsGenericParameter || !type.IsGenericType)
             return CleanupFileLocalName(type.Name);
 
-        var name = CleanupGenericName(CleanupFileLocalName(type.Name));
-
-        return name;
+        return CleanupGenericName(CleanupFileLocalName(type.Name));
     }
 
     /// <summary>

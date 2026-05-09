@@ -10,7 +10,7 @@ namespace Annium.Internal.Threading;
 /// Provides a debounced timer that executes a handler with a state object after a period of inactivity.
 /// </summary>
 /// <typeparam name="T">The type of the state object.</typeparam>
-internal class DebounceTimer<T> : DebounceTimerBase
+internal sealed class DebounceTimer<T> : DebounceTimerBase
 {
     /// <summary>
     /// The state object passed to the handler.
@@ -49,7 +49,7 @@ internal class DebounceTimer<T> : DebounceTimerBase
 /// <summary>
 /// Provides a debounced timer that executes a handler after a period of inactivity.
 /// </summary>
-internal class DebounceTimer : DebounceTimerBase
+internal sealed class DebounceTimer : DebounceTimerBase
 {
     /// <summary>
     /// The asynchronous handler to execute.
@@ -94,9 +94,11 @@ internal abstract class DebounceTimerBase : IDebounceTimer, ILogSubject
     private readonly Timer _timer;
 
     /// <summary>
-    /// The time interval to wait before executing the handler.
+    /// The time interval to wait before executing the handler. Volatile so cross-thread reads in
+    /// <see cref="Request"/> observe writes from <see cref="Change(int)"/> without a stale value
+    /// on weakly-ordered architectures.
     /// </summary>
-    private int _period;
+    private volatile int _period;
 
     /// <summary>
     /// A flag indicating whether a new request has been made (1) or not (0).
@@ -107,6 +109,14 @@ internal abstract class DebounceTimerBase : IDebounceTimer, ILogSubject
     /// A flag indicating whether the timer is currently handling a callback (1) or not (0).
     /// </summary>
     private volatile int _isHandling;
+
+    /// <summary>
+    /// A flag indicating whether <see cref="Dispose"/> has run. Set BEFORE <c>_timer.Dispose()</c>
+    /// so concurrent <see cref="Request"/> / <see cref="Callback"/> observe the dispose and skip the
+    /// <see cref="Timer.Change(int, int)"/> call that would otherwise throw <see cref="ObjectDisposedException"/>
+    /// silently into the threadpool.
+    /// </summary>
+    private volatile bool _disposed;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DebounceTimerBase"/> class.
@@ -125,6 +135,7 @@ internal abstract class DebounceTimerBase : IDebounceTimer, ILogSubject
     /// </summary>
     public void Dispose()
     {
+        _disposed = true;
         _timer.Dispose();
     }
 
@@ -142,8 +153,24 @@ internal abstract class DebounceTimerBase : IDebounceTimer, ILogSubject
     /// </summary>
     public void Request()
     {
-        _timer.Change(_period, Timeout.Infinite);
+        if (_disposed)
+            return;
+
+        // Set the requested flag BEFORE arming the timer so that if the callback fires between these two
+        // statements, its finally-block CompareExchange observes _isRequested == 1 and re-fires the timer.
+        // Otherwise the request would be silently lost when the timer fires before the Exchange completes.
         Interlocked.Exchange(ref _isRequested, 1);
+        try
+        {
+            _timer.Change(_period, Timeout.Infinite);
+        }
+        catch (ObjectDisposedException)
+        {
+            // Race: Dispose() ran between the _disposed check above and _timer.Change(). The intent of this
+            // call was to schedule a future firing, which Dispose() has already prevented; swallow safely.
+            // This guard MUST be here even though Request() also checks _disposed at entry, because the
+            // check and Change() are not atomic. The same race fires from Callback's finally re-call.
+        }
     }
 
     /// <summary>
@@ -168,7 +195,7 @@ internal abstract class DebounceTimerBase : IDebounceTimer, ILogSubject
 
         try
         {
-            await HandleAsync();
+            await HandleAsync().ConfigureAwait(false);
         }
         catch (Exception e)
         {
@@ -179,7 +206,8 @@ internal abstract class DebounceTimerBase : IDebounceTimer, ILogSubject
             Interlocked.Exchange(ref _isHandling, 0);
 
             // Atomically consume any request that arrived during HandleAsync; if claimed, re-fire.
-            if (Interlocked.CompareExchange(ref _isRequested, 0, 1) == 1)
+            // Skip if Dispose ran during the handler — Request() also guards on _disposed.
+            if (!_disposed && Interlocked.CompareExchange(ref _isRequested, 0, 1) == 1)
                 Request();
         }
     }

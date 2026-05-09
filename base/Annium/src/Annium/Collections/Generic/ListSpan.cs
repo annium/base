@@ -41,6 +41,7 @@ public record ListSpan<T> : IListSpan<T>
     {
         if (start < 0 || start + count > collection.Count)
             throw new ArgumentOutOfRangeException(
+                nameof(start),
                 $"Invalid span at {start} with length {count} for collection of size {collection.Count}"
             );
 
@@ -60,7 +61,10 @@ public record ListSpan<T> : IListSpan<T>
         get
         {
             if (index < 0 || index >= Count)
-                throw new ArgumentOutOfRangeException($"Index {index} if out of range [0;{Count}]");
+                throw new ArgumentOutOfRangeException(
+                    nameof(index),
+                    $"Index {index} is out of range [0;{Count - 1}]"
+                );
 
             return _collection[Start + index];
         }
@@ -97,18 +101,4 @@ public record ListSpan<T> : IListSpan<T>
     /// </summary>
     /// <returns>An enumerator that can be used to iterate through the span.</returns>
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-}
-
-/// <summary>
-/// Defines a span of elements from a read-only list with the ability to move the span's position.
-/// </summary>
-/// <typeparam name="T">The type of the elements in the span.</typeparam>
-public interface IListSpan<out T> : IReadOnlyIndexedSpan<T>
-{
-    /// <summary>
-    /// Moves the span by the specified offset.
-    /// </summary>
-    /// <param name="offset">The number of positions to move the span.</param>
-    /// <returns>True if the move was successful; otherwise, false.</returns>
-    bool Move(int offset);
 }

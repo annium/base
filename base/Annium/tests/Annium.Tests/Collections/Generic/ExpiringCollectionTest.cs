@@ -40,7 +40,8 @@ public class ExpiringCollectionTest : TestBase
     }
 
     /// <summary>
-    /// Verifies that the Contains method works correctly, including after expiration.
+    /// Verifies that the Contains method works correctly, including the expiration boundary
+    /// (an item is considered expired the instant it reaches its expiry, not strictly afterwards).
     /// </summary>
     [Fact]
     public void Contains_Works()
@@ -52,11 +53,17 @@ public class ExpiringCollectionTest : TestBase
         var ttl = Duration.FromSeconds(5);
         collection.Add(value, ttl);
 
-        // assert
+        // assert: still alive just before expiry
         collection.Contains(value).IsTrue();
-        timeManager.SetNow(timeProvider.Now + ttl);
+        timeManager.SetNow(timeProvider.Now + ttl - Duration.FromMilliseconds(1));
         collection.Contains(value).IsTrue();
-        timeManager.SetNow(timeProvider.Now + ttl + Duration.FromMilliseconds(1));
+
+        // assert: expired exactly at the boundary
+        timeManager.SetNow(timeProvider.Now + Duration.FromMilliseconds(1));
+        collection.Contains(value).IsFalse();
+
+        // assert: still expired after the boundary
+        timeManager.SetNow(timeProvider.Now + Duration.FromMilliseconds(1));
         collection.Contains(value).IsFalse();
     }
 

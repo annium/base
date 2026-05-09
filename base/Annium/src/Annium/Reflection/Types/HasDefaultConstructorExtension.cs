@@ -32,6 +32,14 @@ public static class HasDefaultConstructorExtension
         if (type is null)
             throw new ArgumentNullException(nameof(type));
 
+        // Open generic type definitions cannot be instantiated via Activator.CreateInstance and so
+        // are reported as not constructable. Without this guard, the IsClass branch would silently
+        // return false (GetConstructor returns null) and the IsValueType branch would silently return
+        // true (no concrete ctors on the open generic) — both inconsistent with the documented
+        // ArgumentException contract for non-constructable types.
+        if (type.IsGenericTypeDefinition)
+            throw new ArgumentException($"{type} is an open generic type definition and is not constructable");
+
         if (type.IsClass)
             return type.GetConstructor(bindingFlags, Type.EmptyTypes) != null;
 

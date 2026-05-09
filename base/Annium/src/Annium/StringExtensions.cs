@@ -132,7 +132,10 @@ public static class StringExtensions
         if (count == 0 || string.IsNullOrEmpty(value))
             return string.Empty;
 
-        return new StringBuilder(value.Length * count).AppendJoin(value, new string[count + 1]).ToString();
+        var builder = new StringBuilder(value.Length * count);
+        for (var i = 0; i < count; i++)
+            builder.Append(value);
+        return builder.ToString();
     }
 
     /// <summary>

@@ -42,7 +42,8 @@ public class ExpiringDictionaryTest : TestBase
     }
 
     /// <summary>
-    /// Verifies that getting elements from the dictionary works correctly, including after expiration.
+    /// Verifies that getting elements from the dictionary works correctly, with strict expiry-boundary
+    /// semantics — an entry is considered expired the instant <c>now</c> reaches its expiry.
     /// </summary>
     [Fact]
     public void Get_Works()
@@ -55,16 +56,18 @@ public class ExpiringDictionaryTest : TestBase
         var ttl = Duration.FromSeconds(5);
         collection.Add(key, value, ttl);
 
-        // assert
+        // assert: alive just before the boundary
         collection.Get(key).Is(value);
-        timeManager.SetNow(timeProvider.Now + ttl);
+        timeManager.SetNow(timeProvider.Now + ttl - Duration.FromMilliseconds(1));
         collection.Get(key).Is(value);
-        timeManager.SetNow(timeProvider.Now + ttl + Duration.FromMilliseconds(1));
+
+        // assert: expired exactly at the boundary
+        timeManager.SetNow(timeProvider.Now + Duration.FromMilliseconds(1));
         Wrap.It(() => collection.Get(key)).Throws<KeyNotFoundException>();
     }
 
     /// <summary>
-    /// Verifies that TryGet works correctly, including after expiration.
+    /// Verifies that TryGet works correctly and observes the same expiry-boundary semantics as Get.
     /// </summary>
     [Fact]
     public void TryGet_Works()
@@ -77,17 +80,23 @@ public class ExpiringDictionaryTest : TestBase
         var ttl = Duration.FromSeconds(5);
         collection.Add(key, value, ttl);
 
-        // assert
+        // assert: alive
         collection.TryGet(key, out var val).IsTrue();
         val.Is(value);
-        timeManager.SetNow(timeProvider.Now + ttl);
-        collection.Get(key).Is(value);
-        timeManager.SetNow(timeProvider.Now + ttl + Duration.FromMilliseconds(1));
-        Wrap.It(() => collection.Get(key)).Throws<KeyNotFoundException>();
+
+        // assert: alive just before the boundary
+        timeManager.SetNow(timeProvider.Now + ttl - Duration.FromMilliseconds(1));
+        collection.TryGet(key, out val).IsTrue();
+        val.Is(value);
+
+        // assert: TryGet returns false exactly at the boundary, with default value out
+        timeManager.SetNow(timeProvider.Now + Duration.FromMilliseconds(1));
+        collection.TryGet(key, out val).IsFalse();
+        val.IsDefault();
     }
 
     /// <summary>
-    /// Verifies that ContainsKey works correctly, including after expiration.
+    /// Verifies that ContainsKey works correctly across the expiry boundary.
     /// </summary>
     [Fact]
     public void ContainsKey_Works()
@@ -99,11 +108,13 @@ public class ExpiringDictionaryTest : TestBase
         var ttl = Duration.FromSeconds(5);
         collection.Add(key, "secret", ttl);
 
-        // assert
+        // assert: alive just before the boundary
         collection.ContainsKey(key).IsTrue();
-        timeManager.SetNow(timeProvider.Now + ttl);
+        timeManager.SetNow(timeProvider.Now + ttl - Duration.FromMilliseconds(1));
         collection.ContainsKey(key).IsTrue();
-        timeManager.SetNow(timeProvider.Now + ttl + Duration.FromMilliseconds(1));
+
+        // assert: expired exactly at the boundary
+        timeManager.SetNow(timeProvider.Now + Duration.FromMilliseconds(1));
         collection.ContainsKey(key).IsFalse();
     }
 

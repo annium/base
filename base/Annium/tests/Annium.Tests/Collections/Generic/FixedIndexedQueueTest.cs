@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using Annium.Collections.Generic;
 using Annium.Testing;
@@ -64,6 +65,25 @@ public class FixedIndexedQueueTest
 
         var list = queue.ToArray();
         list.IsEqual(new[] { 5, 6, 7 });
+    }
+
+    /// <summary>
+    /// Verifies that the indexer guards against reads past <c>Count</c> while the queue is partially filled.
+    /// Without the guard, the indexer would return <c>default(T)</c> from uninitialized backing slots.
+    /// </summary>
+    [Fact]
+    public void Indexer_PartiallyFilled_ThrowsAtCount()
+    {
+        // arrange — capacity 3, only 1 element added
+        var queue = new FixedIndexedQueue<int>(3);
+        queue.Add(42);
+
+        // assert
+        queue.Count.Is(1);
+        queue[0].Is(42);
+        Wrap.It(() => { _ = queue[1]; }).Throws<ArgumentOutOfRangeException>();
+        Wrap.It(() => { _ = queue[2]; }).Throws<ArgumentOutOfRangeException>();
+        Wrap.It(() => { _ = queue[-1]; }).Throws<ArgumentOutOfRangeException>();
     }
 
     /// <summary>

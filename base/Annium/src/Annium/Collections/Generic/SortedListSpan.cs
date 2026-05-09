@@ -43,6 +43,7 @@ public record SortedListSpan<TKey, TValue> : ISortedListSpan<TKey, TValue>
     {
         if (start < 0 || start + count > collection.Count)
             throw new ArgumentOutOfRangeException(
+                nameof(start),
                 $"Invalid span at {start} with length {count} for collection of size {collection.Count}"
             );
 
@@ -62,7 +63,10 @@ public record SortedListSpan<TKey, TValue> : ISortedListSpan<TKey, TValue>
         get
         {
             if (index < 0 || index >= Count)
-                throw new ArgumentOutOfRangeException($"Index {index} if out of range [0;{Count}]");
+                throw new ArgumentOutOfRangeException(
+                    nameof(index),
+                    $"Index {index} is out of range [0;{Count - 1}]"
+                );
 
             var key = _collection.Keys[Start + index];
 
@@ -105,20 +109,4 @@ public record SortedListSpan<TKey, TValue> : ISortedListSpan<TKey, TValue>
     /// </summary>
     /// <returns>An enumerator that can be used to iterate through the span.</returns>
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-}
-
-/// <summary>
-/// Defines a span of key-value pairs from a sorted list with the ability to move the span's position.
-/// </summary>
-/// <typeparam name="TKey">The type of the keys in the sorted list.</typeparam>
-/// <typeparam name="TValue">The type of the values in the sorted list.</typeparam>
-public interface ISortedListSpan<TKey, TValue> : IReadOnlyIndexedSpan<KeyValuePair<TKey, TValue>>
-    where TKey : notnull
-{
-    /// <summary>
-    /// Moves the span by the specified offset.
-    /// </summary>
-    /// <param name="offset">The number of positions to move the span.</param>
-    /// <returns>True if the move was successful; otherwise, false.</returns>
-    bool Move(int offset);
 }

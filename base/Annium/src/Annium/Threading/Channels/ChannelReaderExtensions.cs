@@ -35,21 +35,19 @@ public static class ChannelReaderExtensions
     /// <param name="reader">The source channel reader.</param>
     /// <param name="writer">The target channel writer.</param>
     /// <param name="logger">The logger to use for logging.</param>
-    /// <returns>A disposable object that can be used to stop the pipe operation.</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static IDisposable Pipe<T>(this ChannelReader<T> reader, ChannelWriter<T> writer, ILogger logger)
+    /// <returns>An asynchronous disposable that, when disposed, cancels the background pipe loop and awaits its completion.</returns>
+    public static IAsyncDisposable Pipe<T>(this ChannelReader<T> reader, ChannelWriter<T> writer, ILogger logger)
     {
         var bridge = new LogBridge(typeof(ChannelReader<T>).FriendlyName(), logger);
         var cts = new CancellationTokenSource();
-        var gate = new ManualResetEventSlim();
-        _ = Task.Run(
+        var loop = Task.Run(
             async () =>
             {
                 try
                 {
-                    while (await reader.WaitToReadAsync(cts.Token))
+                    while (await reader.WaitToReadAsync(cts.Token).ConfigureAwait(false))
                     {
-                        var data = await reader.ReadAsync(cts.Token);
+                        var data = await reader.ReadAsync(cts.Token).ConfigureAwait(false);
                         writer.Write(data);
                     }
                 }
@@ -59,23 +57,22 @@ public static class ChannelReaderExtensions
                 {
                     bridge.Error(e);
                 }
-                finally
-                {
-                    gate.Set();
-                }
             },
             CancellationToken.None
         );
 
-        return Disposable.Create(() =>
+        return Disposable.Create(async () =>
         {
             bridge.Trace("cancel");
-            cts.Cancel();
-            bridge.Trace("wait");
-            gate.Wait(CancellationToken.None);
+            await cts.CancelAsync().ConfigureAwait(false);
+            bridge.Trace("await loop");
+#pragma warning disable VSTHRD003
+            await loop.ConfigureAwait(false);
+#pragma warning restore VSTHRD003
             bridge.Trace("dispose");
+#pragma warning disable VSTHRD103
             cts.Dispose();
-            gate.Dispose();
+#pragma warning restore VSTHRD103
             bridge.Trace("done");
         });
     }
@@ -91,6 +88,6 @@ public static class ChannelReaderExtensions
     public static async Task WhenEmptyAsync<T>(this ChannelReader<T> reader, int delay = 25)
     {
         while (reader.TryPeek(out _))
-            await Task.Delay(delay);
+            await Task.Delay(delay).ConfigureAwait(false);
     }
 }

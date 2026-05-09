@@ -9,7 +9,7 @@ namespace Annium.Internal.Threading;
 /// Provides a synchronous timer that executes a handler with a state object at specified intervals.
 /// </summary>
 /// <typeparam name="T">The type of the state object.</typeparam>
-internal class SyncTimer<T> : SyncTimerBase
+internal sealed class SyncTimer<T> : SyncTimerBase
     where T : class
 {
     /// <summary>
@@ -35,7 +35,7 @@ internal class SyncTimer<T> : SyncTimerBase
     {
         _state = state;
         _handler = handler;
-        Timer = new Timer(Callback, null, dueTime, period);
+        Start(dueTime, period);
     }
 
     /// <summary>
@@ -50,7 +50,7 @@ internal class SyncTimer<T> : SyncTimerBase
 /// <summary>
 /// Provides a synchronous timer that executes a handler at specified intervals.
 /// </summary>
-internal class SyncTimer : SyncTimerBase
+internal sealed class SyncTimer : SyncTimerBase
 {
     /// <summary>
     /// The synchronous handler to execute.
@@ -68,7 +68,7 @@ internal class SyncTimer : SyncTimerBase
         : base(logger)
     {
         _handler = handler;
-        Timer = new Timer(Callback, null, dueTime, period);
+        Start(dueTime, period);
     }
 
     /// <summary>
@@ -83,38 +83,113 @@ internal class SyncTimer : SyncTimerBase
 /// <summary>
 /// Provides a base class for synchronous timers.
 /// </summary>
+/// <remarks>
+/// On <see cref="Dispose"/>, the underlying <see cref="Timer"/> is drained via the
+/// <see cref="Timer.Dispose(WaitHandle)"/> overload before returning, so an in-flight
+/// <see cref="Handle"/> completes against still-live owner state. If the drain exceeds
+/// <see cref="_disposeWaitBudget"/>, the wait handle is intentionally leaked and a warning is logged
+/// so the still-running callback can complete safely; callers MUST NOT free shared state on timeout
+/// without independent synchronization.
+/// </remarks>
 internal abstract class SyncTimerBase : ISequentialTimer, ILogSubject
 {
+    /// <summary>
+    /// Maximum time <see cref="Dispose"/> waits for queued callbacks to drain before returning.
+    /// </summary>
+    private static readonly TimeSpan _disposeWaitBudget = TimeSpan.FromSeconds(5);
+
     /// <summary>
     /// Gets the logger instance for tracing operations.
     /// </summary>
     public ILogger Logger { get; }
 
     /// <summary>
-    /// Gets the underlying timer instance.
+    /// The underlying timer instance. Created in the base ctor with <see cref="Timeout.Infinite"/> and started by
+    /// the derived ctor's call to <see cref="Start"/> after derived fields are assigned.
     /// </summary>
-    protected Timer Timer { get; init; } = default!;
+    protected Timer Timer { get; }
 
     /// <summary>
     /// A flag indicating whether the timer is currently handling a callback (1) or not (0).
     /// </summary>
-    private volatile int _isHandling;
+    private int _isHandling;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="SyncTimerBase"/> class.
+    /// Managed thread id of the thread currently executing <see cref="Handle"/>, or 0 if none. Used by
+    /// <see cref="Dispose"/> to detect re-entrant disposal from inside <see cref="Handle"/> and skip the
+    /// drain to avoid <see cref="Timer.Dispose(WaitHandle)"/>'s documented self-deadlock when invoked from
+    /// the timer's callback thread.
+    /// </summary>
+    private volatile int _callbackThreadId;
+
+    /// <summary>
+    /// 0 if <see cref="Dispose"/> has not yet claimed the dispose path; 1 once it has. Prevents a
+    /// concurrent second caller from racing into <see cref="Timer.Dispose(WaitHandle)"/> on the
+    /// already-disposed timer.
+    /// </summary>
+    private int _disposed;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SyncTimerBase"/> class with an inert timer; derived ctors
+    /// MUST call <see cref="Start"/> as their last step to begin firing.
     /// </summary>
     /// <param name="logger">The logger instance for tracing operations.</param>
     protected SyncTimerBase(ILogger logger)
     {
         Logger = logger;
+        Timer = new Timer(Callback, null, Timeout.Infinite, Timeout.Infinite);
+    }
+
+    /// <summary>
+    /// Begins firing the timer with the specified due time and period. Called by derived ctors after
+    /// derived fields are assigned so callbacks observe a fully-initialized instance.
+    /// </summary>
+    /// <param name="dueTime">The amount of time to delay before the first execution.</param>
+    /// <param name="period">The time interval between executions.</param>
+    protected void Start(int dueTime, int period)
+    {
+        Timer.Change(dueTime, period);
     }
 
     /// <summary>
     /// Releases all resources used by the timer.
     /// </summary>
+    /// <remarks>
+    /// Drains queued ThreadPool callbacks via <see cref="Timer.Dispose(WaitHandle)"/> and waits for the
+    /// drain (bounded by <see cref="_disposeWaitBudget"/>); on timeout the wait handle is leaked and a
+    /// warning is logged so the still-running callback can complete without raising
+    /// <see cref="ObjectDisposedException"/>. Re-entrant disposal — calling <see cref="Dispose"/> from
+    /// inside <see cref="Handle"/> on the same thread — is detected via <see cref="_callbackThreadId"/>
+    /// and skips the drain (which would otherwise self-deadlock per <see cref="Timer.Dispose(WaitHandle)"/>'s
+    /// documented behavior); the timer is still stopped from issuing new callbacks.
+    /// </remarks>
     public void Dispose()
     {
-        Timer.Dispose();
+        if (Interlocked.Exchange(ref _disposed, 1) == 1)
+            return;
+
+        if (_callbackThreadId == Environment.CurrentManagedThreadId)
+        {
+            // Re-entrant dispose from within Handle on the timer's callback thread. Stop the timer; do
+            // NOT block on Timer.Dispose(WaitHandle) — it would deadlock waiting for the very callback
+            // that is currently executing this Dispose call.
+            Timer.Dispose();
+            return;
+        }
+
+        var drained = new ManualResetEvent(false);
+        Timer.Dispose(drained);
+
+        if (drained.WaitOne(_disposeWaitBudget))
+        {
+            drained.Dispose();
+            return;
+        }
+
+        this.Warn(
+            "Timer drain exceeded {budget} budget; wait handle intentionally leaked to allow queued callbacks to complete",
+            _disposeWaitBudget
+        );
     }
 
     /// <summary>
@@ -148,13 +223,14 @@ internal abstract class SyncTimerBase : ISequentialTimer, ILogSubject
     /// The callback method that is called when the timer elapses.
     /// </summary>
     /// <param name="_">The state object passed to the timer (unused).</param>
-    protected void Callback(object? _)
+    private void Callback(object? _)
     {
         if (Interlocked.CompareExchange(ref _isHandling, 1, 0) == 1)
         {
             return;
         }
 
+        _callbackThreadId = Environment.CurrentManagedThreadId;
         try
         {
             Handle();
@@ -165,7 +241,8 @@ internal abstract class SyncTimerBase : ISequentialTimer, ILogSubject
         }
         finally
         {
-            _isHandling = 0;
+            _callbackThreadId = 0;
+            Interlocked.Exchange(ref _isHandling, 0);
         }
     }
 }
