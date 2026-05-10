@@ -54,8 +54,7 @@ public sealed class AsyncDisposableBox : DisposableBoxBase<AsyncDisposableBox>, 
 
         DisposeBase();
 
-        await Task
-            .WhenAll(
+        await Task.WhenAll(
                 Pull(_asyncDisposables)
                     .Select(async entry =>
                     {
@@ -65,8 +64,7 @@ public sealed class AsyncDisposableBox : DisposableBoxBase<AsyncDisposableBox>, 
                     })
             )
             .ConfigureAwait(false);
-        await Task
-            .WhenAll(
+        await Task.WhenAll(
                 Pull(_asyncDisposes)
                     .Select(async entry =>
                     {
@@ -89,6 +87,34 @@ public sealed class AsyncDisposableBox : DisposableBoxBase<AsyncDisposableBox>, 
         _asyncDisposables.Clear();
         _asyncDisposes.Clear();
     }
+
+    /// <summary>Adds an asynchronous <see cref="IAsyncDisposable"/> to the box's async-disposables list.</summary>
+    private AsyncDisposableBox AddAsyncDisposable(IAsyncDisposable disposable) => Add(_asyncDisposables, disposable);
+
+    /// <summary>Adds a collection of asynchronous <see cref="IAsyncDisposable"/>s to the box's async-disposables list.</summary>
+    private AsyncDisposableBox AddAsyncDisposables(IEnumerable<IAsyncDisposable> disposables) =>
+        Add(_asyncDisposables, disposables);
+
+    /// <summary>Removes an asynchronous <see cref="IAsyncDisposable"/> from the box's async-disposables list.</summary>
+    private AsyncDisposableBox RemoveAsyncDisposable(IAsyncDisposable disposable) =>
+        Remove(_asyncDisposables, disposable);
+
+    /// <summary>Removes a collection of asynchronous <see cref="IAsyncDisposable"/>s from the box's async-disposables list.</summary>
+    private AsyncDisposableBox RemoveAsyncDisposables(IEnumerable<IAsyncDisposable> disposables) =>
+        Remove(_asyncDisposables, disposables);
+
+    /// <summary>Adds an asynchronous dispose function to the box's async-disposes list.</summary>
+    private AsyncDisposableBox AddAsyncDispose(Func<Task> dispose) => Add(_asyncDisposes, dispose);
+
+    /// <summary>Adds a collection of asynchronous dispose functions to the box's async-disposes list.</summary>
+    private AsyncDisposableBox AddAsyncDisposes(IEnumerable<Func<Task>> disposes) => Add(_asyncDisposes, disposes);
+
+    /// <summary>Removes an asynchronous dispose function from the box's async-disposes list.</summary>
+    private AsyncDisposableBox RemoveAsyncDispose(Func<Task> dispose) => Remove(_asyncDisposes, dispose);
+
+    /// <summary>Removes a collection of asynchronous dispose functions from the box's async-disposes list.</summary>
+    private AsyncDisposableBox RemoveAsyncDisposes(IEnumerable<Func<Task>> disposes) =>
+        Remove(_asyncDisposes, disposes);
 
     /// <summary>
     /// Adds a synchronous disposable resource to the box.
@@ -118,31 +144,30 @@ public sealed class AsyncDisposableBox : DisposableBoxBase<AsyncDisposableBox>, 
     /// Adds an asynchronous disposable resource to the box.
     /// </summary>
     public static AsyncDisposableBox operator +(AsyncDisposableBox box, IAsyncDisposable disposable) =>
-        box.Add(box._asyncDisposables, disposable);
+        box.AddAsyncDisposable(disposable);
 
     /// <summary>
     /// Removes an asynchronous disposable resource from the box.
     /// </summary>
     public static AsyncDisposableBox operator -(AsyncDisposableBox box, IAsyncDisposable disposable) =>
-        box.Remove(box._asyncDisposables, disposable);
+        box.RemoveAsyncDisposable(disposable);
 
     /// <summary>
     /// Adds a collection of asynchronous disposable resources to the box.
     /// </summary>
     public static AsyncDisposableBox operator +(AsyncDisposableBox box, IEnumerable<IAsyncDisposable> disposables) =>
-        box.Add(box._asyncDisposables, disposables);
+        box.AddAsyncDisposables(disposables);
 
     /// <summary>
     /// Removes a collection of asynchronous disposable resources from the box.
     /// </summary>
     public static AsyncDisposableBox operator -(AsyncDisposableBox box, IEnumerable<IAsyncDisposable> disposables) =>
-        box.Remove(box._asyncDisposables, disposables);
+        box.RemoveAsyncDisposables(disposables);
 
     /// <summary>
     /// Adds a synchronous dispose action to the box.
     /// </summary>
-    public static AsyncDisposableBox operator +(AsyncDisposableBox box, Action dispose) =>
-        box.AddSyncDispose(dispose);
+    public static AsyncDisposableBox operator +(AsyncDisposableBox box, Action dispose) => box.AddSyncDispose(dispose);
 
     /// <summary>
     /// Removes a synchronous dispose action from the box.
@@ -166,23 +191,23 @@ public sealed class AsyncDisposableBox : DisposableBoxBase<AsyncDisposableBox>, 
     /// Adds an asynchronous dispose function to the box.
     /// </summary>
     public static AsyncDisposableBox operator +(AsyncDisposableBox box, Func<Task> dispose) =>
-        box.Add(box._asyncDisposes, dispose);
+        box.AddAsyncDispose(dispose);
 
     /// <summary>
     /// Removes an asynchronous dispose function from the box.
     /// </summary>
     public static AsyncDisposableBox operator -(AsyncDisposableBox box, Func<Task> dispose) =>
-        box.Remove(box._asyncDisposes, dispose);
+        box.RemoveAsyncDispose(dispose);
 
     /// <summary>
     /// Adds a collection of asynchronous dispose functions to the box.
     /// </summary>
     public static AsyncDisposableBox operator +(AsyncDisposableBox box, IEnumerable<Func<Task>> disposes) =>
-        box.Add(box._asyncDisposes, disposes);
+        box.AddAsyncDisposes(disposes);
 
     /// <summary>
     /// Removes a collection of asynchronous dispose functions from the box.
     /// </summary>
     public static AsyncDisposableBox operator -(AsyncDisposableBox box, IEnumerable<Func<Task>> disposes) =>
-        box.Remove(box._asyncDisposes, disposes);
+        box.RemoveAsyncDisposes(disposes);
 }

@@ -12,6 +12,16 @@ namespace Annium.Collections.Generic;
 /// </summary>
 /// <remarks>
 /// <para>
+/// <b>Why this facade exists:</b> all storage and eviction is implemented by the internal
+/// <see cref="ExpiringStore{TKey, TValue}"/>. This type is a thin public surface that
+/// (a) keeps <see cref="ExpiringStore{TKey, TValue}"/> internal so its representation can change
+/// without breaking the public surface, and (b) presents the expected dictionary-shaped API
+/// (<see cref="Get"/> throws <see cref="KeyNotFoundException"/> rather than returning a status flag,
+/// matching <c>Dictionary&lt;TKey, TValue&gt;</c> ergonomics). The one-line delegations are deliberate
+/// — every method is a direct mapping to the corresponding store method, with the sole exception of
+/// <see cref="Get"/> which adds the throw-on-missing semantics.
+/// </para>
+/// <para>
 /// <b>Lifetime obligation:</b> instances own a <see cref="System.Threading.Timer"/> for background
 /// eviction and therefore implement <see cref="IDisposable"/>. Callers MUST dispose the instance when
 /// done; failing to do so leaks the timer (no finalizer is provided) and the eviction tick will keep
