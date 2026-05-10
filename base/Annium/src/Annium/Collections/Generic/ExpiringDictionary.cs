@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
+using Annium.Internal.Collections.Generic;
 using NodaTime;
 
 namespace Annium.Collections.Generic;
@@ -19,7 +21,7 @@ namespace Annium.Collections.Generic;
 /// </remarks>
 /// <typeparam name="TKey">The type of the keys in the dictionary.</typeparam>
 /// <typeparam name="TValue">The type of the values in the dictionary.</typeparam>
-public sealed class ExpiringDictionary<TKey, TValue> : IDisposable
+public sealed class ExpiringDictionary<TKey, TValue> : IDisposable, IAsyncDisposable
     where TKey : notnull
 {
     private readonly ExpiringStore<TKey, TValue> _store;
@@ -84,6 +86,13 @@ public sealed class ExpiringDictionary<TKey, TValue> : IDisposable
     /// <summary>
     /// Removes the value with the specified key from the dictionary.
     /// </summary>
+    /// <remarks>
+    /// Returns <c>true</c> ONLY when the key was present AND non-expired at the time of removal. An
+    /// expired entry is still PHYSICALLY removed from the dictionary, but the method returns <c>false</c>
+    /// with <paramref name="value"/> set to <c>default</c>. Callers that need to distinguish "key was
+    /// absent" from "key was expired" must check expiry separately via <see cref="ContainsKey"/> or
+    /// <see cref="TryGet"/> beforehand.
+    /// </remarks>
     public bool Remove(TKey key, out TValue value)
     {
         return _store.Remove(key, out value);
@@ -103,5 +112,16 @@ public sealed class ExpiringDictionary<TKey, TValue> : IDisposable
     public void Dispose()
     {
         _store.Dispose();
+    }
+
+    /// <summary>
+    /// Asynchronously stops the background eviction timer and releases resources. The drain is
+    /// currently synchronous; this method exists to satisfy <see cref="IAsyncDisposable"/> for callers
+    /// that prefer <c>await using</c>.
+    /// </summary>
+    public ValueTask DisposeAsync()
+    {
+        Dispose();
+        return ValueTask.CompletedTask;
     }
 }

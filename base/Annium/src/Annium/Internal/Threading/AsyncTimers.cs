@@ -218,6 +218,16 @@ internal abstract class AsyncTimerBase : ISequentialTimer, ILogSubject
     }
 
     /// <summary>
+    /// Asynchronously releases all resources used by the timer. The drain is currently synchronous; this
+    /// method exists to satisfy <see cref="IAsyncDisposable"/> for callers that prefer <c>await using</c>.
+    /// </summary>
+    public ValueTask DisposeAsync()
+    {
+        Dispose();
+        return ValueTask.CompletedTask;
+    }
+
+    /// <summary>
     /// Changes the start time and the interval between method invocations for a timer.
     /// </summary>
     /// <param name="dueTime">The amount of time to delay before the first execution.</param>

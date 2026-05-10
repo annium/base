@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 using System.Threading;
 using NodaTime;
 
-namespace Annium.Collections.Generic;
+namespace Annium.Internal.Collections.Generic;
 
 /// <summary>
 /// A thread-safe key/value store with TTL-based expiry. Reads check per-item expiry on every call so that
@@ -19,11 +19,12 @@ internal sealed class ExpiringStore<TKey, TValue> : IDisposable
     /// <summary>
     /// The default interval between background eviction passes.
     /// </summary>
-    public static readonly TimeSpan DefaultEvictionInterval = TimeSpan.FromMinutes(1);
+    internal static readonly TimeSpan DefaultEvictionInterval = TimeSpan.FromMinutes(1);
 
     private readonly ITimeProvider _timeProvider;
     private readonly ConcurrentDictionary<TKey, Entry> _data = new();
     private readonly Timer _evictionTimer;
+    private int _disposed;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ExpiringStore{TKey, TValue}"/> class.
@@ -75,9 +76,15 @@ internal sealed class ExpiringStore<TKey, TValue> : IDisposable
     }
 
     /// <summary>
-    /// Removes the entry with the specified key. Returns the removed value if it was present and
-    /// non-expired; otherwise returns the default value.
+    /// Removes the entry with the specified key from the underlying dictionary.
     /// </summary>
+    /// <remarks>
+    /// Returns <c>true</c> ONLY when an entry existed AND was non-expired at the time of removal. An
+    /// expired entry is still PHYSICALLY removed from the dictionary (the eviction would have happened
+    /// on the next prune anyway), but the method returns <c>false</c> with <paramref name="value"/> set
+    /// to <c>default</c>. Callers that need to distinguish "key was absent" from "key was expired" must
+    /// check expiry separately via <see cref="ContainsKey"/> or <see cref="TryGet"/> beforehand.
+    /// </remarks>
     public bool Remove(TKey key, out TValue value)
     {
         if (_data.TryRemove(key, out var entry) && entry.Expires > _timeProvider.Now)
@@ -103,13 +110,17 @@ internal sealed class ExpiringStore<TKey, TValue> : IDisposable
     /// (bounded by a small drain budget) so callers do not race with a still-running prune. On timeout the
     /// wait handle is intentionally leaked — disposing it while <see cref="Evict"/> still races toward
     /// <see cref="Timer"/>'s internal Set call would surface <see cref="ObjectDisposedException"/> on a
-    /// ThreadPool thread (process crash). After <c>Dispose()</c> returns, calls to other methods still
-    /// operate on the dictionary (no <see cref="ObjectDisposedException"/>); they simply lack background
-    /// eviction. This is intentional for an internal helper consumed by
-    /// <see cref="ExpiringCollection{T}"/> and <see cref="ExpiringDictionary{TKey,TValue}"/>.
+    /// ThreadPool thread (process crash). The dispose path is idempotent: a second call returns
+    /// immediately. After <c>Dispose()</c> returns, calls to other methods still operate on the dictionary
+    /// (no <see cref="ObjectDisposedException"/>); they simply lack background eviction. This is intentional
+    /// for an internal helper consumed by <see cref="Annium.Collections.Generic.ExpiringCollection{T}"/> and
+    /// <see cref="Annium.Collections.Generic.ExpiringDictionary{TKey,TValue}"/>.
     /// </summary>
     public void Dispose()
     {
+        if (Interlocked.Exchange(ref _disposed, 1) == 1)
+            return;
+
         var drained = new ManualResetEvent(false);
         _evictionTimer.Dispose(drained);
         // Evict() is a small, fast pass over the dictionary; a tight 1s budget is plenty.

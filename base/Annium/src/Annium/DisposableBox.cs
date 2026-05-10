@@ -39,45 +39,45 @@ public sealed class DisposableBox : DisposableBoxBase<DisposableBox>, IDisposabl
     /// Adds a disposable resource to the box.
     /// </summary>
     public static DisposableBox operator +(DisposableBox box, IDisposable disposable) =>
-        box.Add(box.SyncDisposables, disposable);
+        box.AddSyncDisposable(disposable);
 
     /// <summary>
     /// Removes a disposable resource from the box.
     /// </summary>
     public static DisposableBox operator -(DisposableBox box, IDisposable disposable) =>
-        box.Remove(box.SyncDisposables, disposable);
+        box.RemoveSyncDisposable(disposable);
 
     /// <summary>
     /// Adds a collection of disposable resources to the box.
     /// </summary>
     public static DisposableBox operator +(DisposableBox box, IEnumerable<IDisposable> disposables) =>
-        box.Add(box.SyncDisposables, disposables);
+        box.AddSyncDisposables(disposables);
 
     /// <summary>
     /// Removes a collection of disposable resources from the box.
     /// </summary>
     public static DisposableBox operator -(DisposableBox box, IEnumerable<IDisposable> disposables) =>
-        box.Remove(box.SyncDisposables, disposables);
+        box.RemoveSyncDisposables(disposables);
 
     /// <summary>
     /// Adds a dispose action to the box.
     /// </summary>
-    public static DisposableBox operator +(DisposableBox box, Action dispose) => box.Add(box.SyncDisposes, dispose);
+    public static DisposableBox operator +(DisposableBox box, Action dispose) => box.AddSyncDispose(dispose);
 
     /// <summary>
     /// Removes a dispose action from the box.
     /// </summary>
-    public static DisposableBox operator -(DisposableBox box, Action dispose) => box.Remove(box.SyncDisposes, dispose);
+    public static DisposableBox operator -(DisposableBox box, Action dispose) => box.RemoveSyncDispose(dispose);
 
     /// <summary>
     /// Adds a collection of dispose actions to the box.
     /// </summary>
     public static DisposableBox operator +(DisposableBox box, IEnumerable<Action> disposes) =>
-        box.Add(box.SyncDisposes, disposes);
+        box.AddSyncDisposes(disposes);
 
     /// <summary>
     /// Removes a collection of dispose actions from the box.
     /// </summary>
     public static DisposableBox operator -(DisposableBox box, IEnumerable<Action> disposes) =>
-        box.Remove(box.SyncDisposes, disposes);
+        box.RemoveSyncDisposes(disposes);
 }

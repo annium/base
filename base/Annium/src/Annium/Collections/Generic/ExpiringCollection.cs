@@ -1,4 +1,6 @@
 using System;
+using System.Threading.Tasks;
+using Annium.Internal.Collections.Generic;
 using NodaTime;
 
 namespace Annium.Collections.Generic;
@@ -17,7 +19,7 @@ namespace Annium.Collections.Generic;
 /// </para>
 /// </remarks>
 /// <typeparam name="T">The type of the items in the collection.</typeparam>
-public sealed class ExpiringCollection<T> : IDisposable
+public sealed class ExpiringCollection<T> : IDisposable, IAsyncDisposable
     where T : notnull
 {
     private readonly ExpiringStore<T, byte> _store;
@@ -62,8 +64,14 @@ public sealed class ExpiringCollection<T> : IDisposable
     /// <summary>
     /// Removes the specified item from the collection.
     /// </summary>
+    /// <remarks>
+    /// Returns <c>true</c> ONLY when the item was present AND non-expired at the time of removal. An
+    /// expired item is still PHYSICALLY removed from the collection, but the method returns <c>false</c>
+    /// — callers that need to distinguish "item was absent" from "item was expired" must check expiry
+    /// separately via <see cref="Contains"/> beforehand.
+    /// </remarks>
     /// <param name="item">The item to remove.</param>
-    /// <returns>True if the item was successfully removed; otherwise, false.</returns>
+    /// <returns>True if the item was present and non-expired; otherwise, false.</returns>
     public bool Remove(T item)
     {
         return _store.Remove(item, out _);
@@ -83,5 +91,16 @@ public sealed class ExpiringCollection<T> : IDisposable
     public void Dispose()
     {
         _store.Dispose();
+    }
+
+    /// <summary>
+    /// Asynchronously stops the background eviction timer and releases resources. The drain is
+    /// currently synchronous; this method exists to satisfy <see cref="IAsyncDisposable"/> for callers
+    /// that prefer <c>await using</c>.
+    /// </summary>
+    public ValueTask DisposeAsync()
+    {
+        Dispose();
+        return ValueTask.CompletedTask;
     }
 }

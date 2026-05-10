@@ -81,8 +81,27 @@ internal sealed class DebounceTimer : DebounceTimerBase
 /// <summary>
 /// Provides a base class for debounced timers.
 /// </summary>
+/// <remarks>
+/// On <see cref="Dispose"/>, the underlying <see cref="Timer"/> is drained via the
+/// <see cref="Timer.Dispose(WaitHandle)"/> overload before the in-flight gate is reclaimed; this drains
+/// queued ThreadPool callbacks before the gate is torn down. Because <see cref="Callback"/> is
+/// <c>async void</c>, the wait handle is signaled the moment the synchronous prefix of <c>Callback</c>
+/// returns (typically at <c>await HandleAsync()</c>) — not when the asynchronous handler completes.
+/// The actual in-flight drain is provided by acquiring <see cref="_gate"/>'s permit, which a running
+/// callback releases only in its <c>finally</c> block. On either timeout, the wait handle and (on the
+/// second) the gate are intentionally leaked and a warning is logged so the still-running callback can
+/// complete without raising <see cref="ObjectDisposedException"/>; callers MUST NOT free shared state
+/// on timeout without independent synchronization. Re-entrant disposal — calling <see cref="Dispose"/>
+/// from inside <c>HandleAsync</c> (or any continuation of it) — is detected via <see cref="_inCallback"/>
+/// and skips the gate drain to avoid the self-deadlock that would otherwise occur.
+/// </remarks>
 internal abstract class DebounceTimerBase : IDebounceTimer, ILogSubject
 {
+    /// <summary>
+    /// Maximum time <see cref="Dispose"/> waits for the timer drain and the in-flight callback before returning.
+    /// </summary>
+    private static readonly TimeSpan _disposeWaitBudget = TimeSpan.FromSeconds(5);
+
     /// <summary>
     /// Gets the logger instance for tracing operations.
     /// </summary>
@@ -111,12 +130,26 @@ internal abstract class DebounceTimerBase : IDebounceTimer, ILogSubject
     private volatile int _isHandling;
 
     /// <summary>
-    /// A flag indicating whether <see cref="Dispose"/> has run. Set BEFORE <c>_timer.Dispose()</c>
-    /// so concurrent <see cref="Request"/> / <see cref="Callback"/> observe the dispose and skip the
-    /// <see cref="Timer.Change(int, int)"/> call that would otherwise throw <see cref="ObjectDisposedException"/>
-    /// silently into the threadpool.
+    /// 0 if <see cref="Dispose"/> has not yet claimed the dispose path; 1 once it has. Set BEFORE the
+    /// drain begins so concurrent <see cref="Request"/> / <see cref="Callback"/> observe the dispose and
+    /// short-circuit. Also prevents a concurrent second <see cref="Dispose"/> caller from racing into
+    /// <c>_gate.Wait</c> on the already-disposed semaphore.
     /// </summary>
-    private volatile bool _disposed;
+    private int _disposed;
+
+    /// <summary>
+    /// Mutex + in-flight signal. The single permit is held for the duration of an executing callback;
+    /// <see cref="Callback"/> uses non-blocking acquisition (skips overlapping ticks), and <see cref="Dispose"/>
+    /// uses a bounded blocking acquisition to drain any in-flight callback before reclaiming owned state.
+    /// </summary>
+    private readonly SemaphoreSlim _gate = new(initialCount: 1, maxCount: 1);
+
+    /// <summary>
+    /// Per-instance flow flag set inside <see cref="Callback"/> so a re-entrant <see cref="Dispose"/> call
+    /// (one made from the handler's logical execution context, including across <c>await</c>s) can skip the
+    /// gate drain — the calling flow holds the permit, so attempting to acquire it would deadlock.
+    /// </summary>
+    private readonly AsyncLocal<bool> _inCallback = new();
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DebounceTimerBase"/> class.
@@ -131,12 +164,60 @@ internal abstract class DebounceTimerBase : IDebounceTimer, ILogSubject
     }
 
     /// <summary>
-    /// Releases all resources used by the timer.
+    /// Releases all resources used by the timer. Drains queued ThreadPool callbacks via
+    /// <see cref="Timer.Dispose(WaitHandle)"/>, then acquires the gate's permit (bounded by
+    /// <see cref="_disposeWaitBudget"/>) so any in-flight callback completes. On success the wait handle
+    /// and the gate are both disposed; on timeout, both are leaked and a warning is logged so the
+    /// still-running callback can release its state without raising <see cref="ObjectDisposedException"/>.
     /// </summary>
     public void Dispose()
     {
-        _disposed = true;
-        _timer.Dispose();
+        if (Interlocked.Exchange(ref _disposed, 1) == 1)
+            return;
+
+        if (_inCallback.Value)
+        {
+            // Re-entrant dispose from inside HandleAsync's logical flow: the calling flow holds the gate
+            // permit, so blocking on _gate.Wait() would deadlock. Stop the timer and return; the handler's
+            // finally will release the permit on its own. The gate is intentionally not disposed here.
+            _timer.Dispose();
+            return;
+        }
+
+        var drained = new ManualResetEvent(false);
+        _timer.Dispose(drained);
+
+        if (drained.WaitOne(_disposeWaitBudget))
+        {
+            drained.Dispose();
+            if (_gate.Wait(_disposeWaitBudget))
+            {
+                _gate.Dispose();
+                return;
+            }
+
+            this.Warn(
+                "Timer disposed but in-flight callback exceeded {budget} drain budget; gate intentionally leaked",
+                _disposeWaitBudget
+            );
+            return;
+        }
+
+        // Drain timed out: queued ThreadPool callbacks may still execute. Leak both handles to keep them safe.
+        this.Warn(
+            "Timer drain exceeded {budget} budget; wait handle and gate intentionally leaked to allow queued callbacks to complete",
+            _disposeWaitBudget
+        );
+    }
+
+    /// <summary>
+    /// Asynchronously releases all resources used by the timer. The drain is currently synchronous; this
+    /// method exists to satisfy <see cref="IAsyncDisposable"/> for callers that prefer <c>await using</c>.
+    /// </summary>
+    public ValueTask DisposeAsync()
+    {
+        Dispose();
+        return ValueTask.CompletedTask;
     }
 
     /// <summary>
@@ -153,7 +234,10 @@ internal abstract class DebounceTimerBase : IDebounceTimer, ILogSubject
     /// </summary>
     public void Request()
     {
-        if (_disposed)
+        // Volatile read so cross-thread observers see Dispose's Interlocked.Exchange(_disposed, 1) in
+        // a timely fashion on weakly-ordered architectures (ARM64). The race between this check and
+        // _timer.Change below is still possible, but the catch (ObjectDisposedException) below handles it.
+        if (Volatile.Read(ref _disposed) != 0)
             return;
 
         // Set the requested flag BEFORE arming the timer so that if the callback fires between these two
@@ -187,12 +271,23 @@ internal abstract class DebounceTimerBase : IDebounceTimer, ILogSubject
     private async void Callback(object? _)
 #pragma warning restore VSTHRD100
     {
-        if (Interlocked.CompareExchange(ref _isHandling, 1, 0) == 1)
+        // Non-blocking gate acquisition: if Dispose is draining (or another callback is running), skip.
+        if (!_gate.Wait(0))
             return;
+
+        if (Interlocked.CompareExchange(ref _isHandling, 1, 0) == 1)
+        {
+            // Another callback already claimed _isHandling between our gate-wait and this CAS — extremely
+            // unlikely given the gate, but release and bail out to keep both invariants consistent.
+            _gate.Release();
+            return;
+        }
 
         // Claim the pending request that triggered this callback.
         Interlocked.Exchange(ref _isRequested, 0);
 
+        var prevInCallback = _inCallback.Value;
+        _inCallback.Value = true;
         try
         {
             await HandleAsync().ConfigureAwait(false);
@@ -203,12 +298,18 @@ internal abstract class DebounceTimerBase : IDebounceTimer, ILogSubject
         }
         finally
         {
+            _inCallback.Value = prevInCallback;
             Interlocked.Exchange(ref _isHandling, 0);
 
             // Atomically consume any request that arrived during HandleAsync; if claimed, re-fire.
             // Skip if Dispose ran during the handler — Request() also guards on _disposed.
-            if (!_disposed && Interlocked.CompareExchange(ref _isRequested, 0, 1) == 1)
+            // Volatile.Read provides the acquire fence needed to observe Dispose's Interlocked.Exchange.
+            if (Volatile.Read(ref _disposed) == 0 && Interlocked.CompareExchange(ref _isRequested, 0, 1) == 1)
                 Request();
+
+            // Release is always safe: Dispose's _gate.Wait runs AFTER the timer drain, so by the time it
+            // acquires the gate, no queued callback can still be racing toward this Release.
+            _gate.Release();
         }
     }
 }

@@ -5,7 +5,12 @@ namespace Annium.Threading;
 /// <summary>
 /// Represents a timer that executes operations sequentially.
 /// </summary>
-public interface ISequentialTimer : IDisposable
+/// <remarks>
+/// Implements both <see cref="IDisposable"/> and <see cref="IAsyncDisposable"/> so the drain contract
+/// (the bounded wait for an in-flight callback to complete during disposal) is visible at the interface
+/// level. Callers may use either <c>using</c> or <c>await using</c>.
+/// </remarks>
+public interface ISequentialTimer : IDisposable, IAsyncDisposable
 {
     /// <summary>
     /// Changes the start time and interval between method invocations for a timer.

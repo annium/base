@@ -13,10 +13,11 @@ namespace Annium;
 /// Established invariant for <see cref="DisposeBase"/> and derived dispose paths: <see cref="IsDisposed"/>
 /// is set to <c>true</c> under <see cref="_locker"/>, then the actual list iteration runs OUTSIDE the
 /// lock via <see cref="Pull{T}"/>, which atomically snapshots and clears the list under <see cref="_locker"/>.
-/// Concurrent <see cref="Add{T}(List{T},T)"/> / <see cref="Remove{T}(List{T},T)"/> repeat the
-/// <see cref="EnsureNotDisposed"/> check INSIDE the lock so a racing dispose cannot strand new entries.
-/// Derived classes that own additional disposable lists MUST clear them in their own <see cref="Reset"/>
-/// override AND drain them in their own dispose path under the same lock-then-pull pattern.
+/// Concurrent <see cref="AddSyncDisposable"/> / <see cref="RemoveSyncDisposable"/> (and their list
+/// equivalents) repeat the disposed check INSIDE the lock so a racing dispose cannot strand new entries.
+/// Derived classes that own additional disposable lists pass them to the protected generic
+/// <c>Add</c>/<c>Remove</c>/<c>Pull</c> helpers (their own private fields stay encapsulated) and override
+/// <see cref="ResetCore"/> to clear them under the same lock.
 /// </remarks>
 public abstract class DisposableBoxBase<TBox> : ILogSubject
     where TBox : DisposableBoxBase<TBox>
@@ -32,14 +33,18 @@ public abstract class DisposableBoxBase<TBox> : ILogSubject
     public bool IsDisposed { get; private set; }
 
     /// <summary>
-    /// The list of synchronous disposable resources.
+    /// Private list of synchronous disposable resources owned by the base. Mutated only via the protected
+    /// <see cref="AddSyncDisposable"/> / <see cref="AddSyncDisposables"/> /
+    /// <see cref="RemoveSyncDisposable"/> / <see cref="RemoveSyncDisposables"/> helpers, which centralize
+    /// the lock semantics. Kept private so derived classes cannot bypass the lock by mutating the list directly.
     /// </summary>
-    protected readonly List<IDisposable> SyncDisposables = new();
+    private readonly List<IDisposable> _syncDisposables = new();
 
     /// <summary>
-    /// The list of synchronous dispose actions.
+    /// Private list of synchronous dispose actions, mutated only via the protected helpers. See
+    /// <see cref="_syncDisposables"/> for the rationale.
     /// </summary>
-    protected readonly List<Action> SyncDisposes = new();
+    private readonly List<Action> _syncDisposes = new();
 
     /// <summary>
     /// A thread-safe lock object used to synchronize access to the box's resources.
@@ -61,7 +66,7 @@ public abstract class DisposableBoxBase<TBox> : ILogSubject
     /// <see cref="DisposeBase"/> has already pulled the snapshot.
     /// </summary>
     /// <typeparam name="T">The type of the entry.</typeparam>
-    /// <param name="entries">The list to add the entry to.</param>
+    /// <param name="entries">The list to add the entry to (typically a derived class's own private list).</param>
     /// <param name="entry">The entry to add.</param>
     /// <returns>The current box instance for method chaining.</returns>
     protected TBox Add<T>(List<T> entries, T entry)
@@ -158,6 +163,30 @@ public abstract class DisposableBoxBase<TBox> : ILogSubject
         }
     }
 
+    /// <summary>Adds a synchronous <see cref="IDisposable"/> to the base's sync-disposables list.</summary>
+    protected TBox AddSyncDisposable(IDisposable disposable) => Add(_syncDisposables, disposable);
+
+    /// <summary>Adds a collection of synchronous <see cref="IDisposable"/>s to the base's sync-disposables list.</summary>
+    protected TBox AddSyncDisposables(IEnumerable<IDisposable> disposables) => Add(_syncDisposables, disposables);
+
+    /// <summary>Removes a synchronous <see cref="IDisposable"/> from the base's sync-disposables list.</summary>
+    protected TBox RemoveSyncDisposable(IDisposable disposable) => Remove(_syncDisposables, disposable);
+
+    /// <summary>Removes a collection of synchronous <see cref="IDisposable"/>s from the base's sync-disposables list.</summary>
+    protected TBox RemoveSyncDisposables(IEnumerable<IDisposable> disposables) => Remove(_syncDisposables, disposables);
+
+    /// <summary>Adds a synchronous dispose <see cref="Action"/> to the base's sync-disposes list.</summary>
+    protected TBox AddSyncDispose(Action dispose) => Add(_syncDisposes, dispose);
+
+    /// <summary>Adds a collection of synchronous dispose <see cref="Action"/>s to the base's sync-disposes list.</summary>
+    protected TBox AddSyncDisposes(IEnumerable<Action> disposes) => Add(_syncDisposes, disposes);
+
+    /// <summary>Removes a synchronous dispose <see cref="Action"/> from the base's sync-disposes list.</summary>
+    protected TBox RemoveSyncDispose(Action dispose) => Remove(_syncDisposes, dispose);
+
+    /// <summary>Removes a collection of synchronous dispose <see cref="Action"/>s from the base's sync-disposes list.</summary>
+    protected TBox RemoveSyncDisposes(IEnumerable<Action> disposes) => Remove(_syncDisposes, disposes);
+
     /// <summary>
     /// Disposes all resources in the base box. Sets <see cref="IsDisposed"/> under the lock, then drains the
     /// sync lists outside the lock via <see cref="Pull{T}"/>. Derived classes that own additional disposable
@@ -176,21 +205,19 @@ public abstract class DisposableBoxBase<TBox> : ILogSubject
             IsDisposed = true;
         }
 
-        if (SyncDisposables.Count > 0)
-            foreach (var entry in Pull(SyncDisposables))
-            {
-                this.Trace<string>("dispose {entry} - start", entry.GetFullId());
-                entry.Dispose();
-                this.Trace<string>("dispose {entry} - done", entry.GetFullId());
-            }
+        foreach (var entry in Pull(_syncDisposables))
+        {
+            this.Trace<string>("dispose {entry} - start", entry.GetFullId());
+            entry.Dispose();
+            this.Trace<string>("dispose {entry} - done", entry.GetFullId());
+        }
 
-        if (SyncDisposes.Count > 0)
-            foreach (var entry in Pull(SyncDisposes))
-            {
-                this.Trace<string>("dispose {entry} - start", entry.GetFullId());
-                entry();
-                this.Trace<string>("dispose {entry} - done", entry.GetFullId());
-            }
+        foreach (var entry in Pull(_syncDisposes))
+        {
+            this.Trace<string>("dispose {entry} - start", entry.GetFullId());
+            entry();
+            this.Trace<string>("dispose {entry} - done", entry.GetFullId());
+        }
     }
 
     /// <summary>
@@ -203,8 +230,8 @@ public abstract class DisposableBoxBase<TBox> : ILogSubject
         lock (_locker)
         {
             IsDisposed = false;
-            SyncDisposables.Clear();
-            SyncDisposes.Clear();
+            _syncDisposables.Clear();
+            _syncDisposes.Clear();
             ResetCore();
         }
     }

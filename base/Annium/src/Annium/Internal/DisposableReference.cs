@@ -48,7 +48,10 @@ internal sealed class DisposableReference<TValue> : IDisposableReference<TValue>
         if (Interlocked.Exchange(ref _disposed, 1) == 1)
             return;
 
-        Value = default!;
+        // Run the dispose callback BEFORE nulling Value so closures over `this.Value` (or racing readers)
+        // see the live value during the asynchronous teardown rather than `default`. The idempotency
+        // guard above already ensures _dispose() runs exactly once.
         await _dispose().ConfigureAwait(false);
+        Value = default!;
     }
 }

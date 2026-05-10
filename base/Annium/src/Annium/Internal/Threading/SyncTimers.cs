@@ -1,5 +1,6 @@
 using System;
 using System.Threading;
+using System.Threading.Tasks;
 using Annium.Logging;
 using Annium.Threading;
 
@@ -111,6 +112,9 @@ internal abstract class SyncTimerBase : ISequentialTimer, ILogSubject
 
     /// <summary>
     /// A flag indicating whether the timer is currently handling a callback (1) or not (0).
+    /// Intentionally NOT consulted in <see cref="Dispose"/> — <see cref="Timer.Dispose(WaitHandle)"/>
+    /// already drains synchronous callbacks fully (the wait handle is signaled only after the last
+    /// callback body returns). This CAS is purely to prevent overlapping ticks during normal operation.
     /// </summary>
     private int _isHandling;
 
@@ -193,6 +197,16 @@ internal abstract class SyncTimerBase : ISequentialTimer, ILogSubject
     }
 
     /// <summary>
+    /// Asynchronously releases all resources used by the timer. The drain is currently synchronous; this
+    /// method exists to satisfy <see cref="IAsyncDisposable"/> for callers that prefer <c>await using</c>.
+    /// </summary>
+    public ValueTask DisposeAsync()
+    {
+        Dispose();
+        return ValueTask.CompletedTask;
+    }
+
+    /// <summary>
     /// Changes the start time and the interval between method invocations for a timer.
     /// </summary>
     /// <param name="dueTime">The amount of time to delay before the first execution.</param>
@@ -226,9 +240,7 @@ internal abstract class SyncTimerBase : ISequentialTimer, ILogSubject
     private void Callback(object? _)
     {
         if (Interlocked.CompareExchange(ref _isHandling, 1, 0) == 1)
-        {
             return;
-        }
 
         _callbackThreadId = Environment.CurrentManagedThreadId;
         try

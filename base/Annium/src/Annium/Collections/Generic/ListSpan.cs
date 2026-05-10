@@ -7,6 +7,14 @@ namespace Annium.Collections.Generic;
 /// <summary>
 /// Represents a span of elements from a read-only list, with the ability to move the span's position.
 /// </summary>
+/// <remarks>
+/// Declared as <c>record</c> so two spans with the same public state (<see cref="Count"/>, <see cref="Start"/>,
+/// <see cref="End"/>) compare equal — this is relied on by <c>SortedListExtensions.GetChunks</c> tests and
+/// other range-comparison call sites. <b>Caveat:</b> the compiler-synthesized <c>with</c>-expression can
+/// reach <see cref="Start"/> directly (its setter is <c>private set</c>, but record copy ctors bypass that),
+/// so callers can construct an out-of-range span via <c>span with { Start = -1 }</c>. The <see cref="Move(int)"/>
+/// API is the only sanctioned way to reposition the span and includes bounds checking.
+/// </remarks>
 /// <typeparam name="T">The type of the elements in the span.</typeparam>
 public record ListSpan<T> : IListSpan<T>
 {

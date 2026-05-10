@@ -41,6 +41,12 @@ public sealed class AsyncDisposableBox : DisposableBoxBase<AsyncDisposableBox>, 
     /// <summary>
     /// Asynchronously disposes all resources in the box.
     /// </summary>
+    /// <remarks>
+    /// Drain order: synchronous resources first (via <see cref="DisposableBoxBase{TBox}.DisposeBase"/>),
+    /// then asynchronous resources in parallel via <see cref="Task.WhenAll(System.Collections.Generic.IEnumerable{Task})"/>.
+    /// Callers MUST NOT register asynchronous resources that depend on synchronous ones still being alive
+    /// during their own teardown — those will observe the dependency already disposed.
+    /// </remarks>
     /// <returns>A <see cref="ValueTask"/> representing the asynchronous operation.</returns>
     public async ValueTask DisposeAsync()
     {
@@ -48,28 +54,28 @@ public sealed class AsyncDisposableBox : DisposableBoxBase<AsyncDisposableBox>, 
 
         DisposeBase();
 
-        if (_asyncDisposables.Count > 0)
-            await Task.WhenAll(
-                    Pull(_asyncDisposables)
-                        .Select(async entry =>
-                        {
-                            this.Trace<string>("dispose {entry} - start", entry.GetFullId());
-                            await entry.DisposeAsync().ConfigureAwait(false);
-                            this.Trace<string>("dispose {entry} - done", entry.GetFullId());
-                        })
-                )
-                .ConfigureAwait(false);
-        if (_asyncDisposes.Count > 0)
-            await Task.WhenAll(
-                    Pull(_asyncDisposes)
-                        .Select(async entry =>
-                        {
-                            this.Trace<string>("dispose {entry} - start", entry.GetFullId());
-                            await entry().ConfigureAwait(false);
-                            this.Trace<string>("dispose {entry} - done", entry.GetFullId());
-                        })
-                )
-                .ConfigureAwait(false);
+        await Task
+            .WhenAll(
+                Pull(_asyncDisposables)
+                    .Select(async entry =>
+                    {
+                        this.Trace<string>("dispose {entry} - start", entry.GetFullId());
+                        await entry.DisposeAsync().ConfigureAwait(false);
+                        this.Trace<string>("dispose {entry} - done", entry.GetFullId());
+                    })
+            )
+            .ConfigureAwait(false);
+        await Task
+            .WhenAll(
+                Pull(_asyncDisposes)
+                    .Select(async entry =>
+                    {
+                        this.Trace<string>("dispose {entry} - start", entry.GetFullId());
+                        await entry().ConfigureAwait(false);
+                        this.Trace<string>("dispose {entry} - done", entry.GetFullId());
+                    })
+            )
+            .ConfigureAwait(false);
 
         this.Trace("done");
     }
@@ -88,25 +94,25 @@ public sealed class AsyncDisposableBox : DisposableBoxBase<AsyncDisposableBox>, 
     /// Adds a synchronous disposable resource to the box.
     /// </summary>
     public static AsyncDisposableBox operator +(AsyncDisposableBox box, IDisposable disposable) =>
-        box.Add(box.SyncDisposables, disposable);
+        box.AddSyncDisposable(disposable);
 
     /// <summary>
     /// Removes a synchronous disposable resource from the box.
     /// </summary>
     public static AsyncDisposableBox operator -(AsyncDisposableBox box, IDisposable disposable) =>
-        box.Remove(box.SyncDisposables, disposable);
+        box.RemoveSyncDisposable(disposable);
 
     /// <summary>
     /// Adds a collection of synchronous disposable resources to the box.
     /// </summary>
     public static AsyncDisposableBox operator +(AsyncDisposableBox box, IEnumerable<IDisposable> disposables) =>
-        box.Add(box.SyncDisposables, disposables);
+        box.AddSyncDisposables(disposables);
 
     /// <summary>
     /// Removes a collection of synchronous disposable resources from the box.
     /// </summary>
     public static AsyncDisposableBox operator -(AsyncDisposableBox box, IEnumerable<IDisposable> disposables) =>
-        box.Remove(box.SyncDisposables, disposables);
+        box.RemoveSyncDisposables(disposables);
 
     /// <summary>
     /// Adds an asynchronous disposable resource to the box.
@@ -136,25 +142,25 @@ public sealed class AsyncDisposableBox : DisposableBoxBase<AsyncDisposableBox>, 
     /// Adds a synchronous dispose action to the box.
     /// </summary>
     public static AsyncDisposableBox operator +(AsyncDisposableBox box, Action dispose) =>
-        box.Add(box.SyncDisposes, dispose);
+        box.AddSyncDispose(dispose);
 
     /// <summary>
     /// Removes a synchronous dispose action from the box.
     /// </summary>
     public static AsyncDisposableBox operator -(AsyncDisposableBox box, Action dispose) =>
-        box.Remove(box.SyncDisposes, dispose);
+        box.RemoveSyncDispose(dispose);
 
     /// <summary>
     /// Adds a collection of synchronous dispose actions to the box.
     /// </summary>
     public static AsyncDisposableBox operator +(AsyncDisposableBox box, IEnumerable<Action> disposes) =>
-        box.Add(box.SyncDisposes, disposes);
+        box.AddSyncDisposes(disposes);
 
     /// <summary>
     /// Removes a collection of synchronous dispose actions from the box.
     /// </summary>
     public static AsyncDisposableBox operator -(AsyncDisposableBox box, IEnumerable<Action> disposes) =>
-        box.Remove(box.SyncDisposes, disposes);
+        box.RemoveSyncDisposes(disposes);
 
     /// <summary>
     /// Adds an asynchronous dispose function to the box.
