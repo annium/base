@@ -61,6 +61,17 @@ internal class MappingSinglePipeHandler<TRequest, TResponseIn, TResponseOut>
     {
         var response = await next(request, ct);
 
+        if (response.Status != OperationStatus.Ok)
+        {
+            this.Trace(
+                "Skip mapping on non-Ok status {status}: {responseIn} -> {responseOut}",
+                response.Status,
+                typeof(TResponseIn),
+                typeof(TResponseOut)
+            );
+            return Result.Status(response.Status, default(TResponseOut)!).Join(response);
+        }
+
         this.Trace("Map response: {responseIn} -> {responseOut}", typeof(TResponseIn), typeof(TResponseOut));
         var mappedResponse = _mapper.Map<TResponseOut>(response.Data!);
 

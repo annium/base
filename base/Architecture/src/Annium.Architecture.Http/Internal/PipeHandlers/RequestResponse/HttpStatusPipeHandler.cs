@@ -1,4 +1,5 @@
 using Annium.Architecture.Base;
+using Annium.Architecture.Http.Exceptions;
 using Annium.Core.Mediator;
 using Annium.Data.Operations;
 
@@ -21,6 +22,12 @@ internal class HttpStatusPipeHandler<TRequest, TResponse>
     protected override IResult<TResponse> GetResponse(IStatusResult<OperationStatus, TResponse> response)
     {
         HandleStatus(response.Status, response);
+
+        // Defense in depth: an upstream handler that returns Status=Ok with Data=null is a programming
+        // error (TResponse has no `notnull` constraint, so the type system cannot enforce this). Surface
+        // it as a ServerException (HTTP 500) instead of propagating a null-Data result downstream.
+        if (response.Data is null)
+            throw new ServerException(response);
 
         return Result.Create(response.Data).Join(response);
     }

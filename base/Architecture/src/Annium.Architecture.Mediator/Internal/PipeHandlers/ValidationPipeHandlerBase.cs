@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Annium.Architecture.Base;
 using Annium.Data.Operations;
 using Annium.Extensions.Validation;
 using Annium.Logging;
@@ -51,9 +52,12 @@ internal abstract class ValidationPipeHandlerBase<TRequest, TResponse> : ILogSub
         this.Trace("Validate {request}", typeof(TRequest));
         if (request is null)
         {
+            // A null TRequest is a programming error (DI / pipeline wiring problem), not a user
+            // input problem — surface it as UncaughtError instead of BadRequest so callers can
+            // distinguish "the framework misrouted" from "the user sent garbage".
             this.Trace("Validation of {request} failed - request is null", typeof(TRequest));
 
-            return GetResponse(Result.Create().Error("Request is empty"));
+            return GetResponse(OperationStatus.UncaughtError, Result.Create().Error("Request is empty"));
         }
 
         var result = await _validator.ValidateAsync(request);
@@ -61,7 +65,7 @@ internal abstract class ValidationPipeHandlerBase<TRequest, TResponse> : ILogSub
         {
             this.Trace("Validation of {request} failed", typeof(TRequest));
 
-            return GetResponse(result);
+            return GetResponse(OperationStatus.BadRequest, result);
         }
 
         return await next(request, ct);
@@ -70,7 +74,8 @@ internal abstract class ValidationPipeHandlerBase<TRequest, TResponse> : ILogSub
     /// <summary>
     /// Gets the response when validation fails
     /// </summary>
+    /// <param name="status">The operation status to report (BadRequest for validator failures, UncaughtError for null requests)</param>
     /// <param name="validationResult">The failed validation result</param>
     /// <returns>The failure response</returns>
-    protected abstract TResponse GetResponse(IResult validationResult);
+    protected abstract TResponse GetResponse(OperationStatus status, IResult validationResult);
 }

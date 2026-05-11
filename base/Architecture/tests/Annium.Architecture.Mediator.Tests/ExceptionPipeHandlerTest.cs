@@ -33,10 +33,11 @@ public class ExceptionPipeHandlerTest : TestBase
             TestContext.Current.CancellationToken
         );
 
-        // assert
+        // assert: handler returns the generic sentinel; the raw exception message is intentionally
+        // not surfaced to callers (it is logged separately via ExceptionPipeHandlerBase.Failure).
         result.Status.Is(OperationStatus.UncaughtError);
         result.PlainErrors.Has(1);
-        result.PlainErrors.At(0).Is("TEST EXCEPTION");
+        result.PlainErrors.At(0).Is("An internal error occurred");
     }
 
     /// <summary>
@@ -47,7 +48,7 @@ public class ExceptionPipeHandlerTest : TestBase
     public async Task Success_ReturnsOriginalResult()
     {
         // arrange
-        RegisterMediator(cfg => cfg.AddCompositionHandler().AddHandler(typeof(EchoRequestHandler<>)));
+        RegisterMediator(cfg => cfg.AddExceptionHandler().AddHandler(typeof(EchoRequestHandler<>)));
         var mediator = Get<IMediator>();
         var request = new LoginRequest { Throw = false };
 
