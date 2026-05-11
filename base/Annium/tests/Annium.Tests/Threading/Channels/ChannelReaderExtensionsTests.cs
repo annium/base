@@ -46,7 +46,7 @@ public class ChannelReaderExtensionsTests : TestBase
 
         // act
         this.Trace("pipe");
-        using var pipe = source.Reader.Pipe(target.Writer, Logger);
+        await using var pipe = source.Reader.Pipe(target.Writer, Logger);
 
         // assert
         this.Trace("assert log is complete");

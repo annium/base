@@ -9,7 +9,8 @@ namespace Annium.Analyzers.Tests;
 /// <summary>
 /// Contains unit tests for <see cref="ExceptionNameCodeFix"/> to verify code fix for exception naming conventions.
 /// </summary>
-public class ExceptionNameCodeFixTests : CSharpCodeFixTest<ExceptionNameAnalyzer, ExceptionNameCodeFix, DefaultVerifier>
+public sealed class ExceptionNameCodeFixTests
+    : CSharpCodeFixTest<ExceptionNameAnalyzer, ExceptionNameCodeFix, DefaultVerifier>
 {
     /// <summary>
     /// Verifies that the code fix adds the 'Exception' postfix to incorrectly named exception classes.
@@ -21,9 +22,9 @@ public class ExceptionNameCodeFixTests : CSharpCodeFixTest<ExceptionNameAnalyzer
         TestState.Sources.Add(("CustomError.cs", "public class CustomError : System.Exception { }"));
 
         ExpectedDiagnostics.Add(
-            new DiagnosticResult(Descriptors.Pg0001ExceptionNameFormat.Id, DiagnosticSeverity.Warning)
+            new DiagnosticResult(Descriptors.An0001ExceptionNameFormat.Id, DiagnosticSeverity.Warning)
                 .WithArguments("CustomError")
-                .WithMessageFormat(Descriptors.Pg0001ExceptionNameFormat.MessageFormat)
+                .WithMessageFormat(Descriptors.An0001ExceptionNameFormat.MessageFormat)
                 .WithSpan("CustomError.cs", 1, 14, 1, 25)
         );
 

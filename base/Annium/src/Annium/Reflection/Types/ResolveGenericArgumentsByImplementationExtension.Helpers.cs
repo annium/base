@@ -72,8 +72,8 @@ public static partial class ResolveGenericArgumentsByImplementationExtension
         Type[] targetArgs;
         if (target.IsArray)
         {
-            sourceArgs = new[] { source.GetElementType()! };
-            targetArgs = new[] { target.GetElementType()! };
+            sourceArgs = [source.GetElementType()!];
+            targetArgs = [target.GetElementType()!];
         }
         else if (target.IsGenericType)
         {

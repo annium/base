@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using Annium.Testing;
 using Xunit;
 
@@ -12,11 +13,13 @@ public class TrackingWeakReferenceTest
 {
     /// <summary>
     /// Verifies that TrackingWeakReference correctly tracks object collection and raises the OnCollected event.
+    /// The event fires off the finalizer thread (queued to the ThreadPool), so we wait for it via a signal.
     /// </summary>
     [Fact]
     public void TrackingWeakReference_Works()
     {
         // arrange
+        using var collected = new ManualResetEventSlim(initialState: false);
         var counter = 0;
         object target;
         ITrackingWeakReference<object> reference = default!;
@@ -24,7 +27,11 @@ public class TrackingWeakReferenceTest
         {
             target = new object();
             reference = TrackingWeakReference.Get(target);
-            reference.OnCollected += () => counter++;
+            reference.OnCollected += () =>
+            {
+                Interlocked.Increment(ref counter);
+                collected.Set();
+            };
         });
 
         // act
@@ -40,7 +47,8 @@ public class TrackingWeakReferenceTest
         GC.Collect();
         GC.WaitForPendingFinalizers();
 
-        // assert
+        // assert - OnCollected runs on the ThreadPool, so wait for the signal before reading the counter.
+        collected.Wait(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken).IsTrue();
         counter.Is(1);
     }
 

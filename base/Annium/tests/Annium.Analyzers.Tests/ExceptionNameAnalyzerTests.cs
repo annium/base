@@ -9,7 +9,7 @@ namespace Annium.Analyzers.Tests;
 /// <summary>
 /// Contains unit tests for <see cref="ExceptionNameAnalyzer"/> to verify exception naming conventions.
 /// </summary>
-public class ExceptionNameAnalyzerTests : CSharpAnalyzerTest<ExceptionNameAnalyzer, DefaultVerifier>
+public sealed class ExceptionNameAnalyzerTests : CSharpAnalyzerTest<ExceptionNameAnalyzer, DefaultVerifier>
 {
     /// <summary>
     /// Verifies that the analyzer ignores correctly named exception classes.
@@ -35,7 +35,7 @@ public class ExceptionNameAnalyzerTests : CSharpAnalyzerTest<ExceptionNameAnalyz
         TestState.Sources.Add(("CustomError.cs", "public class CustomError : System.Exception { }"));
 
         ExpectedDiagnostics.Add(
-            new DiagnosticResult(Descriptors.Pg0001ExceptionNameFormat.Id, DiagnosticSeverity.Warning)
+            new DiagnosticResult(Descriptors.An0001ExceptionNameFormat.Id, DiagnosticSeverity.Warning)
                 .WithMessage("CustomError class name should end with Exception")
                 .WithSpan("CustomError.cs", 1, 14, 1, 25)
         );

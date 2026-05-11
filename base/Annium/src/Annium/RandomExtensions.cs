@@ -13,7 +13,7 @@ public static class RandomExtensions
     /// </summary>
     /// <param name="random">The random number generator.</param>
     /// <returns>A random boolean value with equal probability of true or false.</returns>
-    public static bool NextBool(this Random random) => random.Next(0, 1) == 1;
+    public static bool NextBool(this Random random) => random.Next(0, 2) == 1;
 
     /// <summary>
     /// Returns a random enumeration value.

@@ -3,7 +3,7 @@ namespace Annium.Logging;
 /// <summary>
 /// Represents a concrete implementation of <see cref="ILogBridge"/> that bridges a logger and a log subject with a specific type.
 /// </summary>
-public class LogBridge : ILogBridge
+public sealed class LogBridge : ILogBridge
 {
     /// <summary>
     /// Gets the logger instance associated with this bridge.

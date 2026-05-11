@@ -20,6 +20,6 @@ public static class DisposableExtensions
 
         disposable.Dispose();
 
-        return new ValueTask(Task.CompletedTask);
+        return ValueTask.CompletedTask;
     }
 }

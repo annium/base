@@ -12,7 +12,7 @@ namespace Annium.Logging.InMemory;
 /// Thread-safe for concurrent producers.
 /// </summary>
 /// <typeparam name="TContext">The type of the log context</typeparam>
-public class InMemoryLogHandler<TContext> : ILogHandler<TContext>
+public sealed class InMemoryLogHandler<TContext> : ILogHandler<TContext>
     where TContext : class
 {
     /// <summary>

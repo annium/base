@@ -137,8 +137,13 @@ public class StringExtensionsTest
     [Fact]
     public void Repeat_WorksCorrectly()
     {
-        // assert
-        "demo".Repeat(-2).Is("demo");
+        // assert - negative throws
+        Wrap.It(() => "demo".Repeat(-2)).Throws<ArgumentOutOfRangeException>();
+
+        // assert - zero returns empty
+        "demo".Repeat(0).Is(string.Empty);
+
+        // assert - positive repeats
         "demo".Repeat(2).Is("demodemo");
     }
 

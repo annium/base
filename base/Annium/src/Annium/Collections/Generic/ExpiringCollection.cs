@@ -1,32 +1,54 @@
-using System.Collections.Concurrent;
+using System;
+using System.Threading.Tasks;
+using Annium.Internal.Collections.Generic;
 using NodaTime;
 
 namespace Annium.Collections.Generic;
 
 /// <summary>
-/// Represents a collection of items that expire after a specified duration.
+/// Represents a collection of items that expire after a specified duration. Reads check per-item
+/// expiry on every call; a background timer periodically evicts stale entries to bound memory growth.
 /// </summary>
+/// <remarks>
+/// <para>
+/// <b>Why this facade exists:</b> all storage and eviction is implemented by the internal
+/// <see cref="ExpiringStore{TKey, TValue}"/>. This type is a thin Set-shaped public surface that
+/// (a) keeps <see cref="ExpiringStore{TKey, TValue}"/> internal so its <see cref="byte"/>-as-filler-value
+/// representation is not exposed to consumers, (b) presents Set semantics (<see cref="Add"/> /
+/// <see cref="Contains"/> / <see cref="Remove"/>) instead of the dictionary-shaped store API, and
+/// (c) provides a stable public type whose underlying representation can change without breaking
+/// the public surface. The one-line delegations are deliberate — every method is a direct mapping
+/// to the corresponding store method.
+/// </para>
+/// <para>
+/// <b>Lifetime obligation:</b> instances own a <see cref="System.Threading.Timer"/> for background
+/// eviction and therefore implement <see cref="IDisposable"/>. Callers MUST dispose the instance when
+/// done; failing to do so leaks the timer (no finalizer is provided) and the eviction tick will keep
+/// firing until garbage collection eventually reclaims the underlying timer queue entry, potentially
+/// after a significant delay in long-lived applications.
+/// </para>
+/// </remarks>
 /// <typeparam name="T">The type of the items in the collection.</typeparam>
-public class ExpiringCollection<T>
+public sealed class ExpiringCollection<T> : IDisposable, IAsyncDisposable
     where T : notnull
 {
-    /// <summary>
-    /// The time provider used to determine the current time.
-    /// </summary>
-    private readonly ITimeProvider _timeProvider;
-
-    /// <summary>
-    /// The underlying dictionary storing the items and their expiration times.
-    /// </summary>
-    private readonly ConcurrentDictionary<T, Instant> _data = new();
+    private readonly ExpiringStore<T, byte> _store;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ExpiringCollection{T}"/> class with the specified time provider.
     /// </summary>
     /// <param name="timeProvider">The time provider to use for determining expiration times.</param>
     public ExpiringCollection(ITimeProvider timeProvider)
+        : this(timeProvider, ExpiringStore<T, byte>.DefaultEvictionInterval) { }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ExpiringCollection{T}"/> class with the specified time provider and eviction interval.
+    /// </summary>
+    /// <param name="timeProvider">The time provider to use for determining expiration times.</param>
+    /// <param name="evictionInterval">How often the background eviction pass runs.</param>
+    public ExpiringCollection(ITimeProvider timeProvider, TimeSpan evictionInterval)
     {
-        _timeProvider = timeProvider;
+        _store = new ExpiringStore<T, byte>(timeProvider, evictionInterval);
     }
 
     /// <summary>
@@ -36,32 +58,33 @@ public class ExpiringCollection<T>
     /// <param name="ttl">The duration after which the item will expire.</param>
     public void Add(T item, Duration ttl)
     {
-        var expires = _timeProvider.Now + ttl;
-        _data.AddOrUpdate(item, expires, (_, _) => expires);
+        _store.Add(item, default, ttl);
     }
 
     /// <summary>
-    /// Checks if the collection contains the specified item.
+    /// Checks if the collection contains the specified item and that it has not expired.
     /// </summary>
     /// <param name="item">The item to check for.</param>
     /// <returns>True if the item is present and not expired; otherwise, false.</returns>
     public bool Contains(T item)
     {
-        Cleanup();
-
-        return _data.ContainsKey(item);
+        return _store.ContainsKey(item);
     }
 
     /// <summary>
     /// Removes the specified item from the collection.
     /// </summary>
+    /// <remarks>
+    /// Returns <c>true</c> ONLY when the item was present AND non-expired at the time of removal. An
+    /// expired item is still PHYSICALLY removed from the collection, but the method returns <c>false</c>
+    /// — callers that need to distinguish "item was absent" from "item was expired" must check expiry
+    /// separately via <see cref="Contains"/> beforehand.
+    /// </remarks>
     /// <param name="item">The item to remove.</param>
-    /// <returns>True if the item was successfully removed; otherwise, false.</returns>
+    /// <returns>True if the item was present and non-expired; otherwise, false.</returns>
     public bool Remove(T item)
     {
-        Cleanup();
-
-        return _data.TryRemove(item, out _);
+        return _store.Remove(item, out _);
     }
 
     /// <summary>
@@ -69,20 +92,25 @@ public class ExpiringCollection<T>
     /// </summary>
     public void Clear()
     {
-        _data.Clear();
+        _store.Clear();
     }
 
     /// <summary>
-    /// Removes expired items from the collection.
+    /// Stops the background eviction timer and releases resources.
     /// </summary>
-    private void Cleanup()
+    public void Dispose()
     {
-        var now = _timeProvider.Now;
-        var pairs = _data.ToArray();
-        foreach (var (item, expires) in pairs)
-        {
-            if (expires < now)
-                _data.TryRemove(item, out _);
-        }
+        _store.Dispose();
+    }
+
+    /// <summary>
+    /// Asynchronously stops the background eviction timer and releases resources. The drain is
+    /// currently synchronous; this method exists to satisfy <see cref="IAsyncDisposable"/> for callers
+    /// that prefer <c>await using</c>.
+    /// </summary>
+    public ValueTask DisposeAsync()
+    {
+        Dispose();
+        return ValueTask.CompletedTask;
     }
 }

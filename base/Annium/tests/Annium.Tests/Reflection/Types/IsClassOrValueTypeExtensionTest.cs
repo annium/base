@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using Annium.Reflection;
 using Annium.Testing;
@@ -41,6 +42,19 @@ public class IsClassOrValueTypeExtensionTest
     {
         // assert
         typeof(long).IsConstructable().IsTrue();
-        typeof(ValueTuple<>).IsConstructable().IsTrue();
+        typeof(ValueTuple<int>).IsConstructable().IsTrue();
+    }
+
+    /// <summary>
+    /// Verifies that open generic type definitions are NOT reported as constructable, since they
+    /// cannot be instantiated via <see cref="Activator.CreateInstance(Type)"/>.
+    /// </summary>
+    [Fact]
+    public void OpenGeneric_IsNotConstructable()
+    {
+        // assert
+        typeof(List<>).IsConstructable().IsFalse();
+        typeof(Dictionary<,>).IsConstructable().IsFalse();
+        typeof(ValueTuple<>).IsConstructable().IsFalse();
     }
 }

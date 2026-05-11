@@ -39,9 +39,16 @@ public static class TimeSpanExtensions
     /// Floors the time span to the nearest multiple of the specified duration.
     /// </summary>
     /// <param name="t">The time span to floor.</param>
-    /// <param name="d">The duration to floor to.</param>
+    /// <param name="d">The duration to floor to. Must be positive.</param>
     /// <returns>A time span floored to the nearest multiple of the specified duration.</returns>
-    public static TimeSpan FloorTo(this TimeSpan t, TimeSpan d) => TimeSpan.FromTicks(t.Ticks - t.Ticks % d.Ticks);
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="d"/> is zero or negative.</exception>
+    public static TimeSpan FloorTo(this TimeSpan t, TimeSpan d)
+    {
+        if (d <= TimeSpan.Zero)
+            throw new ArgumentOutOfRangeException(nameof(d), d, "Duration must be positive.");
+
+        return TimeSpan.FromTicks(t.Ticks - t.Ticks % d.Ticks);
+    }
 
     /// <summary>
     /// Rounds the time span to the nearest second.
@@ -118,8 +125,14 @@ public static class TimeSpanExtensions
     /// Ceils the time span to the nearest multiple of the specified duration.
     /// </summary>
     /// <param name="t">The time span to ceil.</param>
-    /// <param name="d">The duration to ceil to.</param>
+    /// <param name="d">The duration to ceil to. Must be positive.</param>
     /// <returns>A time span ceiled to the nearest multiple of the specified duration.</returns>
-    public static TimeSpan CeilTo(this TimeSpan t, TimeSpan d) =>
-        TimeSpan.FromTicks(t.Ticks + d.Ticks - t.Ticks % d.Ticks);
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="d"/> is zero or negative.</exception>
+    public static TimeSpan CeilTo(this TimeSpan t, TimeSpan d)
+    {
+        if (d <= TimeSpan.Zero)
+            throw new ArgumentOutOfRangeException(nameof(d), d, "Duration must be positive.");
+
+        return TimeSpan.FromTicks(t.Ticks + d.Ticks - t.Ticks % d.Ticks);
+    }
 }

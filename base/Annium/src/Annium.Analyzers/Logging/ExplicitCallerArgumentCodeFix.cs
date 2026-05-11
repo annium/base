@@ -19,7 +19,7 @@ namespace Annium.Analyzers.Logging;
 /// compiler-injected default takes over again.
 /// </summary>
 [ExportCodeFixProvider(LanguageNames.CSharp), Shared]
-public class ExplicitCallerArgumentCodeFix : CodeFixProvider
+public sealed class ExplicitCallerArgumentCodeFix : CodeFixProvider
 {
     /// <summary>
     /// Diagnostic IDs handled by this code fix.
@@ -87,7 +87,9 @@ public class ExplicitCallerArgumentCodeFix : CodeFixProvider
             ?? RemoveArgument(invocation, flagged);
 
         var root = await document.GetSyntaxRootAsync(ct).ConfigureAwait(false);
-        var newRoot = root!.ReplaceNode(invocation, newInvocation);
+        if (root is null)
+            return document;
+        var newRoot = root.ReplaceNode(invocation, newInvocation);
         return document.WithSyntaxRoot(newRoot);
     }
 
@@ -111,6 +113,12 @@ public class ExplicitCallerArgumentCodeFix : CodeFixProvider
     /// <c>Error("msg: {exception}", ex)</c> form. Returns <see langword="null"/> when the invocation
     /// shape doesn't match (so the caller falls back to the simple-remove fix).
     /// </summary>
+    /// <remarks>
+    /// The first user-visible parameter is located via <see cref="GetFirstUserParameter"/> to handle both
+    /// reduced (<c>method.IsExtensionMethod</c> with <c>this</c> stripped) and unreduced extension-method
+    /// symbol shapes — indexing <c>Parameters[0]</c> blindly would mistakenly check the <c>this ILogSubject</c>
+    /// receiver type on the unreduced form and cause the rewrite to silently drop the exception value.
+    /// </remarks>
     /// <param name="invocation">Original invocation syntax.</param>
     /// <param name="semanticModel">Semantic model for symbol/type lookups.</param>
     /// <param name="ct">Cancellation token.</param>
@@ -129,16 +137,27 @@ public class ExplicitCallerArgumentCodeFix : CodeFixProvider
         if (args[0].NameColon is not null || args[1].NameColon is not null)
             return null;
 
-        // Target method must take Exception as its first non-this parameter.
         if (semanticModel.GetSymbolInfo(invocation, ct).Symbol is not IMethodSymbol method)
             return null;
 
-        if (method.Parameters.Length == 0 || !IsExceptionType(method.Parameters[0].Type))
+        // Use a single source of truth (AnalyzerHelpers.InheritsFromException) for "is this an
+        // exception type" so the analyzer-side and code-fix-side checks cannot drift apart.
+        // If the compilation does not reference System.Exception we cannot prove the shape, so
+        // gracefully fall back to the simple-remove path.
+        var exceptionType = AnalyzerHelpers.ResolveExceptionType(semanticModel.Compilation);
+        if (exceptionType is null)
+            return null;
+
+        var firstUserParameter = GetFirstUserParameter(method);
+        if (
+            firstUserParameter is null
+            || !AnalyzerHelpers.InheritsFromException(firstUserParameter.Type, exceptionType)
+        )
             return null;
 
         // First arg must actually be an Exception expression (defensive — the binding guarantees it).
         var firstType = semanticModel.GetTypeInfo(args[0].Expression, ct).Type;
-        if (firstType is null || !IsExceptionType(firstType))
+        if (firstType is null || !AnalyzerHelpers.InheritsFromException(firstType, exceptionType))
             return null;
 
         // Second arg must be a literal string — that's what the developer thought was the message.
@@ -173,24 +192,25 @@ public class ExplicitCallerArgumentCodeFix : CodeFixProvider
     }
 
     /// <summary>
-    /// Returns true when <paramref name="type"/> is <c>System.Exception</c> or any subclass.
+    /// Returns the first user-visible parameter of <paramref name="method"/>, normalising over the
+    /// reduced (extension-receiver stripped) and unreduced shapes Roslyn may surface for an extension
+    /// method invocation. For non-extension methods the first parameter is returned directly.
     /// </summary>
-    /// <param name="type">The type to inspect.</param>
-    /// <returns><see langword="true"/> when the type is or derives from <c>System.Exception</c>.</returns>
-    private static bool IsExceptionType(ITypeSymbol type)
+    /// <param name="method">The target method symbol.</param>
+    /// <returns>The first user-visible parameter, or <see langword="null"/> when none exists.</returns>
+    private static IParameterSymbol? GetFirstUserParameter(IMethodSymbol method)
     {
-        for (var current = type; current is not null; current = current.BaseType)
+        // method.IsExtensionMethod is true for both the reduced and unreduced forms. In the reduced
+        // form Parameters[0] is the first user-visible parameter (the `this` receiver has been
+        // stripped). In the unreduced form Parameters[0] IS the `this` receiver, so the first
+        // user-visible parameter is Parameters[1]. method.ReducedFrom is non-null only on reduced
+        // symbols.
+        if (method.IsExtensionMethod && method.ReducedFrom is null)
         {
-            if (current.Name != "Exception")
-                continue;
-
-            var ns = current.ContainingNamespace;
-            if (ns is null || ns.Name != "System" || ns.ContainingNamespace?.IsGlobalNamespace != true)
-                continue;
-
-            return true;
+            // Unreduced extension form — skip the `this` receiver.
+            return method.Parameters.Length > 1 ? method.Parameters[1] : null;
         }
 
-        return false;
+        return method.Parameters.Length > 0 ? method.Parameters[0] : null;
     }
 }

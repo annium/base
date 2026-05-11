@@ -11,11 +11,11 @@ namespace Annium.Reflection;
 public static class GetAllFieldsExtension
 {
     /// <summary>
-    /// Gets all fields of the specified type using the default binding flags.
+    /// Gets all public instance and static fields of the specified type.
     /// </summary>
     /// <param name="type">The type to get all fields from.</param>
     /// <returns>An array of <see cref="FieldInfo"/> representing all fields of the type.</returns>
-    public static FieldInfo[] GetAllFields(this Type type) => type.GetAllFields(Constants.DefaultBindingFlags);
+    public static FieldInfo[] GetAllFields(this Type type) => type.GetAllFields(Constants.PublicBindingFlags);
 
     /// <summary>
     /// Gets all fields of the specified type using the specified binding flags.

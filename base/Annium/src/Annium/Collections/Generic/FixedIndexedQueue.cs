@@ -63,13 +63,13 @@ public class FixedIndexedQueue<T> : IFixedIndexedQueue<T>
     /// </summary>
     /// <param name="index">The zero-based index of the element to get.</param>
     /// <returns>The element at the specified index.</returns>
-    /// <exception cref="ArgumentOutOfRangeException">Thrown if the index is out of range.</exception>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown if the index is out of range [0, Count-1].</exception>
     public T this[int index]
     {
         get
         {
-            if (index < 0 || index > _maxIndex)
-                throw new ArgumentOutOfRangeException($"Index {index} is out of range [0;{_maxIndex}]");
+            if (index < 0 || index >= Count)
+                throw new ArgumentOutOfRangeException(nameof(index), $"Index {index} is out of range [0;{Count - 1}]");
 
             return _data[(_index + index) % Capacity];
         }
@@ -108,22 +108,4 @@ public class FixedIndexedQueue<T> : IFixedIndexedQueue<T>
     /// </summary>
     /// <returns>An enumerator for the queue.</returns>
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-}
-
-/// <summary>
-/// Defines a fixed-size queue with indexed access to its elements.
-/// </summary>
-/// <typeparam name="T">The type of the elements in the queue.</typeparam>
-public interface IFixedIndexedQueue<T> : IReadOnlyList<T>
-{
-    /// <summary>
-    /// Gets the capacity of the queue.
-    /// </summary>
-    int Capacity { get; }
-
-    /// <summary>
-    /// Adds an item to the queue.
-    /// </summary>
-    /// <param name="item">The item to add.</param>
-    void Add(T item);
 }

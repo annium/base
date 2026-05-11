@@ -42,7 +42,7 @@ public static partial class ResolveGenericArgumentsByImplementationExtension
             return null;
 
         // ensure all parameter constraints are implemented
-        return Helper.ParameterMeetsConstraints(type, target) ? new[] { type } : null;
+        return ParameterHelper.ParameterMeetsConstraints(type, target) ? new[] { type } : null;
     }
 
     /// <summary>
@@ -85,7 +85,7 @@ public static partial class ResolveGenericArgumentsByImplementationExtension
 /// <summary>
 /// Helper class for checking if a generic parameter meets all constraints of a target parameter.
 /// </summary>
-file class Helper
+file class ParameterHelper
 {
     /// <summary>
     /// Checks if the source generic parameter meets all constraints of the target generic parameter.

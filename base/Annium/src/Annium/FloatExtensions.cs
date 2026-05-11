@@ -181,11 +181,17 @@ public static class FloatExtensions
     /// <summary>
     /// Rounds a float value down to the nearest multiple of a specified step.
     /// </summary>
-    /// <param name="value">The value to round.</param>
-    /// <param name="step">The step value to round to.</param>
+    /// <param name="value">The value to round. <see cref="float.NaN"/> and infinities propagate to the result.</param>
+    /// <param name="step">The step value to round to. Must be a positive, finite number.</param>
     /// <returns>The rounded value as a float.</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static float FloorTo(this float value, float step) => value - value % step;
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="step"/> is non-finite or not positive.</exception>
+    public static float FloorTo(this float value, float step)
+    {
+        if (!float.IsFinite(step) || step <= 0f)
+            throw new ArgumentOutOfRangeException(nameof(step), step, "Step must be a positive, finite number.");
+
+        return value - value % step;
+    }
 
     /// <summary>
     /// Rounds a float value to the nearest multiple of a specified step.
@@ -203,9 +209,15 @@ public static class FloatExtensions
     /// <summary>
     /// Rounds a float value up to the nearest multiple of a specified step.
     /// </summary>
-    /// <param name="value">The value to round.</param>
-    /// <param name="step">The step value to round to.</param>
+    /// <param name="value">The value to round. <see cref="float.NaN"/> and infinities propagate to the result.</param>
+    /// <param name="step">The step value to round to. Must be a positive, finite number.</param>
     /// <returns>The rounded value as a float.</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static float CeilTo(this float value, float step) => value + step - value % step;
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="step"/> is non-finite or not positive.</exception>
+    public static float CeilTo(this float value, float step)
+    {
+        if (!float.IsFinite(step) || step <= 0f)
+            throw new ArgumentOutOfRangeException(nameof(step), step, "Step must be a positive, finite number.");
+
+        return value + step - value % step;
+    }
 }

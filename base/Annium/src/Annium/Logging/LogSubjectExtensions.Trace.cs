@@ -1,26 +1,16 @@
-using System;
 using System.Runtime.CompilerServices;
+
+#pragma warning disable LOG0002 // Forwarders intentionally pass caller info through to LogSubjectLogExtensions.Log.
 
 namespace Annium.Logging;
 
 /// <summary>
 /// Provides extension methods for logging trace-level messages for <see cref="ILogSubject"/> instances.
+/// All overloads forward to <see cref="LogSubjectLogExtensions.Log"/> with <see cref="LogLevel.Trace"/>.
 /// </summary>
 public static class LogSubjectTraceExtensions
 {
-    /// <summary>
-    /// Gets a value indicating whether trace-level logging is enabled.
-    /// </summary>
-    private static bool IsEnabled => LogConfig.Level <= LogLevel.Trace;
-
-    /// <summary>
-    /// Logs a trace-level message.
-    /// </summary>
-    /// <param name="subject">The log subject.</param>
-    /// <param name="message">The message to log.</param>
-    /// <param name="file">The source file path (automatically provided).</param>
-    /// <param name="member">The member name (automatically provided).</param>
-    /// <param name="line">The line number (automatically provided).</param>
+    /// <summary>Logs a trace-level message.</summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void Trace(
         this ILogSubject subject,
@@ -28,22 +18,9 @@ public static class LogSubjectTraceExtensions
         [CallerFilePath] string file = "",
         [CallerMemberName] string member = "",
         [CallerLineNumber] int line = 0
-    )
-    {
-        if (IsEnabled)
-            subject.Logger.Log(subject, file, member, line, LogLevel.Trace, message, Array.Empty<object>());
-    }
+    ) => subject.Log(LogLevel.Trace, message, file, member, line);
 
-    /// <summary>
-    /// Logs a trace-level message with one parameter.
-    /// </summary>
-    /// <typeparam name="T1">The type of the first parameter.</typeparam>
-    /// <param name="subject">The log subject.</param>
-    /// <param name="message">The message to log.</param>
-    /// <param name="x1">The first parameter value.</param>
-    /// <param name="file">The source file path (automatically provided).</param>
-    /// <param name="member">The member name (automatically provided).</param>
-    /// <param name="line">The line number (automatically provided).</param>
+    /// <summary>Logs a trace-level message with one parameter.</summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void Trace<T1>(
         this ILogSubject subject,
@@ -52,24 +29,9 @@ public static class LogSubjectTraceExtensions
         [CallerFilePath] string file = "",
         [CallerMemberName] string member = "",
         [CallerLineNumber] int line = 0
-    )
-    {
-        if (IsEnabled)
-            subject.Logger.Log(subject, file, member, line, LogLevel.Trace, message, new object?[] { x1 });
-    }
+    ) => subject.Log(LogLevel.Trace, message, x1, file, member, line);
 
-    /// <summary>
-    /// Logs a trace-level message with two parameters.
-    /// </summary>
-    /// <typeparam name="T1">The type of the first parameter.</typeparam>
-    /// <typeparam name="T2">The type of the second parameter.</typeparam>
-    /// <param name="subject">The log subject.</param>
-    /// <param name="message">The message to log.</param>
-    /// <param name="x1">The first parameter value.</param>
-    /// <param name="x2">The second parameter value.</param>
-    /// <param name="file">The source file path (automatically provided).</param>
-    /// <param name="member">The member name (automatically provided).</param>
-    /// <param name="line">The line number (automatically provided).</param>
+    /// <summary>Logs a trace-level message with two parameters.</summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void Trace<T1, T2>(
         this ILogSubject subject,
@@ -79,26 +41,9 @@ public static class LogSubjectTraceExtensions
         [CallerFilePath] string file = "",
         [CallerMemberName] string member = "",
         [CallerLineNumber] int line = 0
-    )
-    {
-        if (IsEnabled)
-            subject.Logger.Log(subject, file, member, line, LogLevel.Trace, message, new object?[] { x1, x2 });
-    }
+    ) => subject.Log(LogLevel.Trace, message, x1, x2, file, member, line);
 
-    /// <summary>
-    /// Logs a trace-level message with three parameters.
-    /// </summary>
-    /// <typeparam name="T1">The type of the first parameter.</typeparam>
-    /// <typeparam name="T2">The type of the second parameter.</typeparam>
-    /// <typeparam name="T3">The type of the third parameter.</typeparam>
-    /// <param name="subject">The log subject.</param>
-    /// <param name="message">The message to log.</param>
-    /// <param name="x1">The first parameter value.</param>
-    /// <param name="x2">The second parameter value.</param>
-    /// <param name="x3">The third parameter value.</param>
-    /// <param name="file">The source file path (automatically provided).</param>
-    /// <param name="member">The member name (automatically provided).</param>
-    /// <param name="line">The line number (automatically provided).</param>
+    /// <summary>Logs a trace-level message with three parameters.</summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void Trace<T1, T2, T3>(
         this ILogSubject subject,
@@ -109,28 +54,9 @@ public static class LogSubjectTraceExtensions
         [CallerFilePath] string file = "",
         [CallerMemberName] string member = "",
         [CallerLineNumber] int line = 0
-    )
-    {
-        if (IsEnabled)
-            subject.Logger.Log(subject, file, member, line, LogLevel.Trace, message, new object?[] { x1, x2, x3 });
-    }
+    ) => subject.Log(LogLevel.Trace, message, x1, x2, x3, file, member, line);
 
-    /// <summary>
-    /// Logs a trace-level message with four parameters.
-    /// </summary>
-    /// <typeparam name="T1">The type of the first parameter.</typeparam>
-    /// <typeparam name="T2">The type of the second parameter.</typeparam>
-    /// <typeparam name="T3">The type of the third parameter.</typeparam>
-    /// <typeparam name="T4">The type of the fourth parameter.</typeparam>
-    /// <param name="subject">The log subject.</param>
-    /// <param name="message">The message to log.</param>
-    /// <param name="x1">The first parameter value.</param>
-    /// <param name="x2">The second parameter value.</param>
-    /// <param name="x3">The third parameter value.</param>
-    /// <param name="x4">The fourth parameter value.</param>
-    /// <param name="file">The source file path (automatically provided).</param>
-    /// <param name="member">The member name (automatically provided).</param>
-    /// <param name="line">The line number (automatically provided).</param>
+    /// <summary>Logs a trace-level message with four parameters.</summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void Trace<T1, T2, T3, T4>(
         this ILogSubject subject,
@@ -142,30 +68,9 @@ public static class LogSubjectTraceExtensions
         [CallerFilePath] string file = "",
         [CallerMemberName] string member = "",
         [CallerLineNumber] int line = 0
-    )
-    {
-        if (IsEnabled)
-            subject.Logger.Log(subject, file, member, line, LogLevel.Trace, message, new object?[] { x1, x2, x3, x4 });
-    }
+    ) => subject.Log(LogLevel.Trace, message, x1, x2, x3, x4, file, member, line);
 
-    /// <summary>
-    /// Logs a trace-level message with five parameters.
-    /// </summary>
-    /// <typeparam name="T1">The type of the first parameter.</typeparam>
-    /// <typeparam name="T2">The type of the second parameter.</typeparam>
-    /// <typeparam name="T3">The type of the third parameter.</typeparam>
-    /// <typeparam name="T4">The type of the fourth parameter.</typeparam>
-    /// <typeparam name="T5">The type of the fifth parameter.</typeparam>
-    /// <param name="subject">The log subject.</param>
-    /// <param name="message">The message to log.</param>
-    /// <param name="x1">The first parameter value.</param>
-    /// <param name="x2">The second parameter value.</param>
-    /// <param name="x3">The third parameter value.</param>
-    /// <param name="x4">The fourth parameter value.</param>
-    /// <param name="x5">The fifth parameter value.</param>
-    /// <param name="file">The source file path (automatically provided).</param>
-    /// <param name="member">The member name (automatically provided).</param>
-    /// <param name="line">The line number (automatically provided).</param>
+    /// <summary>Logs a trace-level message with five parameters.</summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void Trace<T1, T2, T3, T4, T5>(
         this ILogSubject subject,
@@ -178,40 +83,9 @@ public static class LogSubjectTraceExtensions
         [CallerFilePath] string file = "",
         [CallerMemberName] string member = "",
         [CallerLineNumber] int line = 0
-    )
-    {
-        if (IsEnabled)
-            subject.Logger.Log(
-                subject,
-                file,
-                member,
-                line,
-                LogLevel.Trace,
-                message,
-                new object?[] { x1, x2, x3, x4, x5 }
-            );
-    }
+    ) => subject.Log(LogLevel.Trace, message, x1, x2, x3, x4, x5, file, member, line);
 
-    /// <summary>
-    /// Logs a trace-level message with six parameters.
-    /// </summary>
-    /// <typeparam name="T1">The type of the first parameter.</typeparam>
-    /// <typeparam name="T2">The type of the second parameter.</typeparam>
-    /// <typeparam name="T3">The type of the third parameter.</typeparam>
-    /// <typeparam name="T4">The type of the fourth parameter.</typeparam>
-    /// <typeparam name="T5">The type of the fifth parameter.</typeparam>
-    /// <typeparam name="T6">The type of the sixth parameter.</typeparam>
-    /// <param name="subject">The log subject.</param>
-    /// <param name="message">The message to log.</param>
-    /// <param name="x1">The first parameter value.</param>
-    /// <param name="x2">The second parameter value.</param>
-    /// <param name="x3">The third parameter value.</param>
-    /// <param name="x4">The fourth parameter value.</param>
-    /// <param name="x5">The fifth parameter value.</param>
-    /// <param name="x6">The sixth parameter value.</param>
-    /// <param name="file">The source file path (automatically provided).</param>
-    /// <param name="member">The member name (automatically provided).</param>
-    /// <param name="line">The line number (automatically provided).</param>
+    /// <summary>Logs a trace-level message with six parameters.</summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void Trace<T1, T2, T3, T4, T5, T6>(
         this ILogSubject subject,
@@ -225,42 +99,9 @@ public static class LogSubjectTraceExtensions
         [CallerFilePath] string file = "",
         [CallerMemberName] string member = "",
         [CallerLineNumber] int line = 0
-    )
-    {
-        if (IsEnabled)
-            subject.Logger.Log(
-                subject,
-                file,
-                member,
-                line,
-                LogLevel.Trace,
-                message,
-                new object?[] { x1, x2, x3, x4, x5, x6 }
-            );
-    }
+    ) => subject.Log(LogLevel.Trace, message, x1, x2, x3, x4, x5, x6, file, member, line);
 
-    /// <summary>
-    /// Logs a trace-level message with seven parameters.
-    /// </summary>
-    /// <typeparam name="T1">The type of the first parameter.</typeparam>
-    /// <typeparam name="T2">The type of the second parameter.</typeparam>
-    /// <typeparam name="T3">The type of the third parameter.</typeparam>
-    /// <typeparam name="T4">The type of the fourth parameter.</typeparam>
-    /// <typeparam name="T5">The type of the fifth parameter.</typeparam>
-    /// <typeparam name="T6">The type of the sixth parameter.</typeparam>
-    /// <typeparam name="T7">The type of the seventh parameter.</typeparam>
-    /// <param name="subject">The log subject.</param>
-    /// <param name="message">The message to log.</param>
-    /// <param name="x1">The first parameter value.</param>
-    /// <param name="x2">The second parameter value.</param>
-    /// <param name="x3">The third parameter value.</param>
-    /// <param name="x4">The fourth parameter value.</param>
-    /// <param name="x5">The fifth parameter value.</param>
-    /// <param name="x6">The sixth parameter value.</param>
-    /// <param name="x7">The seventh parameter value.</param>
-    /// <param name="file">The source file path (automatically provided).</param>
-    /// <param name="member">The member name (automatically provided).</param>
-    /// <param name="line">The line number (automatically provided).</param>
+    /// <summary>Logs a trace-level message with seven parameters.</summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void Trace<T1, T2, T3, T4, T5, T6, T7>(
         this ILogSubject subject,
@@ -275,44 +116,9 @@ public static class LogSubjectTraceExtensions
         [CallerFilePath] string file = "",
         [CallerMemberName] string member = "",
         [CallerLineNumber] int line = 0
-    )
-    {
-        if (IsEnabled)
-            subject.Logger.Log(
-                subject,
-                file,
-                member,
-                line,
-                LogLevel.Trace,
-                message,
-                new object?[] { x1, x2, x3, x4, x5, x6, x7 }
-            );
-    }
+    ) => subject.Log(LogLevel.Trace, message, x1, x2, x3, x4, x5, x6, x7, file, member, line);
 
-    /// <summary>
-    /// Logs a trace-level message with eight parameters.
-    /// </summary>
-    /// <typeparam name="T1">The type of the first parameter.</typeparam>
-    /// <typeparam name="T2">The type of the second parameter.</typeparam>
-    /// <typeparam name="T3">The type of the third parameter.</typeparam>
-    /// <typeparam name="T4">The type of the fourth parameter.</typeparam>
-    /// <typeparam name="T5">The type of the fifth parameter.</typeparam>
-    /// <typeparam name="T6">The type of the sixth parameter.</typeparam>
-    /// <typeparam name="T7">The type of the seventh parameter.</typeparam>
-    /// <typeparam name="T8">The type of the eighth parameter.</typeparam>
-    /// <param name="subject">The log subject.</param>
-    /// <param name="message">The message to log.</param>
-    /// <param name="x1">The first parameter value.</param>
-    /// <param name="x2">The second parameter value.</param>
-    /// <param name="x3">The third parameter value.</param>
-    /// <param name="x4">The fourth parameter value.</param>
-    /// <param name="x5">The fifth parameter value.</param>
-    /// <param name="x6">The sixth parameter value.</param>
-    /// <param name="x7">The seventh parameter value.</param>
-    /// <param name="x8">The eighth parameter value.</param>
-    /// <param name="file">The source file path (automatically provided).</param>
-    /// <param name="member">The member name (automatically provided).</param>
-    /// <param name="line">The line number (automatically provided).</param>
+    /// <summary>Logs a trace-level message with eight parameters.</summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void Trace<T1, T2, T3, T4, T5, T6, T7, T8>(
         this ILogSubject subject,
@@ -328,17 +134,5 @@ public static class LogSubjectTraceExtensions
         [CallerFilePath] string file = "",
         [CallerMemberName] string member = "",
         [CallerLineNumber] int line = 0
-    )
-    {
-        if (IsEnabled)
-            subject.Logger.Log(
-                subject,
-                file,
-                member,
-                line,
-                LogLevel.Trace,
-                message,
-                new object?[] { x1, x2, x3, x4, x5, x6, x7, x8 }
-            );
-    }
+    ) => subject.Log(LogLevel.Trace, message, x1, x2, x3, x4, x5, x6, x7, x8, file, member, line);
 }

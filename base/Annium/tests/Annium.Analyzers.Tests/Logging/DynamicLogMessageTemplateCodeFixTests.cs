@@ -13,7 +13,7 @@ namespace Annium.Analyzers.Tests.Logging;
 /// Verifies <see cref="DynamicLogMessageTemplateCodeFix"/> rewrites interpolated log calls
 /// into the static-template / named-args form.
 /// </summary>
-public class DynamicLogMessageTemplateCodeFixTests
+public sealed class DynamicLogMessageTemplateCodeFixTests
     : CSharpCodeFixTest<DynamicLogMessageTemplateAnalyzer, DynamicLogMessageTemplateCodeFix, DefaultVerifier>
 {
     /// <summary>

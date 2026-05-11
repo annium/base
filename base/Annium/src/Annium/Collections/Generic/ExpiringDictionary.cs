@@ -1,34 +1,56 @@
-using System.Collections.Concurrent;
+using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
+using Annium.Internal.Collections.Generic;
 using NodaTime;
 
 namespace Annium.Collections.Generic;
 
 /// <summary>
-/// Represents a dictionary of key-value pairs that expire after a specified duration.
+/// Represents a dictionary of key-value pairs that expire after a specified duration. Reads check
+/// per-item expiry on every call; a background timer periodically evicts stale entries.
 /// </summary>
+/// <remarks>
+/// <para>
+/// <b>Why this facade exists:</b> all storage and eviction is implemented by the internal
+/// <see cref="ExpiringStore{TKey, TValue}"/>. This type is a thin public surface that
+/// (a) keeps <see cref="ExpiringStore{TKey, TValue}"/> internal so its representation can change
+/// without breaking the public surface, and (b) presents the expected dictionary-shaped API
+/// (<see cref="Get"/> throws <see cref="KeyNotFoundException"/> rather than returning a status flag,
+/// matching <c>Dictionary&lt;TKey, TValue&gt;</c> ergonomics). The one-line delegations are deliberate
+/// — every method is a direct mapping to the corresponding store method, with the sole exception of
+/// <see cref="Get"/> which adds the throw-on-missing semantics.
+/// </para>
+/// <para>
+/// <b>Lifetime obligation:</b> instances own a <see cref="System.Threading.Timer"/> for background
+/// eviction and therefore implement <see cref="IDisposable"/>. Callers MUST dispose the instance when
+/// done; failing to do so leaks the timer (no finalizer is provided) and the eviction tick will keep
+/// firing until garbage collection eventually reclaims the underlying timer queue entry, potentially
+/// after a significant delay in long-lived applications.
+/// </para>
+/// </remarks>
 /// <typeparam name="TKey">The type of the keys in the dictionary.</typeparam>
 /// <typeparam name="TValue">The type of the values in the dictionary.</typeparam>
-public class ExpiringDictionary<TKey, TValue>
+public sealed class ExpiringDictionary<TKey, TValue> : IDisposable, IAsyncDisposable
     where TKey : notnull
 {
-    /// <summary>
-    /// The time provider used to determine the current time.
-    /// </summary>
-    private readonly ITimeProvider _timeProvider;
+    private readonly ExpiringStore<TKey, TValue> _store;
 
     /// <summary>
-    /// The underlying dictionary storing the key-value pairs and their expiration times.
-    /// </summary>
-    private readonly ConcurrentDictionary<TKey, Item> _data = new();
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="ExpiringDictionary{TKey, TValue}"/> class with the specified time provider.
+    /// Initializes a new instance of the <see cref="ExpiringDictionary{TKey, TValue}"/> class.
     /// </summary>
     /// <param name="timeProvider">The time provider to use for determining expiration times.</param>
     public ExpiringDictionary(ITimeProvider timeProvider)
+        : this(timeProvider, ExpiringStore<TKey, TValue>.DefaultEvictionInterval) { }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ExpiringDictionary{TKey, TValue}"/> class with a custom eviction interval.
+    /// </summary>
+    /// <param name="timeProvider">The time provider to use for determining expiration times.</param>
+    /// <param name="evictionInterval">How often the background eviction pass runs.</param>
+    public ExpiringDictionary(ITimeProvider timeProvider, TimeSpan evictionInterval)
     {
-        _timeProvider = timeProvider;
+        _store = new ExpiringStore<TKey, TValue>(timeProvider, evictionInterval);
     }
 
     /// <summary>
@@ -39,68 +61,51 @@ public class ExpiringDictionary<TKey, TValue>
     /// <param name="ttl">The duration after which the element will expire.</param>
     public void Add(TKey key, TValue value, Duration ttl)
     {
-        var item = new Item(value, _timeProvider.Now + ttl);
-        _data.AddOrUpdate(key, item, (_, _) => item);
+        _store.Add(key, value, ttl);
     }
 
     /// <summary>
-    /// Attempts to get the value associated with the specified key.
+    /// Attempts to get the value associated with the specified key. Returns false when the key is
+    /// absent OR the entry has already expired.
     /// </summary>
-    /// <param name="key">The key of the value to get.</param>
-    /// <param name="value">When this method returns, contains the value associated with the specified key, if the key is found; otherwise, the default value for the type of the value parameter.</param>
-    /// <returns>True if the key was found; otherwise, false.</returns>
     public bool TryGet(TKey key, out TValue value)
     {
-        Cleanup();
-
-        var result = _data.TryGetValue(key, out var item);
-        value = item is null ? default! : item.Value;
-
-        return result;
+        return _store.TryGet(key, out value);
     }
 
     /// <summary>
     /// Gets the value associated with the specified key.
     /// </summary>
-    /// <param name="key">The key of the value to get.</param>
-    /// <returns>The value associated with the specified key.</returns>
-    /// <exception cref="KeyNotFoundException">Thrown if the key is not found in the dictionary.</exception>
+    /// <exception cref="KeyNotFoundException">Thrown if the key is missing or its entry has expired.</exception>
     public TValue Get(TKey key)
     {
-        Cleanup();
+        if (_store.TryGet(key, out var value))
+            return value;
 
-        if (!_data.TryGetValue(key, out var item))
-            throw new KeyNotFoundException($"Key {key} is missing in collection");
-
-        return item.Value;
+        throw new KeyNotFoundException($"Key {key} is missing in collection");
     }
 
     /// <summary>
-    /// Determines whether the dictionary contains the specified key.
+    /// Determines whether the dictionary contains the specified key with a non-expired entry.
     /// </summary>
-    /// <param name="key">The key to locate in the dictionary.</param>
-    /// <returns>True if the dictionary contains an element with the specified key; otherwise, false.</returns>
     public bool ContainsKey(TKey key)
     {
-        Cleanup();
-
-        return _data.ContainsKey(key);
+        return _store.ContainsKey(key);
     }
 
     /// <summary>
     /// Removes the value with the specified key from the dictionary.
     /// </summary>
-    /// <param name="key">The key of the element to remove.</param>
-    /// <param name="value">When this method returns, contains the value associated with the specified key, if the key is found; otherwise, the default value for the type of the value parameter.</param>
-    /// <returns>True if the element is successfully removed; otherwise, false.</returns>
+    /// <remarks>
+    /// Returns <c>true</c> ONLY when the key was present AND non-expired at the time of removal. An
+    /// expired entry is still PHYSICALLY removed from the dictionary, but the method returns <c>false</c>
+    /// with <paramref name="value"/> set to <c>default</c>. Callers that need to distinguish "key was
+    /// absent" from "key was expired" must check expiry separately via <see cref="ContainsKey"/> or
+    /// <see cref="TryGet"/> beforehand.
+    /// </remarks>
     public bool Remove(TKey key, out TValue value)
     {
-        Cleanup();
-
-        var result = _data.TryRemove(key, out var item);
-        value = item is null ? default! : item.Value;
-
-        return result;
+        return _store.Remove(key, out value);
     }
 
     /// <summary>
@@ -108,25 +113,25 @@ public class ExpiringDictionary<TKey, TValue>
     /// </summary>
     public void Clear()
     {
-        _data.Clear();
+        _store.Clear();
     }
 
     /// <summary>
-    /// Removes expired key-value pairs from the dictionary.
+    /// Stops the background eviction timer and releases resources.
     /// </summary>
-    private void Cleanup()
+    public void Dispose()
     {
-        var now = _timeProvider.Now;
-        var pairs = _data.ToArray();
-        foreach (var (key, value) in pairs)
-        {
-            if (value.Expires < now)
-                _data.TryRemove(key, out _);
-        }
+        _store.Dispose();
     }
 
     /// <summary>
-    /// Represents an item in the dictionary with its value and expiration time.
+    /// Asynchronously stops the background eviction timer and releases resources. The drain is
+    /// currently synchronous; this method exists to satisfy <see cref="IAsyncDisposable"/> for callers
+    /// that prefer <c>await using</c>.
     /// </summary>
-    private record Item(TValue Value, Instant Expires);
+    public ValueTask DisposeAsync()
+    {
+        Dispose();
+        return ValueTask.CompletedTask;
+    }
 }
