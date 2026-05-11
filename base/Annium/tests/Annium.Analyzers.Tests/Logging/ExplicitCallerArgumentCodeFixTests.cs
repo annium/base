@@ -12,7 +12,7 @@ namespace Annium.Analyzers.Tests.Logging;
 /// <summary>
 /// Verifies <see cref="ExplicitCallerArgumentCodeFix"/> rewrites caller-info-overriding log calls.
 /// </summary>
-public class ExplicitCallerArgumentCodeFixTests
+public sealed class ExplicitCallerArgumentCodeFixTests
     : CSharpCodeFixTest<ExplicitCallerArgumentAnalyzer, ExplicitCallerArgumentCodeFix, DefaultVerifier>
 {
     /// <summary>

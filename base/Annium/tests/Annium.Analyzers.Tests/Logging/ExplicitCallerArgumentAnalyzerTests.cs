@@ -12,7 +12,8 @@ namespace Annium.Analyzers.Tests.Logging;
 /// <summary>
 /// Contains unit tests for <see cref="ExplicitCallerArgumentAnalyzer"/> covering caller-info parameter overrides.
 /// </summary>
-public class ExplicitCallerArgumentAnalyzerTests : CSharpAnalyzerTest<ExplicitCallerArgumentAnalyzer, DefaultVerifier>
+public sealed class ExplicitCallerArgumentAnalyzerTests
+    : CSharpAnalyzerTest<ExplicitCallerArgumentAnalyzer, DefaultVerifier>
 {
     /// <summary>
     /// Builds the reference assemblies set used for every test in this fixture.

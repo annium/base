@@ -12,7 +12,7 @@ namespace Annium.Analyzers.Tests.Logging;
 /// <summary>
 /// Contains unit tests for <see cref="DynamicLogMessageTemplateAnalyzer"/> to verify log message template analysis.
 /// </summary>
-public class DynamicLogMessageTemplateAnalyzerTests
+public sealed class DynamicLogMessageTemplateAnalyzerTests
     : CSharpAnalyzerTest<DynamicLogMessageTemplateAnalyzer, DefaultVerifier>
 {
     /// <summary>
