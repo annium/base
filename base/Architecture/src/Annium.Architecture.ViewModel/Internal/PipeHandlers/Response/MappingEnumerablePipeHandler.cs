@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Annium.Architecture.Base;
@@ -61,6 +62,27 @@ internal class MappingEnumerablePipeHandler<TRequest, TResponseIn, TResponseOut>
     )
     {
         var response = await next(request, ct);
+
+        if (response.Status != OperationStatus.Ok)
+        {
+            this.Trace(
+                "Skip mapping on non-Ok status {status}: {responseIn} -> {responseOut}",
+                response.Status,
+                typeof(TResponseIn),
+                typeof(TResponseOut)
+            );
+            return Result.Status(response.Status, Enumerable.Empty<TResponseOut>()).Join(response);
+        }
+
+        if (response.Data is null)
+        {
+            // Contract violation: Status=Ok implies a non-null Data payload. TResponseIn has no
+            // notnull constraint so we can't enforce this at the type level; surface as a
+            // programming error so the ExceptionPipeHandler upstream converts it to UncaughtError.
+            throw new InvalidOperationException(
+                $"Upstream handler returned Status=Ok with null Data for IEnumerable<{typeof(TResponseIn).Name}>"
+            );
+        }
 
         this.Trace("Map response: {responseIn} -> {responseOut}", typeof(TResponseIn), typeof(TResponseOut));
         var mappedResponse = _mapper.Map<IEnumerable<TResponseOut>>(response.Data);

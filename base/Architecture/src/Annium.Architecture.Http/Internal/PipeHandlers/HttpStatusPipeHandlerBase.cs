@@ -19,16 +19,16 @@ internal abstract class HttpStatusPipeHandlerBase<TRequest, TResponseIn, TRespon
     /// Handles the request by executing the next handler and processing the response
     /// </summary>
     /// <param name="request">The request to handle</param>
-    /// <param name="cancellationToken">The cancellation token</param>
+    /// <param name="ct">The cancellation token</param>
     /// <param name="next">The next handler in the pipeline</param>
     /// <returns>The processed response</returns>
     public async Task<TResponseOut> HandleAsync(
         TRequest request,
-        CancellationToken cancellationToken,
+        CancellationToken ct,
         Func<TRequest, CancellationToken, Task<TResponseIn>> next
     )
     {
-        var response = await next(request, cancellationToken);
+        var response = await next(request, ct);
 
         return GetResponse(response);
     }

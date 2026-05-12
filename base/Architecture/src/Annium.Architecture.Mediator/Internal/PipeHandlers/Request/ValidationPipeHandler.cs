@@ -25,10 +25,11 @@ internal class ValidationPipeHandler<TRequest>
     /// <summary>
     /// Gets the response when validation fails for request-only operations
     /// </summary>
+    /// <param name="status">The operation status to report</param>
     /// <param name="validationResult">The failed validation result</param>
-    /// <returns>A status result indicating a bad request</returns>
-    protected override IStatusResult<OperationStatus> GetResponse(IResult validationResult)
+    /// <returns>A status result reporting the given status with the joined errors</returns>
+    protected override IStatusResult<OperationStatus> GetResponse(OperationStatus status, IResult validationResult)
     {
-        return Result.Status(OperationStatus.BadRequest).Join(validationResult);
+        return Result.Status(status).Join(validationResult);
     }
 }

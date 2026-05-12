@@ -30,6 +30,9 @@ public static class MediatorConfigurationExtensions
         foreach (var handler in typeManager.GetImplementations(typeof(IQueryHandler<,>)))
             cfg.AddHandler(handler);
 
+        foreach (var handler in typeManager.GetImplementations(typeof(IQueryHandler<>)))
+            cfg.AddHandler(handler);
+
         return cfg;
     }
 }

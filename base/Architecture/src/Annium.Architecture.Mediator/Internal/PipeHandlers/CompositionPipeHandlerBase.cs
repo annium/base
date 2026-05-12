@@ -31,7 +31,7 @@ internal abstract class CompositionPipeHandlerBase<TRequest, TResponse> : ILogSu
     /// </summary>
     /// <param name="composer">The composer for the request type</param>
     /// <param name="logger">The logger instance</param>
-    public CompositionPipeHandlerBase(IComposer<TRequest> composer, ILogger logger)
+    protected CompositionPipeHandlerBase(IComposer<TRequest> composer, ILogger logger)
     {
         _composer = composer;
         Logger = logger;
