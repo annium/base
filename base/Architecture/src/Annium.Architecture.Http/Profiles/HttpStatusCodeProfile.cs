@@ -40,6 +40,8 @@ public class HttpStatusCodeProfile : Profile
             HttpStatusCode.BadGateway => OperationStatus.NetworkError,
             HttpStatusCode.ServiceUnavailable => OperationStatus.Aborted,
             HttpStatusCode.GatewayTimeout => OperationStatus.Timeout,
+            // 500 is listed explicitly (even though `_` would also catch it with the same mapping)
+            // so the 500 → UncaughtError intent survives any future refactor of the `_` arm.
             HttpStatusCode.InternalServerError => OperationStatus.UncaughtError,
             _ => OperationStatus.UncaughtError,
         };

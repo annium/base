@@ -24,7 +24,7 @@ public class MappingEnumerablePipeHandlerTests
     public async Task HandleAsync_NonOkStatus_DoesNotInvokeMapper()
     {
         // arrange
-        var mapper = new ThrowingMapper();
+        var mapper = new RecordingMapper();
         var handler = new MappingEnumerablePipeHandler<TestRequest, TestSource, TestTarget>(mapper, new NullLogger());
 
         // act
@@ -69,6 +69,31 @@ public class MappingEnumerablePipeHandlerTests
         mapper.Invocations.Is(1);
     }
 
+    /// <summary>Status=Ok with Data=null is a contract violation; the handler MUST throw so the
+    /// upstream ExceptionPipeHandler can convert it to UncaughtError instead of silently mapping null.</summary>
+    [Fact]
+    public async Task HandleAsync_OkStatusWithNullData_Throws()
+    {
+        // arrange
+        var mapper = new RecordingMapper();
+        var handler = new MappingEnumerablePipeHandler<TestRequest, TestSource, TestTarget>(mapper, new NullLogger());
+
+        // act + assert
+        await Wrap.It(async () =>
+                await handler.HandleAsync(
+                    new TestRequest(),
+                    CancellationToken.None,
+                    (_, _) =>
+                        Task.FromResult<IStatusResult<OperationStatus, IEnumerable<TestSource>>>(
+                            Result.Status(OperationStatus.Ok, default(IEnumerable<TestSource>)!)
+                        )
+                )
+            )
+            .ThrowsAsync<InvalidOperationException>();
+
+        mapper.Invocations.Is(0);
+    }
+
     /// <summary>Test request marker.</summary>
     public class TestRequest { }
 
@@ -78,8 +103,10 @@ public class MappingEnumerablePipeHandlerTests
     /// <summary>View-model target the handler maps into.</summary>
     public class TestTarget : IResponse<TestSource> { }
 
-    /// <summary>Mapper that throws on every Map call — used to prove the non-Ok path skips mapping.</summary>
-    private sealed class ThrowingMapper : IMapper
+    /// <summary>Mapper that records invocations without producing a result. Used to prove that
+    /// non-Ok paths bypass the mapper entirely via the independent <c>Invocations.Is(0)</c>
+    /// assertion (rather than relying on a thrown exception as the regression signal).</summary>
+    private sealed class RecordingMapper : IMapper
     {
         public int Invocations { get; private set; }
 
@@ -90,13 +117,13 @@ public class MappingEnumerablePipeHandlerTests
         public T Map<T>(object? source)
         {
             Invocations++;
-            throw new InvalidOperationException("Mapper should not be invoked on non-Ok responses");
+            return default!;
         }
 
         public object? Map(object? source, Type type)
         {
             Invocations++;
-            throw new InvalidOperationException("Mapper should not be invoked on non-Ok responses");
+            return null;
         }
     }
 
