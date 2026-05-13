@@ -50,6 +50,6 @@ public static class GetInheritanceChainExtension
             return chain.ToArray();
         }
 
-        return Array.Empty<Type>();
+        return [];
     }
 }

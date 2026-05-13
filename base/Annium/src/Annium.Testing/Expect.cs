@@ -73,8 +73,11 @@ public static class Expect
     /// <param name="ms">The timeout in milliseconds.</param>
     /// <param name="pollDelay">The delay in milliseconds between validation attempts.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    public static Task ToAsync(Action validate, int ms = 10_000, int pollDelay = 25) =>
-        ToAsync(validate, new CancellationTokenSource(ms).Token, pollDelay);
+    public static async Task ToAsync(Action validate, int ms = 10_000, int pollDelay = 25)
+    {
+        using var cts = new CancellationTokenSource(ms);
+        await ToAsync(validate, cts.Token, pollDelay);
+    }
 
     /// <summary>
     /// Asynchronously waits until the specified asynchronous validation function succeeds or the timeout is reached.
@@ -83,6 +86,9 @@ public static class Expect
     /// <param name="ms">The timeout in milliseconds.</param>
     /// <param name="pollDelay">The delay in milliseconds between validation attempts.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    public static Task ToAsync(Func<ValueTask> validate, int ms = 10_000, int pollDelay = 25) =>
-        ToAsync(validate, new CancellationTokenSource(ms).Token, pollDelay);
+    public static async Task ToAsync(Func<ValueTask> validate, int ms = 10_000, int pollDelay = 25)
+    {
+        using var cts = new CancellationTokenSource(ms);
+        await ToAsync(validate, cts.Token, pollDelay);
+    }
 }

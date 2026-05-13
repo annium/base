@@ -83,10 +83,7 @@ public static class EnumExtensions
     public static T ParseEnum<T>(this string str, T defaultValue)
         where T : struct, Enum
     {
-        if (str.TryParseEnum<T>(out var value))
-            return value;
-
-        return defaultValue;
+        return str.TryParseEnum<T>(out var value) ? value : defaultValue;
     }
 
     /// <summary>
@@ -99,10 +96,7 @@ public static class EnumExtensions
     public static T ParseEnum<T>(this ValueType raw, T defaultValue)
         where T : struct, Enum
     {
-        if (raw.TryParseEnum<T>(out var value))
-            return value;
-
-        return defaultValue;
+        return raw.TryParseEnum<T>(out var value) ? value : defaultValue;
     }
 
     /// <summary>

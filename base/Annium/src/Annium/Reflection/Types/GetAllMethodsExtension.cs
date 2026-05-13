@@ -23,10 +23,6 @@ public static class GetAllMethodsExtension
     /// <param name="type">The type to get all methods from.</param>
     /// <param name="flags">The binding flags to use for retrieving the methods.</param>
     /// <returns>An array of <see cref="MethodInfo"/> representing all methods of the type.</returns>
-    public static MethodInfo[] GetAllMethods(this Type type, BindingFlags flags)
-    {
-        var info = type.GetTypeInfo();
-
-        return info.GetMethods(flags).Concat(info.ImplementedInterfaces.SelectMany(x => x.GetMethods(flags))).ToArray();
-    }
+    public static MethodInfo[] GetAllMethods(this Type type, BindingFlags flags) =>
+        MembersIncludingInterfaces.Get(type, flags, (i, f) => i.GetMethods(f));
 }

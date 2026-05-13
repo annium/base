@@ -21,16 +21,10 @@ public static class IsDerivedFromExtension
     {
         // if target is not generic type definition - simply check with IsAssignable from
         if (!target.IsGenericTypeDefinition)
-        {
-            if (!self && type == target)
-                return false;
-
-            return target.IsAssignableFrom(type);
-        }
+            return (self || type != target) && target.IsAssignableFrom(type);
 
         if (target.IsClass)
-            return GetInheritanceChainExtension
-                .GetInheritanceChain(type, self, true)
+            return type.GetInheritanceChain(self, true)
                 .Any(x => x.IsGenericType && x.GetGenericTypeDefinition() == target);
 
         if (target.IsInterface)

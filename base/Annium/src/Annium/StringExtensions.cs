@@ -324,17 +324,11 @@ public static class StringExtensions
     /// </summary>
     /// <param name="c">The character to check.</param>
     /// <returns>The symbol type of the character.</returns>
-    private static Symbol GetSymbol(char c)
-    {
-        if (char.IsUpper(c))
-            return Symbol.Upper;
-        if (char.IsLower(c))
-            return Symbol.Lower;
-        if (char.IsDigit(c))
-            return Symbol.Digit;
-
-        return Symbol.Other;
-    }
+    private static Symbol GetSymbol(char c) =>
+        char.IsUpper(c) ? Symbol.Upper
+        : char.IsLower(c) ? Symbol.Lower
+        : char.IsDigit(c) ? Symbol.Digit
+        : Symbol.Other;
 
     /// <summary>
     /// Creates a lookup table for hexadecimal characters.

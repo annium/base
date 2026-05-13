@@ -1,5 +1,6 @@
 using System.Text;
 using Annium.Security;
+using Annium.Testing;
 using Xunit;
 
 namespace Annium.Tests.Security;
@@ -24,6 +25,6 @@ public class SecureStringExtensionsTests
         // decode
         var decoded = Encoding.UTF8.GetString(encoded.AsBytes());
 
-        Assert.Equal(source, decoded);
+        decoded.Is(source);
     }
 }

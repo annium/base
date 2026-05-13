@@ -144,12 +144,12 @@ public static class DecimalExtensions
     public static long CeilInt64(this decimal value) => (long)Math.Ceiling(value);
 
     /// <summary>
-    /// Rounds a double value up to the nearest double.
+    /// Rounds a decimal value up to the nearest double.
     /// </summary>
     /// <param name="value">The value to round.</param>
-    /// <returns>The rounded value as a double.</returns>
+    /// <returns>The rounded value as a decimal.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static double Ceil(this double value) => Math.Ceiling(value);
+    public static decimal Ceil(this decimal value) => Math.Ceiling(value);
 
     /// <summary>
     /// Ensures a decimal value is within a specified range.

@@ -14,7 +14,7 @@ internal sealed class TrackingWeakReference<T> : ITrackingWeakReference<T>
     /// <summary>
     /// A registry that maintains the association between target objects and their tracking references.
     /// </summary>
-    public static readonly ConditionalWeakTable<T, TrackingWeakReference<T>> Registry = new();
+    internal static readonly ConditionalWeakTable<T, TrackingWeakReference<T>> Registry = new();
 
     /// <summary>
     /// Occurs when the referenced object is collected by the garbage collector.

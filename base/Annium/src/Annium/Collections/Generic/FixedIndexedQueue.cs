@@ -9,7 +9,7 @@ namespace Annium.Collections.Generic;
 /// Represents a fixed-size queue with indexed access to its elements.
 /// </summary>
 /// <typeparam name="T">The type of the elements in the queue.</typeparam>
-public class FixedIndexedQueue<T> : IFixedIndexedQueue<T>
+public sealed class FixedIndexedQueue<T> : IFixedIndexedQueue<T>
 {
     /// <summary>
     /// Gets the capacity of the queue.

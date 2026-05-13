@@ -2,6 +2,8 @@ using System;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Annium.Net;
 
@@ -16,13 +18,15 @@ public static class IPEndPoints
     private const string TcpPrefix = "tcp://";
 
     /// <summary>
-    /// Parses a string into an <see cref="IPEndPoint"/>.
+    /// Parses a string into an <see cref="IPEndPoint"/>, resolving hostnames via async DNS lookup.
     /// </summary>
     /// <param name="s">The string to parse, e.g. "127.0.0.1:8080" or "localhost:8080".</param>
     /// <param name="defaultPort">The default port to use if none is specified in the string.</param>
+    /// <param name="ct">The cancellation token to observe.</param>
     /// <returns>The parsed <see cref="IPEndPoint"/>.</returns>
     /// <exception cref="ArgumentOutOfRangeException">Thrown if <paramref name="defaultPort"/> is not a valid port number.</exception>
-    public static IPEndPoint Parse(string s, int defaultPort = 0)
+    /// <exception cref="ArgumentException">Thrown if the hostname cannot be resolved to an IPv4 address.</exception>
+    public static async Task<IPEndPoint> ParseAsync(string s, int defaultPort = 0, CancellationToken ct = default)
     {
         if (!IsValidPort(defaultPort))
             throw new ArgumentOutOfRangeException(nameof(defaultPort));
@@ -32,15 +36,18 @@ public static class IPEndPoints
 
         var port = IsValidPort(uri.Port) ? uri.Port : defaultPort;
         if (uri.Host.Any(char.IsLetter))
-            return new IPEndPoint(
-                Dns.GetHostAddresses(uri.Host).First(x => x.AddressFamily == AddressFamily.InterNetwork),
-                port
-            );
+        {
+            var addresses = await Dns.GetHostAddressesAsync(uri.Host, ct);
+            var ipv4 = addresses.FirstOrDefault(x => x.AddressFamily == AddressFamily.InterNetwork);
+            if (ipv4 is null)
+                throw new ArgumentException($"Could not resolve an IPv4 address for {uri.Host}", nameof(s));
+            return new IPEndPoint(ipv4, port);
+        }
 
         if (IPAddress.TryParse(uri.Host, out var ipAddress))
             return new IPEndPoint(ipAddress, port);
 
-        return new IPEndPoint(new IPAddress(new byte[] { 127, 0, 0, 1 }), port);
+        return new IPEndPoint(new IPAddress([127, 0, 0, 1]), port);
     }
 
     /// <summary>

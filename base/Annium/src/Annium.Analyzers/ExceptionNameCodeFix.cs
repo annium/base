@@ -59,13 +59,13 @@ public sealed class ExceptionNameCodeFix : CodeFixProvider
             CodeAction.Create(
                 equivalenceKey: nameof(ExceptionNameCodeFix),
                 title: $"Rename to {suggestedName}",
-                createChangedSolution: async cancellationToken =>
+                createChangedSolution: async ct =>
                     await Renamer.RenameSymbolAsync(
                         solution,
                         classModel,
                         new SymbolRenameOptions(RenameInStrings: true, RenameInComments: true, RenameFile: true),
                         suggestedName,
-                        cancellationToken
+                        ct
                     )
             ),
             context.Diagnostics

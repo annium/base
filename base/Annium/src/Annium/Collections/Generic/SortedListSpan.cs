@@ -17,7 +17,7 @@ namespace Annium.Collections.Generic;
 /// </remarks>
 /// <typeparam name="TKey">The type of the keys in the sorted list.</typeparam>
 /// <typeparam name="TValue">The type of the values in the sorted list.</typeparam>
-public record SortedListSpan<TKey, TValue> : ISortedListSpan<TKey, TValue>
+public sealed record SortedListSpan<TKey, TValue> : ISortedListSpan<TKey, TValue>
     where TKey : notnull
 {
     /// <summary>

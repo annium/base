@@ -23,10 +23,6 @@ public static class GetAllFieldsExtension
     /// <param name="type">The type to get all fields from.</param>
     /// <param name="flags">The binding flags to use for retrieving the fields.</param>
     /// <returns>An array of <see cref="FieldInfo"/> representing all fields of the type.</returns>
-    public static FieldInfo[] GetAllFields(this Type type, BindingFlags flags)
-    {
-        var info = type.GetTypeInfo();
-
-        return info.GetFields(flags).Concat(info.ImplementedInterfaces.SelectMany(x => x.GetFields(flags))).ToArray();
-    }
+    public static FieldInfo[] GetAllFields(this Type type, BindingFlags flags) =>
+        MembersIncludingInterfaces.Get(type, flags, (i, f) => i.GetFields(f));
 }

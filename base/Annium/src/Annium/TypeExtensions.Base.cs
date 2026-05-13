@@ -1,5 +1,4 @@
 using System;
-using System.Reflection;
 
 namespace Annium;
 
@@ -15,7 +14,7 @@ public static class TypeBaseExtensions
     /// <returns>The default value for the type. For value types, this is an instance with all fields set to their default values. For reference types, this is null.</returns>
     public static object? DefaultValue(this Type type)
     {
-        return type.GetTypeInfo().IsValueType ? Activator.CreateInstance(type) : null;
+        return type.IsValueType ? Activator.CreateInstance(type) : null;
     }
 
     /// <summary>

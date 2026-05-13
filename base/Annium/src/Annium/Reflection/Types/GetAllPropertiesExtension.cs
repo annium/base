@@ -24,12 +24,6 @@ public static class GetAllPropertiesExtension
     /// <param name="type">The type to get all properties from.</param>
     /// <param name="flags">The binding flags to use for retrieving the properties.</param>
     /// <returns>An array of <see cref="PropertyInfo"/> representing all properties of the type.</returns>
-    public static PropertyInfo[] GetAllProperties(this Type type, BindingFlags flags)
-    {
-        var info = type.GetTypeInfo();
-
-        return info.GetProperties(flags)
-            .Concat(info.ImplementedInterfaces.SelectMany(x => x.GetProperties(flags)))
-            .ToArray();
-    }
+    public static PropertyInfo[] GetAllProperties(this Type type, BindingFlags flags) =>
+        MembersIncludingInterfaces.Get(type, flags, (i, f) => i.GetProperties(f));
 }

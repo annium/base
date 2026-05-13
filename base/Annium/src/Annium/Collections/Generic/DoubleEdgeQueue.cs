@@ -9,7 +9,7 @@ namespace Annium.Collections.Generic;
 /// Represents a double-ended queue (deque) with configurable directionality.
 /// </summary>
 /// <typeparam name="T">The type of elements in the queue.</typeparam>
-public class DoubleEdgeQueue<T> : IDoubleEdgeQueue<T>
+public sealed class DoubleEdgeQueue<T> : IDoubleEdgeQueue<T>
 {
     /// <summary>
     /// Indicates whether the queue operates in direct mode.

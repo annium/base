@@ -16,7 +16,7 @@ namespace Annium.Collections.Generic;
 /// API is the only sanctioned way to reposition the span and includes bounds checking.
 /// </remarks>
 /// <typeparam name="T">The type of the elements in the span.</typeparam>
-public record ListSpan<T> : IListSpan<T>
+public sealed record ListSpan<T> : IListSpan<T>
 {
     /// <summary>
     /// Gets the number of elements in the span.
