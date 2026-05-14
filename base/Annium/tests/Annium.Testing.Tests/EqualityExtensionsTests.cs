@@ -65,12 +65,12 @@ public class EqualityExtensionsTests
         Assert.Equal("x", result);
     }
 
-    /// <summary>Verifies that IsNotDefault throws when value is null.</summary>
+    /// <summary>Verifies that IsNotDefault throws ArgumentNullException when value is null (per XML doc contract; B14 fix).</summary>
     [Fact]
     public void IsNotDefault_ThrowsWhenNull()
     {
         string? value = null;
-        Assert.Throws<AssertionFailedException>(() => value.IsNotDefault());
+        Assert.Throws<ArgumentNullException>(() => value.IsNotDefault());
     }
 
     /// <summary>Verifies that reference equality works for distinct-but-equal strings.</summary>

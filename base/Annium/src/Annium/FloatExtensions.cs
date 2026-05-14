@@ -190,7 +190,8 @@ public static class FloatExtensions
         if (!float.IsFinite(step) || step <= 0f)
             throw new ArgumentOutOfRangeException(nameof(step), step, "Step must be a positive, finite number.");
 
-        return value - value % step;
+        var rem = ((value % step) + step) % step;
+        return value - rem;
     }
 
     /// <summary>
@@ -201,9 +202,9 @@ public static class FloatExtensions
     /// <returns>The rounded value as a float.</returns>
     public static float RoundTo(this float value, float step)
     {
-        var diff = value % step;
+        var rem = ((value % step) + step) % step;
 
-        return value - diff + (step > diff * 2f ? 0f : step);
+        return rem * 2f < step ? value - rem : value - rem + step;
     }
 
     /// <summary>
@@ -218,6 +219,7 @@ public static class FloatExtensions
         if (!float.IsFinite(step) || step <= 0f)
             throw new ArgumentOutOfRangeException(nameof(step), step, "Step must be a positive, finite number.");
 
-        return value + step - value % step;
+        var rem = ((value % step) + step) % step;
+        return rem == 0f ? value : value - rem + step;
     }
 }

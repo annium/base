@@ -223,8 +223,11 @@ public static class DecimalExtensions
     /// <param name="value">The value to round.</param>
     /// <param name="step">The step value to round to.</param>
     /// <returns>The rounded value as a decimal.</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static decimal FloorTo(this decimal value, decimal step) => value - value % step;
+    public static decimal FloorTo(this decimal value, decimal step)
+    {
+        var rem = ((value % step) + step) % step;
+        return value - rem;
+    }
 
     /// <summary>
     /// Rounds a decimal value to the nearest multiple of a specified step.
@@ -234,9 +237,9 @@ public static class DecimalExtensions
     /// <returns>The rounded value as a decimal.</returns>
     public static decimal RoundTo(this decimal value, decimal step)
     {
-        var diff = value % step;
+        var rem = ((value % step) + step) % step;
 
-        return value - diff + (step > diff * 2m ? 0m : step);
+        return rem * 2m < step ? value - rem : value - rem + step;
     }
 
     /// <summary>
@@ -245,8 +248,11 @@ public static class DecimalExtensions
     /// <param name="value">The value to round.</param>
     /// <param name="step">The step value to round to.</param>
     /// <returns>The rounded value as a decimal.</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static decimal CeilTo(this decimal value, decimal step) => value + step - value % step;
+    public static decimal CeilTo(this decimal value, decimal step)
+    {
+        var rem = ((value % step) + step) % step;
+        return rem == 0m ? value : value - rem + step;
+    }
 
     /// <summary>
     /// Aligns a decimal value by removing trailing zeros.

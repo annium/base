@@ -189,7 +189,8 @@ public static class DoubleExtensions
         if (!double.IsFinite(step) || step <= 0d)
             throw new ArgumentOutOfRangeException(nameof(step), step, "Step must be a positive, finite number.");
 
-        return value - value % step;
+        var rem = ((value % step) + step) % step;
+        return value - rem;
     }
 
     /// <summary>
@@ -200,9 +201,9 @@ public static class DoubleExtensions
     /// <returns>The rounded value as a double.</returns>
     public static double RoundTo(this double value, double step)
     {
-        var diff = value % step;
+        var rem = ((value % step) + step) % step;
 
-        return value - diff + (step > diff * 2d ? 0d : step);
+        return rem * 2d < step ? value - rem : value - rem + step;
     }
 
     /// <summary>
@@ -217,6 +218,7 @@ public static class DoubleExtensions
         if (!double.IsFinite(step) || step <= 0d)
             throw new ArgumentOutOfRangeException(nameof(step), step, "Step must be a positive, finite number.");
 
-        return value + step - value % step;
+        var rem = ((value % step) + step) % step;
+        return rem == 0d ? value : value - rem + step;
     }
 }

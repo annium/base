@@ -46,8 +46,8 @@ public static class ValueExtensions
         [CallerArgumentExpression(nameof(value))] string valueEx = ""
     )
     {
-        value.IsNot(default, $"{value.WrapWithExpression(valueEx)} is default");
         ArgumentNullException.ThrowIfNull(value);
+        value.IsNot(default, $"{value.WrapWithExpression(valueEx)} is default");
 
         return value;
     }
