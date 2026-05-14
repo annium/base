@@ -6,7 +6,7 @@ namespace Annium.Logging;
 /// <summary>
 /// Provides extension methods for logging messages at various log levels for <see cref="ILogSubject"/> instances.
 /// </summary>
-public static class LogSubjectLogExtensions
+public static partial class LogSubjectExtensions
 {
     /// <summary>
     /// Determines whether logging is enabled for the specified log level.

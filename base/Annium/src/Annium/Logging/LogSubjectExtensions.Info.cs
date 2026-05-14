@@ -1,14 +1,14 @@
 using System.Runtime.CompilerServices;
 
-#pragma warning disable LOG0002 // Forwarders intentionally pass caller info through to LogSubjectLogExtensions.Log.
+#pragma warning disable LOG0002 // Forwarders intentionally pass caller info through to LogSubjectExtensions.Log.
 
 namespace Annium.Logging;
 
 /// <summary>
 /// Provides extension methods for logging info-level messages for <see cref="ILogSubject"/> instances.
-/// All overloads forward to <see cref="LogSubjectLogExtensions.Log"/> with <see cref="LogLevel.Info"/>.
+/// All overloads forward to <see cref="LogSubjectExtensions.Log"/> with <see cref="LogLevel.Info"/>.
 /// </summary>
-public static class LogSubjectInfoExtensions
+public static partial class LogSubjectExtensions
 {
     /// <summary>Logs an info-level message.</summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

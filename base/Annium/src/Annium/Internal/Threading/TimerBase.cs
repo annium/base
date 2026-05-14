@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Annium.Logging;
+using Annium.Threading;
 
 namespace Annium.Internal.Threading;
 
@@ -66,12 +67,16 @@ internal abstract class TimerBase : ILogSubject
     }
 
     /// <summary>
-    /// Changes the due time and period of the underlying timer.
+    /// Changes the due time and period of the underlying timer. Public surface for derived classes that
+    /// implement <see cref="ISequentialTimer"/>; the inherited methods satisfy the interface contract.
+    /// <see cref="DebounceTimerBase"/> inherits these methods too but exposes them as bypass-the-debounce
+    /// escape hatches — callers that arm a debounce timer directly via <c>Change(dueTime, period)</c> are
+    /// deliberately stepping outside the debounce protocol.
     /// </summary>
     /// <param name="dueTime">The amount of time to delay before the next execution.</param>
     /// <param name="period">The time interval between executions.</param>
     /// <returns>true if the timer was successfully updated; otherwise, false.</returns>
-    protected bool ChangeTimer(int dueTime, int period)
+    public bool Change(int dueTime, int period)
     {
         return _timer.Change(dueTime, period);
     }
@@ -82,10 +87,11 @@ internal abstract class TimerBase : ILogSubject
     /// <param name="dueTime">The amount of time to delay before the next execution.</param>
     /// <param name="period">The time interval between executions.</param>
     /// <returns>true if the timer was successfully updated; otherwise, false.</returns>
-    protected bool ChangeTimer(TimeSpan dueTime, TimeSpan period)
+    public bool Change(TimeSpan dueTime, TimeSpan period)
     {
         return _timer.Change(dueTime, period);
     }
+
 
     /// <summary>
     /// Releases all resources used by the timer.

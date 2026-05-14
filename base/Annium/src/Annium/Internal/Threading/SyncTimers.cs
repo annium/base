@@ -121,28 +121,6 @@ internal abstract class SyncTimerBase : TimerBase, ISequentialTimer
         : base(logger) { }
 
     /// <summary>
-    /// Changes the start time and the interval between method invocations for a timer.
-    /// </summary>
-    /// <param name="dueTime">The amount of time to delay before the first execution.</param>
-    /// <param name="period">The time interval between executions.</param>
-    /// <returns>true if the timer was successfully updated; otherwise, false.</returns>
-    public bool Change(int dueTime, int period)
-    {
-        return ChangeTimer(dueTime, period);
-    }
-
-    /// <summary>
-    /// Changes the start time and the interval between method invocations for a timer.
-    /// </summary>
-    /// <param name="dueTime">The amount of time to delay before the first execution.</param>
-    /// <param name="period">The time interval between executions.</param>
-    /// <returns>true if the timer was successfully updated; otherwise, false.</returns>
-    public bool Change(TimeSpan dueTime, TimeSpan period)
-    {
-        return ChangeTimer(dueTime, period);
-    }
-
-    /// <summary>
     /// Executes the timer's handler.
     /// </summary>
     protected abstract void Handle();
