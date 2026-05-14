@@ -35,7 +35,7 @@ public static partial class LogSubjectExtensions
     )
     {
         if (IsEnabled(level))
-            subject.Logger.Log(subject, file, member, line, level, message, Array.Empty<object>());
+            subject.Logger.Log(subject, file, member, line, level, message, []);
     }
 
     /// <summary>
@@ -61,7 +61,7 @@ public static partial class LogSubjectExtensions
     )
     {
         if (IsEnabled(level))
-            subject.Logger.Log(subject, file, member, line, level, message, new object?[] { x1 });
+            subject.Logger.Log(subject, file, member, line, level, message, [x1]);
     }
 
     /// <summary>
@@ -90,7 +90,7 @@ public static partial class LogSubjectExtensions
     )
     {
         if (IsEnabled(level))
-            subject.Logger.Log(subject, file, member, line, level, message, new object?[] { x1, x2 });
+            subject.Logger.Log(subject, file, member, line, level, message, [x1, x2]);
     }
 
     /// <summary>
@@ -122,7 +122,7 @@ public static partial class LogSubjectExtensions
     )
     {
         if (IsEnabled(level))
-            subject.Logger.Log(subject, file, member, line, level, message, new object?[] { x1, x2, x3 });
+            subject.Logger.Log(subject, file, member, line, level, message, [x1, x2, x3]);
     }
 
     /// <summary>
@@ -157,7 +157,7 @@ public static partial class LogSubjectExtensions
     )
     {
         if (IsEnabled(level))
-            subject.Logger.Log(subject, file, member, line, level, message, new object?[] { x1, x2, x3, x4 });
+            subject.Logger.Log(subject, file, member, line, level, message, [x1, x2, x3, x4]);
     }
 
     /// <summary>
@@ -195,7 +195,7 @@ public static partial class LogSubjectExtensions
     )
     {
         if (IsEnabled(level))
-            subject.Logger.Log(subject, file, member, line, level, message, new object?[] { x1, x2, x3, x4, x5 });
+            subject.Logger.Log(subject, file, member, line, level, message, [x1, x2, x3, x4, x5]);
     }
 
     /// <summary>
@@ -236,7 +236,7 @@ public static partial class LogSubjectExtensions
     )
     {
         if (IsEnabled(level))
-            subject.Logger.Log(subject, file, member, line, level, message, new object?[] { x1, x2, x3, x4, x5, x6 });
+            subject.Logger.Log(subject, file, member, line, level, message, [x1, x2, x3, x4, x5, x6]);
     }
 
     /// <summary>
@@ -287,7 +287,7 @@ public static partial class LogSubjectExtensions
                 line,
                 level,
                 message,
-                new object?[] { x1, x2, x3, x4, x5, x6, x7 }
+                [x1, x2, x3, x4, x5, x6, x7]
             );
     }
 
@@ -342,7 +342,7 @@ public static partial class LogSubjectExtensions
                 line,
                 level,
                 message,
-                new object?[] { x1, x2, x3, x4, x5, x6, x7, x8 }
+                [x1, x2, x3, x4, x5, x6, x7, x8]
             );
     }
 }

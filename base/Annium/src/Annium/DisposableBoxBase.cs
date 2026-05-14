@@ -164,27 +164,43 @@ public abstract class DisposableBoxBase<TBox> : ILogSubject
     }
 
     /// <summary>Adds a synchronous <see cref="IDisposable"/> to the base's sync-disposables list.</summary>
+    /// <param name="disposable">The disposable to add.</param>
+    /// <returns>This box instance.</returns>
     protected TBox AddSyncDisposable(IDisposable disposable) => Add(_syncDisposables, disposable);
 
     /// <summary>Adds a collection of synchronous <see cref="IDisposable"/>s to the base's sync-disposables list.</summary>
+    /// <param name="disposables">The disposables to add.</param>
+    /// <returns>This box instance.</returns>
     protected TBox AddSyncDisposables(IEnumerable<IDisposable> disposables) => Add(_syncDisposables, disposables);
 
     /// <summary>Removes a synchronous <see cref="IDisposable"/> from the base's sync-disposables list.</summary>
+    /// <param name="disposable">The disposable to remove.</param>
+    /// <returns>This box instance.</returns>
     protected TBox RemoveSyncDisposable(IDisposable disposable) => Remove(_syncDisposables, disposable);
 
     /// <summary>Removes a collection of synchronous <see cref="IDisposable"/>s from the base's sync-disposables list.</summary>
+    /// <param name="disposables">The disposables to remove.</param>
+    /// <returns>This box instance.</returns>
     protected TBox RemoveSyncDisposables(IEnumerable<IDisposable> disposables) => Remove(_syncDisposables, disposables);
 
     /// <summary>Adds a synchronous dispose <see cref="Action"/> to the base's sync-disposes list.</summary>
+    /// <param name="dispose">The dispose action to add.</param>
+    /// <returns>This box instance.</returns>
     protected TBox AddSyncDispose(Action dispose) => Add(_syncDisposes, dispose);
 
     /// <summary>Adds a collection of synchronous dispose <see cref="Action"/>s to the base's sync-disposes list.</summary>
+    /// <param name="disposes">The dispose actions to add.</param>
+    /// <returns>This box instance.</returns>
     protected TBox AddSyncDisposes(IEnumerable<Action> disposes) => Add(_syncDisposes, disposes);
 
     /// <summary>Removes a synchronous dispose <see cref="Action"/> from the base's sync-disposes list.</summary>
+    /// <param name="dispose">The dispose action to remove.</param>
+    /// <returns>This box instance.</returns>
     protected TBox RemoveSyncDispose(Action dispose) => Remove(_syncDisposes, dispose);
 
     /// <summary>Removes a collection of synchronous dispose <see cref="Action"/>s from the base's sync-disposes list.</summary>
+    /// <param name="disposes">The dispose actions to remove.</param>
+    /// <returns>This box instance.</returns>
     protected TBox RemoveSyncDisposes(IEnumerable<Action> disposes) => Remove(_syncDisposes, disposes);
 
     /// <summary>

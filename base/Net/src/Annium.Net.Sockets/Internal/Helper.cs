@@ -147,11 +147,10 @@ internal static class Helper
                     var (isClosed, result) = await receive();
                     if (isClosed)
                     {
-                        log.Trace(
-                            result.Exception is not null
-                                ? $"stop with {result.Status}: {result.Exception}"
-                                : $"stop with {result.Status}"
-                        );
+                        if (result.Exception is not null)
+                            log.Trace("stop with {status}: {exception}", result.Status, result.Exception);
+                        else
+                            log.Trace("stop with {status}", result.Status);
                         return result;
                     }
                 }

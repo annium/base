@@ -9,6 +9,12 @@ namespace Annium;
 public static class DoubleExtensions
 {
     /// <summary>
+    /// Error message thrown by step-validating methods (FloorTo, CeilTo) when step is non-finite or non-positive.
+    /// </summary>
+    private const string StepError = "Step must be a positive, finite number.";
+
+
+    /// <summary>
     /// Calculates the relative difference between two values.
     /// </summary>
     /// <param name="value">The value to compare.</param>
@@ -187,7 +193,7 @@ public static class DoubleExtensions
     public static double FloorTo(this double value, double step)
     {
         if (!double.IsFinite(step) || step <= 0d)
-            throw new ArgumentOutOfRangeException(nameof(step), step, "Step must be a positive, finite number.");
+            throw new ArgumentOutOfRangeException(nameof(step), step, StepError);
 
         var rem = ((value % step) + step) % step;
         return value - rem;
@@ -216,7 +222,7 @@ public static class DoubleExtensions
     public static double CeilTo(this double value, double step)
     {
         if (!double.IsFinite(step) || step <= 0d)
-            throw new ArgumentOutOfRangeException(nameof(step), step, "Step must be a positive, finite number.");
+            throw new ArgumentOutOfRangeException(nameof(step), step, StepError);
 
         var rem = ((value % step) + step) % step;
         return rem == 0d ? value : value - rem + step;

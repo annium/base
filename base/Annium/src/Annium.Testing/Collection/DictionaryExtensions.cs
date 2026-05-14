@@ -86,13 +86,8 @@ public static class DictionaryExtensions
     )
         where TKey : notnull
     {
-        if (value is null)
-            throw new ArgumentNullException(nameof(value));
-
-        var total = value.Count;
-        total.Is(count, $"{valueEx} count `{total}` != `{count.WrapWithExpression(countEx)}`");
-
-        return value;
+        CheckCount(value, value?.Count ?? 0, count, valueEx, countEx);
+        return value!;
     }
 
     /// <summary>
@@ -115,13 +110,8 @@ public static class DictionaryExtensions
     )
         where TKey : notnull
     {
-        if (value is null)
-            throw new ArgumentNullException(nameof(value));
-
-        var total = value.Count;
-        total.Is(count, $"{valueEx} count `{total}` != `{count.WrapWithExpression(countEx)}`");
-
-        return value;
+        CheckCount(value, value?.Count ?? 0, count, valueEx, countEx);
+        return value!;
     }
 
     /// <summary>
@@ -140,13 +130,8 @@ public static class DictionaryExtensions
     )
         where TKey : notnull
     {
-        if (value is null)
-            throw new ArgumentNullException(nameof(value));
-
-        var total = value.Count;
-        total.Is(0, $"{valueEx} expected to be empty, but has `{total}` items");
-
-        return value;
+        CheckEmpty(value, value?.Count ?? 0, valueEx);
+        return value!;
     }
 
     /// <summary>
@@ -165,13 +150,8 @@ public static class DictionaryExtensions
     )
         where TKey : notnull
     {
-        if (value is null)
-            throw new ArgumentNullException(nameof(value));
-
-        var total = value.Count;
-        total.Is(0, $"{valueEx} expected to be empty, but has `{total}` items");
-
-        return value;
+        CheckEmpty(value, value?.Count ?? 0, valueEx);
+        return value!;
     }
 
     /// <summary>
@@ -190,13 +170,8 @@ public static class DictionaryExtensions
     )
         where TKey : notnull
     {
-        if (value is null)
-            throw new ArgumentNullException(nameof(value));
-
-        var total = value.Count;
-        total.IsNot(0, $"{valueEx} expected to be not empty");
-
-        return value;
+        CheckNotEmpty(value, value?.Count ?? 0, valueEx);
+        return value!;
     }
 
     /// <summary>
@@ -215,12 +190,48 @@ public static class DictionaryExtensions
     )
         where TKey : notnull
     {
+        CheckNotEmpty(value, value?.Count ?? 0, valueEx);
+        return value!;
+    }
+
+    /// <summary>Asserts that <paramref name="value"/> is non-null and its count equals <paramref name="count"/>.</summary>
+    /// <param name="value">The dictionary to validate.</param>
+    /// <param name="actualCount">The dictionary's actual count.</param>
+    /// <param name="count">The expected count.</param>
+    /// <param name="valueEx">The expression that produced the dictionary.</param>
+    /// <param name="countEx">The expression that produced the expected count.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
+    private static void CheckCount(object? value, int actualCount, int count, string valueEx, string countEx)
+    {
         if (value is null)
             throw new ArgumentNullException(nameof(value));
 
-        var total = value.Count;
-        total.IsNot(0, $"{valueEx} expected to be not empty");
+        actualCount.Is(count, $"{valueEx} count `{actualCount}` != `{count.WrapWithExpression(countEx)}`");
+    }
 
-        return value;
+    /// <summary>Asserts that <paramref name="value"/> is non-null and its count is zero.</summary>
+    /// <param name="value">The dictionary to validate.</param>
+    /// <param name="actualCount">The dictionary's actual count.</param>
+    /// <param name="valueEx">The expression that produced the dictionary.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
+    private static void CheckEmpty(object? value, int actualCount, string valueEx)
+    {
+        if (value is null)
+            throw new ArgumentNullException(nameof(value));
+
+        actualCount.Is(0, $"{valueEx} expected to be empty, but has `{actualCount}` items");
+    }
+
+    /// <summary>Asserts that <paramref name="value"/> is non-null and its count is non-zero.</summary>
+    /// <param name="value">The dictionary to validate.</param>
+    /// <param name="actualCount">The dictionary's actual count.</param>
+    /// <param name="valueEx">The expression that produced the dictionary.</param>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="value"/> is null.</exception>
+    private static void CheckNotEmpty(object? value, int actualCount, string valueEx)
+    {
+        if (value is null)
+            throw new ArgumentNullException(nameof(value));
+
+        actualCount.IsNot(0, $"{valueEx} expected to be not empty");
     }
 }

@@ -21,7 +21,7 @@ public static class GetUnboundBaseTypeExtension
             throw new ArgumentNullException(nameof(type));
 
         var baseType = type.BaseType;
-        if (baseType == null)
+        if (baseType is null)
             return null;
 
         if (!baseType.ContainsGenericParameters)

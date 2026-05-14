@@ -221,10 +221,14 @@ public static class DecimalExtensions
     /// Rounds a decimal value down to the nearest multiple of a specified step.
     /// </summary>
     /// <param name="value">The value to round.</param>
-    /// <param name="step">The step value to round to.</param>
+    /// <param name="step">The step value to round to. Must be positive.</param>
     /// <returns>The rounded value as a decimal.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="step"/> is zero or negative.</exception>
     public static decimal FloorTo(this decimal value, decimal step)
     {
+        if (step <= 0m)
+            throw new ArgumentOutOfRangeException(nameof(step), step, "Step must be a positive number.");
+
         var rem = ((value % step) + step) % step;
         return value - rem;
     }
@@ -233,10 +237,14 @@ public static class DecimalExtensions
     /// Rounds a decimal value to the nearest multiple of a specified step.
     /// </summary>
     /// <param name="value">The value to round.</param>
-    /// <param name="step">The step value to round to.</param>
+    /// <param name="step">The step value to round to. Must be positive.</param>
     /// <returns>The rounded value as a decimal.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="step"/> is zero or negative.</exception>
     public static decimal RoundTo(this decimal value, decimal step)
     {
+        if (step <= 0m)
+            throw new ArgumentOutOfRangeException(nameof(step), step, "Step must be a positive number.");
+
         var rem = ((value % step) + step) % step;
 
         return rem * 2m < step ? value - rem : value - rem + step;
@@ -246,10 +254,14 @@ public static class DecimalExtensions
     /// Rounds a decimal value up to the nearest multiple of a specified step.
     /// </summary>
     /// <param name="value">The value to round.</param>
-    /// <param name="step">The step value to round to.</param>
+    /// <param name="step">The step value to round to. Must be positive.</param>
     /// <returns>The rounded value as a decimal.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="step"/> is zero or negative.</exception>
     public static decimal CeilTo(this decimal value, decimal step)
     {
+        if (step <= 0m)
+            throw new ArgumentOutOfRangeException(nameof(step), step, "Step must be a positive number.");
+
         var rem = ((value % step) + step) % step;
         return rem == 0m ? value : value - rem + step;
     }

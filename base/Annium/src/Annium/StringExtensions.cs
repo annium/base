@@ -251,7 +251,7 @@ public static class StringExtensions
     /// <returns>true if the conversion was successful; otherwise, false.</returns>
     public static bool TryFromHexStringToByteArray(this string str, out byte[] byteArray)
     {
-        byteArray = Array.Empty<byte>();
+        byteArray = [];
 
         if (string.IsNullOrEmpty(str) || str.Length % 2 != 0)
             return false;
@@ -278,6 +278,7 @@ public static class StringExtensions
 
     #region Like
 
+    /// <summary>Cache mapping LIKE patterns to their compiled regular expressions.</summary>
     private static readonly ConcurrentDictionary<string, Regex> _likeCache = new();
 
     /// <summary>

@@ -72,10 +72,18 @@ internal abstract class AsyncTimerGateBase : TimerBase
     /// </summary>
     protected virtual void OnAfterGateReleased() { }
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Returns whether the current Dispose call is re-entrant (i.e. invoked from inside the callback itself).
+    /// Re-entrant disposal skips the drain to avoid self-deadlock — the in-flight callback owns the gate.
+    /// </summary>
+    /// <returns><see langword="true"/> when Dispose was called from within the callback; otherwise <see langword="false"/>.</returns>
     protected sealed override bool IsReentrantDispose() => _inCallback.Value;
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Drains any in-flight async callback by acquiring the gate with a bounded wait, then disposes the gate.
+    /// On wait timeout the gate is intentionally leaked to avoid <see cref="ObjectDisposedException"/> on the
+    /// ThreadPool thread that may still be racing toward the callback's <c>Release()</c>.
+    /// </summary>
     protected sealed override void OnDrainCompleted()
     {
         if (_gate.Wait(TimerConstants.DisposeWaitBudget))

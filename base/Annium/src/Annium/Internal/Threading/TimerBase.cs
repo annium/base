@@ -152,6 +152,7 @@ internal abstract class TimerBase : ILogSubject
     /// Asynchronously releases all resources used by the timer. The drain is currently synchronous; this
     /// method exists to satisfy <see cref="IAsyncDisposable"/> for callers that prefer <c>await using</c>.
     /// </summary>
+    /// <returns>A completed <see cref="ValueTask"/>.</returns>
     public ValueTask DisposeAsync()
     {
         Dispose();

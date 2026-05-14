@@ -9,6 +9,13 @@ namespace Annium;
 /// <summary>
 /// Represents a box that manages asynchronous disposable resources and provides thread-safe operations for adding and removing them.
 /// </summary>
+/// <remarks>
+/// <b>Drain ordering on <see cref="DisposeAsync"/>:</b> synchronous resources are drained FIRST (low-level
+/// dependencies), then asynchronous resources in parallel. Callers MUST register resources in dependency order:
+/// async resources that depend on a sync resource must NOT assume the sync resource is still alive during their
+/// own teardown. This is the inverse of typical "high-level first" expectations and is encoded here because
+/// the box's primary use is wiring application-level (async) consumers over framework-level (sync) primitives.
+/// </remarks>
 public sealed class AsyncDisposableBox : DisposableBoxBase<AsyncDisposableBox>, IAsyncDisposable
 {
     /// <summary>
@@ -89,30 +96,46 @@ public sealed class AsyncDisposableBox : DisposableBoxBase<AsyncDisposableBox>, 
     }
 
     /// <summary>Adds an asynchronous <see cref="IAsyncDisposable"/> to the box's async-disposables list.</summary>
+    /// <param name="disposable">The async disposable to add.</param>
+    /// <returns>This box instance.</returns>
     private AsyncDisposableBox AddAsyncDisposable(IAsyncDisposable disposable) => Add(_asyncDisposables, disposable);
 
     /// <summary>Adds a collection of asynchronous <see cref="IAsyncDisposable"/>s to the box's async-disposables list.</summary>
+    /// <param name="disposables">The async disposables to add.</param>
+    /// <returns>This box instance.</returns>
     private AsyncDisposableBox AddAsyncDisposables(IEnumerable<IAsyncDisposable> disposables) =>
         Add(_asyncDisposables, disposables);
 
     /// <summary>Removes an asynchronous <see cref="IAsyncDisposable"/> from the box's async-disposables list.</summary>
+    /// <param name="disposable">The async disposable to remove.</param>
+    /// <returns>This box instance.</returns>
     private AsyncDisposableBox RemoveAsyncDisposable(IAsyncDisposable disposable) =>
         Remove(_asyncDisposables, disposable);
 
     /// <summary>Removes a collection of asynchronous <see cref="IAsyncDisposable"/>s from the box's async-disposables list.</summary>
+    /// <param name="disposables">The async disposables to remove.</param>
+    /// <returns>This box instance.</returns>
     private AsyncDisposableBox RemoveAsyncDisposables(IEnumerable<IAsyncDisposable> disposables) =>
         Remove(_asyncDisposables, disposables);
 
     /// <summary>Adds an asynchronous dispose function to the box's async-disposes list.</summary>
+    /// <param name="dispose">The async dispose function to add.</param>
+    /// <returns>This box instance.</returns>
     private AsyncDisposableBox AddAsyncDispose(Func<Task> dispose) => Add(_asyncDisposes, dispose);
 
     /// <summary>Adds a collection of asynchronous dispose functions to the box's async-disposes list.</summary>
+    /// <param name="disposes">The async dispose functions to add.</param>
+    /// <returns>This box instance.</returns>
     private AsyncDisposableBox AddAsyncDisposes(IEnumerable<Func<Task>> disposes) => Add(_asyncDisposes, disposes);
 
     /// <summary>Removes an asynchronous dispose function from the box's async-disposes list.</summary>
+    /// <param name="dispose">The async dispose function to remove.</param>
+    /// <returns>This box instance.</returns>
     private AsyncDisposableBox RemoveAsyncDispose(Func<Task> dispose) => Remove(_asyncDisposes, dispose);
 
     /// <summary>Removes a collection of asynchronous dispose functions from the box's async-disposes list.</summary>
+    /// <param name="disposes">The async dispose functions to remove.</param>
+    /// <returns>This box instance.</returns>
     private AsyncDisposableBox RemoveAsyncDisposes(IEnumerable<Func<Task>> disposes) =>
         Remove(_asyncDisposes, disposes);
 

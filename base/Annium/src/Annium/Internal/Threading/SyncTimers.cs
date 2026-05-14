@@ -125,7 +125,11 @@ internal abstract class SyncTimerBase : TimerBase, ISequentialTimer
     /// </summary>
     protected abstract void Handle();
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Returns whether the current Dispose call is re-entrant (i.e. invoked from inside the callback's own thread).
+    /// Re-entrant disposal skips the drain to avoid self-deadlock — the in-flight callback owns the timer.
+    /// </summary>
+    /// <returns><see langword="true"/> when Dispose was called from within the callback thread; otherwise <see langword="false"/>.</returns>
     protected override bool IsReentrantDispose() =>
         Volatile.Read(ref _callbackThreadId) == Environment.CurrentManagedThreadId;
 

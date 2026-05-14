@@ -7,7 +7,7 @@ namespace Annium.Testing;
 /// <summary>
 /// Provides extension methods for default value assertions in tests.
 /// </summary>
-public static class ValueExtensions
+public static class DefaultExtensions
 {
     /// <summary>
     /// Asserts that the value is the default value for its type.

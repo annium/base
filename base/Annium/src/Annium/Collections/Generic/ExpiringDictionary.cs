@@ -34,6 +34,7 @@ namespace Annium.Collections.Generic;
 public sealed class ExpiringDictionary<TKey, TValue> : IDisposable, IAsyncDisposable
     where TKey : notnull
 {
+    /// <summary>The underlying expiring store that holds the entries and evicts them on expiry.</summary>
     private readonly ExpiringStore<TKey, TValue> _store;
 
     /// <summary>
@@ -68,6 +69,9 @@ public sealed class ExpiringDictionary<TKey, TValue> : IDisposable, IAsyncDispos
     /// Attempts to get the value associated with the specified key. Returns false when the key is
     /// absent OR the entry has already expired.
     /// </summary>
+    /// <param name="key">The key to look up.</param>
+    /// <param name="value">When this method returns, contains the value if the key exists and the entry has not expired; otherwise default.</param>
+    /// <returns><see langword="true"/> when the key is present and non-expired; otherwise <see langword="false"/>.</returns>
     public bool TryGet(TKey key, out TValue value)
     {
         return _store.TryGet(key, out value);
@@ -76,6 +80,8 @@ public sealed class ExpiringDictionary<TKey, TValue> : IDisposable, IAsyncDispos
     /// <summary>
     /// Gets the value associated with the specified key.
     /// </summary>
+    /// <param name="key">The key to look up.</param>
+    /// <returns>The value associated with the key.</returns>
     /// <exception cref="KeyNotFoundException">Thrown if the key is missing or its entry has expired.</exception>
     public TValue Get(TKey key)
     {
@@ -88,6 +94,8 @@ public sealed class ExpiringDictionary<TKey, TValue> : IDisposable, IAsyncDispos
     /// <summary>
     /// Determines whether the dictionary contains the specified key with a non-expired entry.
     /// </summary>
+    /// <param name="key">The key to look up.</param>
+    /// <returns><see langword="true"/> when the key is present and non-expired; otherwise <see langword="false"/>.</returns>
     public bool ContainsKey(TKey key)
     {
         return _store.ContainsKey(key);
@@ -103,6 +111,9 @@ public sealed class ExpiringDictionary<TKey, TValue> : IDisposable, IAsyncDispos
     /// absent" from "key was expired" must check expiry separately via <see cref="ContainsKey"/> or
     /// <see cref="TryGet"/> beforehand.
     /// </remarks>
+    /// <param name="key">The key to remove.</param>
+    /// <param name="value">When this method returns, contains the removed value if the key was present and non-expired; otherwise default.</param>
+    /// <returns><see langword="true"/> when the key was present and non-expired at the time of removal; otherwise <see langword="false"/>.</returns>
     public bool Remove(TKey key, out TValue value)
     {
         return _store.Remove(key, out value);
@@ -129,6 +140,7 @@ public sealed class ExpiringDictionary<TKey, TValue> : IDisposable, IAsyncDispos
     /// currently synchronous; this method exists to satisfy <see cref="IAsyncDisposable"/> for callers
     /// that prefer <c>await using</c>.
     /// </summary>
+    /// <returns>A completed <see cref="ValueTask"/>.</returns>
     public ValueTask DisposeAsync()
     {
         Dispose();

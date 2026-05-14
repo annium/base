@@ -48,9 +48,6 @@ public static class GetDefaultConstructorExtension
         if (type is null)
             throw new ArgumentNullException(nameof(type));
 
-        if (type.IsClass || type.IsValueType)
-            return type.GetConstructor(bindingFlags, Type.EmptyTypes);
-
-        return null;
+        return type.IsClass || type.IsValueType ? type.GetConstructor(bindingFlags, Type.EmptyTypes) : null;
     }
 }

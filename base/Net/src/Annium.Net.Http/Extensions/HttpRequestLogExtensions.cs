@@ -95,7 +95,7 @@ public static class HttpRequestLogExtensions
                     );
 
                     if (log.HasFlag(LogData.Response))
-                        subject.Trace(await response.Content.ReadAsStringAsync());
+                        subject.Trace<string>("response body: {body}", await response.Content.ReadAsStringAsync());
                 }
             }
         });

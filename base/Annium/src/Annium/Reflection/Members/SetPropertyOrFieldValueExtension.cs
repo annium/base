@@ -18,16 +18,19 @@ public static class SetPropertyOrFieldValueExtension
     /// <exception cref="InvalidOperationException">Thrown if the member is neither a writable property nor a field.</exception>
     public static void SetPropertyOrFieldValue(this MemberInfo member, object target, object? value)
     {
-        if (member is PropertyInfo property)
+        switch (member)
         {
-            var setter = property.GetSetMethod();
-            if (setter is null)
-                throw new InvalidOperationException($"property {member} is not writable");
-            setter.Invoke(target, new[] { value });
+            case PropertyInfo property:
+                var setter =
+                    property.GetSetMethod()
+                    ?? throw new InvalidOperationException($"property {member} is not writable");
+                setter.Invoke(target, [value]);
+                break;
+            case FieldInfo field:
+                field.SetValue(target, value);
+                break;
+            default:
+                throw new InvalidOperationException($"{member} is neither writable property nor field");
         }
-        else if (member is FieldInfo field)
-            field.SetValue(target, value);
-        else
-            throw new InvalidOperationException($"{member} is neither readable property nor field");
     }
 }

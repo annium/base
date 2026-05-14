@@ -72,7 +72,7 @@ public static class EnumerableExtensions
     /// <exception cref="AssertionFailedException">Thrown when the enumerable is empty.</exception>
     public static IEnumerable<T> IsNotEmpty<T>(
         this IEnumerable<T> value,
-        [CallerArgumentExpression(nameof(value))] string valueEx = ""!
+        [CallerArgumentExpression(nameof(value))] string valueEx = ""
     )
     {
         if (value is null)
@@ -97,8 +97,8 @@ public static class EnumerableExtensions
     public static T At<T>(
         this IEnumerable<T> value,
         int key,
-        [CallerArgumentExpression(nameof(value))] string valueEx = ""!,
-        [CallerArgumentExpression(nameof(key))] string keyEx = ""!
+        [CallerArgumentExpression(nameof(value))] string valueEx = "",
+        [CallerArgumentExpression(nameof(key))] string keyEx = ""
     )
     {
         var val = value.ToArray();

@@ -13,13 +13,14 @@ namespace Annium.Logging;
 public static partial class LogSubjectExtensions
 {
     /// <summary>Logs an error with an exception.</summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void Error(
         this ILogSubject subject,
         Exception exception,
         [CallerFilePath] string file = "",
         [CallerMemberName] string member = "",
         [CallerLineNumber] int line = 0
-    ) => subject.Logger.Error(subject, file, member, line, exception, Array.Empty<object>());
+    ) => subject.Logger.Error(subject, file, member, line, exception, []);
 
     /// <summary>Logs an error-level message.</summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
