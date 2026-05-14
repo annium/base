@@ -202,6 +202,56 @@ public class DisposableTest : TestBase
     }
 
     /// <summary>
+    /// Verifies that calling <c>Dispose()</c> on a <c>DisposableBox</c> twice is idempotent (review T9).
+    /// </summary>
+    [Fact]
+    public void Disposable_DoubleDispose_IsIdempotent()
+    {
+        var probe = new CountingDisposable();
+        var box = Disposable.Box(Logger);
+        box += probe;
+
+        box.Dispose();
+        box.Dispose();
+
+        // The probe was inside the box; it must have been disposed exactly once even though we
+        // called box.Dispose() twice. The lock guard in DisposeBase short-circuits the second call.
+        probe.DisposeCount.Is(1);
+    }
+
+    /// <summary>
+    /// Verifies that calling <c>DisposeAsync()</c> on an <c>AsyncDisposableBox</c> twice is idempotent (review T9).
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact]
+    public async Task AsyncDisposable_DoubleDispose_IsIdempotent()
+    {
+        var probe = new CountingDisposable();
+        var box = Disposable.AsyncBox(Logger);
+        box += probe;
+
+        await box.DisposeAsync();
+        await box.DisposeAsync();
+
+        probe.DisposeCount.Is(1);
+    }
+
+    /// <summary>
+    /// Verifies that when one async-disposable throws during <c>DisposeAsync</c>, the exception propagates
+    /// (review T8 — exception-during-dispose).
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact]
+    public async Task AsyncDisposable_OneAsyncDisposableThrows_ExceptionPropagates()
+    {
+        var box = Disposable.AsyncBox(Logger);
+        box += new ThrowingAsyncDisposable(new InvalidOperationException("dispose-boom"));
+
+        var ex = await Wrap.It(async () => await box.DisposeAsync()).ThrowsAsync<InvalidOperationException>();
+        ex.Message.Is("dispose-boom");
+    }
+
+    /// <summary>
     /// IDisposable that records how many times it was disposed — for detecting leaks or
     /// double-disposal in the concurrent stress test above.
     /// </summary>
@@ -212,5 +262,21 @@ public class DisposableTest : TestBase
         public int DisposeCount => Volatile.Read(ref _disposeCount);
 
         public void Dispose() => Interlocked.Increment(ref _disposeCount);
+    }
+
+    /// <summary>
+    /// IAsyncDisposable that throws the given exception when disposed — used to verify exception
+    /// propagation through <c>AsyncDisposableBox.DisposeAsync</c>.
+    /// </summary>
+    private sealed class ThrowingAsyncDisposable : IAsyncDisposable
+    {
+        private readonly Exception _ex;
+
+        public ThrowingAsyncDisposable(Exception ex)
+        {
+            _ex = ex;
+        }
+
+        public ValueTask DisposeAsync() => ValueTask.FromException(_ex);
     }
 }

@@ -337,6 +337,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Annium.Architecture.CQRS.Te
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Annium.Architecture.Base.Tests", "base\Architecture\tests\Annium.Architecture.Base.Tests\Annium.Architecture.Base.Tests.csproj", "{49D997EB-CCB8-42C0-B0A6-36DF61E67A38}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Annium.Testing.Tests", "base\Annium\tests\Annium.Testing.Tests\Annium.Testing.Tests.csproj", "{AF68D941-F729-486F-AC2B-EA91EA7E123F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -1811,6 +1813,18 @@ Global
 		{49D997EB-CCB8-42C0-B0A6-36DF61E67A38}.Release|x64.Build.0 = Release|Any CPU
 		{49D997EB-CCB8-42C0-B0A6-36DF61E67A38}.Release|x86.ActiveCfg = Release|Any CPU
 		{49D997EB-CCB8-42C0-B0A6-36DF61E67A38}.Release|x86.Build.0 = Release|Any CPU
+		{AF68D941-F729-486F-AC2B-EA91EA7E123F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AF68D941-F729-486F-AC2B-EA91EA7E123F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AF68D941-F729-486F-AC2B-EA91EA7E123F}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{AF68D941-F729-486F-AC2B-EA91EA7E123F}.Debug|x64.Build.0 = Debug|Any CPU
+		{AF68D941-F729-486F-AC2B-EA91EA7E123F}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{AF68D941-F729-486F-AC2B-EA91EA7E123F}.Debug|x86.Build.0 = Debug|Any CPU
+		{AF68D941-F729-486F-AC2B-EA91EA7E123F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AF68D941-F729-486F-AC2B-EA91EA7E123F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AF68D941-F729-486F-AC2B-EA91EA7E123F}.Release|x64.ActiveCfg = Release|Any CPU
+		{AF68D941-F729-486F-AC2B-EA91EA7E123F}.Release|x64.Build.0 = Release|Any CPU
+		{AF68D941-F729-486F-AC2B-EA91EA7E123F}.Release|x86.ActiveCfg = Release|Any CPU
+		{AF68D941-F729-486F-AC2B-EA91EA7E123F}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -1981,5 +1995,6 @@ Global
 		{B2DDA314-711E-4E15-AB66-2353711A3ED2} = {932457CD-E1F9-4E34-810F-1A4C21177D53}
 		{C94D184A-5523-49F8-972C-382EE786D9FC} = {932457CD-E1F9-4E34-810F-1A4C21177D53}
 		{49D997EB-CCB8-42C0-B0A6-36DF61E67A38} = {932457CD-E1F9-4E34-810F-1A4C21177D53}
+		{AF68D941-F729-486F-AC2B-EA91EA7E123F} = {8BF73ED2-B7D6-46AF-B9E4-5608B60C7C01}
 	EndGlobalSection
 EndGlobal

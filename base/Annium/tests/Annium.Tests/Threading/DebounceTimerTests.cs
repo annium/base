@@ -139,6 +139,49 @@ public class DebounceTimerTests : TestBase
     }
 
     /// <summary>
+    /// Verifies that Request() called after DisposeAsync() does not throw (review T7 — post-dispose guard).
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact]
+    public async Task Request_AfterDispose_DoesNotThrow()
+    {
+        var timer = Timers.Debounce(static () => ValueTask.CompletedTask, 10, Logger);
+        await timer.DisposeAsync();
+
+        // Must not throw — the IsDisposed guard + ObjectDisposedException catch in Request() absorbs the race.
+        timer.Request();
+        timer.Request();
+
+        true.IsTrue();
+    }
+
+    /// <summary>
+    /// Verifies that Request() racing concurrently with DisposeAsync() neither hangs nor surfaces an unhandled
+    /// exception (review T7 — race window between IsDisposed check and timer.Change).
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact]
+    public async Task Request_RaceWithDispose_NeitherHangsNorThrows()
+    {
+        var timer = Timers.Debounce(static () => ValueTask.CompletedTask, 10, Logger);
+        var ct = TestContext.Current.CancellationToken;
+
+        var requester = Task.Run(
+            () =>
+            {
+                for (var i = 0; i < 1000; i++)
+                    timer.Request();
+            },
+            ct
+        );
+
+        await timer.DisposeAsync();
+        await requester;
+
+        true.IsTrue();
+    }
+
+    /// <summary>
     /// A class that maintains a queue of integers for testing.
     /// </summary>
     private class State

@@ -1,10 +1,11 @@
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Annium.Logging;
 using Annium.Testing;
 using Annium.Threading;
+using Annium.Threading.Tasks;
 using Xunit;
 
 namespace Annium.Tests.Threading;
@@ -168,14 +169,17 @@ public class SyncTimerTests : TestBase
     /// <returns>A task representing the asynchronous operation.</returns>
     private async Task EnsureValid(State state)
     {
-        // await until timers complete (step is executed to end)
-        do
-        {
-            await Task.Delay(5);
-        } while (state.Data.Count % 2 > 0);
+        // Bounded wait until timers complete (step is executed to end). Replaces the previous
+        // unbounded `do { await Task.Delay(5); } while (count % 2 > 0)` loop that could hang the
+        // test runner indefinitely if a timer regression caused the count to stop advancing.
+        await Wait.UntilAsync(() => state.Data.Count % 2 == 0, ms: 5000);
 
-        var expectedData = Enumerable.Range(0, state.Data.Count).ToArray();
-        state.Data.SequenceEqual(expectedData).IsTrue();
+        // Snapshot under ConcurrentQueue.ToArray() — safe against a queued ThreadPool callback
+        // that may still call Push() after the underlying timer was stopped via Change(Infinite, Infinite)
+        // but before its queued callbacks have drained.
+        var snapshot = state.Data.ToArray();
+        var expectedData = Enumerable.Range(0, snapshot.Length).ToArray();
+        snapshot.SequenceEqual(expectedData).IsTrue();
     }
 
     /// <summary>
@@ -184,9 +188,11 @@ public class SyncTimerTests : TestBase
     private class State
     {
         /// <summary>
-        /// Gets the queue of integers.
+        /// Gets the queue of integers. <see cref="ConcurrentQueue{T}"/> is used so iteration via
+        /// <c>ToArray</c> is snapshot-safe against races with queued timer callbacks calling
+        /// <see cref="Push"/> after <c>timer.Change(Infinite, Infinite)</c>.
         /// </summary>
-        public Queue<int> Data { get; } = new();
+        public ConcurrentQueue<int> Data { get; } = new();
 
         /// <summary>
         /// Adds the current count to the queue.

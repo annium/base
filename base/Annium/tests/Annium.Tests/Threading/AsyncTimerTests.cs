@@ -1,10 +1,12 @@
-using System.Collections.Generic;
+using System;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Annium.Logging;
 using Annium.Testing;
 using Annium.Threading;
+using Annium.Threading.Tasks;
 using Xunit;
 
 namespace Annium.Tests.Threading;
@@ -162,20 +164,94 @@ public class AsyncTimerTests : TestBase
     }
 
     /// <summary>
+    /// Verifies that calling DisposeAsync twice is idempotent and does not deadlock (review T5).
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact]
+    public async Task Dispose_IsIdempotent_SecondCallReturnsImmediately()
+    {
+        var timer = Timers.Async(static () => ValueTask.CompletedTask, 0, 10, Logger);
+
+        await timer.DisposeAsync();
+        await timer.DisposeAsync();
+
+        // Reaching here without hang or exception is the assertion.
+        true.IsTrue();
+    }
+
+    /// <summary>
+    /// Verifies that calling Dispose from inside the handler does not deadlock (review T5 — re-entrant dispose).
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact]
+    public async Task Dispose_Reentrant_FromInsideHandler_DoesNotDeadlock()
+    {
+        ISequentialTimer? timer = null;
+        var disposed = false;
+
+        timer = Timers.Async(
+            async () =>
+            {
+                await timer!.DisposeAsync();
+                disposed = true;
+            },
+            0,
+            10,
+            Logger
+        );
+
+        await Wait.UntilAsync(() => disposed, ms: 5000);
+        disposed.IsTrue();
+    }
+
+    /// <summary>
+    /// Verifies that an exception thrown by the handler does not stop subsequent ticks (review T6).
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact]
+    public async Task HandlerThrows_TimerContinuesFiring()
+    {
+        var calls = 0;
+        var successAfterThrow = false;
+
+        using var timer = Timers.Async(
+            () =>
+            {
+                var n = Interlocked.Increment(ref calls);
+                if (n <= 2)
+                    throw new InvalidOperationException($"intentional fault on tick {n}");
+                successAfterThrow = true;
+                return ValueTask.CompletedTask;
+            },
+            0,
+            5,
+            Logger
+        );
+
+        await Wait.UntilAsync(() => successAfterThrow, ms: 5000);
+
+        successAfterThrow.IsTrue();
+        (calls >= 3).IsTrue();
+    }
+
+    /// <summary>
     /// Ensures that the state is valid by checking the sequence of numbers.
     /// </summary>
     /// <param name="state">The state to validate.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
     private async Task EnsureValid(State state)
     {
-        // await until timers complete (step is executed to end)
-        do
-        {
-            await Task.Delay(5);
-        } while (state.Data.Count % 2 > 0);
+        // Bounded wait until timers complete (step is executed to end). Replaces the previous
+        // unbounded `do { await Task.Delay(5); } while (count % 2 > 0)` loop that could hang the
+        // test runner indefinitely if a timer regression caused the count to stop advancing.
+        await Wait.UntilAsync(() => state.Data.Count % 2 == 0, ms: 5000);
 
-        var expectedData = Enumerable.Range(0, state.Data.Count).ToArray();
-        state.Data.SequenceEqual(expectedData).IsTrue();
+        // Snapshot under ConcurrentQueue.ToArray() — safe against a queued ThreadPool callback
+        // that may still call Push() after the underlying timer was stopped via Change(Infinite, Infinite)
+        // but before its queued callbacks have drained.
+        var snapshot = state.Data.ToArray();
+        var expectedData = Enumerable.Range(0, snapshot.Length).ToArray();
+        snapshot.SequenceEqual(expectedData).IsTrue();
     }
 
     /// <summary>
@@ -184,9 +260,11 @@ public class AsyncTimerTests : TestBase
     private class State
     {
         /// <summary>
-        /// Gets the queue of integers.
+        /// Gets the queue of integers. <see cref="ConcurrentQueue{T}"/> is used so iteration via
+        /// <c>ToArray</c> is snapshot-safe against races with queued timer callbacks calling
+        /// <see cref="Push"/> after <c>timer.Change(Infinite, Infinite)</c>.
         /// </summary>
-        public Queue<int> Data { get; } = new();
+        public ConcurrentQueue<int> Data { get; } = new();
 
         /// <summary>
         /// Adds the current count to the queue.
