@@ -25,7 +25,7 @@ public static partial class ResolveGenericArgumentsByImplementationExtension
         if (!succeed)
             return null;
 
-        var unresolvedArgs = args.Count(a => a.IsGenericTypeParameter);
+        var unresolvedArgs = CountUnresolved(args);
         if (unresolvedArgs == 0 || unresolvedArgs == args.Length)
             return args;
 
@@ -44,7 +44,7 @@ public static partial class ResolveGenericArgumentsByImplementationExtension
                         return null;
             }
 
-            var currentlyUnresolved = args.Count(a => a.IsGenericTypeParameter);
+            var currentlyUnresolved = CountUnresolved(args);
             if (currentlyUnresolved == 0 || currentlyUnresolved == unresolvedArgs)
                 break;
 
@@ -95,6 +95,21 @@ public static partial class ResolveGenericArgumentsByImplementationExtension
         }
 
         return true;
+    }
+
+    /// <summary>
+    /// Counts unresolved generic type parameters in an arg array. Allocation-free counterpart to
+    /// `args.Count(a => a.IsGenericTypeParameter)` for the hot reflection path.
+    /// </summary>
+    /// <param name="args">The arg array to scan.</param>
+    /// <returns>The number of entries that are still generic type parameters.</returns>
+    private static int CountUnresolved(Type[] args)
+    {
+        var count = 0;
+        foreach (var a in args)
+            if (a.IsGenericTypeParameter)
+                count++;
+        return count;
     }
 
     /// <summary>

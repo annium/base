@@ -33,7 +33,7 @@ public static class GetDefaultConstructorExtension
     /// <returns>The <see cref="ConstructorInfo"/> representing the default constructor.</returns>
     /// <exception cref="ArgumentException">Thrown if the type has no default constructor.</exception>
     public static ConstructorInfo GetDefaultConstructor(this Type type, BindingFlags bindingFlags) =>
-        type.TryGetDefaultConstructor()
+        type.TryGetDefaultConstructor(bindingFlags)
         ?? throw new ArgumentException($"{type.FriendlyName()} has no default constructor");
 
     /// <summary>

@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Annium.Internal.Collections.Generic;
 
 namespace Annium.Collections.Generic;
 
@@ -69,7 +70,7 @@ public sealed class FixedIndexedQueue<T> : IFixedIndexedQueue<T>
         get
         {
             if (index < 0 || index >= Count)
-                throw new ArgumentOutOfRangeException(nameof(index), $"Index {index} is out of range [0;{Count - 1}]");
+                throw new ArgumentOutOfRangeException(nameof(index), IndexOutOfRangeMessage.For(index, Count));
 
             return _data[(_index + index) % Capacity];
         }

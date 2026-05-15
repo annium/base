@@ -61,26 +61,25 @@ public sealed class AsyncDisposableBox : DisposableBoxBase<AsyncDisposableBox>, 
 
         DisposeBase();
 
-        await Task.WhenAll(
-                Pull(_asyncDisposables)
-                    .Select(async entry =>
-                    {
-                        this.Trace<string>("dispose {entry} - start", entry.GetFullId());
-                        await entry.DisposeAsync().ConfigureAwait(false);
-                        this.Trace<string>("dispose {entry} - done", entry.GetFullId());
-                    })
-            )
-            .ConfigureAwait(false);
-        await Task.WhenAll(
-                Pull(_asyncDisposes)
-                    .Select(async entry =>
-                    {
-                        this.Trace<string>("dispose {entry} - start", entry.GetFullId());
-                        await entry().ConfigureAwait(false);
-                        this.Trace<string>("dispose {entry} - done", entry.GetFullId());
-                    })
-            )
-            .ConfigureAwait(false);
+        // Snapshot both queues before composing so the lock-protected Pulls happen up front,
+        // then run all teardowns in a single WhenAll. A single WhenAll guarantees that a
+        // throwing task in either queue does NOT skip teardown of the other queue — every
+        // registered dispose runs and exceptions aggregate into one AggregateException.
+        var asyncDisposableTasks = Pull(_asyncDisposables)
+            .Select(async entry =>
+            {
+                this.Trace<string>("dispose {entry} - start", entry.GetFullId());
+                await entry.DisposeAsync().ConfigureAwait(false);
+                this.Trace<string>("dispose {entry} - done", entry.GetFullId());
+            });
+        var asyncDisposeTasks = Pull(_asyncDisposes)
+            .Select(async entry =>
+            {
+                this.Trace<string>("dispose {entry} - start", entry.GetFullId());
+                await entry().ConfigureAwait(false);
+                this.Trace<string>("dispose {entry} - done", entry.GetFullId());
+            });
+        await Task.WhenAll(asyncDisposableTasks.Concat(asyncDisposeTasks)).ConfigureAwait(false);
 
         this.Trace("done");
     }

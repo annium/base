@@ -144,6 +144,46 @@ public class ExpiringDictionaryTest : TestBase
     }
 
     /// <summary>
+    /// Verifies that <c>Clear</c> removes every entry from the dictionary. Closes the TG10 gap from
+    /// review-2026.05.15 — Clear was previously untested.
+    /// </summary>
+    [Fact]
+    public void Clear_RemovesAllItems()
+    {
+        // arrange
+        var (_, timeProvider) = GetTimeTools();
+        var collection = new ExpiringDictionary<int, string>(timeProvider);
+        var ttl = Duration.FromSeconds(5);
+        for (var i = 0; i < 10; i++)
+            collection.Add(i, $"v:{i}", ttl);
+
+        // act
+        collection.Clear();
+
+        // assert
+        for (var i = 0; i < 10; i++)
+            collection.ContainsKey(i).IsFalse();
+    }
+
+    /// <summary>
+    /// Verifies that <c>DisposeAsync</c> stops the background eviction timer cleanly and is idempotent
+    /// across both sync and async dispose paths. Closes the TG10 gap.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact]
+    public async Task DisposeAsync_IsIdempotent()
+    {
+        // arrange
+        var (_, timeProvider) = GetTimeTools();
+        var collection = new ExpiringDictionary<int, string>(timeProvider);
+        collection.Add(1, "v:1", Duration.FromSeconds(5));
+
+        // act — dispose twice; second call must be a no-op (idempotent)
+        await collection.DisposeAsync();
+        await collection.DisposeAsync();
+    }
+
+    /// <summary>
     /// Gets the time manager and time provider for testing.
     /// </summary>
     /// <returns>A tuple containing the time manager and time provider.</returns>

@@ -1,4 +1,3 @@
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using Annium.Core.Mapper;
 using Annium.Data.Models.Extensions;
@@ -32,7 +31,7 @@ public static class ShallowEqualityExtensions
         [CallerArgumentExpression(nameof(data))] string dataEx = ""
     )
     {
-        if (!value.IsShallowEqual(data, mapper ?? Mapper.GetFor(Assembly.GetCallingAssembly())))
+        if (!value.IsShallowEqual(data, mapper ?? Mapper.GetFor(typeof(T).Assembly)))
             throw new AssertionFailedException(
                 message
                     ?? $"{value.WrapWithExpression(valueEx)} is not shallow equal to {data.WrapWithExpression(dataEx)}"
@@ -63,7 +62,7 @@ public static class ShallowEqualityExtensions
         [CallerArgumentExpression(nameof(data))] string dataEx = ""
     )
     {
-        if (value.IsShallowEqual(data, mapper ?? Mapper.GetFor(Assembly.GetCallingAssembly())))
+        if (value.IsShallowEqual(data, mapper ?? Mapper.GetFor(typeof(T).Assembly)))
             throw new AssertionFailedException(
                 message ?? $"{value.WrapWithExpression(valueEx)} is shallow equal to {data.WrapWithExpression(dataEx)}"
             );

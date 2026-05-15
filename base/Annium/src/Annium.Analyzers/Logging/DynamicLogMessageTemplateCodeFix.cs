@@ -15,7 +15,7 @@ namespace Annium.Analyzers.Logging;
 
 /// <summary>
 /// Converts an interpolated-string log call into the static-template / named-args form expected by Annium logging,
-/// e.g. <c>logger.Trace($"run for {id}")</c> becomes <c>logger.Trace("run for {id}", id)</c>.
+/// e.g. <c>this.Trace($"run for {id}")</c> becomes <c>this.Trace("run for {id}", id)</c>.
 /// </summary>
 /// <remarks>
 /// <b>Operation-vs-Syntax argument-index impedance:</b> the analyzer fires when <c>IInvocationOperation.Arguments[1]</c>

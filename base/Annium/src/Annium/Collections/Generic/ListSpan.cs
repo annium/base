@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Annium.Internal.Collections.Generic;
 
 namespace Annium.Collections.Generic;
 
@@ -47,11 +48,7 @@ public sealed record ListSpan<T> : IListSpan<T>
     /// <exception cref="ArgumentOutOfRangeException">Thrown when the span parameters are invalid.</exception>
     public ListSpan(IReadOnlyList<T> collection, int start, int count)
     {
-        if (start < 0 || start + count > collection.Count)
-            throw new ArgumentOutOfRangeException(
-                nameof(start),
-                $"Invalid span at {start} with length {count} for collection of size {collection.Count}"
-            );
+        IndexOutOfRangeMessage.ValidateSpanRange(start, count, collection.Count);
 
         _collection = collection;
         Start = start;
@@ -69,7 +66,7 @@ public sealed record ListSpan<T> : IListSpan<T>
         get
         {
             if (index < 0 || index >= Count)
-                throw new ArgumentOutOfRangeException(nameof(index), $"Index {index} is out of range [0;{Count - 1}]");
+                throw new ArgumentOutOfRangeException(nameof(index), IndexOutOfRangeMessage.For(index, Count));
 
             return _collection[Start + index];
         }

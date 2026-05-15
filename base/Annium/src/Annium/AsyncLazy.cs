@@ -26,9 +26,15 @@ public sealed class AsyncLazy<T>
     public ValueTask<T> GetValueAsync(CancellationToken ct = default)
     {
         var task = _instance.Value;
-        // task.Result on a completed task is non-blocking — analyzer is being conservative here.
+        // IsCompletedSuccessfully (not IsCompleted) so faulted/cancelled tasks take the slow
+        // path via WaitAsync — that propagates the original exception unwrapped, while the
+        // fast path's task.Result would throw AggregateException for faulted/cancelled tasks.
+        // task.Result on a successfully-completed task is non-blocking — analyzer is being
+        // conservative here.
 #pragma warning disable VSTHRD103
-        return task.IsCompleted ? new ValueTask<T>(task.Result) : new ValueTask<T>(task.WaitAsync(ct));
+        return task.IsCompletedSuccessfully
+            ? new ValueTask<T>(task.Result)
+            : new ValueTask<T>(task.WaitAsync(ct));
 #pragma warning restore VSTHRD103
     }
 

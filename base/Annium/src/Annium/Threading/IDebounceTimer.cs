@@ -19,6 +19,12 @@ public interface IDebounceTimer : IDisposable, IAsyncDisposable
     void Change(int period);
 
     /// <summary>
+    /// Changes the period of the debounce timer.
+    /// </summary>
+    /// <param name="period">The new period.</param>
+    void Change(TimeSpan period);
+
+    /// <summary>
     /// Requests the debounce timer to execute after the current period.
     /// </summary>
     void Request();

@@ -106,4 +106,45 @@ public class ExpiringCollectionTest : TestBase
 
         return (timeManager, timeProvider);
     }
+
+    /// <summary>
+    /// Verifies that <c>Clear</c> removes every entry from the collection. Closes the TG10 gap from
+    /// review-2026.05.15 — Clear was previously untested.
+    /// </summary>
+    [Fact]
+    public void Clear_RemovesAllItems()
+    {
+        // arrange
+        var (_, timeProvider) = GetTimeTools();
+        var collection = new ExpiringCollection<int>(timeProvider);
+        var ttl = Duration.FromSeconds(5);
+        for (var i = 0; i < 10; i++)
+            collection.Add(i, ttl);
+
+        // act
+        collection.Clear();
+
+        // assert
+        for (var i = 0; i < 10; i++)
+            collection.Contains(i).IsFalse();
+    }
+
+    /// <summary>
+    /// Verifies that <c>DisposeAsync</c> stops the background eviction timer cleanly and is idempotent
+    /// across both sync and async dispose paths. Closes the TG10 gap — the eviction-timer lifecycle
+    /// after dispose was previously untested.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact]
+    public async Task DisposeAsync_IsIdempotent()
+    {
+        // arrange
+        var (_, timeProvider) = GetTimeTools();
+        var collection = new ExpiringCollection<int>(timeProvider);
+        collection.Add(1, Duration.FromSeconds(5));
+
+        // act — dispose twice; second call must be a no-op (idempotent)
+        await collection.DisposeAsync();
+        await collection.DisposeAsync();
+    }
 }

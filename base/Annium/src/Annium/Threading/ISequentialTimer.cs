@@ -15,7 +15,7 @@ public interface ISequentialTimer : IDisposable, IAsyncDisposable
     /// <summary>
     /// Changes the start time and interval between method invocations for a timer.
     /// </summary>
-    /// <param name="dueTime">The amount of time to delay before the invoking the callback method, in milliseconds.</param>
+    /// <param name="dueTime">The amount of time to delay before invoking the callback method, in milliseconds.</param>
     /// <param name="period">The time interval between invocations of the callback method, in milliseconds.</param>
     /// <returns>true if the timer was successfully updated; otherwise, false.</returns>
     bool Change(int dueTime, int period);

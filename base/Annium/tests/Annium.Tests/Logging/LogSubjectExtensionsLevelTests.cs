@@ -1,0 +1,110 @@
+using System;
+using System.Collections.Generic;
+using Annium.Logging;
+using Annium.Testing;
+using Xunit;
+
+namespace Annium.Tests.Logging;
+
+/// <summary>
+/// Tests that the level-shim extensions on <see cref="ILogSubject"/> route to the correct
+/// <see cref="LogLevel"/>. Closes the TG8 gap from review-2026.05.15: a parameter-count mismatch
+/// or wrong level constant in any of the sed-generated Debug/Info/Warn shims would silently log
+/// at the wrong level — these tests would catch it.
+/// </summary>
+public class LogSubjectExtensionsLevelTests
+{
+    [Fact]
+    public void Trace_RoutesToTraceLevel() => RunLevelTest(LogLevel.Trace, subject => subject.Trace("msg"));
+
+    [Fact]
+    public void Debug_RoutesToDebugLevel() => RunLevelTest(LogLevel.Debug, subject => subject.Debug("msg"));
+
+    [Fact]
+    public void Info_RoutesToInfoLevel() => RunLevelTest(LogLevel.Info, subject => subject.Info("msg"));
+
+    [Fact]
+    public void Warn_RoutesToWarnLevel() => RunLevelTest(LogLevel.Warn, subject => subject.Warn("msg"));
+
+    [Fact]
+    public void Error_RoutesToErrorLevel() => RunLevelTest(LogLevel.Error, subject => subject.Error("msg"));
+
+    [Fact]
+    public void Debug_OneParam_ForwardsArgument()
+    {
+        var captured = RunCapture(subject => subject.Debug("msg {x}", 42));
+        captured.Level.Is(LogLevel.Debug);
+        captured.Data.Has(1);
+        captured.Data[0].Is(42);
+    }
+
+    [Fact]
+    public void Info_OneParam_ForwardsArgument()
+    {
+        // non-string T1 to disambiguate from the [CallerFilePath] string overload
+        var captured = RunCapture(subject => subject.Info("msg {x}", 99));
+        captured.Level.Is(LogLevel.Info);
+        captured.Data.Has(1);
+        captured.Data[0].Is(99);
+    }
+
+    [Fact]
+    public void Warn_OneParam_ForwardsArgument()
+    {
+        var captured = RunCapture(subject => subject.Warn("msg {x}", true));
+        captured.Level.Is(LogLevel.Warn);
+        captured.Data.Has(1);
+        captured.Data[0].Is(true);
+    }
+
+    private static void RunLevelTest(LogLevel expected, Action<ILogSubject> action)
+    {
+        var captured = RunCapture(action);
+        captured.Level.Is(expected);
+        captured.Message.Is("msg");
+    }
+
+    private static CapturedEntry RunCapture(Action<ILogSubject> action)
+    {
+        var originalLevel = LogConfig.Level;
+        try
+        {
+            LogConfig.SetLevel(LogLevel.Trace);
+            var logger = new CapturingLogger();
+            var subject = new TestSubject(logger);
+            action(subject);
+            logger.Entries.Has(1);
+            return logger.Entries[0];
+        }
+        finally
+        {
+            LogConfig.SetLevel(originalLevel);
+        }
+    }
+
+    private sealed record CapturedEntry(LogLevel Level, string Message, IReadOnlyList<object?> Data);
+
+    private sealed class CapturingLogger : ILogger
+    {
+        public List<CapturedEntry> Entries { get; } = new();
+
+        public void Log(
+            object subject,
+            string file,
+            string member,
+            int line,
+            LogLevel level,
+            string message,
+            IReadOnlyList<object?> data
+        ) => Entries.Add(new CapturedEntry(level, message, data));
+
+        public void Error(object subject, string file, string member, int line, Exception ex, IReadOnlyList<object?> data) =>
+            Entries.Add(new CapturedEntry(LogLevel.Error, ex.Message, data));
+    }
+
+    private sealed class TestSubject : ILogSubject
+    {
+        public TestSubject(ILogger logger) => Logger = logger;
+        public ILogger Logger { get; }
+    }
+}

@@ -17,6 +17,7 @@ public static class EnumerableExtensions
     /// <typeparam name="T">The type of elements in the enumerable.</typeparam>
     /// <param name="value">The enumerable to check.</param>
     /// <param name="count">The expected number of elements.</param>
+    /// <param name="message">Optional override for the assertion failure message.</param>
     /// <param name="valueEx">The expression that produced the enumerable.</param>
     /// <param name="countEx">The expression that produced the count.</param>
     /// <returns>The original enumerable.</returns>
@@ -25,6 +26,7 @@ public static class EnumerableExtensions
     public static IEnumerable<T> Has<T>(
         this IEnumerable<T> value,
         int count,
+        string? message = null,
         [CallerArgumentExpression(nameof(value))] string valueEx = "",
         [CallerArgumentExpression(nameof(count))] string countEx = ""
     )
@@ -33,7 +35,7 @@ public static class EnumerableExtensions
             throw new ArgumentNullException(nameof(value));
 
         var total = value.Count();
-        total.Is(count, $"{valueEx} count `{total}` != `{count.WrapWithExpression(countEx)}`");
+        total.Is(count, message ?? $"{valueEx} count `{total}` != `{count.WrapWithExpression(countEx)}`");
 
         return value;
     }
@@ -43,12 +45,14 @@ public static class EnumerableExtensions
     /// </summary>
     /// <typeparam name="T">The type of elements in the enumerable.</typeparam>
     /// <param name="value">The enumerable to check.</param>
+    /// <param name="message">Optional override for the assertion failure message.</param>
     /// <param name="valueEx">The expression that produced the enumerable.</param>
     /// <returns>The original enumerable.</returns>
     /// <exception cref="ArgumentNullException">Thrown when the enumerable is null.</exception>
     /// <exception cref="AssertionFailedException">Thrown when the enumerable is not empty.</exception>
     public static IEnumerable<T> IsEmpty<T>(
         this IEnumerable<T> value,
+        string? message = null,
         [CallerArgumentExpression(nameof(value))] string valueEx = ""
     )
     {
@@ -56,7 +60,7 @@ public static class EnumerableExtensions
             throw new ArgumentNullException(nameof(value));
 
         var total = value.Count();
-        total.Is(0, $"{valueEx} expected to be empty, but has `{total}` items");
+        total.Is(0, message ?? $"{valueEx} expected to be empty, but has `{total}` items");
 
         return value;
     }
@@ -66,12 +70,14 @@ public static class EnumerableExtensions
     /// </summary>
     /// <typeparam name="T">The type of elements in the enumerable.</typeparam>
     /// <param name="value">The enumerable to check.</param>
+    /// <param name="message">Optional override for the assertion failure message.</param>
     /// <param name="valueEx">The expression that produced the enumerable.</param>
     /// <returns>The original enumerable.</returns>
     /// <exception cref="ArgumentNullException">Thrown when the enumerable is null.</exception>
     /// <exception cref="AssertionFailedException">Thrown when the enumerable is empty.</exception>
     public static IEnumerable<T> IsNotEmpty<T>(
         this IEnumerable<T> value,
+        string? message = null,
         [CallerArgumentExpression(nameof(value))] string valueEx = ""
     )
     {
@@ -79,7 +85,7 @@ public static class EnumerableExtensions
             throw new ArgumentNullException(nameof(value));
 
         var total = value.Count();
-        total.IsNot(0, $"{valueEx} expected to be not empty");
+        total.IsNot(0, message ?? $"{valueEx} expected to be not empty");
 
         return value;
     }

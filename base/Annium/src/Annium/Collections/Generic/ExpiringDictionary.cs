@@ -130,10 +130,7 @@ public sealed class ExpiringDictionary<TKey, TValue> : IDisposable, IAsyncDispos
     /// <summary>
     /// Stops the background eviction timer and releases resources.
     /// </summary>
-    public void Dispose()
-    {
-        _store.Dispose();
-    }
+    public void Dispose() => _store.Dispose();
 
     /// <summary>
     /// Asynchronously stops the background eviction timer and releases resources. The drain is
@@ -141,9 +138,5 @@ public sealed class ExpiringDictionary<TKey, TValue> : IDisposable, IAsyncDispos
     /// that prefer <c>await using</c>.
     /// </summary>
     /// <returns>A completed <see cref="ValueTask"/>.</returns>
-    public ValueTask DisposeAsync()
-    {
-        Dispose();
-        return ValueTask.CompletedTask;
-    }
+    public ValueTask DisposeAsync() => _store.DisposeAsync();
 }

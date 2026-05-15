@@ -11,6 +11,7 @@ namespace Annium.Internal.Threading;
 /// </summary>
 /// <typeparam name="T">The type of the state object.</typeparam>
 internal sealed class DebounceTimer<T> : DebounceTimerBase
+    where T : class
 {
     /// <summary>
     /// The state object passed to the handler.
@@ -121,6 +122,12 @@ internal abstract class DebounceTimerBase : AsyncTimerGateBase, IDebounceTimer
     {
         _period = period;
     }
+
+    /// <summary>
+    /// Changes the time interval to wait before executing the handler.
+    /// </summary>
+    /// <param name="period">The new time interval.</param>
+    public void Change(TimeSpan period) => Change((int)period.TotalMilliseconds);
 
     /// <summary>
     /// Requests the timer to execute the handler after the specified period.

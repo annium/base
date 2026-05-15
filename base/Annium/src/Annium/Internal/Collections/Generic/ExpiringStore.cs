@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Threading;
+using System.Threading.Tasks;
 using NodaTime;
 
 namespace Annium.Internal.Collections.Generic;
@@ -13,7 +14,7 @@ namespace Annium.Internal.Collections.Generic;
 /// </summary>
 /// <typeparam name="TKey">The type of the keys.</typeparam>
 /// <typeparam name="TValue">The type of the values.</typeparam>
-internal sealed class ExpiringStore<TKey, TValue> : IDisposable
+internal sealed class ExpiringStore<TKey, TValue> : IDisposable, IAsyncDisposable
     where TKey : notnull
 {
     /// <summary>
@@ -149,6 +150,19 @@ internal sealed class ExpiringStore<TKey, TValue> : IDisposable
         }
         // Drain timed out: in-flight Evict() may still call WaitHandle.Set() after we return. Disposing the
         // handle now would crash the ThreadPool thread; leak it so the late Set is harmless.
+    }
+
+    /// <summary>
+    /// Asynchronously stops the background eviction timer and releases resources. The drain is
+    /// synchronous; this method exists so callers consuming this store via <see cref="IAsyncDisposable"/>
+    /// (e.g. <see cref="Annium.Collections.Generic.ExpiringCollection{T}"/> behind <c>await using</c>) need
+    /// not duplicate the <c>Dispose() + ValueTask.CompletedTask</c> shim.
+    /// </summary>
+    /// <returns>A completed <see cref="ValueTask"/>.</returns>
+    public ValueTask DisposeAsync()
+    {
+        Dispose();
+        return ValueTask.CompletedTask;
     }
 
     /// <summary>

@@ -111,4 +111,38 @@ public class NullableExtensionsTests
         var verifiedValue = await validValue.NotNullAsync();
         verifiedValue.Is(true);
     }
+
+    /// <summary>
+    /// Verifies that NotNullAsync on a ValueTask&lt;T?&gt; struct overload throws for a null result and
+    /// returns the value otherwise. Closes the TG6 ValueTask-overload gap from review-2026.05.15.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact]
+    public async Task EnsureNotNullAsync_ValueTask_Struct()
+    {
+        var nullValue = new ValueTask<bool?>((bool?)null);
+        var validValue = new ValueTask<bool?>((bool?)true);
+
+        await Wrap.It(async () => _ = await nullValue.NotNullAsync()).ThrowsAsync<NullReferenceException>();
+
+        var verified = await validValue.NotNullAsync();
+        verified.Is(true);
+    }
+
+    /// <summary>
+    /// Verifies that NotNullAsync on a ValueTask&lt;T?&gt; reference (class) overload throws for a null
+    /// result and returns the value otherwise. Closes the TG6 ValueTask reference-overload gap.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact]
+    public async Task EnsureNotNullAsync_ValueTask_Class()
+    {
+        var nullValue = new ValueTask<string?>((string?)null);
+        var validValue = new ValueTask<string?>("data");
+
+        await Wrap.It(async () => _ = await nullValue.NotNullAsync()).ThrowsAsync<NullReferenceException>();
+
+        var verified = await validValue.NotNullAsync();
+        verified.Is("data");
+    }
 }
