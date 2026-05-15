@@ -89,7 +89,7 @@ public class TestLogTests
                     log.Add(n++);
                 }
             },
-            cts.Token
+            TestContext.Current.CancellationToken
         );
 
         for (var i = 0; i < 200 && !cts.Token.IsCancellationRequested; i++)

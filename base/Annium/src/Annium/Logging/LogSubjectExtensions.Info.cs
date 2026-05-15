@@ -10,7 +10,7 @@ namespace Annium.Logging;
 /// </summary>
 public static partial class LogSubjectExtensions
 {
-    /// <summary>Logs a info-level message.</summary>
+    /// <summary>Logs an info-level message.</summary>
     /// <param name="subject">The log subject.</param>
     /// <param name="message">The message template.</param>
     /// <param name="file">The caller file path (auto-supplied).</param>
@@ -25,7 +25,7 @@ public static partial class LogSubjectExtensions
         [CallerLineNumber] int line = 0
     ) => subject.Log(LogLevel.Info, message, file, member, line);
 
-    /// <summary>Logs a info-level message with one parameter.</summary>
+    /// <summary>Logs an info-level message with one parameter.</summary>
     /// <typeparam name="T1">The type of the first parameter.</typeparam>
     /// <param name="subject">The log subject.</param>
     /// <param name="message">The message template.</param>
@@ -43,7 +43,7 @@ public static partial class LogSubjectExtensions
         [CallerLineNumber] int line = 0
     ) => subject.Log(LogLevel.Info, message, x1, file, member, line);
 
-    /// <summary>Logs a info-level message with two parameters.</summary>
+    /// <summary>Logs an info-level message with two parameters.</summary>
     /// <typeparam name="T1">The type of the first parameter.</typeparam>
     /// <typeparam name="T2">The type of the second parameter.</typeparam>
     /// <param name="subject">The log subject.</param>
@@ -64,7 +64,7 @@ public static partial class LogSubjectExtensions
         [CallerLineNumber] int line = 0
     ) => subject.Log(LogLevel.Info, message, x1, x2, file, member, line);
 
-    /// <summary>Logs a info-level message with three parameters.</summary>
+    /// <summary>Logs an info-level message with three parameters.</summary>
     /// <typeparam name="T1">The type of the first parameter.</typeparam>
     /// <typeparam name="T2">The type of the second parameter.</typeparam>
     /// <typeparam name="T3">The type of the third parameter.</typeparam>
@@ -88,7 +88,7 @@ public static partial class LogSubjectExtensions
         [CallerLineNumber] int line = 0
     ) => subject.Log(LogLevel.Info, message, x1, x2, x3, file, member, line);
 
-    /// <summary>Logs a info-level message with four parameters.</summary>
+    /// <summary>Logs an info-level message with four parameters.</summary>
     /// <typeparam name="T1">The type of the first parameter.</typeparam>
     /// <typeparam name="T2">The type of the second parameter.</typeparam>
     /// <typeparam name="T3">The type of the third parameter.</typeparam>
@@ -115,7 +115,7 @@ public static partial class LogSubjectExtensions
         [CallerLineNumber] int line = 0
     ) => subject.Log(LogLevel.Info, message, x1, x2, x3, x4, file, member, line);
 
-    /// <summary>Logs a info-level message with five parameters.</summary>
+    /// <summary>Logs an info-level message with five parameters.</summary>
     /// <typeparam name="T1">The type of the first parameter.</typeparam>
     /// <typeparam name="T2">The type of the second parameter.</typeparam>
     /// <typeparam name="T3">The type of the third parameter.</typeparam>
@@ -145,7 +145,7 @@ public static partial class LogSubjectExtensions
         [CallerLineNumber] int line = 0
     ) => subject.Log(LogLevel.Info, message, x1, x2, x3, x4, x5, file, member, line);
 
-    /// <summary>Logs a info-level message with six parameters.</summary>
+    /// <summary>Logs an info-level message with six parameters.</summary>
     /// <typeparam name="T1">The type of the first parameter.</typeparam>
     /// <typeparam name="T2">The type of the second parameter.</typeparam>
     /// <typeparam name="T3">The type of the third parameter.</typeparam>
@@ -178,7 +178,7 @@ public static partial class LogSubjectExtensions
         [CallerLineNumber] int line = 0
     ) => subject.Log(LogLevel.Info, message, x1, x2, x3, x4, x5, x6, file, member, line);
 
-    /// <summary>Logs a info-level message with seven parameters.</summary>
+    /// <summary>Logs an info-level message with seven parameters.</summary>
     /// <typeparam name="T1">The type of the first parameter.</typeparam>
     /// <typeparam name="T2">The type of the second parameter.</typeparam>
     /// <typeparam name="T3">The type of the third parameter.</typeparam>
@@ -214,7 +214,7 @@ public static partial class LogSubjectExtensions
         [CallerLineNumber] int line = 0
     ) => subject.Log(LogLevel.Info, message, x1, x2, x3, x4, x5, x6, x7, file, member, line);
 
-    /// <summary>Logs a info-level message with eight parameters.</summary>
+    /// <summary>Logs an info-level message with eight parameters.</summary>
     /// <typeparam name="T1">The type of the first parameter.</typeparam>
     /// <typeparam name="T2">The type of the second parameter.</typeparam>
     /// <typeparam name="T3">The type of the third parameter.</typeparam>
