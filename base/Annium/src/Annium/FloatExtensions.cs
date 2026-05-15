@@ -157,34 +157,6 @@ public static class FloatExtensions
     public static float Ceil(this float value) => (float)Math.Ceiling(value);
 
     /// <summary>
-    /// Ensures a float value is within a specified range.
-    /// </summary>
-    /// <param name="value">The value to check.</param>
-    /// <param name="min">The minimum allowed value.</param>
-    /// <param name="max">The maximum allowed value.</param>
-    /// <returns>The value if it is within the range, or the nearest boundary value if it is outside the range.</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static float Within(this float value, float min, float max) => value.Above(min).Below(max);
-
-    /// <summary>
-    /// Ensures a float value is not less than a specified minimum.
-    /// </summary>
-    /// <param name="value">The value to check.</param>
-    /// <param name="min">The minimum allowed value.</param>
-    /// <returns>The value if it is greater than or equal to the minimum, or the minimum value if it is less.</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static float Above(this float value, float min) => Math.Max(value, min);
-
-    /// <summary>
-    /// Ensures a float value is not greater than a specified maximum.
-    /// </summary>
-    /// <param name="value">The value to check.</param>
-    /// <param name="max">The maximum allowed value.</param>
-    /// <returns>The value if it is less than or equal to the maximum, or the maximum value if it is greater.</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static float Below(this float value, float max) => Math.Min(value, max);
-
-    /// <summary>
     /// Rounds a float value down to the nearest multiple of a specified step.
     /// </summary>
     /// <param name="value">The value to round. <see cref="float.NaN"/> and infinities propagate to the result.</param>

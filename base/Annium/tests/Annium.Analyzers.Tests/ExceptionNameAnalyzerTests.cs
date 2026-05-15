@@ -42,4 +42,77 @@ public sealed class ExceptionNameAnalyzerTests : CSharpAnalyzerTest<ExceptionNam
 
         await RunAsync(TestContext.Current.CancellationToken);
     }
+
+    /// <summary>
+    /// Verifies that the analyzer flags an indirect subclass of <see cref="System.Exception"/>
+    /// whose name does not end with "Exception".
+    /// </summary>
+    [Fact]
+    public async Task MultilevelInheritance_WrongName_ShowsWarning()
+    {
+        TestState.Sources.Add(
+            (
+                "Hierarchy.cs",
+                """
+public class MidException : System.Exception { }
+public class LeafError : MidException { }
+"""
+            )
+        );
+
+        ExpectedDiagnostics.Add(
+            new DiagnosticResult(Descriptors.An0001ExceptionNameFormat.Id, DiagnosticSeverity.Warning)
+                .WithMessage("LeafError class name should end with Exception")
+                .WithSpan("Hierarchy.cs", 2, 14, 2, 23)
+        );
+
+        await RunAsync(TestContext.Current.CancellationToken);
+    }
+
+    /// <summary>
+    /// Verifies that the analyzer ignores an abstract subclass whose name already ends with
+    /// "Exception".
+    /// </summary>
+    [Fact]
+    public async Task AbstractExceptionSubclass_CorrectName_Ignores()
+    {
+        TestState.Sources.Add(("AbstractEx.cs", "public abstract class FrameworkException : System.Exception { }"));
+
+        ExpectedDiagnostics.Clear();
+
+        await RunAsync(TestContext.Current.CancellationToken);
+    }
+
+    /// <summary>
+    /// Verifies that the analyzer does not flag types that are not classes — interfaces whose
+    /// name ends with "Exception" do not derive from System.Exception and must not warn.
+    /// </summary>
+    [Fact]
+    public async Task Interface_Ignores()
+    {
+        TestState.Sources.Add(("IFoo.cs", "public interface IFooException { }"));
+
+        ExpectedDiagnostics.Clear();
+
+        await RunAsync(TestContext.Current.CancellationToken);
+    }
+
+    /// <summary>
+    /// Verifies that the analyzer flags a partial class whose declarations are spread across files
+    /// when the name does not end with "Exception".
+    /// </summary>
+    [Fact]
+    public async Task PartialClass_WrongName_ShowsWarning()
+    {
+        TestState.Sources.Add(("PartA.cs", "public partial class PartialError : System.Exception { }"));
+        TestState.Sources.Add(("PartB.cs", "public partial class PartialError { public int Id; }"));
+
+        ExpectedDiagnostics.Add(
+            new DiagnosticResult(Descriptors.An0001ExceptionNameFormat.Id, DiagnosticSeverity.Warning)
+                .WithMessage("PartialError class name should end with Exception")
+                .WithSpan("PartA.cs", 1, 22, 1, 34)
+        );
+
+        await RunAsync(TestContext.Current.CancellationToken);
+    }
 }

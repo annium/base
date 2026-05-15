@@ -152,34 +152,6 @@ public static class DecimalExtensions
     public static decimal Ceil(this decimal value) => Math.Ceiling(value);
 
     /// <summary>
-    /// Ensures a decimal value is within a specified range.
-    /// </summary>
-    /// <param name="value">The value to check.</param>
-    /// <param name="min">The minimum allowed value.</param>
-    /// <param name="max">The maximum allowed value.</param>
-    /// <returns>The value if it is within the range, or the nearest boundary value if it is outside the range.</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static decimal Within(this decimal value, decimal min, decimal max) => value.Above(min).Below(max);
-
-    /// <summary>
-    /// Ensures a decimal value is not less than a specified minimum.
-    /// </summary>
-    /// <param name="value">The value to check.</param>
-    /// <param name="min">The minimum allowed value.</param>
-    /// <returns>The value if it is greater than or equal to the minimum, or the minimum value if it is less.</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static decimal Above(this decimal value, decimal min) => Math.Max(value, min);
-
-    /// <summary>
-    /// Ensures a decimal value is not greater than a specified maximum.
-    /// </summary>
-    /// <param name="value">The value to check.</param>
-    /// <param name="max">The maximum allowed value.</param>
-    /// <returns>The value if it is less than or equal to the maximum, or the maximum value if it is greater.</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static decimal Below(this decimal value, decimal max) => Math.Min(value, max);
-
-    /// <summary>
     /// Formats a decimal value to a "pretty" representation by removing unnecessary decimal places while maintaining a specified precision.
     /// </summary>
     /// <param name="value">The value to format.</param>

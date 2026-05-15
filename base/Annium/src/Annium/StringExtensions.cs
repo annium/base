@@ -290,6 +290,11 @@ public static class StringExtensions
     public static bool IsLike(this string str, string pattern) =>
         _likeCache.GetOrAdd(pattern, BuildLikeRegex).IsMatch(str);
 
+    /// <summary>
+    /// Builds the compiled regex used by <see cref="IsLike"/> from a wildcard pattern.
+    /// </summary>
+    /// <param name="pattern">The wildcard pattern (<c>*</c> for any sequence, <c>?</c> for any single character).</param>
+    /// <returns>A compiled, case-insensitive regex anchored at both ends.</returns>
     private static Regex BuildLikeRegex(string pattern)
     {
         var rePattern = "^" + Regex.Escape(pattern).Replace(@"\*", ".*").Replace(@"\?", ".") + "$";

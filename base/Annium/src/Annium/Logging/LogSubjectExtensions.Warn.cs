@@ -5,12 +5,17 @@ using System.Runtime.CompilerServices;
 namespace Annium.Logging;
 
 /// <summary>
-/// Provides extension methods for logging warning-level messages for <see cref="ILogSubject"/> instances.
+/// Provides extension methods for logging warn-level messages for <see cref="ILogSubject"/> instances.
 /// All overloads forward to <see cref="LogSubjectExtensions.Log"/> with <see cref="LogLevel.Warn"/>.
 /// </summary>
 public static partial class LogSubjectExtensions
 {
-    /// <summary>Logs a warning-level message.</summary>
+    /// <summary>Logs a warn-level message.</summary>
+    /// <param name="subject">The log subject.</param>
+    /// <param name="message">The message template.</param>
+    /// <param name="file">The caller file path (auto-supplied).</param>
+    /// <param name="member">The caller member name (auto-supplied).</param>
+    /// <param name="line">The caller line number (auto-supplied).</param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void Warn(
         this ILogSubject subject,
@@ -20,7 +25,14 @@ public static partial class LogSubjectExtensions
         [CallerLineNumber] int line = 0
     ) => subject.Log(LogLevel.Warn, message, file, member, line);
 
-    /// <summary>Logs a warning-level message with one parameter.</summary>
+    /// <summary>Logs a warn-level message with one parameter.</summary>
+    /// <typeparam name="T1">The type of the first parameter.</typeparam>
+    /// <param name="subject">The log subject.</param>
+    /// <param name="message">The message template.</param>
+    /// <param name="x1">The first parameter value.</param>
+    /// <param name="file">The caller file path (auto-supplied).</param>
+    /// <param name="member">The caller member name (auto-supplied).</param>
+    /// <param name="line">The caller line number (auto-supplied).</param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void Warn<T1>(
         this ILogSubject subject,
@@ -31,7 +43,16 @@ public static partial class LogSubjectExtensions
         [CallerLineNumber] int line = 0
     ) => subject.Log(LogLevel.Warn, message, x1, file, member, line);
 
-    /// <summary>Logs a warning-level message with two parameters.</summary>
+    /// <summary>Logs a warn-level message with two parameters.</summary>
+    /// <typeparam name="T1">The type of the first parameter.</typeparam>
+    /// <typeparam name="T2">The type of the second parameter.</typeparam>
+    /// <param name="subject">The log subject.</param>
+    /// <param name="message">The message template.</param>
+    /// <param name="x1">The first parameter value.</param>
+    /// <param name="x2">The second parameter value.</param>
+    /// <param name="file">The caller file path (auto-supplied).</param>
+    /// <param name="member">The caller member name (auto-supplied).</param>
+    /// <param name="line">The caller line number (auto-supplied).</param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void Warn<T1, T2>(
         this ILogSubject subject,
@@ -43,7 +64,18 @@ public static partial class LogSubjectExtensions
         [CallerLineNumber] int line = 0
     ) => subject.Log(LogLevel.Warn, message, x1, x2, file, member, line);
 
-    /// <summary>Logs a warning-level message with three parameters.</summary>
+    /// <summary>Logs a warn-level message with three parameters.</summary>
+    /// <typeparam name="T1">The type of the first parameter.</typeparam>
+    /// <typeparam name="T2">The type of the second parameter.</typeparam>
+    /// <typeparam name="T3">The type of the third parameter.</typeparam>
+    /// <param name="subject">The log subject.</param>
+    /// <param name="message">The message template.</param>
+    /// <param name="x1">The first parameter value.</param>
+    /// <param name="x2">The second parameter value.</param>
+    /// <param name="x3">The third parameter value.</param>
+    /// <param name="file">The caller file path (auto-supplied).</param>
+    /// <param name="member">The caller member name (auto-supplied).</param>
+    /// <param name="line">The caller line number (auto-supplied).</param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void Warn<T1, T2, T3>(
         this ILogSubject subject,
@@ -56,7 +88,20 @@ public static partial class LogSubjectExtensions
         [CallerLineNumber] int line = 0
     ) => subject.Log(LogLevel.Warn, message, x1, x2, x3, file, member, line);
 
-    /// <summary>Logs a warning-level message with four parameters.</summary>
+    /// <summary>Logs a warn-level message with four parameters.</summary>
+    /// <typeparam name="T1">The type of the first parameter.</typeparam>
+    /// <typeparam name="T2">The type of the second parameter.</typeparam>
+    /// <typeparam name="T3">The type of the third parameter.</typeparam>
+    /// <typeparam name="T4">The type of the fourth parameter.</typeparam>
+    /// <param name="subject">The log subject.</param>
+    /// <param name="message">The message template.</param>
+    /// <param name="x1">The first parameter value.</param>
+    /// <param name="x2">The second parameter value.</param>
+    /// <param name="x3">The third parameter value.</param>
+    /// <param name="x4">The fourth parameter value.</param>
+    /// <param name="file">The caller file path (auto-supplied).</param>
+    /// <param name="member">The caller member name (auto-supplied).</param>
+    /// <param name="line">The caller line number (auto-supplied).</param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void Warn<T1, T2, T3, T4>(
         this ILogSubject subject,
@@ -70,7 +115,22 @@ public static partial class LogSubjectExtensions
         [CallerLineNumber] int line = 0
     ) => subject.Log(LogLevel.Warn, message, x1, x2, x3, x4, file, member, line);
 
-    /// <summary>Logs a warning-level message with five parameters.</summary>
+    /// <summary>Logs a warn-level message with five parameters.</summary>
+    /// <typeparam name="T1">The type of the first parameter.</typeparam>
+    /// <typeparam name="T2">The type of the second parameter.</typeparam>
+    /// <typeparam name="T3">The type of the third parameter.</typeparam>
+    /// <typeparam name="T4">The type of the fourth parameter.</typeparam>
+    /// <typeparam name="T5">The type of the fifth parameter.</typeparam>
+    /// <param name="subject">The log subject.</param>
+    /// <param name="message">The message template.</param>
+    /// <param name="x1">The first parameter value.</param>
+    /// <param name="x2">The second parameter value.</param>
+    /// <param name="x3">The third parameter value.</param>
+    /// <param name="x4">The fourth parameter value.</param>
+    /// <param name="x5">The fifth parameter value.</param>
+    /// <param name="file">The caller file path (auto-supplied).</param>
+    /// <param name="member">The caller member name (auto-supplied).</param>
+    /// <param name="line">The caller line number (auto-supplied).</param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void Warn<T1, T2, T3, T4, T5>(
         this ILogSubject subject,
@@ -85,7 +145,24 @@ public static partial class LogSubjectExtensions
         [CallerLineNumber] int line = 0
     ) => subject.Log(LogLevel.Warn, message, x1, x2, x3, x4, x5, file, member, line);
 
-    /// <summary>Logs a warning-level message with six parameters.</summary>
+    /// <summary>Logs a warn-level message with six parameters.</summary>
+    /// <typeparam name="T1">The type of the first parameter.</typeparam>
+    /// <typeparam name="T2">The type of the second parameter.</typeparam>
+    /// <typeparam name="T3">The type of the third parameter.</typeparam>
+    /// <typeparam name="T4">The type of the fourth parameter.</typeparam>
+    /// <typeparam name="T5">The type of the fifth parameter.</typeparam>
+    /// <typeparam name="T6">The type of the sixth parameter.</typeparam>
+    /// <param name="subject">The log subject.</param>
+    /// <param name="message">The message template.</param>
+    /// <param name="x1">The first parameter value.</param>
+    /// <param name="x2">The second parameter value.</param>
+    /// <param name="x3">The third parameter value.</param>
+    /// <param name="x4">The fourth parameter value.</param>
+    /// <param name="x5">The fifth parameter value.</param>
+    /// <param name="x6">The sixth parameter value.</param>
+    /// <param name="file">The caller file path (auto-supplied).</param>
+    /// <param name="member">The caller member name (auto-supplied).</param>
+    /// <param name="line">The caller line number (auto-supplied).</param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void Warn<T1, T2, T3, T4, T5, T6>(
         this ILogSubject subject,
@@ -101,7 +178,26 @@ public static partial class LogSubjectExtensions
         [CallerLineNumber] int line = 0
     ) => subject.Log(LogLevel.Warn, message, x1, x2, x3, x4, x5, x6, file, member, line);
 
-    /// <summary>Logs a warning-level message with seven parameters.</summary>
+    /// <summary>Logs a warn-level message with seven parameters.</summary>
+    /// <typeparam name="T1">The type of the first parameter.</typeparam>
+    /// <typeparam name="T2">The type of the second parameter.</typeparam>
+    /// <typeparam name="T3">The type of the third parameter.</typeparam>
+    /// <typeparam name="T4">The type of the fourth parameter.</typeparam>
+    /// <typeparam name="T5">The type of the fifth parameter.</typeparam>
+    /// <typeparam name="T6">The type of the sixth parameter.</typeparam>
+    /// <typeparam name="T7">The type of the seventh parameter.</typeparam>
+    /// <param name="subject">The log subject.</param>
+    /// <param name="message">The message template.</param>
+    /// <param name="x1">The first parameter value.</param>
+    /// <param name="x2">The second parameter value.</param>
+    /// <param name="x3">The third parameter value.</param>
+    /// <param name="x4">The fourth parameter value.</param>
+    /// <param name="x5">The fifth parameter value.</param>
+    /// <param name="x6">The sixth parameter value.</param>
+    /// <param name="x7">The seventh parameter value.</param>
+    /// <param name="file">The caller file path (auto-supplied).</param>
+    /// <param name="member">The caller member name (auto-supplied).</param>
+    /// <param name="line">The caller line number (auto-supplied).</param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void Warn<T1, T2, T3, T4, T5, T6, T7>(
         this ILogSubject subject,
@@ -118,7 +214,28 @@ public static partial class LogSubjectExtensions
         [CallerLineNumber] int line = 0
     ) => subject.Log(LogLevel.Warn, message, x1, x2, x3, x4, x5, x6, x7, file, member, line);
 
-    /// <summary>Logs a warning-level message with eight parameters.</summary>
+    /// <summary>Logs a warn-level message with eight parameters.</summary>
+    /// <typeparam name="T1">The type of the first parameter.</typeparam>
+    /// <typeparam name="T2">The type of the second parameter.</typeparam>
+    /// <typeparam name="T3">The type of the third parameter.</typeparam>
+    /// <typeparam name="T4">The type of the fourth parameter.</typeparam>
+    /// <typeparam name="T5">The type of the fifth parameter.</typeparam>
+    /// <typeparam name="T6">The type of the sixth parameter.</typeparam>
+    /// <typeparam name="T7">The type of the seventh parameter.</typeparam>
+    /// <typeparam name="T8">The type of the eighth parameter.</typeparam>
+    /// <param name="subject">The log subject.</param>
+    /// <param name="message">The message template.</param>
+    /// <param name="x1">The first parameter value.</param>
+    /// <param name="x2">The second parameter value.</param>
+    /// <param name="x3">The third parameter value.</param>
+    /// <param name="x4">The fourth parameter value.</param>
+    /// <param name="x5">The fifth parameter value.</param>
+    /// <param name="x6">The sixth parameter value.</param>
+    /// <param name="x7">The seventh parameter value.</param>
+    /// <param name="x8">The eighth parameter value.</param>
+    /// <param name="file">The caller file path (auto-supplied).</param>
+    /// <param name="member">The caller member name (auto-supplied).</param>
+    /// <param name="line">The caller line number (auto-supplied).</param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void Warn<T1, T2, T3, T4, T5, T6, T7, T8>(
         this ILogSubject subject,

@@ -96,4 +96,46 @@ public class Sample : ILogSubject
 
         await RunAsync(TestContext.Current.CancellationToken);
     }
+
+    /// <summary>
+    /// Verifies that the analyzer shows a warning for string-concatenated log message templates.
+    /// </summary>
+    [Fact]
+    public async Task StringConcatTemplate_ShowsWarning()
+    {
+        ReferenceAssemblies = new ReferenceAssemblies(
+            ReferenceAssemblies.NetStandard.NetStandard21.TargetFramework,
+            ReferenceAssemblies.NetStandard.NetStandard21.ReferenceAssemblyPackage,
+            Directory.GetCurrentDirectory()
+        ).AddAssemblies([typeof(ILogSubject).Assembly.GetName().Name!]);
+
+        TestCode = """
+using Annium.Logging;
+
+namespace Test;
+
+public class Sample : ILogSubject
+{
+    public ILogger Logger { get; }
+
+    public Sample(ILogger logger)
+    {
+        Logger = logger;
+    }
+
+    public void Setup(string suffix)
+    {
+        this.Trace("run for " + suffix);
+    }
+}
+""";
+
+        ExpectedDiagnostics.Add(
+            new DiagnosticResult(Descriptors.Log0001DynamicLogMessageTemplate.Id, DiagnosticSeverity.Warning)
+                .WithMessage("Call message template is non-constant")
+                .WithSpan(16, 9, 16, 40)
+        );
+
+        await RunAsync(TestContext.Current.CancellationToken);
+    }
 }
