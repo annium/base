@@ -280,15 +280,7 @@ public static partial class LogSubjectExtensions
     )
     {
         if (IsEnabled(level))
-            subject.Logger.Log(
-                subject,
-                file,
-                member,
-                line,
-                level,
-                message,
-                [x1, x2, x3, x4, x5, x6, x7]
-            );
+            subject.Logger.Log(subject, file, member, line, level, message, [x1, x2, x3, x4, x5, x6, x7]);
     }
 
     /// <summary>
@@ -335,14 +327,6 @@ public static partial class LogSubjectExtensions
     )
     {
         if (IsEnabled(level))
-            subject.Logger.Log(
-                subject,
-                file,
-                member,
-                line,
-                level,
-                message,
-                [x1, x2, x3, x4, x5, x6, x7, x8]
-            );
+            subject.Logger.Log(subject, file, member, line, level, message, [x1, x2, x3, x4, x5, x6, x7, x8]);
     }
 }

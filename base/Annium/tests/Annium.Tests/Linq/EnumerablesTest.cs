@@ -17,8 +17,7 @@ public class EnumerablesTest
 
     /// <summary>Range&lt;int&gt; with a multi step skips by that amount.</summary>
     [Fact]
-    public void Range_Int_MultiStep_SkipsByStep() =>
-        Enumerables.Range(0, 4, 3).ToArray().IsEqual(new[] { 0, 3, 6, 9 });
+    public void Range_Int_MultiStep_SkipsByStep() => Enumerables.Range(0, 4, 3).ToArray().IsEqual(new[] { 0, 3, 6, 9 });
 
     /// <summary>Range&lt;int&gt; with a negative step counts down.</summary>
     [Fact]

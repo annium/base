@@ -91,7 +91,11 @@ public static class GetTargetImplementationExtension
     /// <param name="target">The target type to resolve against.</param>
     /// <param name="genericParameters">A set of known generic parameters to avoid cyclic recursion.</param>
     /// <returns>The <see cref="Type"/> representing the implementation, or <c>null</c> if not found.</returns>
-    private static Type? GetStructImplementationOfTarget(this Type type, Type target, HashSet<Type> genericParameters) =>
+    private static Type? GetStructImplementationOfTarget(
+        this Type type,
+        Type target,
+        HashSet<Type> genericParameters
+    ) =>
         target switch
         {
             { IsGenericParameter: true } => type.GetStructImplementationOfGenericParameter(target, genericParameters),
@@ -115,7 +119,10 @@ public static class GetTargetImplementationExtension
     ) =>
         target switch
         {
-            { IsGenericParameter: true } => type.GetInterfaceImplementationOfGenericParameter(target, genericParameters),
+            { IsGenericParameter: true } => type.GetInterfaceImplementationOfGenericParameter(
+                target,
+                genericParameters
+            ),
             { IsClass: true } => null,
             { IsValueType: true } => null,
             { IsInterface: true } => type.GetInterfaceImplementationOfInterface(target, genericParameters),
@@ -200,17 +207,11 @@ public static class GetTargetImplementationExtension
     /// <param name="target">The target interface to resolve against.</param>
     /// <param name="genericParameters">A set of known generic parameters to avoid cyclic recursion.</param>
     /// <returns>The <see cref="Type"/> representing the implementation, or <c>null</c> if not found.</returns>
-    private static Type? GetClassImplementationOfInterface(this Type type, Type target, HashSet<Type> genericParameters)
-    {
-        var targetBase = target.GetGenericTypeDefinition();
-        var implementation = type.GetInterfaces()
-            .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == targetBase);
-
-        if (implementation is null)
-            return null;
-
-        return BuildImplementation(implementation, target, genericParameters);
-    }
+    private static Type? GetClassImplementationOfInterface(
+        this Type type,
+        Type target,
+        HashSet<Type> genericParameters
+    ) => FindInterfaceImplementation(type, target, genericParameters);
 
     /// <summary>
     /// Gets the implementation of a generic parameter by a struct type.
@@ -274,11 +275,24 @@ public static class GetTargetImplementationExtension
         this Type type,
         Type target,
         HashSet<Type> genericParameters
-    )
+    ) => FindInterfaceImplementation(type, target, genericParameters);
+
+    /// <summary>
+    /// Finds the interface among <paramref name="type"/>'s implemented interfaces whose generic
+    /// type definition matches that of <paramref name="target"/>, then builds the concrete
+    /// implementation. Shared body for class-of-interface and struct-of-interface lookups.
+    /// </summary>
+    /// <param name="type">The type (class or struct) to scan for implementations.</param>
+    /// <param name="target">The target interface to resolve against.</param>
+    /// <param name="genericParameters">A set of known generic parameters to avoid cyclic recursion.</param>
+    /// <returns>The <see cref="Type"/> representing the implementation, or <c>null</c> if not found.</returns>
+    private static Type? FindInterfaceImplementation(Type type, Type target, HashSet<Type> genericParameters)
     {
         var targetBase = target.GetGenericTypeDefinition();
-        var implementation = type.GetInterfaces()
-            .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == targetBase);
+        var implementation = Array.Find(
+            type.GetInterfaces(),
+            i => i.IsGenericType && i.GetGenericTypeDefinition() == targetBase
+        );
 
         if (implementation is null)
             return null;
@@ -332,9 +346,8 @@ public static class GetTargetImplementationExtension
     )
     {
         var targetBase = target.GetGenericTypeDefinition();
-        var implementation = type.GetInterfaces()
-            .Append(type)
-            .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == targetBase);
+        Type[] candidates = [.. type.GetInterfaces(), type];
+        var implementation = Array.Find(candidates, i => i.IsGenericType && i.GetGenericTypeDefinition() == targetBase);
 
         if (implementation is null)
             return null;
@@ -356,23 +369,25 @@ public static class GetTargetImplementationExtension
 
         var implementationArgs = implementation.GetGenericArguments();
         var targetArgs = target.GenericTypeArguments;
-        var args = targetArgs
-            .Zip(
-                implementationArgs,
-                (targetArg, implementationArg) =>
-                {
-                    // special case to avoid recursion
-                    if (genericParameters.Contains(targetArg))
-                        return implementationArg;
-                    // if targetArg is generic parameter, or contains those - go resolve deeper
-                    return targetArg.ContainsGenericParameters
-                        ? implementationArg.GetTargetImplementation(targetArg)
-                        : targetArg;
-                }
-            )
-            .ToArray();
-        if (args.Any(arg => arg is null))
-            return null;
+        var args = new Type?[targetArgs.Length];
+        for (var i = 0; i < targetArgs.Length; i++)
+        {
+            var targetArg = targetArgs[i];
+            var implementationArg = implementationArgs[i];
+            // special case to avoid recursion
+            if (genericParameters.Contains(targetArg))
+                args[i] = implementationArg;
+            // if targetArg is generic parameter, or contains those - go resolve deeper
+            else
+                args[i] = targetArg.ContainsGenericParameters
+                    ? implementationArg.GetTargetImplementation(targetArg)
+                    : targetArg;
+        }
+        foreach (var arg in args)
+        {
+            if (arg is null)
+                return null;
+        }
 
         if (!target.GetGenericTypeDefinition().TryMakeGenericType(out var result, args!))
             return null;

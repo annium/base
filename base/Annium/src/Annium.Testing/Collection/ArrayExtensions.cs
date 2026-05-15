@@ -44,6 +44,7 @@ public static class ArrayExtensions
     /// <typeparam name="T">The type of elements in the array.</typeparam>
     /// <param name="value">The array to check.</param>
     /// <param name="count">The expected number of elements.</param>
+    /// <param name="message">The message to include in the exception if the assertion fails.</param>
     /// <param name="valueEx">The expression that produced the array.</param>
     /// <param name="countEx">The expression that produced the count.</param>
     /// <returns>The original array.</returns>
@@ -52,6 +53,7 @@ public static class ArrayExtensions
     public static T[] Has<T>(
         this T[] value,
         int count,
+        string? message = null,
         [CallerArgumentExpression(nameof(value))] string valueEx = "",
         [CallerArgumentExpression(nameof(count))] string countEx = ""
     )
@@ -60,7 +62,7 @@ public static class ArrayExtensions
             throw new ArgumentNullException(nameof(value));
 
         var total = value.Length;
-        total.Is(count, $"{valueEx} length `{total}` != `{count.WrapWithExpression(countEx)}`");
+        total.Is(count, message ?? $"{valueEx} length `{total}` != `{count.WrapWithExpression(countEx)}`");
 
         return value;
     }
@@ -70,17 +72,22 @@ public static class ArrayExtensions
     /// </summary>
     /// <typeparam name="T">The type of elements in the array.</typeparam>
     /// <param name="value">The array to check.</param>
+    /// <param name="message">The message to include in the exception if the assertion fails.</param>
     /// <param name="valueEx">The expression that produced the array.</param>
     /// <returns>The original array.</returns>
     /// <exception cref="ArgumentNullException">Thrown when the array is null.</exception>
     /// <exception cref="AssertionFailedException">Thrown when the array is not empty.</exception>
-    public static T[] IsEmpty<T>(this T[] value, [CallerArgumentExpression(nameof(value))] string valueEx = "")
+    public static T[] IsEmpty<T>(
+        this T[] value,
+        string? message = null,
+        [CallerArgumentExpression(nameof(value))] string valueEx = ""
+    )
     {
         if (value is null)
             throw new ArgumentNullException(nameof(value));
 
         var total = value.Length;
-        total.Is(0, $"{valueEx} expected to be empty, but has `{total}` items");
+        total.Is(0, message ?? $"{valueEx} expected to be empty, but has `{total}` items");
 
         return value;
     }
@@ -90,17 +97,22 @@ public static class ArrayExtensions
     /// </summary>
     /// <typeparam name="T">The type of elements in the array.</typeparam>
     /// <param name="value">The array to check.</param>
+    /// <param name="message">The message to include in the exception if the assertion fails.</param>
     /// <param name="valueEx">The expression that produced the array.</param>
     /// <returns>The original array.</returns>
     /// <exception cref="ArgumentNullException">Thrown when the array is null.</exception>
     /// <exception cref="AssertionFailedException">Thrown when the array is empty.</exception>
-    public static T[] IsNotEmpty<T>(this T[] value, [CallerArgumentExpression(nameof(value))] string valueEx = "")
+    public static T[] IsNotEmpty<T>(
+        this T[] value,
+        string? message = null,
+        [CallerArgumentExpression(nameof(value))] string valueEx = ""
+    )
     {
         if (value is null)
             throw new ArgumentNullException(nameof(value));
 
         var total = value.Length;
-        total.IsNot(0, $"{valueEx} expected to be not empty");
+        total.IsNot(0, message ?? $"{valueEx} expected to be not empty");
 
         return value;
     }

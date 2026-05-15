@@ -47,4 +47,34 @@ public class EnumerableExtensionsTests
         var arr = new[] { 10, 20, 30 };
         Assert.Equal(20, arr.At(1));
     }
+
+    /// <summary>Has(count, message) puts the custom message into the thrown exception.</summary>
+    [Fact]
+    public void Has_CustomMessage_AppearsInException()
+    {
+        var ex = Assert.Throws<AssertionFailedException>(() =>
+            new List<int> { 1, 2 }.Has(3, "domain-specific count message")
+        );
+        Assert.Equal("domain-specific count message", ex.Message);
+    }
+
+    /// <summary>IsEmpty(message) puts the custom message into the thrown exception.</summary>
+    [Fact]
+    public void IsEmpty_CustomMessage_AppearsInException()
+    {
+        var ex = Assert.Throws<AssertionFailedException>(() =>
+            new List<int> { 1 }.IsEmpty("expected nothing remaining")
+        );
+        Assert.Equal("expected nothing remaining", ex.Message);
+    }
+
+    /// <summary>IsNotEmpty(message) puts the custom message into the thrown exception.</summary>
+    [Fact]
+    public void IsNotEmpty_CustomMessage_AppearsInException()
+    {
+        var ex = Assert.Throws<AssertionFailedException>(() =>
+            new List<int>().IsNotEmpty("expected at least one item")
+        );
+        Assert.Equal("expected at least one item", ex.Message);
+    }
 }

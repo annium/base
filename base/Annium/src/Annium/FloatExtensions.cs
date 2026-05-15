@@ -13,7 +13,6 @@ public static class FloatExtensions
     /// </summary>
     private const string StepError = "Step must be a positive, finite number.";
 
-
     /// <summary>
     /// Calculates the relative difference between two float values.
     /// </summary>

@@ -32,9 +32,7 @@ public sealed class AsyncLazy<T>
         // task.Result on a successfully-completed task is non-blocking — analyzer is being
         // conservative here.
 #pragma warning disable VSTHRD103
-        return task.IsCompletedSuccessfully
-            ? new ValueTask<T>(task.Result)
-            : new ValueTask<T>(task.WaitAsync(ct));
+        return task.IsCompletedSuccessfully ? new ValueTask<T>(task.Result) : new ValueTask<T>(task.WaitAsync(ct));
 #pragma warning restore VSTHRD103
     }
 
@@ -53,19 +51,7 @@ public sealed class AsyncLazy<T>
     /// </summary>
     /// <param name="factory">The delegate that is invoked on a background thread to produce the value when it is needed.</param>
     public AsyncLazy(Func<T> factory)
-    {
-#pragma warning disable VSTHRD011
-        _instance = new Lazy<Task<T>>(
-#pragma warning restore VSTHRD011
-            async () =>
-            {
-                var value = await Task.Run(factory).ConfigureAwait(false);
-                _isValueCreated = true;
-                return value;
-            },
-            isThreadSafe: true
-        );
-    }
+        : this(() => Task.FromResult(factory())) { }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AsyncLazy{T}"/> class with an asynchronous factory.

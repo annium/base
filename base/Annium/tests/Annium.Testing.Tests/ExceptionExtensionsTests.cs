@@ -111,8 +111,8 @@ public class ExceptionExtensionsTests
     {
         var task = Task.FromResult(Sample("alpha beta"));
 
-        await Assert.ThrowsAsync<AssertionFailedException>(
-            async () => await task.ReportsAllAsync(["alpha", "missing"])
+        await Assert.ThrowsAsync<AssertionFailedException>(async () =>
+            await task.ReportsAllAsync(["alpha", "missing"])
         );
     }
 

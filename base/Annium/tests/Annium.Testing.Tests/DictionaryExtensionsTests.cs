@@ -11,7 +11,8 @@ namespace Annium.Testing.Tests;
 public class DictionaryExtensionsTests
 {
     private static IDictionary<string, int> MutableSample => new Dictionary<string, int> { ["a"] = 1, ["b"] = 2 };
-    private static IReadOnlyDictionary<string, int> ReadOnlySample => new Dictionary<string, int> { ["a"] = 1, ["b"] = 2 };
+    private static IReadOnlyDictionary<string, int> ReadOnlySample =>
+        new Dictionary<string, int> { ["a"] = 1, ["b"] = 2 };
 
     /// <summary>Verifies At returns the value for an existing key on IDictionary.</summary>
     [Fact]
@@ -171,5 +172,65 @@ public class DictionaryExtensionsTests
         IReadOnlyDictionary<string, int> dict = new Dictionary<string, int>();
 
         Assert.Throws<AssertionFailedException>(() => dict.IsNotEmpty());
+    }
+
+    /// <summary>Has(count, message) puts the custom message into the thrown exception (IDictionary).</summary>
+    [Fact]
+    public void Has_IDictionary_CustomMessage_AppearsInException()
+    {
+        var dict = MutableSample;
+
+        var ex = Assert.Throws<AssertionFailedException>(() => dict.Has(99, "dict count msg"));
+        Assert.Equal("dict count msg", ex.Message);
+    }
+
+    /// <summary>Has(count, message) puts the custom message into the thrown exception (IReadOnlyDictionary).</summary>
+    [Fact]
+    public void Has_IReadOnlyDictionary_CustomMessage_AppearsInException()
+    {
+        var dict = ReadOnlySample;
+
+        var ex = Assert.Throws<AssertionFailedException>(() => dict.Has(99, "ro dict count msg"));
+        Assert.Equal("ro dict count msg", ex.Message);
+    }
+
+    /// <summary>IsEmpty(message) puts the custom message into the thrown exception (IDictionary).</summary>
+    [Fact]
+    public void IsEmpty_IDictionary_CustomMessage_AppearsInException()
+    {
+        var dict = MutableSample;
+
+        var ex = Assert.Throws<AssertionFailedException>(() => dict.IsEmpty("must be empty"));
+        Assert.Equal("must be empty", ex.Message);
+    }
+
+    /// <summary>IsEmpty(message) puts the custom message into the thrown exception (IReadOnlyDictionary).</summary>
+    [Fact]
+    public void IsEmpty_IReadOnlyDictionary_CustomMessage_AppearsInException()
+    {
+        var dict = ReadOnlySample;
+
+        var ex = Assert.Throws<AssertionFailedException>(() => dict.IsEmpty("ro must be empty"));
+        Assert.Equal("ro must be empty", ex.Message);
+    }
+
+    /// <summary>IsNotEmpty(message) puts the custom message into the thrown exception (IDictionary).</summary>
+    [Fact]
+    public void IsNotEmpty_IDictionary_CustomMessage_AppearsInException()
+    {
+        IDictionary<string, int> dict = new Dictionary<string, int>();
+
+        var ex = Assert.Throws<AssertionFailedException>(() => dict.IsNotEmpty("need entries"));
+        Assert.Equal("need entries", ex.Message);
+    }
+
+    /// <summary>IsNotEmpty(message) puts the custom message into the thrown exception (IReadOnlyDictionary).</summary>
+    [Fact]
+    public void IsNotEmpty_IReadOnlyDictionary_CustomMessage_AppearsInException()
+    {
+        IReadOnlyDictionary<string, int> dict = new Dictionary<string, int>();
+
+        var ex = Assert.Throws<AssertionFailedException>(() => dict.IsNotEmpty("ro need entries"));
+        Assert.Equal("ro need entries", ex.Message);
     }
 }

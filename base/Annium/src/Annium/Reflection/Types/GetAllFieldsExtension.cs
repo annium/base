@@ -6,8 +6,8 @@ namespace Annium.Reflection;
 
 /// <summary>
 /// Provides extension methods for retrieving all fields from a <see cref="Type"/>, including
-/// fields declared on every interface the type implements. Contrast with <see cref="GetInheritanceChainExtension"/>,
-/// which walks only the class hierarchy.
+/// fields declared on every interface the type implements. For the type's own members and its
+/// base-class chain only (no interface inclusion), use the BCL <c>Type.GetFields(BindingFlags)</c>.
 /// </summary>
 public static class GetAllFieldsExtension
 {

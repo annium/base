@@ -21,8 +21,7 @@ public class IPEndPointsTests
     [Fact]
     public async Task ParseAsync_InvalidDefaultPort_Negative_Throws()
     {
-        await Wrap
-            .It(async () => await IPEndPoints.ParseAsync("127.0.0.1:80", defaultPort: -1))
+        await Wrap.It(async () => await IPEndPoints.ParseAsync("127.0.0.1:80", defaultPort: -1))
             .ThrowsAsync<System.ArgumentOutOfRangeException>();
     }
 
@@ -34,8 +33,7 @@ public class IPEndPointsTests
     [Fact]
     public async Task ParseAsync_InvalidDefaultPort_TooLarge_Throws()
     {
-        await Wrap
-            .It(async () => await IPEndPoints.ParseAsync("127.0.0.1:80", defaultPort: 65536))
+        await Wrap.It(async () => await IPEndPoints.ParseAsync("127.0.0.1:80", defaultPort: 65536))
             .ThrowsAsync<System.ArgumentOutOfRangeException>();
     }
 
@@ -59,7 +57,11 @@ public class IPEndPointsTests
     [Fact]
     public async Task ParseAsync_IpLiteral_NoPort_UsesDefaultPort()
     {
-        var endpoint = await IPEndPoints.ParseAsync("127.0.0.1", defaultPort: 9000, ct: TestContext.Current.CancellationToken);
+        var endpoint = await IPEndPoints.ParseAsync(
+            "127.0.0.1",
+            defaultPort: 9000,
+            ct: TestContext.Current.CancellationToken
+        );
 
         endpoint.Address.Is(IPAddress.Loopback);
         endpoint.Port.Is(9000);

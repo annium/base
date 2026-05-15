@@ -22,6 +22,12 @@ internal sealed class ExpiringStore<TKey, TValue> : IDisposable, IAsyncDisposabl
     /// </summary>
     internal static readonly TimeSpan DefaultEvictionInterval = TimeSpan.FromMinutes(1);
 
+    /// <summary>
+    /// The drain budget for <see cref="Dispose"/> when waiting for an in-flight <see cref="Evict"/> callback
+    /// to complete. Evict is a tight pass over the dictionary; 1s is plenty.
+    /// </summary>
+    internal static readonly TimeSpan EvictionDrainTimeout = TimeSpan.FromSeconds(1);
+
     /// <summary>The time provider used to determine the current instant when checking entry expiry.</summary>
     private readonly ITimeProvider _timeProvider;
 
@@ -142,8 +148,7 @@ internal sealed class ExpiringStore<TKey, TValue> : IDisposable, IAsyncDisposabl
 
         var drained = new ManualResetEvent(false);
         _evictionTimer.Dispose(drained);
-        // Evict() is a small, fast pass over the dictionary; a tight 1s budget is plenty.
-        if (drained.WaitOne(TimeSpan.FromSeconds(1)))
+        if (drained.WaitOne(EvictionDrainTimeout))
         {
             drained.Dispose();
             return;

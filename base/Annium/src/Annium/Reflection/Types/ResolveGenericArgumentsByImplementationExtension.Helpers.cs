@@ -68,19 +68,13 @@ public static partial class ResolveGenericArgumentsByImplementationExtension
             return false;
 
         target = implementation;
-        Type[] sourceArgs;
-        Type[] targetArgs;
-        if (target.IsArray)
+        (Type[]? sourceArgs, Type[]? targetArgs) = target switch
         {
-            sourceArgs = [source.GetElementType()!];
-            targetArgs = [target.GetElementType()!];
-        }
-        else if (target.IsGenericType)
-        {
-            sourceArgs = source.GetGenericArguments();
-            targetArgs = target.GetGenericArguments();
-        }
-        else
+            { IsArray: true } => (new[] { source.GetElementType()! }, new[] { target.GetElementType()! }),
+            { IsGenericType: true } => (source.GetGenericArguments(), target.GetGenericArguments()),
+            _ => (null, null),
+        };
+        if (sourceArgs is null || targetArgs is null)
             return false;
 
         for (var i = 0; i < sourceArgs.Length; i++)

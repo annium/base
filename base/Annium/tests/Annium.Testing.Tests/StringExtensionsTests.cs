@@ -53,9 +53,7 @@ public class StringExtensionsTests
     [Fact]
     public void IsContainingAll_UsesCustomMessage()
     {
-        var ex = Assert.Throws<AssertionFailedException>(
-            () => "alpha".IsContainingAll(["beta"], message: "need beta")
-        );
+        var ex = Assert.Throws<AssertionFailedException>(() => "alpha".IsContainingAll(["beta"], message: "need beta"));
 
         Assert.Equal("need beta", ex.Message);
     }
@@ -80,8 +78,8 @@ public class StringExtensionsTests
     [Fact]
     public void IsNotContaining_UsesCustomMessage()
     {
-        var ex = Assert.Throws<AssertionFailedException>(
-            () => "alpha".IsNotContaining("alpha", message: "should not contain alpha")
+        var ex = Assert.Throws<AssertionFailedException>(() =>
+            "alpha".IsNotContaining("alpha", message: "should not contain alpha")
         );
 
         Assert.Equal("should not contain alpha", ex.Message);

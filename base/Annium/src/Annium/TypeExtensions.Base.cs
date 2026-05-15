@@ -12,8 +12,7 @@ public static class TypeBaseExtensions
     /// </summary>
     /// <param name="type">The type to get the default value for.</param>
     /// <returns>The default value for the type. For value types, this is an instance with all fields set to their default values. For reference types, this is null.</returns>
-    public static object? DefaultValue(this Type type) =>
-        type.IsValueType ? Activator.CreateInstance(type) : null;
+    public static object? DefaultValue(this Type type) => type.IsValueType ? Activator.CreateInstance(type) : null;
 
     /// <summary>
     /// Determines whether the specified type is a scalar type.

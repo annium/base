@@ -98,13 +98,20 @@ public class LogSubjectExtensionsLevelTests
             IReadOnlyList<object?> data
         ) => Entries.Add(new CapturedEntry(level, message, data));
 
-        public void Error(object subject, string file, string member, int line, Exception ex, IReadOnlyList<object?> data) =>
-            Entries.Add(new CapturedEntry(LogLevel.Error, ex.Message, data));
+        public void Error(
+            object subject,
+            string file,
+            string member,
+            int line,
+            Exception ex,
+            IReadOnlyList<object?> data
+        ) => Entries.Add(new CapturedEntry(LogLevel.Error, ex.Message, data));
     }
 
     private sealed class TestSubject : ILogSubject
     {
         public TestSubject(ILogger logger) => Logger = logger;
+
         public ILogger Logger { get; }
     }
 }

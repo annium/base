@@ -104,11 +104,9 @@ public class TimeSpanExtensionsTest
 
     /// <summary>CeilToHour rounds up to the next hour.</summary>
     [Fact]
-    public void CeilToHour_RoundsUpToNextHour() =>
-        TimeSpan.FromMinutes(61).CeilToHour().Is(TimeSpan.FromHours(2));
+    public void CeilToHour_RoundsUpToNextHour() => TimeSpan.FromMinutes(61).CeilToHour().Is(TimeSpan.FromHours(2));
 
     /// <summary>FloorToDay rounds down to the day.</summary>
     [Fact]
-    public void FloorToDay_RoundsDownToDay() =>
-        TimeSpan.FromHours(25).FloorToDay().Is(TimeSpan.FromDays(1));
+    public void FloorToDay_RoundsDownToDay() => TimeSpan.FromHours(25).FloorToDay().Is(TimeSpan.FromDays(1));
 }

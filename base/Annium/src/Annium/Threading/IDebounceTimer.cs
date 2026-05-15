@@ -21,7 +21,7 @@ public interface IDebounceTimer : IDisposable, IAsyncDisposable
     /// <summary>
     /// Changes the period of the debounce timer.
     /// </summary>
-    /// <param name="period">The new period.</param>
+    /// <param name="period">The new debounce interval. Must fit in <see cref="int"/> milliseconds (~24.85 days); otherwise an <see cref="OverflowException"/> is thrown.</param>
     void Change(TimeSpan period);
 
     /// <summary>

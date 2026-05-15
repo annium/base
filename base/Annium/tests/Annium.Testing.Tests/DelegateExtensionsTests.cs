@@ -38,8 +38,7 @@ public class DelegateExtensionsTests
     [Fact]
     public async Task ThrowsAsync_ReturnsCaughtException()
     {
-        var ex = await Wrap
-            .It(async () =>
+        var ex = await Wrap.It(async () =>
             {
                 await Task.Yield();
                 throw new InvalidOperationException("async-boom");
@@ -54,8 +53,8 @@ public class DelegateExtensionsTests
     [Fact]
     public async Task ThrowsAsync_FailsWhenNoException()
     {
-        await Assert.ThrowsAsync<AssertionFailedException>(
-            async () => await Wrap.It(async () => await Task.Yield()).ThrowsAsync<InvalidOperationException>()
+        await Assert.ThrowsAsync<AssertionFailedException>(async () =>
+            await Wrap.It(async () => await Task.Yield()).ThrowsAsync<InvalidOperationException>()
         );
     }
 }

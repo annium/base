@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using Annium.Collections.Generic;
 using Annium.Linq;
@@ -39,5 +41,36 @@ public class SortedListSpanTest
         span.Move(-3).IsTrue();
         span[0].Is(new(0, 1));
         span[1].Is(new(1, 2));
+    }
+
+    /// <summary>Constructor throws ArgumentOutOfRangeException when start is negative.</summary>
+    [Fact]
+    public void Constructor_NegativeStart_Throws()
+    {
+        var data = Enumerable.Range(1, 3).ToSortedList(x => x - 1);
+
+        var ex = Assert.Throws<ArgumentOutOfRangeException>(() => new SortedListSpan<int, int>(data, -1, 2));
+        Assert.Equal("start", ex.ParamName);
+    }
+
+    /// <summary>Constructor throws ArgumentOutOfRangeException when (start + count) exceeds the collection size.</summary>
+    [Fact]
+    public void Constructor_SpanOverrunsCollection_Throws()
+    {
+        var data = Enumerable.Range(1, 3).ToSortedList(x => x - 1);
+
+        var ex = Assert.Throws<ArgumentOutOfRangeException>(() => new SortedListSpan<int, int>(data, 2, 5));
+        Assert.Equal("start", ex.ParamName);
+    }
+
+    /// <summary>Constructor accepts an empty span anchored at the end of the collection (start == count).</summary>
+    [Fact]
+    public void Constructor_EmptySpanAtEnd_DoesNotThrow()
+    {
+        var data = Enumerable.Range(1, 3).ToSortedList(x => x - 1);
+
+        var span = new SortedListSpan<int, int>(data, 3, 0);
+
+        span.Count.Is(0);
     }
 }

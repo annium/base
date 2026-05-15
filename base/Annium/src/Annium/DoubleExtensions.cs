@@ -13,7 +13,6 @@ public static class DoubleExtensions
     /// </summary>
     private const string StepError = "Step must be a positive, finite number.";
 
-
     /// <summary>
     /// Calculates the relative difference between two values.
     /// </summary>

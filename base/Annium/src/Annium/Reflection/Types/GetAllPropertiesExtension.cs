@@ -6,8 +6,8 @@ namespace Annium.Reflection;
 
 /// <summary>
 /// Provides extension methods for retrieving all properties from a <see cref="Type"/>, including
-/// properties declared on every interface the type implements. Contrast with <see cref="GetInheritanceChainExtension"/>,
-/// which walks only the class hierarchy.
+/// properties declared on every interface the type implements. For the type's own members and its
+/// base-class chain only (no interface inclusion), use the BCL <c>Type.GetProperties(BindingFlags)</c>.
 /// </summary>
 public static class GetAllPropertiesExtension
 {

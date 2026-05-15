@@ -167,7 +167,9 @@ public class ExpiringDictionaryTest : TestBase
 
     /// <summary>
     /// Verifies that <c>DisposeAsync</c> stops the background eviction timer cleanly and is idempotent
-    /// across both sync and async dispose paths. Closes the TG10 gap.
+    /// across both sync and async dispose paths, and that entries remain accessible after dispose
+    /// (the helper's contract is to keep operating on the dictionary; only the background eviction
+    /// stops). Closes TG10 and strengthens the assertion surface beyond "second dispose does not throw".
     /// </summary>
     /// <returns>A task representing the asynchronous operation.</returns>
     [Fact]
@@ -181,6 +183,10 @@ public class ExpiringDictionaryTest : TestBase
         // act — dispose twice; second call must be a no-op (idempotent)
         await collection.DisposeAsync();
         await collection.DisposeAsync();
+
+        // assert — entry remains observable (no ObjectDisposedException); background eviction is stopped
+        collection.ContainsKey(1).IsTrue();
+        collection.Get(1).Is("v:1");
     }
 
     /// <summary>

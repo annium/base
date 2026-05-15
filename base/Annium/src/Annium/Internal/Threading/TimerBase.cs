@@ -92,7 +92,6 @@ internal abstract class TimerBase : ILogSubject
         return _timer.Change(dueTime, period);
     }
 
-
     /// <summary>
     /// Releases all resources used by the timer.
     /// </summary>

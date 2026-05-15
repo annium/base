@@ -126,8 +126,8 @@ internal abstract class DebounceTimerBase : AsyncTimerGateBase, IDebounceTimer
     /// <summary>
     /// Changes the time interval to wait before executing the handler.
     /// </summary>
-    /// <param name="period">The new time interval.</param>
-    public void Change(TimeSpan period) => Change((int)period.TotalMilliseconds);
+    /// <param name="period">The new time interval. Must fit in <see cref="int"/> milliseconds (~24.85 days); otherwise an <see cref="OverflowException"/> is thrown.</param>
+    public void Change(TimeSpan period) => Change(checked((int)period.TotalMilliseconds));
 
     /// <summary>
     /// Requests the timer to execute the handler after the specified period.
