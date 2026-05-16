@@ -41,16 +41,18 @@ public static class FloatExtensions
     /// </summary>
     /// <param name="value">The value to round.</param>
     /// <returns>The rounded value as a 32-bit integer.</returns>
+    /// <exception cref="OverflowException">Thrown when <paramref name="value"/> is NaN or outside the Int32 range.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int FloorInt32(this float value) => (int)Math.Floor(value);
+    public static int FloorInt32(this float value) => checked((int)Math.Floor(value));
 
     /// <summary>
     /// Rounds a float value down to the nearest integer.
     /// </summary>
     /// <param name="value">The value to round.</param>
     /// <returns>The rounded value as a 64-bit integer.</returns>
+    /// <exception cref="OverflowException">Thrown when <paramref name="value"/> is NaN or outside the Int64 range.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static long FloorInt64(this float value) => (long)Math.Floor(value);
+    public static long FloorInt64(this float value) => checked((long)Math.Floor(value));
 
     /// <summary>
     /// Rounds a float value down to the nearest float.
@@ -65,8 +67,9 @@ public static class FloatExtensions
     /// </summary>
     /// <param name="value">The value to round.</param>
     /// <returns>The rounded value as a 32-bit integer.</returns>
+    /// <exception cref="OverflowException">Thrown when <paramref name="value"/> is NaN or outside the Int32 range.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int RoundInt32(this float value) => (int)Math.Round(value);
+    public static int RoundInt32(this float value) => checked((int)Math.Round(value));
 
     /// <summary>
     /// Rounds a float value to the nearest integer using the specified rounding mode.
@@ -74,16 +77,18 @@ public static class FloatExtensions
     /// <param name="value">The value to round.</param>
     /// <param name="mode">The rounding mode to use.</param>
     /// <returns>The rounded value as a 32-bit integer.</returns>
+    /// <exception cref="OverflowException">Thrown when <paramref name="value"/> is NaN or outside the Int32 range.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int RoundInt32(this float value, MidpointRounding mode) => (int)Math.Round(value, mode);
+    public static int RoundInt32(this float value, MidpointRounding mode) => checked((int)Math.Round(value, mode));
 
     /// <summary>
     /// Rounds a float value to the nearest integer.
     /// </summary>
     /// <param name="value">The value to round.</param>
     /// <returns>The rounded value as a 64-bit integer.</returns>
+    /// <exception cref="OverflowException">Thrown when <paramref name="value"/> is NaN or outside the Int64 range.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static long RoundInt64(this float value) => (long)Math.Round(value);
+    public static long RoundInt64(this float value) => checked((long)Math.Round(value));
 
     /// <summary>
     /// Rounds a float value to the nearest integer using the specified rounding mode.
@@ -91,8 +96,9 @@ public static class FloatExtensions
     /// <param name="value">The value to round.</param>
     /// <param name="mode">The rounding mode to use.</param>
     /// <returns>The rounded value as a 64-bit integer.</returns>
+    /// <exception cref="OverflowException">Thrown when <paramref name="value"/> is NaN or outside the Int64 range.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static long RoundInt64(this float value, MidpointRounding mode) => (long)Math.Round(value, mode);
+    public static long RoundInt64(this float value, MidpointRounding mode) => checked((long)Math.Round(value, mode));
 
     /// <summary>
     /// Rounds a float value to the nearest float.
@@ -136,16 +142,18 @@ public static class FloatExtensions
     /// </summary>
     /// <param name="value">The value to round.</param>
     /// <returns>The rounded value as a 32-bit integer.</returns>
+    /// <exception cref="OverflowException">Thrown when <paramref name="value"/> is NaN or outside the Int32 range.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int CeilInt32(this float value) => (int)Math.Ceiling(value);
+    public static int CeilInt32(this float value) => checked((int)Math.Ceiling(value));
 
     /// <summary>
     /// Rounds a float value up to the nearest integer.
     /// </summary>
     /// <param name="value">The value to round.</param>
     /// <returns>The rounded value as a 64-bit integer.</returns>
+    /// <exception cref="OverflowException">Thrown when <paramref name="value"/> is NaN or outside the Int64 range.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static long CeilInt64(this float value) => (long)Math.Ceiling(value);
+    public static long CeilInt64(this float value) => checked((long)Math.Ceiling(value));
 
     /// <summary>
     /// Rounds a float value up to the nearest float.
