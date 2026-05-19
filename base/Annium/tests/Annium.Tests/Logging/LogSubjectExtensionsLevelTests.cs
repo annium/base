@@ -57,6 +57,24 @@ public class LogSubjectExtensionsLevelTests
         captured.Data[0].Is(true);
     }
 
+    [Fact]
+    public void Trace_OneParam_ForwardsArgument()
+    {
+        var captured = RunCapture(subject => subject.Trace("msg {x}", 7));
+        captured.Level.Is(LogLevel.Trace);
+        captured.Data.Has(1);
+        captured.Data[0].Is(7);
+    }
+
+    [Fact]
+    public void Error_OneParam_ForwardsArgument()
+    {
+        var captured = RunCapture(subject => subject.Error("msg {x}", 13));
+        captured.Level.Is(LogLevel.Error);
+        captured.Data.Has(1);
+        captured.Data[0].Is(13);
+    }
+
     /// <summary>
     /// Verifies that a message logged below the configured global level is not forwarded to the logger.
     /// </summary>
@@ -106,6 +124,105 @@ public class LogSubjectExtensionsLevelTests
         {
             LogConfig.SetLevel(originalLevel);
         }
+    }
+
+    /// <summary>
+    /// Two-param overload forwards both parameters in order. A swap to <c>[x2, x1]</c> would
+    /// produce wrong structured-log data and is undetectable without this assertion.
+    /// </summary>
+    [Fact]
+    public void Log_TwoParams_BothForwardedInOrder()
+    {
+        var captured = RunCapture(subject => subject.Log(LogLevel.Info, "msg {x1} {x2}", 1, 2));
+        captured.Level.Is(LogLevel.Info);
+        captured.Data.Has(2);
+        captured.Data[0].Is(1);
+        captured.Data[1].Is(2);
+    }
+
+    /// <summary>
+    /// Three-param overload forwards all three parameters in order.
+    /// </summary>
+    [Fact]
+    public void Log_ThreeParams_AllForwardedInOrder()
+    {
+        var captured = RunCapture(subject => subject.Log(LogLevel.Info, "msg {x1} {x2} {x3}", 1, 2, 3));
+        captured.Data.Has(3);
+        captured.Data[0].Is(1);
+        captured.Data[1].Is(2);
+        captured.Data[2].Is(3);
+    }
+
+    /// <summary>
+    /// Four-param overload forwards all four parameters in order.
+    /// </summary>
+    [Fact]
+    public void Log_FourParams_AllForwardedInOrder()
+    {
+        var captured = RunCapture(subject => subject.Log(LogLevel.Info, "msg {x1} {x2} {x3} {x4}", 1, 2, 3, 4));
+        captured.Data.Has(4);
+        captured.Data[0].Is(1);
+        captured.Data[1].Is(2);
+        captured.Data[2].Is(3);
+        captured.Data[3].Is(4);
+    }
+
+    /// <summary>
+    /// Five-param overload forwards all five parameters in order.
+    /// </summary>
+    [Fact]
+    public void Log_FiveParams_AllForwardedInOrder()
+    {
+        var captured = RunCapture(subject =>
+            subject.Log(LogLevel.Info, "msg {x1} {x2} {x3} {x4} {x5}", 1, 2, 3, 4, 5)
+        );
+        captured.Data.Has(5);
+        for (var i = 0; i < 5; i++)
+            captured.Data[i].Is(i + 1);
+    }
+
+    /// <summary>
+    /// Six-param overload forwards all six parameters in order.
+    /// </summary>
+    [Fact]
+    public void Log_SixParams_AllForwardedInOrder()
+    {
+        var captured = RunCapture(subject =>
+            subject.Log(LogLevel.Info, "msg {x1} {x2} {x3} {x4} {x5} {x6}", 1, 2, 3, 4, 5, 6)
+        );
+        captured.Data.Has(6);
+        for (var i = 0; i < 6; i++)
+            captured.Data[i].Is(i + 1);
+    }
+
+    /// <summary>
+    /// Seven-param overload forwards all seven parameters in order.
+    /// </summary>
+    [Fact]
+    public void Log_SevenParams_AllForwardedInOrder()
+    {
+        var captured = RunCapture(subject =>
+            subject.Log(LogLevel.Info, "msg {x1} {x2} {x3} {x4} {x5} {x6} {x7}", 1, 2, 3, 4, 5, 6, 7)
+        );
+        captured.Data.Has(7);
+        for (var i = 0; i < 7; i++)
+            captured.Data[i].Is(i + 1);
+    }
+
+    /// <summary>
+    /// Eight-param overload forwards all eight parameters in order. The maximum arity in the
+    /// generated Log shim family — guards against an off-by-one in the data-array literal
+    /// (<c>[x1, x2, x3, x4, x5, x6, x7, x8]</c>) in any copy of the Log.cs file.
+    /// </summary>
+    [Fact]
+    public void Log_EightParams_AllForwardedInOrder()
+    {
+        var captured = RunCapture(subject =>
+            subject.Log(LogLevel.Info, "msg {x1} {x2} {x3} {x4} {x5} {x6} {x7} {x8}", 1, 2, 3, 4, 5, 6, 7, 8)
+        );
+        captured.Data.Has(8);
+        for (var i = 0; i < 8; i++)
+            captured.Data[i].Is(i + 1);
     }
 
     private static void RunLevelTest(LogLevel expected, Action<ILogSubject> action)

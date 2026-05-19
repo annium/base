@@ -1,7 +1,5 @@
-using System.IO;
 using System.Threading.Tasks;
 using Annium.Analyzers.Logging;
-using Annium.Logging;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Testing;
@@ -16,24 +14,13 @@ public sealed class ExplicitCallerArgumentCodeFixTests
     : CSharpCodeFixTest<ExplicitCallerArgumentAnalyzer, ExplicitCallerArgumentCodeFix, DefaultVerifier>
 {
     /// <summary>
-    /// Builds the reference assemblies set used for every test in this fixture.
-    /// </summary>
-    /// <returns>A configured <see cref="ReferenceAssemblies"/> instance.</returns>
-    private static ReferenceAssemblies BuildReferenceAssemblies() =>
-        new ReferenceAssemblies(
-            ReferenceAssemblies.NetStandard.NetStandard21.TargetFramework,
-            ReferenceAssemblies.NetStandard.NetStandard21.ReferenceAssemblyPackage,
-            Directory.GetCurrentDirectory()
-        ).AddAssemblies([typeof(ILogSubject).Assembly.GetName().Name!]);
-
-    /// <summary>
     /// <c>this.Error(ex, "msg")</c> is rewritten to <c>this.Error("msg: {exception}", ex)</c> so that the
     /// message reaches the templated overload instead of being lost in the file-path slot.
     /// </summary>
     [Fact]
     public async Task ExceptionOverloadWithStringSecondArg_ConvertsToTemplated()
     {
-        ReferenceAssemblies = BuildReferenceAssemblies();
+        ReferenceAssemblies = LoggingAnalyzerTestHelpers.BuildReferenceAssemblies();
 
         TestCode = """
 using System;
@@ -95,7 +82,7 @@ public class Sample : ILogSubject
     [Fact]
     public async Task TrailingPositionalCallerArgument_RemovesArgument()
     {
-        ReferenceAssemblies = BuildReferenceAssemblies();
+        ReferenceAssemblies = LoggingAnalyzerTestHelpers.BuildReferenceAssemblies();
 
         TestCode = """
 using Annium.Logging;
@@ -154,7 +141,7 @@ public class Sample : ILogSubject
     [Fact]
     public async Task NamedCallerArgument_RemovesArgument()
     {
-        ReferenceAssemblies = BuildReferenceAssemblies();
+        ReferenceAssemblies = LoggingAnalyzerTestHelpers.BuildReferenceAssemblies();
 
         TestCode = """
 using Annium.Logging;
@@ -215,7 +202,7 @@ public class Sample : ILogSubject
     [Fact]
     public async Task ExceptionShapeWithNamedCallerArg_FallsBackToRemoveArgument()
     {
-        ReferenceAssemblies = BuildReferenceAssemblies();
+        ReferenceAssemblies = LoggingAnalyzerTestHelpers.BuildReferenceAssemblies();
 
         TestCode = """
 using System;
@@ -279,7 +266,7 @@ public class Sample : ILogSubject
     [Fact]
     public async Task NonExceptionShapeWithThreeArgs_FallsBackToRemoveArgument()
     {
-        ReferenceAssemblies = BuildReferenceAssemblies();
+        ReferenceAssemblies = LoggingAnalyzerTestHelpers.BuildReferenceAssemblies();
 
         TestCode = """
 using Annium.Logging;

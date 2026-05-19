@@ -93,6 +93,7 @@ internal sealed class ExpiringStore<TKey, TValue> : IDisposable, IAsyncDisposabl
             return true;
         }
 
+        // TryGet contract: caller must check return value before using; default is safe here.
         value = default!;
         return false;
     }
@@ -118,6 +119,7 @@ internal sealed class ExpiringStore<TKey, TValue> : IDisposable, IAsyncDisposabl
             return true;
         }
 
+        // Remove contract: caller must check return value before using; default is safe here.
         value = default!;
         return false;
     }

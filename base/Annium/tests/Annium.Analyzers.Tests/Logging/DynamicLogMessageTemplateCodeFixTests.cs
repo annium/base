@@ -1,7 +1,5 @@
-using System.IO;
 using System.Threading.Tasks;
 using Annium.Analyzers.Logging;
-using Annium.Logging;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Testing;
@@ -17,23 +15,12 @@ public sealed class DynamicLogMessageTemplateCodeFixTests
     : CSharpCodeFixTest<DynamicLogMessageTemplateAnalyzer, DynamicLogMessageTemplateCodeFix, DefaultVerifier>
 {
     /// <summary>
-    /// Builds the reference assemblies set used for every test in this fixture.
-    /// </summary>
-    /// <returns>A configured <see cref="ReferenceAssemblies"/> instance.</returns>
-    private static ReferenceAssemblies BuildReferenceAssemblies() =>
-        new ReferenceAssemblies(
-            ReferenceAssemblies.NetStandard.NetStandard21.TargetFramework,
-            ReferenceAssemblies.NetStandard.NetStandard21.ReferenceAssemblyPackage,
-            Directory.GetCurrentDirectory()
-        ).AddAssemblies([typeof(ILogSubject).Assembly.GetName().Name!]);
-
-    /// <summary>
     /// Single interpolation: <c>$"run for {id}"</c> becomes <c>"run for {id}", id</c>.
     /// </summary>
     [Fact]
     public async Task WhenDynamicTemplate_ConvertsToStaticTemplate()
     {
-        ReferenceAssemblies = BuildReferenceAssemblies();
+        ReferenceAssemblies = LoggingAnalyzerTestHelpers.BuildReferenceAssemblies();
 
         TestCode = """
 using Annium.Logging;
@@ -95,7 +82,7 @@ public class Sample : ILogSubject
     [Fact]
     public async Task WhenInterpolationHasAlignment_NoCodeFixRegistered()
     {
-        ReferenceAssemblies = BuildReferenceAssemblies();
+        ReferenceAssemblies = LoggingAnalyzerTestHelpers.BuildReferenceAssemblies();
 
         var code = """
 using Annium.Logging;
@@ -140,7 +127,7 @@ public class Sample : ILogSubject
     [Fact]
     public async Task WhenInterpolationHasFormatClause_NoCodeFixRegistered()
     {
-        ReferenceAssemblies = BuildReferenceAssemblies();
+        ReferenceAssemblies = LoggingAnalyzerTestHelpers.BuildReferenceAssemblies();
 
         var code = """
 using Annium.Logging;
@@ -185,7 +172,7 @@ public class Sample : ILogSubject
     [Fact]
     public async Task WhenDuplicateIdentifierInTemplate_BothPlaceholdersSuffixed()
     {
-        ReferenceAssemblies = BuildReferenceAssemblies();
+        ReferenceAssemblies = LoggingAnalyzerTestHelpers.BuildReferenceAssemblies();
 
         TestCode = """
 using Annium.Logging;

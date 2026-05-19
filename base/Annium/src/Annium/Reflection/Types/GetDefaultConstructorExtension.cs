@@ -15,7 +15,7 @@ public static class GetDefaultConstructorExtension
     /// <param name="type">The type to get the default constructor for.</param>
     /// <returns>The <see cref="ConstructorInfo"/> representing the default constructor.</returns>
     public static ConstructorInfo GetDefaultConstructor(this Type type) =>
-        type.GetDefaultConstructor(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+        type.GetDefaultConstructor(Constants.AllInstanceBindingFlags);
 
     /// <summary>
     /// Tries to get the default constructor of the specified type using public, non-public, and instance binding flags.
@@ -23,7 +23,7 @@ public static class GetDefaultConstructorExtension
     /// <param name="type">The type to get the default constructor for.</param>
     /// <returns>The <see cref="ConstructorInfo"/> representing the default constructor, or null if not found.</returns>
     public static ConstructorInfo? TryGetDefaultConstructor(this Type type) =>
-        type.TryGetDefaultConstructor(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+        type.TryGetDefaultConstructor(Constants.AllInstanceBindingFlags);
 
     /// <summary>
     /// Gets the default constructor of the specified type using the provided binding flags.

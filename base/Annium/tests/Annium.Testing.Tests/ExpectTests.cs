@@ -89,4 +89,69 @@ public class ExpectTests
             )
         ).ThrowsAsync<InvalidOperationException>();
     }
+
+    /// <summary>
+    /// Sync-Action overload polls until the condition succeeds and completes once it does.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Fact]
+    public async Task ToAsync_SyncValidate_WaitsUntilConditionMet()
+    {
+        var ready = false;
+
+        _ = Task.Run(
+            async () =>
+            {
+                await Task.Delay(50);
+                ready = true;
+            },
+            TestContext.Current.CancellationToken
+        );
+
+        await Expect.ToAsync(
+            () =>
+            {
+                if (!ready)
+                    throw new InvalidOperationException("not yet ready");
+            },
+            ms: 3_000
+        );
+
+        ready.IsTrue();
+    }
+
+    /// <summary>
+    /// Sync-Action overload re-throws the validate lambda's exception when the timeout expires
+    /// before the condition is met.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Fact]
+    public async Task ToAsync_SyncValidate_TimesOut_ThrowsValidateLambdaException()
+    {
+        await Wrap.It(async () =>
+            await Expect.ToAsync(
+                () => throw new InvalidOperationException("never ready"),
+                ms: 50
+            )
+        ).ThrowsAsync<InvalidOperationException>();
+    }
+
+    /// <summary>
+    /// Sync-Action overload honours a pre-cancelled token: the poll loop exits immediately and
+    /// the final validate call re-throws.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test.</returns>
+    [Fact]
+    public async Task ToAsync_SyncValidate_PreCancelledToken_ThrowsValidateLambdaException()
+    {
+        using var cts = new CancellationTokenSource();
+        await cts.CancelAsync();
+
+        await Wrap.It(async () =>
+            await Expect.ToAsync(
+                () => throw new InvalidOperationException("never ready"),
+                cts.Token
+            )
+        ).ThrowsAsync<InvalidOperationException>();
+    }
 }

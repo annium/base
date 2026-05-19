@@ -50,7 +50,9 @@ internal sealed class DisposableReference<TValue> : IDisposableReference<TValue>
 
         // Run the dispose callback BEFORE nulling Value so closures over `this.Value` (or racing readers)
         // see the live value during the asynchronous teardown rather than `default`. The idempotency
-        // guard above already ensures _dispose() runs exactly once.
+        // guard above already ensures _dispose() runs exactly once. Value is intentionally nulled
+        // post-dispose; the `notnull` constraint only governs live references — callers must not access
+        // Value after DisposeAsync returns, and the `default!` suppression here documents that invariant.
         await _dispose().ConfigureAwait(false);
         Value = default!;
     }

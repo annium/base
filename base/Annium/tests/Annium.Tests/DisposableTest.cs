@@ -394,6 +394,180 @@ public class DisposableTest : TestBase
     }
 
     /// <summary>
+    /// AsyncDisposer (via <c>Disposable.Create(Func&lt;ValueTask&gt;)</c>): second DisposeAsync must be a no-op.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact]
+    public async Task AsyncDisposer_DoubleDispose_HandleCalledOnlyOnce()
+    {
+        var calls = 0;
+        var disposable = Disposable.Create(() =>
+        {
+            Interlocked.Increment(ref calls);
+            return ValueTask.CompletedTask;
+        });
+
+        await disposable.DisposeAsync();
+        await disposable.DisposeAsync();
+
+        calls.Is(1);
+    }
+
+    /// <summary>
+    /// AsyncDisposer: the handle must be invoked on the first DisposeAsync.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact]
+    public async Task AsyncDisposer_HandleInvoked_OnFirstDisposeOnly()
+    {
+        var invoked = false;
+        var disposable = Disposable.Create(() =>
+        {
+            invoked = true;
+            return ValueTask.CompletedTask;
+        });
+
+        invoked.IsFalse();
+        await disposable.DisposeAsync();
+        invoked.IsTrue();
+    }
+
+    /// <summary>
+    /// AsyncDisposer: concurrent DisposeAsync calls must invoke the handle exactly once.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact]
+    public async Task AsyncDisposer_ConcurrentDispose_HandleCalledExactlyOnce()
+    {
+        var calls = 0;
+        var disposable = Disposable.Create(() =>
+        {
+            Interlocked.Increment(ref calls);
+            return ValueTask.CompletedTask;
+        });
+        var ct = TestContext.Current.CancellationToken;
+
+        var disposeTasks = Enumerable
+            .Range(0, 32)
+            .Select(_ => Task.Run(async () => await disposable.DisposeAsync(), ct))
+            .ToArray();
+
+        await Task.WhenAll(disposeTasks);
+
+        calls.Is(1);
+    }
+
+    /// <summary>
+    /// Disposer (via <c>Disposable.Create(Action)</c>): second Dispose must be a no-op.
+    /// </summary>
+    [Fact]
+    public void Disposer_DoubleDispose_HandleCalledOnlyOnce()
+    {
+        var calls = 0;
+        var disposable = Disposable.Create(() => Interlocked.Increment(ref calls));
+
+        disposable.Dispose();
+        disposable.Dispose();
+
+        calls.Is(1);
+    }
+
+    /// <summary>
+    /// Disposer: the handle must be invoked on the first Dispose.
+    /// </summary>
+    [Fact]
+    public void Disposer_HandleInvoked_OnFirstDisposeOnly()
+    {
+        var invoked = false;
+        var disposable = Disposable.Create(() => invoked = true);
+
+        invoked.IsFalse();
+        disposable.Dispose();
+        invoked.IsTrue();
+    }
+
+    /// <summary>
+    /// Disposer: concurrent Dispose calls must invoke the handle exactly once.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact]
+    public async Task Disposer_ConcurrentDispose_HandleCalledExactlyOnce()
+    {
+        var calls = 0;
+        var disposable = Disposable.Create(() => Interlocked.Increment(ref calls));
+        var ct = TestContext.Current.CancellationToken;
+
+        var disposeTasks = Enumerable.Range(0, 32).Select(_ => Task.Run(disposable.Dispose, ct)).ToArray();
+
+        await Task.WhenAll(disposeTasks);
+
+        calls.Is(1);
+    }
+
+    /// <summary>
+    /// DisposableReference: second DisposeAsync must be a no-op (idempotency guard).
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact]
+    public async Task DisposableReference_DoubleDispose_CallbackCalledOnlyOnce()
+    {
+        var calls = 0;
+        var reference = Disposable.Reference(
+            "live",
+            () =>
+            {
+                Interlocked.Increment(ref calls);
+                return ValueTask.CompletedTask;
+            }
+        );
+
+        await reference.DisposeAsync();
+        await reference.DisposeAsync();
+
+        calls.Is(1);
+    }
+
+    /// <summary>
+    /// DisposableReference: dispose callback runs BEFORE <c>Value</c> is nulled (the documented invariant).
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact]
+    public async Task DisposableReference_CallbackRunsBeforeValueNulled()
+    {
+        var observed = "";
+        var reference = default(IDisposableReference<string>)!;
+        reference = Disposable.Reference(
+            "live",
+            () =>
+            {
+                // ReSharper disable once AccessToModifiedClosure — the test relies on `reference` being assigned before DisposeAsync is called.
+                observed = reference.Value;
+                return ValueTask.CompletedTask;
+            }
+        );
+
+        await reference.DisposeAsync();
+
+        observed.Is("live");
+    }
+
+    /// <summary>
+    /// DisposableReference: after DisposeAsync, <c>Value</c> is the default for its type.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact]
+    public async Task DisposableReference_ValueIsNullAfterDispose()
+    {
+        var reference = Disposable.Reference("live");
+        reference.Value.Is("live");
+
+        await reference.DisposeAsync();
+
+        // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract — we deliberately check the post-dispose state.
+        ((object?)reference.Value is null).IsTrue();
+    }
+
+    /// <summary>
     /// IDisposable that records how many times it was disposed — for detecting leaks or
     /// double-disposal in the concurrent stress test above.
     /// </summary>

@@ -96,7 +96,7 @@ public class WaitTests
         using var cts = new CancellationTokenSource(200);
         var sw = Stopwatch.StartNew();
 
-        await Wait.UntilAsync(() => Task.FromResult(false), cts.Token, pollDelay: 25);
+        await Wait.UntilAsync(() => new ValueTask<bool>(false), cts.Token, pollDelay: 25);
 
         sw.Stop();
         (sw.ElapsedMilliseconds >= 150 && sw.ElapsedMilliseconds < 2000).IsTrue();
@@ -111,7 +111,7 @@ public class WaitTests
     {
         var sw = Stopwatch.StartNew();
 
-        await Wait.WhileAsync(() => Task.FromResult(true), ms: 200);
+        await Wait.WhileAsync(() => new ValueTask<bool>(true), ms: 200);
 
         sw.Stop();
         (sw.ElapsedMilliseconds >= 150 && sw.ElapsedMilliseconds < 2000).IsTrue();

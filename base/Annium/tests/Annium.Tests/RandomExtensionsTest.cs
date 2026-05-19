@@ -57,6 +57,47 @@ public class RandomExtensionsTest
     }
 
     /// <summary>
+    /// NextDecimal returns a value in [0, 1) — same range as the underlying NextDouble().
+    /// A mutation removing the cast or returning a constant would fail this range check.
+    /// </summary>
+    [Fact]
+    public void NextDecimal_ReturnsValueBetweenZeroAndOne()
+    {
+        var random = new Random(0xC0DE);
+
+        for (var i = 0; i < 256; i++)
+        {
+            var v = random.NextDecimal();
+            (v >= 0m).IsTrue();
+            (v < 1m).IsTrue();
+        }
+    }
+
+    /// <summary>
+    /// NextDecimal distributes values across the [0, 1) range — over 1024 draws we must see at least
+    /// one value in each quartile. Detects a mutation returning a constant.
+    /// </summary>
+    [Fact]
+    public void NextDecimal_DistributesValuesAcrossRange()
+    {
+        var random = new Random(0xC0DE);
+        var lowQuartile = 0;
+        var highQuartile = 0;
+
+        for (var i = 0; i < 1024; i++)
+        {
+            var v = random.NextDecimal();
+            if (v < 0.25m)
+                lowQuartile++;
+            else if (v >= 0.75m)
+                highQuartile++;
+        }
+
+        lowQuartile.IsGreater(0);
+        highQuartile.IsGreater(0);
+    }
+
+    /// <summary>
     /// Verifies that NextEnum with a subset of values only returns members from that subset.
     /// Over 200 iterations every returned value must belong to the supplied subset.
     /// </summary>
