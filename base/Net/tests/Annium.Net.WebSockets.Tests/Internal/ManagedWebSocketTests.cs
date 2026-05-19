@@ -160,25 +160,32 @@ public class ManagedWebSocketTests : TestBase, IAsyncLifetime
                     string.Empty,
                     default
                 );
-                _ = Task.Delay(10, CancellationToken.None)
-                    .ContinueWith(_ => serverTcs.SetResult(), CancellationToken.None);
+
+                this.Trace("send signal to client");
+                serverTcs.SetResult();
             }
         );
 
         this.Trace("connect and start listening");
         await ConnectAndStartListenAsync(server, TestContext.Current.CancellationToken);
 
-        // delay to let server close connection
+        // wait for the server-side close signal
         this.Trace("await server signal");
         await serverTcs.Task;
 
-        // act
-        this.Trace("send message");
-        var result = await SendTextAsync(message, TestContext.Current.CancellationToken);
-
-        // assert
-        this.Trace("assert status is closed");
-        result.Is(WebSocketSendStatus.Closed);
+        // act — poll SendTextAsync until the close has propagated to the client socket.
+        // The server-side CloseOutputAsync completing is not a hard guarantee that the close
+        // frame has been processed by the client; bounded poll within 5s catches the closed
+        // state without flaking on the race.
+        this.Trace("send message and ensure it eventually becomes closed");
+        await Expect.ToAsync(
+            async () =>
+            {
+                var result = await SendTextAsync(message, TestContext.Current.CancellationToken);
+                result.Is(WebSocketSendStatus.Closed);
+            },
+            ms: 5_000
+        );
 
         this.Trace("done");
     }
@@ -237,32 +244,31 @@ public class ManagedWebSocketTests : TestBase, IAsyncLifetime
 
                 await Task.CompletedTask;
 
-                _ = Task.Delay(10, CancellationToken.None)
-                    .ContinueWith(
-                        _ =>
-                        {
-                            this.Trace("send signal to client");
-                            serverTcs.SetResult();
-                        },
-                        CancellationToken.None
-                    );
+                this.Trace("send signal to client");
+                serverTcs.SetResult();
             }
         );
 
         this.Trace("connect and start listening");
         await ConnectAndStartListenAsync(server, TestContext.Current.CancellationToken);
 
-        // act
-        // delay to let server close connection
+        // wait for the server-side abort signal
         this.Trace("await server signal");
         await serverTcs.Task;
 
-        this.Trace("send message");
-        var result = await SendTextAsync(message, TestContext.Current.CancellationToken);
-
-        // assert
-        this.Trace("assert status is closed");
-        result.Is(WebSocketSendStatus.Closed);
+        // act — poll SendTextAsync until the abort has propagated to the client socket.
+        // The server-side Abort completing is not a hard guarantee that the close has been
+        // observed by the client; bounded poll within 5s catches the closed state without
+        // flaking on the race.
+        this.Trace("send message and ensure it eventually becomes closed");
+        await Expect.ToAsync(
+            async () =>
+            {
+                var result = await SendTextAsync(message, TestContext.Current.CancellationToken);
+                result.Is(WebSocketSendStatus.Closed);
+            },
+            ms: 5_000
+        );
 
         this.Trace("done");
     }

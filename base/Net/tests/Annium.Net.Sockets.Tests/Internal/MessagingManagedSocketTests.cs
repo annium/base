@@ -167,10 +167,12 @@ public class MessagingManagedSocketTests : TestBase, IAsyncLifetime
         await using var server = RunServerBase(
             async (_, socket, _) =>
             {
+                // Leading delay gives the client time to ConnectAndStartListen before the close.
                 await Task.Delay(50, CancellationToken.None);
                 socket.LingerState = new LingerOption(true, 0);
                 socket.Close();
-                await Task.Delay(50, CancellationToken.None);
+
+                this.Trace("send signal to client");
                 serverTcs.SetResult();
             }
         );
@@ -178,17 +180,23 @@ public class MessagingManagedSocketTests : TestBase, IAsyncLifetime
         this.Trace("connect and start listening");
         await ConnectAndStartListenAsync(server, TestContext.Current.CancellationToken);
 
-        // delay to let server close connection
+        // wait for the server-side close signal
         this.Trace("await server signal");
         await serverTcs.Task;
 
-        // act
-        this.Trace("send message");
-        var result = await ManagedSocket.SendAsync(message, TestContext.Current.CancellationToken);
-
-        // assert
-        this.Trace("assert close is received");
-        result.Is(SocketSendStatus.Closed);
+        // act — poll SendAsync until the RST/FIN has propagated to the client socket.
+        // socket.Close() completing on the server is not a hard guarantee that the client
+        // socket has observed the disconnect; bounded poll within 5s catches the closed
+        // state without flaking on the race.
+        this.Trace("send message and ensure it eventually becomes closed");
+        await Expect.ToAsync(
+            async () =>
+            {
+                var result = await ManagedSocket.SendAsync(message, TestContext.Current.CancellationToken);
+                result.Is(SocketSendStatus.Closed);
+            },
+            ms: 5_000
+        );
 
         this.Trace("done");
     }

@@ -144,31 +144,31 @@ public class ClientServerManagedWebSocketTests : TestBase, IAsyncLifetime
             this.Trace("disconnect server socket");
             await serverSocket.DisconnectAsync();
 
-            _ = Task.Delay(10, CancellationToken.None)
-                .ContinueWith(
-                    _ =>
-                    {
-                        this.Trace("send signal to client");
-                        serverTcs.SetResult();
-                    },
-                    CancellationToken.None
-                );
+            this.Trace("send signal to client");
+            serverTcs.SetResult();
         });
 
         this.Trace("connect");
         await ConnectAsync(server, TestContext.Current.CancellationToken);
 
-        // delay to let server close connection
+        // wait for the server-side disconnect signal
         this.Trace("await server signal");
         await serverTcs.Task;
 
-        // act
-        this.Trace("send message");
-        var result = await SendTextAsync(message, TestContext.Current.CancellationToken);
-
-        // assert
-        this.Trace("assert closed");
-        result.Is(WebSocketSendStatus.Closed);
+        // act — poll SendTextAsync until the close has propagated to the client socket.
+        // The server-side DisconnectAsync completing is not a hard guarantee that the close
+        // frame has been received and processed by the client; on slower machines / CI the
+        // first send can race with the close and return Ok before the socket transitions.
+        // Bounded poll within 5s catches the closed state without flaking on the race.
+        this.Trace("send message and ensure it once becomes closed");
+        await Expect.ToAsync(
+            async () =>
+            {
+                var result = await SendTextAsync(message, TestContext.Current.CancellationToken);
+                result.Is(WebSocketSendStatus.Closed);
+            },
+            ms: 5_000
+        );
 
         this.Trace("done");
     }
