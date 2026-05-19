@@ -33,7 +33,7 @@ public class AsyncTimerTests : TestBase
         this.Trace("start");
 
         // arrange
-        var state = new State();
+        var state = new TimerTestHelpers.State();
         using var timer = Timers.Async(
             state,
             static async state =>
@@ -68,7 +68,7 @@ public class AsyncTimerTests : TestBase
         this.Trace("start");
 
         // arrange
-        var state = new State();
+        var state = new TimerTestHelpers.State();
         using var timer = Timers.Async(
             state,
             static async state =>
@@ -104,7 +104,7 @@ public class AsyncTimerTests : TestBase
         this.Trace("start");
 
         // arrange
-        var state = new State();
+        var state = new TimerTestHelpers.State();
         using var timer = Timers.Async(
             async () =>
             {
@@ -138,7 +138,7 @@ public class AsyncTimerTests : TestBase
         this.Trace("start");
 
         // arrange
-        var state = new State();
+        var state = new TimerTestHelpers.State();
         using var timer = Timers.Async(
             async () =>
             {
@@ -294,44 +294,5 @@ public class AsyncTimerTests : TestBase
         await handlerExited.Task.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
     }
 
-    /// <summary>
-    /// Ensures that the state is valid by checking the sequence of numbers.
-    /// </summary>
-    /// <param name="state">The state to validate.</param>
-    /// <returns>A task representing the asynchronous operation.</returns>
-    private async Task EnsureValid(State state)
-    {
-        // Bounded wait until timers complete (step is executed to end). Replaces the previous
-        // unbounded `do { await Task.Delay(5); } while (count % 2 > 0)` loop that could hang the
-        // test runner indefinitely if a timer regression caused the count to stop advancing.
-        await Wait.UntilAsync(() => state.Data.Count % 2 == 0, ms: 5000);
-
-        // Snapshot under ConcurrentQueue.ToArray() — safe against a queued ThreadPool callback
-        // that may still call Push() after the underlying timer was stopped via Change(Infinite, Infinite)
-        // but before its queued callbacks have drained.
-        var snapshot = state.Data.ToArray();
-        var expectedData = Enumerable.Range(0, snapshot.Length).ToArray();
-        snapshot.SequenceEqual(expectedData).IsTrue();
-    }
-
-    /// <summary>
-    /// A class that maintains a queue of integers for testing.
-    /// </summary>
-    private class State
-    {
-        /// <summary>
-        /// Gets the queue of integers. <see cref="ConcurrentQueue{T}"/> is used so iteration via
-        /// <c>ToArray</c> is snapshot-safe against races with queued timer callbacks calling
-        /// <see cref="Push"/> after <c>timer.Change(Infinite, Infinite)</c>.
-        /// </summary>
-        public ConcurrentQueue<int> Data { get; } = new();
-
-        /// <summary>
-        /// Adds the current count to the queue.
-        /// </summary>
-        public void Push()
-        {
-            Data.Enqueue(Data.Count);
-        }
-    }
+    private static Task EnsureValid(TimerTestHelpers.State state) => TimerTestHelpers.EnsureValidAsync(state);
 }

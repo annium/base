@@ -13,6 +13,13 @@ namespace Annium.Threading.Channels;
 public static class ChannelReaderExtensions
 {
     /// <summary>
+    /// Default poll cadence in milliseconds for <see cref="WhenEmptyAsync{T}"/>. Matches the
+    /// same default used by <c>Wait</c> and <c>Expect</c> so behaviour stays consistent across the
+    /// area's polling primitives.
+    /// </summary>
+    private const int DefaultDelayMs = 25;
+
+    /// <summary>
     /// Reads an item from the channel reader.
     /// </summary>
     /// <typeparam name="T">The type of items in the channel.</typeparam>
@@ -90,7 +97,7 @@ public static class ChannelReaderExtensions
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static async Task WhenEmptyAsync<T>(
         this ChannelReader<T> reader,
-        int delay = 25,
+        int delay = DefaultDelayMs,
         CancellationToken ct = default
     )
     {
