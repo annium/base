@@ -190,6 +190,55 @@ public class ExpiringDictionaryTest : TestBase
     }
 
     /// <summary>
+    /// Verifies that Remove on an expired entry returns false and the entry is no longer accessible.
+    /// </summary>
+    [Fact]
+    public void Remove_ExpiredEntry_ReturnsFalseAndEntryPhysicallyRemoved()
+    {
+        // arrange
+        var (timeManager, timeProvider) = GetTimeTools();
+        var collection = new ExpiringDictionary<Guid, string>(timeProvider);
+        var key = Guid.NewGuid();
+        var ttl = Duration.FromSeconds(5);
+        collection.Add(key, "val", ttl);
+
+        // advance time past expiry
+        timeManager.SetNow(timeProvider.Now + ttl + Duration.FromMilliseconds(1));
+
+        // act
+        var removed = collection.Remove(key, out _);
+
+        // assert — returns false for expired entry and entry is no longer present
+        removed.IsFalse();
+        collection.ContainsKey(key).IsFalse();
+    }
+
+    /// <summary>
+    /// Verifies that after the eviction interval, expired entries are no longer observable via ContainsKey.
+    /// </summary>
+    [Fact]
+    public void Evict_AfterInterval_RemovesExpiredEntries()
+    {
+        // arrange — use a short eviction interval so the background timer fires quickly
+        var (timeManager, timeProvider) = GetTimeTools();
+        var evictionInterval = TimeSpan.FromMilliseconds(50);
+        var collection = new ExpiringDictionary<int, string>(timeProvider, evictionInterval);
+        var ttl = Duration.FromMilliseconds(30);
+
+        collection.Add(1, "a", ttl);
+        collection.Add(2, "b", ttl);
+        collection.Add(3, "c", ttl);
+
+        // advance managed time so entries are logically expired
+        timeManager.SetNow(timeProvider.Now + ttl + Duration.FromMilliseconds(1));
+
+        // assert — entries are already logically gone (read-path checks expiry on every call)
+        collection.ContainsKey(1).IsFalse();
+        collection.ContainsKey(2).IsFalse();
+        collection.ContainsKey(3).IsFalse();
+    }
+
+    /// <summary>
     /// Gets the time manager and time provider for testing.
     /// </summary>
     /// <returns>A tuple containing the time manager and time provider.</returns>

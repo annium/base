@@ -57,6 +57,57 @@ public class LogSubjectExtensionsLevelTests
         captured.Data[0].Is(true);
     }
 
+    /// <summary>
+    /// Verifies that a message logged below the configured global level is not forwarded to the logger.
+    /// </summary>
+    [Fact]
+    public void Log_BelowGlobalLevel_IsNotForwardedToLogger()
+    {
+        var originalLevel = LogConfig.Level;
+        try
+        {
+            LogConfig.SetLevel(LogLevel.Info);
+            var logger = new CapturingLogger();
+            var subject = new TestSubject(logger);
+
+            subject.Trace("msg-below");
+
+            logger.Entries.IsEmpty();
+        }
+        finally
+        {
+            LogConfig.SetLevel(originalLevel);
+        }
+    }
+
+    /// <summary>
+    /// Verifies that messages at or above the configured global level are forwarded to the logger.
+    /// </summary>
+    [Fact]
+    public void Log_AtOrAboveGlobalLevel_IsForwardedToLogger()
+    {
+        var originalLevel = LogConfig.Level;
+        try
+        {
+            LogConfig.SetLevel(LogLevel.Info);
+            var logger = new CapturingLogger();
+            var subject = new TestSubject(logger);
+
+            subject.Info("msg-info");
+            subject.Warn("msg-warn");
+
+            logger.Entries.Has(2);
+            logger.Entries[0].Level.Is(LogLevel.Info);
+            logger.Entries[0].Message.Is("msg-info");
+            logger.Entries[1].Level.Is(LogLevel.Warn);
+            logger.Entries[1].Message.Is("msg-warn");
+        }
+        finally
+        {
+            LogConfig.SetLevel(originalLevel);
+        }
+    }
+
     private static void RunLevelTest(LogLevel expected, Action<ILogSubject> action)
     {
         var captured = RunCapture(action);

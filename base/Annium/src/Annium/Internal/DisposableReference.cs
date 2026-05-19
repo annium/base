@@ -21,7 +21,7 @@ internal sealed class DisposableReference<TValue> : IDisposableReference<TValue>
     /// <summary>
     /// The asynchronous function to execute when this reference is disposed.
     /// </summary>
-    private readonly Func<Task> _dispose;
+    private readonly Func<ValueTask> _dispose;
 
     /// <summary>
     /// 0 if the handle has not yet been run; 1 once a dispose has claimed it.
@@ -33,7 +33,7 @@ internal sealed class DisposableReference<TValue> : IDisposableReference<TValue>
     /// </summary>
     /// <param name="value">The value to reference.</param>
     /// <param name="dispose">The asynchronous function to execute when this reference is disposed.</param>
-    public DisposableReference(TValue value, Func<Task> dispose)
+    public DisposableReference(TValue value, Func<ValueTask> dispose)
     {
         Value = value;
         _dispose = dispose;

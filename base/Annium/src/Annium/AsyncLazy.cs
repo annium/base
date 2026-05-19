@@ -59,6 +59,7 @@ public sealed class AsyncLazy<T>
     /// <param name="factory">The asynchronous delegate that is invoked on a background thread to produce the value when it is needed.</param>
     public AsyncLazy(Func<Task<T>> factory)
     {
+        // VSTHRD011: Lazy<Task<T>> is intentional — thread-safe lazy async initialization (isThreadSafe:true).
 #pragma warning disable VSTHRD011
         _instance = new Lazy<Task<T>>(
 #pragma warning restore VSTHRD011

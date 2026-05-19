@@ -270,6 +270,7 @@ public static class EnumExtensions
     /// <param name="values">The values to combine.</param>
     /// <returns>The combined value.</returns>
     /// <exception cref="ArgumentException">Thrown when the enumeration type is not supported.</exception>
+    // CA2021: Cast<byte/ushort/...>().Aggregate is correct here — CastValues is called only after GetTypeCode() confirms the underlying type, so the cast cannot fail at runtime.
 #pragma warning disable CA2021
     [SuppressMessage("ReSharper", "SuspiciousTypeConversion.Global")]
     private static T CastValues<T>(IReadOnlyCollection<T> values)

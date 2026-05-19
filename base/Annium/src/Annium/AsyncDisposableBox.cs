@@ -26,7 +26,7 @@ public sealed class AsyncDisposableBox : DisposableBoxBase<AsyncDisposableBox>, 
     /// <summary>
     /// A list of asynchronous dispose functions managed by this box.
     /// </summary>
-    private readonly List<Func<Task>> _asyncDisposes = new();
+    private readonly List<Func<ValueTask>> _asyncDisposes = new();
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AsyncDisposableBox"/> class.
@@ -120,22 +120,22 @@ public sealed class AsyncDisposableBox : DisposableBoxBase<AsyncDisposableBox>, 
     /// <summary>Adds an asynchronous dispose function to the box's async-disposes list.</summary>
     /// <param name="dispose">The async dispose function to add.</param>
     /// <returns>This box instance.</returns>
-    private AsyncDisposableBox AddAsyncDispose(Func<Task> dispose) => Add(_asyncDisposes, dispose);
+    private AsyncDisposableBox AddAsyncDispose(Func<ValueTask> dispose) => Add(_asyncDisposes, dispose);
 
     /// <summary>Adds a collection of asynchronous dispose functions to the box's async-disposes list.</summary>
     /// <param name="disposes">The async dispose functions to add.</param>
     /// <returns>This box instance.</returns>
-    private AsyncDisposableBox AddAsyncDisposes(IEnumerable<Func<Task>> disposes) => Add(_asyncDisposes, disposes);
+    private AsyncDisposableBox AddAsyncDisposes(IEnumerable<Func<ValueTask>> disposes) => Add(_asyncDisposes, disposes);
 
     /// <summary>Removes an asynchronous dispose function from the box's async-disposes list.</summary>
     /// <param name="dispose">The async dispose function to remove.</param>
     /// <returns>This box instance.</returns>
-    private AsyncDisposableBox RemoveAsyncDispose(Func<Task> dispose) => Remove(_asyncDisposes, dispose);
+    private AsyncDisposableBox RemoveAsyncDispose(Func<ValueTask> dispose) => Remove(_asyncDisposes, dispose);
 
     /// <summary>Removes a collection of asynchronous dispose functions from the box's async-disposes list.</summary>
     /// <param name="disposes">The async dispose functions to remove.</param>
     /// <returns>This box instance.</returns>
-    private AsyncDisposableBox RemoveAsyncDisposes(IEnumerable<Func<Task>> disposes) =>
+    private AsyncDisposableBox RemoveAsyncDisposes(IEnumerable<Func<ValueTask>> disposes) =>
         Remove(_asyncDisposes, disposes);
 
     /// <summary>
@@ -212,24 +212,24 @@ public sealed class AsyncDisposableBox : DisposableBoxBase<AsyncDisposableBox>, 
     /// <summary>
     /// Adds an asynchronous dispose function to the box.
     /// </summary>
-    public static AsyncDisposableBox operator +(AsyncDisposableBox box, Func<Task> dispose) =>
+    public static AsyncDisposableBox operator +(AsyncDisposableBox box, Func<ValueTask> dispose) =>
         box.AddAsyncDispose(dispose);
 
     /// <summary>
     /// Removes an asynchronous dispose function from the box.
     /// </summary>
-    public static AsyncDisposableBox operator -(AsyncDisposableBox box, Func<Task> dispose) =>
+    public static AsyncDisposableBox operator -(AsyncDisposableBox box, Func<ValueTask> dispose) =>
         box.RemoveAsyncDispose(dispose);
 
     /// <summary>
     /// Adds a collection of asynchronous dispose functions to the box.
     /// </summary>
-    public static AsyncDisposableBox operator +(AsyncDisposableBox box, IEnumerable<Func<Task>> disposes) =>
+    public static AsyncDisposableBox operator +(AsyncDisposableBox box, IEnumerable<Func<ValueTask>> disposes) =>
         box.AddAsyncDisposes(disposes);
 
     /// <summary>
     /// Removes a collection of asynchronous dispose functions from the box.
     /// </summary>
-    public static AsyncDisposableBox operator -(AsyncDisposableBox box, IEnumerable<Func<Task>> disposes) =>
+    public static AsyncDisposableBox operator -(AsyncDisposableBox box, IEnumerable<Func<ValueTask>> disposes) =>
         box.RemoveAsyncDisposes(disposes);
 }

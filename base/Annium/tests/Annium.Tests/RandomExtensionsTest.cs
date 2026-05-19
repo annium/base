@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Annium.Testing;
 using Xunit;
 
@@ -34,5 +35,44 @@ public class RandomExtensionsTest
         // assert
         trueCount.IsGreater(0);
         falseCount.IsGreater(0);
+    }
+
+    /// <summary>
+    /// Verifies that NextEnum with no explicit values returns only valid members of the enum.
+    /// Over 200 iterations every returned value must be a defined DayOfWeek.
+    /// </summary>
+    [Fact]
+    public void NextEnum_NoValues_ReturnsValueFromAllEnumValues()
+    {
+        // arrange
+        const int iterations = 200;
+        var random = new Random(0xC0DE);
+
+        // act + assert
+        for (var i = 0; i < iterations; i++)
+        {
+            var result = random.NextEnum<DayOfWeek>();
+            Enum.IsDefined(typeof(DayOfWeek), result).IsTrue();
+        }
+    }
+
+    /// <summary>
+    /// Verifies that NextEnum with a subset of values only returns members from that subset.
+    /// Over 200 iterations every returned value must belong to the supplied subset.
+    /// </summary>
+    [Fact]
+    public void NextEnum_WithSubset_ReturnsOnlySubsetValues()
+    {
+        // arrange
+        const int iterations = 200;
+        var random = new Random(0xC0DE);
+        var subset = new HashSet<DayOfWeek> { DayOfWeek.Monday, DayOfWeek.Friday };
+
+        // act + assert
+        for (var i = 0; i < iterations; i++)
+        {
+            var result = random.NextEnum(DayOfWeek.Monday, DayOfWeek.Friday);
+            subset.Contains(result).IsTrue();
+        }
     }
 }

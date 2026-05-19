@@ -14,7 +14,7 @@ internal sealed class AsyncDisposer : IAsyncDisposable
     /// <summary>
     /// The asynchronous function to execute when this object is disposed.
     /// </summary>
-    private readonly Func<Task> _handle;
+    private readonly Func<ValueTask> _handle;
 
     /// <summary>
     /// 0 if the handle has not yet been run; 1 once an in-flight or completed dispose has claimed it.
@@ -25,7 +25,7 @@ internal sealed class AsyncDisposer : IAsyncDisposable
     /// Initializes a new instance of the <see cref="AsyncDisposer"/> class.
     /// </summary>
     /// <param name="handle">The asynchronous function to execute when this object is disposed.</param>
-    public AsyncDisposer(Func<Task> handle)
+    public AsyncDisposer(Func<ValueTask> handle)
     {
         _handle = handle;
     }

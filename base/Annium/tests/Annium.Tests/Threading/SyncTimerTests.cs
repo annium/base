@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading;
@@ -183,6 +184,116 @@ public class SyncTimerTests : TestBase
     }
 
     /// <summary>
+    /// Verifies that a stateless SyncTimer continues firing after the handler throws an exception.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact]
+    public async Task HandlerThrows_SyncTimer_ContinuesFiring()
+    {
+        this.Trace("start");
+
+        // arrange
+        var calls = 0;
+        var pushes = new ConcurrentQueue<int>();
+        using var timer = Timers.Sync(
+            () =>
+            {
+                var n = Interlocked.Increment(ref calls);
+                if (n == 1)
+                    throw new InvalidOperationException("boom");
+                pushes.Enqueue(n);
+            },
+            0,
+            20,
+            Logger
+        );
+
+        // act — wait for at least 2 successful (non-throwing) invocations
+        await Wait.UntilAsync(() => pushes.Count >= 2, ms: 2000);
+        timer.Change(Timeout.Infinite, Timeout.Infinite);
+
+        // assert — timer did not stall after the exception
+        this.Trace("assert pushes");
+        (pushes.Count >= 2).IsTrue();
+
+        this.Trace("done");
+    }
+
+    /// <summary>
+    /// Verifies that a stateful SyncTimer continues firing after the handler throws an exception.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact]
+    public async Task HandlerThrows_SyncTimerStateful_ContinuesFiring()
+    {
+        this.Trace("start");
+
+        // arrange
+        var statefulState = new ThrowState();
+        using var timer = Timers.Sync(
+            statefulState,
+            static s =>
+            {
+                var n = Interlocked.Increment(ref s.Calls);
+                if (n == 1)
+                    throw new InvalidOperationException("boom");
+                s.Pushes.Enqueue(n);
+            },
+            0,
+            20,
+            Logger
+        );
+
+        // act — wait for at least 2 successful (non-throwing) invocations
+        await Wait.UntilAsync(() => statefulState.Pushes.Count >= 2, ms: 2000);
+        timer.Change(Timeout.Infinite, Timeout.Infinite);
+
+        // assert — timer did not stall after the exception
+        this.Trace("assert pushes");
+        (statefulState.Pushes.Count >= 2).IsTrue();
+
+        this.Trace("done");
+    }
+
+    /// <summary>
+    /// Verifies that disposing a SyncTimer from inside its own handler does not deadlock.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact]
+    public async Task Dispose_Reentrant_FromInsideSyncHandler_DoesNotDeadlock()
+    {
+        this.Trace("start");
+
+        // arrange
+        ISequentialTimer? timer = null;
+        var tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        timer = Timers.Sync(
+            () =>
+            {
+                // Capture and dispose re-entrantly on the first invocation only
+                if (!tcs.Task.IsCompleted)
+                {
+                    timer!.Dispose();
+                    tcs.TrySetResult(true);
+                }
+            },
+            0,
+            50,
+            Logger
+        );
+
+        // act — bounded wait so a deadlock regression fails the test instead of hanging
+        await Wait.UntilAsync(() => tcs.Task.IsCompleted, ms: 2000);
+
+        // assert — the dispose call returned without deadlocking
+        this.Trace("assert tcs completed");
+        tcs.Task.IsCompleted.IsTrue();
+
+        this.Trace("done");
+    }
+
+    /// <summary>
     /// A class that maintains a queue of integers for testing.
     /// </summary>
     private class State
@@ -201,5 +312,21 @@ public class SyncTimerTests : TestBase
         {
             Data.Enqueue(Data.Count);
         }
+    }
+
+    /// <summary>
+    /// A class that holds mutable state for the exception-resilience tests.
+    /// </summary>
+    private class ThrowState
+    {
+        /// <summary>
+        /// Gets or sets the invocation counter.
+        /// </summary>
+        public int Calls;
+
+        /// <summary>
+        /// Gets the queue of successfully recorded invocation numbers.
+        /// </summary>
+        public ConcurrentQueue<int> Pushes { get; } = new();
     }
 }

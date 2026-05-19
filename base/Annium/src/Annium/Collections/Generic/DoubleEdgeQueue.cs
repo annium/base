@@ -46,6 +46,7 @@ public sealed class DoubleEdgeQueue<T> : IDoubleEdgeQueue<T>
     /// <param name="isDirect">If true, operates in direct mode; otherwise, in reverse mode.</param>
     public DoubleEdgeQueue(IEnumerable<T> entries, bool isDirect)
     {
+        // IDE0306: collection-expression not applicable to LinkedList<T>; constructor overload required.
 #pragma warning disable IDE0306
         _entries = new LinkedList<T>(entries);
 #pragma warning restore IDE0306

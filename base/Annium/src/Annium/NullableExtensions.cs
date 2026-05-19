@@ -106,6 +106,7 @@ public static class NullableExtensions
     )
         where T : class
     {
+        // Awaiting a Task<T?> parameter — VSTHRD003 false positive; task provided by caller, not created locally.
 #pragma warning disable VSTHRD003
         var value = await task;
 #pragma warning restore VSTHRD003
@@ -130,6 +131,7 @@ public static class NullableExtensions
     )
         where T : struct
     {
+        // Awaiting a Task<T?> parameter — VSTHRD003 false positive; task provided by caller, not created locally.
 #pragma warning disable VSTHRD003
         var value = await task;
 #pragma warning restore VSTHRD003

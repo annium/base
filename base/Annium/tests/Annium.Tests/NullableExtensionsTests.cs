@@ -70,8 +70,9 @@ public class NullableExtensionsTests
         var validValue = Task.FromResult<string?>("data");
 
         // assert
+        // VSTHRD003: awaiting caller-provided Task<T?> to exercise NotNullAsync — analyzer false positive in test context.
 #pragma warning disable VSTHRD003
-        await Wrap.It(() => nullValue.NotNullAsync())
+        await Wrap.It(async () => await nullValue.NotNullAsync())
 #pragma warning restore VSTHRD003
             .ThrowsAsync<NullReferenceException>()
             .ReportsAsync($"{nameof(nullValue)} is null");
@@ -96,6 +97,7 @@ public class NullableExtensionsTests
             {
                 try
                 {
+                    // VSTHRD003: awaiting caller-provided Task<T?> to exercise NotNullAsync — analyzer false positive in test context.
 #pragma warning disable VSTHRD003
                     var failedValue = await nullValue.NotNullAsync();
 #pragma warning restore VSTHRD003

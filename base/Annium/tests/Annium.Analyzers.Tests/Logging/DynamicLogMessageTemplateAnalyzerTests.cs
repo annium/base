@@ -16,17 +16,24 @@ public sealed class DynamicLogMessageTemplateAnalyzerTests
     : CSharpAnalyzerTest<DynamicLogMessageTemplateAnalyzer, DefaultVerifier>
 {
     /// <summary>
+    /// Builds the reference assemblies set used for every test in this fixture.
+    /// </summary>
+    /// <returns>A configured <see cref="ReferenceAssemblies"/> instance.</returns>
+    private static ReferenceAssemblies BuildReferenceAssemblies() =>
+        new ReferenceAssemblies(
+            ReferenceAssemblies.NetStandard.NetStandard21.TargetFramework,
+            ReferenceAssemblies.NetStandard.NetStandard21.ReferenceAssemblyPackage,
+            Directory.GetCurrentDirectory()
+        ).AddAssemblies([typeof(ILogSubject).Assembly.GetName().Name!]);
+
+    /// <summary>
     /// Verifies that the analyzer ignores constant log message templates.
     /// </summary>
     /// <returns>True if the analyzer ignores constant templates; otherwise, false.</returns>
     [Fact]
     public async Task ConstantTemplate_Ignores()
     {
-        ReferenceAssemblies = new ReferenceAssemblies(
-            ReferenceAssemblies.NetStandard.NetStandard21.TargetFramework,
-            ReferenceAssemblies.NetStandard.NetStandard21.ReferenceAssemblyPackage,
-            Directory.GetCurrentDirectory()
-        ).AddAssemblies([typeof(ILogSubject).Assembly.GetName().Name!]);
+        ReferenceAssemblies = BuildReferenceAssemblies();
 
         TestCode = """
 using Annium.Logging;
@@ -61,11 +68,7 @@ public class Sample : ILogSubject
     [Fact]
     public async Task DynamicTemplate_ShowsWarning()
     {
-        ReferenceAssemblies = new ReferenceAssemblies(
-            ReferenceAssemblies.NetStandard.NetStandard21.TargetFramework,
-            ReferenceAssemblies.NetStandard.NetStandard21.ReferenceAssemblyPackage,
-            Directory.GetCurrentDirectory()
-        ).AddAssemblies([typeof(ILogSubject).Assembly.GetName().Name!]);
+        ReferenceAssemblies = BuildReferenceAssemblies();
 
         TestCode = """
 using Annium.Logging;
@@ -103,11 +106,7 @@ public class Sample : ILogSubject
     [Fact]
     public async Task StringConcatTemplate_ShowsWarning()
     {
-        ReferenceAssemblies = new ReferenceAssemblies(
-            ReferenceAssemblies.NetStandard.NetStandard21.TargetFramework,
-            ReferenceAssemblies.NetStandard.NetStandard21.ReferenceAssemblyPackage,
-            Directory.GetCurrentDirectory()
-        ).AddAssemblies([typeof(ILogSubject).Assembly.GetName().Name!]);
+        ReferenceAssemblies = BuildReferenceAssemblies();
 
         TestCode = """
 using Annium.Logging;

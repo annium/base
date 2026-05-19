@@ -10,6 +10,7 @@ namespace Annium.Threading.Tasks;
 /// </summary>
 public static class ValueTaskSet
 {
+    // WhenAll returns ValueTask matching the inputs; the Async suffix is omitted intentionally to match System.Threading.Tasks.Task.WhenAll ergonomics.
 #pragma warning disable VSTHRD200
     /// <summary>
     /// Waits for all ValueTasks to complete and returns their results as an array.
@@ -38,6 +39,7 @@ public static class ValueTaskSet
         return exceptions is null ? results : throw new AggregateException(exceptions);
     }
 
+    // WhenAll returns ValueTask matching the inputs; the Async suffix is omitted intentionally to match System.Threading.Tasks.Task.WhenAll ergonomics.
 #pragma warning disable VSTHRD200
     /// <summary>
     /// Waits for all ValueTasks to complete.
@@ -65,6 +67,7 @@ public static class ValueTaskSet
             throw new AggregateException(exceptions);
     }
 
+    // WhenAll returns ValueTask matching the inputs; the Async suffix is omitted intentionally to match System.Threading.Tasks.Task.WhenAll ergonomics.
 #pragma warning disable VSTHRD200
     /// <summary>
     /// Waits for all ValueTasks to complete and returns their results as an array.

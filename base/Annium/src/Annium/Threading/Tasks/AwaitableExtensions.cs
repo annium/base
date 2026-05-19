@@ -7,6 +7,7 @@ namespace Annium.Threading.Tasks;
 /// </summary>
 public static class AwaitableExtensions
 {
+    // Await() is a deliberate sync-over-async helper for test scaffolding and program entry points; sync-blocking is the intended contract here.
 #pragma warning disable VSTHRD002
     /// <summary>
     /// Awaits a task synchronously.

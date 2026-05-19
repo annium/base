@@ -104,6 +104,7 @@ internal abstract class AsyncTimerGateBase : TimerBase
     /// callback flow via <see cref="OnAfterGateAcquired"/> and <see cref="OnAfterGateReleased"/>.
     /// </summary>
     /// <param name="state">The timer state object (unused).</param>
+    // VSTHRD100: timer callback must be void; exceptions are caught inside the method body.
 #pragma warning disable VSTHRD100
     protected sealed override async void InvokeCallback(object? state)
 #pragma warning restore VSTHRD100

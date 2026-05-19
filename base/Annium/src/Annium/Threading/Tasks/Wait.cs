@@ -18,8 +18,12 @@ public static class Wait
     /// <returns>A task that completes when the condition is false or canceled.</returns>
     public static async Task WhileAsync(Func<bool> condition, CancellationToken ct, int pollDelay = 25)
     {
-        while (condition() && !ct.IsCancellationRequested)
-            await Task.Delay(pollDelay, CancellationToken.None).ConfigureAwait(false);
+        try
+        {
+            while (condition() && !ct.IsCancellationRequested)
+                await Task.Delay(pollDelay, ct).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException oce) when (oce.CancellationToken == ct) { }
     }
 
     /// <summary>
@@ -63,8 +67,12 @@ public static class Wait
     /// <returns>A task that completes when the condition is false or canceled.</returns>
     public static async Task WhileAsync(Func<Task<bool>> condition, CancellationToken ct, int pollDelay = 25)
     {
-        while (await condition().ConfigureAwait(false) && !ct.IsCancellationRequested)
-            await Task.Delay(pollDelay, CancellationToken.None).ConfigureAwait(false);
+        try
+        {
+            while (await condition().ConfigureAwait(false) && !ct.IsCancellationRequested)
+                await Task.Delay(pollDelay, ct).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException oce) when (oce.CancellationToken == ct) { }
     }
 
     /// <summary>
@@ -108,8 +116,12 @@ public static class Wait
     /// <returns>A task that completes when the condition is true or canceled.</returns>
     public static async Task UntilAsync(Func<bool> condition, CancellationToken ct, int pollDelay = 25)
     {
-        while (!condition() && !ct.IsCancellationRequested)
-            await Task.Delay(pollDelay, CancellationToken.None).ConfigureAwait(false);
+        try
+        {
+            while (!condition() && !ct.IsCancellationRequested)
+                await Task.Delay(pollDelay, ct).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException oce) when (oce.CancellationToken == ct) { }
     }
 
     /// <summary>
@@ -153,8 +165,12 @@ public static class Wait
     /// <returns>A task that completes when the condition is true or canceled.</returns>
     public static async Task UntilAsync(Func<Task<bool>> condition, CancellationToken ct, int pollDelay = 25)
     {
-        while (!await condition().ConfigureAwait(false) && !ct.IsCancellationRequested)
-            await Task.Delay(pollDelay, CancellationToken.None).ConfigureAwait(false);
+        try
+        {
+            while (!await condition().ConfigureAwait(false) && !ct.IsCancellationRequested)
+                await Task.Delay(pollDelay, ct).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException oce) when (oce.CancellationToken == ct) { }
     }
 
     /// <summary>
