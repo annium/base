@@ -282,8 +282,7 @@ public class AsyncTimerTests : TestBase
 
         // assert — drain-timeout warning was logged with the expected template
         Logs.Any(l =>
-                l.Level == LogLevel.Warn
-                && l.MessageTemplate.Contains("Timer disposed but in-flight callback exceeded")
+                l.Level == LogLevel.Warn && l.MessageTemplate.Contains("Timer disposed but in-flight callback exceeded")
             )
             .IsTrue();
 

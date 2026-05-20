@@ -96,7 +96,11 @@ public static class Expect
     /// <param name="ms">The timeout in milliseconds.</param>
     /// <param name="pollDelay">The delay in milliseconds between validation attempts.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    public static async Task ToAsync(Func<ValueTask> validate, int ms = DefaultTimeoutMs, int pollDelay = DefaultPollDelayMs)
+    public static async Task ToAsync(
+        Func<ValueTask> validate,
+        int ms = DefaultTimeoutMs,
+        int pollDelay = DefaultPollDelayMs
+    )
     {
         using var cts = new CancellationTokenSource(ms);
         await ToAsync(validate, cts.Token, pollDelay);

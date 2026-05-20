@@ -18,10 +18,7 @@ public class TryMakeGenericMethodExtensionTests
     [Fact]
     public void TryMakeGenericMethod_NullMethod_Throws()
     {
-        Wrap.It(() =>
-                (null as MethodInfo)!.TryMakeGenericMethod(out _, typeof(int))
-            )
-            .Throws<ArgumentNullException>();
+        Wrap.It(() => (null as MethodInfo)!.TryMakeGenericMethod(out _, typeof(int))).Throws<ArgumentNullException>();
     }
 
     /// <summary>

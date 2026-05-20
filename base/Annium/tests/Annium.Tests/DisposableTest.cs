@@ -328,7 +328,11 @@ public class DisposableTest : TestBase
         box.Dispose();
 
         // act + assert
-        Wrap.It(() => { box += Disposable.Create(() => { }); }).Throws<ObjectDisposedException>();
+        Wrap.It(() =>
+            {
+                box += Disposable.Create(() => { });
+            })
+            .Throws<ObjectDisposedException>();
     }
 
     /// <summary>

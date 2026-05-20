@@ -70,7 +70,11 @@ public static class Wait
     /// <param name="ct">Cancellation token.</param>
     /// <param name="pollDelay">The delay at which the condition will be polled, in milliseconds.</param>
     /// <returns>A task that completes when the condition is false or canceled.</returns>
-    public static async Task WhileAsync(Func<ValueTask<bool>> condition, CancellationToken ct, int pollDelay = DefaultPollDelayMs)
+    public static async Task WhileAsync(
+        Func<ValueTask<bool>> condition,
+        CancellationToken ct,
+        int pollDelay = DefaultPollDelayMs
+    )
     {
         try
         {
@@ -168,7 +172,11 @@ public static class Wait
     /// <param name="ct">Cancellation token.</param>
     /// <param name="pollDelay">The delay at which the condition will be polled, in milliseconds.</param>
     /// <returns>A task that completes when the condition is true or canceled.</returns>
-    public static async Task UntilAsync(Func<ValueTask<bool>> condition, CancellationToken ct, int pollDelay = DefaultPollDelayMs)
+    public static async Task UntilAsync(
+        Func<ValueTask<bool>> condition,
+        CancellationToken ct,
+        int pollDelay = DefaultPollDelayMs
+    )
     {
         try
         {

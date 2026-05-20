@@ -56,15 +56,16 @@ public class ExpectTests
     public async Task ToAsync_AsyncValidate_TimesOut_ThrowsValidateLambdaException()
     {
         await Wrap.It(async () =>
-            await Expect.ToAsync(
-                async () =>
-                {
-                    await Task.Yield();
-                    throw new InvalidOperationException("never ready");
-                },
-                ms: 50
+                await Expect.ToAsync(
+                    async () =>
+                    {
+                        await Task.Yield();
+                        throw new InvalidOperationException("never ready");
+                    },
+                    ms: 50
+                )
             )
-        ).ThrowsAsync<InvalidOperationException>();
+            .ThrowsAsync<InvalidOperationException>();
     }
 
     /// <summary>
@@ -79,15 +80,16 @@ public class ExpectTests
         await cts.CancelAsync();
 
         await Wrap.It(async () =>
-            await Expect.ToAsync(
-                async () =>
-                {
-                    await Task.Yield();
-                    throw new InvalidOperationException("never ready");
-                },
-                cts.Token
+                await Expect.ToAsync(
+                    async () =>
+                    {
+                        await Task.Yield();
+                        throw new InvalidOperationException("never ready");
+                    },
+                    cts.Token
+                )
             )
-        ).ThrowsAsync<InvalidOperationException>();
+            .ThrowsAsync<InvalidOperationException>();
     }
 
     /// <summary>
@@ -129,11 +131,9 @@ public class ExpectTests
     public async Task ToAsync_SyncValidate_TimesOut_ThrowsValidateLambdaException()
     {
         await Wrap.It(async () =>
-            await Expect.ToAsync(
-                () => throw new InvalidOperationException("never ready"),
-                ms: 50
+                await Expect.ToAsync(() => throw new InvalidOperationException("never ready"), ms: 50)
             )
-        ).ThrowsAsync<InvalidOperationException>();
+            .ThrowsAsync<InvalidOperationException>();
     }
 
     /// <summary>
@@ -148,10 +148,8 @@ public class ExpectTests
         await cts.CancelAsync();
 
         await Wrap.It(async () =>
-            await Expect.ToAsync(
-                () => throw new InvalidOperationException("never ready"),
-                cts.Token
+                await Expect.ToAsync(() => throw new InvalidOperationException("never ready"), cts.Token)
             )
-        ).ThrowsAsync<InvalidOperationException>();
+            .ThrowsAsync<InvalidOperationException>();
     }
 }

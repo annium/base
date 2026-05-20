@@ -173,9 +173,7 @@ public class LogSubjectExtensionsLevelTests
     [Fact]
     public void Log_FiveParams_AllForwardedInOrder()
     {
-        var captured = RunCapture(subject =>
-            subject.Log(LogLevel.Info, "msg {x1} {x2} {x3} {x4} {x5}", 1, 2, 3, 4, 5)
-        );
+        var captured = RunCapture(subject => subject.Log(LogLevel.Info, "msg {x1} {x2} {x3} {x4} {x5}", 1, 2, 3, 4, 5));
         captured.Data.Has(5);
         for (var i = 0; i < 5; i++)
             captured.Data[i].Is(i + 1);
