@@ -154,14 +154,16 @@ public abstract class TestBase : ILogSubject
     }
 
     /// <summary>
-    /// Builds the service provider and marks it as built.
+    /// Builds the service provider and marks it as built. Goes through the documented M.E.DI
+    /// host bridge — the one sync-over-async site in the framework. T2 reshapes this class
+    /// around <c>IAsyncLifetime</c> so the bridge is no longer required here.
     /// </summary>
     /// <returns>The built <see cref="IKeyedServiceProvider"/>.</returns>
     private IKeyedServiceProvider BuildServiceProvider()
     {
         EnsureNotBuilt();
 
-        return _builder.Build();
+        return (IKeyedServiceProvider)new ServiceProviderFactory().CreateServiceProvider(_builder);
     }
 
     /// <summary>

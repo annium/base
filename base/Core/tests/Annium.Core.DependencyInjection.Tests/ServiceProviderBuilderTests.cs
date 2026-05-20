@@ -1,5 +1,6 @@
 using System;
 using System.Threading;
+using System.Threading.Tasks;
 using Annium.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
@@ -18,7 +19,7 @@ public class ServiceProviderBuilderTests
     /// after the final provider is built, so any singletons it materialized are released.
     /// </summary>
     [Fact]
-    public void Build_TransientProvider_IsDisposed()
+    public async Task Build_TransientProvider_IsDisposed()
     {
         // arrange
         DisposableProbe.Reset();
@@ -26,7 +27,7 @@ public class ServiceProviderBuilderTests
         builder.UseServicePack<ProbePack>();
 
         // act
-        using var provider = builder.Build();
+        await using var provider = await builder.BuildAsync(TestContext.Current.CancellationToken);
 
         // assert — the transient provider disposed its materialized probe instance;
         // the final provider holds its own probe instance (still alive, not yet disposed)
@@ -34,40 +35,46 @@ public class ServiceProviderBuilderTests
     }
 
     /// <summary>
-    /// Verifies that a second call to Build on the same builder throws with a clear
+    /// Verifies that a second call to BuildAsync on the same builder throws with a clear
     /// "already built" message, preserving the single-use contract.
     /// </summary>
     [Fact]
-    public void Build_SecondCall_Throws()
+    public async Task Build_SecondCall_Throws()
     {
         // arrange
         var builder = new ServiceProviderFactory().CreateBuilder(new ServiceCollection());
-        using var provider = builder.Build();
+        await using var provider = await builder.BuildAsync(TestContext.Current.CancellationToken);
 
         // act + assert
-        var ex = Wrap.It(() => builder.Build()).Throws<InvalidOperationException>();
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(
+            async () => await builder.BuildAsync(TestContext.Current.CancellationToken)
+        );
         ex.Message.IsEqual("ServiceProviderBuilder is already built");
     }
 
     /// <summary>
     /// Verifies that a Configure-phase throw leaves the builder in its pre-build state —
-    /// the "already built" flag is not flipped prematurely, so re-calling Build produces
+    /// the "already built" flag is not flipped prematurely, so re-calling BuildAsync produces
     /// the same underlying fault rather than a misleading "already built" error.
     /// </summary>
     [Fact]
-    public void Build_WhenConfigureThrows_PreservesRetryability()
+    public async Task Build_WhenConfigureThrows_PreservesRetryability()
     {
         // arrange
         var builder = new ServiceProviderFactory().CreateBuilder(new ServiceCollection());
         builder.UseServicePack<ThrowingConfigurePack>();
 
         // first Build propagates the Configure fault
-        var firstEx = Wrap.It(() => builder.Build()).Throws<InvalidOperationException>();
+        var firstEx = await Assert.ThrowsAsync<InvalidOperationException>(
+            async () => await builder.BuildAsync(TestContext.Current.CancellationToken)
+        );
         firstEx.Message.IsEqual("boom");
 
         // act — second Build on same builder reproduces the underlying fault,
         // NOT "already built" — proves _isAlreadyBuilt was not flipped on throw
-        var secondEx = Wrap.It(() => builder.Build()).Throws<InvalidOperationException>();
+        var secondEx = await Assert.ThrowsAsync<InvalidOperationException>(
+            async () => await builder.BuildAsync(TestContext.Current.CancellationToken)
+        );
 
         // assert
         secondEx.Message.IsEqual("boom");
@@ -104,25 +111,28 @@ internal sealed class DisposableProbe : IDisposable
 internal sealed class ProbePack : ServicePackBase
 {
     /// <inheritdoc/>
-    public override void Configure(IServiceContainer container)
+    public override Task ConfigureAsync(IServiceContainer container, CancellationToken ct)
     {
         container.Add<DisposableProbe>().AsSelf().Singleton();
+        return Task.CompletedTask;
     }
 
     /// <inheritdoc/>
-    public override void Register(IServiceContainer container, IServiceProvider provider)
+    public override Task RegisterAsync(IServiceContainer container, IServiceProvider provider, CancellationToken ct)
     {
         // resolve from the transient provider so it materializes and owns a singleton instance
         _ = provider.Resolve<DisposableProbe>();
+        return Task.CompletedTask;
     }
 }
 
 /// <summary>
-/// Test service pack that deliberately throws from its Configure method, used to verify
+/// Test service pack that deliberately throws from its ConfigureAsync method, used to verify
 /// that builder state survives a mid-phase fault.
 /// </summary>
 internal sealed class ThrowingConfigurePack : ServicePackBase
 {
     /// <inheritdoc/>
-    public override void Configure(IServiceContainer container) => throw new InvalidOperationException("boom");
+    public override Task ConfigureAsync(IServiceContainer container, CancellationToken ct) =>
+        throw new InvalidOperationException("boom");
 }
