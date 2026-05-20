@@ -21,7 +21,7 @@ public static class TypeHelper
         if (map.Body is NewExpression create)
             return create.Arguments.Select(x => Expression.Lambda(x, map.Parameters)).ToArray();
 
-        return new LambdaExpression[] { map };
+        return [map];
     }
 
     /// <summary>
@@ -35,7 +35,7 @@ public static class TypeHelper
         if (map.Body is NewExpression create)
             return create.Arguments.Select(ResolveProperty).ToArray();
 
-        return new[] { ResolveProperty(map.Body) };
+        return [ResolveProperty(map.Body)];
     }
 
     /// <summary>

@@ -17,7 +17,7 @@ public static class HasDefaultConstructorExtension
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="type"/> is null.</exception>
     /// <exception cref="ArgumentException">Thrown when the type is not constructable.</exception>
     public static bool HasDefaultConstructor(this Type type) =>
-        type.HasDefaultConstructor(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+        type.HasDefaultConstructor(Constants.AllInstanceBindingFlags);
 
     /// <summary>
     /// Checks if the specified type has a default constructor using the provided binding flags.

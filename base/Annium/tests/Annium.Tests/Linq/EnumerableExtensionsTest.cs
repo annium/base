@@ -56,4 +56,71 @@ public class EnumerableExtensionsTest
         // would produce 0 non-identity runs).
         nonIdentityRuns.IsGreaterOrEqual(900);
     }
+
+    /// <summary>Yield wraps a non-null value into a single-element sequence.</summary>
+    [Fact]
+    public void Yield_NonNull_ReturnsSingleElement()
+    {
+        var result = "hello".Yield().ToArray();
+
+        result.IsEqual(new[] { "hello" });
+    }
+
+    /// <summary>Yield on a null reference returns an empty sequence.</summary>
+    [Fact]
+    public void Yield_Null_ReturnsEmpty()
+    {
+        string? source = null;
+
+        var result = source!.Yield().ToArray();
+
+        result.Length.Is(0);
+    }
+
+    /// <summary>WhereNot keeps elements for which the predicate is false.</summary>
+    [Fact]
+    public void WhereNot_KeepsNonMatching()
+    {
+        var src = new[] { 1, 2, 3, 4 };
+
+        var result = src.WhereNot(x => x % 2 == 0).ToArray();
+
+        result.IsEqual(new[] { 1, 3 });
+    }
+
+    /// <summary>None returns true when no element matches the predicate.</summary>
+    [Fact]
+    public void None_NoMatch_ReturnsTrue()
+    {
+        var src = new[] { 1, 3, 5 };
+
+        src.None(x => x % 2 == 0).IsTrue();
+    }
+
+    /// <summary>None returns false when any element matches the predicate.</summary>
+    [Fact]
+    public void None_AnyMatch_ReturnsFalse()
+    {
+        var src = new[] { 1, 2, 3 };
+
+        src.None(x => x % 2 == 0).IsFalse();
+    }
+
+    /// <summary>Join with the default empty separator concatenates strings tightly.</summary>
+    [Fact]
+    public void Join_DefaultSeparator_ConcatsTight()
+    {
+        var src = new[] { "a", "b", "c" };
+
+        src.Join().Is("abc");
+    }
+
+    /// <summary>Join with a separator interleaves the separator between elements.</summary>
+    [Fact]
+    public void Join_WithSeparator_Interleaves()
+    {
+        var src = new[] { "a", "b", "c" };
+
+        src.Join(", ").Is("a, b, c");
+    }
 }

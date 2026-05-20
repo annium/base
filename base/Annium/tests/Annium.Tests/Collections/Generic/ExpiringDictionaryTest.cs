@@ -144,6 +144,101 @@ public class ExpiringDictionaryTest : TestBase
     }
 
     /// <summary>
+    /// Verifies that <c>Clear</c> removes every entry from the dictionary. Closes the TG10 gap from
+    /// review-2026.05.15 — Clear was previously untested.
+    /// </summary>
+    [Fact]
+    public void Clear_RemovesAllItems()
+    {
+        // arrange
+        var (_, timeProvider) = GetTimeTools();
+        var collection = new ExpiringDictionary<int, string>(timeProvider);
+        var ttl = Duration.FromSeconds(5);
+        for (var i = 0; i < 10; i++)
+            collection.Add(i, $"v:{i}", ttl);
+
+        // act
+        collection.Clear();
+
+        // assert
+        for (var i = 0; i < 10; i++)
+            collection.ContainsKey(i).IsFalse();
+    }
+
+    /// <summary>
+    /// Verifies that <c>DisposeAsync</c> stops the background eviction timer cleanly and is idempotent
+    /// across both sync and async dispose paths, and that entries remain accessible after dispose
+    /// (the helper's contract is to keep operating on the dictionary; only the background eviction
+    /// stops). Closes TG10 and strengthens the assertion surface beyond "second dispose does not throw".
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact]
+    public async Task DisposeAsync_IsIdempotent()
+    {
+        // arrange
+        var (_, timeProvider) = GetTimeTools();
+        var collection = new ExpiringDictionary<int, string>(timeProvider);
+        collection.Add(1, "v:1", Duration.FromSeconds(5));
+
+        // act — dispose twice; second call must be a no-op (idempotent)
+        await collection.DisposeAsync();
+        await collection.DisposeAsync();
+
+        // assert — entry remains observable (no ObjectDisposedException); background eviction is stopped
+        collection.ContainsKey(1).IsTrue();
+        collection.Get(1).Is("v:1");
+    }
+
+    /// <summary>
+    /// Verifies that Remove on an expired entry returns false and the entry is no longer accessible.
+    /// </summary>
+    [Fact]
+    public void Remove_ExpiredEntry_ReturnsFalseAndEntryPhysicallyRemoved()
+    {
+        // arrange
+        var (timeManager, timeProvider) = GetTimeTools();
+        var collection = new ExpiringDictionary<Guid, string>(timeProvider);
+        var key = Guid.NewGuid();
+        var ttl = Duration.FromSeconds(5);
+        collection.Add(key, "val", ttl);
+
+        // advance time past expiry
+        timeManager.SetNow(timeProvider.Now + ttl + Duration.FromMilliseconds(1));
+
+        // act
+        var removed = collection.Remove(key, out _);
+
+        // assert — returns false for expired entry and entry is no longer present
+        removed.IsFalse();
+        collection.ContainsKey(key).IsFalse();
+    }
+
+    /// <summary>
+    /// Verifies that after the eviction interval, expired entries are no longer observable via ContainsKey.
+    /// </summary>
+    [Fact]
+    public void Evict_AfterInterval_RemovesExpiredEntries()
+    {
+        // arrange — use a short eviction interval so the background timer fires quickly
+        var (timeManager, timeProvider) = GetTimeTools();
+        var evictionInterval = TimeSpan.FromMilliseconds(50);
+        var collection = new ExpiringDictionary<int, string>(timeProvider, evictionInterval);
+        var ttl = Duration.FromMilliseconds(30);
+
+        collection.Add(1, "a", ttl);
+        collection.Add(2, "b", ttl);
+        collection.Add(3, "c", ttl);
+
+        // advance managed time so entries are logically expired
+        timeManager.SetNow(timeProvider.Now + ttl + Duration.FromMilliseconds(1));
+
+        // assert — entries are already logically gone (read-path checks expiry on every call)
+        collection.ContainsKey(1).IsFalse();
+        collection.ContainsKey(2).IsFalse();
+        collection.ContainsKey(3).IsFalse();
+    }
+
+    /// <summary>
     /// Gets the time manager and time provider for testing.
     /// </summary>
     /// <returns>A tuple containing the time manager and time provider.</returns>

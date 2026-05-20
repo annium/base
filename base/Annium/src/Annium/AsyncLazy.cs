@@ -26,9 +26,13 @@ public sealed class AsyncLazy<T>
     public ValueTask<T> GetValueAsync(CancellationToken ct = default)
     {
         var task = _instance.Value;
-        // task.Result on a completed task is non-blocking — analyzer is being conservative here.
+        // IsCompletedSuccessfully (not IsCompleted) so faulted/cancelled tasks take the slow
+        // path via WaitAsync — that propagates the original exception unwrapped, while the
+        // fast path's task.Result would throw AggregateException for faulted/cancelled tasks.
+        // task.Result on a successfully-completed task is non-blocking — analyzer is being
+        // conservative here.
 #pragma warning disable VSTHRD103
-        return task.IsCompleted ? new ValueTask<T>(task.Result) : new ValueTask<T>(task.WaitAsync(ct));
+        return task.IsCompletedSuccessfully ? new ValueTask<T>(task.Result) : new ValueTask<T>(task.WaitAsync(ct));
 #pragma warning restore VSTHRD103
     }
 
@@ -47,19 +51,7 @@ public sealed class AsyncLazy<T>
     /// </summary>
     /// <param name="factory">The delegate that is invoked on a background thread to produce the value when it is needed.</param>
     public AsyncLazy(Func<T> factory)
-    {
-#pragma warning disable VSTHRD011
-        _instance = new Lazy<Task<T>>(
-#pragma warning restore VSTHRD011
-            async () =>
-            {
-                var value = await Task.Run(factory).ConfigureAwait(false);
-                _isValueCreated = true;
-                return value;
-            },
-            isThreadSafe: true
-        );
-    }
+        : this(() => Task.FromResult(factory())) { }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AsyncLazy{T}"/> class with an asynchronous factory.
@@ -67,6 +59,7 @@ public sealed class AsyncLazy<T>
     /// <param name="factory">The asynchronous delegate that is invoked on a background thread to produce the value when it is needed.</param>
     public AsyncLazy(Func<Task<T>> factory)
     {
+        // VSTHRD011: Lazy<Task<T>> is intentional — thread-safe lazy async initialization (isThreadSafe:true).
 #pragma warning disable VSTHRD011
         _instance = new Lazy<Task<T>>(
 #pragma warning restore VSTHRD011

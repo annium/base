@@ -1,4 +1,3 @@
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using Annium.Core.Mapper;
 using Annium.Data.Models.Extensions;
@@ -17,8 +16,8 @@ public static class ShallowEqualityExtensions
     /// <typeparam name="TD">The type of the data to compare.</typeparam>
     /// <param name="value">The value to compare.</param>
     /// <param name="data">The data to compare against.</param>
-    /// <param name="message">The message to include in the exception if the assertion fails.</param>
     /// <param name="mapper">The mapper to use for comparison. If null, a default mapper is used.</param>
+    /// <param name="message">The message to include in the exception if the assertion fails.</param>
     /// <param name="valueEx">The expression representing the value parameter.</param>
     /// <param name="dataEx">The expression representing the data parameter.</param>
     /// <returns>The original value if the assertion passes.</returns>
@@ -26,13 +25,13 @@ public static class ShallowEqualityExtensions
     public static T IsEqual<T, TD>(
         this T value,
         TD data,
-        string? message = null,
         IMapper? mapper = default,
+        string? message = null,
         [CallerArgumentExpression(nameof(value))] string valueEx = "",
         [CallerArgumentExpression(nameof(data))] string dataEx = ""
     )
     {
-        if (!value.IsShallowEqual(data, mapper ?? Mapper.GetFor(Assembly.GetCallingAssembly())))
+        if (!value.IsShallowEqual(data, mapper ?? Mapper.GetFor(typeof(T).Assembly)))
             throw new AssertionFailedException(
                 message
                     ?? $"{value.WrapWithExpression(valueEx)} is not shallow equal to {data.WrapWithExpression(dataEx)}"
@@ -48,8 +47,8 @@ public static class ShallowEqualityExtensions
     /// <typeparam name="TD">The type of the data to compare.</typeparam>
     /// <param name="value">The value to compare.</param>
     /// <param name="data">The data to compare against.</param>
-    /// <param name="message">The message to include in the exception if the assertion fails.</param>
     /// <param name="mapper">The mapper to use for comparison. If null, a default mapper is used.</param>
+    /// <param name="message">The message to include in the exception if the assertion fails.</param>
     /// <param name="valueEx">The expression representing the value parameter.</param>
     /// <param name="dataEx">The expression representing the data parameter.</param>
     /// <returns>The original value if the assertion passes.</returns>
@@ -57,13 +56,13 @@ public static class ShallowEqualityExtensions
     public static T IsNotEqual<T, TD>(
         this T value,
         TD data,
-        string? message = null,
         IMapper? mapper = default,
+        string? message = null,
         [CallerArgumentExpression(nameof(value))] string valueEx = "",
         [CallerArgumentExpression(nameof(data))] string dataEx = ""
     )
     {
-        if (value.IsShallowEqual(data, mapper ?? Mapper.GetFor(Assembly.GetCallingAssembly())))
+        if (value.IsShallowEqual(data, mapper ?? Mapper.GetFor(typeof(T).Assembly)))
             throw new AssertionFailedException(
                 message ?? $"{value.WrapWithExpression(valueEx)} is shallow equal to {data.WrapWithExpression(dataEx)}"
             );

@@ -22,7 +22,7 @@ public static class GetOwnInterfacesExtension
             throw new ArgumentNullException(nameof(type));
 
         if (type is { IsValueType: false, IsClass: false, IsInterface: false })
-            throw new ArgumentException(nameof(type), $"Can't collect inherited interfaces of {type.FriendlyName()}");
+            throw new ArgumentException($"Can't collect inherited interfaces of {type.FriendlyName()}", nameof(type));
 
         var inheritedInterfaces = type.GetInheritedInterfaces();
         var allInterfaces = type.GetInterfaces();

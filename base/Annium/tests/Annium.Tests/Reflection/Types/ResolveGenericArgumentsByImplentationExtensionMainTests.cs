@@ -52,6 +52,54 @@ public class ResolveGenericArgumentsByImplementationExtensionMainTests
     }
 
     /// <summary>
+    /// Interface→class arm: when the receiver is an interface and the target is a class,
+    /// <c>ResolveInterfaceArgumentsByTarget</c> returns <c>null</c> (interfaces don't extend classes).
+    /// </summary>
+    [Fact]
+    public void Interface_TargetIsClass_ReturnsNull()
+    {
+        var result = typeof(IGeneric<bool>).ResolveGenericArgumentsByImplementation(typeof(SimpleClass));
+        (result is null).IsTrue();
+    }
+
+    /// <summary>
+    /// Interface→value-type arm: same idea — interfaces don't implement value types.
+    /// </summary>
+    [Fact]
+    public void Interface_TargetIsValueType_ReturnsNull()
+    {
+        var result = typeof(IGeneric<bool>).ResolveGenericArgumentsByImplementation(typeof(int));
+        (result is null).IsTrue();
+    }
+
+    /// <summary>
+    /// Class→value-type arm: <c>ResolveClassArgumentsByTarget</c> returns <c>null</c> when the
+    /// target is a value type (a class cannot inherit a struct).
+    /// </summary>
+    [Fact]
+    public void Class_TargetIsValueType_ReturnsNull()
+    {
+        var result = typeof(SimpleClass).ResolveGenericArgumentsByImplementation(typeof(int));
+        (result is null).IsTrue();
+    }
+
+    /// <summary>
+    /// Struct→class arm: <c>ResolveStructArgumentsByTarget</c> returns <c>null</c> when the
+    /// target is a class (a struct cannot inherit a class).
+    /// </summary>
+    [Fact]
+    public void Struct_TargetIsClass_ReturnsNull()
+    {
+        var result = typeof(int).ResolveGenericArgumentsByImplementation(typeof(SimpleClass));
+        (result is null).IsTrue();
+    }
+
+    /// <summary>
+    /// A non-generic concrete class used as a target in the negative arms above.
+    /// </summary>
+    private class SimpleClass;
+
+    /// <summary>
     /// Represents a constrained complex class for testing generic argument resolution.
     /// </summary>
     /// <typeparam name="T1">The first type parameter, must implement IGeneric&lt;T2, T3&gt;.</typeparam>

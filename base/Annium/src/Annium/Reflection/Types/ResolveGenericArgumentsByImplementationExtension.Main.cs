@@ -24,20 +24,14 @@ public static partial class ResolveGenericArgumentsByImplementationExtension
         if (target is null)
             throw new ArgumentNullException(nameof(target));
 
-        if (type.IsGenericParameter)
-            return type.ResolveGenericParameterArgumentsByTarget(target);
-
-        if (type.IsClass)
-            return type.ResolveClassArgumentsByTarget(target);
-
-        if (type.IsValueType)
-            return type.ResolveStructArgumentsByTarget(target);
-
-        if (type.IsInterface)
-            return type.ResolveInterfaceArgumentsByTarget(target);
-
-        // otherwise - not implemented or don't know how to resolve
-        throw NotImplementedException(type, target);
+        return type switch
+        {
+            { IsGenericParameter: true } => type.ResolveGenericParameterArgumentsByTarget(target),
+            { IsClass: true } => type.ResolveClassArgumentsByTarget(target),
+            { IsValueType: true } => type.ResolveStructArgumentsByTarget(target),
+            { IsInterface: true } => type.ResolveInterfaceArgumentsByTarget(target),
+            _ => throw NotImplementedException(type, target),
+        };
     }
 
     /// <summary>
@@ -47,22 +41,15 @@ public static partial class ResolveGenericArgumentsByImplementationExtension
     /// <param name="target">The target type to resolve against.</param>
     /// <returns>An array of resolved type arguments, or null if resolution fails.</returns>
     /// <exception cref="NotImplementedException">Thrown if the resolution logic is not implemented for the given types.</exception>
-    private static Type[]? ResolveGenericParameterArgumentsByTarget(this Type type, Type target)
-    {
-        if (target.IsGenericParameter)
-            return type.ResolveGenericParameterArgumentsByGenericParameter(target);
-
-        if (target.IsClass)
-            return type.ResolveGenericParameterArgumentsByClass(target);
-
-        if (target.IsValueType)
-            return type.ResolveGenericParameterArgumentsByStruct(target);
-
-        if (target.IsInterface)
-            return type.ResolveGenericParameterArgumentsByInterface(target);
-
-        throw NotImplementedException(type, target);
-    }
+    private static Type[]? ResolveGenericParameterArgumentsByTarget(this Type type, Type target) =>
+        target switch
+        {
+            { IsGenericParameter: true } => type.ResolveGenericParameterArgumentsByGenericParameter(target),
+            { IsClass: true } => type.ResolveGenericParameterArgumentsByClass(target),
+            { IsValueType: true } => type.ResolveGenericParameterArgumentsByStruct(target),
+            { IsInterface: true } => type.ResolveGenericParameterArgumentsByInterface(target),
+            _ => throw NotImplementedException(type, target),
+        };
 
     /// <summary>
     /// Resolves generic arguments for a class type based on the target type.
@@ -71,22 +58,15 @@ public static partial class ResolveGenericArgumentsByImplementationExtension
     /// <param name="target">The target type to resolve against.</param>
     /// <returns>An array of resolved type arguments, or null if resolution fails.</returns>
     /// <exception cref="NotImplementedException">Thrown if the resolution logic is not implemented for the given types.</exception>
-    private static Type[]? ResolveClassArgumentsByTarget(this Type type, Type target)
-    {
-        if (target.IsGenericParameter)
-            return type.ResolveClassArgumentsByGenericParameter(target);
-
-        if (target.IsClass)
-            return type.ResolveClassArgumentsByClass(target);
-
-        if (target.IsValueType)
-            return null;
-
-        if (target.IsInterface)
-            return type.ResolveClassArgumentsByInterface(target);
-
-        throw NotImplementedException(type, target);
-    }
+    private static Type[]? ResolveClassArgumentsByTarget(this Type type, Type target) =>
+        target switch
+        {
+            { IsGenericParameter: true } => type.ResolveClassArgumentsByGenericParameter(target),
+            { IsClass: true } => type.ResolveClassArgumentsByClass(target),
+            { IsValueType: true } => null,
+            { IsInterface: true } => type.ResolveClassArgumentsByInterface(target),
+            _ => throw NotImplementedException(type, target),
+        };
 
     /// <summary>
     /// Resolves generic arguments for a struct type based on the target type.
@@ -95,22 +75,15 @@ public static partial class ResolveGenericArgumentsByImplementationExtension
     /// <param name="target">The target type to resolve against.</param>
     /// <returns>An array of resolved type arguments, or null if resolution fails.</returns>
     /// <exception cref="NotImplementedException">Thrown if the resolution logic is not implemented for the given types.</exception>
-    private static Type[]? ResolveStructArgumentsByTarget(this Type type, Type target)
-    {
-        if (target.IsGenericParameter)
-            return type.ResolveStructArgumentsByGenericParameter(target);
-
-        if (target.IsClass)
-            return null;
-
-        if (target.IsValueType)
-            return type.ResolveStructArgumentsByStruct(target);
-
-        if (target.IsInterface)
-            return type.ResolveStructArgumentsByInterface(target);
-
-        throw NotImplementedException(type, target);
-    }
+    private static Type[]? ResolveStructArgumentsByTarget(this Type type, Type target) =>
+        target switch
+        {
+            { IsGenericParameter: true } => type.ResolveStructArgumentsByGenericParameter(target),
+            { IsClass: true } => null,
+            { IsValueType: true } => type.ResolveStructArgumentsByStruct(target),
+            { IsInterface: true } => type.ResolveStructArgumentsByInterface(target),
+            _ => throw NotImplementedException(type, target),
+        };
 
     /// <summary>
     /// Resolves generic arguments for an interface type based on the target type.
@@ -119,22 +92,15 @@ public static partial class ResolveGenericArgumentsByImplementationExtension
     /// <param name="target">The target type to resolve against.</param>
     /// <returns>An array of resolved type arguments, or null if resolution fails.</returns>
     /// <exception cref="NotImplementedException">Thrown if the resolution logic is not implemented for the given types.</exception>
-    private static Type[]? ResolveInterfaceArgumentsByTarget(this Type type, Type target)
-    {
-        if (target.IsGenericParameter)
-            return type.ResolveInterfaceArgumentsByGenericParameter(target);
-
-        if (target.IsClass)
-            return null;
-
-        if (target.IsValueType)
-            return null;
-
-        if (target.IsInterface)
-            return type.ResolveInterfaceArgumentsByInterface(target);
-
-        throw NotImplementedException(type, target);
-    }
+    private static Type[]? ResolveInterfaceArgumentsByTarget(this Type type, Type target) =>
+        target switch
+        {
+            { IsGenericParameter: true } => type.ResolveInterfaceArgumentsByGenericParameter(target),
+            { IsClass: true } => null,
+            { IsValueType: true } => null,
+            { IsInterface: true } => type.ResolveInterfaceArgumentsByInterface(target),
+            _ => throw NotImplementedException(type, target),
+        };
 
     /// <summary>
     /// Creates a <see cref="NotImplementedException"/> for cases where resolution logic is not implemented.

@@ -30,11 +30,16 @@ public sealed class ExplicitCallerArgumentAnalyzer : DiagnosticAnalyzer
         "System.Runtime.CompilerServices.CallerArgumentExpressionAttribute",
     ];
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Gets the supported diagnostics for this analyzer.
+    /// </summary>
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } =
     [Descriptors.Log0002ExplicitCallerArgument];
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Initializes the analyzer by configuring concurrent execution and registering the operation action.
+    /// </summary>
+    /// <param name="context">The analysis context to configure.</param>
     public override void Initialize(AnalysisContext context)
     {
         context.EnableConcurrentExecution();

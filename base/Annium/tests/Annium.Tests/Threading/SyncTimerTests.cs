@@ -1,10 +1,12 @@
-using System.Collections.Generic;
+using System;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Annium.Logging;
 using Annium.Testing;
 using Annium.Threading;
+using Annium.Threading.Tasks;
 using Xunit;
 
 namespace Annium.Tests.Threading;
@@ -31,7 +33,7 @@ public class SyncTimerTests : TestBase
         this.Trace("start");
 
         // arrange
-        var state = new State();
+        var state = new TimerTestHelpers.State();
         using var timer = Timers.Sync(
             state,
             static state =>
@@ -66,7 +68,7 @@ public class SyncTimerTests : TestBase
         this.Trace("start");
 
         // arrange
-        var state = new State();
+        var state = new TimerTestHelpers.State();
         using var timer = Timers.Sync(
             state,
             static state =>
@@ -102,7 +104,7 @@ public class SyncTimerTests : TestBase
         this.Trace("start");
 
         // arrange
-        var state = new State();
+        var state = new TimerTestHelpers.State();
         using var timer = Timers.Sync(
             () =>
             {
@@ -136,7 +138,7 @@ public class SyncTimerTests : TestBase
         this.Trace("start");
 
         // arrange
-        var state = new State();
+        var state = new TimerTestHelpers.State();
         using var timer = Timers.Sync(
             () =>
             {
@@ -161,39 +163,131 @@ public class SyncTimerTests : TestBase
         this.Trace("done");
     }
 
-    /// <summary>
-    /// Ensures that the state is valid by checking the sequence of numbers.
-    /// </summary>
-    /// <param name="state">The state to validate.</param>
-    /// <returns>A task representing the asynchronous operation.</returns>
-    private async Task EnsureValid(State state)
-    {
-        // await until timers complete (step is executed to end)
-        do
-        {
-            await Task.Delay(5);
-        } while (state.Data.Count % 2 > 0);
+    private static Task EnsureValid(TimerTestHelpers.State state) => TimerTestHelpers.EnsureValidAsync(state);
 
-        var expectedData = Enumerable.Range(0, state.Data.Count).ToArray();
-        state.Data.SequenceEqual(expectedData).IsTrue();
+    /// <summary>
+    /// Verifies that a stateless SyncTimer continues firing after the handler throws an exception.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact]
+    public async Task HandlerThrows_SyncTimer_ContinuesFiring()
+    {
+        this.Trace("start");
+
+        // arrange
+        var calls = 0;
+        var pushes = new ConcurrentQueue<int>();
+        using var timer = Timers.Sync(
+            () =>
+            {
+                var n = Interlocked.Increment(ref calls);
+                if (n == 1)
+                    throw new InvalidOperationException("boom");
+                pushes.Enqueue(n);
+            },
+            0,
+            20,
+            Logger
+        );
+
+        // act — wait for at least 2 successful (non-throwing) invocations
+        await Wait.UntilAsync(() => pushes.Count >= 2, ms: 2000);
+        timer.Change(Timeout.Infinite, Timeout.Infinite);
+
+        // assert — timer did not stall after the exception
+        this.Trace("assert pushes");
+        (pushes.Count >= 2).IsTrue();
+
+        this.Trace("done");
     }
 
     /// <summary>
-    /// A class that maintains a queue of integers for testing.
+    /// Verifies that a stateful SyncTimer continues firing after the handler throws an exception.
     /// </summary>
-    private class State
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact]
+    public async Task HandlerThrows_SyncTimerStateful_ContinuesFiring()
+    {
+        this.Trace("start");
+
+        // arrange
+        var statefulState = new ThrowState();
+        using var timer = Timers.Sync(
+            statefulState,
+            static s =>
+            {
+                var n = Interlocked.Increment(ref s.Calls);
+                if (n == 1)
+                    throw new InvalidOperationException("boom");
+                s.Pushes.Enqueue(n);
+            },
+            0,
+            20,
+            Logger
+        );
+
+        // act — wait for at least 2 successful (non-throwing) invocations
+        await Wait.UntilAsync(() => statefulState.Pushes.Count >= 2, ms: 2000);
+        timer.Change(Timeout.Infinite, Timeout.Infinite);
+
+        // assert — timer did not stall after the exception
+        this.Trace("assert pushes");
+        (statefulState.Pushes.Count >= 2).IsTrue();
+
+        this.Trace("done");
+    }
+
+    /// <summary>
+    /// Verifies that disposing a SyncTimer from inside its own handler does not deadlock.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact]
+    public async Task Dispose_Reentrant_FromInsideSyncHandler_DoesNotDeadlock()
+    {
+        this.Trace("start");
+
+        // arrange
+        ISequentialTimer? timer = null;
+        var tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        timer = Timers.Sync(
+            () =>
+            {
+                // Capture and dispose re-entrantly on the first invocation only
+                if (!tcs.Task.IsCompleted)
+                {
+                    timer!.Dispose();
+                    tcs.TrySetResult(true);
+                }
+            },
+            0,
+            50,
+            Logger
+        );
+
+        // act — bounded wait so a deadlock regression fails the test instead of hanging
+        await Wait.UntilAsync(() => tcs.Task.IsCompleted, ms: 2000);
+
+        // assert — the dispose call returned without deadlocking
+        this.Trace("assert tcs completed");
+        tcs.Task.IsCompleted.IsTrue();
+
+        this.Trace("done");
+    }
+
+    /// <summary>
+    /// A class that holds mutable state for the exception-resilience tests.
+    /// </summary>
+    private class ThrowState
     {
         /// <summary>
-        /// Gets the queue of integers.
+        /// Gets or sets the invocation counter.
         /// </summary>
-        public Queue<int> Data { get; } = new();
+        public int Calls;
 
         /// <summary>
-        /// Adds the current count to the queue.
+        /// Gets the queue of successfully recorded invocation numbers.
         /// </summary>
-        public void Push()
-        {
-            Data.Enqueue(Data.Count);
-        }
+        public ConcurrentQueue<int> Pushes { get; } = new();
     }
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Annium.Internal.Collections.Generic;
 
 namespace Annium.Collections.Generic;
 
@@ -17,7 +18,7 @@ namespace Annium.Collections.Generic;
 /// </remarks>
 /// <typeparam name="TKey">The type of the keys in the sorted list.</typeparam>
 /// <typeparam name="TValue">The type of the values in the sorted list.</typeparam>
-public record SortedListSpan<TKey, TValue> : ISortedListSpan<TKey, TValue>
+public sealed record SortedListSpan<TKey, TValue> : ISortedListSpan<TKey, TValue>
     where TKey : notnull
 {
     /// <summary>
@@ -49,11 +50,7 @@ public record SortedListSpan<TKey, TValue> : ISortedListSpan<TKey, TValue>
     /// <exception cref="ArgumentOutOfRangeException">Thrown when the span parameters are invalid.</exception>
     public SortedListSpan(SortedList<TKey, TValue> collection, int start, int count)
     {
-        if (start < 0 || start + count > collection.Count)
-            throw new ArgumentOutOfRangeException(
-                nameof(start),
-                $"Invalid span at {start} with length {count} for collection of size {collection.Count}"
-            );
+        IndexOutOfRangeMessage.ValidateSpanRange(start, count, collection.Count);
 
         _collection = collection;
         Start = start;
@@ -71,7 +68,7 @@ public record SortedListSpan<TKey, TValue> : ISortedListSpan<TKey, TValue>
         get
         {
             if (index < 0 || index >= Count)
-                throw new ArgumentOutOfRangeException(nameof(index), $"Index {index} is out of range [0;{Count - 1}]");
+                throw new ArgumentOutOfRangeException(nameof(index), IndexOutOfRangeMessage.For(index, Count));
 
             // Use parallel positional access on Keys / Values rather than Keys + key-based lookup:
             // (a) O(1) instead of O(log n); (b) the key and value come from the same offset in the

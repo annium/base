@@ -13,4 +13,12 @@ internal static class Constants
     /// </summary>
     public static readonly BindingFlags PublicBindingFlags =
         BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public;
+
+    /// <summary>
+    /// Binding flags that match every instance member (public + non-public). Used when the operation must
+    /// observe non-public constructors / fields (e.g. default-constructor lookup), and excludes static
+    /// members on purpose.
+    /// </summary>
+    public static readonly BindingFlags AllInstanceBindingFlags =
+        BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
 }

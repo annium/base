@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using Annium.Collections.ObjectModel;
 using Annium.Testing;
 using Xunit;
@@ -35,5 +37,38 @@ public class ObservableCollectionExtensionsTests
         // Assert elements have been sorted
         for (var i = 0; i < maxValue; i++)
             data[i].Is(i);
+    }
+
+    /// <summary>
+    /// Verifies that ForceSort places elements in ascending order, including duplicate values.
+    /// </summary>
+    [Fact]
+    public void ForceSort_UnsortedCollection_ItemsInSortedOrder()
+    {
+        // arrange
+        var coll = new ObservableCollection<int> { 3, 1, 4, 1, 5 };
+
+        // act
+        coll.ForceSort(Comparer<int>.Default.Compare);
+
+        // assert
+        coll.SequenceEqual(new[] { 1, 1, 3, 4, 5 }).IsTrue();
+    }
+
+    /// <summary>
+    /// Verifies that ForceSort on an empty collection leaves it empty.
+    /// </summary>
+    [Fact]
+    public void ForceSort_EmptyCollection_RemainsEmpty()
+    {
+        // arrange
+        var coll = new ObservableCollection<int>();
+
+        // act
+        coll.ForceSort(Comparer<int>.Default.Compare);
+
+        // assert
+        coll.IsEmpty();
+        coll.Has(0);
     }
 }

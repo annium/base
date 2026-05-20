@@ -106,6 +106,7 @@ public static class ExceptionExtensions
     )
         where T : Exception
     {
+        // Awaiting a Task<T> parameter — VSTHRD003 false positive; task provided by caller, not created locally.
 #pragma warning disable VSTHRD003
         var val = await value;
 #pragma warning restore VSTHRD003
@@ -136,6 +137,7 @@ public static class ExceptionExtensions
     )
         where T : Exception
     {
+        // Awaiting a Task<T> parameter — VSTHRD003 false positive; task provided by caller, not created locally.
 #pragma warning disable VSTHRD003
         var val = await value;
 #pragma warning restore VSTHRD003
@@ -166,6 +168,7 @@ public static class ExceptionExtensions
     )
         where T : Exception
     {
+        // Awaiting a Task<T> parameter — VSTHRD003 false positive; task provided by caller, not created locally.
 #pragma warning disable VSTHRD003
         var val = await value;
 #pragma warning restore VSTHRD003

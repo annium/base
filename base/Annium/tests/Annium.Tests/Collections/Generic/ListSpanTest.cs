@@ -1,3 +1,4 @@
+using System;
 using Annium.Collections.Generic;
 using Annium.Linq;
 using Annium.Testing;
@@ -38,5 +39,37 @@ public class ListSpanTest
         span.Move(-3).IsTrue();
         span[0].Is(1);
         span[1].Is(2);
+    }
+
+    /// <summary>Constructor throws ArgumentOutOfRangeException when start is negative.</summary>
+    [Fact]
+    public void Constructor_NegativeStart_Throws()
+    {
+        var data = new[] { 1, 2, 3 };
+
+        var ex = Assert.Throws<ArgumentOutOfRangeException>(() => new ListSpan<int>(data, -1, 2));
+        Assert.Equal("start", ex.ParamName);
+    }
+
+    /// <summary>Constructor throws ArgumentOutOfRangeException when (start + count) exceeds the collection size.</summary>
+    [Fact]
+    public void Constructor_SpanOverrunsCollection_Throws()
+    {
+        var data = new[] { 1, 2, 3 };
+
+        var ex = Assert.Throws<ArgumentOutOfRangeException>(() => new ListSpan<int>(data, 2, 5));
+        Assert.Equal("start", ex.ParamName);
+    }
+
+    /// <summary>Constructor accepts an empty span anchored at the end of the collection (start == count).</summary>
+    [Fact]
+    public void Constructor_EmptySpanAtEnd_DoesNotThrow()
+    {
+        var data = new[] { 1, 2, 3 };
+
+        var span = new ListSpan<int>(data, 3, 0);
+
+        span.Count.Is(0);
+        span.Start.Is(3);
     }
 }

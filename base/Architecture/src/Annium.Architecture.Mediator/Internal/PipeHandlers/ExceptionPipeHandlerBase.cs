@@ -14,6 +14,12 @@ namespace Annium.Architecture.Mediator.Internal.PipeHandlers;
 internal abstract class ExceptionPipeHandlerBase<TRequest, TResponse> : ILogSubject
 {
     /// <summary>
+    /// Message surfaced on the failure result. Raw exception text is intentionally
+    /// not propagated to callers; the full exception is logged separately via Failure.
+    /// </summary>
+    internal const string InternalErrorMessage = "An internal error occurred";
+
+    /// <summary>
     /// Gets the logger for this pipe handler
     /// </summary>
     public ILogger Logger { get; }

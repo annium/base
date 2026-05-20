@@ -39,6 +39,7 @@ internal class ValidationPipeHandler<TRequest, TResponse>
         IResult validationResult
     )
     {
+        // null Data is intentional for validation failure; Status≠Ok, Data is never consumed
         return Result.Status(status, default(TResponse)!).Join(validationResult);
     }
 }

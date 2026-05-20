@@ -393,8 +393,8 @@ public class MediatorTest : TestBase
         /// <returns>The transformed response.</returns>
         public Task<TResponse> HandleAsync(TRequest request, CancellationToken ct)
         {
-            this.Info(GetType().FriendlyName());
-            this.Trace(request.GetHashCode().ToString());
+            this.Info<string>("handler: {type}", GetType().FriendlyName());
+            this.Trace<int>("request hash: {hash}", request.GetHashCode());
 
             var response = new TResponse { Value = request.Value!.Replace(' ', '_') };
 
@@ -429,8 +429,8 @@ public class MediatorTest : TestBase
         /// <returns>The converted One response.</returns>
         public Task<One> HandleAsync(Base request, CancellationToken ct)
         {
-            this.Trace(GetType().FullName!);
-            this.Trace(request.GetHashCode().ToString());
+            this.Trace<string>("handler: {type}", GetType().FullName!);
+            this.Trace<int>("request hash: {hash}", request.GetHashCode());
 
             return Task.FromResult(new One { First = request.Value!.Length, Value = request.Value });
         }

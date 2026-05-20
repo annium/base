@@ -66,7 +66,7 @@ public sealed class TestLog<T> : IReadOnlyList<T>
     public IEnumerator<T> GetEnumerator()
     {
         lock (_entries)
-            return _entries.GetEnumerator();
+            return new List<T>(_entries).GetEnumerator();
     }
 
     /// <summary>
@@ -76,6 +76,6 @@ public sealed class TestLog<T> : IReadOnlyList<T>
     IEnumerator IEnumerable.GetEnumerator()
     {
         lock (_entries)
-            return _entries.GetEnumerator();
+            return new List<T>(_entries).GetEnumerator();
     }
 }

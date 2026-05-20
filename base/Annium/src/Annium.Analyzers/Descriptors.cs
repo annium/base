@@ -10,7 +10,7 @@ namespace Annium.Analyzers;
 /// <b>ID prefix policy:</b>
 /// </para>
 /// <list type="bullet">
-/// <item><description><c>LOG</c> — diagnostics that target the Annium logging APIs (`LogSubject*Extensions`)</description></item>
+/// <item><description><c>LOG</c> — diagnostics that target the Annium logging APIs (`LogSubjectExtensions`)</description></item>
 /// <item><description><c>AN</c> — Annium naming / convention diagnostics that apply more broadly than a single API surface</description></item>
 /// </list>
 /// <para>

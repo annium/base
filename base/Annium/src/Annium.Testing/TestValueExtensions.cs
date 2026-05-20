@@ -33,8 +33,8 @@ public static class TestValueExtensions
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static string Stringify<T>(this T value)
     {
-        if (typeof(T) == typeof(Type))
-            return typeof(T).FriendlyName();
+        if (typeof(T) == typeof(Type) && value is not null)
+            return ((Type)(object)value).FriendlyName();
 
         if (value is IEnumerable enumerable)
             return Stringify(enumerable);

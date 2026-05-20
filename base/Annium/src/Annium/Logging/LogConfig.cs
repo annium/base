@@ -1,4 +1,6 @@
 using System;
+using System.Linq;
+using System.Threading;
 
 namespace Annium.Logging;
 
@@ -8,9 +10,14 @@ namespace Annium.Logging;
 public static class LogConfig
 {
     /// <summary>
-    /// Gets or sets the current global log level.
+    /// Backing storage for <see cref="Level"/>; accessed via <see cref="Volatile"/> for cross-thread visibility.
     /// </summary>
-    public static LogLevel Level { get; private set; }
+    private static int _level;
+
+    /// <summary>
+    /// Gets the current global log level.
+    /// </summary>
+    public static LogLevel Level => (LogLevel)Volatile.Read(ref _level);
 
     static LogConfig()
     {
@@ -18,13 +25,13 @@ public static class LogConfig
 
         if (args.Contains("-trace"))
         {
-            Level = LogLevel.Trace;
+            Volatile.Write(ref _level, (int)LogLevel.Trace);
             return;
         }
 
         if (args.Contains("-debug"))
         {
-            Level = LogLevel.Debug;
+            Volatile.Write(ref _level, (int)LogLevel.Debug);
             return;
         }
 
@@ -32,13 +39,13 @@ public static class LogConfig
         switch (raw?.Trim())
         {
             case "trace":
-                Level = LogLevel.Trace;
+                Volatile.Write(ref _level, (int)LogLevel.Trace);
                 break;
             case "debug":
-                Level = LogLevel.Debug;
+                Volatile.Write(ref _level, (int)LogLevel.Debug);
                 break;
             default:
-                Level = LogLevel.Info;
+                Volatile.Write(ref _level, (int)LogLevel.Info);
                 break;
         }
     }
@@ -47,5 +54,5 @@ public static class LogConfig
     /// Sets the global log level.
     /// </summary>
     /// <param name="level">The log level to set.</param>
-    public static void SetLevel(LogLevel level) => Level = level;
+    public static void SetLevel(LogLevel level) => Volatile.Write(ref _level, (int)level);
 }

@@ -26,15 +26,16 @@ internal static class AnalyzerHelpers
     internal const string AnniumLoggingNamespace = "Logging";
 
     /// <summary>
-    /// Suffix used to build the per-verb logging extension class name pattern
-    /// (<c>LogSubject{Verb}Extensions</c>). Load-bearing for the logging gate.
+    /// Name of the (partial) class hosting all Annium logging extension methods. All log-verb methods
+    /// (Trace/Debug/Info/Warn/Error/Log) live as parts of this single class. Load-bearing for the
+    /// logging gate.
     /// </summary>
-    internal const string LogSubjectExtensionsClassSuffix = "Extensions";
+    internal const string LogSubjectExtensionsClassName = "LogSubjectExtensions";
 
     /// <summary>
     /// Logging extension method names whose calls are analyzed by both logging analyzers. A new verb
-    /// MUST be added here (single source of truth) and to the matching <c>LogSubject{Verb}Extensions</c>
-    /// class in <c>Annium.Logging</c>.
+    /// MUST be added here (single source of truth) and to the matching overload set in
+    /// <c>LogSubjectExtensions</c> under <c>Annium.Logging</c>.
     /// </summary>
     internal static readonly IReadOnlyCollection<string> LogMethodNames =
     [
@@ -48,8 +49,8 @@ internal static class AnalyzerHelpers
 
     /// <summary>
     /// Returns <see langword="true"/> when <paramref name="method"/> is a call to one of the Annium
-    /// logging extension methods (<c>LogSubject{Verb}Extensions</c> in namespace <c>Annium.Logging</c>
-    /// of the <c>Annium</c> assembly). Used by both logging analyzers as the assembly + namespace +
+    /// logging extension methods on <c>LogSubjectExtensions</c> in namespace <c>Annium.Logging</c>
+    /// of the <c>Annium</c> assembly. Used by both logging analyzers as the assembly + namespace +
     /// method-name + containing-type gate.
     /// </summary>
     /// <param name="method">The invoked method symbol.</param>
@@ -71,8 +72,7 @@ internal static class AnalyzerHelpers
         if (!LogMethodNames.Contains(method.Name))
             return false;
 
-        var expectedTypeName = $"LogSubject{method.Name}{LogSubjectExtensionsClassSuffix}";
-        return method.ContainingType?.Name == expectedTypeName;
+        return method.ContainingType?.Name == LogSubjectExtensionsClassName;
     }
 
     /// <summary>

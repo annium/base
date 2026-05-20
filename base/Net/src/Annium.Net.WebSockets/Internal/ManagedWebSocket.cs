@@ -87,11 +87,10 @@ internal class ManagedWebSocket : ISendingReceivingWebSocket, ILogSubject
             var (isClosed, result) = await ReceiveAsync(buffer, ct);
             if (isClosed)
             {
-                this.Trace(
-                    result.Exception is not null
-                        ? $"stop with {result.Status}: {result.Exception}"
-                        : $"stop with {result.Status}"
-                );
+                if (result.Exception is not null)
+                    this.Trace("stop with {status}: {exception}", result.Status, result.Exception);
+                else
+                    this.Trace("stop with {status}", result.Status);
                 return result;
             }
         }

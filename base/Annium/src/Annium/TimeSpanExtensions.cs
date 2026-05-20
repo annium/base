@@ -47,7 +47,8 @@ public static class TimeSpanExtensions
         if (d <= TimeSpan.Zero)
             throw new ArgumentOutOfRangeException(nameof(d), d, "Duration must be positive.");
 
-        return TimeSpan.FromTicks(t.Ticks - t.Ticks % d.Ticks);
+        var rem = ((t.Ticks % d.Ticks) + d.Ticks) % d.Ticks;
+        return TimeSpan.FromTicks(t.Ticks - rem);
     }
 
     /// <summary>
@@ -88,9 +89,11 @@ public static class TimeSpanExtensions
     {
         var mt = t.Ticks;
         var dt = d.Ticks;
-        var diff = mt % dt;
+        var rem = ((mt % dt) + dt) % dt;
 
-        return TimeSpan.FromTicks(mt - diff + (dt > diff * 2L ? 0L : dt));
+        // overflow-safe midpoint: `rem < dt - rem` is equivalent to `rem * 2 < dt`
+        // but never overflows because rem < dt by the % invariant
+        return TimeSpan.FromTicks(rem < dt - rem ? mt - rem : mt - rem + dt);
     }
 
     /// <summary>
@@ -133,6 +136,7 @@ public static class TimeSpanExtensions
         if (d <= TimeSpan.Zero)
             throw new ArgumentOutOfRangeException(nameof(d), d, "Duration must be positive.");
 
-        return TimeSpan.FromTicks(t.Ticks + d.Ticks - t.Ticks % d.Ticks);
+        var rem = ((t.Ticks % d.Ticks) + d.Ticks) % d.Ticks;
+        return rem == 0L ? t : TimeSpan.FromTicks(t.Ticks - rem + d.Ticks);
     }
 }

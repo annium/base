@@ -7,7 +7,7 @@ namespace Annium.Testing;
 /// <summary>
 /// Provides extension methods for default value assertions in tests.
 /// </summary>
-public static class ValueExtensions
+public static class DefaultExtensions
 {
     /// <summary>
     /// Asserts that the value is the default value for its type.
@@ -24,7 +24,7 @@ public static class ValueExtensions
         [CallerArgumentExpression(nameof(value))] string valueEx = ""
     )
     {
-        value.Is(default, $"{value.WrapWithExpression(valueEx)} is not default");
+        value.Is(default, message ?? $"{value.WrapWithExpression(valueEx)} is not default");
 
         return value;
     }
@@ -46,8 +46,8 @@ public static class ValueExtensions
         [CallerArgumentExpression(nameof(value))] string valueEx = ""
     )
     {
-        value.IsNot(default, $"{value.WrapWithExpression(valueEx)} is default");
         ArgumentNullException.ThrowIfNull(value);
+        value.IsNot(default, message ?? $"{value.WrapWithExpression(valueEx)} is default");
 
         return value;
     }

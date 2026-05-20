@@ -34,9 +34,17 @@ public class DisposableTest : TestBase
 
         // act
         box += Disposable.Create(() => ++calls);
-        box += Disposable.Create(() => Task.FromResult(++calls));
+        box += Disposable.Create(() =>
+        {
+            ++calls;
+            return ValueTask.CompletedTask;
+        });
         box += () => ++calls;
-        box += () => Task.FromResult(++calls);
+        box += () =>
+        {
+            ++calls;
+            return ValueTask.CompletedTask;
+        };
         await box.DisposeAsync();
 
         // assert
@@ -56,9 +64,17 @@ public class DisposableTest : TestBase
 
         // act
         var disposable = Disposable.Create(() => ++calls);
-        var asyncDisposable = Disposable.Create(() => Task.FromResult(++calls));
+        var asyncDisposable = Disposable.Create(() =>
+        {
+            ++calls;
+            return ValueTask.CompletedTask;
+        });
         void Dispose() => ++calls;
-        Task AsyncDispose() => Task.FromResult(++calls);
+        ValueTask AsyncDispose()
+        {
+            ++calls;
+            return ValueTask.CompletedTask;
+        }
         box += disposable;
         box -= disposable;
         box += asyncDisposable;
@@ -202,6 +218,360 @@ public class DisposableTest : TestBase
     }
 
     /// <summary>
+    /// Verifies that calling <c>Dispose()</c> on a <c>DisposableBox</c> twice is idempotent (review T9).
+    /// </summary>
+    [Fact]
+    public void Disposable_DoubleDispose_IsIdempotent()
+    {
+        var probe = new CountingDisposable();
+        var box = Disposable.Box(Logger);
+        box += probe;
+
+        box.Dispose();
+        box.Dispose();
+
+        // The probe was inside the box; it must have been disposed exactly once even though we
+        // called box.Dispose() twice. The lock guard in DisposeBase short-circuits the second call.
+        probe.DisposeCount.Is(1);
+    }
+
+    /// <summary>
+    /// Verifies that calling <c>DisposeAsync()</c> on an <c>AsyncDisposableBox</c> twice is idempotent (review T9).
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact]
+    public async Task AsyncDisposable_DoubleDispose_IsIdempotent()
+    {
+        var probe = new CountingDisposable();
+        var box = Disposable.AsyncBox(Logger);
+        box += probe;
+
+        await box.DisposeAsync();
+        await box.DisposeAsync();
+
+        probe.DisposeCount.Is(1);
+    }
+
+    /// <summary>
+    /// Verifies that when one async-disposable throws during <c>DisposeAsync</c>, the exception propagates
+    /// (review T8 — exception-during-dispose).
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact]
+    public async Task AsyncDisposable_OneAsyncDisposableThrows_ExceptionPropagates()
+    {
+        var box = Disposable.AsyncBox(Logger);
+        box += new ThrowingAsyncDisposable(new InvalidOperationException("dispose-boom"));
+
+        var ex = await Wrap.It(async () => await box.DisposeAsync()).ThrowsAsync<InvalidOperationException>();
+        ex.Message.Is("dispose-boom");
+    }
+
+    /// <summary>
+    /// Stress test: concurrent sync Add operations racing with a single Dispose must result in every
+    /// Add either (a) being accepted and its disposable invoked exactly once during dispose, or
+    /// (b) rejected with <see cref="ObjectDisposedException"/>. No leaks, no double-dispose.
+    /// </summary>
+    [Fact]
+    public async Task Disposable_ConcurrentAddDuringDispose_AllDisposedOrRejected()
+    {
+        // arrange
+        const int addCount = 200;
+        var box = Disposable.Box(Get<ILogger>());
+        var rejected = 0;
+        var disposables = Enumerable.Range(0, addCount).Select(_ => new CountingDisposable()).ToArray();
+        var ct = TestContext.Current.CancellationToken;
+
+        // act — fire all Adds in parallel, concurrently with a single Dispose.
+        var addTasks = disposables
+            .Select(d =>
+                Task.Run(
+                    () =>
+                    {
+                        try
+                        {
+                            box += d;
+                        }
+                        catch (ObjectDisposedException)
+                        {
+                            Interlocked.Increment(ref rejected);
+                        }
+                    },
+                    ct
+                )
+            )
+            .ToArray();
+
+        var disposeTask = Task.Run(() => box.Dispose(), ct);
+
+        await Task.WhenAll(addTasks.Concat(new[] { disposeTask }));
+
+        // assert — no double-dispose; accepted + rejected == addCount.
+        var accepted = disposables.Count(d => d.DisposeCount == 1);
+        var untouched = disposables.Count(d => d.DisposeCount == 0);
+        var doubleDisposed = disposables.Count(d => d.DisposeCount > 1);
+
+        doubleDisposed.Is(0);
+        accepted.Is(addCount - rejected);
+        untouched.Is(rejected);
+    }
+
+    /// <summary>
+    /// Verifies that adding a disposable to a <c>DisposableBox</c> after it has been disposed
+    /// throws <see cref="ObjectDisposedException"/>.
+    /// </summary>
+    [Fact]
+    public void DisposableBox_AddAfterDispose_ThrowsObjectDisposedException()
+    {
+        // arrange
+        var box = Disposable.Box(Get<ILogger>());
+        box.Dispose();
+
+        // act + assert
+        Wrap.It(() =>
+            {
+                box += Disposable.Create(() => { });
+            })
+            .Throws<ObjectDisposedException>();
+    }
+
+    /// <summary>
+    /// Verifies that after a DisposeAndResetAsync the original entries are not disposed again on
+    /// the next DisposeAsync — only the newly-added entries fire.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact]
+    public async Task AsyncDisposable_Reset_PreviousEntriesNotRedisposed()
+    {
+        // arrange
+        var box = Disposable.AsyncBox(Get<ILogger>());
+        var calls = 0;
+
+        // act — first round: add 2 disposables, dispose and reset
+        box += Disposable.Create(() => ++calls);
+        box += Disposable.Create(() => ++calls);
+        await box.DisposeAndResetAsync();
+
+        var callsAfterFirstDispose = calls;
+
+        // add one more disposable in round 2 and dispose
+        box += Disposable.Create(() => ++calls);
+        await box.DisposeAsync();
+
+        // assert — first two must not fire again; only the third one fires in round 2.
+        callsAfterFirstDispose.Is(2);
+        calls.Is(3);
+    }
+
+    /// <summary>
+    /// Verifies that after <c>DisposeAndResetAsync</c> only newly-added entries are disposed on
+    /// the subsequent DisposeAsync — the original async dispose lambda fires exactly once.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact]
+    public async Task AsyncDisposable_DisposeAndReset_ThenAddAndDispose_OnlyNewEntriesDisposed()
+    {
+        // arrange
+        var box = Disposable.AsyncBox(Get<ILogger>());
+        var firstCalls = 0;
+        var secondCalls = 0;
+
+        // act — first round: async dispose lambda
+        box += () =>
+        {
+            ++firstCalls;
+            return ValueTask.CompletedTask;
+        };
+        await box.DisposeAndResetAsync();
+
+        // second round: new async dispose lambda
+        box += () =>
+        {
+            ++secondCalls;
+            return ValueTask.CompletedTask;
+        };
+        await box.DisposeAsync();
+
+        // assert — each lambda fires exactly once
+        firstCalls.Is(1);
+        secondCalls.Is(1);
+    }
+
+    /// <summary>
+    /// AsyncDisposer (via <c>Disposable.Create(Func&lt;ValueTask&gt;)</c>): second DisposeAsync must be a no-op.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact]
+    public async Task AsyncDisposer_DoubleDispose_HandleCalledOnlyOnce()
+    {
+        var calls = 0;
+        var disposable = Disposable.Create(() =>
+        {
+            Interlocked.Increment(ref calls);
+            return ValueTask.CompletedTask;
+        });
+
+        await disposable.DisposeAsync();
+        await disposable.DisposeAsync();
+
+        calls.Is(1);
+    }
+
+    /// <summary>
+    /// AsyncDisposer: the handle must be invoked on the first DisposeAsync.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact]
+    public async Task AsyncDisposer_HandleInvoked_OnFirstDisposeOnly()
+    {
+        var invoked = false;
+        var disposable = Disposable.Create(() =>
+        {
+            invoked = true;
+            return ValueTask.CompletedTask;
+        });
+
+        invoked.IsFalse();
+        await disposable.DisposeAsync();
+        invoked.IsTrue();
+    }
+
+    /// <summary>
+    /// AsyncDisposer: concurrent DisposeAsync calls must invoke the handle exactly once.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact]
+    public async Task AsyncDisposer_ConcurrentDispose_HandleCalledExactlyOnce()
+    {
+        var calls = 0;
+        var disposable = Disposable.Create(() =>
+        {
+            Interlocked.Increment(ref calls);
+            return ValueTask.CompletedTask;
+        });
+        var ct = TestContext.Current.CancellationToken;
+
+        var disposeTasks = Enumerable
+            .Range(0, 32)
+            .Select(_ => Task.Run(async () => await disposable.DisposeAsync(), ct))
+            .ToArray();
+
+        await Task.WhenAll(disposeTasks);
+
+        calls.Is(1);
+    }
+
+    /// <summary>
+    /// Disposer (via <c>Disposable.Create(Action)</c>): second Dispose must be a no-op.
+    /// </summary>
+    [Fact]
+    public void Disposer_DoubleDispose_HandleCalledOnlyOnce()
+    {
+        var calls = 0;
+        var disposable = Disposable.Create(() => Interlocked.Increment(ref calls));
+
+        disposable.Dispose();
+        disposable.Dispose();
+
+        calls.Is(1);
+    }
+
+    /// <summary>
+    /// Disposer: the handle must be invoked on the first Dispose.
+    /// </summary>
+    [Fact]
+    public void Disposer_HandleInvoked_OnFirstDisposeOnly()
+    {
+        var invoked = false;
+        var disposable = Disposable.Create(() => invoked = true);
+
+        invoked.IsFalse();
+        disposable.Dispose();
+        invoked.IsTrue();
+    }
+
+    /// <summary>
+    /// Disposer: concurrent Dispose calls must invoke the handle exactly once.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact]
+    public async Task Disposer_ConcurrentDispose_HandleCalledExactlyOnce()
+    {
+        var calls = 0;
+        var disposable = Disposable.Create(() => Interlocked.Increment(ref calls));
+        var ct = TestContext.Current.CancellationToken;
+
+        var disposeTasks = Enumerable.Range(0, 32).Select(_ => Task.Run(disposable.Dispose, ct)).ToArray();
+
+        await Task.WhenAll(disposeTasks);
+
+        calls.Is(1);
+    }
+
+    /// <summary>
+    /// DisposableReference: second DisposeAsync must be a no-op (idempotency guard).
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact]
+    public async Task DisposableReference_DoubleDispose_CallbackCalledOnlyOnce()
+    {
+        var calls = 0;
+        var reference = Disposable.Reference(
+            "live",
+            () =>
+            {
+                Interlocked.Increment(ref calls);
+                return ValueTask.CompletedTask;
+            }
+        );
+
+        await reference.DisposeAsync();
+        await reference.DisposeAsync();
+
+        calls.Is(1);
+    }
+
+    /// <summary>
+    /// DisposableReference: dispose callback runs BEFORE <c>Value</c> is nulled (the documented invariant).
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact]
+    public async Task DisposableReference_CallbackRunsBeforeValueNulled()
+    {
+        var observed = "";
+        var reference = default(IDisposableReference<string>)!;
+        reference = Disposable.Reference(
+            "live",
+            () =>
+            {
+                // ReSharper disable once AccessToModifiedClosure — the test relies on `reference` being assigned before DisposeAsync is called.
+                observed = reference.Value;
+                return ValueTask.CompletedTask;
+            }
+        );
+
+        await reference.DisposeAsync();
+
+        observed.Is("live");
+    }
+
+    /// <summary>
+    /// DisposableReference: after DisposeAsync, <c>Value</c> is the default for its type.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact]
+    public async Task DisposableReference_ValueIsNullAfterDispose()
+    {
+        var reference = Disposable.Reference("live");
+        reference.Value.Is("live");
+
+        await reference.DisposeAsync();
+
+        // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract — we deliberately check the post-dispose state.
+        ((object?)reference.Value is null).IsTrue();
+    }
+
+    /// <summary>
     /// IDisposable that records how many times it was disposed — for detecting leaks or
     /// double-disposal in the concurrent stress test above.
     /// </summary>
@@ -212,5 +582,21 @@ public class DisposableTest : TestBase
         public int DisposeCount => Volatile.Read(ref _disposeCount);
 
         public void Dispose() => Interlocked.Increment(ref _disposeCount);
+    }
+
+    /// <summary>
+    /// IAsyncDisposable that throws the given exception when disposed — used to verify exception
+    /// propagation through <c>AsyncDisposableBox.DisposeAsync</c>.
+    /// </summary>
+    private sealed class ThrowingAsyncDisposable : IAsyncDisposable
+    {
+        private readonly Exception _ex;
+
+        public ThrowingAsyncDisposable(Exception ex)
+        {
+            _ex = ex;
+        }
+
+        public ValueTask DisposeAsync() => ValueTask.FromException(_ex);
     }
 }

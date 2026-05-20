@@ -2,6 +2,7 @@ using System.Threading.Tasks;
 
 namespace Annium.Threading.Tasks;
 
+// TaskSet uses task.Result after Task.WhenAll guarantees completion; naming follows tuple-return convention not async suffix.
 #pragma warning disable VSTHRD200
 #pragma warning disable VSTHRD103
 #pragma warning disable VSTHRD003

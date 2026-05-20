@@ -110,7 +110,7 @@ internal abstract class SyncTimerBase : TimerBase, ISequentialTimer
     /// <see cref="System.Threading.Timer.Dispose(WaitHandle)"/>'s documented self-deadlock when invoked
     /// from the timer's callback thread.
     /// </summary>
-    private volatile int _callbackThreadId;
+    private int _callbackThreadId;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="SyncTimerBase"/> class with an inert timer; derived ctors
@@ -121,34 +121,17 @@ internal abstract class SyncTimerBase : TimerBase, ISequentialTimer
         : base(logger) { }
 
     /// <summary>
-    /// Changes the start time and the interval between method invocations for a timer.
-    /// </summary>
-    /// <param name="dueTime">The amount of time to delay before the first execution.</param>
-    /// <param name="period">The time interval between executions.</param>
-    /// <returns>true if the timer was successfully updated; otherwise, false.</returns>
-    public bool Change(int dueTime, int period)
-    {
-        return ChangeTimer(dueTime, period);
-    }
-
-    /// <summary>
-    /// Changes the start time and the interval between method invocations for a timer.
-    /// </summary>
-    /// <param name="dueTime">The amount of time to delay before the first execution.</param>
-    /// <param name="period">The time interval between executions.</param>
-    /// <returns>true if the timer was successfully updated; otherwise, false.</returns>
-    public bool Change(TimeSpan dueTime, TimeSpan period)
-    {
-        return ChangeTimer(dueTime, period);
-    }
-
-    /// <summary>
     /// Executes the timer's handler.
     /// </summary>
     protected abstract void Handle();
 
-    /// <inheritdoc />
-    protected override bool IsReentrantDispose() => _callbackThreadId == Environment.CurrentManagedThreadId;
+    /// <summary>
+    /// Returns whether the current Dispose call is re-entrant (i.e. invoked from inside the callback's own thread).
+    /// Re-entrant disposal skips the drain to avoid self-deadlock — the in-flight callback owns the timer.
+    /// </summary>
+    /// <returns><see langword="true"/> when Dispose was called from within the callback thread; otherwise <see langword="false"/>.</returns>
+    protected override bool IsReentrantDispose() =>
+        Volatile.Read(ref _callbackThreadId) == Environment.CurrentManagedThreadId;
 
     /// <summary>
     /// The callback invoked by the underlying timer. Runs <see cref="Handle"/> under the
@@ -160,7 +143,7 @@ internal abstract class SyncTimerBase : TimerBase, ISequentialTimer
         if (Interlocked.CompareExchange(ref _isHandling, 1, 0) == 1)
             return;
 
-        _callbackThreadId = Environment.CurrentManagedThreadId;
+        Volatile.Write(ref _callbackThreadId, Environment.CurrentManagedThreadId);
         try
         {
             Handle();
@@ -171,7 +154,7 @@ internal abstract class SyncTimerBase : TimerBase, ISequentialTimer
         }
         finally
         {
-            _callbackThreadId = 0;
+            Volatile.Write(ref _callbackThreadId, 0);
             Interlocked.Exchange(ref _isHandling, 0);
         }
     }

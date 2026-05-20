@@ -29,7 +29,7 @@ public static class Disposable
     /// </summary>
     /// <param name="handle">The asynchronous function to execute when disposing.</param>
     /// <returns>An <see cref="IAsyncDisposable"/> that executes the specified function when disposed.</returns>
-    public static IAsyncDisposable Create(Func<Task> handle) => new AsyncDisposer(handle);
+    public static IAsyncDisposable Create(Func<ValueTask> handle) => new AsyncDisposer(handle);
 
     /// <summary>
     /// Creates a synchronous disposable resource from a dispose action.
@@ -52,7 +52,7 @@ public static class Disposable
     public static IDisposableReference<TValue> Reference<TValue>(TValue value)
         where TValue : notnull
     {
-        return new DisposableReference<TValue>(value, () => Task.CompletedTask);
+        return new DisposableReference<TValue>(value, () => ValueTask.CompletedTask);
     }
 
     /// <summary>
@@ -62,7 +62,7 @@ public static class Disposable
     /// <param name="value">The value to reference.</param>
     /// <param name="dispose">The asynchronous function to execute when disposing.</param>
     /// <returns>A disposable reference to the specified value.</returns>
-    public static IDisposableReference<TValue> Reference<TValue>(TValue value, Func<Task> dispose)
+    public static IDisposableReference<TValue> Reference<TValue>(TValue value, Func<ValueTask> dispose)
         where TValue : notnull
     {
         return new DisposableReference<TValue>(value, dispose);

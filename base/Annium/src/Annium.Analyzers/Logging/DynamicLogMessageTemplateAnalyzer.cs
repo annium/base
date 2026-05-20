@@ -46,7 +46,19 @@ public sealed class DynamicLogMessageTemplateAnalyzer : DiagnosticAnalyzer
         if (args.Length <= 1)
             return;
 
-        if (args[1].Value is not IInterpolatedStringOperation)
+        // Only check when the second arg is a string (the message template). Overloads where args[1]
+        // is something else (e.g. Error(Exception) — args[1] is the Exception, not a template) skip the
+        // check. The template must be a compile-time constant string. This catches:
+        //   - $"interpolated" (IInterpolatedStringOperation)
+        //   - "prefix" + variable (IBinaryOperation on strings, non-constant)
+        //   - string.Concat(...), string.Format(...), $"{...}".ToString() (IInvocationOperation, non-constant)
+        //   - condition ? "a" : variable (IConditionalOperation, non-constant)
+        // Any string operation whose ConstantValue.HasValue is false is dynamic.
+        var templateValue = args[1].Value;
+        if (templateValue.Type?.SpecialType != SpecialType.System_String)
+            return;
+
+        if (templateValue.ConstantValue.HasValue)
             return;
 
         ctx.ReportDiagnostic(

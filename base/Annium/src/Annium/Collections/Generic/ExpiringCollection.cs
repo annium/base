@@ -32,6 +32,7 @@ namespace Annium.Collections.Generic;
 public sealed class ExpiringCollection<T> : IDisposable, IAsyncDisposable
     where T : notnull
 {
+    /// <summary>The underlying expiring store that holds entries and evicts them on expiry.</summary>
     private readonly ExpiringStore<T, byte> _store;
 
     /// <summary>
@@ -98,19 +99,13 @@ public sealed class ExpiringCollection<T> : IDisposable, IAsyncDisposable
     /// <summary>
     /// Stops the background eviction timer and releases resources.
     /// </summary>
-    public void Dispose()
-    {
-        _store.Dispose();
-    }
+    public void Dispose() => _store.Dispose();
 
     /// <summary>
     /// Asynchronously stops the background eviction timer and releases resources. The drain is
     /// currently synchronous; this method exists to satisfy <see cref="IAsyncDisposable"/> for callers
     /// that prefer <c>await using</c>.
     /// </summary>
-    public ValueTask DisposeAsync()
-    {
-        Dispose();
-        return ValueTask.CompletedTask;
-    }
+    /// <returns>A completed <see cref="ValueTask"/>.</returns>
+    public ValueTask DisposeAsync() => _store.DisposeAsync();
 }

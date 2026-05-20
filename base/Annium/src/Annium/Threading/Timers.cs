@@ -39,6 +39,7 @@ public static class Timers
         return new SyncTimer<T>(state, handler, dueTime, period, logger);
     }
 
+    // Factory methods named Async() return ISequentialTimer not a Task; VSTHRD200 does not apply to factory naming.
 #pragma warning disable VSTHRD200
     /// <summary>
     /// Creates an asynchronous sequential timer.
@@ -54,6 +55,7 @@ public static class Timers
         return new AsyncTimer(handler, dueTime, period, logger);
     }
 
+    // Factory methods named Async() return ISequentialTimer not a Task; VSTHRD200 does not apply to factory naming.
 #pragma warning disable VSTHRD200
     /// <summary>
     /// Creates an asynchronous sequential timer with state.

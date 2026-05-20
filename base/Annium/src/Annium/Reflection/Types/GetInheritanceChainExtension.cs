@@ -37,7 +37,7 @@ public static class GetInheritanceChainExtension
 
         if (type.IsClass)
         {
-            if (type.BaseType != null)
+            if (type.BaseType is not null)
                 while (type.BaseType != typeof(object))
                 {
                     chain.Add(type.BaseType!);
@@ -50,6 +50,6 @@ public static class GetInheritanceChainExtension
             return chain.ToArray();
         }
 
-        return Array.Empty<Type>();
+        return [];
     }
 }

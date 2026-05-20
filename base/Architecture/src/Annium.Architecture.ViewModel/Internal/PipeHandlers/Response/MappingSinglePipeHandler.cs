@@ -69,6 +69,8 @@ internal class MappingSinglePipeHandler<TRequest, TResponseIn, TResponseOut>
                 typeof(TResponseIn),
                 typeof(TResponseOut)
             );
+            // non-Ok status: default is the explicit "no mapped value" sentinel — sibling
+            // MappingEnumerablePipeHandler uses Enumerable.Empty<T>() for the same purpose
             return Result.Status(response.Status, default(TResponseOut)!).Join(response);
         }
 
