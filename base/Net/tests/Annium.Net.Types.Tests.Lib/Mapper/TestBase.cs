@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Annium.Net.Types.Models;
 using Annium.Net.Types.Refs;
 using Namotion.Reflection;
@@ -17,9 +18,9 @@ public abstract class TestBase : Testing.TestBase
     protected IReadOnlyCollection<IModel> Models => _testProvider.Models;
 
     /// <summary>
-    /// Gets the mapper configuration for test customization
+    /// Gets the mapper configuration for test customization (set in <see cref="InitializeAsync"/>).
     /// </summary>
-    protected readonly IMapperConfig Config;
+    protected IMapperConfig Config { get; private set; } = null!;
 
     /// <summary>
     /// The test provider instance for type mapping operations
@@ -41,6 +42,12 @@ public abstract class TestBase : Testing.TestBase
             testProvider.ConfigureContainer(container);
         });
         Setup(testProvider.Setup);
+    }
+
+    /// <inheritdoc/>
+    public override async ValueTask InitializeAsync()
+    {
+        await base.InitializeAsync();
         Config = Get<IMapperConfig>();
     }
 

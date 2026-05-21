@@ -1,3 +1,5 @@
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 
 // ReSharper disable once CheckNamespace
@@ -24,8 +26,11 @@ public interface IServiceProviderBuilder
     IServiceProviderBuilder UseServicePack(ServicePackBase servicePack);
 
     /// <summary>
-    /// Builds the service provider with all configured service packs
+    /// Asynchronously builds the service provider with all configured service packs.
+    /// Honours cooperative cancellation at every pack await and at Phase 3→4 / Phase 4→5 boundaries.
+    /// On any non-normal exit, partial state is disposed in reverse order (final before transient).
     /// </summary>
+    /// <param name="ct">Cancellation token threaded to every pack phase</param>
     /// <returns>The built service provider</returns>
-    ServiceProvider Build();
+    Task<ServiceProvider> BuildAsync(CancellationToken ct);
 }

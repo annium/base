@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Net.Security;
 using System.Net.Sockets;
-using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 using Annium.Core.DependencyInjection;
@@ -18,7 +17,7 @@ namespace Annium.Net.Sockets.Tests.Internal;
 /// <summary>
 /// Tests for client-server managed socket communication functionality
 /// </summary>
-public class ClientServerManagedSocketTests : TestBase, IAsyncLifetime
+public class ClientServerManagedSocketTests : TestBase
 {
     /// <summary>
     /// Gets the client managed socket instance
@@ -603,15 +602,15 @@ public class ClientServerManagedSocketTests : TestBase, IAsyncLifetime
     /// Initializes the test asynchronously
     /// </summary>
     /// <returns>A task representing the initialization</returns>
-    public async ValueTask InitializeAsync()
+    public override async ValueTask InitializeAsync()
     {
+        await base.InitializeAsync();
+
         this.Trace("start");
 
         var options = ManagedSocketOptions.Default with { Mode = SocketMode.Messaging };
         _clientSocket = new ClientManagedSocket(options, Logger);
         ClientSocket.OnReceived += x => _messages.Add(x.ToArray());
-
-        await Task.CompletedTask;
 
         this.Trace("done");
     }
@@ -620,7 +619,7 @@ public class ClientServerManagedSocketTests : TestBase, IAsyncLifetime
     /// Disposes the test resources asynchronously
     /// </summary>
     /// <returns>A task representing the disposal</returns>
-    public ValueTask DisposeAsync()
+    public override async ValueTask DisposeAsync()
     {
         this.Trace("start");
 
@@ -628,7 +627,7 @@ public class ClientServerManagedSocketTests : TestBase, IAsyncLifetime
 
         this.Trace("done");
 
-        return ValueTask.CompletedTask;
+        await base.DisposeAsync();
     }
 
     /// <summary>

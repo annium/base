@@ -2,6 +2,7 @@ using System.Linq;
 using Annium.Linq;
 using Annium.Testing;
 using Xunit;
+using EnumerableExtensions = Annium.Linq.EnumerableExtensions;
 
 namespace Annium.Tests.Linq;
 
@@ -46,7 +47,7 @@ public class EnumerableExtensionsTest
         var nonIdentityRuns = 0;
         for (var i = 0; i < 1000; i++)
         {
-            var shuffled = Annium.Linq.EnumerableExtensions.Shuffle(source).ToArray();
+            var shuffled = EnumerableExtensions.Shuffle(source).ToArray();
             if (!shuffled.SequenceEqual(source))
                 nonIdentityRuns++;
         }

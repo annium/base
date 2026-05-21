@@ -13,7 +13,7 @@ namespace Annium.Collections.Generic;
 /// <remarks>
 /// <para>
 /// <b>Why this facade exists:</b> all storage and eviction is implemented by the internal
-/// <see cref="ExpiringStore{TKey, TValue}"/>. This type is a thin public surface that
+/// <see cref="ExpiringStore{TKey,TValue}"/>. This type is a thin public surface that
 /// (a) keeps <see cref="ExpiringStore{TKey, TValue}"/> internal so its representation can change
 /// without breaking the public surface, and (b) presents the expected dictionary-shaped API
 /// (<see cref="Get"/> throws <see cref="KeyNotFoundException"/> rather than returning a status flag,

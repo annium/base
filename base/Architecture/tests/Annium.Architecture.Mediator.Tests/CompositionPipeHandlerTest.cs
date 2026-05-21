@@ -14,7 +14,10 @@ namespace Annium.Architecture.Mediator.Tests;
 public class CompositionPipeHandlerTest : TestBase
 {
     public CompositionPipeHandlerTest(ITestOutputHelper outputHelper)
-        : base(outputHelper) { }
+        : base(outputHelper)
+    {
+        RegisterMediator(cfg => cfg.AddCompositionHandler().AddHandler(typeof(EchoRequestHandler<>)));
+    }
 
     /// <summary>
     /// Tests that composition failure returns a NotFound status.
@@ -24,7 +27,6 @@ public class CompositionPipeHandlerTest : TestBase
     public async Task CompositionFailure_ReturnsNotFound()
     {
         // arrange
-        RegisterMediator(cfg => cfg.AddCompositionHandler().AddHandler(typeof(EchoRequestHandler<>)));
         var mediator = Get<IMediator>();
         var request = new LoginRequest { IsComposedSuccessfully = false };
 
@@ -49,7 +51,6 @@ public class CompositionPipeHandlerTest : TestBase
     public async Task CompositionSuccess_ReturnsOriginalResult()
     {
         // arrange
-        RegisterMediator(cfg => cfg.AddCompositionHandler().AddHandler(typeof(EchoRequestHandler<>)));
         var mediator = Get<IMediator>();
         var request = new LoginRequest { IsComposedSuccessfully = true };
 

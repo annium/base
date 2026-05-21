@@ -1,4 +1,5 @@
 using System;
+using System.Net;
 using System.Net.Security;
 using System.Threading;
 using System.Threading.Tasks;
@@ -95,7 +96,7 @@ public class WhenDisconnectedAsyncTests
 
         public void RaiseDisconnected(SocketCloseStatus status) => OnDisconnected?.Invoke(status);
 
-        public void Connect(System.Net.IPEndPoint endpoint, SslClientAuthenticationOptions? authOptions = null) =>
+        public void Connect(IPEndPoint endpoint, SslClientAuthenticationOptions? authOptions = null) =>
             throw new NotImplementedException();
 
         public void Disconnect() => throw new NotImplementedException();

@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Annium.Configuration.Abstractions;
 using Annium.Configuration.Abstractions.Internal;
 using Annium.Testing;
 using Xunit;

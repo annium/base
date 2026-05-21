@@ -1,3 +1,4 @@
+using System;
 using System.Reflection;
 using Annium.Reflection;
 using Annium.Testing;
@@ -47,7 +48,7 @@ public class AssemblyExtensionsTests
     [Fact]
     public void AssemblyName_FriendlyName_FormatsAsNameColonVersion()
     {
-        var assemblyName = new AssemblyName("MyLib") { Version = new System.Version(1, 2, 3, 4) };
+        var assemblyName = new AssemblyName("MyLib") { Version = new Version(1, 2, 3, 4) };
 
         assemblyName.FriendlyName().Is("MyLib:1.2.3.4");
     }

@@ -17,7 +17,7 @@ namespace Annium.Net.WebSockets.Tests.Internal;
 /// <summary>
 /// Tests for low-level managed WebSocket functionality
 /// </summary>
-public class ManagedWebSocketTests : TestBase, IAsyncLifetime
+public class ManagedWebSocketTests : TestBase
 {
     /// <summary>
     /// Gets the native client WebSocket instance
@@ -690,8 +690,10 @@ public class ManagedWebSocketTests : TestBase, IAsyncLifetime
     /// Initializes the test instance and sets up native and managed WebSocket instances
     /// </summary>
     /// <returns>Task representing the initialization operation</returns>
-    public async ValueTask InitializeAsync()
+    public override async ValueTask InitializeAsync()
     {
+        await base.InitializeAsync();
+
         this.Trace("start");
 
         ClientSocket = new NativeClientWebSocket();
@@ -713,8 +715,6 @@ public class ManagedWebSocketTests : TestBase, IAsyncLifetime
             _binaries.Add(message);
         };
 
-        await Task.CompletedTask;
-
         this.Trace("done");
     }
 
@@ -722,9 +722,9 @@ public class ManagedWebSocketTests : TestBase, IAsyncLifetime
     /// Disposes the test instance and cleans up WebSocket resources
     /// </summary>
     /// <returns>Task representing the disposal operation</returns>
-    public async ValueTask DisposeAsync()
+    public override ValueTask DisposeAsync()
     {
-        await Task.CompletedTask;
+        return base.DisposeAsync();
     }
 
     /// <summary>

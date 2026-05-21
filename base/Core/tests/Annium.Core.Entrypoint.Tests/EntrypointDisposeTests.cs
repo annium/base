@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.Loader;
+using System.Threading;
 using System.Threading.Tasks;
 using Annium.Core.DependencyInjection;
 using Annium.Core.Runtime;
@@ -30,7 +31,7 @@ public class EntrypointDisposeTests
         // act — create 3 entrypoints (each requires a ServicePack that registers ILogger)
         var entries = new List<Entry>();
         for (var i = 0; i < 3; i++)
-            entries.Add(new Entrypoint().UseServicePack<LoggingPack>().Setup());
+            entries.Add(await new Entrypoint().UseServicePack<LoggingPack>().SetupAsync());
 
         // assert — each Setup should add 1 handler to each static event (if introspection works)
         var consoleAfterSetup = CountConsoleCancelKeyPressHandlers();
@@ -91,15 +92,17 @@ public class EntrypointDisposeTests
     /// </summary>
     private sealed class LoggingPack : ServicePackBase
     {
-        public override void Configure(IServiceContainer container)
+        public override Task ConfigureAsync(IServiceContainer container, CancellationToken ct)
         {
             container.AddTime().WithRealTime().SetDefault();
             container.AddLogging();
+            return Task.CompletedTask;
         }
 
-        public override void Register(IServiceContainer container, IServiceProvider provider)
+        public override Task RegisterAsync(IServiceContainer container, IServiceProvider provider, CancellationToken ct)
         {
             provider.UseLogging(route => route.UseInMemory());
+            return Task.CompletedTask;
         }
     }
 }

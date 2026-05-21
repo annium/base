@@ -1,6 +1,5 @@
 using System;
 using System.Threading.Tasks;
-using Annium.Testing;
 using Xunit;
 
 namespace Annium.Testing.Tests;

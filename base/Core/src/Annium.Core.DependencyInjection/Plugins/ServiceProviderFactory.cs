@@ -1,4 +1,6 @@
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 using Annium.Core.DependencyInjection.Internal.Packs;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -13,7 +15,7 @@ public class ServiceProviderFactory : IServiceProviderFactory<IServiceProviderBu
     /// <summary>
     /// The action to configure the service provider builder
     /// </summary>
-    private readonly Action<ServiceProviderBuilder> _configure;
+    private readonly Action<IServiceProviderBuilder> _configure;
 
     /// <summary>
     /// Initializes a new instance of the ServiceProviderFactory class with no configuration
@@ -46,12 +48,25 @@ public class ServiceProviderFactory : IServiceProviderFactory<IServiceProviderBu
     }
 
     /// <summary>
-    /// Creates a service provider from the specified builder
+    /// Annium-native async path. Use this from any caller that has a CancellationToken
+    /// (Entrypoint, TestBase, ad-hoc bootstrap).
+    /// </summary>
+    /// <param name="container">The service provider builder to build from</param>
+    /// <param name="ct">Cancellation token threaded to every pack phase</param>
+    /// <returns>The built service provider</returns>
+    public Task<ServiceProvider> CreateServiceProviderAsync(IServiceProviderBuilder container, CancellationToken ct) =>
+        container.BuildAsync(ct);
+
+    /// <summary>
+    /// M.E.DI host bridge — the one documented sync-over-async in the framework, required by
+    /// <see cref="IServiceProviderFactory{TContainer}"/>'s sync contract. ASP.NET Core's
+    /// <c>UseServiceProviderFactory</c> and Blazor's <c>ConfigureContainer</c> invoke this
+    /// synchronously. All Annium-native callers go through <see cref="CreateServiceProviderAsync"/>.
     /// </summary>
     /// <param name="container">The service provider builder to build from</param>
     /// <returns>The created service provider</returns>
-    public IServiceProvider CreateServiceProvider(IServiceProviderBuilder container)
-    {
-        return container.Build();
-    }
+#pragma warning disable VSTHRD002
+    public IServiceProvider CreateServiceProvider(IServiceProviderBuilder container) =>
+        container.BuildAsync(CancellationToken.None).GetAwaiter().GetResult();
+#pragma warning restore VSTHRD002
 }

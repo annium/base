@@ -36,7 +36,7 @@ public class TestLogTests
 
         log.Clear();
 
-        Assert.Empty((IEnumerable<string>)log);
+        Assert.Empty(log);
     }
 
     /// <summary>Verifies the indexer returns entries in insertion order.</summary>
@@ -85,7 +85,7 @@ public class TestLogTests
         log.Add(2);
         log.Add(3);
 
-        var enumerator = ((IEnumerable<int>)log).GetEnumerator();
+        var enumerator = log.GetEnumerator();
         log.Add(4);
         log.Add(5);
 
@@ -216,6 +216,6 @@ public class TestLogTests
     {
         var log = new TestLog<string>();
 
-        Assert.Empty((IEnumerable<string>)log);
+        Assert.Empty(log);
     }
 }

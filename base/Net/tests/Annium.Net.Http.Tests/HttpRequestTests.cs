@@ -2,7 +2,6 @@ using System;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -23,7 +22,7 @@ public class HttpRequestTests : TestBase
     /// <summary>
     /// The HTTP request factory for creating requests.
     /// </summary>
-    private readonly IHttpRequestFactory _httpRequestFactory;
+    private IHttpRequestFactory _httpRequestFactory = null!;
 
     /// <summary>
     /// Initializes a new instance of the HttpRequestTests class.
@@ -37,6 +36,12 @@ public class HttpRequestTests : TestBase
             container.AddSerializers().WithJson(true);
             container.AddHttpRequestFactory(true);
         });
+    }
+
+    /// <inheritdoc/>
+    public override async ValueTask InitializeAsync()
+    {
+        await base.InitializeAsync();
         _httpRequestFactory = Get<IHttpRequestFactory>();
     }
 

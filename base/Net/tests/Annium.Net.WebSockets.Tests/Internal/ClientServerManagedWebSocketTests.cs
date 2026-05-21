@@ -16,7 +16,7 @@ namespace Annium.Net.WebSockets.Tests.Internal;
 /// <summary>
 /// Tests for client-server managed WebSocket communication scenarios
 /// </summary>
-public class ClientServerManagedWebSocketTests : TestBase, IAsyncLifetime
+public class ClientServerManagedWebSocketTests : TestBase
 {
     /// <summary>
     /// Gets the client managed WebSocket instance
@@ -562,8 +562,10 @@ public class ClientServerManagedWebSocketTests : TestBase, IAsyncLifetime
     /// Initializes the test instance and sets up managed WebSocket client
     /// </summary>
     /// <returns>Task representing the initialization operation</returns>
-    public async ValueTask InitializeAsync()
+    public override async ValueTask InitializeAsync()
     {
+        await base.InitializeAsync();
+
         this.Trace("start");
 
         _clientSocket = new ClientManagedWebSocket(1_000, Logger);
@@ -578,8 +580,6 @@ public class ClientServerManagedWebSocketTests : TestBase, IAsyncLifetime
             _binaries.Add(message);
         };
 
-        await Task.CompletedTask;
-
         this.Trace("done");
     }
 
@@ -587,7 +587,7 @@ public class ClientServerManagedWebSocketTests : TestBase, IAsyncLifetime
     /// Disposes the test instance and cleans up managed WebSocket client
     /// </summary>
     /// <returns>Task representing the disposal operation</returns>
-    public async ValueTask DisposeAsync()
+    public override async ValueTask DisposeAsync()
     {
         this.Trace("start");
 
@@ -595,6 +595,8 @@ public class ClientServerManagedWebSocketTests : TestBase, IAsyncLifetime
             await _clientSocket.DisconnectAsync();
 
         this.Trace("done");
+
+        await base.DisposeAsync();
     }
 
     /// <summary>

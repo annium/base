@@ -1,3 +1,4 @@
+using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
@@ -22,7 +23,7 @@ public class IPEndPointsTests
     public async Task ParseAsync_InvalidDefaultPort_Negative_Throws()
     {
         await Wrap.It(async () => await IPEndPoints.ParseAsync("127.0.0.1:80", defaultPort: -1))
-            .ThrowsAsync<System.ArgumentOutOfRangeException>();
+            .ThrowsAsync<ArgumentOutOfRangeException>();
     }
 
     /// <summary>
@@ -34,7 +35,7 @@ public class IPEndPointsTests
     public async Task ParseAsync_InvalidDefaultPort_TooLarge_Throws()
     {
         await Wrap.It(async () => await IPEndPoints.ParseAsync("127.0.0.1:80", defaultPort: 65536))
-            .ThrowsAsync<System.ArgumentOutOfRangeException>();
+            .ThrowsAsync<ArgumentOutOfRangeException>();
     }
 
     /// <summary>

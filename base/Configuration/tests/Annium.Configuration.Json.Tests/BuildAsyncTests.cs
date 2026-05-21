@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net;
+using System.Net.Http;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -112,7 +114,7 @@ public class BuildAsyncTests
             .ThrowsAsync<AggregateException>();
         ex.InnerExceptions.Has(1);
         var inner = ex.InnerExceptions[0];
-        var isFetchFailure = inner is TimeoutException or System.Net.Http.HttpRequestException;
+        var isFetchFailure = inner is TimeoutException or HttpRequestException;
         isFetchFailure.IsTrue($"expected fetch failure; got {inner.GetType().FullName}: {inner.Message}");
     }
 
@@ -145,7 +147,7 @@ public class BuildAsyncTests
     {
         private readonly TcpListener _listener;
         private readonly CancellationTokenSource _cts = new();
-        private readonly System.Collections.Generic.List<TcpClient> _accepted = new();
+        private readonly List<TcpClient> _accepted = new();
 
         public HangingTcpListener()
         {

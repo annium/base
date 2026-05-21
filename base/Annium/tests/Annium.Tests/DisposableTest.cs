@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -568,7 +567,7 @@ public class DisposableTest : TestBase
         await reference.DisposeAsync();
 
         // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract — we deliberately check the post-dispose state.
-        ((object?)reference.Value is null).IsTrue();
+        (reference.Value is null).IsTrue();
     }
 
     /// <summary>

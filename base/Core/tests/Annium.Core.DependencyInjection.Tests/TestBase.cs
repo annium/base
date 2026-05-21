@@ -10,7 +10,7 @@ namespace Annium.Core.DependencyInjection.Tests;
 /// (runtime/time/logging) — those still live in the base class's container, isolated from
 /// the local one.
 /// </summary>
-public class TestBase : Annium.Testing.TestBase
+public class TestBase : Testing.TestBase
 {
     /// <summary>
     /// Local service container the tests mutate directly via <c>Container.Add</c>.

@@ -1,4 +1,3 @@
-using System;
 using Annium.Architecture.Base;
 using Annium.Architecture.Http.Exceptions;
 using Annium.Architecture.Http.Internal.PipeHandlers;

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Annium.Testing;
 using Xunit;
@@ -90,7 +91,7 @@ public class StageExecutorTests
     public async Task RunAsync_AsyncAndSyncCommits_AllRunAndNoRollback()
     {
         // arrange
-        var commitOrder = new System.Collections.Generic.List<int>();
+        var commitOrder = new List<int>();
         var rollbackCount = 0;
 
         // act

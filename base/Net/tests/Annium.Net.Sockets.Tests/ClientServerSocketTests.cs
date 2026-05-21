@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Net.Security;
 using System.Net.Sockets;
-using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 using Annium.Core.DependencyInjection;
@@ -17,7 +16,7 @@ namespace Annium.Net.Sockets.Tests;
 /// <summary>
 /// Tests for client-server socket communication functionality
 /// </summary>
-public class ClientServerSocketTests : TestBase, IAsyncLifetime
+public class ClientServerSocketTests : TestBase
 {
     /// <summary>
     /// Gets the client socket instance
@@ -681,8 +680,10 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
     /// Initializes the test asynchronously
     /// </summary>
     /// <returns>A task representing the initialization</returns>
-    public ValueTask InitializeAsync()
+    public override async ValueTask InitializeAsync()
     {
+        await base.InitializeAsync();
+
         this.Trace("start");
 
         var options = ClientSocketOptions.Default with
@@ -704,22 +705,21 @@ public class ClientServerSocketTests : TestBase, IAsyncLifetime
         ClientSocket.OnError += e => Assert.Fail($"Exception occured: {e}");
 
         this.Trace("done");
-
-        return ValueTask.CompletedTask;
     }
 
     /// <summary>
     /// Disposes the test resources asynchronously
     /// </summary>
     /// <returns>A task representing the disposal</returns>
-    public ValueTask DisposeAsync()
+    public override async ValueTask DisposeAsync()
     {
         this.Trace("start");
 
         _clientSocket?.Disconnect();
 
         this.Trace("done");
-        return ValueTask.CompletedTask;
+
+        await base.DisposeAsync();
     }
 
     /// <summary>

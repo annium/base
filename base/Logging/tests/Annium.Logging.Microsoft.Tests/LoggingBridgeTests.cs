@@ -5,7 +5,6 @@ using Annium.Logging.InMemory;
 using Annium.Logging.Shared;
 using Annium.Testing;
 using Annium.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Xunit;
 using AnniumLogLevel = Annium.Logging.LogLevel;

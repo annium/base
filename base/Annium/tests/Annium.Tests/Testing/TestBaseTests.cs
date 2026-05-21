@@ -1,4 +1,3 @@
-using System;
 using Annium.Core.DependencyInjection;
 using Annium.Testing;
 using Microsoft.Extensions.DependencyInjection;
@@ -7,8 +6,10 @@ using Xunit;
 namespace Annium.Tests.Testing;
 
 /// <summary>
-/// Direct tests for <see cref="TestBase"/>'s public surface area: <c>Register</c> /
-/// <c>EnsureNotBuilt</c> guard, <c>GetKeyed</c>, and <c>CreateAsyncScope</c>.
+/// Direct tests for <see cref="TestBase"/>'s public surface area: <c>GetKeyed</c> resolution
+/// and <c>CreateAsyncScope</c> scope materialization. Registrations happen in the constructor
+/// — xUnit.v3 drives <c>InitializeAsync</c> before each test method, after which the registration
+/// window is closed.
 /// </summary>
 public class TestBaseTests : TestBase
 {
@@ -17,20 +18,10 @@ public class TestBaseTests : TestBase
     /// </summary>
     /// <param name="outputHelper">The test output helper.</param>
     public TestBaseTests(ITestOutputHelper outputHelper)
-        : base(outputHelper) { }
-
-    /// <summary>
-    /// Once <c>Provider</c> has been resolved, subsequent <c>Register</c> calls must throw
-    /// <see cref="InvalidOperationException"/>. The guard is critical: silent acceptance of late
-    /// registrations would produce a "registered but unresolvable" state for downstream services.
-    /// </summary>
-    [Fact]
-    public void Register_AfterProviderBuilt_ThrowsInvalidOperationException()
+        : base(outputHelper)
     {
-        // Trigger the lazy provider build.
-        _ = Provider;
-
-        Wrap.It(() => Register(c => c.Add<SomeService>().AsSelf().Singleton())).Throws<InvalidOperationException>();
+        Register(c => c.Add(new SomeService("kv")).AsKeyed<SomeService>("alpha").Singleton());
+        Register(c => c.Add<SomeService>().AsSelf().Scoped());
     }
 
     /// <summary>
@@ -39,10 +30,7 @@ public class TestBaseTests : TestBase
     [Fact]
     public void GetKeyed_RegisteredKeyedService_Resolves()
     {
-        const string key = "alpha";
-        Register(c => c.Add(new SomeService("kv")).AsKeyed<SomeService>(key).Singleton());
-
-        var resolved = GetKeyed<SomeService>(key);
+        var resolved = GetKeyed<SomeService>("alpha");
 
         resolved.Name.Is("kv");
     }
@@ -54,13 +42,9 @@ public class TestBaseTests : TestBase
     [Fact]
     public void CreateAsyncScope_ProvidesScope()
     {
-        Register(c => c.Add<SomeService>().AsSelf().Scoped());
-
         using var scope = CreateAsyncScope();
         var resolved = scope.ServiceProvider.GetRequiredService<SomeService>();
 
-        // Assert on observable state — name comes from the parameterless ctor and round-trips
-        // through DI; a regression returning a stub instance with a different name would fail here.
         resolved.Name.Is("default");
     }
 

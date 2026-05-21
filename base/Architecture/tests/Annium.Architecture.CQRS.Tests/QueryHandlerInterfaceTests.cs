@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 using Annium.Architecture.Base;
 using Annium.Architecture.CQRS.Commands;
 using Annium.Architecture.CQRS.Queries;
-using Annium.Core.Mediator;
 using Annium.Data.Operations;
 using Annium.Testing;
 using Xunit;

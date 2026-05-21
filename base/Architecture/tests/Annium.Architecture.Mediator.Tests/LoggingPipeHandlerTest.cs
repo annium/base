@@ -13,7 +13,10 @@ namespace Annium.Architecture.Mediator.Tests;
 public class LoggingPipeHandlerTest : TestBase
 {
     public LoggingPipeHandlerTest(ITestOutputHelper outputHelper)
-        : base(outputHelper) { }
+        : base(outputHelper)
+    {
+        RegisterMediator(cfg => cfg.AddLoggingHandler().AddHandler(typeof(EchoRequestHandler<>)));
+    }
 
     /// <summary>
     /// Tests that the logging handler returns the original result.
@@ -23,7 +26,6 @@ public class LoggingPipeHandlerTest : TestBase
     public async Task ReturnsOriginalResult()
     {
         // arrange
-        RegisterMediator(cfg => cfg.AddLoggingHandler().AddHandler(typeof(EchoRequestHandler<>)));
         var mediator = Get<IMediator>();
         var request = new LoginRequest();
 

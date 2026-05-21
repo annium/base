@@ -19,7 +19,7 @@ namespace Annium.Net.Sockets.Tests.Internal;
 /// <summary>
 /// Tests for raw managed socket functionality
 /// </summary>
-public class RawManagedSocketTests : TestBase, IAsyncLifetime
+public class RawManagedSocketTests : TestBase
 {
     /// <summary>
     /// Gets the client socket instance
@@ -479,16 +479,16 @@ public class RawManagedSocketTests : TestBase, IAsyncLifetime
     /// Initializes the test asynchronously
     /// </summary>
     /// <returns>A task representing the initialization</returns>
-    public ValueTask InitializeAsync()
+    public override ValueTask InitializeAsync()
     {
-        return ValueTask.CompletedTask;
+        return base.InitializeAsync();
     }
 
     /// <summary>
     /// Disposes the test resources asynchronously
     /// </summary>
     /// <returns>A task representing the disposal</returns>
-    public async ValueTask DisposeAsync()
+    public override async ValueTask DisposeAsync()
     {
         this.Trace("start");
 
@@ -496,6 +496,8 @@ public class RawManagedSocketTests : TestBase, IAsyncLifetime
             await _clientStream.DisposeAsync();
 
         this.Trace("done");
+
+        await base.DisposeAsync();
     }
 
     /// <summary>

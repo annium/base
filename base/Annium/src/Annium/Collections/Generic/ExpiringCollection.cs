@@ -12,7 +12,7 @@ namespace Annium.Collections.Generic;
 /// <remarks>
 /// <para>
 /// <b>Why this facade exists:</b> all storage and eviction is implemented by the internal
-/// <see cref="ExpiringStore{TKey, TValue}"/>. This type is a thin Set-shaped public surface that
+/// <see cref="ExpiringStore{TKey,TValue}"/>. This type is a thin Set-shaped public surface that
 /// (a) keeps <see cref="ExpiringStore{TKey, TValue}"/> internal so its <see cref="byte"/>-as-filler-value
 /// representation is not exposed to consumers, (b) presents Set semantics (<see cref="Add"/> /
 /// <see cref="Contains"/> / <see cref="Remove"/>) instead of the dictionary-shaped store API, and
