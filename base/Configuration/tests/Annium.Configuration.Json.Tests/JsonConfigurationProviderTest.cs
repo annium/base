@@ -59,7 +59,7 @@ public class JsonConfigurationProviderTest : TestBase
         var serializer = container.BuildServiceProvider().Resolve<ISerializer<string>>();
         File.WriteAllText(_jsonFile, serializer.Serialize(cfg));
 
-        Register(c => c.AddConfiguration<Config>(x => x.AddJsonFile(_jsonFile)));
+        Register((c, ct) => c.AddConfigurationAsync<Config>(x => x.AddJsonFile(_jsonFile), ct));
     }
 
     /// <inheritdoc/>

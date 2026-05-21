@@ -23,7 +23,7 @@ public class CommandLineConfigurationProviderTest : TestBase
         args.AddRange("-array", "4", "-array", "7");
         args.AddRange("-nested.plain", "4");
         args.AddRange("-nested.array", "4", "-nested.array", "13");
-        Register(c => c.AddConfiguration<Config>(x => x.AddCommandLineArgs(args.ToArray())));
+        Register((c, ct) => c.AddConfigurationAsync<Config>(x => x.AddCommandLineArgs(args.ToArray()), ct));
     }
 
     /// <summary>

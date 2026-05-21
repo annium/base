@@ -49,7 +49,7 @@ public class YamlConfigurationProviderTest : TestBase
         var serializer = new SerializerBuilder().Build();
         File.WriteAllText(_yamlFile, serializer.Serialize(cfg));
 
-        Register(c => c.AddConfiguration<Config>(x => x.AddYamlFile(_yamlFile)));
+        Register((c, ct) => c.AddConfigurationAsync<Config>(x => x.AddYamlFile(_yamlFile), ct));
     }
 
     /// <inheritdoc/>

@@ -19,7 +19,7 @@ public class ConfigurationBuilderTest : TestBase
         cfg[new[] { "abstract", "type" }] = "ConfigOne";
         cfg[new[] { "abstract", "value" }] = "14";
         cfg[new[] { "enum" }] = "two";
-        Register(container => container.AddConfiguration<Config>(x => x.Add(cfg)));
+        Register((container, ct) => container.AddConfigurationAsync<Config>(x => x.Add(cfg), ct));
     }
 
     /// <summary>

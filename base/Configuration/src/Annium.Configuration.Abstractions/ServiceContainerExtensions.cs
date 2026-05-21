@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using Annium.Configuration.Abstractions.Internal;
 using Annium.Core.DependencyInjection;
@@ -31,27 +32,24 @@ public static class ServiceContainerExtensions
     }
 
     /// <summary>
-    /// Registers a configuration built from the provided configuration action
+    /// Registers a configuration built from the provided async configuration function.
     /// </summary>
-    /// <param name="container">The service container</param>
-    /// <param name="configure">Action to configure the configuration container</param>
-    /// <returns>The service container for method chaining</returns>
-    public static IServiceContainer AddConfiguration<T>(
+    /// <param name="container">The service container.</param>
+    /// <param name="configure">Async function to configure the configuration container. Receives the same cancellation token threaded into <see cref="ConfigurationContainerExtensions.BuildAsync"/>.</param>
+    /// <param name="ct">Cancellation token forwarded to the configure delegate and to <see cref="ConfigurationContainerExtensions.BuildAsync"/>.</param>
+    /// <returns>Task containing the service container for method chaining.</returns>
+    public static async Task<IServiceContainer> AddConfigurationAsync<T>(
         this IServiceContainer container,
-        Action<IConfigurationContainer> configure
+        Func<IConfigurationContainer, CancellationToken, Task> configure,
+        CancellationToken ct = default
     )
         where T : class, new()
     {
         container.AddConfigurationBuilder();
 
         var cfgContainer = new ConfigurationContainer();
-        configure(cfgContainer);
-        // Flush any deferred sources synchronously. All in-process sources (Object/Json file/
-        // Yaml file/CommandLine) complete on a hot path; remote sources should use the async
-        // entry point below to avoid blocking on I/O.
-#pragma warning disable VSTHRD002
-        cfgContainer.BuildAsync().GetAwaiter().GetResult();
-#pragma warning restore VSTHRD002
+        await configure(cfgContainer, ct);
+        await cfgContainer.BuildAsync(ct);
 
         container
             .Add(sp =>
@@ -70,39 +68,31 @@ public static class ServiceContainerExtensions
     }
 
     /// <summary>
-    /// Registers a configuration built from the provided asynchronous configuration function
+    /// Registers a configuration built from the provided sync configuration action.
     /// </summary>
-    /// <param name="container">The service container</param>
-    /// <param name="configure">Async function to configure the configuration container</param>
-    /// <returns>Task containing the service container for method chaining</returns>
-    public static async Task<IServiceContainer> AddConfigurationAsync<T>(
+    /// <remarks>
+    /// Ergonomic forwarder over the primary async overload. The supplied <paramref name="configure"/>
+    /// action runs synchronously and does not observe <paramref name="ct"/>; the cancellation token is
+    /// forwarded only into <see cref="ConfigurationContainerExtensions.BuildAsync"/>.
+    /// </remarks>
+    /// <param name="container">The service container.</param>
+    /// <param name="configure">Action to configure the configuration container.</param>
+    /// <param name="ct">Cancellation token forwarded to <see cref="ConfigurationContainerExtensions.BuildAsync"/>.</param>
+    /// <returns>Task containing the service container for method chaining.</returns>
+    public static Task<IServiceContainer> AddConfigurationAsync<T>(
         this IServiceContainer container,
-        Func<IConfigurationContainer, Task> configure
+        Action<IConfigurationContainer> configure,
+        CancellationToken ct = default
     )
-        where T : class, new()
-    {
-        container.AddConfigurationBuilder();
-
-        var cfgContainer = new ConfigurationContainer();
-        await configure(cfgContainer);
-        // Flush any deferred sources — including remote ones — without blocking the calling thread.
-        await cfgContainer.BuildAsync();
-
-        container
-            .Add(sp =>
+        where T : class, new() =>
+        container.AddConfigurationAsync<T>(
+            (cfg, _) =>
             {
-                var builder = sp.Resolve<IConfigurationBuilder>();
-                builder.Add(cfgContainer.Get());
-
-                return builder.Build<T>();
-            })
-            .AsSelf()
-            .Singleton();
-
-        Register(container, typeof(T));
-
-        return container;
-    }
+                configure(cfg);
+                return Task.CompletedTask;
+            },
+            ct
+        );
 
     /// <summary>
     /// Registers the configuration builder in the service container

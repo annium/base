@@ -37,7 +37,7 @@ public class ObjectConfigurationProviderTest : TestBase
             Abstract = new ConfigTwo { Value = 10 },
             Tuple = ("demo|", 11),
         };
-        Register(container => container.AddConfiguration<Config>(x => x.Add(cfg)));
+        Register((container, ct) => container.AddConfigurationAsync<Config>(x => x.Add(cfg), ct));
     }
 
     /// <summary>
