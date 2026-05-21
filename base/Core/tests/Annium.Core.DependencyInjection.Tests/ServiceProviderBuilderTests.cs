@@ -46,8 +46,8 @@ public class ServiceProviderBuilderTests
         await using var provider = await builder.BuildAsync(TestContext.Current.CancellationToken);
 
         // act + assert
-        var ex = await Assert.ThrowsAsync<InvalidOperationException>(
-            async () => await builder.BuildAsync(TestContext.Current.CancellationToken)
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+            await builder.BuildAsync(TestContext.Current.CancellationToken)
         );
         ex.Message.IsEqual("ServiceProviderBuilder is already built");
     }
@@ -65,15 +65,15 @@ public class ServiceProviderBuilderTests
         builder.UseServicePack<ThrowingConfigurePack>();
 
         // first Build propagates the Configure fault
-        var firstEx = await Assert.ThrowsAsync<InvalidOperationException>(
-            async () => await builder.BuildAsync(TestContext.Current.CancellationToken)
+        var firstEx = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+            await builder.BuildAsync(TestContext.Current.CancellationToken)
         );
         firstEx.Message.IsEqual("boom");
 
         // act — second Build on same builder reproduces the underlying fault,
         // NOT "already built" — proves _isAlreadyBuilt was not flipped on throw
-        var secondEx = await Assert.ThrowsAsync<InvalidOperationException>(
-            async () => await builder.BuildAsync(TestContext.Current.CancellationToken)
+        var secondEx = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+            await builder.BuildAsync(TestContext.Current.CancellationToken)
         );
 
         // assert

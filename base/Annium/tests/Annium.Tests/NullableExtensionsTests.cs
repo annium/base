@@ -123,7 +123,7 @@ public class NullableExtensionsTests
     public async Task EnsureNotNullAsync_ValueTask_Struct()
     {
         var nullValue = new ValueTask<bool?>((bool?)null);
-        var validValue = new ValueTask<bool?>((bool?)true);
+        var validValue = new ValueTask<bool?>(true);
 
         await Wrap.It(async () => _ = await nullValue.NotNullAsync()).ThrowsAsync<NullReferenceException>();
 

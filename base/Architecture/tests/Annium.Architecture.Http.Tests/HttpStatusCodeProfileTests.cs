@@ -1,7 +1,6 @@
 using System.Net;
 using Annium.Architecture.Base;
 using Annium.Architecture.Http.Profiles;
-using Annium.Core.DependencyInjection;
 using Annium.Core.Mapper;
 using Annium.Testing;
 using Xunit;

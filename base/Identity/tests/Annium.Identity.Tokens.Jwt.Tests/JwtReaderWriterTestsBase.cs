@@ -2,11 +2,9 @@ using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
-using Annium;
+using System.Threading;
 using Annium.Core.DependencyInjection;
 using Annium.Core.Runtime;
-using Annium.Identity.Tokens;
-using Annium.NodaTime.Extensions;
 using Annium.Testing;
 using Microsoft.IdentityModel.Tokens;
 using NodaTime;
@@ -152,7 +150,7 @@ public class JwtReaderWriterTestsBase
         var encoded = writer.Write(new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim("k", "v") }, "JWT")));
 
         // wait so the token's ValidTo (now + 1ms) is in the past
-        System.Threading.Thread.Sleep(50);
+        Thread.Sleep(50);
 
         var (reader, _, _) = Resolve(publicKey, signatureAlgorithm, issuer, audience, expirationWindow: null, lifetime);
 
@@ -193,7 +191,7 @@ public class JwtReaderWriterTestsBase
         // wait so the token expires (lifetime 1ms) plus ClockSkew (10s applied below) — need
         // to wait > 10s for the MS library to treat it as expired. We use a tighter
         // ClockSkew here (1ms) so the test stays fast.
-        System.Threading.Thread.Sleep(50);
+        Thread.Sleep(50);
 
         var (reader, _, _) = Resolve(
             publicKey,
@@ -307,7 +305,7 @@ public class JwtReaderWriterTestsBase
         var encoded = writer.Write(new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim("k", "v") }, "JWT")));
 
         // wait long enough that ValidTo + ClockSkew has passed even under concurrent test load
-        System.Threading.Thread.Sleep(500);
+        Thread.Sleep(500);
 
         // sanity — without override the read must fail (expired)
         reader.Read(encoded).Status.Is(TokenReadStatus.Expired);

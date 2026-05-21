@@ -1,3 +1,4 @@
+using Annium.Architecture.ViewModel.Internal.PipeHandlers.Request;
 using Annium.Core.Mediator;
 
 namespace Annium.Architecture.ViewModel;
@@ -27,8 +28,8 @@ public static class MediatorConfigurationExtensions
     /// <returns>The updated mediator configuration</returns>
     public static MediatorConfiguration AddViewMappingHandlers(this MediatorConfiguration cfg)
     {
-        cfg.AddHandler(typeof(Internal.PipeHandlers.Request.MappingEnumerablePipeHandler<,,>));
-        cfg.AddHandler(typeof(Internal.PipeHandlers.Request.MappingSinglePipeHandler<,,>));
+        cfg.AddHandler(typeof(MappingEnumerablePipeHandler<,,>));
+        cfg.AddHandler(typeof(MappingSinglePipeHandler<,,>));
         cfg.AddHandler(typeof(Internal.PipeHandlers.Response.MappingEnumerablePipeHandler<,,>));
         cfg.AddHandler(typeof(Internal.PipeHandlers.Response.MappingSinglePipeHandler<,,>));
 

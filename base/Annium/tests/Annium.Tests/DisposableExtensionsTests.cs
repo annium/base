@@ -20,7 +20,7 @@ public class DisposableExtensionsTests
     public async Task DisposeAsync_SyncOnly_CallsDispose()
     {
         var disposable = new SyncDisposable();
-        var task = ((IDisposable)disposable).DisposeAsync();
+        var task = disposable.DisposeAsync();
         task.IsCompleted.IsTrue();
         await task;
         disposable.Disposed.IsTrue();

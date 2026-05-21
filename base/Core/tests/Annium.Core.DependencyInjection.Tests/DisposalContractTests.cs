@@ -49,8 +49,8 @@ public class DisposalContractTests
             new DynamicServicePack().Configure((_, _) => throw new InvalidOperationException("configure-boom"))
         );
 
-        var ex = await Assert.ThrowsAsync<InvalidOperationException>(
-            async () => await builder.BuildAsync(TestContext.Current.CancellationToken)
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+            await builder.BuildAsync(TestContext.Current.CancellationToken)
         );
 
         ex.Message.IsEqual("configure-boom");
@@ -73,8 +73,8 @@ public class DisposalContractTests
                 )
         );
 
-        var ex = await Assert.ThrowsAsync<InvalidOperationException>(
-            async () => await builder.BuildAsync(TestContext.Current.CancellationToken)
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+            await builder.BuildAsync(TestContext.Current.CancellationToken)
         );
 
         ex.Message.IsEqual("register-boom");
@@ -100,17 +100,15 @@ public class DisposalContractTests
                         p.GetRequiredService<TransientHook>().Hook = transientHook;
                     }
                 )
-                .Setup(
-                    p =>
-                    {
-                        p.GetRequiredService<FinalHook>().Hook = finalHook;
-                        throw new InvalidOperationException("setup-boom");
-                    }
-                )
+                .Setup(p =>
+                {
+                    p.GetRequiredService<FinalHook>().Hook = finalHook;
+                    throw new InvalidOperationException("setup-boom");
+                })
         );
 
-        var ex = await Assert.ThrowsAsync<InvalidOperationException>(
-            async () => await builder.BuildAsync(TestContext.Current.CancellationToken)
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+            await builder.BuildAsync(TestContext.Current.CancellationToken)
         );
 
         ex.Message.IsEqual("setup-boom");
@@ -131,9 +129,7 @@ public class DisposalContractTests
 
         cts.CancelAfter(TimeSpan.FromMilliseconds(50));
 
-        var ex = await Assert.ThrowsAsync<TaskCanceledException>(
-            async () => await builder.BuildAsync(cts.Token)
-        );
+        var ex = await Assert.ThrowsAsync<TaskCanceledException>(async () => await builder.BuildAsync(cts.Token));
         ex.CancellationToken.Is(cts.Token);
     }
 
@@ -157,9 +153,7 @@ public class DisposalContractTests
 
         cts.CancelAfter(TimeSpan.FromMilliseconds(50));
 
-        var ex = await Assert.ThrowsAsync<TaskCanceledException>(
-            async () => await builder.BuildAsync(cts.Token)
-        );
+        var ex = await Assert.ThrowsAsync<TaskCanceledException>(async () => await builder.BuildAsync(cts.Token));
         ex.CancellationToken.Is(cts.Token);
         transientHook.DisposedCount.Is(1);
     }
@@ -186,13 +180,11 @@ public class DisposalContractTests
                         await cts.CancelAsync();
                     }
                 )
-                .Setup(
-                    p =>
-                    {
-                        // would only run if Phase 5 reached
-                        p.GetRequiredService<FinalHook>().Hook = finalHook;
-                    }
-                )
+                .Setup(p =>
+                {
+                    // would only run if Phase 5 reached
+                    p.GetRequiredService<FinalHook>().Hook = finalHook;
+                })
         );
 
         var ex = await Assert.ThrowsAsync<OperationCanceledException>(async () => await builder.BuildAsync(cts.Token));
@@ -225,12 +217,10 @@ public class DisposalContractTests
                         p.GetRequiredService<TransientCanceller>().Cts = cts;
                     }
                 )
-                .Setup(
-                    _ =>
-                    {
-                        setupRan = true;
-                    }
-                )
+                .Setup(_ =>
+                {
+                    setupRan = true;
+                })
         );
 
         var ex = await Assert.ThrowsAsync<OperationCanceledException>(async () => await builder.BuildAsync(cts.Token));
@@ -285,18 +275,16 @@ public class DisposalContractTests
         builder.UseServicePack(
             new DynamicServicePack()
                 .Configure(c => c.Add<ThrowOnAsyncDispose>().AsSelf().Singleton())
-                .Setup(
-                    p =>
-                    {
-                        // materialise so SP tracks it for dispose
-                        _ = p.GetRequiredService<ThrowOnAsyncDispose>();
-                        throw new InvalidOperationException("phase5-boom");
-                    }
-                )
+                .Setup(p =>
+                {
+                    // materialise so SP tracks it for dispose
+                    _ = p.GetRequiredService<ThrowOnAsyncDispose>();
+                    throw new InvalidOperationException("phase5-boom");
+                })
         );
 
-        var ex = await Assert.ThrowsAsync<AggregateException>(
-            async () => await builder.BuildAsync(TestContext.Current.CancellationToken)
+        var ex = await Assert.ThrowsAsync<AggregateException>(async () =>
+            await builder.BuildAsync(TestContext.Current.CancellationToken)
         );
 
         // InnerExceptions[0] is the original phase-5 exception
@@ -310,18 +298,16 @@ public class DisposalContractTests
     public async Task BuildAsync_FailedRunDoesNotSetIsAlreadyBuilt()
     {
         var builder = new ServiceProviderFactory().CreateBuilder(new ServiceCollection());
-        builder.UseServicePack(
-            new DynamicServicePack().Setup(_ => throw new InvalidOperationException("setup-boom"))
-        );
+        builder.UseServicePack(new DynamicServicePack().Setup(_ => throw new InvalidOperationException("setup-boom")));
 
         // first build fails in Phase 5
-        await Assert.ThrowsAsync<InvalidOperationException>(
-            async () => await builder.BuildAsync(TestContext.Current.CancellationToken)
+        await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+            await builder.BuildAsync(TestContext.Current.CancellationToken)
         );
 
         // second build on SAME builder should reproduce the same fault, NOT throw "already built"
-        var secondEx = await Assert.ThrowsAsync<InvalidOperationException>(
-            async () => await builder.BuildAsync(TestContext.Current.CancellationToken)
+        var secondEx = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+            await builder.BuildAsync(TestContext.Current.CancellationToken)
         );
         secondEx.Message.IsEqual("setup-boom");
     }
@@ -390,9 +376,7 @@ public class DisposalContractTests
     {
         var factory = new ServiceProviderFactory();
         var builder = factory.CreateBuilder(new ServiceCollection());
-        builder.UseServicePack(
-            new DynamicServicePack().Configure(c => c.Add<TransientHook>().AsSelf().Singleton())
-        );
+        builder.UseServicePack(new DynamicServicePack().Configure(c => c.Add<TransientHook>().AsSelf().Singleton()));
 
         var sp = factory.CreateServiceProvider(builder);
 

@@ -1,6 +1,5 @@
 using System.Threading;
 using System.Threading.Tasks;
-using Annium.Logging;
 using Annium.Net.WebSockets.Internal;
 
 namespace Annium.Net.WebSockets;

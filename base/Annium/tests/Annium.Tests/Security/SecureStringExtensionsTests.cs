@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
 using Annium.Security;
@@ -42,7 +41,7 @@ public class SecureStringExtensionsTests
         const string original = "hello";
 
         // act
-        var secure = ((IEnumerable<char>)original).AsSecureString();
+        var secure = original.AsSecureString();
 
         // assert — unmarshal back to plain string for equality check
         var ptr = IntPtr.Zero;
@@ -69,7 +68,7 @@ public class SecureStringExtensionsTests
         var empty = Array.Empty<char>();
 
         // act
-        var secure = ((IEnumerable<char>)empty).AsSecureString();
+        var secure = empty.AsSecureString();
 
         // assert
         secure.Length.Is(0);

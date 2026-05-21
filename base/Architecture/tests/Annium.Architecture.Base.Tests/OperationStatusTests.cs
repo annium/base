@@ -1,4 +1,4 @@
-using Annium.Architecture.Base;
+using System;
 using Annium.Testing;
 using Xunit;
 
@@ -15,15 +15,15 @@ public class OperationStatusTests
     [Fact]
     public void OperationStatus_ContainsExpectedMembers()
     {
-        System.Enum.IsDefined(typeof(OperationStatus), nameof(OperationStatus.Ok)).IsTrue();
-        System.Enum.IsDefined(typeof(OperationStatus), nameof(OperationStatus.BadRequest)).IsTrue();
-        System.Enum.IsDefined(typeof(OperationStatus), nameof(OperationStatus.Unauthorized)).IsTrue();
-        System.Enum.IsDefined(typeof(OperationStatus), nameof(OperationStatus.Forbidden)).IsTrue();
-        System.Enum.IsDefined(typeof(OperationStatus), nameof(OperationStatus.NotFound)).IsTrue();
-        System.Enum.IsDefined(typeof(OperationStatus), nameof(OperationStatus.Conflict)).IsTrue();
-        System.Enum.IsDefined(typeof(OperationStatus), nameof(OperationStatus.NetworkError)).IsTrue();
-        System.Enum.IsDefined(typeof(OperationStatus), nameof(OperationStatus.Aborted)).IsTrue();
-        System.Enum.IsDefined(typeof(OperationStatus), nameof(OperationStatus.Timeout)).IsTrue();
-        System.Enum.IsDefined(typeof(OperationStatus), nameof(OperationStatus.UncaughtError)).IsTrue();
+        Enum.IsDefined(typeof(OperationStatus), nameof(OperationStatus.Ok)).IsTrue();
+        Enum.IsDefined(typeof(OperationStatus), nameof(OperationStatus.BadRequest)).IsTrue();
+        Enum.IsDefined(typeof(OperationStatus), nameof(OperationStatus.Unauthorized)).IsTrue();
+        Enum.IsDefined(typeof(OperationStatus), nameof(OperationStatus.Forbidden)).IsTrue();
+        Enum.IsDefined(typeof(OperationStatus), nameof(OperationStatus.NotFound)).IsTrue();
+        Enum.IsDefined(typeof(OperationStatus), nameof(OperationStatus.Conflict)).IsTrue();
+        Enum.IsDefined(typeof(OperationStatus), nameof(OperationStatus.NetworkError)).IsTrue();
+        Enum.IsDefined(typeof(OperationStatus), nameof(OperationStatus.Aborted)).IsTrue();
+        Enum.IsDefined(typeof(OperationStatus), nameof(OperationStatus.Timeout)).IsTrue();
+        Enum.IsDefined(typeof(OperationStatus), nameof(OperationStatus.UncaughtError)).IsTrue();
     }
 }

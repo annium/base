@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Annium.Logging;
 using Annium.Logging.Shared;
 using Annium.Testing;
 using NodaTime;

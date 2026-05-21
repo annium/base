@@ -55,7 +55,7 @@ public static class ConfigurationContainerExtensions
                 try
                 {
                     var data = await s.LoadAsync(ct);
-                    return (source: s, data, error: (Exception?)null);
+                    return (source: s, data, error: null);
                 }
                 catch (Exception ex)
                 {
