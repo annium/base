@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Annium.Configuration.Abstractions;
 using Annium.Configuration.Tests.Lib;
 using Annium.Testing;
@@ -14,19 +15,13 @@ namespace Annium.Configuration.Yaml.Tests;
 /// </summary>
 public class YamlConfigurationProviderTest : TestBase
 {
+    private readonly string _yamlFile;
+
     public YamlConfigurationProviderTest(ITestOutputHelper outputHelper)
         : base(outputHelper)
     {
         this.RegisterMapper();
-    }
 
-    /// <summary>
-    /// Tests that YAML configuration works correctly.
-    /// </summary>
-    [Fact]
-    public void YamlConfiguration_Works()
-    {
-        // arrange
         var cfg = new Config
         {
             Flag = true,
@@ -50,46 +45,53 @@ public class YamlConfigurationProviderTest : TestBase
             Abstract = new ConfigTwo { Value = 10 },
         };
 
-        var yamlFile = string.Empty;
-        try
-        {
-            yamlFile = Path.GetTempFileName();
-            var serializer = new SerializerBuilder().Build();
-            File.WriteAllText(yamlFile, serializer.Serialize(cfg));
-            Register(c => c.AddConfiguration<Config>(x => x.AddYamlFile(yamlFile)));
+        _yamlFile = Path.GetTempFileName();
+        var serializer = new SerializerBuilder().Build();
+        File.WriteAllText(_yamlFile, serializer.Serialize(cfg));
 
-            // act
-            var result = Get<Config>();
-            var nested = Get<SomeConfig>();
+        Register(c => c.AddConfiguration<Config>(x => x.AddYamlFile(_yamlFile)));
+    }
 
-            // assert
-            result.IsNotDefault();
-            result.Flag.IsTrue();
-            result.Plain.Is(7);
-            // result.Nullable.Is(3);
-            result.Array.SequenceEqual(new[] { 4, 7 }).IsTrue();
-            result.Matrix.Has(2);
-            result.Matrix.At(0).SequenceEqual(new[] { 3, 2 }).IsTrue();
-            result.Matrix.At(1).SequenceEqual(new[] { 5, 4 }).IsTrue();
-            result.List.Has(2);
-            result.List[0].Plain.Is(8);
-            result.List[0].Array.IsEmpty();
-            result.List[1].Plain.Is(0);
-            result.List[1].Array.SequenceEqual(new[] { 2m, 6m }).IsTrue();
-            IDictionary<string, Val> dict = result.Dictionary;
-            dict.Has(1);
-            dict.At("demo").Plain.Is(14);
-            dict.At("demo").Array.SequenceEqual(new[] { 3m, 15m }).IsTrue();
-            result.Nested.Plain.Is(4);
-            result.Nested.Array.SequenceEqual(new[] { 4m, 13m }).IsTrue();
-            result.Abstract.As<ConfigTwo>().Value.Is(10);
-            result.Abstract.IsEqual(nested);
-            nested.Is(new ConfigTwo { Value = 10 });
-        }
-        finally
-        {
-            if (!string.IsNullOrWhiteSpace(yamlFile) && File.Exists(yamlFile))
-                File.Delete(yamlFile);
-        }
+    /// <inheritdoc/>
+    public override async ValueTask DisposeAsync()
+    {
+        if (!string.IsNullOrWhiteSpace(_yamlFile) && File.Exists(_yamlFile))
+            File.Delete(_yamlFile);
+        await base.DisposeAsync();
+    }
+
+    /// <summary>
+    /// Tests that YAML configuration works correctly.
+    /// </summary>
+    [Fact]
+    public void YamlConfiguration_Works()
+    {
+        // act
+        var result = Get<Config>();
+        var nested = Get<SomeConfig>();
+
+        // assert
+        result.IsNotDefault();
+        result.Flag.IsTrue();
+        result.Plain.Is(7);
+        // result.Nullable.Is(3);
+        result.Array.SequenceEqual(new[] { 4, 7 }).IsTrue();
+        result.Matrix.Has(2);
+        result.Matrix.At(0).SequenceEqual(new[] { 3, 2 }).IsTrue();
+        result.Matrix.At(1).SequenceEqual(new[] { 5, 4 }).IsTrue();
+        result.List.Has(2);
+        result.List[0].Plain.Is(8);
+        result.List[0].Array.IsEmpty();
+        result.List[1].Plain.Is(0);
+        result.List[1].Array.SequenceEqual(new[] { 2m, 6m }).IsTrue();
+        IDictionary<string, Val> dict = result.Dictionary;
+        dict.Has(1);
+        dict.At("demo").Plain.Is(14);
+        dict.At("demo").Array.SequenceEqual(new[] { 3m, 15m }).IsTrue();
+        result.Nested.Plain.Is(4);
+        result.Nested.Array.SequenceEqual(new[] { 4m, 13m }).IsTrue();
+        result.Abstract.As<ConfigTwo>().Value.Is(10);
+        result.Abstract.IsEqual(nested);
+        nested.Is(new ConfigTwo { Value = 10 });
     }
 }

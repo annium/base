@@ -13,7 +13,10 @@ namespace Annium.Architecture.Mediator.Tests;
 public class ExceptionPipeHandlerTest : TestBase
 {
     public ExceptionPipeHandlerTest(ITestOutputHelper outputHelper)
-        : base(outputHelper) { }
+        : base(outputHelper)
+    {
+        RegisterMediator(cfg => cfg.AddExceptionHandler().AddHandler(typeof(EchoRequestHandler<>)));
+    }
 
     /// <summary>
     /// Tests that exceptions are caught and returned as uncaught exception results.
@@ -23,7 +26,6 @@ public class ExceptionPipeHandlerTest : TestBase
     public async Task Exception_ReturnsUncaughtExceptionResult()
     {
         // arrange
-        RegisterMediator(cfg => cfg.AddExceptionHandler().AddHandler(typeof(EchoRequestHandler<>)));
         var mediator = Get<IMediator>();
         var request = new LoginRequest { Throw = true };
 
@@ -48,7 +50,6 @@ public class ExceptionPipeHandlerTest : TestBase
     public async Task Success_ReturnsOriginalResult()
     {
         // arrange
-        RegisterMediator(cfg => cfg.AddExceptionHandler().AddHandler(typeof(EchoRequestHandler<>)));
         var mediator = Get<IMediator>();
         var request = new LoginRequest { Throw = false };
 

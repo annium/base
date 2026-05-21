@@ -14,7 +14,10 @@ namespace Annium.Architecture.Mediator.Tests;
 public class ValidationPipeHandlerTest : TestBase
 {
     public ValidationPipeHandlerTest(ITestOutputHelper outputHelper)
-        : base(outputHelper) { }
+        : base(outputHelper)
+    {
+        RegisterMediator(cfg => cfg.AddValidationHandler().AddHandler(typeof(EchoRequestHandler<>)));
+    }
 
     /// <summary>
     /// Tests that validation failure returns a BadRequest status.
@@ -24,7 +27,6 @@ public class ValidationPipeHandlerTest : TestBase
     public async Task ValidationFailure_ReturnsBadRequest()
     {
         // arrange
-        RegisterMediator(cfg => cfg.AddValidationHandler().AddHandler(typeof(EchoRequestHandler<>)));
         var mediator = Get<IMediator>();
         var request = new LoginRequest();
 
@@ -49,7 +51,6 @@ public class ValidationPipeHandlerTest : TestBase
     public async Task ValidationSuccess_ReturnsOriginalResult()
     {
         // arrange
-        RegisterMediator(cfg => cfg.AddValidationHandler().AddHandler(typeof(EchoRequestHandler<>)));
         var mediator = Get<IMediator>();
         var request = new LoginRequest { UserName = "user", Password = "pass" };
 

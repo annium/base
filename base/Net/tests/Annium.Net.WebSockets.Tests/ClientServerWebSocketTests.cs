@@ -15,7 +15,7 @@ namespace Annium.Net.WebSockets.Tests;
 /// <summary>
 /// Tests for client-server WebSocket communication scenarios
 /// </summary>
-public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
+public class ClientServerWebSocketTests : TestBase
 {
     /// <summary>
     /// Gets the client WebSocket instance
@@ -585,8 +585,10 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
     /// Initializes the test instance and sets up WebSocket client
     /// </summary>
     /// <returns>Task representing the initialization operation</returns>
-    public ValueTask InitializeAsync()
+    public override async ValueTask InitializeAsync()
     {
+        await base.InitializeAsync();
+
         this.Trace("start");
 
         _clientSocket = new ClientWebSocket(ClientWebSocketOptions.Default with { ReconnectDelay = 1 }, Logger);
@@ -606,22 +608,21 @@ public class ClientServerWebSocketTests : TestBase, IAsyncLifetime
         ClientSocket.OnError += e => Assert.Fail($"Exception occured: {e}");
 
         this.Trace("done");
-
-        return ValueTask.CompletedTask;
     }
 
     /// <summary>
     /// Disposes the test instance and cleans up WebSocket client
     /// </summary>
     /// <returns>Task representing the disposal operation</returns>
-    public ValueTask DisposeAsync()
+    public override async ValueTask DisposeAsync()
     {
         this.Trace("start");
 
         _clientSocket?.Disconnect();
 
         this.Trace("done");
-        return ValueTask.CompletedTask;
+
+        await base.DisposeAsync();
     }
 
     /// <summary>

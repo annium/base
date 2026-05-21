@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using Annium.Core.Mapper;
 using Annium.Testing;
 using Xunit;
@@ -6,8 +7,9 @@ using ServiceLifetime = Annium.Core.DependencyInjection.ServiceLifetime;
 namespace Annium.Tests.Testing;
 
 /// <summary>
-/// Tests for the <see cref="TestBaseExtensions"/> helpers. Each test uses an isolated derived
-/// TestBase fixture so registrations don't leak between cases.
+/// Tests for the <see cref="TestBaseExtensions"/> helpers. Each test instantiates an isolated
+/// <see cref="TestBase"/> fixture, configures it, drives the async lifecycle, and asserts
+/// resolution behavior.
 /// </summary>
 public class TestBaseExtensionsTests
 {
@@ -15,10 +17,11 @@ public class TestBaseExtensionsTests
     /// <c>RegisterMapper</c> wires the mapper into the container so <see cref="IMapper"/> is resolvable.
     /// </summary>
     [Fact]
-    public void RegisterMapper_MakesMapperResolvable()
+    public async Task RegisterMapper_MakesMapperResolvable()
     {
-        var fixture = new InnerTest();
+        await using var fixture = new InnerTest();
         fixture.RegisterMapper();
+        await fixture.InitializeAsync();
 
         var mapper = fixture.Get<IMapper>();
 
@@ -30,10 +33,11 @@ public class TestBaseExtensionsTests
     /// the same instance is returned across resolutions.
     /// </summary>
     [Fact]
-    public void RegisterTestLogs_DefaultLifetime_IsSingleton()
+    public async Task RegisterTestLogs_DefaultLifetime_IsSingleton()
     {
-        var fixture = new InnerTest();
+        await using var fixture = new InnerTest();
         fixture.RegisterTestLogs();
+        await fixture.InitializeAsync();
 
         var a = fixture.Get<TestLog<string>>();
         var b = fixture.Get<TestLog<string>>();
@@ -45,10 +49,11 @@ public class TestBaseExtensionsTests
     /// <c>RegisterTestLogs(ServiceLifetime.Transient)</c> produces a fresh instance per resolution.
     /// </summary>
     [Fact]
-    public void RegisterTestLogs_TransientLifetime_IsTransient()
+    public async Task RegisterTestLogs_TransientLifetime_IsTransient()
     {
-        var fixture = new InnerTest();
+        await using var fixture = new InnerTest();
         fixture.RegisterTestLogs(ServiceLifetime.Transient);
+        await fixture.InitializeAsync();
 
         var a = fixture.Get<TestLog<string>>();
         var b = fixture.Get<TestLog<string>>();
@@ -57,8 +62,8 @@ public class TestBaseExtensionsTests
     }
 
     /// <summary>
-    /// Minimal subclass used to instantiate <see cref="TestBase"/>. The test cases need a real
-    /// instance because <see cref="TestBaseExtensions"/> are instance-targeted helpers.
+    /// Minimal subclass used to instantiate <see cref="TestBase"/> outside the xUnit injection flow.
+    /// Implements <see cref="System.IAsyncDisposable"/> via the inherited <c>DisposeAsync</c>.
     /// </summary>
     private sealed class InnerTest : TestBase
     {

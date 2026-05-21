@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using Annium.Core.DependencyInjection;
 using Annium.Core.Runtime;
 using Annium.Logging;
@@ -8,19 +10,25 @@ using Annium.Logging.Shared;
 using Annium.Logging.Xunit;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
-using AsyncServiceScope = Microsoft.Extensions.DependencyInjection.AsyncServiceScope;
 
 namespace Annium.Testing;
 
 /// <summary>
 /// Provides a base class for unit tests with dependency injection, logging, and service registration utilities.
+/// Implements <see cref="IAsyncLifetime"/> so xUnit.v3 drives the async DI build through
+/// <see cref="IServiceProviderBuilder.BuildAsync"/>; constructor records registrations only.
 /// </summary>
-public abstract class TestBase : ILogSubject
+public abstract class TestBase : ILogSubject, IAsyncLifetime
 {
     /// <summary>
-    /// Gets the logger instance for the test.
+    /// Gets the logger instance for the test. Throws <see cref="InvalidOperationException"/>
+    /// if accessed before <see cref="InitializeAsync"/> has completed.
     /// </summary>
-    public ILogger Logger => _logger.Value;
+    public ILogger Logger
+    {
+        get => field ?? throw NotInitialized();
+        private set;
+    }
 
     /// <summary>
     /// Gets the captured logs.
@@ -28,9 +36,10 @@ public abstract class TestBase : ILogSubject
     public IReadOnlyList<LogMessage<DefaultLogContext>> Logs => _inMemoryLogHandler.Logs;
 
     /// <summary>
-    /// Gets the service provider for resolving dependencies.
+    /// Gets the service provider for resolving dependencies. Throws <see cref="InvalidOperationException"/>
+    /// if accessed before <see cref="InitializeAsync"/> has completed.
     /// </summary>
-    public IServiceProvider Provider => _sp.Value;
+    public IServiceProvider Provider => _sp ?? throw NotInitialized();
 
     /// <summary>
     /// OutputHelper for this test.
@@ -43,19 +52,20 @@ public abstract class TestBase : ILogSubject
     private readonly IServiceProviderBuilder _builder;
 
     /// <summary>
-    /// The lazy-initialized service provider.
-    /// </summary>
-    private readonly Lazy<IKeyedServiceProvider> _sp;
-
-    /// <summary>
-    /// The lazy-initialized logger.
-    /// </summary>
-    private readonly Lazy<ILogger> _logger;
-
-    /// <summary>
     /// InMemory log handler.
     /// </summary>
     private readonly InMemoryLogHandler<DefaultLogContext> _inMemoryLogHandler = new();
+
+    /// <summary>
+    /// The materialized service provider; null until <see cref="InitializeAsync"/> completes.
+    /// </summary>
+    private IKeyedServiceProvider? _sp;
+
+    /// <summary>
+    /// Flipped to <c>true</c> at the entry of <see cref="InitializeAsync"/>. Closes the
+    /// registration window for any subsequent <c>Register</c> / <c>Setup</c> / <c>RegisterServicePack</c> call.
+    /// </summary>
+    private bool _initStarted;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TestBase"/> class.
@@ -65,8 +75,6 @@ public abstract class TestBase : ILogSubject
     {
         OutputHelper = outputHelper;
         _builder = new ServiceProviderFactory().CreateBuilder(new ServiceCollection());
-        _sp = new Lazy<IKeyedServiceProvider>(BuildServiceProvider, true);
-        _logger = new Lazy<ILogger>(Get<ILogger>, true);
 
         Register(container => container.Add(outputHelper).AsSelf().Singleton());
         Register(SharedRegister);
@@ -80,27 +88,81 @@ public abstract class TestBase : ILogSubject
     public void RegisterServicePack<T>()
         where T : ServicePackBase, new()
     {
+        EnsureOpen();
         _builder.UseServicePack<T>();
     }
 
     /// <summary>
-    /// Registers a custom service registration action.
+    /// Registers an async registration delegate.
+    /// </summary>
+    /// <param name="register">The async registration delegate.</param>
+    public void Register(Func<IServiceContainer, CancellationToken, Task> register)
+    {
+        EnsureOpen();
+        _builder.UseServicePack(new DynamicServicePack().Register((c, _, ct) => register(c, ct)));
+    }
+
+    /// <summary>
+    /// Registers a sync registration action — ergonomic forwarder over the async overload.
     /// </summary>
     /// <param name="register">The registration action.</param>
     public void Register(Action<IServiceContainer> register)
     {
-        EnsureNotBuilt();
+        EnsureOpen();
         _builder.UseServicePack(new DynamicServicePack().Register((c, _) => register(c)));
     }
 
     /// <summary>
-    /// Registers a custom setup action to be executed after service provider creation.
+    /// Registers an async setup delegate executed after service provider creation.
+    /// </summary>
+    /// <param name="setup">The async setup delegate.</param>
+    public void Setup(Func<IServiceProvider, CancellationToken, Task> setup)
+    {
+        EnsureOpen();
+        _builder.UseServicePack(new DynamicServicePack().Setup(setup));
+    }
+
+    /// <summary>
+    /// Registers a sync setup action — ergonomic forwarder over the async overload.
     /// </summary>
     /// <param name="setup">The setup action.</param>
     public void Setup(Action<IServiceProvider> setup)
     {
-        EnsureNotBuilt();
+        EnsureOpen();
         _builder.UseServicePack(new DynamicServicePack().Setup(setup));
+    }
+
+    /// <summary>
+    /// Materializes the DI container. Subclasses may override and chain via
+    /// <c>await base.InitializeAsync();</c>; after the base call returns, <see cref="Provider"/>
+    /// and <see cref="Logger"/> are usable inside the subclass override.
+    /// </summary>
+    /// <returns>A value task representing the initialization.</returns>
+    public virtual async ValueTask InitializeAsync()
+    {
+        _initStarted = true;
+        var sp = await _builder.BuildAsync(TestContext.Current.CancellationToken).ConfigureAwait(false);
+        _sp = sp;
+        Logger = _sp.Resolve<ILogger>();
+    }
+
+    /// <summary>
+    /// Disposes the built provider, preferring <see cref="IAsyncDisposable"/> over <see cref="IDisposable"/>.
+    /// Subclasses overriding must chain <c>await base.DisposeAsync();</c> last so subclass cleanup
+    /// runs before the provider is torn down.
+    /// </summary>
+    /// <returns>A value task representing the disposal.</returns>
+    public virtual async ValueTask DisposeAsync()
+    {
+        switch (_sp)
+        {
+            case IAsyncDisposable ad:
+                await ad.DisposeAsync().ConfigureAwait(false);
+                break;
+            case IDisposable d:
+                d.Dispose();
+                break;
+        }
     }
 
     /// <summary>
@@ -154,25 +216,25 @@ public abstract class TestBase : ILogSubject
     }
 
     /// <summary>
-    /// Builds the service provider and marks it as built. Goes through the documented M.E.DI
-    /// host bridge — the one sync-over-async site in the framework. T2 reshapes this class
-    /// around <c>IAsyncLifetime</c> so the bridge is no longer required here.
+    /// Ensures the registration window is still open (i.e. <see cref="InitializeAsync"/> has not started).
     /// </summary>
-    /// <returns>The built <see cref="IKeyedServiceProvider"/>.</returns>
-    private IKeyedServiceProvider BuildServiceProvider()
+    /// <exception cref="InvalidOperationException">Thrown if registrations are attempted after init has begun.</exception>
+    private void EnsureOpen()
     {
-        EnsureNotBuilt();
-
-        return (IKeyedServiceProvider)new ServiceProviderFactory().CreateServiceProvider(_builder);
+        if (_initStarted)
+            throw new InvalidOperationException("TestBase registrations are frozen once InitializeAsync has begun.");
     }
 
     /// <summary>
-    /// Ensures that the service provider has not been built yet.
+    /// Builds the diagnostic exception thrown when <see cref="Provider"/> or <see cref="Logger"/>
+    /// is accessed before <see cref="InitializeAsync"/> has completed.
     /// </summary>
-    /// <exception cref="InvalidOperationException">Thrown if the service provider is already built.</exception>
-    private void EnsureNotBuilt()
-    {
-        if (_sp.IsValueCreated)
-            throw new InvalidOperationException("ServiceProvider is already built");
-    }
+    /// <returns>The configured <see cref="InvalidOperationException"/>.</returns>
+    private static InvalidOperationException NotInitialized() =>
+        new(
+            "TestBase.Provider/Logger accessed before InitializeAsync completed. "
+                + "Either the test class is missing IAsyncLifetime wiring (xUnit.v3 should drive this "
+                + "automatically when TestBase implements it) or a subclass override of InitializeAsync "
+                + "forgot to call `await base.InitializeAsync()`."
+        );
 }

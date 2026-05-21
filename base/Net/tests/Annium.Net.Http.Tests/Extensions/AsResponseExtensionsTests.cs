@@ -19,12 +19,12 @@ public class AsResponseExtensionsTests : TestBase
     /// <summary>
     /// Factory for creating HTTP requests
     /// </summary>
-    private readonly IHttpRequestFactory _httpRequestFactory;
+    private IHttpRequestFactory _httpRequestFactory = null!;
 
     /// <summary>
     /// Serializer for JSON conversion operations
     /// </summary>
-    private readonly Serializer _serializer;
+    private Serializer _serializer = null!;
 
     /// <summary>
     /// Initializes a new instance of the AsResponseExtensionsTests class
@@ -48,6 +48,12 @@ public class AsResponseExtensionsTests : TestBase
                 );
             container.AddHttpRequestFactory(true);
         });
+    }
+
+    /// <inheritdoc/>
+    public override async ValueTask InitializeAsync()
+    {
+        await base.InitializeAsync();
         _httpRequestFactory = Get<IHttpRequestFactory>();
         _serializer = Get<Serializer>();
     }

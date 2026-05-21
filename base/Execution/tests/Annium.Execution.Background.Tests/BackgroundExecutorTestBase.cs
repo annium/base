@@ -17,14 +17,26 @@ namespace Annium.Execution.Background.Tests;
 public abstract class BackgroundExecutorTestBase : TestBase
 {
     /// <summary>
-    /// The executor instance being tested
+    /// Factory for the executor under test (resolved against the logger materialized in <see cref="InitializeAsync"/>).
     /// </summary>
-    private readonly IExecutor _executor;
+    private readonly Func<ILogger, IExecutor> _getExecutor;
+
+    /// <summary>
+    /// The executor instance being tested. Materialized in <see cref="InitializeAsync"/> once the provider is built.
+    /// </summary>
+    private IExecutor _executor = null!;
 
     protected BackgroundExecutorTestBase(Func<ILogger, IExecutor> getExecutor, ITestOutputHelper outputHelper)
         : base(outputHelper)
     {
-        _executor = getExecutor(Get<ILogger>());
+        _getExecutor = getExecutor;
+    }
+
+    /// <inheritdoc/>
+    public override async ValueTask InitializeAsync()
+    {
+        await base.InitializeAsync();
+        _executor = _getExecutor(Get<ILogger>());
     }
 
     /// <summary>

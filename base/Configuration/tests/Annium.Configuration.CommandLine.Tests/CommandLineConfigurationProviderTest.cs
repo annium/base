@@ -16,15 +16,6 @@ public class CommandLineConfigurationProviderTest : TestBase
         : base(outputHelper)
     {
         this.RegisterMapper();
-    }
-
-    /// <summary>
-    /// Tests that command line configuration works correctly.
-    /// </summary>
-    [Fact]
-    public void CommandLineConfiguration_Works()
-    {
-        // arrange
         var args = new List<string>();
         args.AddRange("-flag");
         args.AddRange("-plain", "7");
@@ -33,7 +24,14 @@ public class CommandLineConfigurationProviderTest : TestBase
         args.AddRange("-nested.plain", "4");
         args.AddRange("-nested.array", "4", "-nested.array", "13");
         Register(c => c.AddConfiguration<Config>(x => x.AddCommandLineArgs(args.ToArray())));
+    }
 
+    /// <summary>
+    /// Tests that command line configuration works correctly.
+    /// </summary>
+    [Fact]
+    public void CommandLineConfiguration_Works()
+    {
         // act
         var result = Get<Config>();
         var nested = Get<Val>();
