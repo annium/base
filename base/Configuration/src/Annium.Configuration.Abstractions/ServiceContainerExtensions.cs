@@ -123,7 +123,7 @@ public static class ServiceContainerExtensions
     private static void Register(IServiceContainer container, Type type, PropertyInfo property)
     {
         var propertyType = property.PropertyType;
-        container.Add(propertyType, sp => property.GetValue(sp.Resolve(type))!).AsSelf().Singleton();
+        container.Add(propertyType, sp => property.GetValue(sp.Resolve(type)).NotNull()).AsSelf().Singleton();
 
         foreach (var prop in GetRegisteredProperties(propertyType))
             Register(container, propertyType, prop);

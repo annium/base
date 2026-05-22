@@ -31,6 +31,22 @@ public class CommandLineSourceTests
     }
 
     /// <summary>
+    /// Double-dash option syntax (<c>--section.key value</c>) is parsed by <c>ParseName</c>:
+    /// leading dashes are stripped via the <c>^-+</c> regex and segments are PascalCased.
+    /// </summary>
+    [Fact]
+    public async Task Read_DoubleDashOption_ParsedCorrectly()
+    {
+        var container = ConfigurationFactory.CreateContainer();
+        container.AddCommandLineArgs(new[] { "--section.key", "value" });
+
+        await container.BuildAsync(TestContext.Current.CancellationToken);
+
+        var data = container.Get();
+        data.At(new[] { "Section", "Key" }).Is("value");
+    }
+
+    /// <summary>
     /// When args is null, the source reads <see cref="Environment.GetCommandLineArgs"/> and
     /// must skip the executable path at index 0. The executable path is a positional argument
     /// (no leading dash) and therefore must never appear as a key in the flattened result.

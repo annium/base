@@ -101,6 +101,7 @@ internal class ConfigurationProcessor<T>
 
         // var items = config.Where(e => e.Key.StartsWith(path, StringComparison.OrdinalIgnoreCase) && e.Key.Length > path.Length).ToArray();
         var items = GetDescendants();
+        // Activator.CreateInstance returns non-null for concrete Dictionary<,> (never Nullable<T>)
         var result = (IDictionary)Activator.CreateInstance(type)!;
 
         foreach (var name in items)
@@ -125,6 +126,7 @@ internal class ConfigurationProcessor<T>
     private object ProcessList(Type type)
     {
         var elementType = type.GetGenericArguments()[0];
+        // Activator.CreateInstance returns non-null for concrete List<> (never Nullable<T>)
         var result = (IList)Activator.CreateInstance(type)!;
 
         var items = GetDescendants();
@@ -146,6 +148,7 @@ internal class ConfigurationProcessor<T>
     /// <returns>Configured array instance</returns>
     private object ProcessArray(Type type)
     {
+        // type.IsArray is true here (dispatched from Process); GetElementType is BCL-guaranteed non-null for arrays
         var elementType = type.GetElementType()!;
         var raw = (IList)ProcessList(typeof(List<>).MakeGenericType(elementType));
 
@@ -161,8 +164,8 @@ internal class ConfigurationProcessor<T>
     /// Processes configuration data for object types
     /// </summary>
     /// <param name="type">Object type to process</param>
-    /// <returns>Configured object instance</returns>
-    private object ProcessObject(Type type)
+    /// <returns>Configured object instance, or null when an abstract type's resolution key is absent from the configuration</returns>
+    private object? ProcessObject(Type type)
     {
         if (type.IsAbstract || type.IsInterface)
         {
@@ -174,14 +177,19 @@ internal class ConfigurationProcessor<T>
             var hasKey = _config.TryGetValue(Path, out var rawKey);
             _context.Pop();
             if (!hasKey || rawKey is null)
-                return null!;
+                return null; // sentinel for abstract type with absent resolution key; Process<T>() at line 65 converts to InvalidOperationException
 
-            var key = _mapper.Map(rawKey, resolutionKeyProperty.PropertyType);
+            var key =
+                _mapper.Map(rawKey, resolutionKeyProperty.PropertyType)
+                ?? throw new InvalidOperationException(
+                    $"Resolution key mapper returned null for raw value '{rawKey}' of type {resolutionKeyProperty.PropertyType}"
+                );
             type =
-                _typeManager.ResolveByKey(key!, type)
+                _typeManager.ResolveByKey(key, type)
                 ?? throw new ArgumentException($"Can't resolve abstract type {type} with key {key}");
         }
 
+        // Activator.CreateInstance is BCL-guaranteed non-null for concrete reference types; abstract path resolved via ResolveByKey above
         var result = Activator.CreateInstance(type)!;
         var properties = type.GetProperties().Where(e => e.CanWrite).ToArray();
         foreach (var property in properties)

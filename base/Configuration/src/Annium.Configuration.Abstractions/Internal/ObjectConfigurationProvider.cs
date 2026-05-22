@@ -4,6 +4,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Annium;
 using Annium.Reflection;
 
 namespace Annium.Configuration.Abstractions.Internal;
@@ -13,6 +14,8 @@ namespace Annium.Configuration.Abstractions.Internal;
 /// </summary>
 internal class ObjectConfigurationProvider : ConfigurationProviderBase
 {
+    private static readonly object[] _noArgs = Array.Empty<object>();
+
     /// <summary>
     /// The configuration object to read data from
     /// </summary>
@@ -109,20 +112,33 @@ internal class ObjectConfigurationProvider : ConfigurationProviderBase
         var dictionaryType =
             type.GetTargetImplementation(typeof(IDictionary<,>))
             ?? type.GetTargetImplementation(typeof(IReadOnlyDictionary<,>));
-        var keyType = dictionaryType!.GetGenericArguments()[0];
+        if (dictionaryType is null)
+            throw new InvalidOperationException(
+                $"Value of type {type} is not assignable to IDictionary<,> or IReadOnlyDictionary<,>"
+            );
+        var keyType = dictionaryType.GetGenericArguments()[0];
         var valueType = dictionaryType.GetGenericArguments()[1];
         var keyValueType = typeof(KeyValuePair<,>).MakeGenericType(keyType, valueType);
-        var getKey = keyValueType.GetProperty(nameof(KeyValuePair<,>.Key))!.GetMethod!;
-        var getValue = keyValueType.GetProperty(nameof(KeyValuePair<,>.Value))!.GetMethod!;
+        var getKey = keyValueType.GetProperty(nameof(KeyValuePair<,>.Key)).NotNull().GetMethod.NotNull();
+        var getValue = keyValueType.GetProperty(nameof(KeyValuePair<,>.Value)).NotNull().GetMethod.NotNull();
 
         foreach (var item in (IEnumerable)value)
         {
-            var itemValue = getValue.Invoke(item, Array.Empty<object>());
+            var itemValue = getValue.Invoke(item, _noArgs);
             if (itemValue is null)
                 continue;
 
-            var itemKey = getKey.Invoke(item, Array.Empty<object>())!;
-            var memberPath = prefix.Append(itemKey.ToString()!).ToArray();
+            var itemKey =
+                getKey.Invoke(item, _noArgs)
+                ?? throw new InvalidOperationException(
+                    $"Dictionary key is null at path: {string.Join('.', prefix)}"
+                );
+            var keyText =
+                itemKey.ToString()
+                ?? throw new InvalidOperationException(
+                    $"Key.ToString() returned null for type {itemKey.GetType().FullName} at path: {string.Join('.', prefix)}"
+                );
+            var memberPath = prefix.Append(keyText).ToArray();
 
             Process(memberPath, addValue, itemValue);
         }
@@ -158,8 +174,8 @@ internal class ObjectConfigurationProvider : ConfigurationProviderBase
     private void ProcessNullable(string[] prefix, Action<string[], string> addValue, object value)
     {
         var type = value.GetType();
-        var getValueOrDefault = type.GetMethod(nameof(Nullable<>.GetValueOrDefault), Type.EmptyTypes)!;
-        var innerValue = getValueOrDefault.Invoke(value, Array.Empty<object>());
+        var getValueOrDefault = type.GetMethod(nameof(Nullable<>.GetValueOrDefault), Type.EmptyTypes).NotNull();
+        var innerValue = getValueOrDefault.Invoke(value, _noArgs);
         if (innerValue is null)
             return;
 
@@ -211,8 +227,7 @@ file static class Helper
     /// </summary>
     /// <param name="type">Type to get members for</param>
     /// <returns>Collection of accessible members</returns>
-    public static IReadOnlyCollection<MemberInfo> GetMembers(Type type) =>
-        _members.GetOrAdd(type, ResolveMembers);
+    public static IReadOnlyCollection<MemberInfo> GetMembers(Type type) => _members.GetOrAdd(type, ResolveMembers);
 
     /// <summary>
     /// Resolves the type variant for a type

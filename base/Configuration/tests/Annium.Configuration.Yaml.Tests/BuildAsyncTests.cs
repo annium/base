@@ -1,13 +1,11 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.Http;
-using System.Net.Sockets;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Annium.Configuration.Abstractions;
+using Annium.Configuration.Tests.Lib;
 using Annium.Testing;
 using Xunit;
 
@@ -59,7 +57,12 @@ public class BuildAsyncTests
     [Fact]
     public async Task LoadAsync_Non2xxResponse_ThrowsHttpRequestException()
     {
-        using var stub = new StaticResponseTcpListener(HttpStatusCode.InternalServerError, "value: ok");
+        using var stub = new StaticResponseTcpListener(
+            HttpStatusCode.InternalServerError,
+            "value: ok",
+            "config.yaml",
+            contentType: "application/x-yaml"
+        );
         await stub.StartAsync(TestContext.Current.CancellationToken);
 
         var container = ConfigurationFactory.CreateContainer();
@@ -78,7 +81,7 @@ public class BuildAsyncTests
     [Fact]
     public async Task LoadAsync_CtCancelled_ThrowsOperationCanceledException()
     {
-        using var stub = new HangingTcpListener();
+        using var stub = new HangingTcpListener("config.yaml");
         await stub.StartAsync(TestContext.Current.CancellationToken);
 
         using var cts = new CancellationTokenSource();
@@ -96,128 +99,42 @@ public class BuildAsyncTests
     }
 
     /// <summary>
-    /// Local TCP listener that accepts connections but never sends a response. Mirrors the Json
-    /// test helper to keep the YAML coverage symmetric.
+    /// Mirror of the Json timeout test: a hanging remote endpoint with <c>optional: false</c>
+    /// surfaces a <see cref="TimeoutException"/> or <see cref="HttpRequestException"/> wrapped in
+    /// <see cref="AggregateException"/>.
     /// </summary>
-    private sealed class HangingTcpListener : IDisposable
+    [Fact]
+    public async Task BuildAsync_AddRemoteYaml_TimeoutNotOptional_Throws()
     {
-        private readonly TcpListener _listener;
-        private readonly CancellationTokenSource _cts = new();
-        private readonly List<TcpClient> _accepted = new();
-        private readonly TaskCompletionSource _listening = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var stub = new HangingTcpListener("config.yaml");
+        await stub.StartAsync(TestContext.Current.CancellationToken);
 
-        public HangingTcpListener()
-        {
-            _listener = new TcpListener(IPAddress.Loopback, 0);
-        }
+        var container = ConfigurationFactory.CreateContainer();
+        container.AddRemoteYaml(stub.Uri, optional: false, timeout: TimeSpan.FromMilliseconds(500));
 
-        public Uri Uri => new($"http://127.0.0.1:{((IPEndPoint)_listener.LocalEndpoint).Port}/config.yaml");
-
-        public async Task StartAsync(CancellationToken ct)
-        {
-            _listener.Start();
-            _ = Task.Run(async () =>
-            {
-                _listening.TrySetResult();
-                try
-                {
-                    while (!_cts.IsCancellationRequested)
-                    {
-                        var client = await _listener.AcceptTcpClientAsync(_cts.Token);
-                        lock (_accepted)
-                            _accepted.Add(client);
-                    }
-                }
-                catch (OperationCanceledException) { }
-                catch (ObjectDisposedException) { }
-            });
-
-            await _listening.Task.WaitAsync(ct);
-        }
-
-        public void Dispose()
-        {
-            _cts.Cancel();
-            _listener.Stop();
-            lock (_accepted)
-            {
-                foreach (var c in _accepted)
-                    c.Dispose();
-                _accepted.Clear();
-            }
-            _cts.Dispose();
-        }
+        var ex = await Wrap.It(async () => await container.BuildAsync(TestContext.Current.CancellationToken))
+            .ThrowsAsync<AggregateException>();
+        ex.InnerExceptions.Has(1);
+        var inner = ex.InnerExceptions[0];
+        var isFetchFailure = inner is TimeoutException or HttpRequestException;
+        isFetchFailure.IsTrue($"expected fetch failure; got {inner.GetType().FullName}: {inner.Message}");
     }
 
     /// <summary>
-    /// Local TCP listener that returns a fixed HTTP status code + body for any incoming request.
+    /// Mirror of the Json timeout test: same hanging stub with <c>optional: true</c> succeeds
+    /// and the source contributes no data.
     /// </summary>
-    private sealed class StaticResponseTcpListener : IDisposable
+    [Fact]
+    public async Task BuildAsync_AddRemoteYaml_TimeoutOptional_Succeeds()
     {
-        private readonly TcpListener _listener;
-        private readonly CancellationTokenSource _cts = new();
-        private readonly HttpStatusCode _status;
-        private readonly string _body;
-        private readonly TaskCompletionSource _listening = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var stub = new HangingTcpListener("config.yaml");
+        await stub.StartAsync(TestContext.Current.CancellationToken);
 
-        public StaticResponseTcpListener(HttpStatusCode status, string body)
-        {
-            _status = status;
-            _body = body;
-            _listener = new TcpListener(IPAddress.Loopback, 0);
-        }
+        var container = ConfigurationFactory.CreateContainer();
+        container.AddRemoteYaml(stub.Uri, optional: true, timeout: TimeSpan.FromMilliseconds(500));
 
-        public Uri Uri => new($"http://127.0.0.1:{((IPEndPoint)_listener.LocalEndpoint).Port}/config.yaml");
+        await container.BuildAsync(TestContext.Current.CancellationToken);
 
-        public async Task StartAsync(CancellationToken ct)
-        {
-            _listener.Start();
-            _ = Task.Run(async () =>
-            {
-                _listening.TrySetResult();
-                try
-                {
-                    while (!_cts.IsCancellationRequested)
-                    {
-                        using var client = await _listener.AcceptTcpClientAsync(_cts.Token);
-                        await using var stream = client.GetStream();
-
-                        var buffer = new byte[4096];
-                        try
-                        {
-                            using var readCts = new CancellationTokenSource(TimeSpan.FromMilliseconds(200));
-                            _ = await stream.ReadAsync(buffer, readCts.Token);
-                        }
-                        catch (OperationCanceledException) { }
-
-                        var bodyBytes = Encoding.UTF8.GetBytes(_body);
-                        var reasonPhrase = _status.ToString();
-                        var header = Encoding.ASCII.GetBytes(
-                            $"HTTP/1.1 {(int)_status} {reasonPhrase}\r\n"
-                                + $"Content-Length: {bodyBytes.Length}\r\n"
-                                + "Content-Type: application/x-yaml\r\n"
-                                + "Connection: close\r\n"
-                                + "\r\n"
-                        );
-                        await stream.WriteAsync(header, _cts.Token);
-                        if (bodyBytes.Length > 0)
-                            await stream.WriteAsync(bodyBytes, _cts.Token);
-                        await stream.FlushAsync(_cts.Token);
-                    }
-                }
-                catch (OperationCanceledException) { }
-                catch (ObjectDisposedException) { }
-                catch (IOException) { }
-            });
-
-            await _listening.Task.WaitAsync(ct);
-        }
-
-        public void Dispose()
-        {
-            _cts.Cancel();
-            _listener.Stop();
-            _cts.Dispose();
-        }
+        container.Get().Count.Is(0);
     }
 }

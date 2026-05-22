@@ -1,11 +1,8 @@
 using System;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using Annium.Configuration.Tests.Lib;
 using Annium.Core.DependencyInjection;
-using Annium.Core.Mapper;
-using Annium.Core.Runtime;
-using Annium.Logging.Shared;
 using Annium.Testing;
 using Xunit;
 
@@ -33,20 +30,7 @@ public class AddConfigurationAsyncTests
         public int Plain { get; set; }
     }
 
-    /// <summary>
-    /// Builds an isolated <see cref="IServiceProvider"/> that has the minimum registrations
-    /// required for <c>AddConfigurationAsync</c> to succeed:
-    /// runtime type scanning (for <c>ITypeManager</c>) and the mapper (for <c>IMapper</c>).
-    /// </summary>
-    private static ServiceContainer CreateContainer()
-    {
-        var container = new ServiceContainer();
-        container.AddRuntime(Assembly.GetExecutingAssembly());
-        container.AddTime().WithRealTime().SetDefault();
-        container.AddLogging();
-        container.AddMapper(autoload: false);
-        return container;
-    }
+    private static ServiceContainer CreateContainer() => TestContainerFactory.Create();
 
     // ---------------------------------------------------------------------------
     // Test 1 — sync ergonomic overload resolves the registered value

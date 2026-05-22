@@ -86,7 +86,8 @@ public class JsonConfigurationProviderTest : TestBase
         result.IsNotDefault();
         result.Flag.IsTrue();
         result.Plain.Is(7);
-        // result.Nullable.Is(3);
+        result.Nullable.IsNotDefault();
+        result.Nullable.Value.Is(3m);
         Enumerable.SequenceEqual(result.Array, new[] { 4, 7 }).IsTrue();
         result.Matrix.Has(2);
         Enumerable.SequenceEqual(result.Matrix.At(0), new[] { 3, 2 }).IsTrue();
@@ -129,6 +130,59 @@ public class JsonConfigurationProviderTest : TestBase
         finally
         {
             File.Delete(bad);
+        }
+    }
+
+    /// <summary>
+    /// JSON null literals (<c>"key": null</c>) reach the default branch of
+    /// <c>JsonConfigurationProvider.Process</c> and produce a string key via
+    /// <c>ProcessLeaf</c>. The flattened result must contain the key.
+    /// </summary>
+    [Fact]
+    public async Task Read_JsonWithNullLeaf_ProducesStringKey()
+    {
+        var path = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllText(path, "{\"key\": null}");
+            var container = ConfigurationFactory.CreateContainer();
+            container.AddJsonFile(path, optional: false);
+
+            await container.BuildAsync(TestContext.Current.CancellationToken);
+
+            var data = container.Get();
+            data.Keys.Any(k => k.Length == 1 && k[0].Equals("key", StringComparison.OrdinalIgnoreCase)).IsTrue();
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    /// <summary>
+    /// JSON boolean literals reach the default branch of <c>JsonConfigurationProvider.Process</c>
+    /// and produce a string key via <c>ProcessLeaf</c>. Both <c>true</c> and <c>false</c> values
+    /// flatten with their token string representation.
+    /// </summary>
+    [Fact]
+    public async Task Read_JsonWithBooleanLeaf_ProducesStringKey()
+    {
+        var path = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllText(path, "{\"flag\": true, \"off\": false}");
+            var container = ConfigurationFactory.CreateContainer();
+            container.AddJsonFile(path, optional: false);
+
+            await container.BuildAsync(TestContext.Current.CancellationToken);
+
+            var data = container.Get();
+            data.Keys.Any(k => k.Length == 1 && k[0].Equals("flag", StringComparison.OrdinalIgnoreCase)).IsTrue();
+            data.Keys.Any(k => k.Length == 1 && k[0].Equals("off", StringComparison.OrdinalIgnoreCase)).IsTrue();
+        }
+        finally
+        {
+            File.Delete(path);
         }
     }
 }

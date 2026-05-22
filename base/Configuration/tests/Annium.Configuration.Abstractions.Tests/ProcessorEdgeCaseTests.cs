@@ -1,12 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Threading.Tasks;
 using Annium.Configuration.Tests.Lib;
 using Annium.Core.DependencyInjection;
-using Annium.Core.Mapper;
-using Annium.Core.Runtime;
-using Annium.Logging.Shared;
 using Annium.Testing;
 using Xunit;
 
@@ -19,19 +15,7 @@ namespace Annium.Configuration.Abstractions.Tests;
 /// </summary>
 public class ProcessorEdgeCaseTests
 {
-    /// <summary>
-    /// Builds a minimal <see cref="ServiceContainer"/> with the registrations
-    /// <c>AddConfigurationAsync</c> needs (runtime types + mapper).
-    /// </summary>
-    private static ServiceContainer CreateContainer()
-    {
-        var container = new ServiceContainer();
-        container.AddRuntime(Assembly.GetExecutingAssembly());
-        container.AddTime().WithRealTime().SetDefault();
-        container.AddLogging();
-        container.AddMapper(autoload: false);
-        return container;
-    }
+    private static ServiceContainer CreateContainer() => TestContainerFactory.Create();
 
     /// <summary>
     /// When configuration data has a non-leaf descendant for a primitive-element list
@@ -157,8 +141,8 @@ public class ProcessorEdgeCaseTests
         await container.AddConfigurationAsync<Config>(cfg => cfg.Add(sentinel), TestContext.Current.CancellationToken);
 
         var resolved = container.BuildServiceProvider().Resolve<Config>();
-        resolved.Nullable.HasValue.IsTrue();
-        resolved.Nullable!.Value.Is(99m);
+        resolved.Nullable.IsNotDefault();
+        resolved.Nullable.Value.Is(99m);
     }
 
     /// <summary>
@@ -180,5 +164,75 @@ public class ProcessorEdgeCaseTests
         var sp = container.BuildServiceProvider();
         sp.Resolve<Config>().Plain.Is(5);
         sp.Resolve<Val>().Plain.Is(3);
+    }
+
+    /// <summary>
+    /// When the resolution key field value does not map to any registered concrete type
+    /// (<c>ResolveByKey</c> returns null), the processor throws <see cref="ArgumentException"/>.
+    /// Exercised via a wrapper type because <c>AddConfigurationAsync&lt;T&gt;</c> requires
+    /// <c>T : new()</c> and abstract types are barred at the entry point.
+    /// </summary>
+    [Fact]
+    public async Task Process_AbstractTypeWithUnknownResolutionKeyValue_ThrowsArgumentException()
+    {
+        var container = CreateContainer();
+        // RootHoldingSomeConfig.Inner is abstract SomeConfig with [ResolutionKey] string Type.
+        // SomeConfig has concrete subtypes ConfigOne / ConfigTwo (via [ResolutionKeyValue]).
+        // "UnknownVariant" matches neither → ResolveByKey returns null → ArgumentException.
+        var data = new Dictionary<string[], string> { [new[] { "inner", "type" }] = "UnknownVariant" };
+
+        await container.AddConfigurationAsync<RootHoldingSomeConfig>(
+            cfg => cfg.Add(data),
+            TestContext.Current.CancellationToken
+        );
+        var sp = container.BuildServiceProvider();
+
+        Wrap.It(() => sp.Resolve<RootHoldingSomeConfig>()).Throws<ArgumentException>();
+    }
+
+    /// <summary>Wrapper type holding an abstract <see cref="SomeConfig"/> member.</summary>
+    public sealed record RootHoldingSomeConfig
+    {
+        /// <summary>The abstract member; resolved by its [ResolutionKey] Type property.</summary>
+        public SomeConfig Inner { get; set; } = new ConfigOne();
+    }
+
+    /// <summary>
+    /// The sync <c>AddConfiguration&lt;T&gt;(T instance)</c> overload recurses through nested
+    /// property types: a two-level-deep nested record is reachable from the built provider.
+    /// </summary>
+    [Fact]
+    public void AddConfiguration_DeepNestedProperties_AllResolvable()
+    {
+        var container = CreateContainer();
+        var root = new RootCfg { A = new Level1Cfg { B = new Level2Cfg { Value = 42 } } };
+
+        container.AddConfiguration(root);
+
+        var sp = container.BuildServiceProvider();
+        sp.Resolve<RootCfg>().A.B.Value.Is(42);
+        sp.Resolve<Level1Cfg>().B.Value.Is(42);
+        sp.Resolve<Level2Cfg>().Value.Is(42);
+    }
+
+    /// <summary>Two-level config root.</summary>
+    public sealed record RootCfg
+    {
+        /// <summary>Level 1 property.</summary>
+        public Level1Cfg A { get; set; } = new();
+    }
+
+    /// <summary>Two-level config inner.</summary>
+    public sealed record Level1Cfg
+    {
+        /// <summary>Level 2 property.</summary>
+        public Level2Cfg B { get; set; } = new();
+    }
+
+    /// <summary>Two-level config leaf.</summary>
+    public sealed record Level2Cfg
+    {
+        /// <summary>Leaf value.</summary>
+        public int Value { get; set; }
     }
 }

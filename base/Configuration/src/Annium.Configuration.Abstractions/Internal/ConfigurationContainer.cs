@@ -10,7 +10,7 @@ internal sealed class ConfigurationContainer : IConfigurationContainer
     /// <summary>
     /// Dictionary storing configuration data with custom key comparer
     /// </summary>
-    private readonly IDictionary<string[], string> _config = new Dictionary<string[], string>(new KeyComparer());
+    private readonly Dictionary<string[], string> _config = new(new KeyComparer());
 
     /// <summary>
     /// Backing list for registered deferred sources, in registration order.

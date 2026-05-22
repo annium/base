@@ -63,7 +63,12 @@ internal class YamlConfigurationProvider : ConfigurationProviderBase
                     $"YAML mapping key must be a scalar, got {key.GetType().Name}"
                 );
 
-            Context.Push(scalarKey.Value!);
+            if (scalarKey.Value is null)
+                throw new InvalidOperationException(
+                    $"YAML mapping key cannot be null at path: {string.Join('.', Path)}"
+                );
+
+            Context.Push(scalarKey.Value);
 
             if (value is YamlMappingNode map)
                 Process(map);
@@ -108,11 +113,22 @@ internal class YamlConfigurationProvider : ConfigurationProviderBase
     }
 
     /// <summary>
-    /// Processes a YAML scalar node by adding its value to the configuration data
+    /// Processes a YAML scalar node by adding its value to the configuration data.
     /// </summary>
-    /// <param name="token">YAML scalar node to process</param>
+    /// <param name="token">YAML scalar node to process.</param>
+    /// <remarks>
+    /// <see cref="YamlScalarNode.Value"/> is declared <c>string?</c>. Under default YamlDotNet
+    /// parsing of well-formed input it is never null (e.g. <c>key: ~</c> produces <c>Value = "~"</c>,
+    /// not <c>null</c>); a null only arises from an uninitialized / programmatically constructed
+    /// scalar. This defensive guard silently skips that state so the entry is absent from the
+    /// resulting configuration rather than crashing with NRE downstream. A null mapping KEY (see
+    /// <see cref="Process(YamlMappingNode)"/>) is treated differently — a null key cannot be
+    /// encoded into the configuration path and throws.
+    /// </remarks>
     private void Process(YamlScalarNode token)
     {
-        Data[Path] = token.Value!;
+        if (token.Value is null)
+            return;
+        Data[Path] = token.Value;
     }
 }

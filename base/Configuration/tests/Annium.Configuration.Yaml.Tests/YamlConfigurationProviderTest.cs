@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -74,7 +75,8 @@ public class YamlConfigurationProviderTest : TestBase
         result.IsNotDefault();
         result.Flag.IsTrue();
         result.Plain.Is(7);
-        // result.Nullable.Is(3);
+        result.Nullable.IsNotDefault();
+        result.Nullable.Value.Is(3m);
         result.Array.SequenceEqual(new[] { 4, 7 }).IsTrue();
         result.Matrix.Has(2);
         result.Matrix.At(0).SequenceEqual(new[] { 3, 2 }).IsTrue();
@@ -93,5 +95,81 @@ public class YamlConfigurationProviderTest : TestBase
         result.Abstract.As<ConfigTwo>().Value.Is(10);
         result.Abstract.IsEqual(nested);
         nested.Is(new ConfigTwo { Value = 10 });
+    }
+
+    /// <summary>
+    /// An empty YAML document (no top-level node) yields an empty configuration container.
+    /// </summary>
+    [Fact]
+    public async Task Read_EmptyYamlDocument_ReturnsEmptyData()
+    {
+        var path = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllText(path, string.Empty);
+            var container = ConfigurationFactory.CreateContainer();
+            container.AddYamlFile(path, optional: false);
+
+            await container.BuildAsync(TestContext.Current.CancellationToken);
+
+            container.Get().Count.Is(0);
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    /// <summary>
+    /// A YAML document whose root is a scalar (e.g. <c>42</c>) is invalid for configuration —
+    /// the provider throws <see cref="InvalidOperationException"/> wrapped in <see cref="AggregateException"/>.
+    /// </summary>
+    [Fact]
+    public async Task Read_NonMappingRoot_ThrowsInvalidOperationException()
+    {
+        var path = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllText(path, "42");
+            var container = ConfigurationFactory.CreateContainer();
+            container.AddYamlFile(path, optional: false);
+
+            var ex = await Wrap.It(async () => await container.BuildAsync(TestContext.Current.CancellationToken))
+                .ThrowsAsync<AggregateException>();
+            ex.InnerExceptions.Has(1);
+            ex.InnerExceptions[0].As<InvalidOperationException>();
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    /// <summary>
+    /// A YAML document where a mapping key is itself a mapping node (complex key syntax,
+    /// <c>? { a: 1 } : value</c>) triggers the non-scalar-key guard, surfacing
+    /// <see cref="InvalidOperationException"/>.
+    /// </summary>
+    [Fact]
+    public async Task Read_NonScalarMappingKey_ThrowsInvalidOperationException()
+    {
+        var path = Path.GetTempFileName();
+        try
+        {
+            // YAML 1.2 explicit-key form: "? mapping" makes the key itself a mapping node.
+            File.WriteAllText(path, "? { a: 1 }\n: value\n");
+            var container = ConfigurationFactory.CreateContainer();
+            container.AddYamlFile(path, optional: false);
+
+            var ex = await Wrap.It(async () => await container.BuildAsync(TestContext.Current.CancellationToken))
+                .ThrowsAsync<AggregateException>();
+            ex.InnerExceptions.Has(1);
+            var inner = ex.InnerExceptions[0].As<InvalidOperationException>();
+            inner.Message.Contains("scalar").IsTrue($"expected message mentioning 'scalar'; got: {inner.Message}");
+        }
+        finally
+        {
+            File.Delete(path);
+        }
     }
 }

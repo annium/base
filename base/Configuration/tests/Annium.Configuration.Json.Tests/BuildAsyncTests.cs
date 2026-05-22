@@ -1,13 +1,11 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.Http;
-using System.Net.Sockets;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Annium.Configuration.Abstractions;
+using Annium.Configuration.Tests.Lib;
 using Annium.Testing;
 using Xunit;
 
@@ -102,7 +100,7 @@ public class BuildAsyncTests
     [Fact]
     public async Task BuildAsync_AddRemoteJson_TimeoutNotOptional_Throws()
     {
-        using var stub = new HangingTcpListener();
+        using var stub = new HangingTcpListener("config.json");
         await stub.StartAsync(TestContext.Current.CancellationToken);
 
         var container = ConfigurationFactory.CreateContainer();
@@ -123,7 +121,7 @@ public class BuildAsyncTests
     [Fact]
     public async Task BuildAsync_AddRemoteJson_TimeoutOptional_Succeeds()
     {
-        using var stub = new HangingTcpListener();
+        using var stub = new HangingTcpListener("config.json");
         await stub.StartAsync(TestContext.Current.CancellationToken);
 
         var container = ConfigurationFactory.CreateContainer();
@@ -141,7 +139,7 @@ public class BuildAsyncTests
     [Fact]
     public async Task LoadAsync_Non2xxResponse_ThrowsHttpRequestException()
     {
-        using var stub = new StaticResponseTcpListener(HttpStatusCode.InternalServerError, "{}");
+        using var stub = new StaticResponseTcpListener(HttpStatusCode.InternalServerError, "{}", "config.json");
         await stub.StartAsync(TestContext.Current.CancellationToken);
 
         var container = ConfigurationFactory.CreateContainer();
@@ -161,7 +159,7 @@ public class BuildAsyncTests
     [Fact]
     public async Task LoadAsync_CtCancelled_ThrowsOperationCanceledException()
     {
-        using var stub = new HangingTcpListener();
+        using var stub = new HangingTcpListener("config.json");
         await stub.StartAsync(TestContext.Current.CancellationToken);
 
         using var cts = new CancellationTokenSource();
@@ -176,142 +174,5 @@ public class BuildAsyncTests
         var inner = ex.InnerExceptions[0];
         var isCancel = inner is OperationCanceledException;
         isCancel.IsTrue($"expected OperationCanceledException; got {inner.GetType().FullName}: {inner.Message}");
-    }
-
-    /// <summary>
-    /// Local TCP listener that accepts connections but never sends a response — used to force
-    /// a deterministic <c>HttpClient</c> timeout trigger regardless of the test host's network
-    /// configuration. Holds strong references to accepted clients so GC can't reap them
-    /// mid-test (which would otherwise close the socket and translate timeout into IO error).
-    /// </summary>
-    private sealed class HangingTcpListener : IDisposable
-    {
-        private readonly TcpListener _listener;
-        private readonly CancellationTokenSource _cts = new();
-        private readonly List<TcpClient> _accepted = new();
-        private readonly TaskCompletionSource _listening = new(TaskCreationOptions.RunContinuationsAsynchronously);
-
-        public HangingTcpListener()
-        {
-            _listener = new TcpListener(IPAddress.Loopback, 0);
-        }
-
-        public Uri Uri => new($"http://127.0.0.1:{((IPEndPoint)_listener.LocalEndpoint).Port}/config.json");
-
-        public async Task StartAsync(CancellationToken ct)
-        {
-            _listener.Start();
-            _ = Task.Run(async () =>
-            {
-                _listening.TrySetResult();
-                try
-                {
-                    while (!_cts.IsCancellationRequested)
-                    {
-                        var client = await _listener.AcceptTcpClientAsync(_cts.Token);
-                        // Hold a strong reference so GC doesn't reap the socket while the test
-                        // is mid-request — otherwise HttpClient sees an IO error, not a timeout.
-                        lock (_accepted)
-                            _accepted.Add(client);
-                    }
-                }
-                catch (OperationCanceledException) { /* expected on dispose */
-                }
-                catch (ObjectDisposedException) { /* expected on dispose */
-                }
-            });
-
-            await _listening.Task.WaitAsync(ct);
-        }
-
-        public void Dispose()
-        {
-            _cts.Cancel();
-            _listener.Stop();
-            lock (_accepted)
-            {
-                foreach (var c in _accepted)
-                    c.Dispose();
-                _accepted.Clear();
-            }
-            _cts.Dispose();
-        }
-    }
-
-    /// <summary>
-    /// Local TCP listener that returns a fixed HTTP status code + body for any incoming request.
-    /// Used to drive non-2xx response paths without bringing up a full HTTP server.
-    /// </summary>
-    private sealed class StaticResponseTcpListener : IDisposable
-    {
-        private readonly TcpListener _listener;
-        private readonly CancellationTokenSource _cts = new();
-        private readonly HttpStatusCode _status;
-        private readonly string _body;
-        private readonly TaskCompletionSource _listening = new(TaskCreationOptions.RunContinuationsAsynchronously);
-
-        public StaticResponseTcpListener(HttpStatusCode status, string body)
-        {
-            _status = status;
-            _body = body;
-            _listener = new TcpListener(IPAddress.Loopback, 0);
-        }
-
-        public Uri Uri => new($"http://127.0.0.1:{((IPEndPoint)_listener.LocalEndpoint).Port}/config.json");
-
-        public async Task StartAsync(CancellationToken ct)
-        {
-            _listener.Start();
-            _ = Task.Run(async () =>
-            {
-                _listening.TrySetResult();
-                try
-                {
-                    while (!_cts.IsCancellationRequested)
-                    {
-                        using var client = await _listener.AcceptTcpClientAsync(_cts.Token);
-                        await using var stream = client.GetStream();
-
-                        // Drain the request headers (best-effort) before replying.
-                        var buffer = new byte[4096];
-                        try
-                        {
-                            using var readCts = new CancellationTokenSource(TimeSpan.FromMilliseconds(200));
-                            _ = await stream.ReadAsync(buffer, readCts.Token);
-                        }
-                        catch (OperationCanceledException) { }
-
-                        var bodyBytes = Encoding.UTF8.GetBytes(_body);
-                        var reasonPhrase = _status.ToString();
-                        var header = Encoding.ASCII.GetBytes(
-                            $"HTTP/1.1 {(int)_status} {reasonPhrase}\r\n"
-                                + $"Content-Length: {bodyBytes.Length}\r\n"
-                                + "Content-Type: application/json\r\n"
-                                + "Connection: close\r\n"
-                                + "\r\n"
-                        );
-                        await stream.WriteAsync(header, _cts.Token);
-                        if (bodyBytes.Length > 0)
-                            await stream.WriteAsync(bodyBytes, _cts.Token);
-                        await stream.FlushAsync(_cts.Token);
-                    }
-                }
-                catch (OperationCanceledException) { /* expected on dispose */
-                }
-                catch (ObjectDisposedException) { /* expected on dispose */
-                }
-                catch (IOException) { /* client disconnected */
-                }
-            });
-
-            await _listening.Task.WaitAsync(ct);
-        }
-
-        public void Dispose()
-        {
-            _cts.Cancel();
-            _listener.Stop();
-            _cts.Dispose();
-        }
     }
 }

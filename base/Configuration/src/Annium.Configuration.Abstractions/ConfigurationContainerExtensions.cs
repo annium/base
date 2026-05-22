@@ -66,7 +66,7 @@ public static class ConfigurationContainerExtensions
 
         var results = await Task.WhenAll(loads);
 
-        var failures = results.Where(r => r.error is not null && !r.source.Optional).Select(r => r.error!).ToArray();
+        var failures = results.Where(r => !r.source.Optional).Select(r => r.error).OfType<Exception>().ToArray();
 
         if (failures.Length > 0)
             throw new AggregateException("Configuration source(s) failed to load", failures);

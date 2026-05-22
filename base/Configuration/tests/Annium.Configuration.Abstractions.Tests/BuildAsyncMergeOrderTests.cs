@@ -47,6 +47,25 @@ public class BuildAsyncMergeOrderTests
     }
 
     /// <summary>
+    /// Two non-optional sources that throw distinct exception types aggregate both into the
+    /// resulting <see cref="AggregateException"/>.
+    /// </summary>
+    [Fact]
+    public async Task BuildAsync_TwoNonOptionalFail_AggregateContainsBothErrors()
+    {
+        var container = ConfigurationFactory.CreateContainer();
+        container.AddSource(new ThrowingSource(new InvalidOperationException("first down"), optional: false));
+        container.AddSource(new ThrowingSource(new NotSupportedException("second down"), optional: false));
+
+        var ex = await Wrap.It(async () => await container.BuildAsync(TestContext.Current.CancellationToken))
+            .ThrowsAsync<AggregateException>();
+        ex.InnerExceptions.Has(2);
+        // Order matches Task.WhenAll input order = registration order.
+        ex.InnerExceptions[0].As<InvalidOperationException>();
+        ex.InnerExceptions[1].As<NotSupportedException>();
+    }
+
+    /// <summary>
     /// An optional source that throws is silenced; the surviving source's data lands in the container.
     /// </summary>
     [Fact]
