@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -187,44 +188,31 @@ internal class ObjectConfigurationProvider : ConfigurationProviderBase
 file static class Helper
 {
     /// <summary>
-    /// Cache for type variants to improve performance
+    /// Cache for type variants to improve performance. ConcurrentDictionary is required because
+    /// BuildAsync loads sources in parallel via Task.WhenAll, so Read() may run concurrently.
     /// </summary>
-    private static readonly Dictionary<Type, TypeVariant> _variants = new();
+    private static readonly ConcurrentDictionary<Type, TypeVariant> _variants = new();
 
     /// <summary>
-    /// Cache for type members to improve performance
+    /// Cache for type members to improve performance. ConcurrentDictionary is required because
+    /// BuildAsync loads sources in parallel via Task.WhenAll, so Read() may run concurrently.
     /// </summary>
-    private static readonly Dictionary<Type, IReadOnlyCollection<MemberInfo>> _members = new();
+    private static readonly ConcurrentDictionary<Type, IReadOnlyCollection<MemberInfo>> _members = new();
 
     /// <summary>
     /// Gets the type variant for a given type
     /// </summary>
     /// <param name="type">Type to get variant for</param>
     /// <returns>Type variant of the specified type</returns>
-    public static TypeVariant GetVariant(Type type)
-    {
-        if (_variants.TryGetValue(type, out var variant))
-            return variant;
-
-        _variants[type] = variant = ResolveVariant(type);
-
-        return variant;
-    }
+    public static TypeVariant GetVariant(Type type) => _variants.GetOrAdd(type, ResolveVariant);
 
     /// <summary>
     /// Gets the accessible members for a given type
     /// </summary>
     /// <param name="type">Type to get members for</param>
     /// <returns>Collection of accessible members</returns>
-    public static IReadOnlyCollection<MemberInfo> GetMembers(Type type)
-    {
-        if (_members.TryGetValue(type, out var members))
-            return members;
-
-        _members[type] = members = ResolveMembers(type);
-
-        return members;
-    }
+    public static IReadOnlyCollection<MemberInfo> GetMembers(Type type) =>
+        _members.GetOrAdd(type, ResolveMembers);
 
     /// <summary>
     /// Resolves the type variant for a type

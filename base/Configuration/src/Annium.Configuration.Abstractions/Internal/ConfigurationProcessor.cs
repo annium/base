@@ -62,7 +62,13 @@ internal class ConfigurationProcessor<T>
     /// <returns>Configured instance of type T</returns>
     public T Process()
     {
-        return (T)(Process(typeof(T)) ?? default!);
+        var result = Process(typeof(T));
+        if (result is null)
+            throw new InvalidOperationException(
+                $"Configuration produced null for type {typeof(T)}. "
+                    + "This typically means an abstract type was requested but the resolution key was absent from the configuration."
+            );
+        return (T)result;
     }
 
     /// <summary>

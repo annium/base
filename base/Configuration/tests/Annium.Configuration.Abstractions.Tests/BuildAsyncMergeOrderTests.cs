@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Annium.Configuration.Abstractions.Internal;
 using Annium.Testing;
 using Xunit;
 
@@ -20,7 +19,7 @@ public class BuildAsyncMergeOrderTests
     [Fact]
     public async Task BuildAsync_TwoSources_MergesInRegistrationOrder()
     {
-        var container = new ConfigurationContainer();
+        var container = ConfigurationFactory.CreateContainer();
         container.AddSource(new StubSource(new[] { (new[] { "key" }, "first") }, optional: false));
         container.AddSource(new StubSource(new[] { (new[] { "key" }, "second") }, optional: false));
 
@@ -37,7 +36,7 @@ public class BuildAsyncMergeOrderTests
     [Fact]
     public async Task BuildAsync_OneNonOptionalFails_ThrowsAggregate()
     {
-        var container = new ConfigurationContainer();
+        var container = ConfigurationFactory.CreateContainer();
         container.AddSource(new StubSource(new[] { (new[] { "ok" }, "v") }, optional: false));
         container.AddSource(new ThrowingSource(new InvalidOperationException("source down"), optional: false));
 
@@ -53,7 +52,7 @@ public class BuildAsyncMergeOrderTests
     [Fact]
     public async Task BuildAsync_OneOptionalFails_OneSucceeds_SucceedsWithSucceededData()
     {
-        var container = new ConfigurationContainer();
+        var container = ConfigurationFactory.CreateContainer();
         container.AddSource(new ThrowingSource(new InvalidOperationException("flaky"), optional: true));
         container.AddSource(new StubSource(new[] { (new[] { "ok" }, "value") }, optional: false));
 

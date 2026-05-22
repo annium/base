@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using Annium.Configuration.Abstractions;
@@ -39,7 +40,12 @@ internal class YamlConfigurationProvider : ConfigurationProviderBase
         if (stream.Documents.Count == 0)
             return Data;
 
-        Process((YamlMappingNode)stream.Documents[0].RootNode);
+        if (stream.Documents[0].RootNode is not YamlMappingNode root)
+            throw new InvalidOperationException(
+                $"YAML root must be a mapping node, got {stream.Documents[0].RootNode.GetType().Name}"
+            );
+
+        Process(root);
 
         return Data;
     }
@@ -52,14 +58,23 @@ internal class YamlConfigurationProvider : ConfigurationProviderBase
     {
         foreach (var (key, value) in node.Children)
         {
-            Context.Push(((YamlScalarNode)key).Value!);
+            if (key is not YamlScalarNode scalarKey)
+                throw new InvalidOperationException(
+                    $"YAML mapping key must be a scalar, got {key.GetType().Name}"
+                );
+
+            Context.Push(scalarKey.Value!);
 
             if (value is YamlMappingNode map)
                 Process(map);
             else if (value is YamlSequenceNode seq)
                 Process(seq);
+            else if (value is YamlScalarNode scalarValue)
+                Process(scalarValue);
             else
-                Process((YamlScalarNode)value);
+                throw new InvalidOperationException(
+                    $"Unexpected YAML node type {value.GetType().Name} at {string.Join(".", Path)}"
+                );
 
             Context.Pop();
         }
@@ -80,8 +95,12 @@ internal class YamlConfigurationProvider : ConfigurationProviderBase
                 Process(map);
             else if (item is YamlSequenceNode seq)
                 Process(seq);
+            else if (item is YamlScalarNode scalarItem)
+                Process(scalarItem);
             else
-                Process((YamlScalarNode)item);
+                throw new InvalidOperationException(
+                    $"Unexpected YAML node type {item.GetType().Name} at {string.Join(".", Path)}"
+                );
 
             Context.Pop();
             index++;

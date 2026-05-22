@@ -5,7 +5,7 @@ namespace Annium.Configuration.Abstractions.Internal;
 /// <summary>
 /// Implementation of IConfigurationContainer that stores configuration data in memory
 /// </summary>
-public class ConfigurationContainer : IConfigurationContainer
+internal sealed class ConfigurationContainer : IConfigurationContainer
 {
     /// <summary>
     /// Dictionary storing configuration data with custom key comparer

@@ -11,37 +11,24 @@ using Annium.Configuration.Abstractions;
 using Annium.Testing;
 using Xunit;
 
-namespace Annium.Configuration.Json.Tests;
+namespace Annium.Configuration.Yaml.Tests;
 
 /// <summary>
-/// Tests for the deferred-source build pipeline — JSON file + remote sources +
+/// Tests for the deferred-source build pipeline — YAML file + remote sources +
 /// optional / non-optional semantics through <see cref="Abstractions.ConfigurationContainerExtensions.BuildAsync"/>.
 /// </summary>
 public class BuildAsyncTests
 {
     /// <summary>
-    /// An empty container (no sources registered) is a no-op for <c>BuildAsync</c>.
-    /// </summary>
-    [Fact]
-    public async Task BuildAsync_NoSources_NoOp()
-    {
-        var container = ConfigurationFactory.CreateContainer();
-
-        await container.BuildAsync(TestContext.Current.CancellationToken);
-
-        container.Get().Count.Is(0);
-    }
-
-    /// <summary>
-    /// Pointing <c>AddJsonFile(optional: false)</c> at a missing file makes <c>BuildAsync</c>
+    /// Pointing <c>AddYamlFile(optional: false)</c> at a missing file makes <c>BuildAsync</c>
     /// throw <see cref="AggregateException"/> wrapping a <see cref="FileNotFoundException"/>.
     /// </summary>
     [Fact]
-    public async Task BuildAsync_AddJsonFile_MissingNotOptional_Throws()
+    public async Task BuildAsync_AddYamlFile_MissingNotOptional_Throws()
     {
         var container = ConfigurationFactory.CreateContainer();
-        var missing = Path.Combine(Path.GetTempPath(), $"missing-{Guid.NewGuid():N}.json");
-        container.AddJsonFile(missing, optional: false);
+        var missing = Path.Combine(Path.GetTempPath(), $"missing-{Guid.NewGuid():N}.yaml");
+        container.AddYamlFile(missing, optional: false);
 
         var ex = await Wrap.It(async () => await container.BuildAsync(TestContext.Current.CancellationToken))
             .ThrowsAsync<AggregateException>();
@@ -50,15 +37,15 @@ public class BuildAsyncTests
     }
 
     /// <summary>
-    /// Pointing <c>AddJsonFile(optional: true)</c> at a missing file makes <c>BuildAsync</c>
+    /// Pointing <c>AddYamlFile(optional: true)</c> at a missing file makes <c>BuildAsync</c>
     /// succeed; the missing source contributes no data.
     /// </summary>
     [Fact]
-    public async Task BuildAsync_AddJsonFile_MissingOptional_Succeeds()
+    public async Task BuildAsync_AddYamlFile_MissingOptional_Succeeds()
     {
         var container = ConfigurationFactory.CreateContainer();
-        var missing = Path.Combine(Path.GetTempPath(), $"missing-{Guid.NewGuid():N}.json");
-        container.AddJsonFile(missing, optional: true);
+        var missing = Path.Combine(Path.GetTempPath(), $"missing-{Guid.NewGuid():N}.yaml");
+        container.AddYamlFile(missing, optional: true);
 
         await container.BuildAsync(TestContext.Current.CancellationToken);
 
@@ -66,86 +53,17 @@ public class BuildAsyncTests
     }
 
     /// <summary>
-    /// Pointing <c>AddJsonFile</c> at a real file flattens its contents into the container.
-    /// </summary>
-    [Fact]
-    public async Task BuildAsync_AddJsonFile_ExistingFile_Loads()
-    {
-        var jsonFile = Path.GetTempFileName();
-        try
-        {
-            File.WriteAllText(jsonFile, "{\"plain\":42,\"section\":{\"value\":\"ok\"}}");
-            var container = ConfigurationFactory.CreateContainer();
-            container.AddJsonFile(jsonFile);
-
-            await container.BuildAsync(TestContext.Current.CancellationToken);
-
-            var data = container.Get();
-            data.Count.Is(2);
-            data.At(new[] { "plain" }).Is("42");
-            data.At(new[] { "section", "value" }).Is("ok");
-        }
-        finally
-        {
-            File.Delete(jsonFile);
-        }
-    }
-
-    /// <summary>
-    /// A remote source pointed at a stub server that accepts but never responds, with a short
-    /// timeout, makes <c>BuildAsync(optional: false)</c> throw via <see cref="AggregateException"/>.
-    /// The inner is normally <see cref="TimeoutException"/>, but under heavy parallel test load
-    /// the network stack can surface a sibling <see cref="System.Net.Http.HttpRequestException"/>
-    /// with an <see cref="System.IO.IOException"/> inner instead — both denote "remote fetch
-    /// could not complete", which is the spec's behavioral contract for non-optional sources.
-    /// </summary>
-    [Fact]
-    public async Task BuildAsync_AddRemoteJson_TimeoutNotOptional_Throws()
-    {
-        using var stub = new HangingTcpListener();
-        await stub.StartAsync(TestContext.Current.CancellationToken);
-
-        var container = ConfigurationFactory.CreateContainer();
-        container.AddRemoteJson(stub.Uri, optional: false, timeout: TimeSpan.FromMilliseconds(500));
-
-        var ex = await Wrap.It(async () => await container.BuildAsync(TestContext.Current.CancellationToken))
-            .ThrowsAsync<AggregateException>();
-        ex.InnerExceptions.Has(1);
-        var inner = ex.InnerExceptions[0];
-        var isFetchFailure = inner is TimeoutException or HttpRequestException;
-        isFetchFailure.IsTrue($"expected fetch failure; got {inner.GetType().FullName}: {inner.Message}");
-    }
-
-    /// <summary>
-    /// Same stub server + 500ms timeout, but with <c>optional: true</c> — <c>BuildAsync</c> returns
-    /// successfully and the source contributes no data.
-    /// </summary>
-    [Fact]
-    public async Task BuildAsync_AddRemoteJson_TimeoutOptional_Succeeds()
-    {
-        using var stub = new HangingTcpListener();
-        await stub.StartAsync(TestContext.Current.CancellationToken);
-
-        var container = ConfigurationFactory.CreateContainer();
-        container.AddRemoteJson(stub.Uri, optional: true, timeout: TimeSpan.FromMilliseconds(500));
-
-        await container.BuildAsync(TestContext.Current.CancellationToken);
-
-        container.Get().Count.Is(0);
-    }
-
-    /// <summary>
-    /// A remote source pointed at a server returning a non-2xx response surfaces an
+    /// Mirror of the Json test: a remote source returning a non-2xx response surfaces an
     /// <see cref="HttpRequestException"/> wrapped in <see cref="AggregateException"/>.
     /// </summary>
     [Fact]
     public async Task LoadAsync_Non2xxResponse_ThrowsHttpRequestException()
     {
-        using var stub = new StaticResponseTcpListener(HttpStatusCode.InternalServerError, "{}");
+        using var stub = new StaticResponseTcpListener(HttpStatusCode.InternalServerError, "value: ok");
         await stub.StartAsync(TestContext.Current.CancellationToken);
 
         var container = ConfigurationFactory.CreateContainer();
-        container.AddRemoteJson(stub.Uri, optional: false, timeout: TimeSpan.FromSeconds(5));
+        container.AddRemoteYaml(stub.Uri, optional: false, timeout: TimeSpan.FromSeconds(5));
 
         var ex = await Wrap.It(async () => await container.BuildAsync(TestContext.Current.CancellationToken))
             .ThrowsAsync<AggregateException>();
@@ -154,9 +72,8 @@ public class BuildAsyncTests
     }
 
     /// <summary>
-    /// A pre-cancelled cancellation token surfaces <see cref="OperationCanceledException"/>
-    /// (not <see cref="TimeoutException"/>) so callers can distinguish intentional cancel from
-    /// timeout. Verified against a listener that accepts but never responds.
+    /// Mirror of the Json test: a pre-cancelled CT surfaces <see cref="OperationCanceledException"/>
+    /// (not <see cref="TimeoutException"/>).
     /// </summary>
     [Fact]
     public async Task LoadAsync_CtCancelled_ThrowsOperationCanceledException()
@@ -168,7 +85,7 @@ public class BuildAsyncTests
         await cts.CancelAsync();
 
         var container = ConfigurationFactory.CreateContainer();
-        container.AddRemoteJson(stub.Uri, optional: false, timeout: TimeSpan.FromSeconds(30));
+        container.AddRemoteYaml(stub.Uri, optional: false, timeout: TimeSpan.FromSeconds(30));
 
         var ex = await Wrap.It(async () => await container.BuildAsync(cts.Token))
             .ThrowsAsync<AggregateException>();
@@ -179,10 +96,8 @@ public class BuildAsyncTests
     }
 
     /// <summary>
-    /// Local TCP listener that accepts connections but never sends a response — used to force
-    /// a deterministic <c>HttpClient</c> timeout trigger regardless of the test host's network
-    /// configuration. Holds strong references to accepted clients so GC can't reap them
-    /// mid-test (which would otherwise close the socket and translate timeout into IO error).
+    /// Local TCP listener that accepts connections but never sends a response. Mirrors the Json
+    /// test helper to keep the YAML coverage symmetric.
     /// </summary>
     private sealed class HangingTcpListener : IDisposable
     {
@@ -196,7 +111,7 @@ public class BuildAsyncTests
             _listener = new TcpListener(IPAddress.Loopback, 0);
         }
 
-        public Uri Uri => new($"http://127.0.0.1:{((IPEndPoint)_listener.LocalEndpoint).Port}/config.json");
+        public Uri Uri => new($"http://127.0.0.1:{((IPEndPoint)_listener.LocalEndpoint).Port}/config.yaml");
 
         public async Task StartAsync(CancellationToken ct)
         {
@@ -209,16 +124,12 @@ public class BuildAsyncTests
                     while (!_cts.IsCancellationRequested)
                     {
                         var client = await _listener.AcceptTcpClientAsync(_cts.Token);
-                        // Hold a strong reference so GC doesn't reap the socket while the test
-                        // is mid-request — otherwise HttpClient sees an IO error, not a timeout.
                         lock (_accepted)
                             _accepted.Add(client);
                     }
                 }
-                catch (OperationCanceledException) { /* expected on dispose */
-                }
-                catch (ObjectDisposedException) { /* expected on dispose */
-                }
+                catch (OperationCanceledException) { }
+                catch (ObjectDisposedException) { }
             });
 
             await _listening.Task.WaitAsync(ct);
@@ -240,7 +151,6 @@ public class BuildAsyncTests
 
     /// <summary>
     /// Local TCP listener that returns a fixed HTTP status code + body for any incoming request.
-    /// Used to drive non-2xx response paths without bringing up a full HTTP server.
     /// </summary>
     private sealed class StaticResponseTcpListener : IDisposable
     {
@@ -257,7 +167,7 @@ public class BuildAsyncTests
             _listener = new TcpListener(IPAddress.Loopback, 0);
         }
 
-        public Uri Uri => new($"http://127.0.0.1:{((IPEndPoint)_listener.LocalEndpoint).Port}/config.json");
+        public Uri Uri => new($"http://127.0.0.1:{((IPEndPoint)_listener.LocalEndpoint).Port}/config.yaml");
 
         public async Task StartAsync(CancellationToken ct)
         {
@@ -272,7 +182,6 @@ public class BuildAsyncTests
                         using var client = await _listener.AcceptTcpClientAsync(_cts.Token);
                         await using var stream = client.GetStream();
 
-                        // Drain the request headers (best-effort) before replying.
                         var buffer = new byte[4096];
                         try
                         {
@@ -286,7 +195,7 @@ public class BuildAsyncTests
                         var header = Encoding.ASCII.GetBytes(
                             $"HTTP/1.1 {(int)_status} {reasonPhrase}\r\n"
                                 + $"Content-Length: {bodyBytes.Length}\r\n"
-                                + "Content-Type: application/json\r\n"
+                                + "Content-Type: application/x-yaml\r\n"
                                 + "Connection: close\r\n"
                                 + "\r\n"
                         );
@@ -296,12 +205,9 @@ public class BuildAsyncTests
                         await stream.FlushAsync(_cts.Token);
                     }
                 }
-                catch (OperationCanceledException) { /* expected on dispose */
-                }
-                catch (ObjectDisposedException) { /* expected on dispose */
-                }
-                catch (IOException) { /* client disconnected */
-                }
+                catch (OperationCanceledException) { }
+                catch (ObjectDisposedException) { }
+                catch (IOException) { }
             });
 
             await _listening.Task.WaitAsync(ct);

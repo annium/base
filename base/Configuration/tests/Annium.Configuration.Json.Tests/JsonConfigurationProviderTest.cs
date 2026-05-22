@@ -1,6 +1,8 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Annium.Configuration.Abstractions;
 using Annium.Configuration.Tests.Lib;
@@ -85,23 +87,48 @@ public class JsonConfigurationProviderTest : TestBase
         result.Flag.IsTrue();
         result.Plain.Is(7);
         // result.Nullable.Is(3);
-        result.Array.SequenceEqual(new[] { 4, 7 }).IsTrue();
+        Enumerable.SequenceEqual(result.Array, new[] { 4, 7 }).IsTrue();
         result.Matrix.Has(2);
-        result.Matrix.At(0).SequenceEqual(new[] { 3, 2 }).IsTrue();
-        result.Matrix.At(1).SequenceEqual(new[] { 5, 4 }).IsTrue();
+        Enumerable.SequenceEqual(result.Matrix.At(0), new[] { 3, 2 }).IsTrue();
+        Enumerable.SequenceEqual(result.Matrix.At(1), new[] { 5, 4 }).IsTrue();
         result.List.Has(2);
         result.List[0].Plain.Is(8);
         result.List[0].Array.IsEmpty();
         result.List[1].Plain.Is(0);
-        result.List[1].Array.SequenceEqual(new[] { 2m, 6m }).IsTrue();
+        Enumerable.SequenceEqual(result.List[1].Array, new[] { 2m, 6m }).IsTrue();
         IDictionary<string, Val> dict = result.Dictionary;
         dict.Has(1);
         dict.At("demo").Plain.Is(14);
-        dict.At("demo").Array.SequenceEqual(new[] { 3m, 15m }).IsTrue();
+        Enumerable.SequenceEqual(dict.At("demo").Array, new[] { 3m, 15m }).IsTrue();
         result.Nested.Plain.Is(4);
-        result.Nested.Array.SequenceEqual(new[] { 4m, 13m }).IsTrue();
+        Enumerable.SequenceEqual(result.Nested.Array, new[] { 4m, 13m }).IsTrue();
         result.Abstract.As<ConfigTwo>().Value.Is(10);
         result.Abstract.IsEqual(nested);
         nested.Is(new ConfigTwo { Value = 10 });
+    }
+
+    /// <summary>
+    /// Malformed JSON content surfaces as a <see cref="System.Text.Json.JsonException"/> from
+    /// the provider; via the build pipeline it lands wrapped in <see cref="System.AggregateException"/>.
+    /// </summary>
+    [Fact]
+    public async Task Read_MalformedJson_ThrowsJsonException()
+    {
+        var bad = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllText(bad, "{bad json");
+            var container = ConfigurationFactory.CreateContainer();
+            container.AddJsonFile(bad, optional: false);
+
+            var ex = await Wrap.It(async () => await container.BuildAsync(TestContext.Current.CancellationToken))
+                .ThrowsAsync<AggregateException>();
+            ex.InnerExceptions.Has(1);
+            ex.InnerExceptions[0].As<JsonException>();
+        }
+        finally
+        {
+            File.Delete(bad);
+        }
     }
 }
