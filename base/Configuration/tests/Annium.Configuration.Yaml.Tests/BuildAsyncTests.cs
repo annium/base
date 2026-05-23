@@ -136,4 +136,30 @@ public class BuildAsyncTests
 
         container.Get().Count.Is(0);
     }
+
+    /// <summary>
+    /// A remote source returning 200 OK with a valid YAML body parses and flattens the
+    /// payload into the container — the success branch of <c>RemoteConfigurationSourceBase.LoadAsync</c>
+    /// for the YAML flavour (mirror of the Json <c>LoadAsync_SuccessResponse_LoadsRemoteData</c> test).
+    /// </summary>
+    [Fact]
+    public async Task LoadAsync_SuccessResponse_LoadsRemoteData()
+    {
+        await using var stub = new StaticResponseTcpListener(
+            HttpStatusCode.OK,
+            "plain: 42\nsection:\n  value: ok\n",
+            "config.yaml",
+            contentType: "application/x-yaml"
+        );
+        await stub.StartAsync(TestContext.Current.CancellationToken);
+
+        var container = ConfigurationFactory.CreateContainer();
+        container.AddRemoteYaml(stub.Uri, optional: false, timeout: TimeSpan.FromSeconds(5));
+
+        await container.BuildAsync(TestContext.Current.CancellationToken);
+
+        var data = container.Get();
+        data.At(new[] { "plain" }).Is("42");
+        data.At(new[] { "section", "value" }).Is("ok");
+    }
 }
