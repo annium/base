@@ -56,9 +56,11 @@ public sealed class HangingTcpListener : IDisposable
                         _accepted.Add(client);
                 }
             }
-            catch (OperationCanceledException) { /* expected on dispose */
+            catch (OperationCanceledException)
+            { /* expected on dispose */
             }
-            catch (ObjectDisposedException) { /* expected on dispose */
+            catch (ObjectDisposedException)
+            { /* expected on dispose */
             }
         });
 

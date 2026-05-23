@@ -130,9 +130,7 @@ internal class ObjectConfigurationProvider : ConfigurationProviderBase
 
             var itemKey =
                 getKey.Invoke(item, _noArgs)
-                ?? throw new InvalidOperationException(
-                    $"Dictionary key is null at path: {string.Join('.', prefix)}"
-                );
+                ?? throw new InvalidOperationException($"Dictionary key is null at path: {string.Join('.', prefix)}");
             var keyText =
                 itemKey.ToString()
                 ?? throw new InvalidOperationException(

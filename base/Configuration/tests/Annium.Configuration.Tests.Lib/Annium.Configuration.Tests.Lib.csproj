@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <Solutions>Annium.Base</Solutions>
     <OutputType>Library</OutputType>
@@ -6,10 +6,10 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="../../src/Annium.Configuration.Abstractions/Annium.Configuration.Abstractions.csproj" />
     <ProjectReference Include="../../../Core/src/Annium.Core.DependencyInjection/Annium.Core.DependencyInjection.csproj" />
     <ProjectReference Include="../../../Core/src/Annium.Core.Mapper/Annium.Core.Mapper.csproj" />
     <ProjectReference Include="../../../Core/src/Annium.Core.Runtime/Annium.Core.Runtime.csproj" />
     <ProjectReference Include="../../../Logging/src/Annium.Logging.Shared/Annium.Logging.Shared.csproj" />
+    <ProjectReference Include="../../src/Annium.Configuration.Abstractions/Annium.Configuration.Abstractions.csproj" />
   </ItemGroup>
 </Project>

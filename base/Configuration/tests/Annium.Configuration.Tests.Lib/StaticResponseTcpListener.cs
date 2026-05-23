@@ -71,7 +71,9 @@ public sealed class StaticResponseTcpListener : IDisposable
                         using var readCts = new CancellationTokenSource(TimeSpan.FromMilliseconds(200));
                         _ = await stream.ReadAsync(buffer, readCts.Token);
                     }
-                    catch (OperationCanceledException) { }
+                    catch (OperationCanceledException)
+                    { /* best-effort header drain timed out; proceed to write response */
+                    }
 
                     var bodyBytes = Encoding.UTF8.GetBytes(_body);
                     var reasonPhrase = _status.ToString();
@@ -88,11 +90,14 @@ public sealed class StaticResponseTcpListener : IDisposable
                     await stream.FlushAsync(_cts.Token);
                 }
             }
-            catch (OperationCanceledException) { /* expected on dispose */
+            catch (OperationCanceledException)
+            { /* expected on dispose */
             }
-            catch (ObjectDisposedException) { /* expected on dispose */
+            catch (ObjectDisposedException)
+            { /* expected on dispose */
             }
-            catch (IOException) { /* client disconnected */
+            catch (IOException)
+            { /* client disconnected */
             }
         });
 

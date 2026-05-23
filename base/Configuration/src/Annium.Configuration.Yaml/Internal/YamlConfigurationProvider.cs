@@ -59,9 +59,7 @@ internal class YamlConfigurationProvider : ConfigurationProviderBase
         foreach (var (key, value) in node.Children)
         {
             if (key is not YamlScalarNode scalarKey)
-                throw new InvalidOperationException(
-                    $"YAML mapping key must be a scalar, got {key.GetType().Name}"
-                );
+                throw new InvalidOperationException($"YAML mapping key must be a scalar, got {key.GetType().Name}");
 
             if (scalarKey.Value is null)
                 throw new InvalidOperationException(
