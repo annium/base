@@ -67,27 +67,27 @@ internal class CommandLineConfigurationProvider : ConfigurationProviderBase
             }
             else if (IsFlag(value, next))
                 if (flags.Contains(name))
-                    throw new Exception($"Same flag '{value}' is used twice");
+                    throw new InvalidOperationException($"Same flag '{value}' is used twice");
                 else
                     flags.Add(name);
             else
-                throw new Exception($"Can't process value '{value}', followed by '{next}'");
+                throw new InvalidOperationException($"Can't process value '{value}', followed by '{next}'");
         }
 
         foreach (var name in flags)
-            Data[name.Split(Separator)] = true.ToString();
+            SetAt(name.Split(Separator), true.ToString());
 
         foreach (var (name, value) in options)
-            Data[name.Split(Separator)] = value;
+            SetAt(name.Split(Separator), value);
 
         foreach (var (name, values) in multiOptions)
         {
             var path = name.Split(Separator);
             for (var i = 0; i < values.Count; i++)
-                Data[path.Append(i.ToString()).ToArray()] = values[i];
+                SetAt(path.Append(i.ToString()).ToArray(), values[i]);
         }
 
-        return Data;
+        return Result;
     }
 
     /// <summary>

@@ -129,7 +129,20 @@ internal class ConfigurationProcessor<T>
         // Activator.CreateInstance returns non-null for concrete List<> (never Nullable<T>)
         var result = (IList)Activator.CreateInstance(type)!;
 
-        var items = GetDescendants();
+        // GetDescendants returns dictionary keys in arbitrary order; list reconstruction requires
+        // numeric ordering so that List<T> indices (0, 1, 2, ..., 10, 11) reassemble correctly
+        // — and not lexicographically ("10" < "2"). Non-integer keys at a list path indicate
+        // malformed source data and are rejected with path context.
+        var items = GetDescendants()
+            .Select(key =>
+                int.TryParse(key, out var idx)
+                    ? idx
+                    : throw new InvalidOperationException(
+                        $"List index '{key}' at path {string.Join('.', Path)} is not a valid integer"
+                    )
+            )
+            .OrderBy(i => i)
+            .Select(i => i.ToString());
 
         foreach (var index in items)
         {

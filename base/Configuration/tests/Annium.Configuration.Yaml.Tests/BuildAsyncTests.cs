@@ -57,7 +57,7 @@ public class BuildAsyncTests
     [Fact]
     public async Task LoadAsync_Non2xxResponse_ThrowsHttpRequestException()
     {
-        using var stub = new StaticResponseTcpListener(
+        await using var stub = new StaticResponseTcpListener(
             HttpStatusCode.InternalServerError,
             "value: ok",
             "config.yaml",
@@ -81,7 +81,7 @@ public class BuildAsyncTests
     [Fact]
     public async Task LoadAsync_CtCancelled_ThrowsOperationCanceledException()
     {
-        using var stub = new HangingTcpListener("config.yaml");
+        await using var stub = new HangingTcpListener("config.yaml");
         await stub.StartAsync(TestContext.Current.CancellationToken);
 
         using var cts = new CancellationTokenSource();
@@ -105,7 +105,7 @@ public class BuildAsyncTests
     [Fact]
     public async Task BuildAsync_AddRemoteYaml_TimeoutNotOptional_Throws()
     {
-        using var stub = new HangingTcpListener("config.yaml");
+        await using var stub = new HangingTcpListener("config.yaml");
         await stub.StartAsync(TestContext.Current.CancellationToken);
 
         var container = ConfigurationFactory.CreateContainer();
@@ -126,7 +126,7 @@ public class BuildAsyncTests
     [Fact]
     public async Task BuildAsync_AddRemoteYaml_TimeoutOptional_Succeeds()
     {
-        using var stub = new HangingTcpListener("config.yaml");
+        await using var stub = new HangingTcpListener("config.yaml");
         await stub.StartAsync(TestContext.Current.CancellationToken);
 
         var container = ConfigurationFactory.CreateContainer();

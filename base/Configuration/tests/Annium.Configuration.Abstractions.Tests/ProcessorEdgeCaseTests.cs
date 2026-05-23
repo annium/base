@@ -235,4 +235,143 @@ public class ProcessorEdgeCaseTests
         /// <summary>Leaf value.</summary>
         public int Value { get; set; }
     }
+
+    /// <summary>
+    /// Self-referential config type — <c>AddConfiguration</c>'s recursive
+    /// <c>Register</c> must use a visited-set to avoid <see cref="System.StackOverflowException"/>.
+    /// Removing the visited guard at <c>ServiceContainerExtensions.Register</c> would crash here.
+    /// </summary>
+    [Fact]
+    public void AddConfiguration_SelfReferentialType_NoStackOverflow()
+    {
+        var container = CreateContainer();
+        var instance = new SelfRefCfg { Value = 1 };
+
+        container.AddConfiguration(instance);
+
+        var sp = container.BuildServiceProvider();
+        sp.Resolve<SelfRefCfg>().Value.Is(1);
+    }
+
+    /// <summary>
+    /// Config type with a property of its own type — the visited-set guard prevents
+    /// infinite recursion when <c>Register</c> walks nested properties.
+    /// </summary>
+    public sealed class SelfRefCfg
+    {
+        /// <summary>Leaf value.</summary>
+        public int Value { get; set; }
+
+        /// <summary>Self-reference: same type as the enclosing class.</summary>
+        public SelfRefCfg? Self { get; set; }
+    }
+
+    /// <summary>
+    /// Round-trip a list with 12 elements through the object provider + processor pipeline.
+    /// Without the numeric sort fix in <c>ProcessList</c>, index "10" would land before "2"
+    /// (lexicographic) and the reconstructed list would have wrong ordering.
+    /// </summary>
+    [Fact]
+    public async Task Process_ListWith12Elements_OrdersNumerically()
+    {
+        var container = CreateContainer();
+        var expected = new[] { 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210 };
+        var instance = new BigListCfg { Items = [.. expected] };
+
+        await container.AddConfigurationAsync<BigListCfg>(
+            cfg => cfg.Add(instance),
+            TestContext.Current.CancellationToken
+        );
+        var sp = container.BuildServiceProvider();
+
+        var resolved = sp.Resolve<BigListCfg>();
+        resolved.Items.Has(12);
+        for (var i = 0; i < expected.Length; i++)
+            resolved.Items[i].Is(expected[i]);
+    }
+
+    /// <summary>Config holding a 12+-element list of integers for numeric-index ordering verification.</summary>
+    public sealed record BigListCfg
+    {
+        /// <summary>The list under test.</summary>
+        public List<int> Items { get; set; } = new();
+    }
+
+    /// <summary>
+    /// A null entry in an enumerable source value is silently skipped by
+    /// <c>ObjectConfigurationProvider.ProcessEnumerable</c>. Index is only incremented
+    /// for non-null items, so the resulting flat key set compacts nulls out (no gap
+    /// indices in the reconstructed list).
+    /// </summary>
+    [Fact]
+    public async Task Process_ListWithNullEntry_CompactsOutNullEntries()
+    {
+        var container = CreateContainer();
+        var instance = new NullableListCfg { Items = ["a", null, "c"] };
+
+        await container.AddConfigurationAsync<NullableListCfg>(
+            cfg => cfg.Add(instance),
+            TestContext.Current.CancellationToken
+        );
+        var sp = container.BuildServiceProvider();
+
+        var resolved = sp.Resolve<NullableListCfg>();
+        // Null at source-index 1 is skipped before the index counter increments → the
+        // reconstructed list has 2 elements, "a" and "c", with no null in the middle.
+        resolved.Items.Has(2);
+        resolved.Items[0].Is("a");
+        resolved.Items[1].Is("c");
+    }
+
+    /// <summary>Config holding a list with nullable elements for enumerable-null-skip verification.</summary>
+    public sealed record NullableListCfg
+    {
+        /// <summary>The list under test (may include nulls).</summary>
+        public List<string?> Items { get; set; } = new();
+    }
+
+    /// <summary>
+    /// A non-integer key at a list path is malformed source data. <c>ProcessList</c>'s
+    /// <c>int.TryParse</c> guard throws <see cref="InvalidOperationException"/> with the
+    /// offending key and path — not a bare <c>FormatException</c>.
+    /// </summary>
+    [Fact]
+    public async Task Process_ListWithNonIntegerIndex_ThrowsInvalidOperationException()
+    {
+        var container = CreateContainer();
+        // Raw flattened data with a non-integer segment under the "items" list path.
+        var data = new Dictionary<string[], string> { [new[] { "items", "notAnIndex" }] = "5" };
+
+        await container.AddConfigurationAsync<BigListCfg>(
+            cfg => cfg.Add(data),
+            TestContext.Current.CancellationToken
+        );
+        var sp = container.BuildServiceProvider();
+
+        var ex = Wrap.It(() => sp.Resolve<BigListCfg>()).Throws<InvalidOperationException>();
+        ex.Message.Contains("notAnIndex").IsTrue($"expected message naming the bad index; got: {ex.Message}");
+    }
+
+    /// <summary>
+    /// Properties absent from the configuration retain their constructor defaults — the
+    /// <c>if (KeyExists())</c> guard in <c>ProcessObject</c> skips them rather than forcing
+    /// <c>Process</c> (which would throw on the missing leaf). Supplying only <c>Plain</c>
+    /// leaves <c>Nested</c> / <c>List</c> / <c>Array</c> at their defaults.
+    /// </summary>
+    [Fact]
+    public async Task Process_PartialConfig_AbsentPropertiesRetainDefaults()
+    {
+        var container = CreateContainer();
+        var data = new Dictionary<string[], string> { [new[] { "plain" }] = "5" };
+
+        await container.AddConfigurationAsync<Config>(cfg => cfg.Add(data), TestContext.Current.CancellationToken);
+        var sp = container.BuildServiceProvider();
+
+        var resolved = sp.Resolve<Config>();
+        resolved.Plain.Is(5);
+        // Absent keys keep constructor defaults instead of throwing on missing leaves.
+        resolved.Nested.Plain.Is(0);
+        resolved.List.IsEmpty();
+        resolved.Array.IsEmpty();
+    }
 }

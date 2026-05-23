@@ -100,7 +100,7 @@ public class BuildAsyncTests
     [Fact]
     public async Task BuildAsync_AddRemoteJson_TimeoutNotOptional_Throws()
     {
-        using var stub = new HangingTcpListener("config.json");
+        await using var stub = new HangingTcpListener("config.json");
         await stub.StartAsync(TestContext.Current.CancellationToken);
 
         var container = ConfigurationFactory.CreateContainer();
@@ -121,7 +121,7 @@ public class BuildAsyncTests
     [Fact]
     public async Task BuildAsync_AddRemoteJson_TimeoutOptional_Succeeds()
     {
-        using var stub = new HangingTcpListener("config.json");
+        await using var stub = new HangingTcpListener("config.json");
         await stub.StartAsync(TestContext.Current.CancellationToken);
 
         var container = ConfigurationFactory.CreateContainer();
@@ -139,7 +139,7 @@ public class BuildAsyncTests
     [Fact]
     public async Task LoadAsync_Non2xxResponse_ThrowsHttpRequestException()
     {
-        using var stub = new StaticResponseTcpListener(HttpStatusCode.InternalServerError, "{}", "config.json");
+        await using var stub = new StaticResponseTcpListener(HttpStatusCode.InternalServerError, "{}", "config.json");
         await stub.StartAsync(TestContext.Current.CancellationToken);
 
         var container = ConfigurationFactory.CreateContainer();
@@ -159,7 +159,7 @@ public class BuildAsyncTests
     [Fact]
     public async Task LoadAsync_CtCancelled_ThrowsOperationCanceledException()
     {
-        using var stub = new HangingTcpListener("config.json");
+        await using var stub = new HangingTcpListener("config.json");
         await stub.StartAsync(TestContext.Current.CancellationToken);
 
         using var cts = new CancellationTokenSource();
@@ -173,5 +173,29 @@ public class BuildAsyncTests
         var inner = ex.InnerExceptions[0];
         var isCancel = inner is OperationCanceledException;
         isCancel.IsTrue($"expected OperationCanceledException; got {inner.GetType().FullName}: {inner.Message}");
+    }
+
+    /// <summary>
+    /// A remote source returning 200 OK with a valid JSON body parses and flattens the
+    /// payload into the container — the success branch of <c>RemoteConfigurationSourceBase.LoadAsync</c>.
+    /// </summary>
+    [Fact]
+    public async Task LoadAsync_SuccessResponse_LoadsRemoteData()
+    {
+        await using var stub = new StaticResponseTcpListener(
+            HttpStatusCode.OK,
+            "{\"plain\":42,\"section\":{\"value\":\"ok\"}}",
+            "config.json"
+        );
+        await stub.StartAsync(TestContext.Current.CancellationToken);
+
+        var container = ConfigurationFactory.CreateContainer();
+        container.AddRemoteJson(stub.Uri, optional: false, timeout: TimeSpan.FromSeconds(5));
+
+        await container.BuildAsync(TestContext.Current.CancellationToken);
+
+        var data = container.Get();
+        data.At(new[] { "plain" }).Is("42");
+        data.At(new[] { "section", "value" }).Is("ok");
     }
 }

@@ -38,7 +38,7 @@ internal class YamlConfigurationProvider : ConfigurationProviderBase
         stream.Load(reader);
 
         if (stream.Documents.Count == 0)
-            return Data;
+            return Result;
 
         if (stream.Documents[0].RootNode is not YamlMappingNode root)
             throw new InvalidOperationException(
@@ -47,7 +47,7 @@ internal class YamlConfigurationProvider : ConfigurationProviderBase
 
         Process(root);
 
-        return Data;
+        return Result;
     }
 
     /// <summary>
@@ -66,7 +66,7 @@ internal class YamlConfigurationProvider : ConfigurationProviderBase
                     $"YAML mapping key cannot be null at path: {string.Join('.', Path)}"
                 );
 
-            Context.Push(scalarKey.Value);
+            Push(scalarKey.Value);
 
             if (value is YamlMappingNode map)
                 Process(map);
@@ -76,10 +76,10 @@ internal class YamlConfigurationProvider : ConfigurationProviderBase
                 Process(scalarValue);
             else
                 throw new InvalidOperationException(
-                    $"Unexpected YAML node type {value.GetType().Name} at {string.Join(".", Path)}"
+                    $"Unexpected YAML node type {value.GetType().Name} at {string.Join('.', Path)}"
                 );
 
-            Context.Pop();
+            Pop();
         }
     }
 
@@ -92,7 +92,7 @@ internal class YamlConfigurationProvider : ConfigurationProviderBase
         var index = 0;
         foreach (var item in node)
         {
-            Context.Push(index.ToString());
+            Push(index.ToString());
 
             if (item is YamlMappingNode map)
                 Process(map);
@@ -102,10 +102,10 @@ internal class YamlConfigurationProvider : ConfigurationProviderBase
                 Process(scalarItem);
             else
                 throw new InvalidOperationException(
-                    $"Unexpected YAML node type {item.GetType().Name} at {string.Join(".", Path)}"
+                    $"Unexpected YAML node type {item.GetType().Name} at {string.Join('.', Path)}"
                 );
 
-            Context.Pop();
+            Pop();
             index++;
         }
     }
@@ -127,6 +127,6 @@ internal class YamlConfigurationProvider : ConfigurationProviderBase
     {
         if (token.Value is null)
             return;
-        Data[Path] = token.Value;
+        Set(token.Value);
     }
 }
