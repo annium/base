@@ -36,21 +36,20 @@ internal class ObjectConfigurationProvider : ConfigurationProviderBase
     /// <returns>Dictionary containing configuration keys and values</returns>
     public override IReadOnlyDictionary<string[], string> Read()
     {
-        var result = new Dictionary<string[], string>();
+        Init();
 
         if (_config is not null)
-            Process(Array.Empty<string>(), result.Add, _config);
+            Process(Array.Empty<string>(), _config);
 
-        return result;
+        return Result;
     }
 
     /// <summary>
     /// Processes an object value and adds its data to the configuration
     /// </summary>
     /// <param name="prefix">Key prefix for the current path</param>
-    /// <param name="addValue">Action to add key-value pairs</param>
     /// <param name="value">Object value to process</param>
-    private void Process(string[] prefix, Action<string[], string> addValue, object? value)
+    private void Process(string[] prefix, object? value)
     {
         if (value is null)
             return;
@@ -60,19 +59,19 @@ internal class ObjectConfigurationProvider : ConfigurationProviderBase
         switch (variant)
         {
             case TypeVariant.Object:
-                ProcessObject(prefix, addValue, value);
+                ProcessObject(prefix, value);
                 break;
             case TypeVariant.Dictionary:
-                ProcessDictionary(prefix, addValue, value);
+                ProcessDictionary(prefix, value);
                 break;
             case TypeVariant.Enumerable:
-                ProcessEnumerable(prefix, addValue, value);
+                ProcessEnumerable(prefix, value);
                 break;
             case TypeVariant.Nullable:
-                ProcessNullable(prefix, addValue, value);
+                ProcessNullable(prefix, value);
                 break;
             case TypeVariant.Primitive:
-                ProcessPrimitive(prefix, addValue, value);
+                ProcessPrimitive(prefix, value);
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(variant), $"Can't process type {type.FriendlyName()}");
@@ -83,9 +82,8 @@ internal class ObjectConfigurationProvider : ConfigurationProviderBase
     /// Processes an object by iterating through its properties and fields
     /// </summary>
     /// <param name="prefix">Key prefix for the current path</param>
-    /// <param name="addValue">Action to add key-value pairs</param>
     /// <param name="value">Object to process</param>
-    private void ProcessObject(string[] prefix, Action<string[], string> addValue, object value)
+    private void ProcessObject(string[] prefix, object value)
     {
         var type = value.GetType();
         var members = Helper.GetMembers(type);
@@ -96,7 +94,7 @@ internal class ObjectConfigurationProvider : ConfigurationProviderBase
             var memberValue = member.GetPropertyOrFieldValue(value);
 
             if (memberValue is not null)
-                Process(memberPath, addValue, memberValue);
+                Process(memberPath, memberValue);
         }
     }
 
@@ -104,9 +102,8 @@ internal class ObjectConfigurationProvider : ConfigurationProviderBase
     /// Processes a dictionary by iterating through its key-value pairs
     /// </summary>
     /// <param name="prefix">Key prefix for the current path</param>
-    /// <param name="addValue">Action to add key-value pairs</param>
     /// <param name="value">Dictionary to process</param>
-    private void ProcessDictionary(string[] prefix, Action<string[], string> addValue, object value)
+    private void ProcessDictionary(string[] prefix, object value)
     {
         var type = value.GetType();
         var dictionaryType =
@@ -138,7 +135,7 @@ internal class ObjectConfigurationProvider : ConfigurationProviderBase
                 );
             var memberPath = prefix.Append(keyText).ToArray();
 
-            Process(memberPath, addValue, itemValue);
+            Process(memberPath, itemValue);
         }
     }
 
@@ -146,9 +143,8 @@ internal class ObjectConfigurationProvider : ConfigurationProviderBase
     /// Processes an enumerable by iterating through its items with indices
     /// </summary>
     /// <param name="prefix">Key prefix for the current path</param>
-    /// <param name="addValue">Action to add key-value pairs</param>
     /// <param name="value">Enumerable to process</param>
-    private void ProcessEnumerable(string[] prefix, Action<string[], string> addValue, object value)
+    private void ProcessEnumerable(string[] prefix, object value)
     {
         var index = 0;
 
@@ -159,7 +155,7 @@ internal class ObjectConfigurationProvider : ConfigurationProviderBase
 
             var memberPath = prefix.Append((index++).ToString()).ToArray();
 
-            Process(memberPath, addValue, item);
+            Process(memberPath, item);
         }
     }
 
@@ -167,9 +163,8 @@ internal class ObjectConfigurationProvider : ConfigurationProviderBase
     /// Processes a nullable value by extracting its underlying value
     /// </summary>
     /// <param name="prefix">Key prefix for the current path</param>
-    /// <param name="addValue">Action to add key-value pairs</param>
     /// <param name="value">Nullable value to process</param>
-    private void ProcessNullable(string[] prefix, Action<string[], string> addValue, object value)
+    private void ProcessNullable(string[] prefix, object value)
     {
         var type = value.GetType();
         var getValueOrDefault = type.GetMethod(nameof(Nullable<>.GetValueOrDefault), Type.EmptyTypes).NotNull();
@@ -177,22 +172,21 @@ internal class ObjectConfigurationProvider : ConfigurationProviderBase
         if (innerValue is null)
             return;
 
-        Process(prefix, addValue, innerValue);
+        Process(prefix, innerValue);
     }
 
     /// <summary>
     /// Processes a primitive value by converting it to string
     /// </summary>
     /// <param name="prefix">Key prefix for the current path</param>
-    /// <param name="addValue">Action to add key-value pairs</param>
     /// <param name="value">Primitive value to process</param>
-    private void ProcessPrimitive(string[] prefix, Action<string[], string> addValue, object value)
+    private void ProcessPrimitive(string[] prefix, object value)
     {
         var valueString = value.ToString();
         if (valueString is null)
             return;
 
-        addValue(prefix, valueString);
+        SetAt(prefix, valueString);
     }
 }
 

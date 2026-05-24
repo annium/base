@@ -37,19 +37,6 @@ internal class ConfigurationBuilder : IConfigurationBuilder
     }
 
     /// <summary>
-    /// Initializes a new instance of ConfigurationBuilder with an existing container
-    /// </summary>
-    /// <param name="typeManager">Type manager for type resolution</param>
-    /// <param name="mapper">Mapper for data conversion</param>
-    /// <param name="container">Existing configuration container</param>
-    internal ConfigurationBuilder(ITypeManager typeManager, IMapper mapper, IConfigurationContainer container)
-    {
-        _typeManager = typeManager;
-        _mapper = mapper;
-        _container = container;
-    }
-
-    /// <summary>
     /// Sources registered for deferred loading on the underlying container.
     /// </summary>
     public IReadOnlyList<IConfigurationSource> Sources => _container.Sources;
@@ -58,15 +45,13 @@ internal class ConfigurationBuilder : IConfigurationBuilder
     /// Registers a deferred configuration source on the underlying container.
     /// </summary>
     /// <param name="source">Source to register</param>
-    /// <returns>The container for method chaining</returns>
-    public IConfigurationContainer AddSource(IConfigurationSource source) => _container.AddSource(source);
+    public void AddSource(IConfigurationSource source) => _container.AddSource(source);
 
     /// <summary>
     /// Adds configuration data to the container
     /// </summary>
     /// <param name="config">Configuration data to add</param>
-    /// <returns>The container for method chaining</returns>
-    public IConfigurationContainer Add(IReadOnlyDictionary<string[], string> config) => _container.Add(config);
+    public void Add(IReadOnlyDictionary<string[], string> config) => _container.Add(config);
 
     /// <summary>
     /// Gets all configuration data from the container

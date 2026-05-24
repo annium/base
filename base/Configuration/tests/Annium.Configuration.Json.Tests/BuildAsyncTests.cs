@@ -176,6 +176,31 @@ public class BuildAsyncTests
     }
 
     /// <summary>
+    /// A token cancelled WHILE the request is in-flight (not pre-cancelled) surfaces
+    /// <see cref="OperationCanceledException"/>, not <see cref="TimeoutException"/> — the per-source
+    /// timeout is long enough that only the caller's cancellation can fire. Exercises the
+    /// <c>!ct.IsCancellationRequested</c> catch filter at the async suspension point.
+    /// </summary>
+    [Fact]
+    public async Task LoadAsync_CtCancelledMidFlight_ThrowsOperationCanceledException()
+    {
+        await using var stub = new HangingTcpListener("config.json");
+        await stub.StartAsync(TestContext.Current.CancellationToken);
+
+        using var cts = new CancellationTokenSource();
+        cts.CancelAfter(TimeSpan.FromMilliseconds(500));
+
+        var container = ConfigurationFactory.CreateContainer();
+        container.AddRemoteJson(stub.Uri, optional: false, timeout: TimeSpan.FromSeconds(30));
+
+        var ex = await Wrap.It(async () => await container.BuildAsync(cts.Token)).ThrowsAsync<AggregateException>();
+        ex.InnerExceptions.Has(1);
+        var inner = ex.InnerExceptions[0];
+        var isCancel = inner is OperationCanceledException;
+        isCancel.IsTrue($"expected OperationCanceledException; got {inner.GetType().FullName}: {inner.Message}");
+    }
+
+    /// <summary>
     /// A remote source returning 200 OK with a valid JSON body parses and flattens the
     /// payload into the container — the success branch of <c>RemoteConfigurationSourceBase.LoadAsync</c>.
     /// </summary>

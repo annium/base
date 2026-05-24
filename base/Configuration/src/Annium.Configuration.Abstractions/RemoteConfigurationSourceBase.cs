@@ -8,12 +8,21 @@ namespace Annium.Configuration.Abstractions;
 
 /// <summary>
 /// Base class for deferred configuration sources that fetch a document from a remote endpoint at
-/// <see cref="LoadAsync"/> time. Honors a per-source timeout via <see cref="HttpClient.Timeout"/>.
+/// <see cref="LoadAsync"/> time. Honors a per-source timeout via a per-call linked
+/// <see cref="CancellationTokenSource"/> (<see cref="CancellationTokenSource.CancelAfter(TimeSpan)"/>);
+/// the shared client runs with <see cref="Timeout.InfiniteTimeSpan"/>.
 /// </summary>
 public abstract class RemoteConfigurationSourceBase : IConfigurationSource
 {
     /// <summary>Default timeout when none is supplied at registration.</summary>
     public static readonly TimeSpan DefaultTimeout = TimeSpan.FromSeconds(30);
+
+    /// <summary>
+    /// Shared client for every remote source. Its own <see cref="HttpClient.Timeout"/> is disabled
+    /// (infinite); the per-source timeout is enforced via a linked <see cref="CancellationTokenSource"/>
+    /// in <see cref="LoadAsync"/>. A single client avoids the socket exhaustion of per-call instances.
+    /// </summary>
+    private static readonly HttpClient _client = new() { Timeout = Timeout.InfiniteTimeSpan };
 
     /// <summary>The URI to fetch.</summary>
     private readonly Uri _uri;
@@ -54,16 +63,17 @@ public abstract class RemoteConfigurationSourceBase : IConfigurationSource
     /// <returns>Flattened configuration.</returns>
     public async ValueTask<IReadOnlyDictionary<string[], string>> LoadAsync(CancellationToken ct)
     {
-        using var client = new HttpClient { Timeout = _timeout };
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        cts.CancelAfter(_timeout);
         try
         {
-            using var response = await client.GetAsync(_uri, ct);
+            using var response = await _client.GetAsync(_uri, cts.Token);
             if (!response.IsSuccessStatusCode)
                 throw new HttpRequestException(
                     $"{FormatLabel} configuration not available at {_uri} ({(int)response.StatusCode} {response.ReasonPhrase})"
                 );
 
-            var raw = await response.Content.ReadAsStringAsync(ct);
+            var raw = await response.Content.ReadAsStringAsync(cts.Token);
             return ParseRaw(raw);
         }
         catch (Exception ex) when (!ct.IsCancellationRequested && IsTimeout(ex))
@@ -73,14 +83,11 @@ public abstract class RemoteConfigurationSourceBase : IConfigurationSource
     }
 
     /// <summary>
-    /// Recognises a <c>HttpClient.Timeout</c>-induced failure regardless of how the runtime
-    /// wraps it (raw <see cref="TaskCanceledException"/>, or <see cref="HttpRequestException"/>
-    /// with a <see cref="TimeoutException"/> inner).
+    /// Recognises a timeout-induced cancellation. The caller-token guard on the catch filter has
+    /// already excluded caller cancellation, so the only cancellation that can reach here is the
+    /// per-source <see cref="CancellationTokenSource.CancelAfter(TimeSpan)"/> firing.
     /// </summary>
     /// <param name="ex">Exception to inspect</param>
     /// <returns>True when the exception denotes a timeout</returns>
-    private static bool IsTimeout(Exception ex) =>
-        ex is TaskCanceledException
-        || ex is TimeoutException
-        || (ex is HttpRequestException && ex.InnerException is TimeoutException);
+    private static bool IsTimeout(Exception ex) => ex is OperationCanceledException;
 }

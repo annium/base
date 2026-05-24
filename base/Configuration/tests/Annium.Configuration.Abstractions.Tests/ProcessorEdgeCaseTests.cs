@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Annium.Configuration.Tests.Lib;
@@ -234,6 +235,70 @@ public class ProcessorEdgeCaseTests
     {
         /// <summary>Leaf value.</summary>
         public int Value { get; set; }
+    }
+
+    /// <summary>
+    /// When a dictionary property on a config object has an entry whose key is null,
+    /// <c>ObjectConfigurationProvider.ProcessDictionary</c> throws
+    /// <see cref="InvalidOperationException"/> with a message containing "key is null".
+    /// Standard <c>Dictionary&lt;TKey,TValue&gt;</c> forbids null keys, so the test supplies a
+    /// minimal custom <see cref="IReadOnlyDictionary{TKey,TValue}"/> whose enumerator yields
+    /// a <see cref="KeyValuePair{TKey,TValue}"/> with a null Key — the only way to reach the guard.
+    /// </summary>
+    [Fact]
+    public async Task ProcessDictionary_NullKey_ThrowsInvalidOperationException()
+    {
+        var container = ConfigurationFactory.CreateContainer();
+        var instance = new CfgWithNullKeyDict
+        {
+            Data = new NullKeyDictionary<string>("value"),
+        };
+
+        container.Add(instance);
+
+        var ex = await Wrap.It(async () => await container.BuildAsync(TestContext.Current.CancellationToken))
+            .ThrowsAsync<AggregateException>();
+        ex.InnerExceptions.Has(1);
+        var inner = ex.InnerExceptions[0].As<InvalidOperationException>();
+        inner.Message.Contains("key is null").IsTrue($"expected message containing 'key is null'; got: {inner.Message}");
+    }
+
+    /// <summary>Config type whose <see cref="Data"/> property is an <see cref="IReadOnlyDictionary{TKey,TValue}"/>
+    /// — the provider detects it via the interface check and routes to <c>ProcessDictionary</c>.</summary>
+    public sealed class CfgWithNullKeyDict
+    {
+        /// <summary>Dictionary property that will be handed to ProcessDictionary.</summary>
+        public IReadOnlyDictionary<string?, string> Data { get; set; } = new NullKeyDictionary<string>(string.Empty);
+    }
+
+    /// <summary>
+    /// Minimal <see cref="IReadOnlyDictionary{TKey,TValue}"/> implementation whose only enumerator
+    /// entry has a null key. Used solely to exercise the null-key guard in
+    /// <c>ObjectConfigurationProvider.ProcessDictionary</c>.
+    /// </summary>
+    private sealed class NullKeyDictionary<TValue> : IReadOnlyDictionary<string?, TValue>
+    {
+        private readonly TValue _value;
+
+        public NullKeyDictionary(TValue value) => _value = value;
+
+        public int Count => 1;
+        public IEnumerable<string?> Keys => new string?[] { null };
+        public IEnumerable<TValue> Values => new[] { _value };
+        public TValue this[string? key] => _value;
+        public bool ContainsKey(string? key) => key is null;
+        public bool TryGetValue(string? key, out TValue value)
+        {
+            value = _value;
+            return key is null;
+        }
+
+        public IEnumerator<KeyValuePair<string?, TValue>> GetEnumerator()
+        {
+            yield return new KeyValuePair<string?, TValue>(null, _value);
+        }
+
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     }
 
     /// <summary>

@@ -98,6 +98,31 @@ public class BuildAsyncTests
     }
 
     /// <summary>
+    /// Mirror of the Json mid-flight test: a token cancelled WHILE the request is in-flight
+    /// surfaces <see cref="OperationCanceledException"/>, not <see cref="TimeoutException"/> — the
+    /// per-source timeout is long enough that only the caller's cancellation can fire. Exercises
+    /// the <c>!ct.IsCancellationRequested</c> catch filter at the async suspension point.
+    /// </summary>
+    [Fact]
+    public async Task LoadAsync_CtCancelledMidFlight_ThrowsOperationCanceledException()
+    {
+        await using var stub = new HangingTcpListener("config.yaml");
+        await stub.StartAsync(TestContext.Current.CancellationToken);
+
+        using var cts = new CancellationTokenSource();
+        cts.CancelAfter(TimeSpan.FromMilliseconds(500));
+
+        var container = ConfigurationFactory.CreateContainer();
+        container.AddRemoteYaml(stub.Uri, optional: false, timeout: TimeSpan.FromSeconds(30));
+
+        var ex = await Wrap.It(async () => await container.BuildAsync(cts.Token)).ThrowsAsync<AggregateException>();
+        ex.InnerExceptions.Has(1);
+        var inner = ex.InnerExceptions[0];
+        var isCancel = inner is OperationCanceledException;
+        isCancel.IsTrue($"expected OperationCanceledException; got {inner.GetType().FullName}: {inner.Message}");
+    }
+
+    /// <summary>
     /// Mirror of the Json timeout test: a hanging remote endpoint with <c>optional: false</c>
     /// surfaces a <see cref="TimeoutException"/> or <see cref="HttpRequestException"/> wrapped in
     /// <see cref="AggregateException"/>.

@@ -83,6 +83,22 @@ public class BuildAsyncMergeOrderTests
     }
 
     /// <summary>
+    /// When every source is optional and every one throws, <c>BuildAsync</c> raises no exception
+    /// (the non-optional failure filter yields nothing) and the container is left empty.
+    /// </summary>
+    [Fact]
+    public async Task BuildAsync_AllSourcesOptionalAndAllFail_SucceedsWithEmptyContainer()
+    {
+        var container = ConfigurationFactory.CreateContainer();
+        container.AddSource(new ThrowingSource(new InvalidOperationException("first down"), optional: true));
+        container.AddSource(new ThrowingSource(new NotSupportedException("second down"), optional: true));
+
+        await container.BuildAsync(TestContext.Current.CancellationToken);
+
+        container.Get().Count.Is(0);
+    }
+
+    /// <summary>
     /// In-memory source returning a fixed dictionary on <c>LoadAsync</c>.
     /// </summary>
     private sealed class StubSource : IConfigurationSource

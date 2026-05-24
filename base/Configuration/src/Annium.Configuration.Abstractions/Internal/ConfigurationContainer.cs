@@ -26,24 +26,19 @@ internal sealed class ConfigurationContainer : IConfigurationContainer
     /// Registers a deferred configuration source.
     /// </summary>
     /// <param name="source">Source to register</param>
-    /// <returns>The container for method chaining</returns>
-    public IConfigurationContainer AddSource(IConfigurationSource source)
+    public void AddSource(IConfigurationSource source)
     {
         _sources.Add(source);
-        return this;
     }
 
     /// <summary>
     /// Adds configuration data to the container
     /// </summary>
     /// <param name="config">Configuration data to add</param>
-    /// <returns>The container for method chaining</returns>
-    public IConfigurationContainer Add(IReadOnlyDictionary<string[], string> config)
+    public void Add(IReadOnlyDictionary<string[], string> config)
     {
         foreach (var (key, value) in config)
             _config[key] = value;
-
-        return this;
     }
 
     /// <summary>
