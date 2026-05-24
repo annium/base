@@ -168,11 +168,7 @@ public class BuildAsyncTests
         var container = ConfigurationFactory.CreateContainer();
         container.AddRemoteJson(stub.Uri, optional: false, timeout: TimeSpan.FromSeconds(30));
 
-        var ex = await Wrap.It(async () => await container.BuildAsync(cts.Token)).ThrowsAsync<AggregateException>();
-        ex.InnerExceptions.Has(1);
-        var inner = ex.InnerExceptions[0];
-        var isCancel = inner is OperationCanceledException;
-        isCancel.IsTrue($"expected OperationCanceledException; got {inner.GetType().FullName}: {inner.Message}");
+        await Wrap.It(async () => await container.BuildAsync(cts.Token)).ThrowsAsync<OperationCanceledException>();
     }
 
     /// <summary>
@@ -193,11 +189,7 @@ public class BuildAsyncTests
         var container = ConfigurationFactory.CreateContainer();
         container.AddRemoteJson(stub.Uri, optional: false, timeout: TimeSpan.FromSeconds(30));
 
-        var ex = await Wrap.It(async () => await container.BuildAsync(cts.Token)).ThrowsAsync<AggregateException>();
-        ex.InnerExceptions.Has(1);
-        var inner = ex.InnerExceptions[0];
-        var isCancel = inner is OperationCanceledException;
-        isCancel.IsTrue($"expected OperationCanceledException; got {inner.GetType().FullName}: {inner.Message}");
+        await Wrap.It(async () => await container.BuildAsync(cts.Token)).ThrowsAsync<OperationCanceledException>();
     }
 
     /// <summary>

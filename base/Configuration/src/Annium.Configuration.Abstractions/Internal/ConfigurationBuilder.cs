@@ -37,27 +37,10 @@ internal class ConfigurationBuilder : IConfigurationBuilder
     }
 
     /// <summary>
-    /// Sources registered for deferred loading on the underlying container.
-    /// </summary>
-    public IReadOnlyList<IConfigurationSource> Sources => _container.Sources;
-
-    /// <summary>
-    /// Registers a deferred configuration source on the underlying container.
-    /// </summary>
-    /// <param name="source">Source to register</param>
-    public void AddSource(IConfigurationSource source) => _container.AddSource(source);
-
-    /// <summary>
-    /// Adds configuration data to the container
+    /// Adds configuration data to the builder's data store.
     /// </summary>
     /// <param name="config">Configuration data to add</param>
     public void Add(IReadOnlyDictionary<string[], string> config) => _container.Add(config);
-
-    /// <summary>
-    /// Gets all configuration data from the container
-    /// </summary>
-    /// <returns>Dictionary containing all configuration data</returns>
-    public IReadOnlyDictionary<string[], string> Get() => _container.Get();
 
     /// <summary>
     /// Builds an instance of type T from the configuration data

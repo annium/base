@@ -38,7 +38,8 @@ public static class ConfigurationContainerExtensions
     /// Loads every registered source in parallel, then merges results in registration order
     /// (later sources override earlier ones). Sources marked <c>Optional</c> swallow load
     /// failures and contribute an empty dictionary; any non-optional failures surface as a
-    /// single <see cref="AggregateException"/>.
+    /// single <see cref="AggregateException"/>. Caller-requested cancellation propagates as
+    /// <see cref="OperationCanceledException"/> regardless of any source's <c>Optional</c> flag.
     /// </summary>
     /// <param name="container">Container whose sources to flush</param>
     /// <param name="ct">Cancellation token forwarded to each source</param>
@@ -56,6 +57,11 @@ public static class ConfigurationContainerExtensions
                 {
                     var data = await s.LoadAsync(ct);
                     return (source: s, data, error: null);
+                }
+                catch (OperationCanceledException) when (ct.IsCancellationRequested)
+                {
+                    // caller-requested cancellation must propagate regardless of source.Optional
+                    throw;
                 }
                 catch (Exception ex)
                 {

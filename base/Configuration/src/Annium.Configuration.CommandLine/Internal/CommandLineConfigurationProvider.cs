@@ -17,6 +17,11 @@ internal class CommandLineConfigurationProvider : ConfigurationProviderBase
     private const string Separator = "|";
 
     /// <summary>
+    /// Sentinel for "no following argument" used when the current argument is the last one.
+    /// </summary>
+    private const string NoNextArg = "";
+
+    /// <summary>
     /// Command line arguments to process
     /// </summary>
     private readonly string[] _args;
@@ -49,7 +54,7 @@ internal class CommandLineConfigurationProvider : ConfigurationProviderBase
                 continue;
 
             var name = ParseName(value);
-            var next = i < _args.Length - 1 ? _args[i + 1] : string.Empty;
+            var next = i < _args.Length - 1 ? _args[i + 1] : NoNextArg;
 
             if (IsOption(value, next))
             {
@@ -104,7 +109,7 @@ internal class CommandLineConfigurationProvider : ConfigurationProviderBase
     /// <param name="next">Next value in arguments</param>
     /// <returns>True if option with value, false otherwise</returns>
     private bool IsOption(string value, string next) =>
-        IsOptionLike(value) && next != string.Empty && !IsOptionLike(next);
+        IsOptionLike(value) && next != NoNextArg && !IsOptionLike(next);
 
     /// <summary>
     /// Determines if a value is a flag without a following value
@@ -113,7 +118,7 @@ internal class CommandLineConfigurationProvider : ConfigurationProviderBase
     /// <param name="next">Next value in arguments</param>
     /// <returns>True if flag, false otherwise</returns>
     private bool IsFlag(string value, string next) =>
-        IsOptionLike(value) && (next == string.Empty || IsOptionLike(next));
+        IsOptionLike(value) && (next == NoNextArg || IsOptionLike(next));
 
     /// <summary>
     /// Determines if a value looks like an option or flag (starts with -)
