@@ -69,6 +69,7 @@ public static partial class ResolveGenericArgumentsByImplementationExtension
         target = implementation;
         (Type[]? sourceArgs, Type[]? targetArgs) = target switch
         {
+            // GetElementType() is non-null for array types; this arm runs only when IsArray is true.
             { IsArray: true } => (new[] { source.GetElementType()! }, new[] { target.GetElementType()! }),
             { IsGenericType: true } => (source.GetGenericArguments(), target.GetGenericArguments()),
             _ => (null, null),

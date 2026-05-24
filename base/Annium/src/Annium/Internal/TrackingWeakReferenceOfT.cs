@@ -45,7 +45,9 @@ internal sealed class TrackingWeakReference<T> : ITrackingWeakReference<T>
     /// </summary>
     /// <param name="target">When this method returns, contains the referenced object if it is still alive; otherwise, null.</param>
     /// <returns>true if the referenced object is still alive; otherwise, false.</returns>
-    public bool TryGetTarget(out T target) => _ref.TryGetTarget(out target!);
+    public bool TryGetTarget(out T target) =>
+        // out target! mirrors WeakReference<T>.TryGetTarget's [MaybeNullWhen(false)] contract: target is set when returning true.
+        _ref.TryGetTarget(out target!);
 
     /// <summary>
     /// Finalizes the instance and raises the <see cref="OnCollected"/> event off the finalizer thread.

@@ -105,5 +105,6 @@ internal static class AnalyzerHelpers
     /// <param name="compilation">The compilation to resolve against.</param>
     /// <returns>The resolved <c>System.Exception</c> symbol, or <see langword="null"/> when it can't be found.</returns>
     internal static INamedTypeSymbol? ResolveExceptionType(Compilation compilation) =>
+        // FullName is non-null for the concrete Exception type (only open generics / arrays return null).
         compilation.GetTypeByMetadataName(typeof(Exception).FullName!);
 }

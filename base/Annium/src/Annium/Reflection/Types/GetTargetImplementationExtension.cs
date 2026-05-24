@@ -176,6 +176,8 @@ public static class GetTargetImplementationExtension
             if (!type.IsArray)
                 return null;
 
+            // Both types are arrays here (target.IsArray checked above, type.IsArray enforced by the early return),
+            // so GetElementType() is non-null.
             var elementImplementation = type.GetElementType()!
                 .GetTargetImplementation(target.GetElementType()!, genericParameters);
 
@@ -389,6 +391,7 @@ public static class GetTargetImplementationExtension
                 return null;
         }
 
+        // The loop above returns null on any null arg, so args has no null elements here.
         if (!target.GetGenericTypeDefinition().TryMakeGenericType(out var result, args!))
             return null;
 

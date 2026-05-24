@@ -40,6 +40,8 @@ public static class GetInheritanceChainExtension
             if (type.BaseType is not null)
                 while (type.BaseType != typeof(object))
                 {
+                    // BaseType is non-null in this loop: entered only when type.BaseType is not null,
+                    // and the loop runs while BaseType != object.
                     chain.Add(type.BaseType!);
                     type = type.BaseType!;
                 }

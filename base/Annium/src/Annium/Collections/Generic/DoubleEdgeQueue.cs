@@ -26,13 +26,20 @@ public sealed class DoubleEdgeQueue<T> : IDoubleEdgeQueue<T>
     /// </summary>
     /// <exception cref="InvalidOperationException">Thrown if the queue is empty.</exception>
     public T First =>
-        _entries.Count > 0 ? _entries.First!.Value : throw new InvalidOperationException("queue is empty");
+        // First is non-null when Count > 0 (LinkedList invariant).
+        _entries.Count > 0
+            ? _entries.First!.Value
+            : throw new InvalidOperationException("queue is empty");
 
     /// <summary>
     /// Gets the last element in the queue.
     /// </summary>
     /// <exception cref="InvalidOperationException">Thrown if the queue is empty.</exception>
-    public T Last => _entries.Count > 0 ? _entries.Last!.Value : throw new InvalidOperationException("queue is empty");
+    public T Last =>
+        // Last is non-null when Count > 0 (LinkedList invariant).
+        _entries.Count > 0
+            ? _entries.Last!.Value
+            : throw new InvalidOperationException("queue is empty");
 
     /// <summary>
     /// The underlying linked list storing the elements.

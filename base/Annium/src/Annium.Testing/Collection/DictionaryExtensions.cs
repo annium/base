@@ -89,6 +89,7 @@ public static class DictionaryExtensions
         where TKey : notnull
     {
         CheckCount(value, value?.Count ?? 0, count, message, valueEx, countEx);
+        // The Check* helper above throws ArgumentNullException when value is null, so value is non-null here.
         return value!;
     }
 
@@ -115,6 +116,7 @@ public static class DictionaryExtensions
         where TKey : notnull
     {
         CheckCount(value, value?.Count ?? 0, count, message, valueEx, countEx);
+        // The Check* helper above throws ArgumentNullException when value is null, so value is non-null here.
         return value!;
     }
 
@@ -137,6 +139,7 @@ public static class DictionaryExtensions
         where TKey : notnull
     {
         CheckEmpty(value, value?.Count ?? 0, message, valueEx);
+        // The Check* helper above throws ArgumentNullException when value is null, so value is non-null here.
         return value!;
     }
 
@@ -159,6 +162,7 @@ public static class DictionaryExtensions
         where TKey : notnull
     {
         CheckEmpty(value, value?.Count ?? 0, message, valueEx);
+        // The Check* helper above throws ArgumentNullException when value is null, so value is non-null here.
         return value!;
     }
 
@@ -181,6 +185,7 @@ public static class DictionaryExtensions
         where TKey : notnull
     {
         CheckNotEmpty(value, value?.Count ?? 0, message, valueEx);
+        // The Check* helper above throws ArgumentNullException when value is null, so value is non-null here.
         return value!;
     }
 
@@ -203,6 +208,7 @@ public static class DictionaryExtensions
         where TKey : notnull
     {
         CheckNotEmpty(value, value?.Count ?? 0, message, valueEx);
+        // The Check* helper above throws ArgumentNullException when value is null, so value is non-null here.
         return value!;
     }
 

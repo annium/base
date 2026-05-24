@@ -116,4 +116,48 @@ public class WaitTests
         sw.Stop();
         (sw.ElapsedMilliseconds >= 150 && sw.ElapsedMilliseconds < 2000).IsTrue();
     }
+
+    /// <summary>
+    /// Verifies that the async-condition overload of WhileAsync completes immediately when the condition is already false.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact]
+    public async Task WhileAsync_AsyncCondition_ConditionImmediatelyFalse_CompletesImmediately()
+    {
+        var sw = Stopwatch.StartNew();
+        await Wait.WhileAsync(() => new ValueTask<bool>(false), ms: 5000);
+        sw.Stop();
+
+        // First check is false — the loop body (and its poll delay) is never entered.
+        (sw.ElapsedMilliseconds < 1000).IsTrue();
+    }
+
+    /// <summary>
+    /// Verifies that the async-condition overload of WhileAsync exits when the condition flips to false,
+    /// rather than relying on the timeout — locks the <c>await condition()</c> result driving the loop exit.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact]
+    public async Task WhileAsync_AsyncCondition_ConditionBecomesFalse_Completes()
+    {
+        var flipAt = DateTime.UtcNow.AddMilliseconds(100);
+        await Wait.WhileAsync(() => new ValueTask<bool>(DateTime.UtcNow < flipAt), ms: 5000, pollDelay: 10);
+
+        // Reaching here without timing out means the loop exited on the condition flipping false, not the 5s timeout.
+        (DateTime.UtcNow >= flipAt).IsTrue();
+    }
+
+    /// <summary>
+    /// Verifies that the async-condition overload of UntilAsync completes as soon as the condition flips to true.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact]
+    public async Task UntilAsync_AsyncCondition_ConditionFlips_Completes()
+    {
+        var flipAt = DateTime.UtcNow.AddMilliseconds(100);
+        await Wait.UntilAsync(() => new ValueTask<bool>(DateTime.UtcNow >= flipAt), ms: 5000, pollDelay: 10);
+
+        // Reaching here without timing out means the loop exited on the condition flipping true, not the 5s timeout.
+        (DateTime.UtcNow >= flipAt).IsTrue();
+    }
 }
