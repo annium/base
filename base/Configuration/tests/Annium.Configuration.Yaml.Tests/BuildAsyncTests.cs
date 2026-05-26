@@ -18,6 +18,11 @@ namespace Annium.Configuration.Yaml.Tests;
 public class BuildAsyncTests
 {
     /// <summary>
+    /// Resource name served by the stub TCP listeners in these tests.
+    /// </summary>
+    private const string ResourcePath = "config.yaml";
+
+    /// <summary>
     /// Pointing <c>AddYamlFile(optional: false)</c> at a missing file makes <c>BuildAsync</c>
     /// throw <see cref="AggregateException"/> wrapping a <see cref="FileNotFoundException"/>.
     /// </summary>
@@ -51,6 +56,34 @@ public class BuildAsyncTests
     }
 
     /// <summary>
+    /// Pointing <c>AddYamlFile</c> at a real file flattens its contents into the container
+    /// (mirror of the Json existing-file test — exercises the YamlFileSource happy path through
+    /// the BuildAsync pipeline, not just the provider).
+    /// </summary>
+    [Fact]
+    public async Task BuildAsync_AddYamlFile_ExistingFile_Loads()
+    {
+        var yamlFile = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllText(yamlFile, "plain: 42\nsection:\n  value: ok\n");
+            var container = ConfigurationFactory.CreateContainer();
+            container.AddYamlFile(yamlFile);
+
+            await container.BuildAsync(TestContext.Current.CancellationToken);
+
+            var data = container.Get();
+            data.Count.Is(2);
+            data.At(new[] { "plain" }).Is("42");
+            data.At(new[] { "section", "value" }).Is("ok");
+        }
+        finally
+        {
+            File.Delete(yamlFile);
+        }
+    }
+
+    /// <summary>
     /// Mirror of the Json test: a remote source returning a non-2xx response surfaces an
     /// <see cref="HttpRequestException"/> wrapped in <see cref="AggregateException"/>.
     /// </summary>
@@ -60,7 +93,7 @@ public class BuildAsyncTests
         await using var stub = new StaticResponseTcpListener(
             HttpStatusCode.InternalServerError,
             "value: ok",
-            "config.yaml",
+            ResourcePath,
             contentType: "application/x-yaml"
         );
         await stub.StartAsync(TestContext.Current.CancellationToken);
@@ -81,7 +114,7 @@ public class BuildAsyncTests
     [Fact]
     public async Task LoadAsync_CtCancelled_ThrowsOperationCanceledException()
     {
-        await using var stub = new HangingTcpListener("config.yaml");
+        await using var stub = new HangingTcpListener(ResourcePath);
         await stub.StartAsync(TestContext.Current.CancellationToken);
 
         using var cts = new CancellationTokenSource();
@@ -102,7 +135,7 @@ public class BuildAsyncTests
     [Fact]
     public async Task LoadAsync_CtCancelledMidFlight_ThrowsOperationCanceledException()
     {
-        await using var stub = new HangingTcpListener("config.yaml");
+        await using var stub = new HangingTcpListener(ResourcePath);
         await stub.StartAsync(TestContext.Current.CancellationToken);
 
         using var cts = new CancellationTokenSource();
@@ -115,6 +148,27 @@ public class BuildAsyncTests
     }
 
     /// <summary>
+    /// An OPTIONAL remote source whose token is cancelled mid-flight must still surface
+    /// <see cref="OperationCanceledException"/> — caller cancellation is never silenced by the
+    /// <c>Optional</c> flag (only load failures like timeout are). Covers the optional × mid-flight
+    /// quadrant of the cancellation matrix.
+    /// </summary>
+    [Fact]
+    public async Task LoadAsync_OptionalCtCancelledMidFlight_ThrowsOperationCanceledException()
+    {
+        await using var stub = new HangingTcpListener(ResourcePath);
+        await stub.StartAsync(TestContext.Current.CancellationToken);
+
+        using var cts = new CancellationTokenSource();
+        cts.CancelAfter(TimeSpan.FromMilliseconds(500));
+
+        var container = ConfigurationFactory.CreateContainer();
+        container.AddRemoteYaml(stub.Uri, optional: true, timeout: TimeSpan.FromSeconds(30));
+
+        await Wrap.It(async () => await container.BuildAsync(cts.Token)).ThrowsAsync<OperationCanceledException>();
+    }
+
+    /// <summary>
     /// Mirror of the Json timeout test: a hanging remote endpoint with <c>optional: false</c>
     /// surfaces a <see cref="TimeoutException"/> or <see cref="HttpRequestException"/> wrapped in
     /// <see cref="AggregateException"/>.
@@ -122,7 +176,7 @@ public class BuildAsyncTests
     [Fact]
     public async Task BuildAsync_AddRemoteYaml_TimeoutNotOptional_Throws()
     {
-        await using var stub = new HangingTcpListener("config.yaml");
+        await using var stub = new HangingTcpListener(ResourcePath);
         await stub.StartAsync(TestContext.Current.CancellationToken);
 
         var container = ConfigurationFactory.CreateContainer();
@@ -143,7 +197,7 @@ public class BuildAsyncTests
     [Fact]
     public async Task BuildAsync_AddRemoteYaml_TimeoutOptional_Succeeds()
     {
-        await using var stub = new HangingTcpListener("config.yaml");
+        await using var stub = new HangingTcpListener(ResourcePath);
         await stub.StartAsync(TestContext.Current.CancellationToken);
 
         var container = ConfigurationFactory.CreateContainer();
@@ -165,7 +219,7 @@ public class BuildAsyncTests
         await using var stub = new StaticResponseTcpListener(
             HttpStatusCode.OK,
             "plain: 42\nsection:\n  value: ok\n",
-            "config.yaml",
+            ResourcePath,
             contentType: "application/x-yaml"
         );
         await stub.StartAsync(TestContext.Current.CancellationToken);

@@ -255,7 +255,13 @@ file static class Helper
     {
         return type.GetAllProperties(BindingFlags.Public | BindingFlags.Instance)
             .Where(x => x.CanRead && x.GetMethod?.GetParameters().Length == 0)
-            .Concat(type.GetAllFields(BindingFlags.Public | BindingFlags.Instance).OfType<MemberInfo>())
+            // readonly fields are skipped by ConfigurationProcessor.ProcessObject's restore (it filters
+            // !IsInitOnly); excluding them here keeps the flatten and restore member sets symmetric.
+            .Concat(
+                type.GetAllFields(BindingFlags.Public | BindingFlags.Instance)
+                    .Where(f => !f.IsInitOnly)
+                    .OfType<MemberInfo>()
+            )
             .ToArray();
     }
 }

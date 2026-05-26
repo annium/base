@@ -99,6 +99,24 @@ public class BuildAsyncMergeOrderTests
     }
 
     /// <summary>
+    /// An optional source that observes a pre-cancelled token must NOT swallow the caller's
+    /// cancellation: <c>BuildAsync</c> propagates <see cref="OperationCanceledException"/> directly,
+    /// regardless of the source's <c>Optional</c> flag. Locks in the optional-source branch of the
+    /// <c>catch (OperationCanceledException) when (ct.IsCancellationRequested)</c> guard.
+    /// </summary>
+    [Fact]
+    public async Task BuildAsync_OptionalSourcePrecancelledCt_ThrowsOperationCanceledException()
+    {
+        using var cts = new CancellationTokenSource();
+        await cts.CancelAsync();
+
+        var container = ConfigurationFactory.CreateContainer();
+        container.AddSource(new CancelObservingSource(optional: true));
+
+        await Wrap.It(async () => await container.BuildAsync(cts.Token)).ThrowsAsync<OperationCanceledException>();
+    }
+
+    /// <summary>
     /// In-memory source returning a fixed dictionary on <c>LoadAsync</c>.
     /// </summary>
     private sealed class StubSource : IConfigurationSource
@@ -135,5 +153,27 @@ public class BuildAsyncMergeOrderTests
         public bool Optional { get; }
 
         public ValueTask<IReadOnlyDictionary<string[], string>> LoadAsync(CancellationToken ct) => throw _ex;
+    }
+
+    /// <summary>
+    /// Source that honors the cancellation token on <c>LoadAsync</c> — used to verify that
+    /// caller cancellation propagates even when the source is optional.
+    /// </summary>
+    private sealed class CancelObservingSource : IConfigurationSource
+    {
+        private static readonly IReadOnlyDictionary<string[], string> _empty = new Dictionary<string[], string>();
+
+        public CancelObservingSource(bool optional)
+        {
+            Optional = optional;
+        }
+
+        public bool Optional { get; }
+
+        public ValueTask<IReadOnlyDictionary<string[], string>> LoadAsync(CancellationToken ct)
+        {
+            ct.ThrowIfCancellationRequested();
+            return new(_empty);
+        }
     }
 }

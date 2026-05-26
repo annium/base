@@ -72,5 +72,7 @@ public class ObjectConfigurationProviderTest : TestBase
         result.Abstract.As<ConfigTwo>().Value.Is(10);
         result.Abstract.IsEqual(nested);
         nested.IsEqual(new ConfigTwo { Value = 10 });
+        result.Tuple.Item1.Is("demo|");
+        result.Tuple.Item2.Is(11);
     }
 }

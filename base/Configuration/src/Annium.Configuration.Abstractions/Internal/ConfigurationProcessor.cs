@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Annium.Core.Mapper;
 using Annium.Core.Runtime.Types;
 using Annium.Reflection;
@@ -204,12 +205,35 @@ internal class ConfigurationProcessor<T>
 
         // Activator.CreateInstance is BCL-guaranteed non-null for concrete reference types; abstract path resolved via ResolveByKey above
         var result = Activator.CreateInstance(type)!;
-        var properties = type.GetProperties().Where(e => e.CanWrite).ToArray();
+
+        // Mirror ObjectConfigurationProvider's flattener exactly: it enumerates members via
+        // GetAllProperties/GetAllFields (own + interface-declared). DistinctBy(Name) collapses the
+        // interface/class duplicates those return, keeping the concrete member (enumerated first).
+        // Exclude interface-declared PropertyInfo (e.g. unoverridden default-interface-method
+        // properties): SetValue on those against a concrete instance throws. The class's own
+        // implementation of an interface property is enumerated first and kept by DistinctBy.
+        var properties = type.GetAllProperties(BindingFlags.Public | BindingFlags.Instance)
+            .Where(e => e.CanWrite && e.DeclaringType is { IsInterface: false })
+            .DistinctBy(e => e.Name)
+            .ToArray();
         foreach (var property in properties)
         {
             _context.Push(property.Name);
             if (KeyExists())
                 property.SetValue(result, Process(property.PropertyType));
+            _context.Pop();
+        }
+
+        // Public instance fields (e.g. ValueTuple's Item1/Item2) are flattened too, so restore them.
+        var fields = type.GetAllFields(BindingFlags.Public | BindingFlags.Instance)
+            .Where(e => !e.IsInitOnly)
+            .DistinctBy(e => e.Name)
+            .ToArray();
+        foreach (var field in fields)
+        {
+            _context.Push(field.Name);
+            if (KeyExists())
+                field.SetValue(result, Process(field.FieldType));
             _context.Pop();
         }
 

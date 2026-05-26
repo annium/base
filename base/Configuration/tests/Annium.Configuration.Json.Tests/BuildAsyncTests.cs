@@ -18,6 +18,11 @@ namespace Annium.Configuration.Json.Tests;
 public class BuildAsyncTests
 {
     /// <summary>
+    /// Resource name served by the stub TCP listeners in these tests.
+    /// </summary>
+    private const string ResourcePath = "config.json";
+
+    /// <summary>
     /// An empty container (no sources registered) is a no-op for <c>BuildAsync</c>.
     /// </summary>
     [Fact]
@@ -100,7 +105,7 @@ public class BuildAsyncTests
     [Fact]
     public async Task BuildAsync_AddRemoteJson_TimeoutNotOptional_Throws()
     {
-        await using var stub = new HangingTcpListener("config.json");
+        await using var stub = new HangingTcpListener(ResourcePath);
         await stub.StartAsync(TestContext.Current.CancellationToken);
 
         var container = ConfigurationFactory.CreateContainer();
@@ -121,7 +126,7 @@ public class BuildAsyncTests
     [Fact]
     public async Task BuildAsync_AddRemoteJson_TimeoutOptional_Succeeds()
     {
-        await using var stub = new HangingTcpListener("config.json");
+        await using var stub = new HangingTcpListener(ResourcePath);
         await stub.StartAsync(TestContext.Current.CancellationToken);
 
         var container = ConfigurationFactory.CreateContainer();
@@ -139,7 +144,7 @@ public class BuildAsyncTests
     [Fact]
     public async Task LoadAsync_Non2xxResponse_ThrowsHttpRequestException()
     {
-        await using var stub = new StaticResponseTcpListener(HttpStatusCode.InternalServerError, "{}", "config.json");
+        await using var stub = new StaticResponseTcpListener(HttpStatusCode.InternalServerError, "{}", ResourcePath);
         await stub.StartAsync(TestContext.Current.CancellationToken);
 
         var container = ConfigurationFactory.CreateContainer();
@@ -159,7 +164,7 @@ public class BuildAsyncTests
     [Fact]
     public async Task LoadAsync_CtCancelled_ThrowsOperationCanceledException()
     {
-        await using var stub = new HangingTcpListener("config.json");
+        await using var stub = new HangingTcpListener(ResourcePath);
         await stub.StartAsync(TestContext.Current.CancellationToken);
 
         using var cts = new CancellationTokenSource();
@@ -180,7 +185,7 @@ public class BuildAsyncTests
     [Fact]
     public async Task LoadAsync_CtCancelledMidFlight_ThrowsOperationCanceledException()
     {
-        await using var stub = new HangingTcpListener("config.json");
+        await using var stub = new HangingTcpListener(ResourcePath);
         await stub.StartAsync(TestContext.Current.CancellationToken);
 
         using var cts = new CancellationTokenSource();
@@ -188,6 +193,27 @@ public class BuildAsyncTests
 
         var container = ConfigurationFactory.CreateContainer();
         container.AddRemoteJson(stub.Uri, optional: false, timeout: TimeSpan.FromSeconds(30));
+
+        await Wrap.It(async () => await container.BuildAsync(cts.Token)).ThrowsAsync<OperationCanceledException>();
+    }
+
+    /// <summary>
+    /// An OPTIONAL remote source whose token is cancelled mid-flight must still surface
+    /// <see cref="OperationCanceledException"/> — caller cancellation is never silenced by the
+    /// <c>Optional</c> flag (only load failures like timeout are). Covers the optional × mid-flight
+    /// quadrant of the cancellation matrix.
+    /// </summary>
+    [Fact]
+    public async Task LoadAsync_OptionalCtCancelledMidFlight_ThrowsOperationCanceledException()
+    {
+        await using var stub = new HangingTcpListener(ResourcePath);
+        await stub.StartAsync(TestContext.Current.CancellationToken);
+
+        using var cts = new CancellationTokenSource();
+        cts.CancelAfter(TimeSpan.FromMilliseconds(500));
+
+        var container = ConfigurationFactory.CreateContainer();
+        container.AddRemoteJson(stub.Uri, optional: true, timeout: TimeSpan.FromSeconds(30));
 
         await Wrap.It(async () => await container.BuildAsync(cts.Token)).ThrowsAsync<OperationCanceledException>();
     }
@@ -202,7 +228,7 @@ public class BuildAsyncTests
         await using var stub = new StaticResponseTcpListener(
             HttpStatusCode.OK,
             "{\"plain\":42,\"section\":{\"value\":\"ok\"}}",
-            "config.json"
+            ResourcePath
         );
         await stub.StartAsync(TestContext.Current.CancellationToken);
 

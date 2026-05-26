@@ -70,4 +70,19 @@ public class CommandLineSourceTests
             $"executable path '{executablePath}' must not appear as a configuration key (Skip(1) on env args)"
         );
     }
+
+    /// <summary>
+    /// Arguments with no leading dash are positional and skipped by <c>IsPosition</c>; an
+    /// all-positional input therefore produces an empty configuration result.
+    /// </summary>
+    [Fact]
+    public async Task Read_PositionalOnlyArgs_ProducesEmptyResult()
+    {
+        var container = ConfigurationFactory.CreateContainer();
+        container.AddCommandLineArgs(new[] { "positional", "another" });
+
+        await container.BuildAsync(TestContext.Current.CancellationToken);
+
+        container.Get().Count.Is(0);
+    }
 }

@@ -26,6 +26,11 @@ public abstract class ConfigurationProviderBase
     protected string[] Path => _context.Reverse().ToArray();
 
     /// <summary>
+    /// Gets the current path joined with <c>'.'</c>, for use in diagnostic messages.
+    /// </summary>
+    protected string PathString => string.Join('.', Path);
+
+    /// <summary>
     /// Snapshot of the accumulated data, suitable for returning from <see cref="Read"/>.
     /// Returns a fresh dictionary copy each access — the caller's reference is not aliased to
     /// the live <c>_data</c> field, so a subsequent <see cref="Read"/> cannot mutate it.
