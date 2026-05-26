@@ -62,9 +62,7 @@ internal class YamlConfigurationProvider : ConfigurationProviderBase
                 throw new InvalidOperationException($"YAML mapping key must be a scalar, got {key.GetType().Name}");
 
             if (scalarKey.Value is null)
-                throw new InvalidOperationException(
-                    $"YAML mapping key cannot be null at path: {PathString}"
-                );
+                throw new InvalidOperationException($"YAML mapping key cannot be null at path: {PathString}");
 
             Push(scalarKey.Value);
 
@@ -101,9 +99,7 @@ internal class YamlConfigurationProvider : ConfigurationProviderBase
             else if (item is YamlScalarNode scalarItem)
                 Process(scalarItem);
             else
-                throw new InvalidOperationException(
-                    $"Unexpected YAML node type {item.GetType().Name} at {PathString}"
-                );
+                throw new InvalidOperationException($"Unexpected YAML node type {item.GetType().Name} at {PathString}");
 
             Pop();
             index++;

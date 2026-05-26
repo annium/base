@@ -249,10 +249,7 @@ public class ProcessorEdgeCaseTests
     public async Task ProcessDictionary_NullKey_ThrowsInvalidOperationException()
     {
         var container = ConfigurationFactory.CreateContainer();
-        var instance = new CfgWithNullKeyDict
-        {
-            Data = new NullKeyDictionary<string>("value"),
-        };
+        var instance = new CfgWithNullKeyDict { Data = new NullKeyDictionary<string>("value") };
 
         container.Add(instance);
 
@@ -260,7 +257,9 @@ public class ProcessorEdgeCaseTests
             .ThrowsAsync<AggregateException>();
         ex.InnerExceptions.Has(1);
         var inner = ex.InnerExceptions[0].As<InvalidOperationException>();
-        inner.Message.Contains("key is null").IsTrue($"expected message containing 'key is null'; got: {inner.Message}");
+        inner
+            .Message.Contains("key is null")
+            .IsTrue($"expected message containing 'key is null'; got: {inner.Message}");
     }
 
     /// <summary>Config type whose <see cref="Data"/> property is an <see cref="IReadOnlyDictionary{TKey,TValue}"/>
@@ -286,7 +285,9 @@ public class ProcessorEdgeCaseTests
         public IEnumerable<string?> Keys => new string?[] { null };
         public IEnumerable<TValue> Values => new[] { _value };
         public TValue this[string? key] => _value;
+
         public bool ContainsKey(string? key) => key is null;
+
         public bool TryGetValue(string? key, out TValue value)
         {
             value = _value;
@@ -407,10 +408,7 @@ public class ProcessorEdgeCaseTests
         // Raw flattened data with a non-integer segment under the "items" list path.
         var data = new Dictionary<string[], string> { [new[] { "items", "notAnIndex" }] = "5" };
 
-        await container.AddConfigurationAsync<BigListCfg>(
-            cfg => cfg.Add(data),
-            TestContext.Current.CancellationToken
-        );
+        await container.AddConfigurationAsync<BigListCfg>(cfg => cfg.Add(data), TestContext.Current.CancellationToken);
         var sp = container.BuildServiceProvider();
 
         var ex = Wrap.It(() => sp.Resolve<BigListCfg>()).Throws<InvalidOperationException>();

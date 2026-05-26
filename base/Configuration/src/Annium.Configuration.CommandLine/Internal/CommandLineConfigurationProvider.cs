@@ -108,8 +108,7 @@ internal class CommandLineConfigurationProvider : ConfigurationProviderBase
     /// <param name="value">Current value to check</param>
     /// <param name="next">Next value in arguments</param>
     /// <returns>True if option with value, false otherwise</returns>
-    private bool IsOption(string value, string next) =>
-        IsOptionLike(value) && next != NoNextArg && !IsOptionLike(next);
+    private bool IsOption(string value, string next) => IsOptionLike(value) && next != NoNextArg && !IsOptionLike(next);
 
     /// <summary>
     /// Determines if a value is a flag without a following value
@@ -117,8 +116,7 @@ internal class CommandLineConfigurationProvider : ConfigurationProviderBase
     /// <param name="value">Current value to check</param>
     /// <param name="next">Next value in arguments</param>
     /// <returns>True if flag, false otherwise</returns>
-    private bool IsFlag(string value, string next) =>
-        IsOptionLike(value) && (next == NoNextArg || IsOptionLike(next));
+    private bool IsFlag(string value, string next) => IsOptionLike(value) && (next == NoNextArg || IsOptionLike(next));
 
     /// <summary>
     /// Determines if a value looks like an option or flag (starts with -)
