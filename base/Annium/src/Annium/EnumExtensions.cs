@@ -167,6 +167,7 @@ public static class EnumExtensions
 
         foreach (var item in type.GetFields().Where(x => x.IsStatic))
         {
+            // GetValue(null) returns the static enum field's value (non-null); ToString() on the converted primitive is non-null.
             var value = (ValueType)item.GetValue(null)!;
 
             result.Add(item.Name.ToLowerInvariant(), value);
@@ -226,9 +227,11 @@ public static class EnumExtensions
         // if not flags - simply add all values
         if (type.GetCustomAttribute<FlagsAttribute>() is null)
             foreach (var item in type.GetFields().Where(x => x.IsStatic))
+                // GetValue(null) returns the static enum field's value, which is non-null.
                 result.Add((ValueType)Convert.ChangeType(item.GetValue(null)!, valueType));
         else
         {
+            // GetValue(null) returns each static enum field's value, which is non-null.
             var values = type.GetFields()
                 .Where(x => x.IsStatic)
                 .Select(x => (long)Convert.ChangeType(x.GetValue(null)!, typeof(long)))

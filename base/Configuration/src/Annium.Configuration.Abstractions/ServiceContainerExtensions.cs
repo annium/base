@@ -104,29 +104,38 @@ public static class ServiceContainerExtensions
     }
 
     /// <summary>
-    /// Registers all nested properties of the specified type in the service container
+    /// Registers all nested properties of the specified type in the service container.
+    /// Uses a visited-set to prevent infinite recursion on self-referential or
+    /// mutually-referential config types (which would otherwise StackOverflow).
     /// </summary>
     /// <param name="container">The service container</param>
     /// <param name="type">The type to register properties for</param>
     private static void Register(IServiceContainer container, Type type)
     {
+        var visited = new HashSet<Type> { type };
         foreach (var property in GetRegisteredProperties(type))
-            Register(container, type, property);
+            Register(container, type, property, visited);
     }
 
     /// <summary>
-    /// Registers a specific property of a type in the service container
+    /// Registers a specific property of a type in the service container, recursing into
+    /// nested non-collection reference-type properties guarded by <paramref name="visited"/>.
     /// </summary>
     /// <param name="container">The service container</param>
     /// <param name="type">The type containing the property</param>
     /// <param name="property">The property to register</param>
-    private static void Register(IServiceContainer container, Type type, PropertyInfo property)
+    /// <param name="visited">Set of property types already registered in this recursion — prevents cycles.</param>
+    private static void Register(IServiceContainer container, Type type, PropertyInfo property, HashSet<Type> visited)
     {
         var propertyType = property.PropertyType;
-        container.Add(propertyType, sp => property.GetValue(sp.Resolve(type))!).AsSelf().Singleton();
+        // Skip cycle: a property of an already-registered type would recurse forever.
+        if (!visited.Add(propertyType))
+            return;
+
+        container.Add(propertyType, sp => property.GetValue(sp.Resolve(type)).NotNull()).AsSelf().Singleton();
 
         foreach (var prop in GetRegisteredProperties(propertyType))
-            Register(container, propertyType, prop);
+            Register(container, propertyType, prop, visited);
     }
 
     /// <summary>

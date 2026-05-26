@@ -5,12 +5,12 @@ namespace Annium.Configuration.Abstractions.Internal;
 /// <summary>
 /// Implementation of IConfigurationContainer that stores configuration data in memory
 /// </summary>
-public class ConfigurationContainer : IConfigurationContainer
+internal sealed class ConfigurationContainer : IConfigurationContainer
 {
     /// <summary>
     /// Dictionary storing configuration data with custom key comparer
     /// </summary>
-    private readonly IDictionary<string[], string> _config = new Dictionary<string[], string>(new KeyComparer());
+    private readonly Dictionary<string[], string> _config = new(new KeyComparer());
 
     /// <summary>
     /// Backing list for registered deferred sources, in registration order.
@@ -26,24 +26,19 @@ public class ConfigurationContainer : IConfigurationContainer
     /// Registers a deferred configuration source.
     /// </summary>
     /// <param name="source">Source to register</param>
-    /// <returns>The container for method chaining</returns>
-    public IConfigurationContainer AddSource(IConfigurationSource source)
+    public void AddSource(IConfigurationSource source)
     {
         _sources.Add(source);
-        return this;
     }
 
     /// <summary>
     /// Adds configuration data to the container
     /// </summary>
     /// <param name="config">Configuration data to add</param>
-    /// <returns>The container for method chaining</returns>
-    public IConfigurationContainer Add(IReadOnlyDictionary<string[], string> config)
+    public void Add(IReadOnlyDictionary<string[], string> config)
     {
         foreach (var (key, value) in config)
             _config[key] = value;
-
-        return this;
     }
 
     /// <summary>

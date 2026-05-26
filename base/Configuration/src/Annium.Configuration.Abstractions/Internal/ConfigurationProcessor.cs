@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Annium.Core.Mapper;
 using Annium.Core.Runtime.Types;
 using Annium.Reflection;
@@ -62,7 +63,13 @@ internal class ConfigurationProcessor<T>
     /// <returns>Configured instance of type T</returns>
     public T Process()
     {
-        return (T)(Process(typeof(T)) ?? default!);
+        var result = Process(typeof(T));
+        if (result is null)
+            throw new InvalidOperationException(
+                $"Configuration produced null for type {typeof(T)}. "
+                    + "This typically means an abstract type was requested but the resolution key was absent from the configuration."
+            );
+        return (T)result;
     }
 
     /// <summary>
@@ -95,6 +102,7 @@ internal class ConfigurationProcessor<T>
 
         // var items = config.Where(e => e.Key.StartsWith(path, StringComparison.OrdinalIgnoreCase) && e.Key.Length > path.Length).ToArray();
         var items = GetDescendants();
+        // Activator.CreateInstance returns non-null for concrete Dictionary<,> (never Nullable<T>)
         var result = (IDictionary)Activator.CreateInstance(type)!;
 
         foreach (var name in items)
@@ -119,9 +127,23 @@ internal class ConfigurationProcessor<T>
     private object ProcessList(Type type)
     {
         var elementType = type.GetGenericArguments()[0];
+        // Activator.CreateInstance returns non-null for concrete List<> (never Nullable<T>)
         var result = (IList)Activator.CreateInstance(type)!;
 
-        var items = GetDescendants();
+        // GetDescendants returns dictionary keys in arbitrary order; list reconstruction requires
+        // numeric ordering so that List<T> indices (0, 1, 2, ..., 10, 11) reassemble correctly
+        // — and not lexicographically ("10" < "2"). Non-integer keys at a list path indicate
+        // malformed source data and are rejected with path context.
+        var items = GetDescendants()
+            .Select(key =>
+                int.TryParse(key, out var idx)
+                    ? idx
+                    : throw new InvalidOperationException(
+                        $"List index '{key}' at path {string.Join('.', Path)} is not a valid integer"
+                    )
+            )
+            .OrderBy(i => i)
+            .Select(i => i.ToString());
 
         foreach (var index in items)
         {
@@ -140,6 +162,7 @@ internal class ConfigurationProcessor<T>
     /// <returns>Configured array instance</returns>
     private object ProcessArray(Type type)
     {
+        // type.IsArray is true here (dispatched from Process); GetElementType is BCL-guaranteed non-null for arrays
         var elementType = type.GetElementType()!;
         var raw = (IList)ProcessList(typeof(List<>).MakeGenericType(elementType));
 
@@ -155,8 +178,8 @@ internal class ConfigurationProcessor<T>
     /// Processes configuration data for object types
     /// </summary>
     /// <param name="type">Object type to process</param>
-    /// <returns>Configured object instance</returns>
-    private object ProcessObject(Type type)
+    /// <returns>Configured object instance, or null when an abstract type's resolution key is absent from the configuration</returns>
+    private object? ProcessObject(Type type)
     {
         if (type.IsAbstract || type.IsInterface)
         {
@@ -168,21 +191,49 @@ internal class ConfigurationProcessor<T>
             var hasKey = _config.TryGetValue(Path, out var rawKey);
             _context.Pop();
             if (!hasKey || rawKey is null)
-                return null!;
+                return null; // sentinel for abstract type with absent resolution key; Process<T>() at line 65 converts to InvalidOperationException
 
-            var key = _mapper.Map(rawKey, resolutionKeyProperty.PropertyType);
+            var key =
+                _mapper.Map(rawKey, resolutionKeyProperty.PropertyType)
+                ?? throw new InvalidOperationException(
+                    $"Resolution key mapper returned null for raw value '{rawKey}' of type {resolutionKeyProperty.PropertyType}"
+                );
             type =
-                _typeManager.ResolveByKey(key!, type)
+                _typeManager.ResolveByKey(key, type)
                 ?? throw new ArgumentException($"Can't resolve abstract type {type} with key {key}");
         }
 
+        // Activator.CreateInstance is BCL-guaranteed non-null for concrete reference types; abstract path resolved via ResolveByKey above
         var result = Activator.CreateInstance(type)!;
-        var properties = type.GetProperties().Where(e => e.CanWrite).ToArray();
+
+        // Mirror ObjectConfigurationProvider's flattener exactly: it enumerates members via
+        // GetAllProperties/GetAllFields (own + interface-declared). DistinctBy(Name) collapses the
+        // interface/class duplicates those return, keeping the concrete member (enumerated first).
+        // Exclude interface-declared PropertyInfo (e.g. unoverridden default-interface-method
+        // properties): SetValue on those against a concrete instance throws. The class's own
+        // implementation of an interface property is enumerated first and kept by DistinctBy.
+        var properties = type.GetAllProperties(BindingFlags.Public | BindingFlags.Instance)
+            .Where(e => e.CanWrite && e.DeclaringType is { IsInterface: false })
+            .DistinctBy(e => e.Name)
+            .ToArray();
         foreach (var property in properties)
         {
             _context.Push(property.Name);
             if (KeyExists())
                 property.SetValue(result, Process(property.PropertyType));
+            _context.Pop();
+        }
+
+        // Public instance fields (e.g. ValueTuple's Item1/Item2) are flattened too, so restore them.
+        var fields = type.GetAllFields(BindingFlags.Public | BindingFlags.Instance)
+            .Where(e => !e.IsInitOnly)
+            .DistinctBy(e => e.Name)
+            .ToArray();
+        foreach (var field in fields)
+        {
+            _context.Push(field.Name);
+            if (KeyExists())
+                field.SetValue(result, Process(field.FieldType));
             _context.Pop();
         }
 

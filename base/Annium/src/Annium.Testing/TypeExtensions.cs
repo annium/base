@@ -24,6 +24,7 @@ public static class TypeExtensions
     {
         (value is T).IsTrue(message ?? $"{valueEx} is {value?.GetType()}, not {typeof(T)}");
 
+        // The assertion above throws when value is null or not T, so value is non-null here.
         return (T)value!;
     }
 
@@ -44,6 +45,7 @@ public static class TypeExtensions
     {
         (value?.GetType() == typeof(T)).IsTrue(message ?? $"{valueEx} is {value?.GetType()}, not {typeof(T)}");
 
+        // The assertion above throws when value is null or not T, so value is non-null here.
         return (T)value!;
     }
 }

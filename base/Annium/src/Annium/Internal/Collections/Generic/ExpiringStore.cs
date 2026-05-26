@@ -49,7 +49,9 @@ internal sealed class ExpiringStore<TKey, TValue> : IDisposable, IAsyncDisposabl
     {
         _timeProvider = timeProvider;
         _evictionTimer = new Timer(
-            static state => ((ExpiringStore<TKey, TValue>)state!).Evict(),
+            // state is the `this` reference passed as the next argument, so the cast target is non-null.
+            static state =>
+                ((ExpiringStore<TKey, TValue>)state!).Evict(),
             this,
             evictionInterval,
             evictionInterval

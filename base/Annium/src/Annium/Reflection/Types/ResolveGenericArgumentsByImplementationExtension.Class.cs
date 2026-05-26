@@ -111,13 +111,17 @@ file class ClassHelper
     public static Type[]? ResolveBase(Type type, Type target)
     {
         var unboundBaseType = type.GetUnboundBaseType();
+        // ResolveBase runs only after callers verify type.BaseType is non-null (ResolveClassArgumentsBy* guards),
+        // so resolving the present base yields a non-null unbound type.
         var baseArgs = unboundBaseType!.ResolveGenericArgumentsByImplementation(target);
         if (baseArgs is null)
             return null;
 
+        // type.BaseType is non-null per the same caller guards.
         if (!type.BaseType!.GetGenericTypeDefinition().TryMakeGenericType(out var baseImplementation, baseArgs))
             return null;
 
+        // TryMakeGenericType returned true above, so baseImplementation was set.
         return type.ResolveGenericArgumentsByImplementation(baseImplementation!);
     }
 }
