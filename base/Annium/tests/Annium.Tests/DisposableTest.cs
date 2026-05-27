@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -568,6 +569,181 @@ public class DisposableTest : TestBase
 
         // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract — we deliberately check the post-dispose state.
         (reference.Value is null).IsTrue();
+    }
+
+    /// <summary>
+    /// Verifies that when two async teardowns each throw during DisposeAsync, every registered teardown
+    /// still runs (a fault in one does not skip the other), and awaiting the box's DisposeAsync surfaces
+    /// the first fault unwrapped — Task.WhenAll observes both faults, but awaiting it yields the first.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact]
+    public async Task AsyncDisposable_TwoAsyncTeardownsThrow_AllRunAndFirstFaultSurfaces()
+    {
+        // arrange
+        var box = Disposable.AsyncBox(Logger);
+        var disposed = 0;
+        box += Disposable.Create(() =>
+        {
+            Interlocked.Increment(ref disposed);
+            throw new InvalidOperationException("fault-1");
+        });
+        box += Disposable.Create(() =>
+        {
+            Interlocked.Increment(ref disposed);
+            throw new ArgumentException("fault-2");
+        });
+
+        // act & assert — both teardowns run despite throwing; awaiting Task.WhenAll surfaces the first
+        // fault unwrapped (not an AggregateException)
+        await Wrap.It(async () => await box.DisposeAsync()).ThrowsAsync<InvalidOperationException>();
+        disposed.Is(2);
+    }
+
+    /// <summary>
+    /// Verifies that += with an IEnumerable of IAsyncDisposable registers all items
+    /// and they are all disposed when DisposeAsync is called.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact]
+    public async Task AsyncDisposable_AddBatchAsyncDisposables_AllDisposed()
+    {
+        // arrange
+        var box = Disposable.AsyncBox(Logger);
+        var calls = 0;
+        var d1 = Disposable.Create(() =>
+        {
+            ++calls;
+            return ValueTask.CompletedTask;
+        });
+        var d2 = Disposable.Create(() =>
+        {
+            ++calls;
+            return ValueTask.CompletedTask;
+        });
+        var d3 = Disposable.Create(() =>
+        {
+            ++calls;
+            return ValueTask.CompletedTask;
+        });
+
+        // act
+        box += (IEnumerable<IAsyncDisposable>)new IAsyncDisposable[] { d1, d2, d3 };
+        await box.DisposeAsync();
+
+        // assert
+        calls.Is(3);
+    }
+
+    /// <summary>
+    /// Verifies that -= with an IEnumerable of IAsyncDisposable removes the specified items
+    /// so they are NOT disposed, while remaining items are disposed.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact]
+    public async Task AsyncDisposable_RemoveBatchAsyncDisposables_OnlyRemainingDisposed()
+    {
+        // arrange
+        var box = Disposable.AsyncBox(Logger);
+        var calls = 0;
+        var d1 = Disposable.Create(() =>
+        {
+            ++calls;
+            return ValueTask.CompletedTask;
+        });
+        var d2 = Disposable.Create(() =>
+        {
+            ++calls;
+            return ValueTask.CompletedTask;
+        });
+        var d3 = Disposable.Create(() =>
+        {
+            ++calls;
+            return ValueTask.CompletedTask;
+        });
+
+        box += (IEnumerable<IAsyncDisposable>)new IAsyncDisposable[] { d1, d2, d3 };
+
+        // act — remove d1 and d3, leaving only d2
+        box -= (IEnumerable<IAsyncDisposable>)new IAsyncDisposable[] { d1, d3 };
+        await box.DisposeAsync();
+
+        // assert — only d2 was disposed
+        calls.Is(1);
+    }
+
+    /// <summary>
+    /// Verifies that += with an IEnumerable of Func&lt;ValueTask&gt; registers all functions
+    /// and all are invoked when DisposeAsync is called.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact]
+    public async Task AsyncDisposable_AddBatchAsyncDisposes_AllInvoked()
+    {
+        // arrange
+        var box = Disposable.AsyncBox(Logger);
+        var calls = 0;
+
+        Func<ValueTask> f1 = () =>
+        {
+            ++calls;
+            return ValueTask.CompletedTask;
+        };
+        Func<ValueTask> f2 = () =>
+        {
+            ++calls;
+            return ValueTask.CompletedTask;
+        };
+        Func<ValueTask> f3 = () =>
+        {
+            ++calls;
+            return ValueTask.CompletedTask;
+        };
+
+        // act
+        box += (IEnumerable<Func<ValueTask>>)new Func<ValueTask>[] { f1, f2, f3 };
+        await box.DisposeAsync();
+
+        // assert
+        calls.Is(3);
+    }
+
+    /// <summary>
+    /// Verifies that -= with an IEnumerable of Func&lt;ValueTask&gt; removes the specified functions
+    /// so they are NOT invoked, while remaining functions are still invoked.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact]
+    public async Task AsyncDisposable_RemoveBatchAsyncDisposes_OnlyRemainingInvoked()
+    {
+        // arrange
+        var box = Disposable.AsyncBox(Logger);
+        var calls = 0;
+
+        Func<ValueTask> f1 = () =>
+        {
+            ++calls;
+            return ValueTask.CompletedTask;
+        };
+        Func<ValueTask> f2 = () =>
+        {
+            ++calls;
+            return ValueTask.CompletedTask;
+        };
+        Func<ValueTask> f3 = () =>
+        {
+            ++calls;
+            return ValueTask.CompletedTask;
+        };
+
+        box += (IEnumerable<Func<ValueTask>>)new Func<ValueTask>[] { f1, f2, f3 };
+
+        // act — remove f1 and f3, leaving only f2
+        box -= (IEnumerable<Func<ValueTask>>)new Func<ValueTask>[] { f1, f3 };
+        await box.DisposeAsync();
+
+        // assert — only f2 was invoked
+        calls.Is(1);
     }
 
     /// <summary>

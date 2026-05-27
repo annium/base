@@ -100,7 +100,7 @@ public class ChannelReaderExtensionsTests : TestBase
         var channel = Channel.CreateUnbounded<int>();
 
         // act — bounded wait of 100 ms; if WhenEmptyAsync hangs the Wait.UntilAsync will time out
-        var whenEmpty = channel.Reader.WhenEmptyAsync(delay: 10, ct: TestContext.Current.CancellationToken);
+        var whenEmpty = channel.Reader.WhenEmptyAsync(delay: 10, ct: TestContext.Current.CancellationToken).AsTask();
         await Wait.UntilAsync(() => whenEmpty.IsCompleted, TestContext.Current.CancellationToken);
 
         // assert
@@ -121,7 +121,7 @@ public class ChannelReaderExtensionsTests : TestBase
         channel.Writer.TryWrite(3);
 
         // act — start the wait task before reading
-        var whenEmpty = channel.Reader.WhenEmptyAsync(delay: 10, ct: TestContext.Current.CancellationToken);
+        var whenEmpty = channel.Reader.WhenEmptyAsync(delay: 10, ct: TestContext.Current.CancellationToken).AsTask();
 
         // assert — task must NOT be complete while items remain
         whenEmpty.IsCompleted.IsFalse();
@@ -136,5 +136,94 @@ public class ChannelReaderExtensionsTests : TestBase
 
         // assert — task completes after all items are consumed
         whenEmpty.IsCompleted.IsTrue();
+    }
+
+    /// <summary>
+    /// Verifies that when a writer's TryWrite throws an unexpected exception (not OperationCanceledException
+    /// or ChannelClosedException), the Pipe catches it via the general Exception branch, logs it at Error
+    /// level, and the pipe can then be disposed cleanly without throwing.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact]
+    public async Task Pipe_WriterThrowsUnexpectedException_LogsErrorAndDisposesCleanly()
+    {
+        this.Trace("start");
+
+        // arrange — source channel with one item ready to be read
+        var source = Channel.CreateUnbounded<int>();
+        source.Writer.TryWrite(42);
+
+        // A writer whose TryWrite always throws an unexpected exception to hit the general catch branch.
+        var throwingWriter = new ThrowingChannelWriter<int>(new InvalidOperationException("writer-boom"));
+
+        // act — create the pipe; the loop will read the item and call throwingWriter.Write which throws
+        var pipe = source.Reader.Pipe(throwingWriter, Logger);
+
+        // wait for the error-log entry to appear (the exception is bridged to the logger)
+        await Expect.ToAsync(
+            () =>
+                Logs.Any(m => m.Level == LogLevel.Error && m.Exception != null && m.Exception.Message == "writer-boom")
+                    .IsTrue(),
+            TestContext.Current.CancellationToken
+        );
+
+        // dispose must complete cleanly — no exception should propagate out
+        await pipe.DisposeAsync();
+
+        this.Trace("done");
+    }
+
+    /// <summary>
+    /// Verifies that WhenEmptyAsync completes without throwing when the cancellation token is cancelled
+    /// while the channel still has items (the OperationCanceledException is swallowed by the catch guard).
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact]
+    public async Task WhenEmptyAsync_CancelledWhilePolling_CompletesWithoutThrowing()
+    {
+        // arrange — channel with items so the polling loop keeps spinning
+        var channel = Channel.CreateUnbounded<int>();
+        channel.Writer.TryWrite(1);
+        channel.Writer.TryWrite(2);
+        channel.Writer.TryWrite(3);
+
+        using var cts = new CancellationTokenSource();
+
+        // act — start WhenEmptyAsync with our own CTS token (NOT the runner token)
+        var whenEmpty = channel.Reader.WhenEmptyAsync(delay: 10, ct: cts.Token).AsTask();
+
+        // cancel immediately; items are still in the channel so the loop is inside the delay
+        await cts.CancelAsync();
+
+        // assert — task must complete (OCE is swallowed) and must NOT propagate any exception
+        await whenEmpty;
+        whenEmpty.IsCompleted.IsTrue();
+        whenEmpty.IsFaulted.IsFalse();
+        whenEmpty.IsCanceled.IsFalse();
+    }
+
+    /// <summary>
+    /// ChannelWriter that throws a caller-supplied exception from TryWrite. Used to exercise
+    /// the general-exception branch in <see cref="ChannelReaderExtensions.Pipe{T}"/>.
+    /// </summary>
+    private sealed class ThrowingChannelWriter<T> : ChannelWriter<T>
+    {
+        private readonly Exception _ex;
+
+        public ThrowingChannelWriter(Exception ex)
+        {
+            _ex = ex;
+        }
+
+        /// <summary>
+        /// Always throws the configured exception to simulate an unexpected write failure.
+        /// </summary>
+        public override bool TryWrite(T item) => throw _ex;
+
+        /// <summary>
+        /// Returns a completed ValueTask so WaitToWriteAsync never blocks indefinitely.
+        /// </summary>
+        public override ValueTask<bool> WaitToWriteAsync(CancellationToken cancellationToken = default) =>
+            ValueTask.FromResult(true);
     }
 }

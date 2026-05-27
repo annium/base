@@ -33,8 +33,6 @@ public class VoidLoggerTests
         // Reaching here without an exception is the assertion.
         foreach (var level in new[] { LogLevel.Trace, LogLevel.Debug, LogLevel.Info, LogLevel.Warn, LogLevel.Error })
             logger.Log(this, "file.cs", "Member", 42, level, "msg", data);
-
-        true.IsTrue();
     }
 
     /// <summary>
@@ -48,7 +46,5 @@ public class VoidLoggerTests
 
         logger.Error(this, "file.cs", "Member", 42, new InvalidOperationException("boom"), data);
         logger.Error(this, "file.cs", "Member", 42, new Exception(), data);
-
-        true.IsTrue();
     }
 }

@@ -30,7 +30,7 @@ public class ExpiringDictionaryTest : TestBase
     {
         // arrange
         var (_, timeProvider) = GetTimeTools();
-        var collection = new ExpiringDictionary<int, string>(timeProvider);
+        using var collection = new ExpiringDictionary<int, string>(timeProvider);
         var ttl = Duration.FromSeconds(5);
 
         // act
@@ -50,7 +50,7 @@ public class ExpiringDictionaryTest : TestBase
     {
         // arrange
         var (timeManager, timeProvider) = GetTimeTools();
-        var collection = new ExpiringDictionary<Guid, string>(timeProvider);
+        using var collection = new ExpiringDictionary<Guid, string>(timeProvider);
         var key = Guid.NewGuid();
         var value = "secret";
         var ttl = Duration.FromSeconds(5);
@@ -74,7 +74,7 @@ public class ExpiringDictionaryTest : TestBase
     {
         // arrange
         var (timeManager, timeProvider) = GetTimeTools();
-        var collection = new ExpiringDictionary<Guid, string>(timeProvider);
+        using var collection = new ExpiringDictionary<Guid, string>(timeProvider);
         var key = Guid.NewGuid();
         var value = "secret";
         var ttl = Duration.FromSeconds(5);
@@ -103,7 +103,7 @@ public class ExpiringDictionaryTest : TestBase
     {
         // arrange
         var (timeManager, timeProvider) = GetTimeTools();
-        var collection = new ExpiringDictionary<Guid, string>(timeProvider);
+        using var collection = new ExpiringDictionary<Guid, string>(timeProvider);
         var key = Guid.NewGuid();
         var ttl = Duration.FromSeconds(5);
         collection.Add(key, "secret", ttl);
@@ -126,7 +126,7 @@ public class ExpiringDictionaryTest : TestBase
     {
         // arrange
         var (timeManager, timeProvider) = GetTimeTools();
-        var collection = new ExpiringDictionary<Guid, string>(timeProvider);
+        using var collection = new ExpiringDictionary<Guid, string>(timeProvider);
         var key1 = Guid.NewGuid();
         var key2 = Guid.NewGuid();
         var ttl = Duration.FromSeconds(5);
@@ -152,7 +152,7 @@ public class ExpiringDictionaryTest : TestBase
     {
         // arrange
         var (_, timeProvider) = GetTimeTools();
-        var collection = new ExpiringDictionary<int, string>(timeProvider);
+        using var collection = new ExpiringDictionary<int, string>(timeProvider);
         var ttl = Duration.FromSeconds(5);
         for (var i = 0; i < 10; i++)
             collection.Add(i, $"v:{i}", ttl);
@@ -177,7 +177,7 @@ public class ExpiringDictionaryTest : TestBase
     {
         // arrange
         var (_, timeProvider) = GetTimeTools();
-        var collection = new ExpiringDictionary<int, string>(timeProvider);
+        using var collection = new ExpiringDictionary<int, string>(timeProvider);
         collection.Add(1, "v:1", Duration.FromSeconds(5));
 
         // act — dispose twice; second call must be a no-op (idempotent)
@@ -197,7 +197,7 @@ public class ExpiringDictionaryTest : TestBase
     {
         // arrange
         var (timeManager, timeProvider) = GetTimeTools();
-        var collection = new ExpiringDictionary<Guid, string>(timeProvider);
+        using var collection = new ExpiringDictionary<Guid, string>(timeProvider);
         var key = Guid.NewGuid();
         var ttl = Duration.FromSeconds(5);
         collection.Add(key, "val", ttl);
@@ -222,7 +222,7 @@ public class ExpiringDictionaryTest : TestBase
         // arrange — use a short eviction interval so the background timer fires quickly
         var (timeManager, timeProvider) = GetTimeTools();
         var evictionInterval = TimeSpan.FromMilliseconds(50);
-        var collection = new ExpiringDictionary<int, string>(timeProvider, evictionInterval);
+        using var collection = new ExpiringDictionary<int, string>(timeProvider, evictionInterval);
         var ttl = Duration.FromMilliseconds(30);
 
         collection.Add(1, "a", ttl);

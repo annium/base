@@ -1,5 +1,3 @@
-#pragma warning disable VSTHRD003 // Tests legitimately await Task.FromResult to exercise async overloads.
-
 using System;
 using System.Threading.Tasks;
 using Xunit;
@@ -78,7 +76,7 @@ public class ExceptionExtensionsTests
     [Fact]
     public async Task ReportsAsync_Contains_Passes()
     {
-        var task = Task.FromResult(Sample("async fox"));
+        var task = ValueTask.FromResult(Sample("async fox"));
 
         var result = await task.ReportsAsync("fox");
 
@@ -89,7 +87,7 @@ public class ExceptionExtensionsTests
     [Fact]
     public async Task ReportsAsync_DoesNotContain_Throws()
     {
-        var task = Task.FromResult(Sample("hello"));
+        var task = ValueTask.FromResult(Sample("hello"));
 
         await Assert.ThrowsAsync<AssertionFailedException>(async () => await task.ReportsAsync("missing"));
     }
@@ -98,7 +96,7 @@ public class ExceptionExtensionsTests
     [Fact]
     public async Task ReportsAllAsync_AllPresent_Passes()
     {
-        var task = Task.FromResult(Sample("alpha beta gamma"));
+        var task = ValueTask.FromResult(Sample("alpha beta gamma"));
 
         var result = await task.ReportsAllAsync(["alpha", "gamma"]);
 
@@ -109,7 +107,7 @@ public class ExceptionExtensionsTests
     [Fact]
     public async Task ReportsAllAsync_AnyMissing_Throws()
     {
-        var task = Task.FromResult(Sample("alpha beta"));
+        var task = ValueTask.FromResult(Sample("alpha beta"));
 
         await Assert.ThrowsAsync<AssertionFailedException>(async () =>
             await task.ReportsAllAsync(["alpha", "missing"])
@@ -120,7 +118,7 @@ public class ExceptionExtensionsTests
     [Fact]
     public async Task ReportsExactlyAsync_Equal_Passes()
     {
-        var task = Task.FromResult(Sample("exact"));
+        var task = ValueTask.FromResult(Sample("exact"));
 
         var result = await task.ReportsExactlyAsync("exact");
 
@@ -131,7 +129,7 @@ public class ExceptionExtensionsTests
     [Fact]
     public async Task ReportsExactlyAsync_Differs_Throws()
     {
-        var task = Task.FromResult(Sample("close"));
+        var task = ValueTask.FromResult(Sample("close"));
 
         await Assert.ThrowsAsync<AssertionFailedException>(async () => await task.ReportsExactlyAsync("exact"));
     }

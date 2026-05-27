@@ -46,36 +46,13 @@ public static partial class ResolveGenericArgumentsByImplementationExtension
     }
 
     /// <summary>
-    /// Resolves generic arguments for a generic parameter type when the target is a class type.
+    /// Resolves generic arguments for a generic parameter type when the target is a concrete type
+    /// (class, struct, or interface). The resolution is identical for all three target kinds.
     /// </summary>
     /// <param name="type">The generic parameter type to resolve arguments for.</param>
-    /// <param name="target">The target class type.</param>
+    /// <param name="target">The target type (class, struct, or interface).</param>
     /// <returns>An array containing the resolved type, or null if constraints are not met.</returns>
-    private static Type[]? ResolveGenericParameterArgumentsByClass(this Type type, Type target)
-    {
-        // return target, if all parameter constraints are implemented
-        return target.CanBeUsedAsParameter(type) ? [target] : null;
-    }
-
-    /// <summary>
-    /// Resolves generic arguments for a generic parameter type when the target is a struct type.
-    /// </summary>
-    /// <param name="type">The generic parameter type to resolve arguments for.</param>
-    /// <param name="target">The target struct type.</param>
-    /// <returns>An array containing the resolved type, or null if constraints are not met.</returns>
-    private static Type[]? ResolveGenericParameterArgumentsByStruct(this Type type, Type target)
-    {
-        // return target, if all parameter constraints are implemented
-        return target.CanBeUsedAsParameter(type) ? [target] : null;
-    }
-
-    /// <summary>
-    /// Resolves generic arguments for a generic parameter type when the target is an interface type.
-    /// </summary>
-    /// <param name="type">The generic parameter type to resolve arguments for.</param>
-    /// <param name="target">The target interface type.</param>
-    /// <returns>An array containing the resolved type, or null if constraints are not met.</returns>
-    private static Type[]? ResolveGenericParameterArgumentsByInterface(this Type type, Type target)
+    private static Type[]? ResolveGenericParameterArgumentsByConcrete(this Type type, Type target)
     {
         // return target, if all parameter constraints are implemented
         return target.CanBeUsedAsParameter(type) ? [target] : null;

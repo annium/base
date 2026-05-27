@@ -22,7 +22,7 @@ public class SecureStringExtensionsTests
         var source = "sample*$&тест123";
 
         // encode
-        var encoded = source.AsSecureString();
+        using var encoded = source.AsSecureString();
 
         // decode
         var decoded = Encoding.UTF8.GetString(encoded.AsBytes());
@@ -41,7 +41,7 @@ public class SecureStringExtensionsTests
         const string original = "hello";
 
         // act
-        var secure = original.AsSecureString();
+        using var secure = original.AsSecureString();
 
         // assert — unmarshal back to plain string for equality check
         var ptr = IntPtr.Zero;
@@ -68,7 +68,7 @@ public class SecureStringExtensionsTests
         var empty = Array.Empty<char>();
 
         // act
-        var secure = empty.AsSecureString();
+        using var secure = empty.AsSecureString();
 
         // assert
         secure.Length.Is(0);

@@ -10,6 +10,17 @@ namespace Annium.Analyzers.Tests.Logging;
 internal static class LoggingAnalyzerTestHelpers
 {
     /// <summary>
+    /// Expected diagnostic message for LOG0001 (dynamic, non-constant log message template).
+    /// </summary>
+    public const string DynamicTemplateMessage = "Call message template is non-constant";
+
+    /// <summary>
+    /// Expected diagnostic message for LOG0002 when the explicit argument is bound to the 'file' caller-info value.
+    /// </summary>
+    public const string ExplicitCallerFileMessage =
+        "Argument bound to 'file' overrides a compiler-injected caller-info value";
+
+    /// <summary>
     /// Builds the reference assemblies set used by every Logging analyzer / code-fix test fixture.
     /// </summary>
     /// <returns>A configured <see cref="ReferenceAssemblies"/> instance.</returns>

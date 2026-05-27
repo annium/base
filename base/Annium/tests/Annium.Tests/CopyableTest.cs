@@ -41,9 +41,6 @@ public class CopyableTest
         (zx == z).IsTrue();
         zx.W = 10;
         (zx == z).IsFalse();
-        zx.W = 10;
-        (zx == z).IsFalse();
-        zx.Items[0].W = 10;
     }
 
     /// <summary>

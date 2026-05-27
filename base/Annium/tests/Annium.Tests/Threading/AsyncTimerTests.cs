@@ -175,7 +175,6 @@ public class AsyncTimerTests : TestBase
         await timer.DisposeAsync();
 
         // Reaching here without hang or exception is the assertion.
-        true.IsTrue();
     }
 
     /// <summary>
@@ -254,7 +253,7 @@ public class AsyncTimerTests : TestBase
         using var handlerCts = new CancellationTokenSource();
         var handlerEntered = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         var handlerExited = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-        var timer = Timers.Async(
+        await using var timer = Timers.Async(
             async () =>
             {
                 handlerEntered.TrySetResult(true);

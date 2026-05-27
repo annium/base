@@ -153,8 +153,6 @@ public class DebounceTimerTests : TestBase
         // Must not throw — the IsDisposed guard + ObjectDisposedException catch in Request() absorbs the race.
         timer.Request();
         timer.Request();
-
-        true.IsTrue();
     }
 
     /// <summary>
@@ -179,8 +177,6 @@ public class DebounceTimerTests : TestBase
 
         await timer.DisposeAsync();
         await requester;
-
-        true.IsTrue();
     }
 
     /// <summary>

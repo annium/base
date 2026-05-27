@@ -80,4 +80,45 @@ public class IPEndPointsTests
         endpoint.Address.AddressFamily.Is(AddressFamily.InterNetwork);
         endpoint.Port.Is(1234);
     }
+
+    /// <summary>
+    /// Verifies that <c>ParseAsync</c> falls back to loopback (127.0.0.1) with the supplied default port
+    /// when the input cannot be parsed as a URI (e.g. contains a literal bracket that breaks URI syntax).
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact]
+    public async Task ParseAsync_UnparseableInput_FallsBackToLoopbackWithDefaultPort()
+    {
+        // "[::invalid" is not a valid URI host segment — Uri.TryCreate rejects it, so the method
+        // returns IPAddress.Loopback with the provided defaultPort.
+        var endpoint = await IPEndPoints.ParseAsync(
+            "[::invalid",
+            defaultPort: 7777,
+            ct: TestContext.Current.CancellationToken
+        );
+
+        endpoint.Address.Is(IPAddress.Loopback);
+        endpoint.Port.Is(7777);
+    }
+
+    /// <summary>
+    /// Verifies that <c>ParseAsync</c> falls back to loopback (127.0.0.1) when the numeric host
+    /// is syntactically valid as a URI but cannot be parsed as an IP address (e.g. an out-of-range octet),
+    /// and uses the supplied default port.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact]
+    public async Task ParseAsync_InvalidIpOctet_FallsBackToLoopbackWithDefaultPort()
+    {
+        // "999.999.999.999" is accepted by Uri.TryCreate (no letters → DNS path skipped),
+        // but IPAddress.TryParse rejects it → final loopback fallback.
+        var endpoint = await IPEndPoints.ParseAsync(
+            "999.999.999.999:4321",
+            defaultPort: 0,
+            ct: TestContext.Current.CancellationToken
+        );
+
+        endpoint.Address.Is(IPAddress.Loopback);
+        endpoint.Port.Is(4321);
+    }
 }

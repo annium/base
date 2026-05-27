@@ -45,9 +45,8 @@ public static partial class ResolveGenericArgumentsByImplementationExtension
         target switch
         {
             { IsGenericParameter: true } => type.ResolveGenericParameterArgumentsByGenericParameter(target),
-            { IsClass: true } => type.ResolveGenericParameterArgumentsByClass(target),
-            { IsValueType: true } => type.ResolveGenericParameterArgumentsByStruct(target),
-            { IsInterface: true } => type.ResolveGenericParameterArgumentsByInterface(target),
+            { IsClass: true } or { IsValueType: true } or { IsInterface: true } =>
+                type.ResolveGenericParameterArgumentsByConcrete(target),
             _ => throw NotImplementedException(type, target),
         };
 

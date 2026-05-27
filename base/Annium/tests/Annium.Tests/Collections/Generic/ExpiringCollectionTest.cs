@@ -28,7 +28,7 @@ public class ExpiringCollectionTest : TestBase
     {
         // arrange
         var (_, timeProvider) = GetTimeTools();
-        var collection = new ExpiringCollection<int>(timeProvider);
+        using var collection = new ExpiringCollection<int>(timeProvider);
         var ttl = Duration.FromSeconds(5);
 
         // act
@@ -48,7 +48,7 @@ public class ExpiringCollectionTest : TestBase
     {
         // arrange
         var (timeManager, timeProvider) = GetTimeTools();
-        var collection = new ExpiringCollection<Guid>(timeProvider);
+        using var collection = new ExpiringCollection<Guid>(timeProvider);
         var value = Guid.NewGuid();
         var ttl = Duration.FromSeconds(5);
         collection.Add(value, ttl);
@@ -75,7 +75,7 @@ public class ExpiringCollectionTest : TestBase
     {
         // arrange
         var (timeManager, timeProvider) = GetTimeTools();
-        var collection = new ExpiringCollection<Guid>(timeProvider);
+        using var collection = new ExpiringCollection<Guid>(timeProvider);
         var value1 = Guid.NewGuid();
         var value2 = Guid.NewGuid();
         var ttl = Duration.FromSeconds(5);
@@ -116,7 +116,7 @@ public class ExpiringCollectionTest : TestBase
     {
         // arrange
         var (_, timeProvider) = GetTimeTools();
-        var collection = new ExpiringCollection<int>(timeProvider);
+        using var collection = new ExpiringCollection<int>(timeProvider);
         var ttl = Duration.FromSeconds(5);
         for (var i = 0; i < 10; i++)
             collection.Add(i, ttl);
@@ -142,7 +142,7 @@ public class ExpiringCollectionTest : TestBase
     {
         // arrange
         var (_, timeProvider) = GetTimeTools();
-        var collection = new ExpiringCollection<int>(timeProvider);
+        using var collection = new ExpiringCollection<int>(timeProvider);
         collection.Add(1, Duration.FromSeconds(5));
 
         // act — dispose twice; second call must be a no-op (idempotent)

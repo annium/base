@@ -173,4 +173,17 @@ public class SortedListExtensionsTest
 
         static int Next(int x) => x + 1;
     }
+
+    /// <summary>
+    /// Verifies that GetChunks throws ArgumentException when start is greater than end.
+    /// </summary>
+    [Fact]
+    public void GetChunks_StartGreaterThanEnd_ThrowsArgumentException()
+    {
+        // arrange
+        var data = Enumerable.Range(1, 5).ToSortedList(x => x);
+
+        // act & assert
+        Wrap.It(() => data.GetChunks(5, 3, x => x + 1)).Throws<ArgumentException>();
+    }
 }

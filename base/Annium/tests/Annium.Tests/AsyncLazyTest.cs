@@ -221,9 +221,15 @@ public class AsyncLazyTest
         await cts.CancelAsync();
 
         // act + assert — WaitAsync should observe the pre-cancelled token and throw
-        await Wrap.It(async () => await lazy.GetValueAsync(cts.Token)).ThrowsAsync<OperationCanceledException>();
-
-        // cleanup — release the inner task so the test doesn't leak the gated factory
-        gate.SetCanceled(TestContext.Current.CancellationToken);
+        try
+        {
+            await Wrap.It(async () => await lazy.GetValueAsync(cts.Token)).ThrowsAsync<OperationCanceledException>();
+        }
+        finally
+        {
+            // cleanup — release the inner task so the test doesn't leak the gated factory even if the
+            // assertion above throws
+            gate.TrySetCanceled(TestContext.Current.CancellationToken);
+        }
     }
 }

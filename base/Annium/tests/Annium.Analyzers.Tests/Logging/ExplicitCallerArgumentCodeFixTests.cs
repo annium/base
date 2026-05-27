@@ -14,14 +14,20 @@ public sealed class ExplicitCallerArgumentCodeFixTests
     : CSharpCodeFixTest<ExplicitCallerArgumentAnalyzer, ExplicitCallerArgumentCodeFix, DefaultVerifier>
 {
     /// <summary>
+    /// Initializes the test with the shared logging-analyzer reference assemblies.
+    /// </summary>
+    public ExplicitCallerArgumentCodeFixTests()
+    {
+        ReferenceAssemblies = LoggingAnalyzerTestHelpers.BuildReferenceAssemblies();
+    }
+
+    /// <summary>
     /// <c>this.Error(ex, "msg")</c> is rewritten to <c>this.Error("msg: {exception}", ex)</c> so that the
     /// message reaches the templated overload instead of being lost in the file-path slot.
     /// </summary>
     [Fact]
     public async Task ExceptionOverloadWithStringSecondArg_ConvertsToTemplated()
     {
-        ReferenceAssemblies = LoggingAnalyzerTestHelpers.BuildReferenceAssemblies();
-
         TestCode = """
 using System;
 using Annium.Logging;
@@ -68,7 +74,7 @@ public class Sample : ILogSubject
 
         ExpectedDiagnostics.Add(
             new DiagnosticResult(Descriptors.Log0002ExplicitCallerArgument.Id, DiagnosticSeverity.Warning)
-                .WithMessage("Argument bound to 'file' overrides a compiler-injected caller-info value")
+                .WithMessage(LoggingAnalyzerTestHelpers.ExplicitCallerFileMessage)
                 .WithSpan(17, 24, 17, 45)
         );
 
@@ -82,8 +88,6 @@ public class Sample : ILogSubject
     [Fact]
     public async Task TrailingPositionalCallerArgument_RemovesArgument()
     {
-        ReferenceAssemblies = LoggingAnalyzerTestHelpers.BuildReferenceAssemblies();
-
         TestCode = """
 using Annium.Logging;
 
@@ -128,7 +132,7 @@ public class Sample : ILogSubject
 
         ExpectedDiagnostics.Add(
             new DiagnosticResult(Descriptors.Log0002ExplicitCallerArgument.Id, DiagnosticSeverity.Warning)
-                .WithMessage("Argument bound to 'file' overrides a compiler-injected caller-info value")
+                .WithMessage(LoggingAnalyzerTestHelpers.ExplicitCallerFileMessage)
                 .WithSpan(16, 45, 16, 53)
         );
 
@@ -141,8 +145,6 @@ public class Sample : ILogSubject
     [Fact]
     public async Task NamedCallerArgument_RemovesArgument()
     {
-        ReferenceAssemblies = LoggingAnalyzerTestHelpers.BuildReferenceAssemblies();
-
         TestCode = """
 using Annium.Logging;
 
@@ -187,7 +189,7 @@ public class Sample : ILogSubject
 
         ExpectedDiagnostics.Add(
             new DiagnosticResult(Descriptors.Log0002ExplicitCallerArgument.Id, DiagnosticSeverity.Warning)
-                .WithMessage("Argument bound to 'file' overrides a compiler-injected caller-info value")
+                .WithMessage(LoggingAnalyzerTestHelpers.ExplicitCallerFileMessage)
                 .WithSpan(16, 29, 16, 43)
         );
 
@@ -202,8 +204,6 @@ public class Sample : ILogSubject
     [Fact]
     public async Task ExceptionShapeWithNamedCallerArg_FallsBackToRemoveArgument()
     {
-        ReferenceAssemblies = LoggingAnalyzerTestHelpers.BuildReferenceAssemblies();
-
         TestCode = """
 using System;
 using Annium.Logging;
@@ -250,7 +250,7 @@ public class Sample : ILogSubject
 
         ExpectedDiagnostics.Add(
             new DiagnosticResult(Descriptors.Log0002ExplicitCallerArgument.Id, DiagnosticSeverity.Warning)
-                .WithMessage("Argument bound to 'file' overrides a compiler-injected caller-info value")
+                .WithMessage(LoggingAnalyzerTestHelpers.ExplicitCallerFileMessage)
                 .WithSpan(17, 24, 17, 38)
                 .WithArguments("file")
         );
@@ -266,8 +266,6 @@ public class Sample : ILogSubject
     [Fact]
     public async Task NonExceptionShapeWithThreeArgs_FallsBackToRemoveArgument()
     {
-        ReferenceAssemblies = LoggingAnalyzerTestHelpers.BuildReferenceAssemblies();
-
         TestCode = """
 using Annium.Logging;
 
@@ -312,7 +310,7 @@ public class Sample : ILogSubject
 
         ExpectedDiagnostics.Add(
             new DiagnosticResult(Descriptors.Log0002ExplicitCallerArgument.Id, DiagnosticSeverity.Warning)
-                .WithMessage("Argument bound to 'file' overrides a compiler-injected caller-info value")
+                .WithMessage(LoggingAnalyzerTestHelpers.ExplicitCallerFileMessage)
                 .WithSpan(16, 46, 16, 54)
                 .WithArguments("file")
         );

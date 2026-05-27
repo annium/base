@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Annium.Logging;
@@ -160,6 +161,64 @@ public class SyncTimerTests : TestBase
         await EnsureValid(state);
 
         this.Trace("done");
+    }
+
+    /// <summary>
+    /// When the in-flight synchronous callback runs longer than <c>DisposeWaitBudget</c>, the
+    /// <see cref="System.Threading.Timer.Dispose(WaitHandle)"/> drain times out: dispose returns without
+    /// throwing and a warning is logged. The wait handle is intentionally leaked so the still-blocked
+    /// ThreadPool thread can eventually unblock and return without raising
+    /// <see cref="ObjectDisposedException"/>.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact]
+    public async Task Dispose_GateDrainTimesOut_LogsWarningAndDoesNotThrow()
+    {
+        // arrange — handler that blocks on its OWN gate past the 5s DisposeWaitBudget.
+        // The handler MUST NOT honour the xunit runner CT (otherwise early cancellation would let the
+        // handler return before the drain times out and the warn-log branch would never run).
+        // Pattern:
+        //   * handler waits on a ManualResetEventSlim using its own CTS — independent of the runner CT
+        //   * handler signals a TCS in its finally so the test can deterministically wait for cleanup
+        //   * test cancels the handler's gate AFTER Dispose returns (so the drain budget elapses first)
+        //     then awaits the TCS to ensure the handler has fully returned
+        using var handlerCts = new CancellationTokenSource();
+        var handlerEntered = new ManualResetEventSlim(false);
+        var handlerExited = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var blockGate = new ManualResetEventSlim(false);
+
+        var timer = Timers.Sync(
+            () =>
+            {
+                handlerEntered.Set();
+                try
+                {
+                    blockGate.Wait(handlerCts.Token);
+                }
+                catch (OperationCanceledException) { }
+                finally
+                {
+                    handlerExited.TrySetResult(true);
+                }
+            },
+            0,
+            10,
+            Logger
+        );
+
+        // wait until the handler is in-flight so Dispose has work to drain
+        handlerEntered.Wait(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+
+        // act — dispose; the inner drain will time out after ~5s and the warn-log path runs
+        await timer.DisposeAsync();
+
+        // assert — drain-timeout warning was logged with the expected template
+        Logs.Any(l => l.Level == LogLevel.Warn && l.MessageTemplate.Contains("Timer drain exceeded")).IsTrue();
+
+        // cleanup — release the handler and wait for it to finish so the blocked ThreadPool thread
+        // is not left running after the test ends
+        await handlerCts.CancelAsync();
+        await handlerExited.Task.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
     }
 
     private static Task EnsureValid(TimerTestHelpers.State state) => TimerTestHelpers.EnsureValidAsync(state);

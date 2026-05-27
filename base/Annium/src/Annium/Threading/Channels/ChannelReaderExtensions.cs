@@ -88,13 +88,17 @@ public static class ChannelReaderExtensions
     /// <param name="ct">A cancellation token that aborts the wait.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static async Task WhenEmptyAsync<T>(
+    public static async ValueTask WhenEmptyAsync<T>(
         this ChannelReader<T> reader,
         int delay = PollingDefaults.PollDelayMs,
         CancellationToken ct = default
     )
     {
-        while (reader.TryPeek(out _))
-            await Task.Delay(delay, ct).ConfigureAwait(false);
+        try
+        {
+            while (reader.TryPeek(out _))
+                await Task.Delay(delay, ct).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException oce) when (oce.CancellationToken == ct) { }
     }
 }

@@ -27,7 +27,7 @@ public static class Expect
     /// <param name="ct">The cancellation token to observe.</param>
     /// <param name="pollDelay">The delay in milliseconds between validation attempts.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    public static async Task ToAsync(Action validate, CancellationToken ct, int pollDelay = DefaultPollDelayMs)
+    public static async ValueTask ToAsync(Action validate, CancellationToken ct, int pollDelay = DefaultPollDelayMs)
     {
         await Wait.UntilAsync(
             () =>
@@ -55,7 +55,11 @@ public static class Expect
     /// <param name="ct">The cancellation token to observe.</param>
     /// <param name="pollDelay">The delay in milliseconds between validation attempts.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    public static async Task ToAsync(Func<ValueTask> validate, CancellationToken ct, int pollDelay = DefaultPollDelayMs)
+    public static async ValueTask ToAsync(
+        Func<ValueTask> validate,
+        CancellationToken ct,
+        int pollDelay = DefaultPollDelayMs
+    )
     {
         await Wait.UntilAsync(
             async () =>
@@ -83,7 +87,11 @@ public static class Expect
     /// <param name="ms">The timeout in milliseconds.</param>
     /// <param name="pollDelay">The delay in milliseconds between validation attempts.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    public static async Task ToAsync(Action validate, int ms = DefaultTimeoutMs, int pollDelay = DefaultPollDelayMs)
+    public static async ValueTask ToAsync(
+        Action validate,
+        int ms = DefaultTimeoutMs,
+        int pollDelay = DefaultPollDelayMs
+    )
     {
         using var cts = new CancellationTokenSource(ms);
         await ToAsync(validate, cts.Token, pollDelay);
@@ -96,7 +104,7 @@ public static class Expect
     /// <param name="ms">The timeout in milliseconds.</param>
     /// <param name="pollDelay">The delay in milliseconds between validation attempts.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    public static async Task ToAsync(
+    public static async ValueTask ToAsync(
         Func<ValueTask> validate,
         int ms = DefaultTimeoutMs,
         int pollDelay = DefaultPollDelayMs

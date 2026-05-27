@@ -15,17 +15,8 @@ public static partial class ResolveGenericArgumentsByImplementationExtension
     /// <param name="type">The class type to resolve arguments for.</param>
     /// <param name="target">The target generic parameter type.</param>
     /// <returns>An array of resolved type arguments, or null if resolution fails.</returns>
-    private static Type[]? ResolveClassArgumentsByGenericParameter(this Type type, Type target)
-    {
-        if (type.TryGetTargetImplementation(target, out var args))
-            return args;
-
-        // as of here:
-        // - type is open generic type with generic parameters
-        // - target is open/defined generic type with/without generic parameters
-
-        return type.CanBeUsedAsParameter(target) ? type.GetGenericArguments() : null;
-    }
+    private static Type[]? ResolveClassArgumentsByGenericParameter(this Type type, Type target) =>
+        type.ResolveArgumentsByGenericParameter(target);
 
     /// <summary>
     /// Resolves generic arguments for a class type when the target is another class type.

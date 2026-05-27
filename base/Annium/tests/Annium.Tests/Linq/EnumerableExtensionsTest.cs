@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using Annium.Linq;
 using Annium.Testing;
@@ -123,5 +125,36 @@ public class EnumerableExtensionsTest
         var src = new[] { "a", "b", "c" };
 
         src.Join(", ").Is("a, b, c");
+    }
+
+    /// <summary>
+    /// ToSortedList with unique keys returns a SortedList whose keys are in ascending order
+    /// and whose values correspond to the source elements.
+    /// </summary>
+    [Fact]
+    public void ToSortedList_UniqueKeys_ReturnsSortedList()
+    {
+        // arrange — intentionally out of order so that sorted order is observable
+        var items = new[] { 3, 1, 4, 2 };
+
+        // act
+        var result = items.ToSortedList(x => x);
+
+        // assert — SortedList keys are always in ascending order
+        result.Count.Is(4);
+        result.Keys.IsEqual(new[] { 1, 2, 3, 4 });
+        result.Values.IsEqual(new[] { 1, 2, 3, 4 });
+    }
+
+    /// <summary>
+    /// ToSortedList with duplicate keys throws because the underlying ToDictionary
+    /// rejects duplicate keys with an ArgumentException.
+    /// </summary>
+    [Fact]
+    public void ToSortedList_DuplicateKeys_Throws()
+    {
+        var items = new[] { 1, 2, 1 };
+
+        Wrap.It(() => items.ToSortedList(x => x)).Throws<ArgumentException>();
     }
 }
