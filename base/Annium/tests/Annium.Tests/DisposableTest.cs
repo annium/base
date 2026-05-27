@@ -170,6 +170,7 @@ public class DisposableTest : TestBase
     /// disposable invoked exactly once during dispose, or (b) rejected with
     /// <see cref="ObjectDisposedException"/>. No leaks, no double-dispose.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task AsyncDisposable_ConcurrentAddDuringDispose_AllDisposedOrRejected()
     {
@@ -272,6 +273,7 @@ public class DisposableTest : TestBase
     /// Add either (a) being accepted and its disposable invoked exactly once during dispose, or
     /// (b) rejected with <see cref="ObjectDisposedException"/>. No leaks, no double-dispose.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task Disposable_ConcurrentAddDuringDispose_AllDisposedOrRejected()
     {
@@ -752,10 +754,13 @@ public class DisposableTest : TestBase
     /// </summary>
     private sealed class CountingDisposable : IDisposable
     {
+        /// <summary>Backing field tracking the number of times <see cref="Dispose"/> has been called.</summary>
         private int _disposeCount;
 
+        /// <summary>Gets the number of times this instance has been disposed.</summary>
         public int DisposeCount => Volatile.Read(ref _disposeCount);
 
+        /// <summary>Increments the dispose count to record that this instance was disposed.</summary>
         public void Dispose() => Interlocked.Increment(ref _disposeCount);
     }
 
@@ -765,13 +770,18 @@ public class DisposableTest : TestBase
     /// </summary>
     private sealed class ThrowingAsyncDisposable : IAsyncDisposable
     {
+        /// <summary>The exception to surface when <see cref="DisposeAsync"/> is called.</summary>
         private readonly Exception _ex;
 
+        /// <summary>Initializes a new instance with the exception to throw on dispose.</summary>
+        /// <param name="ex">The exception that <see cref="DisposeAsync"/> will return as a faulted task.</param>
         public ThrowingAsyncDisposable(Exception ex)
         {
             _ex = ex;
         }
 
+        /// <summary>Returns a faulted <see cref="ValueTask"/> containing the configured exception.</summary>
+        /// <returns>A faulted <see cref="ValueTask"/> that carries the stored exception.</returns>
         public ValueTask DisposeAsync() => ValueTask.FromException(_ex);
     }
 }

@@ -94,6 +94,7 @@ public class Sample : ILogSubject
     /// <summary>
     /// Verifies that the analyzer shows a warning for string-concatenated log message templates.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task StringConcatTemplate_ShowsWarning()
     {

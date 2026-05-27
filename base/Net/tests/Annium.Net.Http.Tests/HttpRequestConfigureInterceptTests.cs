@@ -34,7 +34,11 @@ public class HttpRequestConfigureInterceptTests : TestBase
         });
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Initializes the test fixture by calling the base initializer and resolving the
+    /// <see cref="IHttpRequestFactory"/> from the DI container.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous initialization.</returns>
     public override async ValueTask InitializeAsync()
     {
         await base.InitializeAsync();

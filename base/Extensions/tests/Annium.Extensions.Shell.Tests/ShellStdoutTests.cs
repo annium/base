@@ -24,6 +24,7 @@ public class ShellStdoutTests : TestBase
     /// A ~100 KB stdout payload is captured in full; no truncation.
     /// Skipped on Windows — this test uses a POSIX shell to generate the payload.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task RunAsync_LargeStdout_NotTruncated()
     {

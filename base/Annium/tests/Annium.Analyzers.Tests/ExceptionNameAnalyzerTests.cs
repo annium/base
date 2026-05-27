@@ -47,6 +47,7 @@ public sealed class ExceptionNameAnalyzerTests : CSharpAnalyzerTest<ExceptionNam
     /// Verifies that the analyzer flags an indirect subclass of <see cref="System.Exception"/>
     /// whose name does not end with "Exception".
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task MultilevelInheritance_WrongName_ShowsWarning()
     {
@@ -73,6 +74,7 @@ public class LeafError : MidException { }
     /// Verifies that the analyzer ignores an abstract subclass whose name already ends with
     /// "Exception".
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task AbstractExceptionSubclass_CorrectName_Ignores()
     {
@@ -87,6 +89,7 @@ public class LeafError : MidException { }
     /// Verifies that the analyzer does not flag types that are not classes — interfaces whose
     /// name ends with "Exception" do not derive from System.Exception and must not warn.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task Interface_Ignores()
     {
@@ -101,6 +104,7 @@ public class LeafError : MidException { }
     /// Verifies that the analyzer flags a partial class whose declarations are spread across files
     /// when the name does not end with "Exception".
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task PartialClass_WrongName_ShowsWarning()
     {

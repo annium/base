@@ -33,6 +33,7 @@ public class LogRouteSchedulerSelectionTests
     /// <summary>
     /// A handler derived from BufferingLogHandler should route through BackgroundLogScheduler by default.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task Use_BufferingHandler_DispatchesViaBackground()
     {
@@ -49,6 +50,7 @@ public class LogRouteSchedulerSelectionTests
     /// <summary>
     /// A non-buffering handler with .WithBackgroundScheduler() must route through BackgroundLogScheduler.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task Use_NonBufferingHandler_WithBackgroundScheduler_OverridesToBackground()
     {
@@ -63,6 +65,8 @@ public class LogRouteSchedulerSelectionTests
     /// <summary>
     /// Builds a service provider, applies the route configuration, and returns the schedulers list.
     /// </summary>
+    /// <param name="configure">An action that configures the log route under test.</param>
+    /// <returns>The resolved list of <see cref="ILogScheduler{TContext}"/> instances registered by the route.</returns>
     private static IReadOnlyList<ILogScheduler<DefaultLogContext>> BuildSchedulers(
         Action<LogRoute<DefaultLogContext>> configure
     )
@@ -83,6 +87,12 @@ public class LogRouteSchedulerSelectionTests
     /// </summary>
     private sealed class SyncSink : ILogHandler<DefaultLogContext>
     {
+        /// <summary>
+        /// Completes immediately, discarding all messages — used only to verify scheduler selection.
+        /// </summary>
+        /// <param name="messages">The log messages passed by the scheduler.</param>
+        /// <param name="ct">Cancellation token.</param>
+        /// <returns>A completed <see cref="ValueTask"/>.</returns>
         public ValueTask HandleAsync(IReadOnlyList<LogMessage<DefaultLogContext>> messages, CancellationToken ct) =>
             ValueTask.CompletedTask;
     }
@@ -95,6 +105,12 @@ public class LogRouteSchedulerSelectionTests
         public BufferingSink()
             : base(new LogRouteConfiguration()) { }
 
+        /// <summary>
+        /// Signals that all buffered events were handled — this sink never actually sends anything,
+        /// it exists solely to exercise the buffering-handler scheduler-selection path.
+        /// </summary>
+        /// <param name="events">The buffered log messages to send.</param>
+        /// <returns>A <see cref="ValueTask{TResult}"/> that always resolves to <c>true</c>.</returns>
         protected override ValueTask<bool> SendEventsAsync(IReadOnlyCollection<LogMessage<DefaultLogContext>> events) =>
             new(true);
     }

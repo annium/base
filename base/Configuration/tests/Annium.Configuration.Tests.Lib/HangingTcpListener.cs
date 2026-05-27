@@ -13,6 +13,7 @@ namespace Annium.Configuration.Tests.Lib;
 /// </summary>
 public sealed class HangingTcpListener : TcpListenerBase
 {
+    /// <summary>Strong references to accepted clients, kept alive until cleanup to prevent premature socket disposal.</summary>
     private readonly List<TcpClient> _accepted = new();
 
     /// <summary>
@@ -22,7 +23,13 @@ public sealed class HangingTcpListener : TcpListenerBase
     public HangingTcpListener(string resourcePath)
         : base(resourcePath) { }
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Accepts the client connection and stores a strong reference to it, intentionally
+    /// not sending any data so the caller's HTTP request hangs until the client is disposed.
+    /// </summary>
+    /// <param name="client">The accepted TCP client to hold alive for the duration of the test.</param>
+    /// <param name="ct">Cancellation token (not observed — hanging behaviour is intentional).</param>
+    /// <returns>A completed value task; processing is synchronous (just an add to the list).</returns>
     protected override ValueTask HandleClientAsync(TcpClient client, CancellationToken ct)
     {
         // Hold a strong reference so GC doesn't reap the socket while the test
@@ -32,7 +39,11 @@ public sealed class HangingTcpListener : TcpListenerBase
         return ValueTask.CompletedTask;
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Disposes all accepted client sockets that were held alive during the test, releasing
+    /// TCP resources after the listener has stopped accepting new connections.
+    /// </summary>
+    /// <returns>A task that completes when all held clients have been disposed.</returns>
     protected override async ValueTask CleanupAsync()
     {
         // Snapshot under the lock, then dispose outside it — DisposeAsync cannot be awaited

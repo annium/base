@@ -14,6 +14,10 @@ namespace Annium.Configuration.Abstractions.Tests;
 /// </summary>
 public class ServiceContainerExtensionsTests
 {
+    /// <summary>
+    /// Creates a fresh <see cref="ServiceContainer"/> for use in each test via the shared test factory.
+    /// </summary>
+    /// <returns>A new <see cref="ServiceContainer"/> instance.</returns>
     private static ServiceContainer CreateContainer() => TestContainerFactory.Create();
 
     /// <summary>

@@ -8,13 +8,19 @@ namespace Annium.Configuration.Json.Internal;
 /// </summary>
 internal sealed class JsonFileSource : FileConfigurationSourceBase
 {
-    /// <inheritdoc />
+    /// <summary>
+    /// Format label ("Json") used in diagnostic and error messages for this source.
+    /// </summary>
     protected override string FormatLabel => "Json";
 
     public JsonFileSource(string path, bool optional)
         : base(path, optional) { }
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Parses raw JSON text into the flattened configuration key/value dictionary.
+    /// </summary>
+    /// <param name="raw">Raw JSON document text loaded from the file.</param>
+    /// <returns>Flattened configuration data keyed by path segments.</returns>
     protected override IReadOnlyDictionary<string[], string> ParseRaw(string raw) =>
         new JsonConfigurationProvider(raw).Read();
 }

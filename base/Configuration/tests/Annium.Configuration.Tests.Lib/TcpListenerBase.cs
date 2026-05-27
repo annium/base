@@ -15,9 +15,16 @@ namespace Annium.Configuration.Tests.Lib;
 /// </summary>
 public abstract class TcpListenerBase : IAsyncDisposable
 {
+    /// <summary>The underlying TCP listener bound to the loopback interface.</summary>
     private readonly TcpListener _listener;
+
+    /// <summary>Completion source resolved when the accept loop is ready to accept connections.</summary>
     private readonly TaskCompletionSource _listening = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+    /// <summary>The resource path segment appended to the listener URI (e.g. "config.json").</summary>
     private readonly string _resourcePath;
+
+    /// <summary>The background accept loop started by <see cref="StartAsync"/>; awaited during disposal.</summary>
     private Task? _acceptLoop;
 
     /// <summary>
@@ -46,6 +53,8 @@ public abstract class TcpListenerBase : IAsyncDisposable
     /// tracked <see cref="Task"/> stored in a private field so <see cref="DisposeAsync"/>
     /// can await its completion — propagating any unexpected exception instead of swallowing it.
     /// </summary>
+    /// <param name="ct">Token used to bound the wait for the accept loop to signal readiness.</param>
+    /// <returns>A task that completes once the accept loop has signalled it is ready.</returns>
     public async Task StartAsync(CancellationToken ct)
     {
         _listener.Start();
@@ -80,15 +89,21 @@ public abstract class TcpListenerBase : IAsyncDisposable
     /// </summary>
     /// <param name="client">The accepted TCP client.</param>
     /// <param name="ct">Token signalled when the listener is disposed.</param>
+    /// <returns>A value task that completes when the connection has been fully handled.</returns>
     protected abstract ValueTask HandleClientAsync(TcpClient client, CancellationToken ct);
 
     /// <summary>
     /// Releases subclass-owned resources after the accept loop has terminated. Called once
     /// during <see cref="DisposeAsync"/>; the base implementation is a no-op.
     /// </summary>
+    /// <returns>A value task that completes when subclass resources have been released.</returns>
     protected virtual ValueTask CleanupAsync() => ValueTask.CompletedTask;
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Cancels the accept loop, stops the underlying listener, awaits loop termination,
+    /// runs <see cref="CleanupAsync"/>, and disposes the cancellation token source.
+    /// </summary>
+    /// <returns>A value task that completes when all resources have been fully released.</returns>
     public async ValueTask DisposeAsync()
     {
         await Cts.CancelAsync();

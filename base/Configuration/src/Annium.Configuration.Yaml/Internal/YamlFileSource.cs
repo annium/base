@@ -8,13 +8,19 @@ namespace Annium.Configuration.Yaml.Internal;
 /// </summary>
 internal sealed class YamlFileSource : FileConfigurationSourceBase
 {
-    /// <inheritdoc />
+    /// <summary>
+    /// Format label ("Yaml") used in diagnostic and error messages for this source.
+    /// </summary>
     protected override string FormatLabel => "Yaml";
 
     public YamlFileSource(string path, bool optional)
         : base(path, optional) { }
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Parses raw YAML text into the flattened configuration key/value dictionary.
+    /// </summary>
+    /// <param name="raw">Raw YAML document text loaded from the file.</param>
+    /// <returns>Flattened configuration data keyed by path segments.</returns>
     protected override IReadOnlyDictionary<string[], string> ParseRaw(string raw) =>
         new YamlConfigurationProvider(raw).Read();
 }

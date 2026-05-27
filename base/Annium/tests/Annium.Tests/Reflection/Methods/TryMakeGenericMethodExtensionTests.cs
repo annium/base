@@ -65,10 +65,27 @@ public class TryMakeGenericMethodExtensionTests
         (result is null).IsTrue();
     }
 
+    /// <summary>
+    /// Static helper class providing generic methods used as reflection targets by the
+    /// <c>TryMakeGenericMethod</c> tests.
+    /// </summary>
     private static class Holder
     {
+        /// <summary>
+        /// Unconstrained generic identity method; used to test the success path of
+        /// <c>TryMakeGenericMethod</c> with a valid type argument.
+        /// </summary>
+        /// <typeparam name="T">The type of the value to return.</typeparam>
+        /// <param name="value">The value to return unchanged.</param>
+        /// <returns>The same <paramref name="value"/> passed in.</returns>
         public static T Identity<T>(T value) => value;
 
+        /// <summary>
+        /// Generic method constrained to reference types; used to test the constraint-violation path
+        /// of <c>TryMakeGenericMethod</c> (passing a value type triggers the catch-returns-false branch).
+        /// </summary>
+        /// <typeparam name="T">The type parameter constrained to <see langword="class"/>.</typeparam>
+        /// <returns>Always <see langword="null"/> — the method body is irrelevant to the tests.</returns>
         public static T ClassOnly<T>()
             where T : class => null!;
     }

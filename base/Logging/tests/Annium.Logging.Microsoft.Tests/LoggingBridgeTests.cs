@@ -94,6 +94,7 @@ public class LoggingBridgeTests
     /// guards against silent regressions where the early-return inadvertently captures a
     /// non-<c>None</c> level.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task Log_AboveFilterLevel_ReachesInMemorySink()
     {

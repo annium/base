@@ -340,6 +340,8 @@ public static class ServiceDescriptor
     /// would therefore be silently coerced to Singleton at provider build, masking the caller's
     /// intent. Reject it at construction so the mistake surfaces immediately.
     /// </summary>
+    /// <param name="serviceType">Service type the instance descriptor is being created for; used only to build the error message.</param>
+    /// <param name="lifetime">Requested lifetime; must be <see cref="ServiceLifetime.Singleton"/> or an <see cref="ArgumentException"/> is thrown.</param>
     private static void EnsureSingleton(Type serviceType, ServiceLifetime lifetime)
     {
         if (lifetime != ServiceLifetime.Singleton)

@@ -21,6 +21,12 @@ namespace Annium.Core.Entrypoint.Tests;
 /// </summary>
 public class EntrypointDisposeTests
 {
+    /// <summary>
+    /// Verifies that disposing three sequentially created entrypoints returns the
+    /// <c>Console.CancelKeyPress</c> and <c>AssemblyLoadContext.Unloading</c> handler counts
+    /// back to the baseline values measured before any entrypoint was created.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task DisposeAsync_ThreeEntrypoints_HandlerCountReturnsToBaseline()
     {
@@ -61,6 +67,7 @@ public class EntrypointDisposeTests
     /// Attempts to read the invocation list length for <c>Console.CancelKeyPress</c>.
     /// Returns -1 when the runtime-internal backing field cannot be located.
     /// </summary>
+    /// <returns>The number of registered handlers, or -1 if introspection is unavailable.</returns>
     private static int CountConsoleCancelKeyPressHandlers()
     {
         var field =
@@ -76,6 +83,7 @@ public class EntrypointDisposeTests
     /// Attempts to read the invocation list length for <c>AssemblyLoadContext.Default.Unloading</c>.
     /// Returns -1 when the runtime-internal backing field cannot be located.
     /// </summary>
+    /// <returns>The number of registered handlers, or -1 if introspection is unavailable.</returns>
     private static int CountUnloadingHandlers()
     {
         var alc = AssemblyLoadContext.Default;
@@ -92,6 +100,10 @@ public class EntrypointDisposeTests
     /// </summary>
     private sealed class LoggingPack : ServicePackBase
     {
+        /// <summary>Registers time and logging services into the container.</summary>
+        /// <param name="container">The service container to configure.</param>
+        /// <param name="ct">Cancellation token.</param>
+        /// <returns>A completed task.</returns>
         public override Task ConfigureAsync(IServiceContainer container, CancellationToken ct)
         {
             container.AddTime().WithRealTime().SetDefault();
@@ -99,6 +111,11 @@ public class EntrypointDisposeTests
             return Task.CompletedTask;
         }
 
+        /// <summary>Wires in-memory logging so the entrypoint's ILogger resolution succeeds.</summary>
+        /// <param name="container">The service container (unused; logging routing is via provider).</param>
+        /// <param name="provider">The built service provider used to configure logging routes.</param>
+        /// <param name="ct">Cancellation token.</param>
+        /// <returns>A completed task.</returns>
         public override Task RegisterAsync(IServiceContainer container, IServiceProvider provider, CancellationToken ct)
         {
             provider.UseLogging(route => route.UseInMemory());

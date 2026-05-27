@@ -68,7 +68,7 @@ publish apiKey:
 
 docs-lint:
     @echo "=== $0 ==="
-    dotnet tool run doclint lint -w . -i '**/*.cs' -e '**/obj/**/*.cs' -e '**/tests/**/*.cs'
+    dotnet tool run doclint lint -w . -i '**/*.cs' -e '**/obj/**/*.cs'
 
 docs-clean:
     @echo "=== $0 ==="
@@ -135,6 +135,7 @@ ci-merge-request-short:
     just ensure-no-changes
     just clean
     just build
+    just docs-lint
 
 ci-merge-request-full:
     #!/usr/bin/env bash
@@ -145,6 +146,7 @@ ci-merge-request-full:
     just ensure-no-changes
     just clean
     just build
+    just docs-lint
     just test
 
 ci-release apiKey repository githubToken:

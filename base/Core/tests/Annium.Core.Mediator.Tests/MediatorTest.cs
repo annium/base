@@ -19,6 +19,7 @@ namespace Annium.Core.Mediator.Tests;
 /// </summary>
 public class MediatorTest
 {
+    /// <summary>The test output helper used for logging within this test class.</summary>
     private readonly ITestOutputHelper _outputHelper;
 
     /// <summary>
@@ -33,6 +34,7 @@ public class MediatorTest
     /// <summary>
     /// Tests that a single closed handler works correctly.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task SingleClosedHandler_Works()
     {
@@ -49,6 +51,7 @@ public class MediatorTest
     /// <summary>
     /// Tests that a single open handler works correctly with expected parameters.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task SingleOpenHandler_WithExpectedParameters_Works()
     {
@@ -65,6 +68,7 @@ public class MediatorTest
     /// <summary>
     /// Tests that a chain of handlers works correctly with expected parameters.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task ChainOfHandlers_WithExpectedParameters_Works()
     {
@@ -89,6 +93,7 @@ public class MediatorTest
     /// <summary>
     /// Tests that a chain of handlers works correctly with registered responses.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task ChainOfHandlers_WithRegisteredResponse_Works()
     {
@@ -114,6 +119,8 @@ public class MediatorTest
     /// <summary>
     /// Builds an initialized fixture with the supplied mediator configuration.
     /// </summary>
+    /// <param name="configure">Action that configures the mediator registrations.</param>
+    /// <returns>A task that resolves to the initialized <see cref="Fixture"/>.</returns>
     private async Task<Fixture> BuildAsync(Action<MediatorConfiguration> configure)
     {
         var fx = new Fixture(_outputHelper);
@@ -133,6 +140,7 @@ public class MediatorTest
         /// Registers mediator handlers + validators + logging routes. Must be called before
         /// <see cref="Annium.Testing.TestBase.InitializeAsync"/>.
         /// </summary>
+        /// <param name="configure">Action that configures the mediator registrations.</param>
         public void Configure(Action<MediatorConfiguration> configure)
         {
             Register(container =>
@@ -167,7 +175,7 @@ public class MediatorTest
         : IPipeRequestHandler<Request<TRequest>, TRequest, TResponse, Response<TResponse>>,
             ILogSubject
     {
-        /// <summary>JSON serializer options configured for operations.</summary>
+        /// <summary>JSON serializer options configured for operations serialization.</summary>
         private readonly JsonSerializerOptions _options = new JsonSerializerOptions().ConfigureForOperations();
 
         /// <summary>Gets the logger for this handler.</summary>
@@ -182,7 +190,13 @@ public class MediatorTest
             Logger = logger;
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Deserializes the outer request, delegates to the next handler, then wraps the result in a response.
+        /// </summary>
+        /// <param name="request">The wrapped request containing a JSON-serialized payload.</param>
+        /// <param name="ct">A cancellation token to observe while awaiting the next handler.</param>
+        /// <param name="next">The next handler delegate in the pipeline.</param>
+        /// <returns>A task that resolves to the serialized response wrapper.</returns>
         public async Task<Response<TResponse>> HandleAsync(
             Request<TRequest> request,
             CancellationToken ct,
@@ -203,6 +217,7 @@ public class MediatorTest
     /// <typeparam name="T">The type of the request value.</typeparam>
     private class Request<T>
     {
+        /// <summary>JSON serializer options configured for operations serialization.</summary>
         private readonly JsonSerializerOptions _options = new JsonSerializerOptions().ConfigureForOperations();
 
         /// <summary>Gets the serialized value.</summary>
@@ -219,6 +234,7 @@ public class MediatorTest
     /// <typeparam name="T">The type of the response value.</typeparam>
     private class Response<T> : IResponse
     {
+        /// <summary>JSON serializer options configured for operations deserialization.</summary>
         private readonly JsonSerializerOptions _options = new JsonSerializerOptions().ConfigureForOperations();
 
         /// <summary>Gets the deserialized value.</summary>
@@ -242,6 +258,7 @@ public class MediatorTest
         /// <summary>Gets the logger for this handler.</summary>
         public ILogger Logger { get; }
 
+        /// <summary>The delegate used to validate incoming requests.</summary>
         private readonly Func<TRequest, bool> _validate;
 
         /// <summary>Initializes a new instance of the <see cref="ValidationHandler{TRequest, TResponse}"/> class.</summary>
@@ -251,7 +268,13 @@ public class MediatorTest
             Logger = logger;
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Validates the request and, if valid, delegates to the next handler; returns a failure result on validation errors.
+        /// </summary>
+        /// <param name="request">The request to validate and process.</param>
+        /// <param name="ct">A cancellation token to observe while awaiting the next handler.</param>
+        /// <param name="next">The next handler delegate in the pipeline.</param>
+        /// <returns>A task that resolves to a boolean result wrapping the response, indicating success or validation failure.</returns>
         public async Task<IBooleanResult<TResponse>> HandleAsync(
             TRequest request,
             CancellationToken ct,
@@ -290,7 +313,12 @@ public class MediatorTest
             Logger = logger;
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Handles the request by replacing spaces in the value with underscores and returning the response.
+        /// </summary>
+        /// <param name="request">The request whose value will be transformed.</param>
+        /// <param name="ct">A cancellation token (unused but required by the interface).</param>
+        /// <returns>A task that resolves to the transformed response.</returns>
         public Task<TResponse> HandleAsync(TRequest request, CancellationToken ct)
         {
             this.Info<string>("handler: {type}", GetType().FriendlyName());
@@ -314,7 +342,12 @@ public class MediatorTest
             Logger = logger;
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Handles the request by mapping a <see cref="Base"/> instance to a <see cref="One"/> response.
+        /// </summary>
+        /// <param name="request">The base request containing the value to map.</param>
+        /// <param name="ct">A cancellation token (unused but required by the interface).</param>
+        /// <returns>A task that resolves to the mapped <see cref="One"/> response.</returns>
         public Task<One> HandleAsync(Base request, CancellationToken ct)
         {
             this.Trace<string>("handler: {type}", GetType().FullName!);
@@ -330,7 +363,10 @@ public class MediatorTest
         /// <summary>Gets or sets the value.</summary>
         public string? Value { get; init; }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Returns a hash code derived from the <see cref="Value"/> property.
+        /// </summary>
+        /// <returns>An integer hash code for this instance.</returns>
         public override int GetHashCode() => Value?.GetHashCode() ?? 0;
     }
 
@@ -340,7 +376,10 @@ public class MediatorTest
         /// <summary>Gets or sets the first value.</summary>
         public long First { get; init; }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Returns a hash code derived from the base <see cref="Base.Value"/> and the <see cref="First"/> property.
+        /// </summary>
+        /// <returns>An integer hash code for this instance.</returns>
         public override int GetHashCode() => 7 * base.GetHashCode() + First.GetHashCode();
     }
 
@@ -350,7 +389,10 @@ public class MediatorTest
         /// <summary>Gets or sets the second value.</summary>
         public int Second { get; init; }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Returns a hash code derived from the base <see cref="Base.Value"/> and the <see cref="Second"/> property.
+        /// </summary>
+        /// <returns>An integer hash code for this instance.</returns>
         public override int GetHashCode() => 11 * base.GetHashCode() + Second.GetHashCode();
     }
 }

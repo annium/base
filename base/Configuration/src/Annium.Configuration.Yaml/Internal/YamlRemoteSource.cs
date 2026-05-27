@@ -10,13 +10,19 @@ namespace Annium.Configuration.Yaml.Internal;
 /// </summary>
 internal sealed class YamlRemoteSource : RemoteConfigurationSourceBase
 {
-    /// <inheritdoc />
+    /// <summary>
+    /// Format label ("Yaml") used in diagnostic and error messages for this source.
+    /// </summary>
     protected override string FormatLabel => "Yaml";
 
     public YamlRemoteSource(Uri uri, bool optional, TimeSpan? timeout)
         : base(uri, optional, timeout) { }
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Parses raw YAML text into the flattened configuration key/value dictionary.
+    /// </summary>
+    /// <param name="raw">Raw YAML document text fetched from the remote endpoint.</param>
+    /// <returns>Flattened configuration data keyed by path segments.</returns>
     protected override IReadOnlyDictionary<string[], string> ParseRaw(string raw) =>
         new YamlConfigurationProvider(raw).Read();
 }

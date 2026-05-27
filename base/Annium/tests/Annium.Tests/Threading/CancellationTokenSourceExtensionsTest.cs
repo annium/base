@@ -18,11 +18,28 @@ public class CancellationTokenSourceExtensionsTest
     /// </summary>
     private sealed class FakeScheduler : IActionScheduler
     {
+        /// <summary>Gets the duration that was passed to the most recent <c>Delay</c> call.</summary>
         public Duration LastDuration { get; private set; }
+
+        /// <summary>The callback registered by the last <c>Delay</c> call, cleared when cancelled.</summary>
         private Action? _pending;
 
+        /// <summary>
+        /// Schedules <paramref name="handle"/> to fire after <paramref name="timeout"/> milliseconds.
+        /// Delegates to the <see cref="Duration"/>-based overload.
+        /// </summary>
+        /// <param name="handle">The callback to invoke when the delay fires.</param>
+        /// <param name="timeout">The delay in milliseconds.</param>
+        /// <returns>A cancellation action that clears the pending callback.</returns>
         public Action Delay(Action handle, int timeout) => Delay(handle, Duration.FromMilliseconds(timeout));
 
+        /// <summary>
+        /// Records <paramref name="timeout"/> in <see cref="LastDuration"/>, stores <paramref name="handle"/>
+        /// as the pending action, and returns a cancellation delegate that clears it.
+        /// </summary>
+        /// <param name="handle">The callback to invoke when the delay fires.</param>
+        /// <param name="timeout">The delay duration to record.</param>
+        /// <returns>A cancellation action that clears the pending callback.</returns>
         public Action Delay(Action handle, Duration timeout)
         {
             LastDuration = timeout;
@@ -30,10 +47,22 @@ public class CancellationTokenSourceExtensionsTest
             return () => _pending = null;
         }
 
+        /// <summary>Not supported by this fake; always throws <see cref="NotSupportedException"/>.</summary>
+        /// <param name="handle">Unused callback.</param>
+        /// <param name="interval">Unused interval in milliseconds.</param>
+        /// <returns>Never returns.</returns>
         public Action Interval(Action handle, int interval) => throw new NotSupportedException();
 
+        /// <summary>Not supported by this fake; always throws <see cref="NotSupportedException"/>.</summary>
+        /// <param name="handle">Unused callback.</param>
+        /// <param name="interval">Unused interval duration.</param>
+        /// <returns>Never returns.</returns>
         public Action Interval(Action handle, Duration interval) => throw new NotSupportedException();
 
+        /// <summary>
+        /// Synchronously invokes the pending callback registered by the last <c>Delay</c> call,
+        /// simulating the scheduler firing.
+        /// </summary>
         public void Fire() => _pending?.Invoke();
     }
 

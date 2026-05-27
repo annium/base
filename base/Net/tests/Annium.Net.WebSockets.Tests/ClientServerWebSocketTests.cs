@@ -552,6 +552,7 @@ public class ClientServerWebSocketTests : TestBase
     /// the underlying WebSocket teardown has already completed, so the public
     /// <see cref="IClientWebSocket.IsConnected"/> surface reports false. Spec test for AC#2 of T8.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task Disconnect_OnDisconnectedFires_HandlerObservesIsConnectedFalse()
     {

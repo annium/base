@@ -25,6 +25,7 @@ public sealed class DynamicLogMessageTemplateCodeFixTests
     /// <summary>
     /// Single interpolation: <c>$"run for {id}"</c> becomes <c>"run for {id}", id</c>.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task WhenDynamicTemplate_ConvertsToStaticTemplate()
     {
@@ -85,6 +86,7 @@ public class Sample : ILogSubject
     /// The analyzer still flags the call, but the code fix must not register any action —
     /// so <c>FixedCode</c> equals <c>TestCode</c>.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task WhenInterpolationHasAlignment_NoCodeFixRegistered()
     {
@@ -128,6 +130,7 @@ public class Sample : ILogSubject
     /// format specifier would be silently dropped.  The analyzer still flags the call, but the code fix
     /// must not register any action — so <c>FixedCode</c> equals <c>TestCode</c>.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task WhenInterpolationHasFormatClause_NoCodeFixRegistered()
     {
@@ -171,6 +174,7 @@ public class Sample : ILogSubject
     /// EVERY occurrence starting from 1 — producing <c>{x1}</c> and <c>{x2}</c> — not the asymmetric
     /// <c>{x}</c> and <c>{x2}</c> shape that would result from suffixing only from the second occurrence.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task WhenDuplicateIdentifierInTemplate_BothPlaceholdersSuffixed()
     {

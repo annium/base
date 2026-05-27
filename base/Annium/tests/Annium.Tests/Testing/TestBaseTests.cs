@@ -63,6 +63,7 @@ public class TestBaseTests : TestBase
             Name = name;
         }
 
+        /// <summary>Gets the name assigned to this service instance at construction time.</summary>
         public string Name { get; }
     }
 }

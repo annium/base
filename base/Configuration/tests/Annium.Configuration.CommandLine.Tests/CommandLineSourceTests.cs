@@ -17,6 +17,7 @@ public class CommandLineSourceTests
     /// Passing the same flag twice raises an <see cref="Exception"/> wrapped in
     /// <see cref="AggregateException"/> by <c>BuildAsync</c>.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task Read_DuplicateFlag_ThrowsException()
     {
@@ -34,6 +35,7 @@ public class CommandLineSourceTests
     /// Double-dash option syntax (<c>--section.key value</c>) is parsed by <c>ParseName</c>:
     /// leading dashes are stripped via the <c>^-+</c> regex and segments are PascalCased.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task Read_DoubleDashOption_ParsedCorrectly()
     {
@@ -51,6 +53,7 @@ public class CommandLineSourceTests
     /// must skip the executable path at index 0. The executable path is a positional argument
     /// (no leading dash) and therefore must never appear as a key in the flattened result.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task LoadAsync_NullArgs_UsesEnvironmentArgsSkippingExecutable()
     {
@@ -75,6 +78,7 @@ public class CommandLineSourceTests
     /// Arguments with no leading dash are positional and skipped by <c>IsPosition</c>; an
     /// all-positional input therefore produces an empty configuration result.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task Read_PositionalOnlyArgs_ProducesEmptyResult()
     {

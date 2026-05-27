@@ -50,7 +50,11 @@ public class AsResponseExtensionsTests : TestBase
         });
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Resolves the <see cref="IHttpRequestFactory"/> and <see cref="Serializer"/> instances
+    /// from the DI container after the base async initialization completes.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous initialization.</returns>
     public override async ValueTask InitializeAsync()
     {
         await base.InitializeAsync();

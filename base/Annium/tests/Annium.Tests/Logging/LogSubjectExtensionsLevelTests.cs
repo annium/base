@@ -14,21 +14,40 @@ namespace Annium.Tests.Logging;
 /// </summary>
 public class LogSubjectExtensionsLevelTests
 {
+    /// <summary>
+    /// Verifies that calling <c>Trace</c> on a log subject routes the message to <see cref="LogLevel.Trace"/>.
+    /// </summary>
     [Fact]
     public void Trace_RoutesToTraceLevel() => RunLevelTest(LogLevel.Trace, subject => subject.Trace("msg"));
 
+    /// <summary>
+    /// Verifies that calling <c>Debug</c> on a log subject routes the message to <see cref="LogLevel.Debug"/>.
+    /// </summary>
     [Fact]
     public void Debug_RoutesToDebugLevel() => RunLevelTest(LogLevel.Debug, subject => subject.Debug("msg"));
 
+    /// <summary>
+    /// Verifies that calling <c>Info</c> on a log subject routes the message to <see cref="LogLevel.Info"/>.
+    /// </summary>
     [Fact]
     public void Info_RoutesToInfoLevel() => RunLevelTest(LogLevel.Info, subject => subject.Info("msg"));
 
+    /// <summary>
+    /// Verifies that calling <c>Warn</c> on a log subject routes the message to <see cref="LogLevel.Warn"/>.
+    /// </summary>
     [Fact]
     public void Warn_RoutesToWarnLevel() => RunLevelTest(LogLevel.Warn, subject => subject.Warn("msg"));
 
+    /// <summary>
+    /// Verifies that calling <c>Error</c> on a log subject routes the message to <see cref="LogLevel.Error"/>.
+    /// </summary>
     [Fact]
     public void Error_RoutesToErrorLevel() => RunLevelTest(LogLevel.Error, subject => subject.Error("msg"));
 
+    /// <summary>
+    /// Verifies that the one-parameter <c>Debug</c> overload forwards the argument to the logger
+    /// and records it at <see cref="LogLevel.Debug"/>.
+    /// </summary>
     [Fact]
     public void Debug_OneParam_ForwardsArgument()
     {
@@ -38,6 +57,11 @@ public class LogSubjectExtensionsLevelTests
         captured.Data[0].Is(42);
     }
 
+    /// <summary>
+    /// Verifies that the one-parameter <c>Info</c> overload forwards the argument to the logger
+    /// and records it at <see cref="LogLevel.Info"/>. A non-string argument is used to avoid
+    /// resolving to the <c>[CallerFilePath]</c> string overload.
+    /// </summary>
     [Fact]
     public void Info_OneParam_ForwardsArgument()
     {
@@ -48,6 +72,10 @@ public class LogSubjectExtensionsLevelTests
         captured.Data[0].Is(99);
     }
 
+    /// <summary>
+    /// Verifies that the one-parameter <c>Warn</c> overload forwards the argument to the logger
+    /// and records it at <see cref="LogLevel.Warn"/>.
+    /// </summary>
     [Fact]
     public void Warn_OneParam_ForwardsArgument()
     {
@@ -57,6 +85,10 @@ public class LogSubjectExtensionsLevelTests
         captured.Data[0].Is(true);
     }
 
+    /// <summary>
+    /// Verifies that the one-parameter <c>Trace</c> overload forwards the argument to the logger
+    /// and records it at <see cref="LogLevel.Trace"/>.
+    /// </summary>
     [Fact]
     public void Trace_OneParam_ForwardsArgument()
     {
@@ -66,6 +98,10 @@ public class LogSubjectExtensionsLevelTests
         captured.Data[0].Is(7);
     }
 
+    /// <summary>
+    /// Verifies that the one-parameter <c>Error</c> overload forwards the argument to the logger
+    /// and records it at <see cref="LogLevel.Error"/>.
+    /// </summary>
     [Fact]
     public void Error_OneParam_ForwardsArgument()
     {
@@ -223,6 +259,12 @@ public class LogSubjectExtensionsLevelTests
             captured.Data[i].Is(i + 1);
     }
 
+    /// <summary>
+    /// Runs the given <paramref name="action"/> against a capturing subject, then asserts the
+    /// captured entry was logged at <paramref name="expected"/> level with the literal message "msg".
+    /// </summary>
+    /// <param name="expected">The log level the extension method is expected to route to.</param>
+    /// <param name="action">The logging call under test, expressed as an action on <see cref="ILogSubject"/>.</param>
     private static void RunLevelTest(LogLevel expected, Action<ILogSubject> action)
     {
         var captured = RunCapture(action);
@@ -230,6 +272,12 @@ public class LogSubjectExtensionsLevelTests
         captured.Message.Is("msg");
     }
 
+    /// <summary>
+    /// Creates a <see cref="CapturingLogger"/> and a <see cref="TestSubject"/>, runs
+    /// <paramref name="action"/>, asserts exactly one entry was captured, and returns it.
+    /// </summary>
+    /// <param name="action">The logging call under test, expressed as an action on <see cref="ILogSubject"/>.</param>
+    /// <returns>The single <see cref="CapturedEntry"/> written by the action.</returns>
     private static CapturedEntry RunCapture(Action<ILogSubject> action)
     {
         var originalLevel = LogConfig.Level;
@@ -248,12 +296,32 @@ public class LogSubjectExtensionsLevelTests
         }
     }
 
+    /// <summary>
+    /// Represents a single log entry captured by <see cref="CapturingLogger"/>.
+    /// </summary>
     private sealed record CapturedEntry(LogLevel Level, string Message, IReadOnlyList<object?> Data);
 
+    /// <summary>
+    /// In-memory <see cref="ILogger"/> that accumulates every call to <see cref="Log"/> and
+    /// <see cref="Error"/> as <see cref="CapturedEntry"/> records for assertion.
+    /// </summary>
     private sealed class CapturingLogger : ILogger
     {
+        /// <summary>
+        /// Gets the list of entries recorded so far.
+        /// </summary>
         public List<CapturedEntry> Entries { get; } = new();
 
+        /// <summary>
+        /// Records the structured-log call as a <see cref="CapturedEntry"/> at the given level.
+        /// </summary>
+        /// <param name="subject">The log subject.</param>
+        /// <param name="file">Source file path.</param>
+        /// <param name="member">Calling member name.</param>
+        /// <param name="line">Source line number.</param>
+        /// <param name="level">The log level.</param>
+        /// <param name="message">The message template.</param>
+        /// <param name="data">Structured-log data arguments.</param>
         public void Log(
             object subject,
             string file,
@@ -264,6 +332,15 @@ public class LogSubjectExtensionsLevelTests
             IReadOnlyList<object?> data
         ) => Entries.Add(new CapturedEntry(level, message, data));
 
+        /// <summary>
+        /// Records the exception call as a <see cref="CapturedEntry"/> at <see cref="LogLevel.Error"/>.
+        /// </summary>
+        /// <param name="subject">The log subject.</param>
+        /// <param name="file">Source file path.</param>
+        /// <param name="member">Calling member name.</param>
+        /// <param name="line">Source line number.</param>
+        /// <param name="ex">The exception to record.</param>
+        /// <param name="data">Structured-log data arguments.</param>
         public void Error(
             object subject,
             string file,
@@ -274,10 +351,17 @@ public class LogSubjectExtensionsLevelTests
         ) => Entries.Add(new CapturedEntry(LogLevel.Error, ex.Message, data));
     }
 
+    /// <summary>
+    /// Minimal <see cref="ILogSubject"/> implementation that delegates to an injected
+    /// <see cref="ILogger"/> — used to drive the extension-method shims under test.
+    /// </summary>
     private sealed class TestSubject : ILogSubject
     {
         public TestSubject(ILogger logger) => Logger = logger;
 
+        /// <summary>
+        /// Gets the logger instance used by this subject.
+        /// </summary>
         public ILogger Logger { get; }
     }
 }

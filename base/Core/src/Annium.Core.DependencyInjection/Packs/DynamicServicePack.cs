@@ -104,13 +104,29 @@ public class DynamicServicePack : ServicePackBase
         return this;
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Runs the configure-phase delegate supplied to this pack, registering configuration-time services into the container.
+    /// </summary>
+    /// <param name="container">The service container being configured.</param>
+    /// <param name="ct">Token to observe for cancellation.</param>
+    /// <returns>A task that completes when the configure delegate finishes.</returns>
     public override Task ConfigureAsync(IServiceContainer container, CancellationToken ct) => _configure(container, ct);
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Runs the register-phase delegate supplied to this pack, registering services that may depend on the configure-phase provider.
+    /// </summary>
+    /// <param name="container">The service container to register services into.</param>
+    /// <param name="provider">Provider exposing services registered during the configure phase.</param>
+    /// <param name="ct">Token to observe for cancellation.</param>
+    /// <returns>A task that completes when the register delegate finishes.</returns>
     public override Task RegisterAsync(IServiceContainer container, IServiceProvider provider, CancellationToken ct) =>
         _register(container, provider, ct);
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Runs the setup-phase delegate supplied to this pack, performing post-registration initialization against the built provider.
+    /// </summary>
+    /// <param name="provider">The fully built service provider.</param>
+    /// <param name="ct">Token to observe for cancellation.</param>
+    /// <returns>A task that completes when the setup delegate finishes.</returns>
     public override Task SetupAsync(IServiceProvider provider, CancellationToken ct) => _setup(provider, ct);
 }

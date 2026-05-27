@@ -21,6 +21,7 @@ namespace Annium.Configuration.Json.Tests;
 /// </summary>
 public class JsonConfigurationProviderTest : TestBase
 {
+    /// <summary>Path to the temporary JSON file written during constructor setup and deleted on dispose.</summary>
     private readonly string _jsonFile;
 
     public JsonConfigurationProviderTest(ITestOutputHelper outputHelper)
@@ -64,7 +65,8 @@ public class JsonConfigurationProviderTest : TestBase
         Register((c, ct) => c.AddConfigurationAsync<Config>(x => x.AddJsonFile(_jsonFile), ct));
     }
 
-    /// <inheritdoc/>
+    /// <summary>Deletes the temporary JSON file created during construction and calls the base dispose.</summary>
+    /// <returns>A value task that completes when the temporary file has been deleted and the base class disposed.</returns>
     public override async ValueTask DisposeAsync()
     {
         if (!string.IsNullOrWhiteSpace(_jsonFile) && File.Exists(_jsonFile))
@@ -112,6 +114,7 @@ public class JsonConfigurationProviderTest : TestBase
     /// Malformed JSON content surfaces as a <see cref="System.Text.Json.JsonException"/> from
     /// the provider; via the build pipeline it lands wrapped in <see cref="System.AggregateException"/>.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task Read_MalformedJson_ThrowsJsonException()
     {
@@ -138,6 +141,7 @@ public class JsonConfigurationProviderTest : TestBase
     /// <c>JsonConfigurationProvider.Process</c> and produce a string key via
     /// <c>ProcessLeaf</c>. The flattened result must contain the key.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task Read_JsonWithNullLeaf_ProducesStringKey()
     {
@@ -164,6 +168,7 @@ public class JsonConfigurationProviderTest : TestBase
     /// and produce a string key via <c>ProcessLeaf</c>. Both <c>true</c> and <c>false</c> values
     /// flatten with their token string representation.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task Read_JsonWithBooleanLeaf_ProducesStringKey()
     {

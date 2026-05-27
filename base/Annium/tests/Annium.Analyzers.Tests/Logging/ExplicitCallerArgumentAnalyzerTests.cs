@@ -24,6 +24,7 @@ public sealed class ExplicitCallerArgumentAnalyzerTests
     /// <summary>
     /// Calls that omit the caller-info parameters should pass through silently.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task NoExplicitCallerArguments_Ignored()
     {
@@ -68,6 +69,7 @@ public class Sample : ILogSubject
     /// <c>this.Error(ex, "msg")</c> resolves to <c>Error(Exception, [CallerFilePath] string file, ...)</c>;
     /// the literal "msg" silently overrides the file-path slot and must be reported.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task ExceptionOverloadWithStringSecondArg_Reports()
     {
@@ -106,6 +108,7 @@ public class Sample : ILogSubject
     /// Trailing positional caller arguments (e.g. <c>this.Trace("msg", id, "")</c> with the final string going
     /// to the <c>file</c> slot) must be reported.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task TrailingPositionalCallerArgument_Reports()
     {
@@ -142,6 +145,7 @@ public class Sample : ILogSubject
     /// <summary>
     /// Named caller-info arguments must be reported even though they are syntactically unambiguous.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task NamedCallerArgument_Reports()
     {

@@ -177,5 +177,6 @@ public class DictionaryExtensionsTest
         dictionary.TryMapValue(null).IsDefault();
     }
 
+    /// <summary>Minimal test record used by value-selector merge overload tests.</summary>
     private record Item(int Id, string Name);
 }

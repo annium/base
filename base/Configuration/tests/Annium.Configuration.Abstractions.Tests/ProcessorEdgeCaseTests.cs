@@ -16,6 +16,11 @@ namespace Annium.Configuration.Abstractions.Tests;
 /// </summary>
 public class ProcessorEdgeCaseTests
 {
+    /// <summary>
+    /// Creates a fresh <see cref="ServiceContainer"/> pre-configured with the standard
+    /// test environment (runtime, logging, configuration abstractions).
+    /// </summary>
+    /// <returns>A new <see cref="ServiceContainer"/> ready for configuration registration.</returns>
     private static ServiceContainer CreateContainer() => TestContainerFactory.Create();
 
     /// <summary>
@@ -24,6 +29,7 @@ public class ProcessorEdgeCaseTests
     /// <c>ProcessValue</c> with a path that has no exact entry and throws
     /// <see cref="ArgumentException"/>.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task Process_MissingRequiredLeafKey_ThrowsArgumentException()
     {
@@ -47,6 +53,7 @@ public class ProcessorEdgeCaseTests
     /// When the target abstract type has no property marked with <c>[ResolutionKey]</c>, the
     /// processor cannot pick a concrete implementation and throws <see cref="ArgumentException"/>.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task Process_AbstractTypeWithoutResolutionKey_ThrowsArgumentException()
     {
@@ -133,6 +140,7 @@ public class ProcessorEdgeCaseTests
     /// <c>ObjectConfigurationProvider</c>. The flattened result must carry the underlying value
     /// as a string.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task Read_ObjectWithNonNullNullableField_FlattensProperly()
     {
@@ -173,6 +181,7 @@ public class ProcessorEdgeCaseTests
     /// Exercised via a wrapper type because <c>AddConfigurationAsync&lt;T&gt;</c> requires
     /// <c>T : new()</c> and abstract types are barred at the entry point.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task Process_AbstractTypeWithUnknownResolutionKeyValue_ThrowsArgumentException()
     {
@@ -245,6 +254,7 @@ public class ProcessorEdgeCaseTests
     /// minimal custom <see cref="IReadOnlyDictionary{TKey,TValue}"/> whose enumerator yields
     /// a <see cref="KeyValuePair{TKey,TValue}"/> with a null Key — the only way to reach the guard.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task ProcessDictionary_NullKey_ThrowsInvalidOperationException()
     {
@@ -277,28 +287,57 @@ public class ProcessorEdgeCaseTests
     /// </summary>
     private sealed class NullKeyDictionary<TValue> : IReadOnlyDictionary<string?, TValue>
     {
+        /// <summary>The single value returned for every lookup and the sole element in the enumerator.</summary>
         private readonly TValue _value;
 
         public NullKeyDictionary(TValue value) => _value = value;
 
+        /// <summary>Always 1 — this dictionary contains exactly one entry with a null key.</summary>
         public int Count => 1;
+
+        /// <summary>Returns a sequence containing the single key: <c>null</c>.</summary>
         public IEnumerable<string?> Keys => new string?[] { null };
+
+        /// <summary>Returns a sequence containing the single stored value.</summary>
         public IEnumerable<TValue> Values => new[] { _value };
+
+        /// <summary>Returns the stored value regardless of <paramref name="key"/>.</summary>
         public TValue this[string? key] => _value;
 
+        /// <summary>
+        /// Returns <see langword="true"/> only when <paramref name="key"/> is <see langword="null"/>,
+        /// which is the only key this dictionary contains.
+        /// </summary>
+        /// <param name="key">The key to test.</param>
+        /// <returns><see langword="true"/> if <paramref name="key"/> is <see langword="null"/>; otherwise <see langword="false"/>.</returns>
         public bool ContainsKey(string? key) => key is null;
 
+        /// <summary>
+        /// Attempts to retrieve the stored value. Always outputs <see cref="_value"/> and
+        /// returns <see langword="true"/> only when <paramref name="key"/> is <see langword="null"/>.
+        /// </summary>
+        /// <param name="key">The key to look up.</param>
+        /// <param name="value">Set to the stored value on every call.</param>
+        /// <returns><see langword="true"/> if <paramref name="key"/> is <see langword="null"/>; otherwise <see langword="false"/>.</returns>
         public bool TryGetValue(string? key, out TValue value)
         {
             value = _value;
             return key is null;
         }
 
+        /// <summary>
+        /// Returns an enumerator over the single entry <c>(null, value)</c>.
+        /// </summary>
+        /// <returns>An enumerator yielding the single null-keyed pair.</returns>
         public IEnumerator<KeyValuePair<string?, TValue>> GetEnumerator()
         {
             yield return new KeyValuePair<string?, TValue>(null, _value);
         }
 
+        /// <summary>
+        /// Returns a non-generic enumerator over the single entry <c>(null, value)</c>.
+        /// </summary>
+        /// <returns>A non-generic enumerator delegating to <see cref="GetEnumerator"/>.</returns>
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     }
 
@@ -337,6 +376,7 @@ public class ProcessorEdgeCaseTests
     /// Without the numeric sort fix in <c>ProcessList</c>, index "10" would land before "2"
     /// (lexicographic) and the reconstructed list would have wrong ordering.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task Process_ListWith12Elements_OrdersNumerically()
     {
@@ -369,6 +409,7 @@ public class ProcessorEdgeCaseTests
     /// for non-null items, so the resulting flat key set compacts nulls out (no gap
     /// indices in the reconstructed list).
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task Process_ListWithNullEntry_CompactsOutNullEntries()
     {
@@ -401,6 +442,7 @@ public class ProcessorEdgeCaseTests
     /// <c>int.TryParse</c> guard throws <see cref="InvalidOperationException"/> with the
     /// offending key and path — not a bare <c>FormatException</c>.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task Process_ListWithNonIntegerIndex_ThrowsInvalidOperationException()
     {
@@ -421,6 +463,7 @@ public class ProcessorEdgeCaseTests
     /// <c>Process</c> (which would throw on the missing leaf). Supplying only <c>Plain</c>
     /// leaves <c>Nested</c> / <c>List</c> / <c>Array</c> at their defaults.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task Process_PartialConfig_AbsentPropertiesRetainDefaults()
     {

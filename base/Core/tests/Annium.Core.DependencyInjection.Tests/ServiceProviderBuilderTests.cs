@@ -18,6 +18,7 @@ public class ServiceProviderBuilderTests
     /// Verifies that the transient provider built between Configure and Register is disposed
     /// after the final provider is built, so any singletons it materialized are released.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task Build_TransientProvider_IsDisposed()
     {
@@ -38,6 +39,7 @@ public class ServiceProviderBuilderTests
     /// Verifies that a second call to BuildAsync on the same builder throws with a clear
     /// "already built" message, preserving the single-use contract.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task Build_SecondCall_Throws()
     {
@@ -57,6 +59,7 @@ public class ServiceProviderBuilderTests
     /// the "already built" flag is not flipped prematurely, so re-calling BuildAsync produces
     /// the same underlying fault rather than a misleading "already built" error.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task Build_WhenConfigureThrows_PreservesRetryability()
     {
@@ -110,14 +113,27 @@ internal sealed class DisposableProbe : IDisposable
 /// </summary>
 internal sealed class ProbePack : ServicePackBase
 {
-    /// <inheritdoc/>
+    /// <summary>
+    /// Registers <see cref="DisposableProbe"/> as a singleton so it can be materialized during the
+    /// Register phase and later observed when the transient provider is disposed.
+    /// </summary>
+    /// <param name="container">The service container to configure.</param>
+    /// <param name="ct">Cancellation token for the configuration phase.</param>
+    /// <returns>A task that represents the asynchronous configure operation.</returns>
     public override Task ConfigureAsync(IServiceContainer container, CancellationToken ct)
     {
         container.Add<DisposableProbe>().AsSelf().Singleton();
         return Task.CompletedTask;
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Resolves <see cref="DisposableProbe"/> from the transient provider so the provider
+    /// materializes and owns the singleton instance, making it observable on disposal.
+    /// </summary>
+    /// <param name="container">The service container (not used in this pack).</param>
+    /// <param name="provider">The transient provider used to resolve the probe.</param>
+    /// <param name="ct">Cancellation token for the register phase.</param>
+    /// <returns>A task that represents the asynchronous register operation.</returns>
     public override Task RegisterAsync(IServiceContainer container, IServiceProvider provider, CancellationToken ct)
     {
         // resolve from the transient provider so it materializes and owns a singleton instance
@@ -132,7 +148,13 @@ internal sealed class ProbePack : ServicePackBase
 /// </summary>
 internal sealed class ThrowingConfigurePack : ServicePackBase
 {
-    /// <inheritdoc/>
+    /// <summary>
+    /// Always throws <see cref="InvalidOperationException"/> to simulate a Configure-phase fault,
+    /// verifying that the builder's built flag is not set prematurely.
+    /// </summary>
+    /// <param name="container">The service container (not used).</param>
+    /// <param name="ct">Cancellation token for the configuration phase.</param>
+    /// <returns>Never returns normally — always throws.</returns>
     public override Task ConfigureAsync(IServiceContainer container, CancellationToken ct) =>
         throw new InvalidOperationException("boom");
 }

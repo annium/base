@@ -20,6 +20,7 @@ public class WhenDisconnectedAsyncTests
     /// <summary>
     /// Firing <c>OnDisconnected</c> twice on a client socket must not throw.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task Client_WhenDisconnectedAsync_EventFiresTwice_NoThrow()
     {
@@ -38,6 +39,7 @@ public class WhenDisconnectedAsyncTests
     /// <summary>
     /// Firing <c>OnDisconnected</c> twice on a server socket must not throw.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task Server_WhenDisconnectedAsync_EventFiresTwice_NoThrow()
     {
@@ -56,6 +58,7 @@ public class WhenDisconnectedAsyncTests
     /// <summary>
     /// Firing <c>OnConnected</c> twice on a client socket must not throw.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task Client_WhenConnectedAsync_EventFiresTwice_NoThrow()
     {
@@ -75,8 +78,10 @@ public class WhenDisconnectedAsyncTests
     /// </summary>
     private sealed class FakeClientSocket : IClientSocket
     {
+        /// <summary>Gets the logger associated with this socket.</summary>
         public ILogger Logger { get; } = VoidLogger.Instance;
 
+        /// <summary>Gets a value indicating whether the socket is currently connected.</summary>
         public bool IsConnected => false;
 
         public event Action? OnConnected;
@@ -92,18 +97,30 @@ public class WhenDisconnectedAsyncTests
             remove { }
         }
 
+        /// <summary>Raises the <c>OnConnected</c> event to simulate a successful connection.</summary>
         public void RaiseConnected() => OnConnected?.Invoke();
 
+        /// <summary>Raises the <c>OnDisconnected</c> event with the given close status.</summary>
+        /// <param name="status">The close status to report to subscribers.</param>
         public void RaiseDisconnected(SocketCloseStatus status) => OnDisconnected?.Invoke(status);
 
+        /// <summary>Not implemented — this fake only exercises the event subscription path.</summary>
+        /// <param name="endpoint">The remote endpoint to connect to.</param>
+        /// <param name="authOptions">Optional SSL authentication options.</param>
         public void Connect(IPEndPoint endpoint, SslClientAuthenticationOptions? authOptions = null) =>
             throw new NotImplementedException();
 
+        /// <summary>Not implemented — this fake only exercises the event subscription path.</summary>
         public void Disconnect() => throw new NotImplementedException();
 
+        /// <summary>Not implemented — this fake only exercises the event subscription path.</summary>
+        /// <param name="data">The data to send.</param>
+        /// <param name="ct">Cancellation token.</param>
+        /// <returns>A <see cref="ValueTask{SocketSendStatus}"/> representing the pending send.</returns>
         public ValueTask<SocketSendStatus> SendAsync(ReadOnlyMemory<byte> data, CancellationToken ct = default) =>
             throw new NotImplementedException();
 
+        /// <summary>Disposes the fake socket (no-op).</summary>
         public void Dispose() { }
     }
 
@@ -112,6 +129,7 @@ public class WhenDisconnectedAsyncTests
     /// </summary>
     private sealed class FakeServerSocket : IServerSocket
     {
+        /// <summary>Gets the logger associated with this server socket.</summary>
         public ILogger Logger { get; } = VoidLogger.Instance;
 
         public event Action<SocketCloseStatus>? OnDisconnected;
@@ -126,13 +144,21 @@ public class WhenDisconnectedAsyncTests
             remove { }
         }
 
+        /// <summary>Raises the <c>OnDisconnected</c> event with the given close status.</summary>
+        /// <param name="status">The close status to report to subscribers.</param>
         public void RaiseDisconnected(SocketCloseStatus status) => OnDisconnected?.Invoke(status);
 
+        /// <summary>Not implemented — this fake only exercises the event subscription path.</summary>
         public void Disconnect() => throw new NotImplementedException();
 
+        /// <summary>Not implemented — this fake only exercises the event subscription path.</summary>
+        /// <param name="data">The data to send.</param>
+        /// <param name="ct">Cancellation token.</param>
+        /// <returns>A <see cref="ValueTask{SocketSendStatus}"/> representing the pending send.</returns>
         public ValueTask<SocketSendStatus> SendAsync(ReadOnlyMemory<byte> data, CancellationToken ct = default) =>
             throw new NotImplementedException();
 
+        /// <summary>Disposes the fake socket (no-op).</summary>
         public void Dispose() { }
     }
 }

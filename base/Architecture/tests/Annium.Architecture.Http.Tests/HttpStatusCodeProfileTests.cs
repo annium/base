@@ -62,5 +62,7 @@ public class HttpStatusCodeProfileTests : TestBase
         mapper.Map<OperationStatus>(HttpStatusCode.Conflict).Is(OperationStatus.Conflict);
     }
 
+    /// <summary>Resolves the <see cref="IMapper"/> instance from the test DI container.</summary>
+    /// <returns>The configured mapper instance.</returns>
     private IMapper Mapper() => Get<IMapper>();
 }

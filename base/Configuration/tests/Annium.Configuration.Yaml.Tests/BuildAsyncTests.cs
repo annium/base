@@ -26,6 +26,7 @@ public class BuildAsyncTests
     /// Pointing <c>AddYamlFile(optional: false)</c> at a missing file makes <c>BuildAsync</c>
     /// throw <see cref="AggregateException"/> wrapping a <see cref="FileNotFoundException"/>.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task BuildAsync_AddYamlFile_MissingNotOptional_Throws()
     {
@@ -43,6 +44,7 @@ public class BuildAsyncTests
     /// Pointing <c>AddYamlFile(optional: true)</c> at a missing file makes <c>BuildAsync</c>
     /// succeed; the missing source contributes no data.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task BuildAsync_AddYamlFile_MissingOptional_Succeeds()
     {
@@ -60,6 +62,7 @@ public class BuildAsyncTests
     /// (mirror of the Json existing-file test — exercises the YamlFileSource happy path through
     /// the BuildAsync pipeline, not just the provider).
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task BuildAsync_AddYamlFile_ExistingFile_Loads()
     {
@@ -87,6 +90,7 @@ public class BuildAsyncTests
     /// Mirror of the Json test: a remote source returning a non-2xx response surfaces an
     /// <see cref="HttpRequestException"/> wrapped in <see cref="AggregateException"/>.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task LoadAsync_Non2xxResponse_ThrowsHttpRequestException()
     {
@@ -111,6 +115,7 @@ public class BuildAsyncTests
     /// Mirror of the Json test: a pre-cancelled CT surfaces <see cref="OperationCanceledException"/>
     /// (not <see cref="TimeoutException"/>).
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task LoadAsync_CtCancelled_ThrowsOperationCanceledException()
     {
@@ -132,6 +137,7 @@ public class BuildAsyncTests
     /// per-source timeout is long enough that only the caller's cancellation can fire. Exercises
     /// the <c>!ct.IsCancellationRequested</c> catch filter at the async suspension point.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task LoadAsync_CtCancelledMidFlight_ThrowsOperationCanceledException()
     {
@@ -153,6 +159,7 @@ public class BuildAsyncTests
     /// <c>Optional</c> flag (only load failures like timeout are). Covers the optional × mid-flight
     /// quadrant of the cancellation matrix.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task LoadAsync_OptionalCtCancelledMidFlight_ThrowsOperationCanceledException()
     {
@@ -173,6 +180,7 @@ public class BuildAsyncTests
     /// surfaces a <see cref="TimeoutException"/> or <see cref="HttpRequestException"/> wrapped in
     /// <see cref="AggregateException"/>.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task BuildAsync_AddRemoteYaml_TimeoutNotOptional_Throws()
     {
@@ -194,6 +202,7 @@ public class BuildAsyncTests
     /// Mirror of the Json timeout test: same hanging stub with <c>optional: true</c> succeeds
     /// and the source contributes no data.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task BuildAsync_AddRemoteYaml_TimeoutOptional_Succeeds()
     {
@@ -213,6 +222,7 @@ public class BuildAsyncTests
     /// payload into the container — the success branch of <c>RemoteConfigurationSourceBase.LoadAsync</c>
     /// for the YAML flavour (mirror of the Json <c>LoadAsync_SuccessResponse_LoadsRemoteData</c> test).
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task LoadAsync_SuccessResponse_LoadsRemoteData()
     {

@@ -122,6 +122,7 @@ public class ObjectCacheTests : TestBase
     /// this one makes the timing explicit via a 500ms provider delay so the concurrent-same-key
     /// semantics are unambiguous.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task GetAsync_ConcurrentSameKey_OneFactoryCall()
     {

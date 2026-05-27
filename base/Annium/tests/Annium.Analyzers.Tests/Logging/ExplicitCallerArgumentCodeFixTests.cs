@@ -25,6 +25,7 @@ public sealed class ExplicitCallerArgumentCodeFixTests
     /// <c>this.Error(ex, "msg")</c> is rewritten to <c>this.Error("msg: {exception}", ex)</c> so that the
     /// message reaches the templated overload instead of being lost in the file-path slot.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task ExceptionOverloadWithStringSecondArg_ConvertsToTemplated()
     {
@@ -85,6 +86,7 @@ public class Sample : ILogSubject
     /// A trailing positional caller-info argument on a non-Exception overload is just removed,
     /// so the compiler-injected default takes over again.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task TrailingPositionalCallerArgument_RemovesArgument()
     {
@@ -142,6 +144,7 @@ public class Sample : ILogSubject
     /// <summary>
     /// A named caller-info argument is removed, leaving the compiler default in place.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task NamedCallerArgument_RemovesArgument()
     {
@@ -201,6 +204,7 @@ public class Sample : ILogSubject
     /// bails out and the fix falls back to simply removing the explicit caller-info argument.
     /// The error message is NOT rewritten to <c>"msg: {exception}"</c> form.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task ExceptionShapeWithNamedCallerArg_FallsBackToRemoveArgument()
     {
@@ -263,6 +267,7 @@ public class Sample : ILogSubject
     /// bails out on the argument-count check and the fix falls back to simply removing the
     /// explicit caller-info argument rather than performing the Exception-shape rewrite.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task NonExceptionShapeWithThreeArgs_FallsBackToRemoveArgument()
     {

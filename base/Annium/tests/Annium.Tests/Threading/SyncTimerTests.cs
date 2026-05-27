@@ -221,6 +221,13 @@ public class SyncTimerTests : TestBase
         await handlerExited.Task.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
     }
 
+    /// <summary>
+    /// Validates the timer state captured during a test run by delegating to the shared
+    /// <see cref="TimerTestHelpers.EnsureValidAsync"/> helper, which asserts that callbacks
+    /// were always entered and exited in matched pairs.
+    /// </summary>
+    /// <param name="state">The accumulated timer state to validate.</param>
+    /// <returns>A task that completes when the validation assertion finishes.</returns>
     private static Task EnsureValid(TimerTestHelpers.State state) => TimerTestHelpers.EnsureValidAsync(state);
 
     /// <summary>

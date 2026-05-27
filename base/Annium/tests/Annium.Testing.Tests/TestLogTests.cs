@@ -127,6 +127,7 @@ public class TestLogTests
     /// >= 50 floor was satisfied by the pre-seed even with zero writer activity; snapshot
     /// stability was unverified).
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task GetEnumerator_ConcurrentAdds_DoesNotThrow()
     {
@@ -179,6 +180,7 @@ public class TestLogTests
     /// review-7 — the prior concurrent test only proved snapshot reads don't throw, never that
     /// concurrent writes actually land.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task ConcurrentAdds_AllItemsPresent()
     {

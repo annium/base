@@ -10,6 +10,9 @@ namespace Annium.Testing.Tests;
 /// </summary>
 public class ExceptionExtensionsTests
 {
+    /// <summary>Creates an <see cref="InvalidOperationException"/> with the given message for use in test assertions.</summary>
+    /// <param name="message">The exception message.</param>
+    /// <returns>A new <see cref="InvalidOperationException"/> carrying <paramref name="message"/>.</returns>
     private static InvalidOperationException Sample(string message) => new(message);
 
     /// <summary>Verifies Reports passes when the message contains the expected text.</summary>
@@ -73,6 +76,7 @@ public class ExceptionExtensionsTests
     }
 
     /// <summary>Verifies ReportsAsync passes when the awaited exception message contains the text.</summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task ReportsAsync_Contains_Passes()
     {
@@ -84,6 +88,7 @@ public class ExceptionExtensionsTests
     }
 
     /// <summary>Verifies ReportsAsync throws when the awaited exception message lacks the text.</summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task ReportsAsync_DoesNotContain_Throws()
     {
@@ -93,6 +98,7 @@ public class ExceptionExtensionsTests
     }
 
     /// <summary>Verifies ReportsAllAsync passes when all texts are present.</summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task ReportsAllAsync_AllPresent_Passes()
     {
@@ -104,6 +110,7 @@ public class ExceptionExtensionsTests
     }
 
     /// <summary>Verifies ReportsAllAsync throws when any text is missing.</summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task ReportsAllAsync_AnyMissing_Throws()
     {
@@ -115,6 +122,7 @@ public class ExceptionExtensionsTests
     }
 
     /// <summary>Verifies ReportsExactlyAsync passes when the messages match exactly.</summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task ReportsExactlyAsync_Equal_Passes()
     {
@@ -126,6 +134,7 @@ public class ExceptionExtensionsTests
     }
 
     /// <summary>Verifies ReportsExactlyAsync throws when the messages differ.</summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task ReportsExactlyAsync_Differs_Throws()
     {

@@ -11,6 +11,7 @@ namespace Annium.Core.Mapper.Tests;
 /// </summary>
 public class GenericProfilesTest
 {
+    /// <summary>The xunit output helper used for capturing test log output.</summary>
     private readonly ITestOutputHelper _outputHelper;
 
     /// <summary>
@@ -25,6 +26,7 @@ public class GenericProfilesTest
     /// <summary>
     /// Tests that generic profiles work correctly with constrained types.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task GenericProfiles_Work()
     {
@@ -49,6 +51,7 @@ public class GenericProfilesTest
     /// <summary>
     /// Tests that generic profiles fail appropriately when type constraints are violated.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task GenericProfiles_Unconstrained_Fails()
     {
@@ -61,6 +64,7 @@ public class GenericProfilesTest
         Wrap.It(() => fx.Get<IMapper>()).Throws<ArgumentException>();
     }
 
+    /// <summary>DI + logging fixture for generic profile mapping tests, disposed asynchronously after each test.</summary>
     private sealed class Fixture(ITestOutputHelper outputHelper) : TestBase(outputHelper), IAsyncDisposable;
 
     /// <summary>
@@ -89,6 +93,7 @@ public class GenericProfilesTest
     /// <summary>Base class for source types with a Name property.</summary>
     private class A
     {
+        /// <summary>Gets or sets the name value used as the mapping source.</summary>
         public string Name { get; set; } = string.Empty;
     }
 
@@ -96,6 +101,7 @@ public class GenericProfilesTest
     [AutoMapped]
     private class B : A
     {
+        /// <summary>Gets or sets the age value carried by this source instance.</summary>
         public int Age { get; set; }
     }
 
@@ -103,12 +109,14 @@ public class GenericProfilesTest
     [AutoMapped]
     private class C : A
     {
+        /// <summary>Gets or sets the alive flag carried by this source instance.</summary>
         public bool IsAlive { get; set; }
     }
 
     /// <summary>Target class with a lowercase name property.</summary>
     private class D
     {
+        /// <summary>Gets or sets the lower-cased name produced by the mapping profile.</summary>
         public string LowerName { get; set; } = string.Empty;
     }
 }
