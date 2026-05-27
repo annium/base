@@ -16,6 +16,7 @@ public class BuildAsyncMergeOrderTests
     /// <summary>
     /// When two sources contribute overlapping keys, the source registered later wins.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task BuildAsync_TwoSources_MergesInRegistrationOrder()
     {
@@ -33,6 +34,7 @@ public class BuildAsyncMergeOrderTests
     /// A non-optional source that throws makes <c>BuildAsync</c> surface the failure as an
     /// <see cref="AggregateException"/>.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task BuildAsync_OneNonOptionalFails_ThrowsAggregate()
     {
@@ -50,6 +52,7 @@ public class BuildAsyncMergeOrderTests
     /// Two non-optional sources that throw distinct exception types aggregate both into the
     /// resulting <see cref="AggregateException"/>.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task BuildAsync_TwoNonOptionalFail_AggregateContainsBothErrors()
     {
@@ -68,6 +71,7 @@ public class BuildAsyncMergeOrderTests
     /// <summary>
     /// An optional source that throws is silenced; the surviving source's data lands in the container.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task BuildAsync_OneOptionalFails_OneSucceeds_SucceedsWithSucceededData()
     {
@@ -86,6 +90,7 @@ public class BuildAsyncMergeOrderTests
     /// When every source is optional and every one throws, <c>BuildAsync</c> raises no exception
     /// (the non-optional failure filter yields nothing) and the container is left empty.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task BuildAsync_AllSourcesOptionalAndAllFail_SucceedsWithEmptyContainer()
     {
@@ -104,6 +109,7 @@ public class BuildAsyncMergeOrderTests
     /// regardless of the source's <c>Optional</c> flag. Locks in the optional-source branch of the
     /// <c>catch (OperationCanceledException) when (ct.IsCancellationRequested)</c> guard.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task BuildAsync_OptionalSourcePrecancelledCt_ThrowsOperationCanceledException()
     {
@@ -121,6 +127,7 @@ public class BuildAsyncMergeOrderTests
     /// </summary>
     private sealed class StubSource : IConfigurationSource
     {
+        /// <summary>The fixed key-value data returned by <c>LoadAsync</c>.</summary>
         private readonly IReadOnlyDictionary<string[], string> _data;
 
         public StubSource(IEnumerable<(string[] key, string value)> entries, bool optional)
@@ -132,8 +139,12 @@ public class BuildAsyncMergeOrderTests
             Optional = optional;
         }
 
+        /// <summary>Gets a value indicating whether load failures are silently ignored.</summary>
         public bool Optional { get; }
 
+        /// <summary>Returns the fixed in-memory data immediately.</summary>
+        /// <param name="ct">Cancellation token (unused — the result is already in memory).</param>
+        /// <returns>A completed value task carrying the fixed key-value dictionary.</returns>
         public ValueTask<IReadOnlyDictionary<string[], string>> LoadAsync(CancellationToken ct) => new(_data);
     }
 
@@ -142,6 +153,7 @@ public class BuildAsyncMergeOrderTests
     /// </summary>
     private sealed class ThrowingSource : IConfigurationSource
     {
+        /// <summary>The exception thrown unconditionally by <c>LoadAsync</c>.</summary>
         private readonly Exception _ex;
 
         public ThrowingSource(Exception ex, bool optional)
@@ -150,8 +162,12 @@ public class BuildAsyncMergeOrderTests
             Optional = optional;
         }
 
+        /// <summary>Gets a value indicating whether load failures are silently ignored.</summary>
         public bool Optional { get; }
 
+        /// <summary>Always throws the pre-configured exception to simulate a failing source.</summary>
+        /// <param name="ct">Cancellation token (unused — the exception is thrown unconditionally).</param>
+        /// <returns>Never returns; always throws.</returns>
         public ValueTask<IReadOnlyDictionary<string[], string>> LoadAsync(CancellationToken ct) => throw _ex;
     }
 
@@ -161,6 +177,7 @@ public class BuildAsyncMergeOrderTests
     /// </summary>
     private sealed class CancelObservingSource : IConfigurationSource
     {
+        /// <summary>Shared empty dictionary returned when the cancellation token is not signalled.</summary>
         private static readonly IReadOnlyDictionary<string[], string> _empty = new Dictionary<string[], string>();
 
         public CancelObservingSource(bool optional)
@@ -168,8 +185,15 @@ public class BuildAsyncMergeOrderTests
             Optional = optional;
         }
 
+        /// <summary>Gets a value indicating whether load failures are silently ignored.</summary>
         public bool Optional { get; }
 
+        /// <summary>
+        /// Throws <see cref="OperationCanceledException"/> if <paramref name="ct"/> is already
+        /// cancelled; otherwise returns an empty dictionary.
+        /// </summary>
+        /// <param name="ct">Cancellation token observed before returning data.</param>
+        /// <returns>A completed value task carrying an empty key-value dictionary, or throws if cancelled.</returns>
         public ValueTask<IReadOnlyDictionary<string[], string>> LoadAsync(CancellationToken ct)
         {
             ct.ThrowIfCancellationRequested();

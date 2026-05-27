@@ -25,6 +25,7 @@ public class BuildAsyncTests
     /// <summary>
     /// An empty container (no sources registered) is a no-op for <c>BuildAsync</c>.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task BuildAsync_NoSources_NoOp()
     {
@@ -39,6 +40,7 @@ public class BuildAsyncTests
     /// Pointing <c>AddJsonFile(optional: false)</c> at a missing file makes <c>BuildAsync</c>
     /// throw <see cref="AggregateException"/> wrapping a <see cref="FileNotFoundException"/>.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task BuildAsync_AddJsonFile_MissingNotOptional_Throws()
     {
@@ -56,6 +58,7 @@ public class BuildAsyncTests
     /// Pointing <c>AddJsonFile(optional: true)</c> at a missing file makes <c>BuildAsync</c>
     /// succeed; the missing source contributes no data.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task BuildAsync_AddJsonFile_MissingOptional_Succeeds()
     {
@@ -71,6 +74,7 @@ public class BuildAsyncTests
     /// <summary>
     /// Pointing <c>AddJsonFile</c> at a real file flattens its contents into the container.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task BuildAsync_AddJsonFile_ExistingFile_Loads()
     {
@@ -102,6 +106,7 @@ public class BuildAsyncTests
     /// with an <see cref="System.IO.IOException"/> inner instead — both denote "remote fetch
     /// could not complete", which is the spec's behavioral contract for non-optional sources.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task BuildAsync_AddRemoteJson_TimeoutNotOptional_Throws()
     {
@@ -123,6 +128,7 @@ public class BuildAsyncTests
     /// Same stub server + 500ms timeout, but with <c>optional: true</c> — <c>BuildAsync</c> returns
     /// successfully and the source contributes no data.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task BuildAsync_AddRemoteJson_TimeoutOptional_Succeeds()
     {
@@ -141,6 +147,7 @@ public class BuildAsyncTests
     /// A remote source pointed at a server returning a non-2xx response surfaces an
     /// <see cref="HttpRequestException"/> wrapped in <see cref="AggregateException"/>.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task LoadAsync_Non2xxResponse_ThrowsHttpRequestException()
     {
@@ -161,6 +168,7 @@ public class BuildAsyncTests
     /// (not <see cref="TimeoutException"/>) so callers can distinguish intentional cancel from
     /// timeout. Verified against a listener that accepts but never responds.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task LoadAsync_CtCancelled_ThrowsOperationCanceledException()
     {
@@ -182,6 +190,7 @@ public class BuildAsyncTests
     /// timeout is long enough that only the caller's cancellation can fire. Exercises the
     /// <c>!ct.IsCancellationRequested</c> catch filter at the async suspension point.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task LoadAsync_CtCancelledMidFlight_ThrowsOperationCanceledException()
     {
@@ -203,6 +212,7 @@ public class BuildAsyncTests
     /// <c>Optional</c> flag (only load failures like timeout are). Covers the optional × mid-flight
     /// quadrant of the cancellation matrix.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task LoadAsync_OptionalCtCancelledMidFlight_ThrowsOperationCanceledException()
     {
@@ -222,6 +232,7 @@ public class BuildAsyncTests
     /// A remote source returning 200 OK with a valid JSON body parses and flattens the
     /// payload into the container — the success branch of <c>RemoteConfigurationSourceBase.LoadAsync</c>.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task LoadAsync_SuccessResponse_LoadsRemoteData()
     {

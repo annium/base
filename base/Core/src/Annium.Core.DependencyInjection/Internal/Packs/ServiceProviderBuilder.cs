@@ -183,6 +183,10 @@ internal class ServiceProviderBuilder : IServiceProviderBuilder
     /// dispose errors follow in the order they occurred. If all disposes succeed, the method returns
     /// normally and the caller's <c>throw;</c> rethrows the original with stack preserved.
     /// </summary>
+    /// <param name="original">The original phase or cancellation exception that triggered teardown; preserved as the head of any aggregated failure.</param>
+    /// <param name="final">The final provider built so far, if any; disposed first. May be null.</param>
+    /// <param name="transient">The transient provider built during the failing phase, if any; disposed after <paramref name="final"/>. May be null.</param>
+    /// <returns>A task that completes once disposal finishes; it throws rather than returning a value when a dispose fails.</returns>
     internal static async Task DisposeWithAggregationAsync(
         Exception original,
         ServiceProvider? final,

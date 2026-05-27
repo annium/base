@@ -20,6 +20,7 @@ public class BackgroundLogSchedulerTests
     /// With a sink that sleeps 500ms per batch, queue 5 batches and assert that DisposeAsync
     /// only returns after all 5 have been handled.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task DisposeAsync_WithSlowSink_AwaitsFinalBatch()
     {
@@ -104,10 +105,20 @@ public class BackgroundLogSchedulerTests
     /// </summary>
     private sealed class SlowSink(TimeSpan perBatch) : ILogHandler<DefaultLogContext>
     {
+        /// <summary>Underlying counter incremented after each batch completes; read via <see cref="BatchCount"/>.</summary>
         private int _batchCount;
 
+        /// <summary>Thread-safe snapshot of the number of batches processed so far.</summary>
         public int BatchCount => Volatile.Read(ref _batchCount);
 
+        /// <summary>
+        /// Sleeps for <c>perBatch</c> to simulate a slow sink, then increments the batch counter.
+        /// Intentionally ignores <paramref name="ct"/> to verify that <c>DisposeAsync</c> waits
+        /// for natural completion.
+        /// </summary>
+        /// <param name="messages">The batch of log messages to handle.</param>
+        /// <param name="ct">Cancellation token (intentionally ignored by this stub).</param>
+        /// <returns>A value task that completes after the simulated delay.</returns>
         public async ValueTask HandleAsync(IReadOnlyList<LogMessage<DefaultLogContext>> messages, CancellationToken ct)
         {
             // intentionally ignore CT — the test asserts that DisposeAsync waits for the
@@ -123,6 +134,13 @@ public class BackgroundLogSchedulerTests
     /// </summary>
     private sealed class NoOpSink : ILogHandler<DefaultLogContext>
     {
+        /// <summary>
+        /// Immediately completes without processing the batch — used by constructor-guard tests
+        /// where the scheduler is expected to fail before any handler call is made.
+        /// </summary>
+        /// <param name="messages">The batch of log messages (ignored).</param>
+        /// <param name="ct">Cancellation token (ignored).</param>
+        /// <returns>A completed value task.</returns>
         public ValueTask HandleAsync(IReadOnlyList<LogMessage<DefaultLogContext>> messages, CancellationToken ct) =>
             ValueTask.CompletedTask;
     }

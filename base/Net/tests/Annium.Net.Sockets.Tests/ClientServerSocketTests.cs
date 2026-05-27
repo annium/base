@@ -641,6 +641,7 @@ public class ClientServerSocketTests : TestBase
     /// surface reports false. This is the spec test for AC#2 of T8 — the ordering guarantee
     /// (await-then-event) made explicit through the public API.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task Disconnect_OnDisconnectedFires_HandlerObservesIsConnectedFalse()
     {

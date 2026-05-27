@@ -16,6 +16,8 @@ namespace Annium.Configuration.CommandLine.Tests;
 /// </summary>
 public class CommandLineMultiOptionTests
 {
+    /// <summary>Creates a fresh <see cref="ServiceContainer"/> pre-configured by <see cref="TestContainerFactory"/>.</summary>
+    /// <returns>A new <see cref="ServiceContainer"/> instance ready for configuration tests.</returns>
     private static ServiceContainer CreateContainer() => TestContainerFactory.Create();
 
     /// <summary>
@@ -24,6 +26,7 @@ public class CommandLineMultiOptionTests
     /// The third occurrence exercises the <c>multiOptions.ContainsKey(name)</c> Add path
     /// that is not covered when the key appears only twice.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task AddCommandLineArgs_OptionRepeatedThreeTimes_AllValuesCollected()
     {

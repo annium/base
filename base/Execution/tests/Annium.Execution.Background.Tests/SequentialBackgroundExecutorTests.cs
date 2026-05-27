@@ -123,6 +123,7 @@ public class SequentialBackgroundExecutorTests : BackgroundExecutorTestBase
     /// <summary>
     /// Verifies that an exception thrown by a scheduled task is surfaced through the logger.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task ExceptionInTask_LogsError()
     {

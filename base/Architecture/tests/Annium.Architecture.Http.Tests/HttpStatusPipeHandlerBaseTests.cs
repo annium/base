@@ -96,8 +96,19 @@ public class HttpStatusPipeHandlerBaseTests
     /// </summary>
     private sealed class TestPipeHandler : HttpStatusPipeHandlerBase<object, object, object>
     {
+        /// <summary>
+        /// Calls the protected <c>HandleStatus</c> method with the given <paramref name="status"/>
+        /// and a fresh result, allowing tests to observe the resulting exception.
+        /// </summary>
+        /// <param name="status">The <see cref="OperationStatus"/> to pass to <c>HandleStatus</c>.</param>
         public void Invoke(OperationStatus status) => HandleStatus(status, Result.Create());
 
+        /// <summary>
+        /// Returns <paramref name="response"/> unchanged — identity implementation required by
+        /// the abstract base class.
+        /// </summary>
+        /// <param name="response">The response object to pass through.</param>
+        /// <returns>The same <paramref name="response"/> object.</returns>
         protected override object GetResponse(object response) => response;
     }
 }

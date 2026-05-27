@@ -117,6 +117,7 @@ public class AsyncLazyTest
     /// Verifies that <c>GetValueAsync</c> returns the lazily-produced value (T8 — replaces the
     /// removed <c>Value</c> sync trapdoor as the explicit accessor).
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task GetValueAsync_SyncFactory_ReturnsValue()
     {
@@ -133,6 +134,7 @@ public class AsyncLazyTest
     /// <summary>
     /// Verifies that <c>GetValueAsync</c> works for an async factory.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task GetValueAsync_AsyncFactory_ReturnsValue()
     {
@@ -165,6 +167,7 @@ public class AsyncLazyTest
     /// fast path — the returned ValueTask completes synchronously without an async continuation. Closes
     /// the TG3 fast-path-coverage gap from review-2026.05.15.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task GetValueAsync_AfterCompletion_UsesFastPath()
     {
@@ -186,6 +189,7 @@ public class AsyncLazyTest
     /// rather than an AggregateException. Catches a regression where the fast path used IsCompleted
     /// (true for Faulted) and synchronously called task.Result, wrapping the exception.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task GetValueAsync_FaultedFactory_PropagatesOriginalException()
     {

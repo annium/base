@@ -10,6 +10,7 @@ namespace Annium.Tests;
 /// </summary>
 public class TimeSpanExtensionsTest
 {
+    /// <summary>The step granularity used across all rounding tests (10 seconds).</summary>
     private static readonly TimeSpan _step = TimeSpan.FromSeconds(10);
 
     /// <summary>FloorTo on a positive value below a step boundary rounds down to the prior multiple.</summary>

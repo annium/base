@@ -10,7 +10,10 @@ namespace Annium.Testing.Tests;
 /// </summary>
 public class DictionaryExtensionsTests
 {
+    /// <summary>Returns a fresh mutable two-entry dictionary used as test input.</summary>
     private static IDictionary<string, int> MutableSample => new Dictionary<string, int> { ["a"] = 1, ["b"] = 2 };
+
+    /// <summary>Returns a fresh read-only two-entry dictionary used as test input.</summary>
     private static IReadOnlyDictionary<string, int> ReadOnlySample =>
         new Dictionary<string, int> { ["a"] = 1, ["b"] = 2 };
 

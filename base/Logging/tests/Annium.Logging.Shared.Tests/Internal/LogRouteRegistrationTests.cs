@@ -160,6 +160,10 @@ public class LogRouteRegistrationTests
     /// </summary>
     private sealed class SyncSink : ILogHandler<DefaultLogContext>
     {
+        /// <summary>Completes immediately without processing messages; used only for route registration assertions.</summary>
+        /// <param name="messages">The batch of log messages (ignored).</param>
+        /// <param name="ct">Cancellation token (ignored).</param>
+        /// <returns>A completed value task.</returns>
         public ValueTask HandleAsync(IReadOnlyList<LogMessage<DefaultLogContext>> messages, CancellationToken ct) =>
             ValueTask.CompletedTask;
     }

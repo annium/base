@@ -16,6 +16,7 @@ public class ResultConcurrencyTests
     /// 1 writer mutating errors in a loop + 4 readers iterating the exposed collections in a
     /// loop; 1000 iterations each. Asserts no exceptions and no ghost entries.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task ConcurrentReadWrite_NoExceptionsNoCorruption()
     {

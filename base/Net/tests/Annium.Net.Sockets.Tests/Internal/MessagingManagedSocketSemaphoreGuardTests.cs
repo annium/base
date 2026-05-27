@@ -23,6 +23,7 @@ public class MessagingManagedSocketSemaphoreGuardTests
     /// internal semaphore. The call returns <see cref="SocketSendStatus.Canceled"/> and a
     /// subsequent send with a live token succeeds.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task SendAsync_PreCancelledToken_DoesNotCorruptSemaphore()
     {

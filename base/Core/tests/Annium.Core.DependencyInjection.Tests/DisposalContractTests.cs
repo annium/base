@@ -19,6 +19,12 @@ namespace Annium.Core.DependencyInjection.Tests;
 [CollectionDefinition(nameof(DisposalContractTests), DisableParallelization = true)]
 public class DisposalContractTests
 {
+    /// <summary>
+    /// Verifies that when all service packs complete without error, <c>BuildAsync</c> returns a
+    /// fully functional final <see cref="IServiceProvider"/> and the transient provider is disposed
+    /// exactly once during Phase 4.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task BuildAsync_AllPacksOk_ReturnsFinalProvider()
     {
@@ -41,6 +47,11 @@ public class DisposalContractTests
         transientHook.DisposedCount.Is(1);
     }
 
+    /// <summary>
+    /// Verifies that when a pack throws during the Configure phase (Phase 1), no disposal hooks
+    /// are invoked because neither the transient nor the final provider was ever constructed.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task BuildAsync_PackThrowsInConfigure_DisposesNothing()
     {
@@ -56,6 +67,11 @@ public class DisposalContractTests
         ex.Message.IsEqual("configure-boom");
     }
 
+    /// <summary>
+    /// Verifies that when a pack throws during the Register phase (Phase 3), the transient provider
+    /// is disposed exactly once and the original exception propagates to the caller.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task BuildAsync_PackThrowsInRegister_DisposesTransient()
     {
@@ -81,6 +97,12 @@ public class DisposalContractTests
         transientHook.DisposedCount.Is(1);
     }
 
+    /// <summary>
+    /// Verifies that when a pack throws during the Setup phase (Phase 5), the final provider is
+    /// disposed once, and the transient provider (already disposed and nulled at Phase 4 step 7)
+    /// is not disposed a second time.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task BuildAsync_PackThrowsInSetup_DisposesFinal_NotTransient()
     {
@@ -118,6 +140,12 @@ public class DisposalContractTests
         transientHook.DisposedCount.Is(1);
     }
 
+    /// <summary>
+    /// Verifies that cancellation during Phase 1 (Configure) propagates as a
+    /// <see cref="TaskCanceledException"/> carrying the original token, and that no disposal
+    /// hooks are invoked because no providers were ever constructed.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task BuildAsync_CancelledDuringPhase1_ThrowsOCE_DisposesNothing()
     {
@@ -133,6 +161,12 @@ public class DisposalContractTests
         ex.CancellationToken.Is(cts.Token);
     }
 
+    /// <summary>
+    /// Verifies that cancellation during the Register phase (Phase 3) propagates as a
+    /// <see cref="TaskCanceledException"/> carrying the original token and that the transient
+    /// provider is disposed exactly once during error cleanup.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task BuildAsync_CancelledDuringPhase3_ThrowsOCE_DisposesTransient()
     {
@@ -158,6 +192,12 @@ public class DisposalContractTests
         transientHook.DisposedCount.Is(1);
     }
 
+    /// <summary>
+    /// Verifies that cancellation signalled between Phase 3 (Register) and Phase 4 (build transient)
+    /// is detected by the Phase 3→4 boundary check, causing an <see cref="OperationCanceledException"/>,
+    /// disposing the transient provider once, and never constructing the final provider.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task BuildAsync_CancelledBetweenPhase3AndPhase4_BoundaryCheckThrows_DisposesTransient_FinalNeverBuilt()
     {
@@ -193,6 +233,13 @@ public class DisposalContractTests
         finalHook.DisposedCount.Is(0); // FinalHook never materialised → never disposed
     }
 
+    /// <summary>
+    /// Verifies that a cancellation fired from inside the transient provider's Dispose (at Phase 4
+    /// step 7) is caught by the Phase 4→5 boundary check, throwing an
+    /// <see cref="OperationCanceledException"/>, disposing the transient exactly once, and preventing
+    /// the Setup phase from running.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task BuildAsync_CancelledBetweenPhase4AndPhase5_BoundaryCheckThrows_DisposesFinal_NoDoubleDisposeOfTransient()
     {
@@ -230,6 +277,12 @@ public class DisposalContractTests
         setupRan.IsFalse();
     }
 
+    /// <summary>
+    /// Verifies that cancellation during the Setup phase (Phase 5) propagates as a
+    /// <see cref="TaskCanceledException"/>, disposes the final provider exactly once via the catch
+    /// handler, and does not re-dispose the transient provider that was already nulled at Phase 4.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task BuildAsync_CancelledDuringPhase5_ThrowsOCE_DisposesFinal_NoDoubleDisposeOfTransient()
     {
@@ -268,6 +321,12 @@ public class DisposalContractTests
         transientHook.DisposedCount.Is(1);
     }
 
+    /// <summary>
+    /// Verifies that when both Phase 5 throws and the final provider's <c>DisposeAsync</c> throws,
+    /// <c>BuildAsync</c> surfaces an <see cref="AggregateException"/> containing the original
+    /// phase-5 exception as the first inner exception and the dispose error as the second.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task BuildAsync_DisposeAsyncThrowsAfterPhase5Failure_AggregatesOriginalAndDisposeError()
     {
@@ -294,6 +353,12 @@ public class DisposalContractTests
         ex.InnerExceptions.Count.Is(2);
     }
 
+    /// <summary>
+    /// Verifies that a failed <c>BuildAsync</c> invocation does not set the internal
+    /// <c>_isAlreadyBuilt</c> flag, so subsequent build attempts on the same builder reproduce
+    /// the fault instead of throwing "already built".
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task BuildAsync_FailedRunDoesNotSetIsAlreadyBuilt()
     {
@@ -319,6 +384,7 @@ public class DisposalContractTests
     /// omits the `transient = null;` line, the catch handler could find both providers alive at
     /// the same time — this test asserts the order is preserved in that case.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task BuildAsync_Phase4NullsTransientAfterDispose_NoDoubleDisposeRegression()
     {
@@ -343,6 +409,7 @@ public class DisposalContractTests
     /// and <see cref="ServicePackBase.InternalSetupAsync"/> against a regression that calls the parent
     /// hook before walking children.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task BuildAsync_NestedServicePacks_DepthFirstChildBeforeParent()
     {
@@ -386,6 +453,14 @@ public class DisposalContractTests
         hook.IsNotDefault();
     }
 
+    /// <summary>
+    /// Builds a <see cref="ServiceProvider"/> that owns an <see cref="OrderedDisposeHook"/> singleton.
+    /// When the provider is disposed the hook appends <paramref name="tag"/> to <paramref name="order"/>,
+    /// enabling tests to assert the disposal sequence.
+    /// </summary>
+    /// <param name="tag">Label appended to <paramref name="order"/> on dispose (e.g. "final" or "transient").</param>
+    /// <param name="order">Shared list that records dispose invocation order.</param>
+    /// <returns>A built <see cref="ServiceProvider"/> with the ordered hook materialised.</returns>
     private static ServiceProvider BuildSpWithOrderedHook(string tag, List<string> order)
     {
         var services = new ServiceCollection();
@@ -404,8 +479,10 @@ public class DisposalContractTests
 /// </summary>
 internal sealed class TransientHook : IDisposable
 {
+    /// <summary>Gets or sets the dispose-counting hook injected by the test after resolution.</summary>
     public DisposeHook? Hook;
 
+    /// <summary>Delegates disposal to the injected <see cref="Hook"/>, if set.</summary>
     public void Dispose() => Hook?.Dispose();
 }
 
@@ -415,8 +492,10 @@ internal sealed class TransientHook : IDisposable
 /// </summary>
 internal sealed class FinalHook : IDisposable
 {
+    /// <summary>Gets or sets the dispose-counting hook injected by the test after resolution.</summary>
     public DisposeHook? Hook;
 
+    /// <summary>Delegates disposal to the injected <see cref="Hook"/>, if set.</summary>
     public void Dispose() => Hook?.Dispose();
 }
 
@@ -426,8 +505,10 @@ internal sealed class FinalHook : IDisposable
 /// </summary>
 internal sealed class DisposeHook
 {
+    /// <summary>Gets the number of times <see cref="Dispose"/> has been invoked.</summary>
     public int DisposedCount;
 
+    /// <summary>Atomically increments <see cref="DisposedCount"/> to record one disposal.</summary>
     public void Dispose() => Interlocked.Increment(ref DisposedCount);
 }
 
@@ -437,6 +518,7 @@ internal sealed class DisposeHook
 /// </summary>
 internal sealed class OrderedDisposeHook(string tag, List<string> sink) : IDisposable
 {
+    /// <summary>Appends the tag supplied at construction to the shared sink under a lock.</summary>
     public void Dispose()
     {
         lock (sink)
@@ -450,8 +532,10 @@ internal sealed class OrderedDisposeHook(string tag, List<string> sink) : IDispo
 /// </summary>
 internal sealed class TransientCanceller : IDisposable
 {
+    /// <summary>Gets or sets the cancellation source that will be cancelled when this instance is disposed.</summary>
     public CancellationTokenSource? Cts;
 
+    /// <summary>Cancels the associated <see cref="Cts"/>, if set, simulating in-dispose cancellation.</summary>
 #pragma warning disable VSTHRD103
     public void Dispose() => Cts?.Cancel();
 #pragma warning restore VSTHRD103
@@ -463,6 +547,8 @@ internal sealed class TransientCanceller : IDisposable
 /// </summary>
 internal sealed class ThrowOnAsyncDispose : IAsyncDisposable
 {
+    /// <summary>Always throws <see cref="InvalidOperationException"/> to drive the dispose-error aggregation path.</summary>
+    /// <returns>This method never returns; it always throws.</returns>
     public ValueTask DisposeAsync() => throw new InvalidOperationException("dispose-boom");
 }
 
@@ -473,8 +559,14 @@ internal sealed class ThrowOnAsyncDispose : IAsyncDisposable
 /// </summary>
 internal static class WalkOrderTracker
 {
+    /// <summary>Gets or sets the list that receives phase-invocation entries; null when not under test.</summary>
     public static List<string>? Sink;
 
+    /// <summary>
+    /// Appends <paramref name="entry"/> to <see cref="Sink"/> under a lock.
+    /// Does nothing when <see cref="Sink"/> is <see langword="null"/>.
+    /// </summary>
+    /// <param name="entry">The phase-invocation label to record (e.g. "child:configure").</param>
     public static void Record(string entry)
     {
         if (Sink is null)
@@ -489,18 +581,37 @@ internal static class WalkOrderTracker
 /// </summary>
 internal sealed class ChildPack : ServicePackBase
 {
+    /// <summary>
+    /// Records the "child:configure" invocation in <see cref="WalkOrderTracker"/> to verify depth-first walk order.
+    /// </summary>
+    /// <param name="container">The service container receiving registrations.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>A completed task.</returns>
     public override Task ConfigureAsync(IServiceContainer container, CancellationToken ct)
     {
         WalkOrderTracker.Record("child:configure");
         return Task.CompletedTask;
     }
 
+    /// <summary>
+    /// Records the "child:register" invocation in <see cref="WalkOrderTracker"/> to verify depth-first walk order.
+    /// </summary>
+    /// <param name="container">The service container receiving registrations.</param>
+    /// <param name="provider">The transient service provider built after Configure.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>A completed task.</returns>
     public override Task RegisterAsync(IServiceContainer container, IServiceProvider provider, CancellationToken ct)
     {
         WalkOrderTracker.Record("child:register");
         return Task.CompletedTask;
     }
 
+    /// <summary>
+    /// Records the "child:setup" invocation in <see cref="WalkOrderTracker"/> to verify depth-first walk order.
+    /// </summary>
+    /// <param name="provider">The final service provider built after Register.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>A completed task.</returns>
     public override Task SetupAsync(IServiceProvider provider, CancellationToken ct)
     {
         WalkOrderTracker.Record("child:setup");
@@ -516,18 +627,37 @@ internal sealed class ParentPack : ServicePackBase
 {
     public ParentPack() => Add<ChildPack>();
 
+    /// <summary>
+    /// Records the "parent:configure" invocation in <see cref="WalkOrderTracker"/> to verify depth-first walk order.
+    /// </summary>
+    /// <param name="container">The service container receiving registrations.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>A completed task.</returns>
     public override Task ConfigureAsync(IServiceContainer container, CancellationToken ct)
     {
         WalkOrderTracker.Record("parent:configure");
         return Task.CompletedTask;
     }
 
+    /// <summary>
+    /// Records the "parent:register" invocation in <see cref="WalkOrderTracker"/> to verify depth-first walk order.
+    /// </summary>
+    /// <param name="container">The service container receiving registrations.</param>
+    /// <param name="provider">The transient service provider built after Configure.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>A completed task.</returns>
     public override Task RegisterAsync(IServiceContainer container, IServiceProvider provider, CancellationToken ct)
     {
         WalkOrderTracker.Record("parent:register");
         return Task.CompletedTask;
     }
 
+    /// <summary>
+    /// Records the "parent:setup" invocation in <see cref="WalkOrderTracker"/> to verify depth-first walk order.
+    /// </summary>
+    /// <param name="provider">The final service provider built after Register.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>A completed task.</returns>
     public override Task SetupAsync(IServiceProvider provider, CancellationToken ct)
     {
         WalkOrderTracker.Record("parent:setup");

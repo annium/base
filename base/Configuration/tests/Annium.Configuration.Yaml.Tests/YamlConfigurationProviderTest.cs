@@ -16,6 +16,9 @@ namespace Annium.Configuration.Yaml.Tests;
 /// </summary>
 public class YamlConfigurationProviderTest : TestBase
 {
+    /// <summary>
+    /// Path to the temporary YAML file written during construction and deleted in <see cref="DisposeAsync"/>.
+    /// </summary>
     private readonly string _yamlFile;
 
     public YamlConfigurationProviderTest(ITestOutputHelper outputHelper)
@@ -53,7 +56,10 @@ public class YamlConfigurationProviderTest : TestBase
         Register((c, ct) => c.AddConfigurationAsync<Config>(x => x.AddYamlFile(_yamlFile), ct));
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Deletes the temporary YAML file created in the constructor, then disposes the base test resources.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous disposal.</returns>
     public override async ValueTask DisposeAsync()
     {
         if (!string.IsNullOrWhiteSpace(_yamlFile) && File.Exists(_yamlFile))
@@ -100,6 +106,7 @@ public class YamlConfigurationProviderTest : TestBase
     /// <summary>
     /// An empty YAML document (no top-level node) yields an empty configuration container.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task Read_EmptyYamlDocument_ReturnsEmptyData()
     {
@@ -124,6 +131,7 @@ public class YamlConfigurationProviderTest : TestBase
     /// A YAML document whose root is a scalar (e.g. <c>42</c>) is invalid for configuration —
     /// the provider throws <see cref="InvalidOperationException"/> wrapped in <see cref="AggregateException"/>.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task Read_NonMappingRoot_ThrowsInvalidOperationException()
     {
@@ -150,6 +158,7 @@ public class YamlConfigurationProviderTest : TestBase
     /// <c>? { a: 1 } : value</c>) triggers the non-scalar-key guard, surfacing
     /// <see cref="InvalidOperationException"/>.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task Read_NonScalarMappingKey_ThrowsInvalidOperationException()
     {

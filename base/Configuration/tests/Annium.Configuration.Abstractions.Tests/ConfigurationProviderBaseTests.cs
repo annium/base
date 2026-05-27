@@ -51,6 +51,9 @@ public class ConfigurationProviderBaseTests
     }
 
     /// <summary>Lookup helper: find a value in a (path,value) list by sequence-equal path.</summary>
+    /// <param name="snapshot">The (path, value) pairs captured from a provider read.</param>
+    /// <param name="path">The key path segments to match by sequence equality.</param>
+    /// <returns>The string value associated with the first entry whose path matches.</returns>
     private static string FindByPath(List<(string[] Path, string Value)> snapshot, params string[] path) =>
         snapshot.First(t => t.Path.SequenceEqual(path)).Value;
 
@@ -104,7 +107,11 @@ public class ConfigurationProviderBaseTests
         /// <summary>Snapshots of <see cref="ConfigurationProviderBase.Path"/> captured during Read.</summary>
         public List<string[]> CapturedPaths { get; } = new();
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Executes a balanced Push/Pop sequence, captures intermediate <c>Path</c> values,
+        /// and sets absolute and relative keys to populate the result dictionary.
+        /// </summary>
+        /// <returns>A snapshot dictionary mapping string-array paths to their configured values.</returns>
         public override IReadOnlyDictionary<string[], string> Read()
         {
             Init();
@@ -144,7 +151,11 @@ public class ConfigurationProviderBaseTests
         /// <summary>The Path captured immediately after the first Push of the most recent Read.</summary>
         public string[] FirstPushPath { get; private set; } = System.Array.Empty<string>();
 
-        /// <inheritdoc />
+        /// <summary>
+        /// Pushes <c>"stale"</c> onto the context stack without a matching Pop, intentionally
+        /// leaving residual state to verify that the next call to <c>Init()</c> clears it.
+        /// </summary>
+        /// <returns>A snapshot dictionary mapping string-array paths to their configured values.</returns>
         public override IReadOnlyDictionary<string[], string> Read()
         {
             Init();

@@ -14,6 +14,9 @@ namespace Annium.Configuration.Abstractions.Internal;
 /// </summary>
 internal class ObjectConfigurationProvider : ConfigurationProviderBase
 {
+    /// <summary>
+    /// Cached empty argument array reused when invoking parameterless members via reflection.
+    /// </summary>
     private static readonly object[] _noArgs = Array.Empty<object>();
 
     /// <summary>

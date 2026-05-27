@@ -23,6 +23,7 @@ public class ServerShutdownOrderingTests : TestBase
     /// Connects a client, then disposes the server. Dispose must complete in under 1s
     /// with the new stop-then-drain ordering.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task DisposeAsync_WithInfiniteLoopHandler_CompletesInUnderOneSecond()
     {

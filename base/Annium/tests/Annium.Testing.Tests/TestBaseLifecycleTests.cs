@@ -28,7 +28,11 @@ public sealed class TestBaseLifecycleTests(ITestOutputHelper outputHelper) : Tes
         /// <summary>Provider captured inside the overridden InitializeAsync, after base call.</summary>
         public IServiceProvider? CapturedProvider { get; private set; }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Chains the base <see cref="Testing.TestBase.InitializeAsync"/> call and then captures
+        /// the built <see cref="Testing.TestBase.Provider"/> into <see cref="CapturedProvider"/>.
+        /// </summary>
+        /// <returns>A task that represents the asynchronous initialisation.</returns>
         public override async ValueTask InitializeAsync()
         {
             await base.InitializeAsync();
@@ -42,6 +46,7 @@ public sealed class TestBaseLifecycleTests(ITestOutputHelper outputHelper) : Tes
     /// <summary>Trivial marker service used to verify registrations wire through to the built provider.</summary>
     private sealed class Marker(string tag)
     {
+        /// <summary>Gets the tag string supplied at construction time.</summary>
         public string Tag { get; } = tag;
     }
 
@@ -76,6 +81,7 @@ public sealed class TestBaseLifecycleTests(ITestOutputHelper outputHelper) : Tes
     // ---------------------------------------------------------------------------
 
     /// <summary>Register(Action) called after InitializeAsync throws with the "frozen" message.</summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task Register_CalledAfterInitStart_Throws()
     {
@@ -90,6 +96,7 @@ public sealed class TestBaseLifecycleTests(ITestOutputHelper outputHelper) : Tes
     }
 
     /// <summary>Setup(Action) called after InitializeAsync throws with the "frozen" message.</summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task Setup_CalledAfterInitStart_Throws()
     {
@@ -104,6 +111,7 @@ public sealed class TestBaseLifecycleTests(ITestOutputHelper outputHelper) : Tes
     }
 
     /// <summary>RegisterServicePack called after InitializeAsync throws with the "frozen" message.</summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task RegisterServicePack_CalledAfterInitStart_Throws()
     {
@@ -118,6 +126,7 @@ public sealed class TestBaseLifecycleTests(ITestOutputHelper outputHelper) : Tes
     }
 
     /// <summary>Async Register(Func) overload called after InitializeAsync throws with the "frozen" message.</summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task Register_AsyncOverload_CalledAfterInitStart_Throws()
     {
@@ -132,6 +141,7 @@ public sealed class TestBaseLifecycleTests(ITestOutputHelper outputHelper) : Tes
     }
 
     /// <summary>Async Setup(Func) overload called after InitializeAsync throws with the "frozen" message.</summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task Setup_AsyncOverload_CalledAfterInitStart_Throws()
     {
@@ -150,6 +160,7 @@ public sealed class TestBaseLifecycleTests(ITestOutputHelper outputHelper) : Tes
     // ---------------------------------------------------------------------------
 
     /// <summary>After InitializeAsync completes, Provider and Logger are non-null and Get works.</summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task InitializeAsync_Completes_ProviderAndLoggerUsable()
     {
@@ -171,6 +182,7 @@ public sealed class TestBaseLifecycleTests(ITestOutputHelper outputHelper) : Tes
     /// Async Register overload's delegate runs during InitializeAsync, receives a non-null container,
     /// receives a non-default CancellationToken, and services registered via the delegate are resolvable.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task Register_AsyncOverload_RunsDelegateAndRegistersResolvableService()
     {
@@ -201,6 +213,7 @@ public sealed class TestBaseLifecycleTests(ITestOutputHelper outputHelper) : Tes
     /// Async Setup overload's delegate runs during InitializeAsync, receives a non-null provider,
     /// receives a non-default CancellationToken, and the captured provider matches the live Provider.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task Setup_AsyncOverload_RunsDelegateWithProviderAndToken()
     {
@@ -230,6 +243,7 @@ public sealed class TestBaseLifecycleTests(ITestOutputHelper outputHelper) : Tes
     /// Sync Register overload's delegate runs during InitializeAsync and services registered via the
     /// delegate are resolvable — verifies the sync forwarder actually wires through to the builder.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task Register_SyncOverload_RegistersResolvableService()
     {
@@ -248,6 +262,7 @@ public sealed class TestBaseLifecycleTests(ITestOutputHelper outputHelper) : Tes
     /// Sync Setup overload's delegate runs during InitializeAsync and the captured provider equals
     /// the live Provider — verifies the sync forwarder actually wires through to the builder.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task Setup_SyncOverload_RunsDelegateWithProvider()
     {
@@ -272,6 +287,7 @@ public sealed class TestBaseLifecycleTests(ITestOutputHelper outputHelper) : Tes
     /// A subclass override of InitializeAsync that chains base can access Provider immediately
     /// after the base call returns.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task SubclassInitializeAsync_AfterBaseAwait_SeesBuiltProvider()
     {
@@ -289,6 +305,7 @@ public sealed class TestBaseLifecycleTests(ITestOutputHelper outputHelper) : Tes
     // ---------------------------------------------------------------------------
 
     /// <summary>DisposeAsync on a never-initialised subject completes without throwing.</summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task DisposeAsync_BeforeInit_DoesNotThrow()
     {
@@ -303,6 +320,7 @@ public sealed class TestBaseLifecycleTests(ITestOutputHelper outputHelper) : Tes
     // ---------------------------------------------------------------------------
 
     /// <summary>After init, emitted log messages surface through the <c>Logs</c> accessor.</summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task Logs_AfterInitAndLog_ContainsEmittedMessage()
     {

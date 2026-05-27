@@ -208,6 +208,7 @@ public class ChannelReaderExtensionsTests : TestBase
     /// </summary>
     private sealed class ThrowingChannelWriter<T> : ChannelWriter<T>
     {
+        /// <summary>The exception instance thrown by every write attempt.</summary>
         private readonly Exception _ex;
 
         public ThrowingChannelWriter(Exception ex)
@@ -218,11 +219,15 @@ public class ChannelReaderExtensionsTests : TestBase
         /// <summary>
         /// Always throws the configured exception to simulate an unexpected write failure.
         /// </summary>
+        /// <param name="item">The item that would be written (ignored — an exception is always thrown).</param>
+        /// <returns>This method never returns; it always throws.</returns>
         public override bool TryWrite(T item) => throw _ex;
 
         /// <summary>
         /// Returns a completed ValueTask so WaitToWriteAsync never blocks indefinitely.
         /// </summary>
+        /// <param name="cancellationToken">Token to observe for cancellation (ignored in this stub).</param>
+        /// <returns>A completed <see cref="ValueTask{Boolean}"/> with <c>true</c>.</returns>
         public override ValueTask<bool> WaitToWriteAsync(CancellationToken cancellationToken = default) =>
             ValueTask.FromResult(true);
     }

@@ -18,6 +18,7 @@ namespace Annium.Architecture.ViewModel.Tests;
 public class MappingEnumerablePipeHandlerTests
 {
     /// <summary>On a non-Ok upstream status the mapper MUST NOT be invoked.</summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task HandleAsync_NonOkStatus_DoesNotInvokeMapper()
     {
@@ -43,6 +44,7 @@ public class MappingEnumerablePipeHandlerTests
     }
 
     /// <summary>On Ok the mapper IS invoked and the mapped enumerable is returned.</summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task HandleAsync_OkStatus_InvokesMapper()
     {
@@ -69,6 +71,7 @@ public class MappingEnumerablePipeHandlerTests
 
     /// <summary>Status=Ok with Data=null is a contract violation; the handler MUST throw so the
     /// upstream ExceptionPipeHandler can convert it to UncaughtError instead of silently mapping null.</summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task HandleAsync_OkStatusWithNullData_Throws()
     {

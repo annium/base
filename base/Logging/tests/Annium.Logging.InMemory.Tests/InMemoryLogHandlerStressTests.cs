@@ -19,6 +19,7 @@ public class InMemoryLogHandlerStressTests
     /// 100 writer tasks × 100 messages each must produce exactly 10_000 messages in <c>Logs</c>,
     /// with no duplicates and no missing sequence numbers.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task Handle_100WritersX100Messages_AllMessagesPreserved()
     {

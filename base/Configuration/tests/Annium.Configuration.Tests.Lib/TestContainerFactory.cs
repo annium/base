@@ -16,6 +16,7 @@ public static class TestContainerFactory
     /// Creates a service container with runtime / time / logging / mapper registrations
     /// suitable for configuration tests. The runtime scans the calling test assembly.
     /// </summary>
+    /// <returns>A configured <see cref="ServiceContainer"/> ready for use in configuration tests.</returns>
     public static ServiceContainer Create()
     {
         var container = new ServiceContainer();

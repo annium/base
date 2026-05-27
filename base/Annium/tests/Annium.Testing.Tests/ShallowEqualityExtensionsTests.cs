@@ -8,6 +8,7 @@ namespace Annium.Testing.Tests;
 /// </summary>
 public class ShallowEqualityExtensionsTests
 {
+    /// <summary>A simple two-dimensional point record used as the subject of shallow-equality assertions.</summary>
     private record Point(int X, int Y);
 
     /// <summary>Verifies IsEqual passes when shallow-equal records are compared.</summary>

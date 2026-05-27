@@ -25,6 +25,7 @@ public class TableConcurrencyTests : TestBase
     /// The observer is subscribed inside the lock BEFORE the initial snapshot, so there is no
     /// "gap" between snapshot and live stream.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task Subscribe_DuringParallelSet_ObservesAllChanges()
     {
@@ -91,6 +92,7 @@ public class TableConcurrencyTests : TestBase
     /// complete without deadlock. The non-reentrant <see cref="System.Threading.Lock"/>
     /// would fatally deadlock if the delegate ran under <c>_locker</c>.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task Set_ReentrantDelegate_CompletesWithoutDeadlock()
     {
@@ -151,6 +153,7 @@ public class TableConcurrencyTests : TestBase
         /// <summary>
         /// Copies the record for table-internal cloning requirements.
         /// </summary>
+        /// <returns>A shallow copy of this <see cref="Item"/>.</returns>
         public Item Copy() => this with { };
     }
 }

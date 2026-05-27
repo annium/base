@@ -44,7 +44,10 @@ public abstract class TestBase : Testing.TestBase
         Setup(testProvider.Setup);
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Runs the base initialization and resolves <see cref="Config"/> from the built service provider.
+    /// </summary>
+    /// <returns>A <see cref="ValueTask"/> that completes when initialization is finished.</returns>
     public override async ValueTask InitializeAsync()
     {
         await base.InitializeAsync();

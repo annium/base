@@ -14,29 +14,69 @@ namespace Annium.Tests.Reflection.Types;
 /// </summary>
 public class GetAllMembersExtensionTests
 {
+    /// <summary>
+    /// Minimal interface whose members are expected to appear in <c>GetAllMethods</c> / <c>GetAllProperties</c>
+    /// results when queried on a concrete implementing type.
+    /// </summary>
     private interface IBase
     {
+        /// <summary>
+        /// Property declared on the interface; expected in <c>GetAllProperties</c> results for <see cref="Concrete"/>.
+        /// </summary>
         int InterfaceProperty { get; }
 
+        /// <summary>
+        /// Method declared on the interface; expected in <c>GetAllMethods</c> results for <see cref="Concrete"/>.
+        /// </summary>
+        /// <returns>Nothing — void method used purely to test member discovery.</returns>
         void InterfaceMethod();
     }
 
+    /// <summary>
+    /// Concrete implementation of <see cref="IBase"/> used as the subject type for reflection
+    /// extension tests. Combines interface members with its own public/private fields, properties,
+    /// and methods to cover the full member-discovery matrix.
+    /// </summary>
     private sealed class Concrete : IBase
     {
+        /// <summary>
+        /// Implements <see cref="IBase.InterfaceProperty"/>; expected in <c>GetAllProperties</c> results.
+        /// </summary>
         public int InterfaceProperty => 0;
 
+        /// <summary>
+        /// Own property not declared on any interface; expected in <c>GetAllProperties</c> results.
+        /// </summary>
         public int OwnProperty => 0;
 
+        /// <summary>
+        /// Private backing field; expected when <c>GetAllFields</c> is called with <c>NonPublic</c> binding.
+        /// </summary>
         private readonly int _privateField = 7;
 
+        /// <summary>
+        /// Public field declared directly on this type; expected in <c>GetAllFields</c> results.
+        /// </summary>
         public int OwnField = 1;
 
+        /// <summary>
+        /// Implements <see cref="IBase.InterfaceMethod"/>; expected in <c>GetAllMethods</c> results.
+        /// </summary>
+        /// <returns>Nothing — void method used purely to test member discovery.</returns>
         public void InterfaceMethod() { }
 
+        /// <summary>
+        /// Own method not declared on any interface; expected in <c>GetAllMethods</c> results.
+        /// </summary>
+        /// <returns>Nothing — void method used purely to test member discovery.</returns>
         public void OwnMethod() { }
 
         // Internal accessor keeps _privateField "used" for the IDE0051 analyzer; reflection alone
         // is not enough to satisfy it.
+        /// <summary>
+        /// Internal helper that returns <see cref="_privateField"/> to prevent the IDE0051 unused-field warning.
+        /// </summary>
+        /// <returns>The value of the private backing field.</returns>
         internal int GetPrivateField() => _privateField;
     }
 

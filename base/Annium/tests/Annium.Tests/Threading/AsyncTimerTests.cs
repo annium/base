@@ -291,5 +291,8 @@ public class AsyncTimerTests : TestBase
         await handlerExited.Task.WaitAsync(TimeSpan.FromSeconds(2), TestContext.Current.CancellationToken);
     }
 
+    /// <summary>Delegates to <see cref="TimerTestHelpers.EnsureValidAsync"/> to assert that all paired push calls are matched.</summary>
+    /// <param name="state">The timer state accumulating push counts from the handler.</param>
+    /// <returns>A task that completes once the state has been validated or the assertion fails.</returns>
     private static Task EnsureValid(TimerTestHelpers.State state) => TimerTestHelpers.EnsureValidAsync(state);
 }

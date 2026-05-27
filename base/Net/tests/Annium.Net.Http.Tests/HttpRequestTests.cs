@@ -38,7 +38,10 @@ public class HttpRequestTests : TestBase
         });
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Runs base initialization and resolves the <see cref="IHttpRequestFactory"/> from the DI container.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous initialization.</returns>
     public override async ValueTask InitializeAsync()
     {
         await base.InitializeAsync();

@@ -30,6 +30,11 @@ public class AddConfigurationAsyncTests
         public int Plain { get; set; }
     }
 
+    /// <summary>
+    /// Creates a fresh <see cref="ServiceContainer"/> pre-configured with the standard
+    /// test environment (runtime, logging, configuration abstractions).
+    /// </summary>
+    /// <returns>A new <see cref="ServiceContainer"/> ready for configuration registration.</returns>
     private static ServiceContainer CreateContainer() => TestContainerFactory.Create();
 
     // ---------------------------------------------------------------------------
@@ -41,6 +46,7 @@ public class AddConfigurationAsyncTests
     /// from the built service provider, and the call returns the same container instance
     /// (fluent chaining contract).
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task AddConfigurationAsync_SyncOverload_RegistersConfigResolvable()
     {
@@ -72,6 +78,7 @@ public class AddConfigurationAsyncTests
     /// explicit-async equivalent <c>(cfg, _) =&gt; { action(cfg); return Task.CompletedTask; }</c>
     /// produce identically-valued configuration objects.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task AddConfigurationAsync_SyncOverload_IdenticalToExplicitAsyncWrapper()
     {
@@ -115,6 +122,7 @@ public class AddConfigurationAsyncTests
     /// cancelled, the <c>configure</c> delegate can observe it and throw
     /// <see cref="OperationCanceledException"/> whose <c>CancellationToken</c> matches the source.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task AddConfigurationAsync_PrimaryAsync_CtCancelledBeforeBuild_ThrowsOce()
     {
@@ -153,6 +161,7 @@ public class AddConfigurationAsyncTests
     /// guards against the mutation where the sync wrapper silently replaces the caller-supplied
     /// <c>ct</c> with <c>default</c>: such a mutation would let the test pass with no exception.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task AddConfigurationAsync_SyncOverload_CtCancelled_ForwardsToBuild()
     {

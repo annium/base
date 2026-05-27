@@ -59,13 +59,18 @@ public class GetUnboundBaseTypeExtensionTests
         result.GetGenericTypeDefinition().Is(typeof(GenericBase<>));
     }
 
+    /// <summary>A plain non-generic base class used as a concrete base in tests.</summary>
     private class Base;
 
+    /// <summary>A concrete class that derives from <see cref="Base"/> with no generic parameters.</summary>
     private class Derived : Base;
 
+    /// <summary>An open generic base class used to exercise unbound-type resolution.</summary>
     private class GenericBase<T>;
 
+    /// <summary>A class that closes <see cref="GenericBase{T}"/> with a concrete type argument (<c>int</c>).</summary>
     private class IntDerived : GenericBase<int>;
 
+    /// <summary>A class that inherits <see cref="GenericBase{T}"/> while keeping the type parameter open.</summary>
     private class OpenDerived<T> : GenericBase<T>;
 }

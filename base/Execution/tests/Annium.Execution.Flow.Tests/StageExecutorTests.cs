@@ -17,6 +17,7 @@ public class StageExecutorTests
     /// <summary>
     /// When all stages commit successfully, none of their rollbacks run.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task RunAsync_AllStagesSucceed_NoRollbackInvoked()
     {
@@ -40,6 +41,7 @@ public class StageExecutorTests
     /// must roll back. Previously the counter incremented before the <c>await</c>, so the
     /// failing stage (3) was included in the rollback set — undoing work that never happened.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task RunAsync_5Stages_StageThreeThrows_RollsBackStagesOneAndTwoOnly()
     {
@@ -87,6 +89,7 @@ public class StageExecutorTests
     /// Async-commit path: the <c>Func&lt;Task&gt;</c> branch of <c>ExecuteAsync</c> must be
     /// exercised. Mixed async + sync stages all commit successfully with no rollback.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task RunAsync_AsyncAndSyncCommits_AllRunAndNoRollback()
     {
@@ -130,6 +133,7 @@ public class StageExecutorTests
     /// the <c>Func&lt;Task&gt;</c> branch of <c>ExecuteAsync</c> combined with the
     /// counter-after-await fix).
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task RunAsync_AsyncCommitThrows_PriorStagesRollBack()
     {
@@ -162,6 +166,7 @@ public class StageExecutorTests
     /// When the very first stage throws during commit, no stage committed successfully and no
     /// rollback runs.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task RunAsync_FirstStageThrows_NoRollbackInvoked()
     {

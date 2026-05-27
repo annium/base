@@ -50,7 +50,11 @@ public class AsExtensionsTests : TestBase
         });
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Resolves <see cref="_httpRequestFactory"/> and <see cref="_serializer"/> from the DI container
+    /// after the base test initialization completes.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous initialization.</returns>
     public override async ValueTask InitializeAsync()
     {
         await base.InitializeAsync();

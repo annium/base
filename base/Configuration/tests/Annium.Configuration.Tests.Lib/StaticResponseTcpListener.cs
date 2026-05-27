@@ -13,8 +13,13 @@ namespace Annium.Configuration.Tests.Lib;
 /// </summary>
 public sealed class StaticResponseTcpListener : TcpListenerBase
 {
+    /// <summary>HTTP status code written into every response.</summary>
     private readonly HttpStatusCode _status;
+
+    /// <summary>UTF-8 body text written after the response headers.</summary>
     private readonly string _body;
+
+    /// <summary>Value of the Content-Type response header.</summary>
     private readonly string _contentType;
 
     /// <summary>
@@ -37,7 +42,13 @@ public sealed class StaticResponseTcpListener : TcpListenerBase
         _contentType = contentType;
     }
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Drains the incoming request headers (best-effort), then writes the fixed HTTP status line,
+    /// headers, and body configured at construction back to the client.
+    /// </summary>
+    /// <param name="client">The accepted TCP client whose stream receives the static response.</param>
+    /// <param name="ct">Cancellation token; used when writing the response to the network stream.</param>
+    /// <returns>A task that represents the asynchronous response write operation.</returns>
     protected override async ValueTask HandleClientAsync(TcpClient client, CancellationToken ct)
     {
         using (client)

@@ -32,7 +32,11 @@ public abstract class BackgroundExecutorTestBase : TestBase
         _getExecutor = getExecutor;
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Initializes the test by calling the base setup and constructing the executor under test
+    /// using the factory supplied at construction time.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous initialization.</returns>
     public override async ValueTask InitializeAsync()
     {
         await base.InitializeAsync();

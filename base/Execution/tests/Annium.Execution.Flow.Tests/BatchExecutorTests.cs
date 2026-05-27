@@ -16,6 +16,7 @@ public class BatchExecutorTests
     /// Mixed sync and async handlers all run exactly once in declaration order when no handler
     /// throws. This establishes the baseline against which the else-if dispatch guard protects.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task RunAsync_MixedSyncAndAsyncHandlers_EachRunsExactlyOnce()
     {
@@ -45,6 +46,7 @@ public class BatchExecutorTests
     /// A throwing handler does not stop the batch: the remaining handlers still execute, and the
     /// error is collected in the result.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task RunAsync_HandlerThrows_CollectsErrorAndContinues()
     {
