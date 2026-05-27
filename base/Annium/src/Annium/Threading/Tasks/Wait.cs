@@ -16,7 +16,7 @@ public static class Wait
     /// <param name="ct">Cancellation token.</param>
     /// <param name="pollDelay">The delay at which the condition will be polled, in milliseconds.</param>
     /// <returns>A task that completes when the condition is false or canceled.</returns>
-    public static async Task WhileAsync(
+    public static async ValueTask WhileAsync(
         Func<bool> condition,
         CancellationToken ct,
         int pollDelay = PollingDefaults.PollDelayMs
@@ -37,7 +37,7 @@ public static class Wait
     /// <param name="ms">Timeout in milliseconds.</param>
     /// <param name="pollDelay">The delay at which the condition will be polled, in milliseconds.</param>
     /// <returns>A task that completes when the condition is false or canceled.</returns>
-    public static async Task WhileAsync(Func<bool> condition, int ms, int pollDelay)
+    public static async ValueTask WhileAsync(Func<bool> condition, int ms, int pollDelay)
     {
         using var cts = new CancellationTokenSource(ms);
         await WhileAsync(condition, cts.Token, pollDelay).ConfigureAwait(false);
@@ -49,7 +49,7 @@ public static class Wait
     /// <param name="condition">The condition that will perpetuate the block.</param>
     /// <param name="ms">Timeout in milliseconds.</param>
     /// <returns>A task that completes when the condition is false or canceled.</returns>
-    public static async Task WhileAsync(Func<bool> condition, int ms)
+    public static async ValueTask WhileAsync(Func<bool> condition, int ms)
     {
         using var cts = new CancellationTokenSource(ms);
         await WhileAsync(condition, cts.Token).ConfigureAwait(false);
@@ -60,7 +60,7 @@ public static class Wait
     /// </summary>
     /// <param name="condition">The condition that will perpetuate the block.</param>
     /// <returns>A task that completes when the condition is false or canceled.</returns>
-    public static Task WhileAsync(Func<bool> condition) => WhileAsync(condition, CancellationToken.None);
+    public static ValueTask WhileAsync(Func<bool> condition) => WhileAsync(condition, CancellationToken.None);
 
     /// <summary>
     /// Awaits while the asynchronous condition is true or the task is canceled.
@@ -69,7 +69,7 @@ public static class Wait
     /// <param name="ct">Cancellation token.</param>
     /// <param name="pollDelay">The delay at which the condition will be polled, in milliseconds.</param>
     /// <returns>A task that completes when the condition is false or canceled.</returns>
-    public static async Task WhileAsync(
+    public static async ValueTask WhileAsync(
         Func<ValueTask<bool>> condition,
         CancellationToken ct,
         int pollDelay = PollingDefaults.PollDelayMs
@@ -90,7 +90,7 @@ public static class Wait
     /// <param name="ms">Timeout in milliseconds.</param>
     /// <param name="pollDelay">The delay at which the condition will be polled, in milliseconds.</param>
     /// <returns>A task that completes when the condition is false or canceled.</returns>
-    public static async Task WhileAsync(Func<ValueTask<bool>> condition, int ms, int pollDelay)
+    public static async ValueTask WhileAsync(Func<ValueTask<bool>> condition, int ms, int pollDelay)
     {
         using var cts = new CancellationTokenSource(ms);
         await WhileAsync(condition, cts.Token, pollDelay).ConfigureAwait(false);
@@ -102,7 +102,7 @@ public static class Wait
     /// <param name="condition">The asynchronous condition that will perpetuate the block.</param>
     /// <param name="ms">Timeout in milliseconds.</param>
     /// <returns>A task that completes when the condition is false or canceled.</returns>
-    public static async Task WhileAsync(Func<ValueTask<bool>> condition, int ms)
+    public static async ValueTask WhileAsync(Func<ValueTask<bool>> condition, int ms)
     {
         using var cts = new CancellationTokenSource(ms);
         await WhileAsync(condition, cts.Token).ConfigureAwait(false);
@@ -113,7 +113,8 @@ public static class Wait
     /// </summary>
     /// <param name="condition">The asynchronous condition that will perpetuate the block.</param>
     /// <returns>A task that completes when the condition is false or canceled.</returns>
-    public static Task WhileAsync(Func<ValueTask<bool>> condition) => WhileAsync(condition, CancellationToken.None);
+    public static ValueTask WhileAsync(Func<ValueTask<bool>> condition) =>
+        WhileAsync(condition, CancellationToken.None);
 
     /// <summary>
     /// Awaits until the condition is true or the task is canceled.
@@ -122,7 +123,7 @@ public static class Wait
     /// <param name="ct">Cancellation token.</param>
     /// <param name="pollDelay">The delay at which the condition will be polled, in milliseconds.</param>
     /// <returns>A task that completes when the condition is true or canceled.</returns>
-    public static async Task UntilAsync(
+    public static async ValueTask UntilAsync(
         Func<bool> condition,
         CancellationToken ct,
         int pollDelay = PollingDefaults.PollDelayMs
@@ -143,7 +144,7 @@ public static class Wait
     /// <param name="ms">Timeout in milliseconds.</param>
     /// <param name="pollDelay">The delay at which the condition will be polled, in milliseconds.</param>
     /// <returns>A task that completes when the condition is true or canceled.</returns>
-    public static async Task UntilAsync(Func<bool> condition, int ms, int pollDelay)
+    public static async ValueTask UntilAsync(Func<bool> condition, int ms, int pollDelay)
     {
         using var cts = new CancellationTokenSource(ms);
         await UntilAsync(condition, cts.Token, pollDelay).ConfigureAwait(false);
@@ -155,7 +156,7 @@ public static class Wait
     /// <param name="condition">The condition that will perpetuate the block.</param>
     /// <param name="ms">Timeout in milliseconds.</param>
     /// <returns>A task that completes when the condition is true or canceled.</returns>
-    public static async Task UntilAsync(Func<bool> condition, int ms)
+    public static async ValueTask UntilAsync(Func<bool> condition, int ms)
     {
         using var cts = new CancellationTokenSource(ms);
         await UntilAsync(condition, cts.Token).ConfigureAwait(false);
@@ -166,7 +167,7 @@ public static class Wait
     /// </summary>
     /// <param name="condition">The condition that will perpetuate the block.</param>
     /// <returns>A task that completes when the condition is true or canceled.</returns>
-    public static Task UntilAsync(Func<bool> condition) => UntilAsync(condition, CancellationToken.None);
+    public static ValueTask UntilAsync(Func<bool> condition) => UntilAsync(condition, CancellationToken.None);
 
     /// <summary>
     /// Awaits until the asynchronous condition is true or the task is canceled.
@@ -175,7 +176,7 @@ public static class Wait
     /// <param name="ct">Cancellation token.</param>
     /// <param name="pollDelay">The delay at which the condition will be polled, in milliseconds.</param>
     /// <returns>A task that completes when the condition is true or canceled.</returns>
-    public static async Task UntilAsync(
+    public static async ValueTask UntilAsync(
         Func<ValueTask<bool>> condition,
         CancellationToken ct,
         int pollDelay = PollingDefaults.PollDelayMs
@@ -196,7 +197,7 @@ public static class Wait
     /// <param name="ms">Timeout in milliseconds.</param>
     /// <param name="pollDelay">The delay at which the condition will be polled, in milliseconds.</param>
     /// <returns>A task that completes when the condition is true or canceled.</returns>
-    public static async Task UntilAsync(Func<ValueTask<bool>> condition, int ms, int pollDelay)
+    public static async ValueTask UntilAsync(Func<ValueTask<bool>> condition, int ms, int pollDelay)
     {
         using var cts = new CancellationTokenSource(ms);
         await UntilAsync(condition, cts.Token, pollDelay).ConfigureAwait(false);
@@ -208,7 +209,7 @@ public static class Wait
     /// <param name="condition">The asynchronous condition that will perpetuate the block.</param>
     /// <param name="ms">Timeout in milliseconds.</param>
     /// <returns>A task that completes when the condition is true or canceled.</returns>
-    public static async Task UntilAsync(Func<ValueTask<bool>> condition, int ms)
+    public static async ValueTask UntilAsync(Func<ValueTask<bool>> condition, int ms)
     {
         using var cts = new CancellationTokenSource(ms);
         await UntilAsync(condition, cts.Token).ConfigureAwait(false);
@@ -219,5 +220,6 @@ public static class Wait
     /// </summary>
     /// <param name="condition">The asynchronous condition that will perpetuate the block.</param>
     /// <returns>A task that completes when the condition is true or canceled.</returns>
-    public static Task UntilAsync(Func<ValueTask<bool>> condition) => UntilAsync(condition, CancellationToken.None);
+    public static ValueTask UntilAsync(Func<ValueTask<bool>> condition) =>
+        UntilAsync(condition, CancellationToken.None);
 }

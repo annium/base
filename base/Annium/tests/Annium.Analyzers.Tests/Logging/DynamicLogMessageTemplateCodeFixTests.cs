@@ -15,13 +15,19 @@ public sealed class DynamicLogMessageTemplateCodeFixTests
     : CSharpCodeFixTest<DynamicLogMessageTemplateAnalyzer, DynamicLogMessageTemplateCodeFix, DefaultVerifier>
 {
     /// <summary>
+    /// Initializes the test with the shared logging-analyzer reference assemblies.
+    /// </summary>
+    public DynamicLogMessageTemplateCodeFixTests()
+    {
+        ReferenceAssemblies = LoggingAnalyzerTestHelpers.BuildReferenceAssemblies();
+    }
+
+    /// <summary>
     /// Single interpolation: <c>$"run for {id}"</c> becomes <c>"run for {id}", id</c>.
     /// </summary>
     [Fact]
     public async Task WhenDynamicTemplate_ConvertsToStaticTemplate()
     {
-        ReferenceAssemblies = LoggingAnalyzerTestHelpers.BuildReferenceAssemblies();
-
         TestCode = """
 using Annium.Logging;
 
@@ -45,7 +51,7 @@ public class Sample : ILogSubject
 
         ExpectedDiagnostics.Add(
             new DiagnosticResult(Descriptors.Log0001DynamicLogMessageTemplate.Id, DiagnosticSeverity.Warning)
-                .WithMessage("Call message template is non-constant")
+                .WithMessage(LoggingAnalyzerTestHelpers.DynamicTemplateMessage)
                 .WithSpan(16, 9, 16, 36)
         );
 
@@ -82,8 +88,6 @@ public class Sample : ILogSubject
     [Fact]
     public async Task WhenInterpolationHasAlignment_NoCodeFixRegistered()
     {
-        ReferenceAssemblies = LoggingAnalyzerTestHelpers.BuildReferenceAssemblies();
-
         var code = """
 using Annium.Logging;
 
@@ -109,7 +113,7 @@ public class Sample : ILogSubject
 
         ExpectedDiagnostics.Add(
             new DiagnosticResult(Descriptors.Log0001DynamicLogMessageTemplate.Id, DiagnosticSeverity.Warning)
-                .WithMessage("Call message template is non-constant")
+                .WithMessage(LoggingAnalyzerTestHelpers.DynamicTemplateMessage)
                 .WithSpan(16, 9, 16, 36)
         );
 
@@ -127,8 +131,6 @@ public class Sample : ILogSubject
     [Fact]
     public async Task WhenInterpolationHasFormatClause_NoCodeFixRegistered()
     {
-        ReferenceAssemblies = LoggingAnalyzerTestHelpers.BuildReferenceAssemblies();
-
         var code = """
 using Annium.Logging;
 
@@ -154,7 +156,7 @@ public class Sample : ILogSubject
 
         ExpectedDiagnostics.Add(
             new DiagnosticResult(Descriptors.Log0001DynamicLogMessageTemplate.Id, DiagnosticSeverity.Warning)
-                .WithMessage("Call message template is non-constant")
+                .WithMessage(LoggingAnalyzerTestHelpers.DynamicTemplateMessage)
                 .WithSpan(16, 9, 16, 36)
         );
 
@@ -172,8 +174,6 @@ public class Sample : ILogSubject
     [Fact]
     public async Task WhenDuplicateIdentifierInTemplate_BothPlaceholdersSuffixed()
     {
-        ReferenceAssemblies = LoggingAnalyzerTestHelpers.BuildReferenceAssemblies();
-
         TestCode = """
 using Annium.Logging;
 
@@ -197,7 +197,7 @@ public class Sample : ILogSubject
 
         ExpectedDiagnostics.Add(
             new DiagnosticResult(Descriptors.Log0001DynamicLogMessageTemplate.Id, DiagnosticSeverity.Warning)
-                .WithMessage("Call message template is non-constant")
+                .WithMessage(LoggingAnalyzerTestHelpers.DynamicTemplateMessage)
                 .WithSpan(16, 9, 16, 35)
         );
 

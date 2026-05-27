@@ -49,10 +49,20 @@ public class AwaitableExtensionsTests
     [Fact]
     public void Await_ValueTask_BlocksUntilCompletion()
     {
-        ValueTask.CompletedTask.Await();
+        var ct = TestContext.Current.CancellationToken;
+        var completed = false;
+        new ValueTask(
+            Task.Run(
+                async () =>
+                {
+                    await Task.Delay(50, ct);
+                    completed = true;
+                },
+                ct
+            )
+        ).Await();
 
-        // Reaching here without throwing is the assertion.
-        true.IsTrue();
+        completed.IsTrue();
     }
 
     /// <summary>

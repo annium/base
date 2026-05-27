@@ -53,6 +53,44 @@ public class TrackingWeakReferenceTest
     }
 
     /// <summary>
+    /// Verifies that a subscriber that throws during OnCollected does not prevent a non-throwing
+    /// subscriber registered before it from firing. Exceptions thrown inside the ThreadPool workitem
+    /// are swallowed by the finalizer's catch block, so neither subscriber can crash the process.
+    /// The non-throwing subscriber is registered first so it fires before the throwing one.
+    /// </summary>
+    [Fact]
+    public void TrackingWeakReference_SubscriberException_NonThrowingSubscriberStillFires()
+    {
+        // arrange — signal to detect whether the non-throwing subscriber ran
+        using var fired = new ManualResetEventSlim(initialState: false);
+        object target;
+        ITrackingWeakReference<object> reference = default!;
+        Wrap(() =>
+        {
+            target = new object();
+            reference = TrackingWeakReference.Get(target);
+
+            // Register non-throwing subscriber FIRST so it runs before the throwing one.
+            // Multicast delegates fire in registration order; once the throwing one aborts,
+            // the outer try/catch in the workitem swallows it — so the signal is already set.
+            reference.OnCollected += () => fired.Set();
+            reference.OnCollected += () => throw new InvalidOperationException("subscriber-boom");
+        });
+
+        // act — drop the target and the reference so the finalizer runs
+        target = default!;
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+
+        reference = default!;
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+
+        // assert — non-throwing subscriber fired; process survived the throwing one
+        fired.Wait(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken).IsTrue();
+    }
+
+    /// <summary>
     /// Wraps an action to prevent inlining, ensuring proper garbage collection behavior.
     /// </summary>
     /// <param name="wrap">The action to wrap.</param>

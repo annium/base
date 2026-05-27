@@ -113,4 +113,23 @@ public class FixedIndexedQueueTest
         queue[0].Is(1);
         queue[1].Is(2);
     }
+
+    /// <summary>
+    /// Verifies that constructing a FixedIndexedQueue from an empty collection yields Capacity 0 and Count 0,
+    /// and that calling Add on a zero-capacity queue throws IndexOutOfRangeException because the backing
+    /// array has length 0 and the overflow branch unconditionally indexes into it.
+    /// </summary>
+    [Fact]
+    public void Create_EmptyCollection_ZeroCapacityAndAddThrows()
+    {
+        // arrange
+        var queue = new FixedIndexedQueue<int>(Array.Empty<int>());
+
+        // assert — construction
+        queue.Capacity.Is(0);
+        queue.Count.Is(0);
+
+        // assert — Add on a zero-capacity queue writes to _data[_index] on a zero-length array
+        Wrap.It(() => queue.Add(1)).Throws<IndexOutOfRangeException>();
+    }
 }

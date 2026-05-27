@@ -14,14 +14,20 @@ public sealed class DynamicLogMessageTemplateAnalyzerTests
     : CSharpAnalyzerTest<DynamicLogMessageTemplateAnalyzer, DefaultVerifier>
 {
     /// <summary>
+    /// Initializes the test with the shared logging-analyzer reference assemblies.
+    /// </summary>
+    public DynamicLogMessageTemplateAnalyzerTests()
+    {
+        ReferenceAssemblies = LoggingAnalyzerTestHelpers.BuildReferenceAssemblies();
+    }
+
+    /// <summary>
     /// Verifies that the analyzer ignores constant log message templates.
     /// </summary>
     /// <returns>True if the analyzer ignores constant templates; otherwise, false.</returns>
     [Fact]
     public async Task ConstantTemplate_Ignores()
     {
-        ReferenceAssemblies = LoggingAnalyzerTestHelpers.BuildReferenceAssemblies();
-
         TestCode = """
 using Annium.Logging;
 
@@ -55,8 +61,6 @@ public class Sample : ILogSubject
     [Fact]
     public async Task DynamicTemplate_ShowsWarning()
     {
-        ReferenceAssemblies = LoggingAnalyzerTestHelpers.BuildReferenceAssemblies();
-
         TestCode = """
 using Annium.Logging;
 
@@ -80,7 +84,7 @@ public class Sample : ILogSubject
 
         ExpectedDiagnostics.Add(
             new DiagnosticResult(Descriptors.Log0001DynamicLogMessageTemplate.Id, DiagnosticSeverity.Warning)
-                .WithMessage("Call message template is non-constant")
+                .WithMessage(LoggingAnalyzerTestHelpers.DynamicTemplateMessage)
                 .WithSpan(16, 9, 16, 36)
         );
 
@@ -93,8 +97,6 @@ public class Sample : ILogSubject
     [Fact]
     public async Task StringConcatTemplate_ShowsWarning()
     {
-        ReferenceAssemblies = LoggingAnalyzerTestHelpers.BuildReferenceAssemblies();
-
         TestCode = """
 using Annium.Logging;
 
@@ -118,7 +120,7 @@ public class Sample : ILogSubject
 
         ExpectedDiagnostics.Add(
             new DiagnosticResult(Descriptors.Log0001DynamicLogMessageTemplate.Id, DiagnosticSeverity.Warning)
-                .WithMessage("Call message template is non-constant")
+                .WithMessage(LoggingAnalyzerTestHelpers.DynamicTemplateMessage)
                 .WithSpan(16, 9, 16, 40)
         );
 
