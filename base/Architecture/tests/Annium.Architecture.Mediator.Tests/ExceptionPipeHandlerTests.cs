@@ -29,11 +29,10 @@ public class ExceptionPipeHandlerTests : TestBase
         // test class so their global mutations don't race under xunit parallel-class execution.
         OverrideLogLevel(LogLevel.Trace);
 
-        RegisterMediator(
-            cfg =>
-                cfg.AddExceptionHandler()
-                    .AddHandler(typeof(DirectTargetInvocationHandler))
-                    .AddHandler(typeof(EchoRequestHandler<>))
+        RegisterMediator(cfg =>
+            cfg.AddExceptionHandler()
+                .AddHandler(typeof(DirectTargetInvocationHandler))
+                .AddHandler(typeof(EchoRequestHandler<>))
         );
     }
 

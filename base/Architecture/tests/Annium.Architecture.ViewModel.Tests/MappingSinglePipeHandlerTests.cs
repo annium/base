@@ -92,5 +92,4 @@ public class MappingSinglePipeHandlerTests
 
         mapper.Invocations.Is(0);
     }
-
 }

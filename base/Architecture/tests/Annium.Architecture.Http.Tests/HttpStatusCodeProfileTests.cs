@@ -69,8 +69,7 @@ public class HttpStatusCodeProfileTests : TestBase
 
     /// <summary>Gone (410) → NotFound, exercising the alias arm.</summary>
     [Fact]
-    public void Map_Gone_NotFound() =>
-        Mapper().Map<OperationStatus>(HttpStatusCode.Gone).Is(OperationStatus.NotFound);
+    public void Map_Gone_NotFound() => Mapper().Map<OperationStatus>(HttpStatusCode.Gone).Is(OperationStatus.NotFound);
 
     /// <summary>TooManyRequests (429) → Aborted, exercising the alias arm.</summary>
     [Fact]

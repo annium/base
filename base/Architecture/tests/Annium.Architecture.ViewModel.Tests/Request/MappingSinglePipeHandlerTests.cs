@@ -78,5 +78,4 @@ public class MappingSinglePipeHandlerTests
         // assert
         ReferenceEquals(response, expectedResponse).IsTrue();
     }
-
 }

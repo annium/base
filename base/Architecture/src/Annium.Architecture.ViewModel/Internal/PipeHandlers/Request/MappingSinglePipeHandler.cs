@@ -14,7 +14,8 @@ namespace Annium.Architecture.ViewModel.Internal.PipeHandlers.Request;
 /// <typeparam name="TRequestOut">The output underlying request type</typeparam>
 /// <typeparam name="TResponse">The response type</typeparam>
 internal class MappingSinglePipeHandler<TRequestIn, TRequestOut, TResponse>
-    : MappingPipeHandlerBase, IPipeRequestHandler<TRequestIn, TRequestOut, TResponse, TResponse>
+    : MappingPipeHandlerBase,
+        IPipeRequestHandler<TRequestIn, TRequestOut, TResponse, TResponse>
     where TRequestIn : IRequest<TRequestOut>
 {
     /// <summary>

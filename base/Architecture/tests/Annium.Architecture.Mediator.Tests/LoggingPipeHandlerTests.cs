@@ -82,5 +82,4 @@ public class LoggingPipeHandlerTests : TestBase
         traceEntries.Any(m => m.MessageTemplate == "Start {request} -> {response}").IsTrue();
         traceEntries.Any(m => m.MessageTemplate == "Complete {request} -> {response}").IsTrue();
     }
-
 }

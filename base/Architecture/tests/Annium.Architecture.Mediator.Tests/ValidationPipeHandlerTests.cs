@@ -3,8 +3,8 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Annium.Architecture.Base;
-using Annium.Core.DependencyInjection;
 using Annium.Architecture.Mediator.Internal.PipeHandlers;
+using Annium.Core.DependencyInjection;
 using Annium.Core.Mediator;
 using Annium.Data.Operations;
 using Annium.Extensions.Validation;
@@ -182,14 +182,17 @@ public class ValidationPipeHandlerTests : TestBase
             null
         );
         (handleMethod is not null).IsTrue();
-        var resultTask = (Task<IStatusResult<OperationStatus, LoginRequest>>)handleMethod!.Invoke(
-            handler,
-            [
-                null,
-                ct,
-                (Func<LoginRequest, CancellationToken, Task<IStatusResult<OperationStatus, LoginRequest>>>)DummyNext,
-            ]
-        )!;
+        var resultTask =
+            (Task<IStatusResult<OperationStatus, LoginRequest>>)
+                handleMethod!.Invoke(
+                    handler,
+                    [
+                        null,
+                        ct,
+                        (Func<LoginRequest, CancellationToken, Task<IStatusResult<OperationStatus, LoginRequest>>>)
+                            DummyNext,
+                    ]
+                )!;
 
         // act
         var result = await resultTask;

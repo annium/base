@@ -22,9 +22,7 @@ public class RequestVariantValidationPipeHandlerTests : TestBase
     public RequestVariantValidationPipeHandlerTests(ITestOutputHelper outputHelper)
         : base(outputHelper)
     {
-        RegisterMediator(cfg =>
-            cfg.AddValidationHandler().AddHandler(typeof(RequestVariantEchoRequestHandler<>))
-        );
+        RegisterMediator(cfg => cfg.AddValidationHandler().AddHandler(typeof(RequestVariantEchoRequestHandler<>)));
     }
 
     /// <summary>

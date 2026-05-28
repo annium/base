@@ -22,9 +22,7 @@ public class RequestVariantCompositionPipeHandlerTests : TestBase
     public RequestVariantCompositionPipeHandlerTests(ITestOutputHelper outputHelper)
         : base(outputHelper)
     {
-        RegisterMediator(cfg =>
-            cfg.AddCompositionHandler().AddHandler(typeof(RequestVariantEchoRequestHandler<>))
-        );
+        RegisterMediator(cfg => cfg.AddCompositionHandler().AddHandler(typeof(RequestVariantEchoRequestHandler<>)));
     }
 
     /// <summary>

@@ -95,5 +95,4 @@ public class MappingEnumerablePipeHandlerTests
 
         mapper.Invocations.Is(0);
     }
-
 }

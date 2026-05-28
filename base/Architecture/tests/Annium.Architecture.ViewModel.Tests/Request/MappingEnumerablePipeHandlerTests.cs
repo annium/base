@@ -124,5 +124,4 @@ public class MappingEnumerablePipeHandlerTests
         // assert
         ReferenceEquals(response, expectedResponse).IsTrue();
     }
-
 }

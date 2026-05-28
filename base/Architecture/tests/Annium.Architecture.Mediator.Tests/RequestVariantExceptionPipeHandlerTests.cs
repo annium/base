@@ -22,9 +22,7 @@ public class RequestVariantExceptionPipeHandlerTests : TestBase
     public RequestVariantExceptionPipeHandlerTests(ITestOutputHelper outputHelper)
         : base(outputHelper)
     {
-        RegisterMediator(cfg =>
-            cfg.AddExceptionHandler().AddHandler(typeof(RequestVariantEchoRequestHandler<>))
-        );
+        RegisterMediator(cfg => cfg.AddExceptionHandler().AddHandler(typeof(RequestVariantEchoRequestHandler<>)));
     }
 
     /// <summary>
@@ -73,5 +71,4 @@ public class RequestVariantExceptionPipeHandlerTests : TestBase
         result.Status.Is(OperationStatus.Ok);
         result.IsOk.IsTrue();
     }
-
 }

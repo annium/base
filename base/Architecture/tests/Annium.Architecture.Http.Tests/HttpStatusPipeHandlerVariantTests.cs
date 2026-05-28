@@ -67,12 +67,13 @@ public class HttpStatusPipeHandlerVariantTests
         var upstream = Result.Status<OperationStatus, string>(OperationStatus.Ok, null!);
 
         await Wrap.It(async () =>
-            await handler.HandleAsync(
-                new object(),
-                CancellationToken.None,
-                (_, _) => Task.FromResult<IStatusResult<OperationStatus, string>>(upstream)
+                await handler.HandleAsync(
+                    new object(),
+                    CancellationToken.None,
+                    (_, _) => Task.FromResult<IStatusResult<OperationStatus, string>>(upstream)
+                )
             )
-        ).ThrowsAsync<ServerException>();
+            .ThrowsAsync<ServerException>();
     }
 
     /// <summary>
@@ -88,12 +89,13 @@ public class HttpStatusPipeHandlerVariantTests
         var upstream = Result.Status<OperationStatus, string>(OperationStatus.NotFound, string.Empty);
 
         await Wrap.It(async () =>
-            await handler.HandleAsync(
-                new object(),
-                CancellationToken.None,
-                (_, _) => Task.FromResult<IStatusResult<OperationStatus, string>>(upstream)
+                await handler.HandleAsync(
+                    new object(),
+                    CancellationToken.None,
+                    (_, _) => Task.FromResult<IStatusResult<OperationStatus, string>>(upstream)
+                )
             )
-        ).ThrowsAsync<NotFoundException>();
+            .ThrowsAsync<NotFoundException>();
     }
 
     // -------------------------------------------------------------------------
@@ -132,12 +134,13 @@ public class HttpStatusPipeHandlerVariantTests
         var upstream = Result.Status<OperationStatus>(OperationStatus.BadRequest);
 
         await Wrap.It(async () =>
-            await handler.HandleAsync(
-                new object(),
-                CancellationToken.None,
-                (_, _) => Task.FromResult<IStatusResult<OperationStatus>>(upstream)
+                await handler.HandleAsync(
+                    new object(),
+                    CancellationToken.None,
+                    (_, _) => Task.FromResult<IStatusResult<OperationStatus>>(upstream)
+                )
             )
-        ).ThrowsAsync<ValidationException>();
+            .ThrowsAsync<ValidationException>();
     }
 
     /// <summary>
@@ -192,8 +195,7 @@ public class HttpStatusPipeHandlerVariantTests
     /// so the tests can drive the concrete <see cref="HttpStatusPipeHandler{TRequest,TResponse}"/>
     /// end-to-end without registering the handler in a mediator pipeline.
     /// </summary>
-    private sealed class RequestResponseHandler
-        : HttpStatusPipeHandler<object, string>
+    private sealed class RequestResponseHandler : HttpStatusPipeHandler<object, string>
     {
         // No additional members needed; HandleAsync is public on the base class.
     }
@@ -204,8 +206,7 @@ public class HttpStatusPipeHandlerVariantTests
     /// so the tests can drive the concrete <see cref="HttpStatusPipeHandler{TRequest}"/>
     /// end-to-end without registering the handler in a mediator pipeline.
     /// </summary>
-    private sealed class RequestOnlyHandler
-        : HttpStatusPipeHandler<object>
+    private sealed class RequestOnlyHandler : HttpStatusPipeHandler<object>
     {
         // No additional members needed; HandleAsync is public on the base class.
     }
