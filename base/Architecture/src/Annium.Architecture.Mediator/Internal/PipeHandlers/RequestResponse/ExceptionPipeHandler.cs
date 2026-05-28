@@ -37,6 +37,8 @@ internal class ExceptionPipeHandler<TRequest, TResponse>
         // Do not surface raw exception messages to callers; the full exception is still logged
         // by ExceptionPipeHandlerBase.Failure via ILogSubject.Trace.
         // null Data is intentional for UncaughtError; failure result, Data is never consumed
-        return Result.Status(OperationStatus.UncaughtError, default(TResponse)!).Error(InternalErrorMessage);
+        return Result
+            .Status(OperationStatus.UncaughtError, default(TResponse)!)
+            .Error(PipeHandlerMessages.InternalError);
     }
 }

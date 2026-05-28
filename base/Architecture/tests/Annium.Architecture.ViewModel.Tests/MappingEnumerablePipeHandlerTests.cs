@@ -8,6 +8,7 @@ using Annium.Architecture.ViewModel.Internal.PipeHandlers.Response;
 using Annium.Data.Operations;
 using Annium.Testing;
 using Xunit;
+using static Annium.Architecture.ViewModel.Tests.ResponseMappingFixtures;
 
 namespace Annium.Architecture.ViewModel.Tests;
 
@@ -94,13 +95,4 @@ public class MappingEnumerablePipeHandlerTests
 
         mapper.Invocations.Is(0);
     }
-
-    /// <summary>Test request marker.</summary>
-    public class TestRequest { }
-
-    /// <summary>Source DTO returned by upstream.</summary>
-    public class TestSource { }
-
-    /// <summary>View-model target the handler maps into.</summary>
-    public class TestTarget : IResponse<TestSource> { }
 }

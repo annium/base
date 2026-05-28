@@ -18,35 +18,22 @@ namespace Annium.Architecture.ViewModel.Internal.PipeHandlers.Response;
 /// <typeparam name="TResponseIn">The input underlying response type</typeparam>
 /// <typeparam name="TResponseOut">The output view model response type</typeparam>
 internal class MappingEnumerablePipeHandler<TRequest, TResponseIn, TResponseOut>
-    : IPipeRequestHandler<
-        TRequest,
-        TRequest,
-        IStatusResult<OperationStatus, IEnumerable<TResponseIn>>,
-        IStatusResult<OperationStatus, IEnumerable<TResponseOut>>
-    >,
-        ILogSubject
+    : MappingPipeHandlerBase,
+        IPipeRequestHandler<
+            TRequest,
+            TRequest,
+            IStatusResult<OperationStatus, IEnumerable<TResponseIn>>,
+            IStatusResult<OperationStatus, IEnumerable<TResponseOut>>
+        >
     where TResponseOut : IResponse<TResponseIn>
 {
-    /// <summary>
-    /// Gets the logger for this pipe handler
-    /// </summary>
-    public ILogger Logger { get; }
-
-    /// <summary>
-    /// The mapper instance used to map between types.
-    /// </summary>
-    private readonly IMapper _mapper;
-
     /// <summary>
     /// Initializes a new instance of the MappingEnumerablePipeHandler class
     /// </summary>
     /// <param name="mapper">The mapper instance</param>
     /// <param name="logger">The logger instance</param>
     public MappingEnumerablePipeHandler(IMapper mapper, ILogger logger)
-    {
-        _mapper = mapper;
-        Logger = logger;
-    }
+        : base(mapper, logger) { }
 
     /// <summary>
     /// Handles the request by executing the next handler and mapping the enumerable response to view model types
@@ -85,7 +72,7 @@ internal class MappingEnumerablePipeHandler<TRequest, TResponseIn, TResponseOut>
         }
 
         this.Trace("Map response: {responseIn} -> {responseOut}", typeof(TResponseIn), typeof(TResponseOut));
-        var mappedResponse = _mapper.Map<IEnumerable<TResponseOut>>(response.Data);
+        var mappedResponse = Mapper.Map<IEnumerable<TResponseOut>>(response.Data);
 
         return Result.Status(response.Status, mappedResponse).Join(response);
     }

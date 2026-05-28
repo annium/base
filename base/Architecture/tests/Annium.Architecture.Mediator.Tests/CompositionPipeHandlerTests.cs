@@ -11,9 +11,9 @@ namespace Annium.Architecture.Mediator.Tests;
 /// <summary>
 /// Tests for the composition pipe handler functionality.
 /// </summary>
-public class CompositionPipeHandlerTest : TestBase
+public class CompositionPipeHandlerTests : TestBase
 {
-    public CompositionPipeHandlerTest(ITestOutputHelper outputHelper)
+    public CompositionPipeHandlerTests(ITestOutputHelper outputHelper)
         : base(outputHelper)
     {
         RegisterMediator(cfg => cfg.AddCompositionHandler().AddHandler(typeof(EchoRequestHandler<>)));

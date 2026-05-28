@@ -30,6 +30,6 @@ internal class ExceptionPipeHandler<TRequest>
     {
         // Do not surface raw exception messages to callers; the full exception is still logged
         // by ExceptionPipeHandlerBase.Failure via ILogSubject.Trace.
-        return Result.Status(OperationStatus.UncaughtError).Error(InternalErrorMessage);
+        return Result.Status(OperationStatus.UncaughtError).Error(PipeHandlerMessages.InternalError);
     }
 }

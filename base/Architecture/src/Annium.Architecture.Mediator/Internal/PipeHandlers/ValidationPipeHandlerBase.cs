@@ -57,7 +57,7 @@ internal abstract class ValidationPipeHandlerBase<TRequest, TResponse> : ILogSub
             // distinguish "the framework misrouted" from "the user sent garbage".
             this.Trace("Validation of {request} failed - request is null", typeof(TRequest));
 
-            return GetResponse(OperationStatus.UncaughtError, Result.Create().Error("Request is empty"));
+            return GetResponse(OperationStatus.UncaughtError, Result.Create().Error(PipeHandlerMessages.NullRequest));
         }
 
         var result = await _validator.ValidateAsync(request);
