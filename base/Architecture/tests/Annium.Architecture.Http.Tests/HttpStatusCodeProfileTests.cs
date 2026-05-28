@@ -62,6 +62,29 @@ public class HttpStatusCodeProfileTests : TestBase
         mapper.Map<OperationStatus>(HttpStatusCode.Conflict).Is(OperationStatus.Conflict);
     }
 
+    /// <summary>UnprocessableEntity (422) → BadRequest, exercising the alias arm.</summary>
+    [Fact]
+    public void Map_UnprocessableEntity_BadRequest() =>
+        Mapper().Map<OperationStatus>(HttpStatusCode.UnprocessableEntity).Is(OperationStatus.BadRequest);
+
+    /// <summary>Gone (410) → NotFound, exercising the alias arm.</summary>
+    [Fact]
+    public void Map_Gone_NotFound() =>
+        Mapper().Map<OperationStatus>(HttpStatusCode.Gone).Is(OperationStatus.NotFound);
+
+    /// <summary>TooManyRequests (429) → Aborted, exercising the alias arm.</summary>
+    [Fact]
+    public void Map_TooManyRequests_Aborted() =>
+        Mapper().Map<OperationStatus>(HttpStatusCode.TooManyRequests).Is(OperationStatus.Aborted);
+
+    /// <summary>
+    /// An unrecognised HTTP status code must fall through the wildcard arm and
+    /// map to <see cref="OperationStatus.UncaughtError"/> rather than throw.
+    /// </summary>
+    [Fact]
+    public void Map_UnrecognisedCode_UncaughtError() =>
+        Mapper().Map<OperationStatus>((HttpStatusCode)999).Is(OperationStatus.UncaughtError);
+
     /// <summary>Resolves the <see cref="IMapper"/> instance from the test DI container.</summary>
     /// <returns>The configured mapper instance.</returns>
     private IMapper Mapper() => Get<IMapper>();

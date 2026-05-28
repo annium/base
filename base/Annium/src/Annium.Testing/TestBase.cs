@@ -147,13 +147,37 @@ public abstract class TestBase : ILogSubject, IAsyncLifetime
     }
 
     /// <summary>
+    /// The process-global log level captured when <see cref="OverrideLogLevel"/> was first called,
+    /// or null if no override is active. Restored at the start of <see cref="DisposeAsync"/>.
+    /// </summary>
+    private LogLevel? _savedLogLevel;
+
+    /// <summary>
+    /// Captures the current process-global log level (only on the first call per test instance) and
+    /// sets it to <paramref name="level"/>. The captured level is restored on dispose. Tests that
+    /// rely on observing specific log levels (e.g. asserting Trace entries) should call this in the
+    /// constructor instead of touching <c>LogConfig</c> directly, and should be tagged with a shared
+    /// <c>[Collection]</c> so their global mutations don't race in parallel.
+    /// </summary>
+    /// <param name="level">The log level to set for the duration of the test.</param>
+    protected void OverrideLogLevel(LogLevel level)
+    {
+        _savedLogLevel ??= LogConfig.Level;
+        LogConfig.SetLevel(level);
+    }
+
+    /// <summary>
     /// Disposes the built provider, preferring <see cref="IAsyncDisposable"/> over <see cref="IDisposable"/>.
+    /// Restores any log-level override applied via <see cref="OverrideLogLevel"/> first.
     /// Subclasses overriding must chain <c>await base.DisposeAsync();</c> last so subclass cleanup
     /// runs before the provider is torn down.
     /// </summary>
     /// <returns>A value task representing the disposal.</returns>
     public virtual async ValueTask DisposeAsync()
     {
+        if (_savedLogLevel.HasValue)
+            LogConfig.SetLevel(_savedLogLevel.Value);
+
         switch (_sp)
         {
             case IAsyncDisposable ad:
