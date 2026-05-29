@@ -43,6 +43,13 @@ public interface IInstanceRegistrationBuilderBase
     IInstanceRegistrationBuilderBase AsKeyed(Type serviceType, object key);
 
     /// <summary>
+    /// Registers the instance as each of its implemented interfaces with the given key.
+    /// </summary>
+    /// <param name="key">The key for registration.</param>
+    /// <returns>Builder.</returns>
+    IInstanceRegistrationBuilderBase AsKeyedInterfaces(object key);
+
+    /// <summary>
     /// Registers the instance as a factory <c>Func&lt;T&gt;</c> that returns it on every call.
     /// Useful when a consumer depends on <c>Func&lt;T&gt;</c> (for example for lazy or deferred
     /// access) while the underlying value is a pre-built singleton instance.

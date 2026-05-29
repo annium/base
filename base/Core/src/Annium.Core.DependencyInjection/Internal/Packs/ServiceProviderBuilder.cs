@@ -26,7 +26,7 @@ internal class ServiceProviderBuilder : IServiceProviderBuilder
     /// <summary>
     /// The collection of service packs to be configured and registered
     /// </summary>
-    private readonly IList<ServicePackBase> _packs = new List<ServicePackBase>();
+    private readonly List<ServicePackBase> _packs = new();
 
     /// <summary>
     /// Initializes a new instance of the ServiceProviderBuilder class with an empty service container
@@ -60,13 +60,15 @@ internal class ServiceProviderBuilder : IServiceProviderBuilder
     }
 
     /// <summary>
-    /// Adds the specified service pack instance to the builder
+    /// Adds the specified service pack instance to the builder if not already added (by reference).
+    /// Identity-based dedup so callers can still register two distinct packs of the same type.
     /// </summary>
     /// <param name="servicePack">The service pack instance to add</param>
     /// <returns>The current service provider builder instance</returns>
     public IServiceProviderBuilder UseServicePack(ServicePackBase servicePack)
     {
-        _packs.Add(servicePack);
+        if (!_packs.Contains(servicePack))
+            _packs.Add(servicePack);
 
         return this;
     }
@@ -88,10 +90,10 @@ internal class ServiceProviderBuilder : IServiceProviderBuilder
     /// </para>
     /// <para>
     /// Disposal contract on non-normal exit: on any thrown exception the catch handler disposes
-    /// the already-built providers in reverse order (final before transient), preferring
-    /// <see cref="IAsyncDisposable.DisposeAsync"/> and falling back to <see cref="IDisposable.Dispose"/>.
-    /// If either dispose call throws, the original exception is preserved as
-    /// <c>InnerExceptions[0]</c> of an <see cref="AggregateException"/> whose subsequent inner
+    /// the already-built providers in reverse order (final before transient) via
+    /// <see cref="IAsyncDisposable.DisposeAsync"/> (the concrete <see cref="ServiceProvider"/>
+    /// type always implements it). If any dispose call throws, the original exception is preserved
+    /// as <c>InnerExceptions[0]</c> of an <see cref="AggregateException"/> whose subsequent inner
     /// exceptions are the dispose errors in the order they occurred.
     /// </para>
     /// <para>
@@ -126,20 +128,32 @@ internal class ServiceProviderBuilder : IServiceProviderBuilder
 
         // Work on a clone of _container so a Configure/Register failure leaves _container
         // unchanged — the caller can retry from a clean baseline.
+        //
+        // OnBuild contract note: _container is `private` and neither public ctor of this class
+        // (ServiceProviderBuilder() / ServiceProviderBuilder(IServiceCollection)) nor any member
+        // of the IServiceProviderBuilder interface exposes it. There is therefore NO public path
+        // by which a caller could attach OnBuild subscribers to _container before BuildAsync —
+        // so the fact that Clone() does not propagate OnBuild subscribers (see ServiceContainer.Clone
+        // remarks) cannot drop any user-attached handlers. The only legitimate subscription path
+        // is inside pack.ConfigureAsync (Phase 1 below), whose `container` parameter IS
+        // workingContainer — those subscriptions attach to workingContainer and fire when
+        // workingContainer.BuildServiceProvider() is called for the final provider at Phase 4.
         var workingContainer = _container.Clone();
 
         try
         {
-            // Phase 1: Configure — accumulate in a staging container, then merge into the working clone
-            var configurationContainer = new ServiceContainer();
+            // Phase 1: Configure — packs register directly into workingContainer.
+            // A Configure failure leaves _container unchanged (workingContainer is already a clone),
+            // and event subscriptions attached via container.OnBuild += ... inside a pack remain on
+            // workingContainer (the parameter passed here) so they fire as documented at Phase 4.
             foreach (var pack in _packs)
-                await pack.InternalConfigureAsync(configurationContainer, ct).ConfigureAwait(false);
+                await pack.InternalConfigureAsync(workingContainer, ct).ConfigureAwait(false);
 
-            foreach (var descriptor in configurationContainer)
-                workingContainer.Add(descriptor);
-
-            // Phase 2: build transient provider for RegisterAsync's provider parameter
-            transient = workingContainer.BuildServiceProvider();
+            // Phase 2: build transient provider for RegisterAsync's provider parameter. We build via
+            // the underlying IServiceCollection directly (not workingContainer.BuildServiceProvider())
+            // so OnBuild is NOT raised for the transient — subscribers expect a single notification
+            // for the stable final provider, not a short-lived transient that gets disposed at Phase 4.
+            transient = workingContainer.Collection.BuildServiceProvider();
 
             // Phase 3: RegisterAsync — packs may consume Configure-phase services via transient
             // while adding additional registrations to workingContainer
@@ -177,11 +191,12 @@ internal class ServiceProviderBuilder : IServiceProviderBuilder
 
     /// <summary>
     /// Reverse-order disposal of partial build state. Iterates [final, transient] (nulls skipped);
-    /// each provider is disposed via <see cref="IAsyncDisposable.DisposeAsync"/> if implemented,
-    /// otherwise <see cref="IDisposable.Dispose"/>. If any dispose throws, the original phase/cancel
-    /// exception is rethrown as <c>InnerExceptions[0]</c> of an <see cref="AggregateException"/>;
-    /// dispose errors follow in the order they occurred. If all disposes succeed, the method returns
-    /// normally and the caller's <c>throw;</c> rethrows the original with stack preserved.
+    /// each provider is disposed via <see cref="IAsyncDisposable.DisposeAsync"/> (the concrete
+    /// <see cref="ServiceProvider"/> type always implements it). If any dispose throws, the
+    /// original phase/cancel exception is rethrown as <c>InnerExceptions[0]</c> of an
+    /// <see cref="AggregateException"/>; dispose errors follow in the order they occurred. If
+    /// all disposes succeed, the method returns normally and the caller's <c>throw;</c> rethrows
+    /// the original with stack preserved.
     /// </summary>
     /// <param name="original">The original phase or cancellation exception that triggered teardown; preserved as the head of any aggregated failure.</param>
     /// <param name="final">The final provider built so far, if any; disposed first. May be null.</param>
@@ -194,11 +209,23 @@ internal class ServiceProviderBuilder : IServiceProviderBuilder
     )
     {
         List<Exception>? disposeErrors = null;
-        foreach (var sp in new[] { final, transient })
-        {
-            if (sp is null)
-                continue;
 
+        if (final is not null)
+            await DisposeOneAsync(final).ConfigureAwait(false);
+        if (transient is not null)
+            await DisposeOneAsync(transient).ConfigureAwait(false);
+
+        if (disposeErrors is null)
+            return;
+
+        // Seed the aggregate with `original` as InnerExceptions[0], then append dispose errors
+        // in the order they occurred. Avoids the new[]+Concat intermediate allocation.
+        var aggregated = new List<Exception>(disposeErrors.Count + 1) { original };
+        aggregated.AddRange(disposeErrors);
+        throw new AggregateException(aggregated);
+
+        async Task DisposeOneAsync(ServiceProvider sp)
+        {
             try
             {
                 await sp.DisposeAsync().ConfigureAwait(false);
@@ -208,8 +235,5 @@ internal class ServiceProviderBuilder : IServiceProviderBuilder
                 (disposeErrors ??= new List<Exception>()).Add(e);
             }
         }
-
-        if (disposeErrors is not null)
-            throw new AggregateException(new[] { original }.Concat(disposeErrors));
     }
 }

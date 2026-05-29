@@ -83,9 +83,6 @@ internal static class Helper
     /// <returns>The factory type</returns>
     public static Type FactoryType(Type type) => typeof(Func<>).MakeGenericType(type);
 
-    // public static Type KeyValueType(Type keyType, Type valueType) =>
-    //     typeof(KeyValue<,>).MakeGenericType(keyType, valueType);
-
     /// <summary>
     /// Creates a service descriptor with a factory using an expression body
     /// </summary>
@@ -134,9 +131,6 @@ internal static class Helper
         );
     }
 
-    // public static Expression KeyValue(Type keyType, Type valueType, object key, Expression value) =>
-    //     Expression.New(KeyValueConstructor(keyType, valueType), Expression.Constant(key), Expression.Lambda(value));
-
     /// <summary>
     /// Creates an expression for resolving a service from a service provider
     /// </summary>
@@ -178,12 +172,4 @@ internal static class Helper
     /// <returns>The generic method info</returns>
     private static MethodInfo GetRequiredKeyedService(Type type) =>
         _getRequiredKeyedServiceMethod.MakeGenericMethod(type);
-    //
-    // private static ConstructorInfo KeyValueConstructor(Type keyType, Type valueType)
-    // {
-    //     var type = typeof(KeyValue<,>).MakeGenericType(keyType, valueType);
-    //
-    //     return type.GetConstructor(new[] { keyType, typeof(Func<>).MakeGenericType(valueType) })
-    //         ?? throw new MissingMethodException($"Failed to find {type.FriendlyName()} constructor");
-    // }
 }

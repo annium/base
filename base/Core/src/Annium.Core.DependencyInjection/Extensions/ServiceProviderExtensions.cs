@@ -102,6 +102,6 @@ public static class ServiceProviderExtensions
     /// <returns>The resolved service instance, or null if not found</returns>
     public static object? TryResolveKeyed(this IServiceProvider provider, Type type, object key)
     {
-        return provider.CastTo<IKeyedServiceProvider>().GetKeyedService(type, key);
+        return provider.GetKeyedService(type, key);
     }
 }

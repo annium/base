@@ -11,6 +11,12 @@ namespace Annium.Core.DependencyInjection.Internal.Builders;
 internal class Registrar
 {
     /// <summary>
+    /// Message thrown when <see cref="Register"/> is called more than once on the same registrar
+    /// (the single-use contract is violated).
+    /// </summary>
+    internal const string AlreadyRegisteredMessage = "Registration already done";
+
+    /// <summary>
     /// The action to register service descriptors.
     /// </summary>
     private readonly Action<IServiceDescriptor> _register;
@@ -40,7 +46,7 @@ internal class Registrar
     public void Register(IEnumerable<IRegistration> registrations, ServiceLifetime lifetime)
     {
         if (_hasRegistered)
-            throw new InvalidOperationException("Registration already done");
+            throw new InvalidOperationException(AlreadyRegisteredMessage);
         _hasRegistered = true;
 
         var descriptors = registrations.SelectMany(x => x.ResolveServiceDescriptors(lifetime)).ToArray();

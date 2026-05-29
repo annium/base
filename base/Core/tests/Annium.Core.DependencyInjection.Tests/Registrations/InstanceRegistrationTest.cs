@@ -1,4 +1,5 @@
 using System;
+using Annium.Core.DependencyInjection.Internal.Builders;
 using Annium.Testing;
 using Xunit;
 
@@ -37,12 +38,13 @@ public class InstanceRegistrationTest : TestBase
     {
         // arrange
         var instance = new D(new A());
-        Container.Add(instance).As(typeof(A)).Singleton();
+        Container.Add(instance).As(typeof(C)).Singleton();
 
         // act
         Build();
 
         // assert
+        Get<C>().Is(instance);
     }
 
     /// <summary>
@@ -163,6 +165,56 @@ public class InstanceRegistrationTest : TestBase
 
         // assert
         GetKeyed<Func<C>>(nameof(C))().Is(instance);
+    }
+
+    /// <summary>
+    /// Verifies that instance registration as keyed interfaces works correctly
+    /// </summary>
+    [Fact]
+    public void AsKeyedInterfaces_Works()
+    {
+        // arrange
+        var instance = new D(new A());
+        Container.Add(instance).AsKeyedInterfaces(nameof(D)).Singleton();
+
+        // act
+        Build();
+
+        // assert
+        GetKeyed<IC>(nameof(D)).Is(instance);
+        GetKeyed<ID>(nameof(D)).Is(instance);
+    }
+
+    /// <summary>
+    /// Verifies that calling Singleton() a second time on the same instance builder throws
+    /// </summary>
+    [Fact]
+    public void In_RegistrarReused_Throws()
+    {
+        // arrange
+        var instance = new D(new A());
+        var b = Container.Add(instance).AsSelf();
+        b.Singleton();
+
+        // act & assert
+        Wrap.It(() => b.Singleton())
+            .Throws<InvalidOperationException>()
+            .Reports(Registrar.AlreadyRegisteredMessage);
+    }
+
+    /// <summary>
+    /// Verifies that calling Singleton() without specifying registration targets throws
+    /// </summary>
+    [Fact]
+    public void In_NoRegistrationTargets_Throws()
+    {
+        // arrange
+        var inst = new D(new A());
+
+        // act & assert
+        Wrap.It(() => Container.Add(inst).Singleton())
+            .Throws<InvalidOperationException>()
+            .Reports("Specify registration targets");
     }
 
     /// <summary>

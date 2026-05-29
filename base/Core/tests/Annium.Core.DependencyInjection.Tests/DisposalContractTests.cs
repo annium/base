@@ -394,12 +394,51 @@ public class DisposalContractTests
 
         var original = new InvalidOperationException("original");
 
+        // expect no throw — both providers dispose cleanly
         await ServiceProviderBuilder.DisposeWithAggregationAsync(original, finalSp, transientSp);
 
         // dispose order: final before transient
         order.Count.Is(2);
         order[0].IsEqual("final");
         order[1].IsEqual("transient");
+    }
+
+    /// <summary>
+    /// Verifies that <see cref="ServiceProviderBuilder.DisposeWithAggregationAsync"/> aggregates
+    /// the original exception plus individual dispose errors from BOTH final and transient providers
+    /// when each owns a service that throws from DisposeAsync.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
+    [Fact]
+    public async Task DisposeWithAggregation_BothProvidersThrow_ThreeInnerExceptions()
+    {
+        // arrange — build two providers each owning a ThrowOnAsyncDispose singleton
+        var finalSp = BuildSpWithThrowOnAsyncDispose();
+        var transientSp = BuildSpWithThrowOnAsyncDispose();
+        var original = new InvalidOperationException("original");
+
+        // act
+        var ex = await Assert.ThrowsAsync<AggregateException>(async () =>
+            await ServiceProviderBuilder.DisposeWithAggregationAsync(original, finalSp, transientSp)
+        );
+
+        // assert — InnerExceptions[0] is original; [1] and [2] are the two dispose errors
+        ex.InnerExceptions[0].Message.IsEqual("original");
+        ex.InnerExceptions.Count.Is(3);
+    }
+
+    /// <summary>
+    /// Builds a <see cref="ServiceProvider"/> that materialises a <see cref="ThrowOnAsyncDispose"/>
+    /// singleton so that disposing the provider causes <see cref="IAsyncDisposable.DisposeAsync"/> to throw.
+    /// </summary>
+    /// <returns>A built and materialised <see cref="ServiceProvider"/>.</returns>
+    private static ServiceProvider BuildSpWithThrowOnAsyncDispose()
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton<ThrowOnAsyncDispose>(_ => new ThrowOnAsyncDispose());
+        var sp = services.BuildServiceProvider();
+        _ = sp.GetRequiredService<ThrowOnAsyncDispose>();
+        return sp;
     }
 
     /// <summary>
@@ -415,22 +454,26 @@ public class DisposalContractTests
     {
         var order = new List<string>();
         WalkOrderTracker.Sink = order;
+        try
+        {
+            var builder = new ServiceProviderFactory().CreateBuilder(new ServiceCollection());
+            builder.UseServicePack<ParentPack>();
 
-        var builder = new ServiceProviderFactory().CreateBuilder(new ServiceCollection());
-        builder.UseServicePack<ParentPack>();
+            await using var sp = await builder.BuildAsync(TestContext.Current.CancellationToken);
 
-        await using var sp = await builder.BuildAsync(TestContext.Current.CancellationToken);
-
-        // Expect: each phase runs child before parent.
-        order.Count.Is(6);
-        order[0].IsEqual("child:configure");
-        order[1].IsEqual("parent:configure");
-        order[2].IsEqual("child:register");
-        order[3].IsEqual("parent:register");
-        order[4].IsEqual("child:setup");
-        order[5].IsEqual("parent:setup");
-
-        WalkOrderTracker.Sink = null;
+            // Expect: each phase runs child before parent.
+            order.Count.Is(6);
+            order[0].IsEqual("child:configure");
+            order[1].IsEqual("parent:configure");
+            order[2].IsEqual("child:register");
+            order[3].IsEqual("parent:register");
+            order[4].IsEqual("child:setup");
+            order[5].IsEqual("parent:setup");
+        }
+        finally
+        {
+            WalkOrderTracker.Sink = null;
+        }
     }
 
     /// <summary>
@@ -536,6 +579,7 @@ internal sealed class TransientCanceller : IDisposable
     public CancellationTokenSource? Cts;
 
     /// <summary>Cancels the associated <see cref="Cts"/>, if set, simulating in-dispose cancellation.</summary>
+    // VSTHRD103: Dispose() is the synchronous IDisposable contract — CancelAsync (ValueTask) cannot be awaited here, so Cts?.Cancel() is the correct call.
 #pragma warning disable VSTHRD103
     public void Dispose() => Cts?.Cancel();
 #pragma warning restore VSTHRD103

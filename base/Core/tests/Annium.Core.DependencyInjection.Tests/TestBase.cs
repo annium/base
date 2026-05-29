@@ -19,8 +19,24 @@ public class TestBase : Testing.TestBase
 
     /// <summary>
     /// The provider built from <see cref="Container"/> — populated by <see cref="Build"/>.
+    /// Exposed as <see cref="Provider"/> for tests that need direct <see cref="IServiceProvider"/>
+    /// access (e.g. <see cref="ServiceProviderExtensions.TryResolve{T}"/> call sites).
+    /// The <c>new</c> modifier hides the inherited <c>Annium.Testing.TestBase.Provider</c>
+    /// (which points to a separate DI container) on purpose — these tests resolve from their
+    /// own locally-built container.
     /// </summary>
+    // IDE0032 suppressed: field uses default! for late-init; cannot be replaced by an auto-property
+    // because the setter in Build() and the late-init initializer are not expressible via field keyword.
+#pragma warning disable IDE0032
     private IServiceProvider _provider = default!;
+#pragma warning restore IDE0032
+
+    /// <summary>
+    /// Exposes the locally-built provider. Hides the inherited
+    /// <see cref="Annium.Testing.TestBase.Provider"/> on purpose — DI tests resolve from
+    /// their own container, not the inherited one.
+    /// </summary>
+    protected new IServiceProvider Provider => _provider;
 
     /// <summary>
     /// Initializes a new instance.

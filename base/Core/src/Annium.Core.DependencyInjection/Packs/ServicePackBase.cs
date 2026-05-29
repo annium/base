@@ -14,7 +14,7 @@ public abstract class ServicePackBase
     /// <summary>
     /// Collection of nested service packs
     /// </summary>
-    private readonly IList<ServicePackBase> _packs = new List<ServicePackBase>();
+    private readonly List<ServicePackBase> _packs = new();
 
     /// <summary>
     /// Adds a nested service pack of the specified type

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Annium.Core.DependencyInjection.Internal.Builders;
 using Annium.Testing;
 using Xunit;
 
@@ -11,8 +12,64 @@ namespace Annium.Core.DependencyInjection.Tests.Registrations;
 /// </summary>
 public class BulkRegistrationTest : TestBase
 {
+    private static readonly Type[] _ab = [typeof(A), typeof(B)];
+    private static readonly Type[] _aOnly = [typeof(A)];
+
     public BulkRegistrationTest(ITestOutputHelper outputHelper)
         : base(outputHelper) { }
+
+    /// <summary>
+    /// Verifies that AssignableTo&lt;T&gt; filters the bulk set to types assignable to T
+    /// </summary>
+    [Fact]
+    public void AssignableTo_FiltersToSubtypes()
+    {
+        // arrange — _ab contains A (implements IA) and B (implements IA + IB); filter to IA only
+        Container.Add(_ab.AsEnumerable()).AssignableTo<IA>().AsSelf().Singleton();
+
+        // act
+        Build();
+
+        // assert — both A and B implement IA, so both are registered
+        Container.HasSingleton(typeof(A), typeof(A));
+        Container.HasSingleton(typeof(B), typeof(B));
+        Get<A>().AsExact<A>();
+        Get<B>().AsExact<B>();
+    }
+
+    /// <summary>
+    /// Verifies that StartingWith filters the bulk set to types whose names begin with the given prefix
+    /// </summary>
+    [Fact]
+    public void StartingWith_FiltersByName()
+    {
+        // arrange — only type "A" starts with "A"; "B" does not
+        Container.Add(_ab.AsEnumerable()).StartingWith("A").AsSelf().Singleton();
+
+        // act
+        Build();
+
+        // assert — A is registered, B is not
+        Container.HasSingleton(typeof(A), typeof(A));
+        Container.Has(typeof(B), 0);
+    }
+
+    /// <summary>
+    /// Verifies that EndingWith filters the bulk set to types whose names end with the given suffix
+    /// </summary>
+    [Fact]
+    public void EndingWith_FiltersByName()
+    {
+        // arrange — only type "B" ends with "B"; "A" does not
+        Container.Add(_ab.AsEnumerable()).EndingWith("B").AsSelf().Singleton();
+
+        // act
+        Build();
+
+        // assert — B is registered, A is not
+        Container.HasSingleton(typeof(B), typeof(B));
+        Container.Has(typeof(A), 0);
+    }
 
     /// <summary>
     /// Verifies that filtering types with Where clause during bulk registration works correctly
@@ -21,13 +78,14 @@ public class BulkRegistrationTest : TestBase
     public void Where_Works()
     {
         // arrange
-        Container.Add(new[] { typeof(A), typeof(B) }.AsEnumerable()).Where(x => x == typeof(A)).AsSelf().Singleton();
+        Container.Add(_ab.AsEnumerable()).Where(x => x == typeof(A)).AsSelf().Singleton();
 
         // act
         Build();
 
         // assert
         Container.HasSingleton(typeof(A), typeof(A));
+        Container.Has(typeof(B), 0);
     }
 
     /// <summary>
@@ -37,7 +95,7 @@ public class BulkRegistrationTest : TestBase
     public void AsSelf_Works()
     {
         // arrange
-        Container.Add(new[] { typeof(A), typeof(B) }.AsEnumerable()).AsSelf().Singleton();
+        Container.Add(_ab.AsEnumerable()).AsSelf().Singleton();
 
         // act
         Build();
@@ -56,7 +114,7 @@ public class BulkRegistrationTest : TestBase
     public void As_Works()
     {
         // arrange
-        Container.Add(new[] { typeof(A), typeof(B) }.AsEnumerable()).As(typeof(A)).Singleton();
+        Container.Add(_ab.AsEnumerable()).As(typeof(A)).Singleton();
 
         // act
         Build();
@@ -77,7 +135,7 @@ public class BulkRegistrationTest : TestBase
     public void AsInterfaces_Works()
     {
         // arrange
-        Container.Add(new[] { typeof(A), typeof(B) }.AsEnumerable()).AsInterfaces().Singleton();
+        Container.Add(_ab.AsEnumerable()).AsInterfaces().Singleton();
 
         // act
         Build();
@@ -95,7 +153,7 @@ public class BulkRegistrationTest : TestBase
     public void AsKeyedSelf_Works()
     {
         // arrange
-        Container.Add(new[] { typeof(A), typeof(B) }.AsEnumerable()).AsKeyedSelf(x => x.Name).Singleton();
+        Container.Add(_ab.AsEnumerable()).AsKeyedSelf(x => x.Name).Singleton();
 
         // act
         Build();
@@ -116,7 +174,7 @@ public class BulkRegistrationTest : TestBase
     public void AsKeyed_Works()
     {
         // arrange
-        Container.Add(new[] { typeof(A), typeof(B) }.AsEnumerable()).AsKeyed(typeof(A), x => x.Name).Singleton();
+        Container.Add(_ab.AsEnumerable()).AsKeyed(typeof(A), x => x.Name).Singleton();
 
         // act
         Build();
@@ -133,7 +191,7 @@ public class BulkRegistrationTest : TestBase
     public void AsSelfFactory_Works()
     {
         // arrange
-        Container.Add(new[] { typeof(A), typeof(B) }.AsEnumerable()).AsSelfFactory().Singleton();
+        Container.Add(_ab.AsEnumerable()).AsSelfFactory().Singleton();
 
         // act
         Build();
@@ -154,7 +212,7 @@ public class BulkRegistrationTest : TestBase
     public void AsFactory_Works()
     {
         // arrange
-        Container.Add(new[] { typeof(A), typeof(B) }.AsEnumerable()).AsFactory<A>().Singleton();
+        Container.Add(_ab.AsEnumerable()).AsFactory<A>().Singleton();
 
         // act
         Build();
@@ -174,7 +232,7 @@ public class BulkRegistrationTest : TestBase
     public void AsKeyedSelfFactory_Works()
     {
         // arrange
-        Container.Add(new[] { typeof(A), typeof(B) }.AsEnumerable()).AsKeyedSelfFactory(x => x.Name).Singleton();
+        Container.Add(_ab.AsEnumerable()).AsKeyedSelfFactory(x => x.Name).Singleton();
 
         // act
         Build();
@@ -194,7 +252,7 @@ public class BulkRegistrationTest : TestBase
     {
         // arrange
         Container
-            .Add(new[] { typeof(A), typeof(B) }.AsEnumerable())
+            .Add(_ab.AsEnumerable())
             .AsKeyedFactory(typeof(A), x => x.Name)
             .Singleton();
 
@@ -206,6 +264,133 @@ public class BulkRegistrationTest : TestBase
         Container.HasSingleton(typeof(B), typeof(B));
         GetKeyed<Func<A>>(nameof(A))().AsExact<A>();
         GetKeyed<Func<A>>(nameof(B))().AsExact<B>();
+    }
+
+    /// <summary>
+    /// Verifies that registering types as keyed interfaces during bulk registration works correctly
+    /// </summary>
+    [Fact]
+    public void AsKeyedInterfaces_Works()
+    {
+        // arrange
+        Container.Add(_ab.AsEnumerable()).AsKeyedInterfaces(x => x.Name).Singleton();
+
+        // act
+        Build();
+
+        // assert
+        Container.HasSingleton(typeof(A), typeof(A));
+        Container.HasSingleton(typeof(B), typeof(B));
+        GetKeyed<IA>(nameof(A)).AsExact<A>();
+        GetKeyed<IA>(nameof(B)).AsExact<B>();
+        GetKeyed<IB>(nameof(B)).AsExact<B>();
+    }
+
+    /// <summary>
+    /// Verifies that bulk registration with scoped lifetime produces scoped descriptors
+    /// </summary>
+    [Fact]
+    public void Scoped_Works()
+    {
+        // arrange
+        Container.Add(_aOnly.AsEnumerable()).AsSelf().Scoped();
+
+        // act
+        Build();
+
+        // assert
+        Container.HasScoped(typeof(A), typeof(A));
+    }
+
+    /// <summary>
+    /// Verifies that bulk registration with transient lifetime produces transient descriptors
+    /// </summary>
+    [Fact]
+    public void Transient_Works()
+    {
+        // arrange
+        Container.Add(_aOnly.AsEnumerable()).AsSelf().Transient();
+
+        // act
+        Build();
+
+        // assert
+        Container.HasTransient(typeof(A), typeof(A));
+    }
+
+    /// <summary>
+    /// Verifies that the In(lifetime) overload accepts a ServiceLifetime argument for bulk registration
+    /// </summary>
+    [Fact]
+    public void In_AcceptsLifetime()
+    {
+        // arrange
+        Container.Add(_aOnly.AsEnumerable()).AsSelf().In(ServiceLifetime.Scoped);
+
+        // act
+        Build();
+
+        // assert
+        Container.HasScoped(typeof(A), typeof(A));
+    }
+
+    /// <summary>
+    /// Verifies that explicit AsSelf followed by As does not produce a duplicate self-registration
+    /// </summary>
+    [Fact]
+    public void AsSelfThenAs_DoesNotDoubleRegisterSelf()
+    {
+        // arrange
+        Container.Add(_aOnly.AsEnumerable()).AsSelf().As(typeof(IA)).Singleton();
+
+        // act
+        Build();
+
+        // assert
+        // exactly one descriptor for A as itself — the explicit AsSelf; no implicit second self-registration
+        Container.HasSingleton(typeof(A), typeof(A));
+        Container.Has(typeof(A), 1);
+    }
+
+    /// <summary>
+    /// Verifies that a Where predicate that matches nothing registers no descriptors
+    /// </summary>
+    [Fact]
+    public void Where_EmptyResult_RegistersNothing()
+    {
+        // arrange
+        Container.Add(_ab.AsEnumerable()).Where(_ => false).AsSelf().Singleton();
+
+        // act
+        Build();
+
+        // assert
+        Container.Has(typeof(A), 0);
+        Container.Has(typeof(B), 0);
+    }
+
+    /// <summary>
+    /// Verifies that calling a lifetime terminator without specifying registration targets throws
+    /// </summary>
+    [Fact]
+    public void In_NoRegistrationTargets_Throws()
+    {
+        Wrap.It(() => Container.Add(_ab.AsEnumerable()).Singleton())
+            .Throws<InvalidOperationException>()
+            .Reports("Specify registration targets");
+    }
+
+    /// <summary>
+    /// Verifies that calling a lifetime terminator a second time on the same bulk builder throws
+    /// </summary>
+    [Fact]
+    public void In_RegistrarReused_Throws()
+    {
+        var b = Container.Add(_aOnly.AsEnumerable()).AsSelf();
+        b.Singleton();
+        Wrap.It(() => b.Singleton())
+            .Throws<InvalidOperationException>()
+            .Reports(Registrar.AlreadyRegisteredMessage);
     }
 
     /// <summary>
