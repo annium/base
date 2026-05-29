@@ -12,7 +12,10 @@ namespace Annium.Core.DependencyInjection.Tests.Registrations;
 /// </summary>
 public class BulkRegistrationTest : TestBase
 {
+    /// <summary>Shared <c>[A, B]</c> type list used as the input to most bulk-registration tests.</summary>
     private static readonly Type[] _ab = [typeof(A), typeof(B)];
+
+    /// <summary>Shared single-element <c>[A]</c> type list for bulk tests that need only one type.</summary>
     private static readonly Type[] _aOnly = [typeof(A)];
 
     public BulkRegistrationTest(ITestOutputHelper outputHelper)

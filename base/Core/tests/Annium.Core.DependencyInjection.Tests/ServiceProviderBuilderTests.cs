@@ -253,6 +253,9 @@ internal sealed class CountingPack : ServicePackBase
     public static void Reset() => Interlocked.Exchange(ref ConfigureCount, 0);
 
     /// <summary>Increments <see cref="ConfigureCount"/> when configure runs.</summary>
+    /// <param name="container">The service container (unused; counter-only pack).</param>
+    /// <param name="ct">Cancellation token (unused; configure does no async work).</param>
+    /// <returns>A completed task.</returns>
     public override Task ConfigureAsync(IServiceContainer container, CancellationToken ct)
     {
         Interlocked.Increment(ref ConfigureCount);

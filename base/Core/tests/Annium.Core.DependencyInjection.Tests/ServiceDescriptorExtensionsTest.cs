@@ -272,8 +272,13 @@ public class ServiceDescriptorExtensionsTest
     /// </summary>
     private sealed class UnsupportedDescriptor : IServiceDescriptor
     {
+        /// <summary>The service type — dummy value; unused by the test, only the descriptor identity matters.</summary>
         public Type ServiceType => typeof(object);
+
+        /// <summary>The service key — always <see langword="null"/> for this dummy descriptor.</summary>
         public object? Key => null;
+
+        /// <summary>The service lifetime — dummy value; <see cref="ServiceLifetime.Singleton"/> chosen arbitrarily.</summary>
         public ServiceLifetime Lifetime => ServiceLifetime.Singleton;
     }
 }
