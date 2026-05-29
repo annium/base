@@ -82,6 +82,86 @@ public class ServiceProviderBuilderTests
         // assert
         secondEx.Message.IsEqual("boom");
     }
+
+    /// <summary>
+    /// Verifies that the generic UseServicePack overload deduplicates by type so a second call with
+    /// the same pack type is a no-op — Configure runs exactly once.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
+    [Fact]
+    public async Task UseServicePack_GenericDedupesByType()
+    {
+        // arrange
+        CountingPack.Reset();
+        var builder = new ServiceProviderFactory().CreateBuilder(new ServiceCollection());
+        builder.UseServicePack<CountingPack>();
+        builder.UseServicePack<CountingPack>();
+
+        // act
+        await using var provider = await builder.BuildAsync(TestContext.Current.CancellationToken);
+
+        // assert — only one Configure invocation despite two UseServicePack calls
+        CountingPack.ConfigureCount.Is(1);
+    }
+
+    /// <summary>
+    /// Verifies that the instance overload of UseServicePack allows two distinct instances of
+    /// the same type — both Configure callbacks run.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
+    [Fact]
+    public async Task UseServicePack_InstanceAllowsTwoOfSameType()
+    {
+        // arrange
+        CountingPack.Reset();
+        var builder = new ServiceProviderFactory().CreateBuilder(new ServiceCollection());
+        builder.UseServicePack(new CountingPack());
+        builder.UseServicePack(new CountingPack());
+
+        // act
+        await using var provider = await builder.BuildAsync(TestContext.Current.CancellationToken);
+
+        // assert — two distinct instances → two Configure invocations
+        CountingPack.ConfigureCount.Is(2);
+    }
+
+    /// <summary>
+    /// Verifies that passing the same instance twice to the instance overload of UseServicePack is a
+    /// no-op for the second call — Configure runs exactly once.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
+    [Fact]
+    public async Task UseServicePack_InstanceDedupesByReference()
+    {
+        // arrange
+        CountingPack.Reset();
+        var builder = new ServiceProviderFactory().CreateBuilder(new ServiceCollection());
+        var pack = new CountingPack();
+        builder.UseServicePack(pack);
+        builder.UseServicePack(pack);
+
+        // act
+        await using var provider = await builder.BuildAsync(TestContext.Current.CancellationToken);
+
+        // assert — same reference → deduplicated → one Configure invocation
+        CountingPack.ConfigureCount.Is(1);
+    }
+
+    /// <summary>
+    /// Verifies that the ServiceProviderFactory constructor that accepts a configure action
+    /// invokes the action when CreateBuilder is called.
+    /// </summary>
+    [Fact]
+    public void ServiceProviderFactory_WithConfigureAction_InvokesConfigure()
+    {
+        var configured = false;
+        var factory = new ServiceProviderFactory(builder =>
+        {
+            configured = true;
+        });
+        factory.CreateBuilder(new ServiceCollection());
+        configured.IsTrue();
+    }
 }
 
 /// <summary>
@@ -157,4 +237,28 @@ internal sealed class ThrowingConfigurePack : ServicePackBase
     /// <returns>Never returns normally — always throws.</returns>
     public override Task ConfigureAsync(IServiceContainer container, CancellationToken ct) =>
         throw new InvalidOperationException("boom");
+}
+
+/// <summary>
+/// Test service pack that increments a static counter on Configure, used to verify
+/// deduplication semantics of <see cref="IServiceProviderBuilder.UseServicePack{T}"/> and
+/// <see cref="IServiceProviderBuilder.UseServicePack(ServicePackBase)"/>.
+/// </summary>
+internal sealed class CountingPack : ServicePackBase
+{
+    /// <summary>Tracks how many times ConfigureAsync ran across all instances since last Reset.</summary>
+    public static int ConfigureCount;
+
+    /// <summary>Resets the shared counter to zero.</summary>
+    public static void Reset() => Interlocked.Exchange(ref ConfigureCount, 0);
+
+    /// <summary>Increments <see cref="ConfigureCount"/> when configure runs.</summary>
+    /// <param name="container">The service container (unused; counter-only pack).</param>
+    /// <param name="ct">Cancellation token (unused; configure does no async work).</param>
+    /// <returns>A completed task.</returns>
+    public override Task ConfigureAsync(IServiceContainer container, CancellationToken ct)
+    {
+        Interlocked.Increment(ref ConfigureCount);
+        return Task.CompletedTask;
+    }
 }

@@ -74,6 +74,107 @@ public class KeyedFactoryRegistrationTest : TestBase
     }
 
     /// <summary>
+    /// Verifies that keyed factory registration as keyed self factory works correctly
+    /// </summary>
+    [Fact]
+    public void AsKeyedSelfFactory_Works()
+    {
+        // arrange
+        D.Reset();
+        Container.Add((_, key) => new D(key.ToString().NotNull())).AsKeyedSelfFactory("x").Singleton();
+
+        // act
+        Build();
+
+        // assert
+        Container.HasSingletonFuncFactory(typeof(D), "x");
+        var result = GetKeyed<Func<D>>("x")();
+        result.AsExact<D>();
+        result.Key.Is("x");
+    }
+
+    /// <summary>
+    /// Verifies that keyed factory registration as keyed factory of a base type works correctly
+    /// </summary>
+    [Fact]
+    public void AsKeyedFactory_Works()
+    {
+        // arrange
+        D.Reset();
+        Container.Add((_, key) => new D(key.ToString().NotNull())).AsKeyedFactory<C>("x").Singleton();
+
+        // act
+        Build();
+
+        // assert
+        Container.HasSingletonFuncFactory(typeof(C), "x");
+        GetKeyed<Func<C>>("x")().AsExact<D>();
+    }
+
+    /// <summary>
+    /// Verifies that calling Singleton() without specifying registration targets throws
+    /// </summary>
+    [Fact]
+    public void In_NoRegistrationTargets_Throws()
+    {
+        // act & assert
+        Wrap.It(() => Container.Add(typeof(D), (_, _) => new D("x")).Singleton())
+            .Throws<InvalidOperationException>()
+            .Reports("Specify registration targets");
+    }
+
+    /// <summary>
+    /// Verifies that keyed factory registration with scoped lifetime produces scoped descriptors
+    /// </summary>
+    [Fact]
+    public void Scoped_Works()
+    {
+        // arrange
+        D.Reset();
+        Container.Add((_, key) => new D(key.ToString().NotNull())).AsKeyedSelf("x").Scoped();
+
+        // act
+        Build();
+
+        // assert
+        Container.HasScopedTypeFactory(typeof(D), "x");
+    }
+
+    /// <summary>
+    /// Verifies that keyed factory registration with transient lifetime produces transient descriptors
+    /// </summary>
+    [Fact]
+    public void Transient_Works()
+    {
+        // arrange
+        D.Reset();
+        Container.Add((_, key) => new D(key.ToString().NotNull())).AsKeyedSelf("x").Transient();
+
+        // act
+        Build();
+
+        // assert
+        Container.HasTransientTypeFactory(typeof(D), "x");
+    }
+
+    /// <summary>
+    /// Verifies that the In(lifetime) overload accepts a ServiceLifetime argument for keyed factory registration
+    /// </summary>
+    [Fact]
+    public void In_AcceptsLifetime()
+    {
+        // arrange
+        D.Reset();
+        Container.Add((_, key) => new D(key.ToString().NotNull())).AsKeyedSelf("x").In(ServiceLifetime.Scoped);
+
+        // act
+        Build();
+
+        // assert
+        Container.HasScopedTypeFactory(typeof(D), "x");
+    }
+
+    /// <summary>
     /// Test class D that inherits from C and implements IX
     /// </summary>
     private sealed class D : C, IX

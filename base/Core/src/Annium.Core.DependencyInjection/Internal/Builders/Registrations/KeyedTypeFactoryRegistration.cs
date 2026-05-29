@@ -51,12 +51,5 @@ internal class KeyedTypeFactoryRegistration : IRegistration
             (sp, _) => Expression.Lambda(Resolve(sp, _implementationType)),
             lifetime
         );
-
-        // yield return Factory(
-        //     KeyValueType(_keyType, FactoryType(_serviceType)),
-        //     sp =>
-        //         KeyValue(_keyType, FactoryType(_serviceType), _key, Expression.Lambda(Resolve(sp, _implementationType))),
-        //     lifetime
-        // );
     }
 }

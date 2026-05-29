@@ -21,8 +21,12 @@ public interface IServiceContainer : IEnumerable<IServiceDescriptor>
     IServiceCollection Collection { get; }
 
     /// <summary>
-    /// Event raised when the service provider is built.
+    /// Event raised when <see cref="BuildServiceProvider"/> produces a provider.
     /// </summary>
+    /// <remarks>
+    /// Subscribers are not propagated when the container is cloned via <see cref="Clone"/> —
+    /// re-attach handlers on the clone if post-build notification is needed there.
+    /// </remarks>
     event Action<IServiceProvider> OnBuild;
 
     /// <summary>
@@ -90,17 +94,33 @@ public interface IServiceContainer : IEnumerable<IServiceDescriptor>
     ISingleRegistrationBuilderBase Add(Type type);
 
     /// <summary>
-    /// Clone existing container
+    /// Clone existing container.
     /// </summary>
+    /// <remarks>
+    /// Only descriptors are copied. <see cref="OnBuild"/> subscribers are NOT propagated to the
+    /// clone — callers that need post-build notification on the clone must re-attach handlers to it.
+    /// </remarks>
     /// <returns>container clone</returns>
     IServiceContainer Clone();
 
     /// <summary>
-    /// Check whether given descriptor is registered in collection
+    /// Check whether given descriptor is registered in collection.
     /// </summary>
+    /// <remarks>
+    /// For factory descriptors (<see cref="IFactoryServiceDescriptor"/>,
+    /// <see cref="IKeyedFactoryServiceDescriptor"/>) equality is computed by delegate identity
+    /// (<c>Method</c> + <c>Target</c>). This works for directly-supplied factory delegates
+    /// (static methods, lambdas captured as variables) but does NOT identify factories produced
+    /// by the fluent builder pipeline, because each builder invocation compiles a fresh expression
+    /// lambda with a unique <c>Method</c> + <c>Target</c>. As a result calling <c>Contains</c>
+    /// on a builder-produced factory descriptor against a previously-built sibling will return
+    /// <see langword="false"/>, and the dedup guard in the registrar will not fire for repeated
+    /// builder-path registrations. Callers that need idempotent registration through the builder
+    /// path must avoid duplicate <c>Add(...).AsX(...).In(...)</c> chains themselves.
+    /// </remarks>
     /// <param name="descriptor">descriptor to find</param>
     /// <returns>whether given descriptor is registered in collection</returns>
-    /// <exception cref="NotSupportedException"></exception>
+    /// <exception cref="NotSupportedException">Thrown when <paramref name="descriptor"/> is not one of the six recognised <see cref="IServiceDescriptor"/> subtypes.</exception>
     bool Contains(IServiceDescriptor descriptor);
 
     /// <summary>
