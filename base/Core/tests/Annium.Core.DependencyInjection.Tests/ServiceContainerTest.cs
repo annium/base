@@ -78,13 +78,22 @@ public class ServiceContainerTest : TestBase
     public void Contains_KeyedTypeDescriptor()
     {
         // arrange — add a raw keyed-type descriptor so Contains can match it exactly
-        IServiceDescriptor descriptor = ServiceDescriptor.KeyedType(typeof(A), "key", typeof(B), ServiceLifetime.Singleton);
+        IServiceDescriptor descriptor = ServiceDescriptor.KeyedType(
+            typeof(A),
+            "key",
+            typeof(B),
+            ServiceLifetime.Singleton
+        );
         Container.Add(descriptor);
 
         // assert — matching descriptor is found
-        Container.Contains(ServiceDescriptor.KeyedType(typeof(A), "key", typeof(B), ServiceLifetime.Singleton)).IsTrue();
+        Container
+            .Contains(ServiceDescriptor.KeyedType(typeof(A), "key", typeof(B), ServiceLifetime.Singleton))
+            .IsTrue();
         // non-matching key returns false
-        Container.Contains(ServiceDescriptor.KeyedType(typeof(A), "other", typeof(B), ServiceLifetime.Singleton)).IsFalse();
+        Container
+            .Contains(ServiceDescriptor.KeyedType(typeof(A), "other", typeof(B), ServiceLifetime.Singleton))
+            .IsFalse();
     }
 
     /// <summary>
@@ -98,7 +107,12 @@ public class ServiceContainerTest : TestBase
     {
         // arrange — stable delegate identity: use a stored delegate reference
         static object KeyedFactory(IServiceProvider _, object __) => new B();
-        IServiceDescriptor descriptor = ServiceDescriptor.KeyedFactory(typeof(B), "key", KeyedFactory, ServiceLifetime.Singleton);
+        IServiceDescriptor descriptor = ServiceDescriptor.KeyedFactory(
+            typeof(B),
+            "key",
+            KeyedFactory,
+            ServiceLifetime.Singleton
+        );
         Container.Add(descriptor);
 
         // assert — matching descriptor (same delegate Method+Target and same key) is found
@@ -120,7 +134,12 @@ public class ServiceContainerTest : TestBase
     {
         // arrange — add a raw keyed-instance descriptor
         var instance = new B();
-        IServiceDescriptor descriptor = ServiceDescriptor.KeyedInstance(typeof(A), "key", instance, ServiceLifetime.Singleton);
+        IServiceDescriptor descriptor = ServiceDescriptor.KeyedInstance(
+            typeof(A),
+            "key",
+            instance,
+            ServiceLifetime.Singleton
+        );
         Container.Add(descriptor);
 
         // assert — matching descriptor is found

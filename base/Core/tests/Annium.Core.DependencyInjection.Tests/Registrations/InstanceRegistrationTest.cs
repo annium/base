@@ -197,9 +197,7 @@ public class InstanceRegistrationTest : TestBase
         b.Singleton();
 
         // act & assert
-        Wrap.It(() => b.Singleton())
-            .Throws<InvalidOperationException>()
-            .Reports(Registrar.AlreadyRegisteredMessage);
+        Wrap.It(() => b.Singleton()).Throws<InvalidOperationException>().Reports(Registrar.AlreadyRegisteredMessage);
     }
 
     /// <summary>

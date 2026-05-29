@@ -254,10 +254,7 @@ public class BulkRegistrationTest : TestBase
     public void AsKeyedFactory_Works()
     {
         // arrange
-        Container
-            .Add(_ab.AsEnumerable())
-            .AsKeyedFactory(typeof(A), x => x.Name)
-            .Singleton();
+        Container.Add(_ab.AsEnumerable()).AsKeyedFactory(typeof(A), x => x.Name).Singleton();
 
         // act
         Build();
@@ -391,9 +388,7 @@ public class BulkRegistrationTest : TestBase
     {
         var b = Container.Add(_aOnly.AsEnumerable()).AsSelf();
         b.Singleton();
-        Wrap.It(() => b.Singleton())
-            .Throws<InvalidOperationException>()
-            .Reports(Registrar.AlreadyRegisteredMessage);
+        Wrap.It(() => b.Singleton()).Throws<InvalidOperationException>().Reports(Registrar.AlreadyRegisteredMessage);
     }
 
     /// <summary>

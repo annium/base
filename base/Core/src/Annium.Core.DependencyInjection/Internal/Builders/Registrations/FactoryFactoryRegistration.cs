@@ -39,9 +39,10 @@ internal class FactoryFactoryRegistration : IRegistration
     {
         yield return Factory(
             FactoryType(_serviceType),
-            sp => Expression.Lambda(
-                Expression.Convert(Expression.Invoke(Expression.Constant(_factory), sp), _serviceType)
-            ),
+            sp =>
+                Expression.Lambda(
+                    Expression.Convert(Expression.Invoke(Expression.Constant(_factory), sp), _serviceType)
+                ),
             lifetime
         );
     }
