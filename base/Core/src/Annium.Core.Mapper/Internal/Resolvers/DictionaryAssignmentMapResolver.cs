@@ -121,14 +121,16 @@ internal class DictionaryAssignmentMapResolver : IMapResolver
 
                         // otherwise - parameter must match respective source dictionary property
                         var itemVar = Expression.Variable(typeof(object));
+                        variables.Add(itemVar);
                         var item = Expression.Condition(
                             Expression.Call(source, tryGetValue, Expression.Constant(target.Name), itemVar),
                             itemVar,
                             Expression.Throw(
                                 Expression.New(
-                                    typeof(KeyNotFoundException).GetConstructor(new[] { typeof(string) })!,
+                                    typeof(KeyNotFoundException).GetConstructor(new[] { typeof(string) }).NotNull(),
                                     Expression.Constant($"Missing value for property '{target.Name}'")
-                                )
+                                ),
+                                typeof(object)
                             )
                         );
 

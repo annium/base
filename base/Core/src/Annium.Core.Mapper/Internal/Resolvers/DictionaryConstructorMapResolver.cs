@@ -63,6 +63,19 @@ internal class DictionaryConstructorMapResolver : IMapResolver
                 );
             var parameters = constructor.GetParameters();
 
+            // resolve each constructor parameter to the matching target property's name (PascalCase),
+            // so the dictionary key matches DictionaryAssignmentMapResolver's `target.Name` convention;
+            // falls back to the parameter name when no matching property is found.
+            var targetProperties = tgt.GetWriteableProperties();
+            var paramKey = parameters.ToDictionary(
+                p => p.Name.NotNull(),
+                p =>
+                    targetProperties
+                        .FirstOrDefault(prop => string.Equals(prop.Name, p.Name, StringComparison.OrdinalIgnoreCase))
+                        ?.Name
+                    ?? p.Name.NotNull()
+            );
+
             var body = new List<Expression>();
 
             var variables = new List<ParameterExpression>();
@@ -104,6 +117,7 @@ internal class DictionaryConstructorMapResolver : IMapResolver
             var values = parameters
                 .Select(param =>
                 {
+                    // ParameterInfo.Name is null only for return-value parameters; constructor parameters always have names
                     var paramName = param.Name!;
                     var paramNameLow = paramName.ToLowerInvariant();
 
@@ -120,14 +134,17 @@ internal class DictionaryConstructorMapResolver : IMapResolver
 
                     // otherwise - parameter must match respective source dictionary property
                     var itemVar = Expression.Variable(typeof(object));
+                    variables.Add(itemVar);
+                    var dictKey = paramKey[paramName];
                     var item = Expression.Condition(
-                        Expression.Call(source, tryGetValue, Expression.Constant(paramName), itemVar),
+                        Expression.Call(source, tryGetValue, Expression.Constant(dictKey), itemVar),
                         itemVar,
                         Expression.Throw(
                             Expression.New(
-                                typeof(KeyNotFoundException).GetConstructor(new[] { typeof(string) })!,
-                                Expression.Constant($"Missing value for property '{paramName}'")
-                            )
+                                typeof(KeyNotFoundException).GetConstructor(new[] { typeof(string) }).NotNull(),
+                                Expression.Constant($"Missing value for property '{dictKey}'")
+                            ),
+                            typeof(object)
                         )
                     );
 

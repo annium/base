@@ -32,6 +32,7 @@ internal class EnumerableMapResolver : IMapResolver
     public Mapping ResolveMap(Type src, Type tgt, IMapConfiguration cfg, IMapResolverContext ctx) =>
         source =>
         {
+            // guaranteed non-null: CanResolveMap already verified both types expose an enumerable element type
             var srcEl = src.GetEnumerableElementType()!;
             var tgtEl = tgt.GetEnumerableElementType()!;
 
@@ -57,7 +58,7 @@ internal class EnumerableMapResolver : IMapResolver
                 .MakeGenericMethod(srcEl, tgtEl);
             var selectLambda = BuildSelectLambda(srcEl, tgtEl, ctx);
             var selection = Expression.Call(select, source, selectLambda);
-            var toArray = typeof(Enumerable).GetMethod(nameof(Enumerable.ToArray))!.MakeGenericMethod(tgtEl);
+            var toArray = typeof(Enumerable).GetMethod(nameof(Enumerable.ToArray)).NotNull().MakeGenericMethod(tgtEl);
             var result = Expression.Condition(
                 Expression.Equal(source, Expression.Default(src)),
                 Expression.NewArrayInit(tgtEl),
@@ -72,7 +73,8 @@ internal class EnumerableMapResolver : IMapResolver
             if (constructor is null)
                 throw new MappingException(src, tgt, $"No constructor with single {parameter} parameter found.");
 
-            return Expression.New(constructor, selection);
+            // pass the null-guarded array (assignable to IEnumerable<tgtEl>) so a null source yields an empty collection
+            return Expression.New(constructor, result);
         };
 
     /// <summary>
@@ -101,8 +103,8 @@ internal class EnumerableMapResolver : IMapResolver
         // get map for element type
         var mapVar = Expression.Variable(typeof(Delegate));
         vars.Add(mapVar);
-        var getMap = typeof(IMapResolverContext).GetMethod(nameof(IMapResolverContext.GetMap))!;
-        var getTypeEx = Expression.Call(param, typeof(object).GetMethod(nameof(GetType))!);
+        var getMap = typeof(IMapResolverContext).GetMethod(nameof(IMapResolverContext.GetMap)).NotNull();
+        var getTypeEx = Expression.Call(param, typeof(object).GetMethod(nameof(GetType)).NotNull());
         body.Add(
             Expression.Assign(
                 mapVar,
@@ -111,7 +113,7 @@ internal class EnumerableMapResolver : IMapResolver
         );
 
         // invoke map and return result
-        var invokeMap = typeof(Delegate).GetMethod(nameof(Delegate.DynamicInvoke))!;
+        var invokeMap = typeof(Delegate).GetMethod(nameof(Delegate.DynamicInvoke)).NotNull();
         body.Add(
             Expression.Label(
                 returnTarget,

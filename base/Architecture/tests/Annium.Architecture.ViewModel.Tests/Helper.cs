@@ -38,22 +38,25 @@ internal sealed class RecordingMapper : IMapper
     /// <typeparam name="T">The destination type.</typeparam>
     /// <param name="source">The source object (ignored).</param>
     /// <returns>The default value of <typeparamref name="T"/>.</returns>
-    public T Map<T>(object? source)
+    public T Map<T>(object source)
     {
         Invocations++;
+        // recording stub — return value is never inspected; default suppression matches the prior behavior.
         return default!;
     }
 
     /// <summary>
-    /// Increments the invocation counter and returns <see langword="null"/>.
+    /// Increments the invocation counter and returns a placeholder sentinel.
     /// </summary>
     /// <param name="source">The source object (ignored).</param>
     /// <param name="type">The destination type (ignored).</param>
-    /// <returns><see langword="null"/>.</returns>
-    public object? Map(object? source, Type type)
+    /// <returns>A placeholder object — tests do not inspect this value.</returns>
+    public object Map(object source, Type type)
     {
         Invocations++;
-        return null;
+        // recording stub — return value is never inspected; null! preserves prior semantics under the
+        // tightened (non-nullable) IMapper.Map contract.
+        return null!;
     }
 }
 
@@ -95,7 +98,7 @@ internal sealed class StubMapper : IMapper
     /// <typeparam name="T">The destination type.</typeparam>
     /// <param name="source">The source object (ignored).</param>
     /// <returns>The fixed result cast to <typeparamref name="T"/>.</returns>
-    public T Map<T>(object? source)
+    public T Map<T>(object source)
     {
         Invocations++;
         return (T)_result;
@@ -107,7 +110,7 @@ internal sealed class StubMapper : IMapper
     /// <param name="source">The source object (ignored).</param>
     /// <param name="type">The destination type (ignored).</param>
     /// <returns>The fixed result object.</returns>
-    public object? Map(object? source, Type type)
+    public object Map(object source, Type type)
     {
         Invocations++;
         return _result;

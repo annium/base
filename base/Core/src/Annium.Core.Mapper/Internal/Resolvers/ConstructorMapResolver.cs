@@ -97,6 +97,7 @@ internal class ConstructorMapResolver : IMapResolver
             var values = parameters
                 .Select(param =>
                 {
+                    // ParameterInfo.Name is null only for return-value parameters; constructor parameters always have names
                     var paramName = param.Name!.ToLowerInvariant();
 
                     // if respective property is ignored - use default value for parameter

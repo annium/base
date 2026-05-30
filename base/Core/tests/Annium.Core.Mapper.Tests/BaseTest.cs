@@ -74,7 +74,9 @@ public class BaseTest : TestBase
         var result = mapper.Map<E>(value);
 
         // assert
-        result.Inner!.Name.Is(value.Inner!.Name);
+        result.Inner.IsNotDefault();
+        value.Inner.IsNotDefault();
+        result.Inner.NotNull().Name.Is(value.Inner.NotNull().Name);
         result.Value.Is(value.Value);
     }
 

@@ -55,15 +55,15 @@ internal class AssignmentMapResolver : IMapResolver
             var sources = src.GetReadableProperties();
             var targets = tgt.GetWriteableProperties();
 
-            // exclude target properties, that are configured to be ignored or have configured mapping, from basic assignment mapping
+            // exclude target properties that are configured to be ignored or have configured mapping, from
+            // basic assignment mapping. Match by PropertyType + Name only — PropertyInfo.DeclaringType
+            // differs between an inherited property reflected from the derived type vs. from the base type
+            // where the configuration expression resolves it, which would otherwise leak inherited
+            // mapped/ignored members back into the auto-assignment loop.
             var excludedMembers = cfg.MemberMaps.Keys.Concat(cfg.IgnoredMembers).ToArray();
             targets = targets
                 .Where(target =>
-                    !excludedMembers.Any(x =>
-                        x.DeclaringType == target.DeclaringType
-                        && x.PropertyType == target.PropertyType
-                        && x.Name == target.Name
-                    )
+                    !excludedMembers.Any(x => x.PropertyType == target.PropertyType && x.Name == target.Name)
                 )
                 // ignore interface implementations
                 .Where(x => !x.Name.Contains('.'))

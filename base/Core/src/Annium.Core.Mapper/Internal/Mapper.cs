@@ -48,25 +48,20 @@ internal class Mapper : IMapper
     }
 
     /// <summary>
-    /// Maps a source object to the specified destination type
+    /// Maps a source object to the specified destination type.
     /// </summary>
-    /// <typeparam name="T">The destination type</typeparam>
-    /// <param name="source">The source object to map</param>
-    /// <returns>The mapped object of type T</returns>
-    public T Map<T>(object? source)
-    {
-        ArgumentNullException.ThrowIfNull(source);
-
-        return (T)Map(source, typeof(T));
-    }
+    /// <typeparam name="T">The destination type.</typeparam>
+    /// <param name="source">The source object to map.</param>
+    /// <returns>The mapped object of type T.</returns>
+    public T Map<T>(object source) => (T)Map(source, typeof(T));
 
     /// <summary>
-    /// Maps a source object to the specified destination type
+    /// Maps a source object to the specified destination type.
     /// </summary>
-    /// <param name="source">The source object to map</param>
-    /// <param name="type">The destination type</param>
-    /// <returns>The mapped object of the specified type</returns>
-    public object Map(object? source, Type type)
+    /// <param name="source">The source object to map.</param>
+    /// <param name="type">The destination type.</param>
+    /// <returns>The mapped object of the specified type.</returns>
+    public object Map(object source, Type type)
     {
         ArgumentNullException.ThrowIfNull(source);
         ArgumentNullException.ThrowIfNull(type);
@@ -75,11 +70,13 @@ internal class Mapper : IMapper
 
         try
         {
+            // compiled mapping delegates always return a non-null instance of the target type
             return map.DynamicInvoke(source)!;
         }
         catch (TargetInvocationException ex)
         {
-            throw ex.InnerException!;
+            // unwrap to surface the user-visible exception; fall back to the wrapper if InnerException is somehow absent
+            throw ex.InnerException ?? ex;
         }
     }
 }

@@ -1,12 +1,11 @@
 using System;
-using Annium.Core.Mapper.Internal;
 
-namespace Annium.Core.Mapper;
+namespace Annium.Core.Mapper.Internal;
 
 /// <summary>
 /// Resolves and creates mapping configurations between source and target types
 /// </summary>
-public interface IMapResolver
+internal interface IMapResolver
 {
     /// <summary>
     /// Determines whether this resolver can create a mapping between the specified source and target types

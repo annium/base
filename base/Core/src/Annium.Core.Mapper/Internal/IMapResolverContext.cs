@@ -5,7 +5,7 @@ namespace Annium.Core.Mapper.Internal;
 /// <summary>
 /// Context for map resolvers providing access to mapping operations
 /// </summary>
-public interface IMapResolverContext
+internal interface IMapResolverContext
 {
     /// <summary>
     /// Gets the lazy-initialized map context

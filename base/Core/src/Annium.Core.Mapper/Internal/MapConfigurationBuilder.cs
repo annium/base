@@ -22,21 +22,35 @@ internal class MapConfigurationBuilder<TS, TD> : IMapConfigurationBuilder<TS, TD
     private readonly MapConfiguration _result = new();
 
     /// <summary>
-    /// Configures a mapping expression from source to destination type
+    /// Configures a mapping expression from source to destination type.
     /// </summary>
-    /// <param name="map">The mapping expression</param>
-    public void With(Expression<Func<TS, TD>> map)
+    /// <param name="map">The mapping expression.</param>
+    /// <returns>The configuration builder for method chaining.</returns>
+    public IMapConfigurationBuilder<TS, TD> With(Expression<Func<TS, TD>> map)
     {
+        if (_result.MapWith is not null)
+            throw new InvalidOperationException(
+                $"With() for Map<{typeof(TS).FriendlyName()}, {typeof(TD).FriendlyName()}> is already configured."
+            );
+
         _result.SetMapWith(map);
+        return this;
     }
 
     /// <summary>
-    /// Configures a contextual mapping expression from source to destination type
+    /// Configures a contextual mapping expression from source to destination type.
     /// </summary>
-    /// <param name="map">The contextual mapping expression factory</param>
-    public void With(Func<IMapContext, Expression<Func<TS, TD>>> map)
+    /// <param name="map">The contextual mapping expression factory.</param>
+    /// <returns>The configuration builder for method chaining.</returns>
+    public IMapConfigurationBuilder<TS, TD> With(Func<IMapContext, Expression<Func<TS, TD>>> map)
     {
+        if (_result.MapWith is not null)
+            throw new InvalidOperationException(
+                $"With() for Map<{typeof(TS).FriendlyName()}, {typeof(TD).FriendlyName()}> is already configured."
+            );
+
         _result.SetMapWith(map);
+        return this;
     }
 
     /// <summary>

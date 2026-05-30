@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
 using Annium.Core.DependencyInjection;
+using Annium.Core.Mapper.Internal;
 using Annium.Core.Runtime;
 using Annium.Testing;
 using Xunit;
@@ -164,6 +165,20 @@ public class RepackerTest : TestBase
     }
 
     /// <summary>
+    /// Verifies static-member access (MemberExpression.Expression == null) is repacked correctly.
+    /// </summary>
+    [Fact]
+    public void StaticMember_Works()
+    {
+        // act
+        var result = Repack<int, string>(_ => string.Empty);
+
+        // assert — static member access returns its constant regardless of input
+        result(0).Is(string.Empty);
+        result(42).Is(string.Empty);
+    }
+
+    /// <summary>
     /// Repacks an expression and returns a compiled function
     /// </summary>
     /// <typeparam name="TS">The source type</typeparam>
@@ -172,11 +187,13 @@ public class RepackerTest : TestBase
     /// <returns>A compiled function representing the repacked expression</returns>
     private Func<TS, TR> Repack<TS, TR>(Expression<Func<TS, TR>> ex)
     {
-        var repacker = new ServiceContainer()
+        // dispose the provider after Compile — IRepacker is only consumed during repack + compile,
+        // the returned Func is self-contained and has no further dependency on the container.
+        using var provider = new ServiceContainer()
             .AddRuntime(Assembly.GetCallingAssembly())
             .AddMapper(false)
-            .BuildServiceProvider()
-            .Resolve<IRepacker>();
+            .BuildServiceProvider();
+        var repacker = provider.Resolve<IRepacker>();
 
         var param = Expression.Parameter(typeof(TS));
 

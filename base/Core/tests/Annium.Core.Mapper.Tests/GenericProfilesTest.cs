@@ -58,10 +58,23 @@ public class GenericProfilesTest
         // arrange
         await using var fx = new Fixture(_outputHelper);
         fx.Register(c => c.AddMapper(autoload: false).AddProfile(typeof(InvalidProfile<>)));
-        await fx.InitializeAsync();
 
-        // assert — mapper resolution observes the unconstrained profile and throws.
-        Wrap.It(() => fx.Get<IMapper>()).Throws<ArgumentException>();
+        // assert — the unconstrained profile must surface as an ArgumentException at SOME pipeline stage:
+        // either eagerly during container build (InitializeAsync) or lazily at mapper resolution.
+        // Catching across both stages avoids false-pass if validation timing shifts.
+        Exception? thrown = null;
+        try
+        {
+            await fx.InitializeAsync();
+            fx.Get<IMapper>();
+        }
+        catch (Exception ex)
+        {
+            thrown = ex;
+        }
+
+        thrown.IsNotDefault();
+        (thrown is ArgumentException).IsTrue();
     }
 
     /// <summary>DI + logging fixture for generic profile mapping tests, disposed asynchronously after each test.</summary>

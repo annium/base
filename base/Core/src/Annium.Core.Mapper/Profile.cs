@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
 using Annium.Core.Mapper.Internal;
+using Annium.Reflection;
 
 namespace Annium.Core.Mapper;
 
@@ -11,20 +11,6 @@ namespace Annium.Core.Mapper;
 /// </summary>
 public abstract class Profile
 {
-    /// <summary>
-    /// Merges multiple profiles into a single profile
-    /// </summary>
-    /// <param name="profiles">The profiles to merge</param>
-    /// <returns>The merged profile</returns>
-    internal static Profile Merge(params Profile[] profiles)
-    {
-        var result = new EmptyProfile();
-        foreach (var (key, map) in profiles.SelectMany(c => c._mapConfigurations))
-            result._mapConfigurations[key] = map;
-
-        return result;
-    }
-
     /// <summary>
     /// Gets the map configurations defined in this profile
     /// </summary>
@@ -69,8 +55,12 @@ public abstract class Profile
     /// <returns>The configuration builder</returns>
     public IMapConfigurationBuilder<TSource, TTarget> Map<TSource, TTarget>()
     {
+        // Last-wins: a re-registration replaces the prior builder. Intentional — built-in profiles
+        // (e.g. DefaultProfile) declare numeric conversions symmetrically in both directions' register
+        // methods and rely on the replacement to coalesce. NOTE for callers: a downstream `.With(...)`
+        // on the previous builder is lost; chain `.For(...)/.Ignore(...)/.With(...)` directly off the
+        // single Map<TS,TD>() call rather than calling Map<TS,TD>() twice.
         var map = new MapConfigurationBuilder<TSource, TTarget>();
-
         _mapConfigurations[(typeof(TSource), typeof(TTarget))] = map.Result;
 
         return map;

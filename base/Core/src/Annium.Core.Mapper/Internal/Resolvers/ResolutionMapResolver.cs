@@ -63,10 +63,9 @@ internal class ResolutionMapResolver : IMapResolver
             var typeVar = Expression.Variable(typeof(Type));
             vars.Add(typeVar);
 
-            var resolve = typeof(ITypeManager).GetMethod(
-                nameof(ITypeManager.Resolve),
-                new[] { typeof(object), typeof(Type) }
-            )!;
+            var resolve = typeof(ITypeManager)
+                .GetMethod(nameof(ITypeManager.Resolve), new[] { typeof(object), typeof(Type) })
+                .NotNull();
 
             expressions.Add(
                 Expression.Assign(
@@ -81,7 +80,7 @@ internal class ResolutionMapResolver : IMapResolver
                     Expression.Equal(typeVar, Expression.Constant(null)),
                     Expression.Throw(
                         Expression.New(
-                            typeof(InvalidOperationException).GetConstructor(new[] { typeof(string) })!,
+                            typeof(InvalidOperationException).GetConstructor(new[] { typeof(string) }).NotNull(),
                             Expression.Constant($"Can't resolve '{tgt}' implementation by signature of '{src}'")
                         )
                     )
@@ -92,14 +91,14 @@ internal class ResolutionMapResolver : IMapResolver
             var mapVar = Expression.Variable(typeof(Delegate));
             vars.Add(mapVar);
 
-            var getMap = typeof(IMapResolverContext).GetMethod(nameof(IMapResolverContext.GetMap))!;
-            var getTypeEx = Expression.Call(source, typeof(object).GetMethod(nameof(GetType))!);
+            var getMap = typeof(IMapResolverContext).GetMethod(nameof(IMapResolverContext.GetMap)).NotNull();
+            var getTypeEx = Expression.Call(source, typeof(object).GetMethod(nameof(GetType)).NotNull());
             expressions.Add(
                 Expression.Assign(mapVar, Expression.Call(Expression.Constant(ctx), getMap, getTypeEx, typeVar))
             );
 
             // invoke map and return result
-            var invokeMap = typeof(Delegate).GetMethod(nameof(Delegate.DynamicInvoke))!;
+            var invokeMap = typeof(Delegate).GetMethod(nameof(Delegate.DynamicInvoke)).NotNull();
             expressions.Add(
                 Expression.Label(
                     returnTarget,

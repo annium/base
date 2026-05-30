@@ -46,6 +46,9 @@ internal class MapConfiguration : IMapConfiguration
     /// <param name="mapWith">The mapping expression</param>
     public void SetMapWith(LambdaExpression mapWith)
     {
+        if (MapWith is not null)
+            throw new InvalidOperationException("MapWith already set");
+
         MapWith = _ => mapWith;
     }
 
@@ -55,6 +58,9 @@ internal class MapConfiguration : IMapConfiguration
     /// <param name="mapWith">The mapping expression factory</param>
     public void SetMapWith(Func<IMapContext, LambdaExpression> mapWith)
     {
+        if (MapWith is not null)
+            throw new InvalidOperationException("MapWith already set");
+
         MapWith = mapWith;
     }
 
