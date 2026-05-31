@@ -55,48 +55,12 @@ internal class AssignmentMapResolver : IMapResolver
             var sources = src.GetReadableProperties();
             var targets = tgt.GetWriteableProperties();
 
-            // exclude target properties that are configured to be ignored or have configured mapping, from
-            // basic assignment mapping. Match by PropertyType + Name only — PropertyInfo.DeclaringType
-            // differs between an inherited property reflected from the derived type vs. from the base type
-            // where the configuration expression resolves it, which would otherwise leak inherited
-            // mapped/ignored members back into the auto-assignment loop.
-            var excludedMembers = cfg.MemberMaps.Keys.Concat(cfg.IgnoredMembers).ToArray();
-            targets = targets
-                .Where(target =>
-                    !excludedMembers.Any(x => x.PropertyType == target.PropertyType && x.Name == target.Name)
-                )
-                // ignore interface implementations
-                .Where(x => !x.Name.Contains('.'))
-                .ToArray();
+            // exclude target properties configured to be ignored / explicitly mapped, and explicit interface
+            // implementations, from basic assignment mapping (shared with DictionaryAssignmentMapResolver)
+            targets = HelperExtensions.FilterAutoAssignTargets(cfg, targets);
 
             var body = new List<Expression>();
-            foreach (var group in cfg.MemberMaps.GroupBy(x => x.Value))
-            {
-                var map = group.Key(ctx.MapContext.Value);
-                var members = group.Select(x => x.Key).ToArray();
-
-                if (members.Length == 1)
-                    body.Add(
-                        Expression.Assign(
-                            Expression.Property(instance, members.Single()),
-                            _repacker.Repack(map.Body)(source)
-                        )
-                    );
-                else
-                {
-                    var variable = Expression.Variable(map.Body.Type);
-                    variables.Add(variable);
-                    body.Add(Expression.Assign(variable, _repacker.Repack(map.Body)(source)));
-
-                    foreach (var member in members)
-                        body.Add(
-                            Expression.Assign(
-                                Expression.Property(instance, member),
-                                Expression.Property(variable, map.Body.Type, member.Name)
-                            )
-                        );
-                }
-            }
+            HelperExtensions.AppendMemberMapAssignments(cfg, ctx, _repacker, source, instance, variables, body);
 
             // for each target property - resolve assignment expression
             body.AddRange(
@@ -130,16 +94,7 @@ internal class AssignmentMapResolver : IMapResolver
                         .Concat(new Expression[] { instance })
                 );
 
-            // define labeled return expression, that will express early return null-checking statement
-            var returnTarget = Expression.Label(tgt);
-            var defaultValue = Expression.Default(tgt);
-            var returnExpression = Expression.Return(returnTarget, defaultValue, tgt);
-            var returnLabel = Expression.Label(returnTarget, defaultValue);
-
-            var nullCheck = Expression.IfThen(Expression.Equal(source, Expression.Default(src)), returnExpression);
-
-            var result = Expression.Return(returnTarget, instance, tgt);
-
+            var (nullCheck, result, returnLabel) = HelperExtensions.BuildNullCheckedReturn(src, tgt, source, instance);
             return Expression.Block(
                 variables,
                 new Expression[] { nullCheck, init }

@@ -1,10 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
-using System.Reflection;
 using Annium.Core.DependencyInjection;
 using Annium.Core.Mapper.Internal;
-using Annium.Core.Runtime;
 using Annium.Testing;
 using Xunit;
 
@@ -23,7 +21,10 @@ public class RepackerTest : TestBase
     /// </summary>
     /// <param name="outputHelper">The test output helper for logging test results.</param>
     public RepackerTest(ITestOutputHelper outputHelper)
-        : base(outputHelper) { }
+        : base(outputHelper)
+    {
+        Register(c => c.AddMapper(autoload: false));
+    }
 
     /// <summary>
     /// Verifies that binary expressions can be repacked correctly
@@ -187,14 +188,7 @@ public class RepackerTest : TestBase
     /// <returns>A compiled function representing the repacked expression</returns>
     private Func<TS, TR> Repack<TS, TR>(Expression<Func<TS, TR>> ex)
     {
-        // dispose the provider after Compile — IRepacker is only consumed during repack + compile,
-        // the returned Func is self-contained and has no further dependency on the container.
-        using var provider = new ServiceContainer()
-            .AddRuntime(Assembly.GetCallingAssembly())
-            .AddMapper(false)
-            .BuildServiceProvider();
-        var repacker = provider.Resolve<IRepacker>();
-
+        var repacker = Get<IRepacker>();
         var param = Expression.Parameter(typeof(TS));
 
         return ((Expression<Func<TS, TR>>)repacker.Repack(ex)(param)).Compile();

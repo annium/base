@@ -466,7 +466,8 @@ internal class DefaultProfile : Profile
         // to noda time
 
         // from string
-        // TODO: it's unexpected that Instant is parsed from milliseconds string
+        // Note: this Instant mapping intentionally accepts a Unix-millisecond numeric string; callers
+        // needing ISO-8601 should use InstantPattern directly. Kept narrow to avoid format ambiguity.
         Map<string, Instant>(x => Instant.FromUnixTimeMilliseconds(long.Parse(x, InvariantCulture)));
         Map<string, Duration>(x => Duration.FromTimeSpan(TimeSpan.Parse(x, InvariantCulture)));
         Map<string, IsoDayOfWeek>(x => x.ParseEnum<IsoDayOfWeek>());

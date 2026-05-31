@@ -31,14 +31,8 @@ internal class DictionaryAssignmentMapResolver : IMapResolver
     /// <param name="src">The source type</param>
     /// <param name="tgt">The target type</param>
     /// <returns>True if the source is a string-object dictionary and target has a default constructor, otherwise false</returns>
-    public bool CanResolveMap(Type src, Type tgt)
-    {
-        return (
-                src == typeof(Dictionary<string, object>)
-                || src == typeof(IDictionary<string, object>)
-                || src == typeof(IReadOnlyDictionary<string, object>)
-            ) && tgt.GetConstructor(Type.EmptyTypes) is not null;
-    }
+    public bool CanResolveMap(Type src, Type tgt) =>
+        src.IsStringObjectDictionary() && tgt.GetConstructor(Type.EmptyTypes) is not null;
 
     /// <summary>
     /// Resolves and creates a mapping from dictionary source to target type using property assignment
@@ -59,57 +53,14 @@ internal class DictionaryAssignmentMapResolver : IMapResolver
             var init = Expression.Assign(instance, Expression.New(constructor));
 
             // get source and target type properties
-            var tryGetValue =
-                src.GetMethod(nameof(Dictionary<,>.TryGetValue))
-                ?? throw new MappingException(
-                    src,
-                    tgt,
-                    $"Failed to resolve method {src.FriendlyName()}.{nameof(Dictionary<,>.TryGetValue)}"
-                );
+            var tryGetValue = HelperExtensions.ResolveTryGetValue(src, tgt);
             var targets = tgt.GetWriteableProperties();
 
-            // exclude target properties, that are configured to be ignored or have configured mapping, from basic assignment mapping
-            var excludedMembers = cfg.MemberMaps.Keys.Concat(cfg.IgnoredMembers).ToArray();
-            targets = targets
-                .Where(target =>
-                    !excludedMembers.Any(x =>
-                        x.DeclaringType == target.DeclaringType
-                        && x.PropertyType == target.PropertyType
-                        && x.Name == target.Name
-                    )
-                )
-                // ignore interface implementations
-                .Where(x => !x.Name.Contains('.'))
-                .ToArray();
+            // exclude configured/ignored members and explicit interface impls (shared with AssignmentMapResolver)
+            targets = HelperExtensions.FilterAutoAssignTargets(cfg, targets);
 
             var body = new List<Expression>();
-            foreach (var group in cfg.MemberMaps.GroupBy(x => x.Value))
-            {
-                var map = group.Key(ctx.MapContext.Value);
-                var members = group.Select(x => x.Key).ToArray();
-
-                if (members.Length == 1)
-                    body.Add(
-                        Expression.Assign(
-                            Expression.Property(instance, members.Single()),
-                            _repacker.Repack(map.Body)(source)
-                        )
-                    );
-                else
-                {
-                    var variable = Expression.Variable(map.Body.Type);
-                    variables.Add(variable);
-                    body.Add(Expression.Assign(variable, _repacker.Repack(map.Body)(source)));
-
-                    foreach (var member in members)
-                        body.Add(
-                            Expression.Assign(
-                                Expression.Property(instance, member),
-                                Expression.Property(variable, map.Body.Type, member.Name)
-                            )
-                        );
-                }
-            }
+            HelperExtensions.AppendMemberMapAssignments(cfg, ctx, _repacker, source, instance, variables, body);
 
             // for each target property - resolve assignment expression
             body.AddRange(
@@ -148,16 +99,7 @@ internal class DictionaryAssignmentMapResolver : IMapResolver
                         .Concat(new Expression[] { instance })
                 );
 
-            // define labeled return expression, that will express early return null-checking statement
-            var returnTarget = Expression.Label(tgt);
-            var defaultValue = Expression.Default(tgt);
-            var returnExpression = Expression.Return(returnTarget, defaultValue, tgt);
-            var returnLabel = Expression.Label(returnTarget, defaultValue);
-
-            var nullCheck = Expression.IfThen(Expression.Equal(source, Expression.Default(src)), returnExpression);
-
-            var result = Expression.Return(returnTarget, instance, tgt);
-
+            var (nullCheck, result, returnLabel) = HelperExtensions.BuildNullCheckedReturn(src, tgt, source, instance);
             return Expression.Block(
                 variables,
                 new Expression[] { nullCheck, init }

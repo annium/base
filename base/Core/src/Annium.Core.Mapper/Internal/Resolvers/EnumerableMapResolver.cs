@@ -32,12 +32,15 @@ internal class EnumerableMapResolver : IMapResolver
     public Mapping ResolveMap(Type src, Type tgt, IMapConfiguration cfg, IMapResolverContext ctx) =>
         source =>
         {
-            // guaranteed non-null: CanResolveMap already verified both types expose an enumerable element type
-            var srcEl = src.GetEnumerableElementType()!;
-            var tgtEl = tgt.GetEnumerableElementType()!;
+            // guaranteed non-null: CanResolveMap already verified both types expose an enumerable element type.
+            // NotNull() validates the invariant at runtime with a diagnostic rather than a bare ! suppression.
+            var srcEl = src.GetEnumerableElementType().NotNull();
+            var tgtEl = tgt.GetEnumerableElementType().NotNull();
 
-            // if tgt is interface - resolve container type
-            if (tgt.IsInterface)
+            // if tgt is a generic interface - resolve container type
+            // (non-generic interfaces fall through; constructor lookup at line 72 surfaces a MappingException
+            // instead of the InvalidOperationException GetGenericTypeDefinition would throw on a non-generic type)
+            if (tgt.IsInterface && tgt.IsGenericType)
             {
                 var def = tgt.GetGenericTypeDefinition();
                 if (
@@ -52,9 +55,17 @@ internal class EnumerableMapResolver : IMapResolver
                     tgt = typeof(Dictionary<,>).MakeGenericType(tgt.GenericTypeArguments);
             }
 
+            // Enumerable.Select has two overloads — element-only (Func<TSource,TResult>) and
+            // element+index (Func<TSource,int,TResult>). GetMethods() order is not guaranteed, so match
+            // the element-only one explicitly; selectLambda is a Func<,> and would break against the indexed overload.
             var select = typeof(Enumerable)
                 .GetMethods()
-                .First(m => m.Name == nameof(Enumerable.Select))
+                .First(m =>
+                    m.Name == nameof(Enumerable.Select)
+                    && m.GetParameters() is { Length: 2 } ps
+                    && ps[1].ParameterType.IsGenericType
+                    && ps[1].ParameterType.GetGenericTypeDefinition() == typeof(Func<,>)
+                )
                 .MakeGenericMethod(srcEl, tgtEl);
             var selectLambda = BuildSelectLambda(srcEl, tgtEl, ctx);
             var selection = Expression.Call(select, source, selectLambda);

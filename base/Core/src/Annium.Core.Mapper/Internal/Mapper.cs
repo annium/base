@@ -71,7 +71,7 @@ internal class Mapper : IMapper
         try
         {
             // compiled mapping delegates always return a non-null instance of the target type
-            return map.DynamicInvoke(source)!;
+            return map.DynamicInvoke(source).NotNull();
         }
         catch (TargetInvocationException ex)
         {

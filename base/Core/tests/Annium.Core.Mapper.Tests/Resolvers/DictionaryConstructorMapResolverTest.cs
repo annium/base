@@ -63,6 +63,7 @@ public class DictionaryConstructorMapResolverTest : TestBase
             .Ignore(x => new { x.IgnoredA, x.IgnoredB })
             .For(
                 x => new { x.Name, x.Age },
+                // "Serialized" is seeded as a boxed JSON string by the test below — ToString() is non-null
                 x => JsonSerializer.Deserialize<Info>(x["Serialized"].ToString()!, default(JsonSerializerOptions))
             );
     }

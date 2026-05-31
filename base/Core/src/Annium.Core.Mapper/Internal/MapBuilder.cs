@@ -88,12 +88,14 @@ internal class MapBuilder : IMapBuilder, ILogSubject
 
         var entry = GetEntry((src, tgt));
         // HasMap answers "is there an explicitly configured mapping for this pair?", NOT the broader
-        // "would any resolver produce one?". Downstream consumers (e.g. ConfigurationProcessor) use
-        // HasMap as a discriminator between atomic-value leafs (configured map exists) and complex
-        // objects (recurse); broadening the probe to the resolver chain would misclassify any type
-        // with a default constructor as a leaf via AssignmentMapResolver and break that consumer.
-        lock (entry.MappingLock)
-            return entry.HasMapping;
+        // "would any resolver produce one?". We therefore probe HasConfiguration (set ONLY by
+        // AddEntriesFromProfile) instead of HasMapping (which also becomes true after any GetMap()
+        // call materialises a resolver-built mapping). Downstream consumers (e.g. ConfigurationProcessor)
+        // use HasMap as a discriminator between atomic-value leafs (configured map exists) and complex
+        // objects (recurse); broadening the probe to the resolver chain — or to side effects of prior
+        // GetMap calls — would misclassify any type with a default constructor as a leaf via
+        // AssignmentMapResolver and break that consumer.
+        return entry.HasConfiguration;
     }
 
     /// <summary>
@@ -307,14 +309,18 @@ internal class MapBuilder : IMapBuilder, ILogSubject
         private IMapConfiguration? _configuration;
 
         /// <summary>
-        /// The lazy-initialized mapping function
+        /// The lazy-initialized mapping function. Marked <c>volatile</c> so the lock-free fast-path
+        /// reads in <see cref="HasMapping"/> / <see cref="Mapping"/> acquire the publication fence
+        /// paired with the release fence performed by <see cref="SetMapping"/> under <see cref="MappingLock"/>.
         /// </summary>
-        private Lazy<Mapping>? _mapping;
+        private volatile Lazy<Mapping>? _mapping;
 
         /// <summary>
-        /// The compiled mapping delegate
+        /// The compiled mapping delegate. Marked <c>volatile</c> so the lock-free fast-path reads in
+        /// <see cref="HasMap"/> / <see cref="Map"/> acquire the publication fence paired with the
+        /// release fence performed by <see cref="SetMap"/> under <see cref="MapLock"/>.
         /// </summary>
-        private Delegate? _map;
+        private volatile Delegate? _map;
 
         private Entry() { }
 

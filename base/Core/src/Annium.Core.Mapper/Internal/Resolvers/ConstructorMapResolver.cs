@@ -60,36 +60,7 @@ internal class ConstructorMapResolver : IMapResolver
 
             var variables = new List<ParameterExpression>();
             var mappedMemberVars = new Dictionary<string, ParameterExpression>();
-            foreach (var group in cfg.MemberMaps.GroupBy(x => x.Value))
-            {
-                var map = group.Key(ctx.MapContext.Value);
-                var members = group.Select(x => x.Key).ToArray();
-
-                if (members.Length == 1)
-                {
-                    var member = members.Single();
-                    var memberVar = Expression.Variable(member.PropertyType);
-                    variables.Add(memberVar);
-                    body.Add(Expression.Assign(memberVar, _repacker.Repack(map.Body)(source)));
-                    mappedMemberVars[member.Name.ToLowerInvariant()] = memberVar;
-                }
-                else
-                {
-                    var resultVar = Expression.Variable(map.Body.Type);
-                    variables.Add(resultVar);
-                    body.Add(Expression.Assign(resultVar, _repacker.Repack(map.Body)(source)));
-
-                    foreach (var member in members)
-                    {
-                        var memberVar = Expression.Variable(member.PropertyType);
-                        variables.Add(memberVar);
-                        body.Add(
-                            Expression.Assign(memberVar, Expression.Property(resultVar, map.Body.Type, member.Name))
-                        );
-                        mappedMemberVars[member.Name.ToLowerInvariant()] = memberVar;
-                    }
-                }
-            }
+            HelperExtensions.AppendMemberMapVariables(cfg, ctx, _repacker, source, variables, body, mappedMemberVars);
 
             // map parameters to their value evaluation expressions
             var ignoredMembers = cfg.IgnoredMembers.Select(x => x.Name.ToLowerInvariant()).ToArray();
@@ -126,16 +97,7 @@ internal class ConstructorMapResolver : IMapResolver
             if (src.IsValueType)
                 return Expression.Block(variables, body.Concat(new[] { instance }));
 
-            // define labeled return expression, that will express early return null-checking statement
-            var returnTarget = Expression.Label(tgt);
-            var defaultValue = Expression.Default(tgt);
-            var returnExpression = Expression.Return(returnTarget, defaultValue, tgt);
-            var returnLabel = Expression.Label(returnTarget, defaultValue);
-
-            var nullCheck = Expression.IfThen(Expression.Equal(source, Expression.Default(src)), returnExpression);
-
-            var result = Expression.Return(returnTarget, instance, tgt);
-
+            var (nullCheck, result, returnLabel) = HelperExtensions.BuildNullCheckedReturn(src, tgt, source, instance);
             return Expression.Block(
                 variables,
                 new Expression[] { nullCheck }

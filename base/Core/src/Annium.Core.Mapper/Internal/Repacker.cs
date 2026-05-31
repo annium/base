@@ -159,7 +159,14 @@ internal class Repacker : IRepacker
     /// <param name="ex">The new expression</param>
     /// <returns>The repacked mapping</returns>
     private Mapping New(NewExpression ex) =>
-        source => Expression.New(ex.Constructor.NotNull(), ex.Arguments.Select(a => Repack(a)(source)));
+        source =>
+            // NewExpression.Constructor is null when the expression names a value-type default ctor
+            // via Expression.New(Type) — fall through to the typed New(Type) overload so struct-shaped
+            // MapWith bodies (`x => new MyStruct { ... }`) repack without throwing.
+            ex.Constructor
+                is null
+                ? Expression.New(ex.Type)
+                : Expression.New(ex.Constructor, ex.Arguments.Select(a => Repack(a)(source)));
 
     /// <summary>
     /// Repacks a new array expression

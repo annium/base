@@ -89,6 +89,7 @@ public class BaseTest : TestBase
     {
         var mapper = Get<IMapper>();
 
+        // intentionally null — exercising the ArgumentNullException guard on each overload
         Wrap.It(() => mapper.Map<A>(null!)).Throws<ArgumentNullException>();
         Wrap.It(() => mapper.Map(null!, typeof(A))).Throws<ArgumentNullException>();
     }

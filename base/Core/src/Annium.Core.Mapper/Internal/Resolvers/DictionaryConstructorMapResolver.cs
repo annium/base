@@ -30,14 +30,14 @@ internal class DictionaryConstructorMapResolver : IMapResolver
     /// <param name="src">The source type</param>
     /// <param name="tgt">The target type</param>
     /// <returns>True if the source is a string-object dictionary and target has no default constructor, otherwise false</returns>
-    public bool CanResolveMap(Type src, Type tgt)
-    {
-        return (
-                src == typeof(Dictionary<string, object>)
-                || src == typeof(IDictionary<string, object>)
-                || src == typeof(IReadOnlyDictionary<string, object>)
-            ) && tgt.GetConstructor(Type.EmptyTypes) is null;
-    }
+    public bool CanResolveMap(Type src, Type tgt) =>
+        // mirror ConstructorMapResolver's target guards: enum / abstract / interface targets have no
+        // usable parameterized constructor, so reject them here rather than throwing from GetParametrizedConstructor
+        !tgt.IsAbstract
+        && !tgt.IsInterface
+        && !tgt.IsEnum
+        && src.IsStringObjectDictionary()
+        && tgt.GetConstructor(Type.EmptyTypes) is null;
 
     /// <summary>
     /// Resolves and creates a mapping from dictionary source to target type using constructor parameters
@@ -54,13 +54,7 @@ internal class DictionaryConstructorMapResolver : IMapResolver
             var constructor = tgt.GetParametrizedConstructor();
 
             // get source accessor and constructor parameters
-            var tryGetValue =
-                src.GetMethod(nameof(Dictionary<,>.TryGetValue))
-                ?? throw new MappingException(
-                    src,
-                    tgt,
-                    $"Failed to resolve method {src.FriendlyName()}.{nameof(Dictionary<,>.TryGetValue)}"
-                );
+            var tryGetValue = HelperExtensions.ResolveTryGetValue(src, tgt);
             var parameters = constructor.GetParameters();
 
             // resolve each constructor parameter to the matching target property's name (PascalCase),
@@ -80,36 +74,7 @@ internal class DictionaryConstructorMapResolver : IMapResolver
 
             var variables = new List<ParameterExpression>();
             var mappedMemberVars = new Dictionary<string, ParameterExpression>();
-            foreach (var group in cfg.MemberMaps.GroupBy(x => x.Value))
-            {
-                var map = group.Key(ctx.MapContext.Value);
-                var members = group.Select(x => x.Key).ToArray();
-
-                if (members.Length == 1)
-                {
-                    var member = members.Single();
-                    var memberVar = Expression.Variable(member.PropertyType);
-                    variables.Add(memberVar);
-                    body.Add(Expression.Assign(memberVar, _repacker.Repack(map.Body)(source)));
-                    mappedMemberVars[member.Name.ToLowerInvariant()] = memberVar;
-                }
-                else
-                {
-                    var resultVar = Expression.Variable(map.Body.Type);
-                    variables.Add(resultVar);
-                    body.Add(Expression.Assign(resultVar, _repacker.Repack(map.Body)(source)));
-
-                    foreach (var member in members)
-                    {
-                        var memberVar = Expression.Variable(member.PropertyType);
-                        variables.Add(memberVar);
-                        body.Add(
-                            Expression.Assign(memberVar, Expression.Property(resultVar, map.Body.Type, member.Name))
-                        );
-                        mappedMemberVars[member.Name.ToLowerInvariant()] = memberVar;
-                    }
-                }
-            }
+            HelperExtensions.AppendMemberMapVariables(cfg, ctx, _repacker, source, variables, body, mappedMemberVars);
 
             // map parameters to their value evaluation expressions
             var ignoredMembers = cfg.IgnoredMembers.Select(x => x.Name.ToLowerInvariant()).ToArray();
@@ -158,16 +123,7 @@ internal class DictionaryConstructorMapResolver : IMapResolver
             if (src.IsValueType)
                 return Expression.Block(variables, body.Concat(new[] { instance }));
 
-            // define labeled return expression, that will express early return null-checking statement
-            var returnTarget = Expression.Label(tgt);
-            var defaultValue = Expression.Default(tgt);
-            var returnExpression = Expression.Return(returnTarget, defaultValue, tgt);
-            var returnLabel = Expression.Label(returnTarget, defaultValue);
-
-            var nullCheck = Expression.IfThen(Expression.Equal(source, Expression.Default(src)), returnExpression);
-
-            var result = Expression.Return(returnTarget, instance, tgt);
-
+            var (nullCheck, result, returnLabel) = HelperExtensions.BuildNullCheckedReturn(src, tgt, source, instance);
             return Expression.Block(
                 variables,
                 new Expression[] { nullCheck }
