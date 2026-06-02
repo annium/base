@@ -8,21 +8,14 @@ namespace Annium.Core.Mapper.Internal.Resolvers;
 /// <summary>
 /// Map resolver that creates mappings using constructor parameters for types without default constructors
 /// </summary>
-internal class ConstructorMapResolver : IMapResolver
+internal class ConstructorMapResolver : RepackerMapResolverBase, IMapResolver
 {
-    /// <summary>
-    /// The expression repacker for repackaging expressions
-    /// </summary>
-    private readonly IRepacker _repacker;
-
     /// <summary>
     /// Initializes a new instance of the ConstructorMapResolver class
     /// </summary>
     /// <param name="repacker">The expression repacker</param>
     public ConstructorMapResolver(IRepacker repacker)
-    {
-        _repacker = repacker;
-    }
+        : base(repacker) { }
 
     /// <summary>
     /// Determines whether this resolver can create a mapping between the specified source and target types
@@ -30,13 +23,8 @@ internal class ConstructorMapResolver : IMapResolver
     /// <param name="src">The source type</param>
     /// <param name="tgt">The target type</param>
     /// <returns>True if the target type has no default constructor and is not enum, abstract, or interface, otherwise false</returns>
-    public bool CanResolveMap(Type src, Type tgt)
-    {
-        if (tgt.IsEnum || tgt.IsAbstract || tgt.IsInterface)
-            return false;
-
-        return tgt.GetConstructor(Type.EmptyTypes) is null;
-    }
+    public bool CanResolveMap(Type src, Type tgt) =>
+        tgt.IsInstantiableTarget() && tgt.GetConstructor(Type.EmptyTypes) is null;
 
     /// <summary>
     /// Resolves and creates a mapping between the specified source and target types using constructor parameters
@@ -60,7 +48,7 @@ internal class ConstructorMapResolver : IMapResolver
 
             var variables = new List<ParameterExpression>();
             var mappedMemberVars = new Dictionary<string, ParameterExpression>();
-            HelperExtensions.AppendMemberMapVariables(cfg, ctx, _repacker, source, variables, body, mappedMemberVars);
+            HelperExtensions.AppendMemberMapVariables(cfg, ctx, Repacker, source, variables, body, mappedMemberVars);
 
             // map parameters to their value evaluation expressions
             var ignoredMembers = cfg.IgnoredMembers.Select(x => x.Name.ToLowerInvariant()).ToArray();
@@ -93,16 +81,14 @@ internal class ConstructorMapResolver : IMapResolver
 
             var instance = Expression.New(constructor, values);
 
-            // if src is struct - things are simpler, no null-checking
-            if (src.IsValueType)
-                return Expression.Block(variables, body.Concat(new[] { instance }));
-
-            var (nullCheck, result, returnLabel) = HelperExtensions.BuildNullCheckedReturn(src, tgt, source, instance);
-            return Expression.Block(
+            return HelperExtensions.BuildResolvedBlock(
+                src,
+                tgt,
+                source,
                 variables,
-                new Expression[] { nullCheck }
-                    .Concat(body)
-                    .Concat(new Expression[] { result, returnLabel })
+                Array.Empty<Expression>(),
+                body,
+                instance
             );
         };
 }

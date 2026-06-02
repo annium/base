@@ -17,11 +17,30 @@ internal static class HelperExtensions
     private const BindingFlags AllInstance = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
 
     /// <summary>
+    /// <see cref="IMapResolverContext.GetMap"/> method, resolved once and reused by the polymorphic resolvers.
+    /// </summary>
+    internal static readonly MethodInfo GetMapMethod = typeof(IMapResolverContext)
+        .GetMethod(nameof(IMapResolverContext.GetMap))
+        .NotNull();
+
+    /// <summary>
+    /// <see cref="object.GetType"/> method, resolved once and reused by the polymorphic resolvers.
+    /// </summary>
+    internal static readonly MethodInfo GetTypeMethod = typeof(object).GetMethod(nameof(object.GetType)).NotNull();
+
+    /// <summary>
+    /// <see cref="Delegate.DynamicInvoke"/> method, resolved once and reused by the polymorphic resolvers.
+    /// </summary>
+    internal static readonly MethodInfo DynamicInvokeMethod = typeof(Delegate)
+        .GetMethod(nameof(Delegate.DynamicInvoke))
+        .NotNull();
+
+    /// <summary>
     /// Gets the element type of an enumerable type
     /// </summary>
     /// <param name="type">The type to inspect</param>
     /// <returns>The element type if the type is enumerable, otherwise null</returns>
-    public static Type? GetEnumerableElementType(this Type type)
+    internal static Type? GetEnumerableElementType(this Type type)
     {
         if (type.IsArray)
             return type.GetElementType();
@@ -45,7 +64,7 @@ internal static class HelperExtensions
     /// </summary>
     /// <param name="type">The type to inspect</param>
     /// <returns>The constructor with the most parameters</returns>
-    public static ConstructorInfo GetParametrizedConstructor(this Type type) =>
+    internal static ConstructorInfo GetParametrizedConstructor(this Type type) =>
         type.GetConstructors(AllInstance)
             .Where(x => x.GetParameters().Length > 0)
             .OrderByDescending(c => c.GetParameters().Length)
@@ -57,7 +76,7 @@ internal static class HelperExtensions
     /// </summary>
     /// <param name="type">The type to inspect</param>
     /// <returns>The default constructor</returns>
-    public static ConstructorInfo GetDefaultConstructor(this Type type) =>
+    internal static ConstructorInfo GetDefaultConstructor(this Type type) =>
         type.GetConstructor(Type.EmptyTypes)
         ?? throw new InvalidOperationException("Parameterless constructor not found");
 
@@ -66,7 +85,7 @@ internal static class HelperExtensions
     /// </summary>
     /// <param name="type">The type to inspect</param>
     /// <returns>Array of readable properties</returns>
-    public static PropertyInfo[] GetReadableProperties(this Type type) =>
+    internal static PropertyInfo[] GetReadableProperties(this Type type) =>
         type.GetProperties(AllInstance).Where(x => x.CanRead).ToArray();
 
     /// <summary>
@@ -74,7 +93,7 @@ internal static class HelperExtensions
     /// </summary>
     /// <param name="type">The type to inspect</param>
     /// <returns>Array of writeable properties</returns>
-    public static PropertyInfo[] GetWriteableProperties(this Type type) =>
+    internal static PropertyInfo[] GetWriteableProperties(this Type type) =>
         type.GetProperties(AllInstance).Where(x => x.CanWrite).ToArray();
 
     /// <summary>
@@ -85,7 +104,7 @@ internal static class HelperExtensions
     /// <param name="cfg">Mapping configuration supplying the mapped + ignored member sets.</param>
     /// <param name="targets">Candidate writeable target properties.</param>
     /// <returns>The targets remaining for auto-assignment.</returns>
-    public static PropertyInfo[] FilterAutoAssignTargets(IMapConfiguration cfg, PropertyInfo[] targets)
+    internal static PropertyInfo[] FilterAutoAssignTargets(IMapConfiguration cfg, PropertyInfo[] targets)
     {
         var excludedMembers = cfg.MemberMaps.Keys.Concat(cfg.IgnoredMembers).ToArray();
         return targets
@@ -102,7 +121,7 @@ internal static class HelperExtensions
     /// <param name="src">The dictionary source type.</param>
     /// <param name="tgt">The target type (for the exception message).</param>
     /// <returns>The resolved <c>TryGetValue</c> method.</returns>
-    public static MethodInfo ResolveTryGetValue(Type src, Type tgt) =>
+    internal static MethodInfo ResolveTryGetValue(Type src, Type tgt) =>
         src.GetMethod(nameof(Dictionary<,>.TryGetValue))
         ?? throw new MappingException(
             src,
@@ -111,13 +130,22 @@ internal static class HelperExtensions
         );
 
     /// <summary>
+    /// Determines whether the target type can be instantiated by the assignment / constructor resolvers via
+    /// <c>Expression.New</c>. Enum, abstract, and interface targets cannot, so the resolvers reject them in
+    /// <c>CanResolveMap</c> rather than failing later at expression compilation.
+    /// </summary>
+    /// <param name="tgt">The candidate target type.</param>
+    /// <returns>True if <paramref name="tgt"/> is a concrete, non-enum, non-interface type.</returns>
+    internal static bool IsInstantiableTarget(this Type tgt) => !tgt.IsEnum && !tgt.IsAbstract && !tgt.IsInterface;
+
+    /// <summary>
     /// Determines whether the type is one of the three string→object dictionary shapes the
     /// dictionary-source resolvers accept (<see cref="Dictionary{TKey,TValue}"/>,
     /// <see cref="IDictionary{TKey,TValue}"/>, <see cref="IReadOnlyDictionary{TKey,TValue}"/>).
     /// </summary>
     /// <param name="type">The candidate source type.</param>
     /// <returns>True if <paramref name="type"/> is a string→object dictionary shape.</returns>
-    public static bool IsStringObjectDictionary(this Type type) =>
+    internal static bool IsStringObjectDictionary(this Type type) =>
         type == typeof(Dictionary<string, object>)
         || type == typeof(IDictionary<string, object>)
         || type == typeof(IReadOnlyDictionary<string, object>);
@@ -136,7 +164,7 @@ internal static class HelperExtensions
     /// <param name="instance">Expression carrying the target instance whose properties get assigned.</param>
     /// <param name="variables">Mutable variable list extended with the shared variables created for multi-member groups.</param>
     /// <param name="body">Mutable expression list extended with the emitted assignments.</param>
-    public static void AppendMemberMapAssignments(
+    internal static void AppendMemberMapAssignments(
         IMapConfiguration cfg,
         IMapResolverContext ctx,
         IRepacker repacker,
@@ -148,7 +176,7 @@ internal static class HelperExtensions
     {
         foreach (var group in cfg.MemberMaps.GroupBy(x => x.Value))
         {
-            var map = group.Key(ctx.MapContext.Value);
+            var map = group.Key(ctx.MapContext);
             var members = group.Select(x => x.Key).ToArray();
 
             if (members.Length == 1)
@@ -189,7 +217,7 @@ internal static class HelperExtensions
     /// <param name="variables">Mutable variable list extended with every per-member variable created.</param>
     /// <param name="body">Mutable expression list extended with the variable assignments.</param>
     /// <param name="mappedMemberVars">Lookup populated with (lower-case-target-name → variable expression) entries.</param>
-    public static void AppendMemberMapVariables(
+    internal static void AppendMemberMapVariables(
         IMapConfiguration cfg,
         IMapResolverContext ctx,
         IRepacker repacker,
@@ -201,7 +229,7 @@ internal static class HelperExtensions
     {
         foreach (var group in cfg.MemberMaps.GroupBy(x => x.Value))
         {
-            var map = group.Key(ctx.MapContext.Value);
+            var map = group.Key(ctx.MapContext);
             var members = group.Select(x => x.Key).ToArray();
 
             if (members.Length == 1)
@@ -240,7 +268,7 @@ internal static class HelperExtensions
     /// <param name="source">Expression carrying the source value to null-check.</param>
     /// <param name="instance">Expression carrying the built target instance to return on the success path.</param>
     /// <returns>The three expression fragments callers splice around <c>body</c>.</returns>
-    public static (Expression NullCheck, Expression Result, LabelExpression ReturnLabel) BuildNullCheckedReturn(
+    private static (Expression NullCheck, Expression Result, LabelExpression ReturnLabel) BuildNullCheckedReturn(
         Type src,
         Type tgt,
         Expression source,
@@ -254,5 +282,94 @@ internal static class HelperExtensions
         var nullCheck = Expression.IfThen(Expression.Equal(source, Expression.Default(src)), returnExpression);
         var result = Expression.Return(returnTarget, instance, tgt);
         return (nullCheck, result, returnLabel);
+    }
+
+    /// <summary>
+    /// Builds the default-constructor instance initialization the assignment resolvers start from: a fresh
+    /// variable list seeded with the target instance variable, and the <c>instance = new tgt()</c> assignment.
+    /// Callers continue to extend the returned <c>Variables</c> list with their own locals.
+    /// </summary>
+    /// <param name="tgt">The target type, which must expose a default constructor.</param>
+    /// <returns>The seeded variable list, the target instance variable, and the init assignment expression.</returns>
+    internal static (
+        List<ParameterExpression> Variables,
+        ParameterExpression Instance,
+        Expression Init
+    ) BuildDefaultConstructorInit(Type tgt)
+    {
+        var variables = new List<ParameterExpression>();
+        var instance = Expression.Variable(tgt);
+        variables.Add(instance);
+        var init = Expression.Assign(instance, Expression.New(tgt.GetDefaultConstructor()));
+        return (variables, instance, init);
+    }
+
+    /// <summary>
+    /// Builds the terminal block every resolver's <c>ResolveMap</c> closure returns. For a value-type source no
+    /// null-checking is needed, so the block is <paramref name="prefix"/> + <paramref name="body"/> + the instance
+    /// value. For a reference-type source the null-checked early-return scaffolding from
+    /// <see cref="BuildNullCheckedReturn"/> is spliced around the same prefix + body, so a null source yields
+    /// <c>default(tgt)</c>.
+    /// </summary>
+    /// <param name="src">Source type — drives the value-type vs. null-checked branch.</param>
+    /// <param name="tgt">Target type used to type the return label and default value.</param>
+    /// <param name="source">Expression carrying the source value to null-check (reference-type branch only).</param>
+    /// <param name="variables">Block-scoped variables.</param>
+    /// <param name="prefix">Expressions emitted before <paramref name="body"/> — the instance-init assignment for assignment resolvers; empty for constructor resolvers.</param>
+    /// <param name="body">The member-mapping expressions.</param>
+    /// <param name="instance">Expression carrying the built target instance returned on the success path.</param>
+    /// <returns>The block expression the resolver closure returns.</returns>
+    internal static Expression BuildResolvedBlock(
+        Type src,
+        Type tgt,
+        Expression source,
+        List<ParameterExpression> variables,
+        IReadOnlyCollection<Expression> prefix,
+        List<Expression> body,
+        Expression instance
+    )
+    {
+        // if src is struct - things are simpler, no null-checking
+        if (src.IsValueType)
+            return Expression.Block(variables, prefix.Concat(body).Concat(new[] { instance }));
+
+        var (nullCheck, result, returnLabel) = BuildNullCheckedReturn(src, tgt, source, instance);
+        return Expression.Block(
+            variables,
+            new[] { nullCheck }.Concat(prefix).Concat(body).Concat(new[] { result, returnLabel })
+        );
+    }
+
+    /// <summary>
+    /// Builds the dictionary-source value access the dictionary resolvers emit per target member: declares a
+    /// fresh <c>object</c> variable (added to <paramref name="variables"/>) and returns a conditional that yields
+    /// that variable when <c>source.TryGetValue(key, out var)</c> succeeds, otherwise throws a
+    /// <see cref="KeyNotFoundException"/> carrying a "Missing value for property '<paramref name="key"/>'" message.
+    /// </summary>
+    /// <param name="source">Expression carrying the dictionary source instance.</param>
+    /// <param name="tryGetValue">The resolved <c>TryGetValue</c> method on the source type.</param>
+    /// <param name="key">The dictionary key to look up (the matching target property name).</param>
+    /// <param name="variables">Mutable variable list extended with the per-key <c>object</c> variable.</param>
+    /// <returns>The conditional access expression, typed <c>object</c>.</returns>
+    internal static Expression BuildDictKeyAccess(
+        Expression source,
+        MethodInfo tryGetValue,
+        string key,
+        List<ParameterExpression> variables
+    )
+    {
+        var itemVar = Expression.Variable(typeof(object));
+        variables.Add(itemVar);
+        return Expression.Condition(
+            Expression.Call(source, tryGetValue, Expression.Constant(key), itemVar),
+            itemVar,
+            Expression.Throw(
+                Expression.New(
+                    typeof(KeyNotFoundException).GetConstructor(new[] { typeof(string) }).NotNull(),
+                    Expression.Constant($"Missing value for property '{key}'")
+                ),
+                typeof(object)
+            )
+        );
     }
 }

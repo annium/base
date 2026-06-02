@@ -114,17 +114,21 @@ internal class EnumerableMapResolver : IMapResolver
         // get map for element type
         var mapVar = Expression.Variable(typeof(Delegate));
         vars.Add(mapVar);
-        var getMap = typeof(IMapResolverContext).GetMethod(nameof(IMapResolverContext.GetMap)).NotNull();
-        var getTypeEx = Expression.Call(param, typeof(object).GetMethod(nameof(GetType)).NotNull());
+        var getTypeEx = Expression.Call(param, HelperExtensions.GetTypeMethod);
         body.Add(
             Expression.Assign(
                 mapVar,
-                Expression.Call(Expression.Constant(ctx), getMap, getTypeEx, Expression.Constant(tgtEl))
+                Expression.Call(
+                    Expression.Constant(ctx),
+                    HelperExtensions.GetMapMethod,
+                    getTypeEx,
+                    Expression.Constant(tgtEl)
+                )
             )
         );
 
         // invoke map and return result
-        var invokeMap = typeof(Delegate).GetMethod(nameof(Delegate.DynamicInvoke)).NotNull();
+        var invokeMap = HelperExtensions.DynamicInvokeMethod;
         body.Add(
             Expression.Label(
                 returnTarget,

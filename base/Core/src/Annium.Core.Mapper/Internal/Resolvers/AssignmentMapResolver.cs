@@ -9,29 +9,23 @@ namespace Annium.Core.Mapper.Internal.Resolvers;
 /// <summary>
 /// Map resolver that creates mappings using property assignment for types with default constructors
 /// </summary>
-internal class AssignmentMapResolver : IMapResolver
+internal class AssignmentMapResolver : RepackerMapResolverBase, IMapResolver
 {
-    /// <summary>
-    /// The expression repacker for repackaging expressions
-    /// </summary>
-    private readonly IRepacker _repacker;
-
     /// <summary>
     /// Initializes a new instance of the AssignmentMapResolver class
     /// </summary>
     /// <param name="repacker">The expression repacker</param>
     public AssignmentMapResolver(IRepacker repacker)
-    {
-        _repacker = repacker;
-    }
+        : base(repacker) { }
 
     /// <summary>
     /// Determines whether this resolver can create a mapping between the specified source and target types
     /// </summary>
     /// <param name="src">The source type</param>
     /// <param name="tgt">The target type</param>
-    /// <returns>True if the target type has a default constructor, otherwise false</returns>
-    public bool CanResolveMap(Type src, Type tgt) => tgt.GetConstructor(Type.EmptyTypes) is not null;
+    /// <returns>True if the target type has a default constructor and is not enum, abstract, or interface, otherwise false</returns>
+    public bool CanResolveMap(Type src, Type tgt) =>
+        tgt.IsInstantiableTarget() && tgt.GetConstructor(Type.EmptyTypes) is not null;
 
     /// <summary>
     /// Resolves and creates a mapping between the specified source and target types using property assignment
@@ -45,11 +39,7 @@ internal class AssignmentMapResolver : IMapResolver
         source =>
         {
             // defined instance and create initial assignment expression
-            var variables = new List<ParameterExpression>();
-            var instance = Expression.Variable(tgt);
-            variables.Add(instance);
-            var constructor = tgt.GetDefaultConstructor();
-            var init = Expression.Assign(instance, Expression.New(constructor));
+            var (variables, instance, init) = HelperExtensions.BuildDefaultConstructorInit(tgt);
 
             // get source and target type properties
             var sources = src.GetReadableProperties();
@@ -60,7 +50,7 @@ internal class AssignmentMapResolver : IMapResolver
             targets = HelperExtensions.FilterAutoAssignTargets(cfg, targets);
 
             var body = new List<Expression>();
-            HelperExtensions.AppendMemberMapAssignments(cfg, ctx, _repacker, source, instance, variables, body);
+            HelperExtensions.AppendMemberMapAssignments(cfg, ctx, Repacker, source, instance, variables, body);
 
             // for each target property - resolve assignment expression
             body.AddRange(
@@ -85,21 +75,14 @@ internal class AssignmentMapResolver : IMapResolver
                     .ToArray()
             );
 
-            // if src is struct - things are simpler, no null-checking
-            if (src.IsValueType)
-                return Expression.Block(
-                    variables,
-                    new Expression[] { init }
-                        .Concat(body)
-                        .Concat(new Expression[] { instance })
-                );
-
-            var (nullCheck, result, returnLabel) = HelperExtensions.BuildNullCheckedReturn(src, tgt, source, instance);
-            return Expression.Block(
+            return HelperExtensions.BuildResolvedBlock(
+                src,
+                tgt,
+                source,
                 variables,
-                new Expression[] { nullCheck, init }
-                    .Concat(body)
-                    .Concat(new Expression[] { result, returnLabel })
+                new Expression[] { init },
+                body,
+                instance
             );
         };
 }

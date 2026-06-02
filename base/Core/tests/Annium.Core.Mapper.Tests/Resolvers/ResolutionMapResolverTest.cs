@@ -1,9 +1,58 @@
+using System;
 using System.Collections.Generic;
 using Annium.Core.Runtime.Types;
 using Annium.Testing;
 using Xunit;
 
 namespace Annium.Core.Mapper.Tests.Resolvers;
+
+/// <summary>
+/// Verifies that <c>ResolutionMapResolver</c> throws <see cref="InvalidOperationException"/>
+/// when no concrete implementation of the abstract target type can be resolved for the source instance.
+/// </summary>
+public class ResolutionMapResolver_NoConcreteMatch_ThrowsTest : TestBase
+{
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ResolutionMapResolver_NoConcreteMatch_ThrowsTest"/> class.
+    /// </summary>
+    /// <param name="outputHelper">The test output helper for logging test results.</param>
+    public ResolutionMapResolver_NoConcreteMatch_ThrowsTest(ITestOutputHelper outputHelper)
+        : base(outputHelper)
+    {
+        Register(c => c.AddMapper(autoload: false));
+    }
+
+    /// <summary>
+    /// Maps a source whose runtime type has no matching concrete implementation of the abstract target.
+    /// The compiled mapping expression throws <see cref="InvalidOperationException"/> at runtime
+    /// because <c>ITypeManager.Resolve</c> returns null for the (source, target) pair.
+    /// </summary>
+    [Fact]
+    public void ResolutionMapping_NoConcreteMatch_ThrowsInvalidOperationException()
+    {
+        // arrange
+        var mapper = Get<IMapper>();
+        // UnresolvableSource has a property set that does not match any concrete implementation of
+        // UnresolvableBase registered in the test assembly.
+        var source = new UnresolvableSource { Alpha = "x" };
+
+        // act + assert
+        Wrap.It(() => mapper.Map<UnresolvableBase>(source)).Throws<InvalidOperationException>();
+    }
+
+    /// <summary>Source whose property signature does not match any concrete <see cref="UnresolvableBase"/> implementation.</summary>
+    private class UnresolvableSource
+    {
+        /// <summary>Gets or sets a property whose name does not appear on any <see cref="UnresolvableBase"/> subtype.</summary>
+        public string? Alpha { get; set; }
+    }
+
+    /// <summary>
+    /// Abstract target base with no concrete implementations in this test file.
+    /// <c>ITypeManager.Resolve</c> therefore returns null, triggering the resolver's throw.
+    /// </summary>
+    private abstract class UnresolvableBase;
+}
 
 /// <summary>
 /// Tests for resolution-based mapping in the mapper, including signature and ID-based resolution.

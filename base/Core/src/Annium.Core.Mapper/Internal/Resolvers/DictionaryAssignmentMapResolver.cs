@@ -9,30 +9,23 @@ namespace Annium.Core.Mapper.Internal.Resolvers;
 /// <summary>
 /// Map resolver that creates mappings from dictionary sources to target types using property assignment
 /// </summary>
-internal class DictionaryAssignmentMapResolver : IMapResolver
+internal class DictionaryAssignmentMapResolver : RepackerMapResolverBase, IMapResolver
 {
-    /// <summary>
-    /// The expression repacker for repackaging expressions
-    /// </summary>
-    private readonly IRepacker _repacker;
-
     /// <summary>
     /// Initializes a new instance of the DictionaryAssignmentMapResolver class
     /// </summary>
     /// <param name="repacker">The expression repacker</param>
     public DictionaryAssignmentMapResolver(IRepacker repacker)
-    {
-        _repacker = repacker;
-    }
+        : base(repacker) { }
 
     /// <summary>
     /// Determines whether this resolver can create a mapping between the specified source and target types
     /// </summary>
     /// <param name="src">The source type</param>
     /// <param name="tgt">The target type</param>
-    /// <returns>True if the source is a string-object dictionary and target has a default constructor, otherwise false</returns>
+    /// <returns>True if the source is a string-object dictionary and target has a default constructor and is not enum, abstract, or interface, otherwise false</returns>
     public bool CanResolveMap(Type src, Type tgt) =>
-        src.IsStringObjectDictionary() && tgt.GetConstructor(Type.EmptyTypes) is not null;
+        tgt.IsInstantiableTarget() && src.IsStringObjectDictionary() && tgt.GetConstructor(Type.EmptyTypes) is not null;
 
     /// <summary>
     /// Resolves and creates a mapping from dictionary source to target type using property assignment
@@ -46,11 +39,7 @@ internal class DictionaryAssignmentMapResolver : IMapResolver
         source =>
         {
             // defined instance and create initial assignment expression
-            var variables = new List<ParameterExpression>();
-            var instance = Expression.Variable(tgt);
-            variables.Add(instance);
-            var constructor = tgt.GetDefaultConstructor();
-            var init = Expression.Assign(instance, Expression.New(constructor));
+            var (variables, instance, init) = HelperExtensions.BuildDefaultConstructorInit(tgt);
 
             // get source and target type properties
             var tryGetValue = HelperExtensions.ResolveTryGetValue(src, tgt);
@@ -60,7 +49,7 @@ internal class DictionaryAssignmentMapResolver : IMapResolver
             targets = HelperExtensions.FilterAutoAssignTargets(cfg, targets);
 
             var body = new List<Expression>();
-            HelperExtensions.AppendMemberMapAssignments(cfg, ctx, _repacker, source, instance, variables, body);
+            HelperExtensions.AppendMemberMapAssignments(cfg, ctx, Repacker, source, instance, variables, body);
 
             // for each target property - resolve assignment expression
             body.AddRange(
@@ -71,40 +60,21 @@ internal class DictionaryAssignmentMapResolver : IMapResolver
                         var map = ctx.ResolveMapping(typeof(object), target.PropertyType);
 
                         // otherwise - parameter must match respective source dictionary property
-                        var itemVar = Expression.Variable(typeof(object));
-                        variables.Add(itemVar);
-                        var item = Expression.Condition(
-                            Expression.Call(source, tryGetValue, Expression.Constant(target.Name), itemVar),
-                            itemVar,
-                            Expression.Throw(
-                                Expression.New(
-                                    typeof(KeyNotFoundException).GetConstructor(new[] { typeof(string) }).NotNull(),
-                                    Expression.Constant($"Missing value for property '{target.Name}'")
-                                ),
-                                typeof(object)
-                            )
-                        );
+                        var item = HelperExtensions.BuildDictKeyAccess(source, tryGetValue, target.Name, variables);
 
                         return Expression.Assign(Expression.Property(instance, target), map(item));
                     })
                     .ToArray()
             );
 
-            // if src is struct - things are simpler, no null-checking
-            if (src.IsValueType)
-                return Expression.Block(
-                    variables,
-                    new Expression[] { init }
-                        .Concat(body)
-                        .Concat(new Expression[] { instance })
-                );
-
-            var (nullCheck, result, returnLabel) = HelperExtensions.BuildNullCheckedReturn(src, tgt, source, instance);
-            return Expression.Block(
+            return HelperExtensions.BuildResolvedBlock(
+                src,
+                tgt,
+                source,
                 variables,
-                new Expression[] { nullCheck, init }
-                    .Concat(body)
-                    .Concat(new Expression[] { result, returnLabel })
+                new Expression[] { init },
+                body,
+                instance
             );
         };
 }

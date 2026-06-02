@@ -14,7 +14,7 @@ internal class MapConfigurationBuilder<TS, TD> : IMapConfigurationBuilder<TS, TD
     /// <summary>
     /// Gets the resulting map configuration
     /// </summary>
-    public IMapConfiguration Result => _result;
+    internal IMapConfiguration Result => _result;
 
     /// <summary>
     /// The configuration being built

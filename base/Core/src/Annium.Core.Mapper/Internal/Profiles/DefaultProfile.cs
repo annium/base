@@ -12,7 +12,7 @@ internal class DefaultProfile : Profile
     /// <summary>
     /// Initializes a new instance of the DefaultProfile class
     /// </summary>
-    public DefaultProfile()
+    internal DefaultProfile()
     {
         RegisterString();
         RegisterByte();

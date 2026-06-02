@@ -180,6 +180,61 @@ public class RepackerTest : TestBase
     }
 
     /// <summary>
+    /// G24: Verifies that a MemberMemberBinding — produced by <c>new Outer { Inner = { Value = x } }</c>
+    /// where <c>Inner</c> is a readable, auto-initialized property — is repacked correctly.
+    /// The compiler emits a <see cref="System.Linq.Expressions.MemberMemberBinding"/> on <c>Outer.Inner</c>
+    /// containing a <see cref="System.Linq.Expressions.MemberAssignment"/> for <c>Inner.Value</c>.
+    /// </summary>
+    [Fact]
+    public void MemberMemberBinding_Works()
+    {
+        // act — the initializer syntax "Inner = { Value = x }" emits MemberMemberBinding
+        var result = Repack<int, Outer>(x => new Outer { Inner = { Value = x } });
+
+        // assert — repacked lambda must produce the correct nested value
+        var output = result(42);
+        output.Inner.Value.Is(42);
+    }
+
+    /// <summary>
+    /// G24: Verifies that a MemberListBinding — produced by <c>new Foo { Items = { x } }</c>
+    /// where <c>Items</c> is a <see cref="List{T}"/> auto-initialized property — is repacked correctly.
+    /// The compiler emits a <see cref="System.Linq.Expressions.MemberListBinding"/> on <c>Foo.Items</c>
+    /// that calls <c>Add(x)</c> on the existing list instance.
+    /// </summary>
+    [Fact]
+    public void MemberListBinding_Works()
+    {
+        // act — the initializer syntax "Items = { x }" emits MemberListBinding (Add call)
+        var result = Repack<int, FooWithItems>(x => new FooWithItems { Items = { x } });
+
+        // assert — repacked lambda must add the value to the auto-initialized list
+        var output = result(7);
+        output.Items.Has(1).At(0).Is(7);
+    }
+
+    /// <summary>Outer type whose Inner property is auto-initialized so MemberMemberBinding is valid at runtime.</summary>
+    private class Outer
+    {
+        /// <summary>Gets the auto-initialized nested object.</summary>
+        public Inner Inner { get; } = new Inner();
+    }
+
+    /// <summary>Nested type whose Value property is settable.</summary>
+    private class Inner
+    {
+        /// <summary>Gets or sets the value.</summary>
+        public int Value { get; set; }
+    }
+
+    /// <summary>Type whose Items list is auto-initialized so MemberListBinding is valid at runtime.</summary>
+    private class FooWithItems
+    {
+        /// <summary>Gets the auto-initialized list of integers.</summary>
+        public List<int> Items { get; } = new List<int>();
+    }
+
+    /// <summary>
     /// Repacks an expression and returns a compiled function
     /// </summary>
     /// <typeparam name="TS">The source type</typeparam>

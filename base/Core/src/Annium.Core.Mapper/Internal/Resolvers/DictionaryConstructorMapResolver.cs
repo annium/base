@@ -8,21 +8,14 @@ namespace Annium.Core.Mapper.Internal.Resolvers;
 /// <summary>
 /// Map resolver that creates mappings from dictionary sources to target types using constructor parameters
 /// </summary>
-internal class DictionaryConstructorMapResolver : IMapResolver
+internal class DictionaryConstructorMapResolver : RepackerMapResolverBase, IMapResolver
 {
-    /// <summary>
-    /// The expression repacker for repackaging expressions
-    /// </summary>
-    private readonly IRepacker _repacker;
-
     /// <summary>
     /// Initializes a new instance of the DictionaryConstructorMapResolver class
     /// </summary>
     /// <param name="repacker">The expression repacker</param>
     public DictionaryConstructorMapResolver(IRepacker repacker)
-    {
-        _repacker = repacker;
-    }
+        : base(repacker) { }
 
     /// <summary>
     /// Determines whether this resolver can create a mapping between the specified source and target types
@@ -31,13 +24,7 @@ internal class DictionaryConstructorMapResolver : IMapResolver
     /// <param name="tgt">The target type</param>
     /// <returns>True if the source is a string-object dictionary and target has no default constructor, otherwise false</returns>
     public bool CanResolveMap(Type src, Type tgt) =>
-        // mirror ConstructorMapResolver's target guards: enum / abstract / interface targets have no
-        // usable parameterized constructor, so reject them here rather than throwing from GetParametrizedConstructor
-        !tgt.IsAbstract
-        && !tgt.IsInterface
-        && !tgt.IsEnum
-        && src.IsStringObjectDictionary()
-        && tgt.GetConstructor(Type.EmptyTypes) is null;
+        tgt.IsInstantiableTarget() && src.IsStringObjectDictionary() && tgt.GetConstructor(Type.EmptyTypes) is null;
 
     /// <summary>
     /// Resolves and creates a mapping from dictionary source to target type using constructor parameters
@@ -74,7 +61,7 @@ internal class DictionaryConstructorMapResolver : IMapResolver
 
             var variables = new List<ParameterExpression>();
             var mappedMemberVars = new Dictionary<string, ParameterExpression>();
-            HelperExtensions.AppendMemberMapVariables(cfg, ctx, _repacker, source, variables, body, mappedMemberVars);
+            HelperExtensions.AppendMemberMapVariables(cfg, ctx, Repacker, source, variables, body, mappedMemberVars);
 
             // map parameters to their value evaluation expressions
             var ignoredMembers = cfg.IgnoredMembers.Select(x => x.Name.ToLowerInvariant()).ToArray();
@@ -98,20 +85,8 @@ internal class DictionaryConstructorMapResolver : IMapResolver
                     var map = ctx.ResolveMapping(typeof(object), param.ParameterType);
 
                     // otherwise - parameter must match respective source dictionary property
-                    var itemVar = Expression.Variable(typeof(object));
-                    variables.Add(itemVar);
                     var dictKey = paramKey[paramName];
-                    var item = Expression.Condition(
-                        Expression.Call(source, tryGetValue, Expression.Constant(dictKey), itemVar),
-                        itemVar,
-                        Expression.Throw(
-                            Expression.New(
-                                typeof(KeyNotFoundException).GetConstructor(new[] { typeof(string) }).NotNull(),
-                                Expression.Constant($"Missing value for property '{dictKey}'")
-                            ),
-                            typeof(object)
-                        )
-                    );
+                    var item = HelperExtensions.BuildDictKeyAccess(source, tryGetValue, dictKey, variables);
 
                     return map(item);
                 })
@@ -119,16 +94,14 @@ internal class DictionaryConstructorMapResolver : IMapResolver
 
             var instance = Expression.New(constructor, values);
 
-            // if src is struct - things are simpler, no null-checking
-            if (src.IsValueType)
-                return Expression.Block(variables, body.Concat(new[] { instance }));
-
-            var (nullCheck, result, returnLabel) = HelperExtensions.BuildNullCheckedReturn(src, tgt, source, instance);
-            return Expression.Block(
+            return HelperExtensions.BuildResolvedBlock(
+                src,
+                tgt,
+                source,
                 variables,
-                new Expression[] { nullCheck }
-                    .Concat(body)
-                    .Concat(new Expression[] { result, returnLabel })
+                Array.Empty<Expression>(),
+                body,
+                instance
             );
         };
 }

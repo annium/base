@@ -91,14 +91,16 @@ internal class ResolutionMapResolver : IMapResolver
             var mapVar = Expression.Variable(typeof(Delegate));
             vars.Add(mapVar);
 
-            var getMap = typeof(IMapResolverContext).GetMethod(nameof(IMapResolverContext.GetMap)).NotNull();
-            var getTypeEx = Expression.Call(source, typeof(object).GetMethod(nameof(GetType)).NotNull());
+            var getTypeEx = Expression.Call(source, HelperExtensions.GetTypeMethod);
             expressions.Add(
-                Expression.Assign(mapVar, Expression.Call(Expression.Constant(ctx), getMap, getTypeEx, typeVar))
+                Expression.Assign(
+                    mapVar,
+                    Expression.Call(Expression.Constant(ctx), HelperExtensions.GetMapMethod, getTypeEx, typeVar)
+                )
             );
 
             // invoke map and return result
-            var invokeMap = typeof(Delegate).GetMethod(nameof(Delegate.DynamicInvoke)).NotNull();
+            var invokeMap = HelperExtensions.DynamicInvokeMethod;
             expressions.Add(
                 Expression.Label(
                     returnTarget,
