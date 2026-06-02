@@ -1,11 +1,11 @@
 using System.Linq.Expressions;
 
-namespace Annium.Core.Mapper;
+namespace Annium.Core.Mapper.Internal;
 
 /// <summary>
 /// Repacks expressions into mapping configurations
 /// </summary>
-public interface IRepacker
+internal interface IRepacker
 {
     /// <summary>
     /// Repacks an expression into a mapping configuration

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using AgileObjects.ReadableExpressions;
-using Annium.Core.Runtime.Types;
 using Annium.Logging;
 using Annium.Reflection;
 
@@ -25,11 +24,6 @@ internal class MapBuilder : IMapBuilder, ILogSubject
     private readonly IReadOnlyCollection<Profile> _knownProfiles;
 
     /// <summary>
-    /// The type resolver for resolving generic types
-    /// </summary>
-    private readonly ITypeResolver _typeResolver;
-
-    /// <summary>
     /// The collection of map resolvers
     /// </summary>
     private readonly IEnumerable<IMapResolver> _mapResolvers;
@@ -47,8 +41,7 @@ internal class MapBuilder : IMapBuilder, ILogSubject
     /// <summary>
     /// Cache of mapping entries by type pair
     /// </summary>
-    private readonly IDictionary<ValueTuple<Type, Type>, Entry> _entries =
-        new Dictionary<ValueTuple<Type, Type>, Entry>();
+    private readonly Dictionary<ValueTuple<Type, Type>, Entry> _entries = new();
 
     /// <summary>
     /// The map resolver context
@@ -59,14 +52,12 @@ internal class MapBuilder : IMapBuilder, ILogSubject
     /// Initializes a new instance of the MapBuilder class
     /// </summary>
     /// <param name="profiles">The profiles containing mapping configurations</param>
-    /// <param name="typeResolver">The type resolver for generic type resolution</param>
     /// <param name="mapResolvers">The map resolvers for different mapping scenarios</param>
     /// <param name="repacker">The expression repacker</param>
     /// <param name="mapContext">The lazy-initialized map context</param>
     /// <param name="logger">The logger instance</param>
     public MapBuilder(
         IEnumerable<Profile> profiles,
-        ITypeResolver typeResolver,
         IEnumerable<IMapResolver> mapResolvers,
         IRepacker repacker,
         Lazy<IMapContext> mapContext,
@@ -75,7 +66,6 @@ internal class MapBuilder : IMapBuilder, ILogSubject
     {
         Logger = logger;
         _knownProfiles = profiles.ToArray();
-        _typeResolver = typeResolver;
         _mapResolvers = mapResolvers;
         _repacker = repacker;
         _mapContext = mapContext;
@@ -86,48 +76,27 @@ internal class MapBuilder : IMapBuilder, ILogSubject
     }
 
     /// <summary>
-    /// Adds a profile configured by the provided action
-    /// </summary>
-    /// <param name="configure">The profile configuration action</param>
-    /// <returns>The map builder for method chaining</returns>
-    public IMapBuilder AddProfile(Action<Profile> configure)
-    {
-        var profile = new EmptyProfile();
-        configure(profile);
-
-        AddEntriesFromProfile(profile);
-
-        return this;
-    }
-
-    /// <summary>
-    /// Adds a profile of the specified type
-    /// </summary>
-    /// <typeparam name="T">The profile type</typeparam>
-    /// <returns>The map builder for method chaining</returns>
-    public IMapBuilder AddProfile<T>()
-        where T : Profile => AddProfileInternal(typeof(T));
-
-    /// <summary>
-    /// Adds a profile of the specified type
-    /// </summary>
-    /// <param name="profileType">The profile type</param>
-    /// <returns>The map builder for method chaining</returns>
-    public IMapBuilder AddProfile(Type profileType)
-    {
-        if (!profileType.GetInheritanceChain().Contains(typeof(Profile)))
-            throw new ArgumentException($"Type {profileType} is not inherited from {typeof(Profile)}");
-
-        return AddProfileInternal(profileType);
-    }
-
-    /// <summary>
     /// Determines if a mapping exists between the specified types
     /// </summary>
     /// <param name="src">The source type</param>
     /// <param name="tgt">The target type</param>
     /// <returns>True if a mapping exists, otherwise false</returns>
-    public bool HasMap(Type src, Type tgt) => src == tgt || GetEntry((src, tgt)).HasMapping;
+    public bool HasMap(Type src, Type tgt)
+    {
+        if (src == tgt)
+            return true;
+
+        var entry = GetEntry((src, tgt));
+        // HasMap answers "is there an explicitly configured mapping for this pair?", NOT the broader
+        // "would any resolver produce one?". We therefore probe HasConfiguration (set ONLY by
+        // AddEntriesFromProfile) instead of HasMapping (which also becomes true after any GetMap()
+        // call materialises a resolver-built mapping). Downstream consumers (e.g. ConfigurationProcessor)
+        // use HasMap as a discriminator between atomic-value leafs (configured map exists) and complex
+        // objects (recurse); broadening the probe to the resolver chain — or to side effects of prior
+        // GetMap calls — would misclassify any type with a default constructor as a leaf via
+        // AssignmentMapResolver and break that consumer.
+        return entry.HasConfiguration;
+    }
 
     /// <summary>
     /// Gets the mapping delegate between the specified types
@@ -138,17 +107,26 @@ internal class MapBuilder : IMapBuilder, ILogSubject
     public Delegate GetMap(Type src, Type tgt)
     {
         var entry = GetEntry((src, tgt));
+
+        // Lock-free fast path for the steady-state case where the compiled delegate already exists.
+        // The _map field is a Delegate? reference; its transition is one-way (null → non-null) and
+        // reference reads are atomic on .NET, so observing a non-null Map is sufficient — we will
+        // never read a torn or post-cleared value here.
+        if (entry.HasMap)
+            return entry.Map;
+
+        // Resolve the mapping BEFORE acquiring MapLock. Holding MapLock across ResolveMapping (which
+        // takes MappingLock and can recursively call back into GetMap for sibling type pairs) creates
+        // an AB/BA cycle under concurrent compilation of circularly-related type graphs.
+        var mapping = ResolveMapping(src, tgt);
+
         lock (entry.MapLock)
         {
             if (entry.HasMap)
-            {
                 return entry.Map;
-            }
 
             this.Trace<string, string>("Resolve map for {src} -> {tgt}", src.FriendlyName(), tgt.FriendlyName());
             var param = Expression.Parameter(src);
-            var mapping = ResolveMapping(src, tgt);
-
             var result = Expression.Lambda(mapping(param), param);
             var resultView = result.ToReadableString();
             this.Trace<string, string, string>(
@@ -158,10 +136,12 @@ internal class MapBuilder : IMapBuilder, ILogSubject
                 resultView
             );
 
-            entry.SetMap(result.Compile());
+            var compiled = result.Compile();
+            entry.SetMap(compiled);
+            // return the local delegate (rather than re-reading entry.Map outside the lock) so the
+            // visibility of the just-published _map field cannot regress across memory models.
+            return compiled;
         }
-
-        return entry.Map;
     }
 
     /// <summary>
@@ -218,26 +198,6 @@ internal class MapBuilder : IMapBuilder, ILogSubject
     }
 
     /// <summary>
-    /// Adds a profile type and resolves its generic variants
-    /// </summary>
-    /// <param name="profileType">The profile type to add</param>
-    /// <returns>The map builder for method chaining</returns>
-    private IMapBuilder AddProfileInternal(Type profileType)
-    {
-        var types = _typeResolver.ResolveType(profileType);
-
-        foreach (var type in types)
-        {
-            var profile =
-                _knownProfiles.SingleOrDefault(x => x.GetType() == type) ?? (Profile)Activator.CreateInstance(type)!;
-
-            AddEntriesFromProfile(profile);
-        }
-
-        return this;
-    }
-
-    /// <summary>
     /// Adds mapping entries from the specified profile
     /// </summary>
     /// <param name="profile">The profile to add entries from</param>
@@ -246,10 +206,27 @@ internal class MapBuilder : IMapBuilder, ILogSubject
         foreach (var (key, cfg) in profile.MapConfigurations)
         {
             var entry = GetEntry(key);
-            if (!entry.HasConfiguration)
+            // serialize configuration / mapping writes under MappingLock; treat duplicate (src, tgt)
+            // registrations across profiles as "first profile wins" — skip BOTH the configuration
+            // and the mapping for the second profile. The prior code skipped config but still
+            // applied the second profile's MapWith, producing a split-brain mapping whose
+            // expression and configuration came from different profiles.
+            lock (entry.MappingLock)
+            {
+                if (entry.HasConfiguration)
+                {
+                    this.Trace<string, string>(
+                        "Skip duplicate mapping registration for {src} -> {tgt} (first profile wins)",
+                        key.Item1.FriendlyName(),
+                        key.Item2.FriendlyName()
+                    );
+                    continue;
+                }
+
                 entry.SetConfiguration(cfg);
-            if (!entry.HasMapping && cfg.MapWith is not null)
-                entry.SetMapping(() => _repacker.Repack(cfg.MapWith(_mapContext.Value).Body));
+                if (cfg.MapWith is not null)
+                    entry.SetMapping(() => _repacker.Repack(cfg.MapWith(_mapContext.Value).Body));
+            }
         }
     }
 
@@ -332,14 +309,18 @@ internal class MapBuilder : IMapBuilder, ILogSubject
         private IMapConfiguration? _configuration;
 
         /// <summary>
-        /// The lazy-initialized mapping function
+        /// The lazy-initialized mapping function. Marked <c>volatile</c> so the lock-free fast-path
+        /// reads in <see cref="HasMapping"/> / <see cref="Mapping"/> acquire the publication fence
+        /// paired with the release fence performed by <see cref="SetMapping"/> under <see cref="MappingLock"/>.
         /// </summary>
-        private Lazy<Mapping>? _mapping;
+        private volatile Lazy<Mapping>? _mapping;
 
         /// <summary>
-        /// The compiled mapping delegate
+        /// The compiled mapping delegate. Marked <c>volatile</c> so the lock-free fast-path reads in
+        /// <see cref="HasMap"/> / <see cref="Map"/> acquire the publication fence paired with the
+        /// release fence performed by <see cref="SetMap"/> under <see cref="MapLock"/>.
         /// </summary>
-        private Delegate? _map;
+        private volatile Delegate? _map;
 
         private Entry() { }
 

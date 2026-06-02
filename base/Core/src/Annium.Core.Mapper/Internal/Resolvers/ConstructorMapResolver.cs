@@ -8,21 +8,14 @@ namespace Annium.Core.Mapper.Internal.Resolvers;
 /// <summary>
 /// Map resolver that creates mappings using constructor parameters for types without default constructors
 /// </summary>
-internal class ConstructorMapResolver : IMapResolver
+internal class ConstructorMapResolver : RepackerMapResolverBase, IMapResolver
 {
-    /// <summary>
-    /// The expression repacker for repackaging expressions
-    /// </summary>
-    private readonly IRepacker _repacker;
-
     /// <summary>
     /// Initializes a new instance of the ConstructorMapResolver class
     /// </summary>
     /// <param name="repacker">The expression repacker</param>
     public ConstructorMapResolver(IRepacker repacker)
-    {
-        _repacker = repacker;
-    }
+        : base(repacker) { }
 
     /// <summary>
     /// Determines whether this resolver can create a mapping between the specified source and target types
@@ -30,13 +23,8 @@ internal class ConstructorMapResolver : IMapResolver
     /// <param name="src">The source type</param>
     /// <param name="tgt">The target type</param>
     /// <returns>True if the target type has no default constructor and is not enum, abstract, or interface, otherwise false</returns>
-    public bool CanResolveMap(Type src, Type tgt)
-    {
-        if (tgt.IsEnum || tgt.IsAbstract || tgt.IsInterface)
-            return false;
-
-        return tgt.GetConstructor(Type.EmptyTypes) is null;
-    }
+    public bool CanResolveMap(Type src, Type tgt) =>
+        tgt.IsInstantiableTarget() && tgt.GetConstructor(Type.EmptyTypes) is null;
 
     /// <summary>
     /// Resolves and creates a mapping between the specified source and target types using constructor parameters
@@ -60,36 +48,7 @@ internal class ConstructorMapResolver : IMapResolver
 
             var variables = new List<ParameterExpression>();
             var mappedMemberVars = new Dictionary<string, ParameterExpression>();
-            foreach (var group in cfg.MemberMaps.GroupBy(x => x.Value))
-            {
-                var map = group.Key(ctx.MapContext.Value);
-                var members = group.Select(x => x.Key).ToArray();
-
-                if (members.Length == 1)
-                {
-                    var member = members.Single();
-                    var memberVar = Expression.Variable(member.PropertyType);
-                    variables.Add(memberVar);
-                    body.Add(Expression.Assign(memberVar, _repacker.Repack(map.Body)(source)));
-                    mappedMemberVars[member.Name.ToLowerInvariant()] = memberVar;
-                }
-                else
-                {
-                    var resultVar = Expression.Variable(map.Body.Type);
-                    variables.Add(resultVar);
-                    body.Add(Expression.Assign(resultVar, _repacker.Repack(map.Body)(source)));
-
-                    foreach (var member in members)
-                    {
-                        var memberVar = Expression.Variable(member.PropertyType);
-                        variables.Add(memberVar);
-                        body.Add(
-                            Expression.Assign(memberVar, Expression.Property(resultVar, map.Body.Type, member.Name))
-                        );
-                        mappedMemberVars[member.Name.ToLowerInvariant()] = memberVar;
-                    }
-                }
-            }
+            HelperExtensions.AppendMemberMapVariables(cfg, ctx, Repacker, source, variables, body, mappedMemberVars);
 
             // map parameters to their value evaluation expressions
             var ignoredMembers = cfg.IgnoredMembers.Select(x => x.Name.ToLowerInvariant()).ToArray();
@@ -97,6 +56,7 @@ internal class ConstructorMapResolver : IMapResolver
             var values = parameters
                 .Select(param =>
                 {
+                    // ParameterInfo.Name is null only for return-value parameters; constructor parameters always have names
                     var paramName = param.Name!.ToLowerInvariant();
 
                     // if respective property is ignored - use default value for parameter
@@ -121,25 +81,14 @@ internal class ConstructorMapResolver : IMapResolver
 
             var instance = Expression.New(constructor, values);
 
-            // if src is struct - things are simpler, no null-checking
-            if (src.IsValueType)
-                return Expression.Block(variables, body.Concat(new[] { instance }));
-
-            // define labeled return expression, that will express early return null-checking statement
-            var returnTarget = Expression.Label(tgt);
-            var defaultValue = Expression.Default(tgt);
-            var returnExpression = Expression.Return(returnTarget, defaultValue, tgt);
-            var returnLabel = Expression.Label(returnTarget, defaultValue);
-
-            var nullCheck = Expression.IfThen(Expression.Equal(source, Expression.Default(src)), returnExpression);
-
-            var result = Expression.Return(returnTarget, instance, tgt);
-
-            return Expression.Block(
+            return HelperExtensions.BuildResolvedBlock(
+                src,
+                tgt,
+                source,
                 variables,
-                new Expression[] { nullCheck }
-                    .Concat(body)
-                    .Concat(new Expression[] { result, returnLabel })
+                Array.Empty<Expression>(),
+                body,
+                instance
             );
         };
 }

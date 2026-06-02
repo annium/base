@@ -74,7 +74,9 @@ public class BaseTest : TestBase
         var result = mapper.Map<E>(value);
 
         // assert
-        result.Inner!.Name.Is(value.Inner!.Name);
+        result.Inner.IsNotDefault();
+        value.Inner.IsNotDefault();
+        result.Inner.NotNull().Name.Is(value.Inner.NotNull().Name);
         result.Value.Is(value.Value);
     }
 
@@ -87,6 +89,7 @@ public class BaseTest : TestBase
     {
         var mapper = Get<IMapper>();
 
+        // intentionally null — exercising the ArgumentNullException guard on each overload
         Wrap.It(() => mapper.Map<A>(null!)).Throws<ArgumentNullException>();
         Wrap.It(() => mapper.Map(null!, typeof(A))).Throws<ArgumentNullException>();
     }

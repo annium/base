@@ -24,18 +24,18 @@ public interface IMapper
     bool HasMap(object? source, Type? type);
 
     /// <summary>
-    /// Maps a source object to the specified destination type
+    /// Maps a source object to the specified destination type.
     /// </summary>
-    /// <typeparam name="T">The destination type</typeparam>
-    /// <param name="source">The source object to map</param>
-    /// <returns>The mapped object of type T</returns>
-    T Map<T>(object? source);
+    /// <typeparam name="T">The destination type.</typeparam>
+    /// <param name="source">The source object to map. Must be non-null.</param>
+    /// <returns>The mapped object of type T.</returns>
+    T Map<T>(object source);
 
     /// <summary>
-    /// Maps a source object to the specified destination type
+    /// Maps a source object to the specified destination type.
     /// </summary>
-    /// <param name="source">The source object to map</param>
-    /// <param name="type">The destination type</param>
-    /// <returns>The mapped object of the specified type</returns>
-    object? Map(object? source, Type type);
+    /// <param name="source">The source object to map. Must be non-null.</param>
+    /// <param name="type">The destination type.</param>
+    /// <returns>The mapped object of the specified type.</returns>
+    object Map(object source, Type type);
 }

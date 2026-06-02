@@ -200,6 +200,84 @@ public class EnumerableMapResolverTest : TestBase
     }
 
     /// <summary>
+    /// Tests that mapping an array to <see cref="IList{T}"/> produces a populated <see cref="List{T}"/>.
+    /// </summary>
+    [Fact]
+    public void ToIList_Works()
+    {
+        // arrange
+        var mapper = Get<IMapper>();
+        var value = new[] { new A { Name = "name" } };
+
+        // act
+        var result = mapper.Map<IList<B>>(value);
+
+        // assert
+        result.Has(1);
+        result.At(0).Name.Is(value[0].Name);
+        result.As<List<B>>(); // EnumerableMapResolver resolves IList<T> → concrete List<T>
+    }
+
+    /// <summary>
+    /// Tests that mapping an array to <see cref="IReadOnlyList{T}"/> produces a populated <see cref="List{T}"/>.
+    /// </summary>
+    [Fact]
+    public void ToIReadOnlyList_Works()
+    {
+        // arrange
+        var mapper = Get<IMapper>();
+        var value = new[] { new A { Name = "name" } };
+
+        // act
+        var result = mapper.Map<IReadOnlyList<B>>(value);
+
+        // assert
+        result.Has(1);
+        result.At(0).Name.Is(value[0].Name);
+        result.As<List<B>>(); // EnumerableMapResolver resolves IReadOnlyList<T> → concrete List<T>
+    }
+
+    /// <summary>
+    /// Tests that mapping an array to <see cref="ICollection{T}"/> produces a populated array
+    /// (EnumerableMapResolver resolves ICollection&lt;T&gt; → T[]).
+    /// </summary>
+    [Fact]
+    public void ToICollection_Works()
+    {
+        // arrange
+        var mapper = Get<IMapper>();
+        var value = new[] { new A { Name = "name" } };
+
+        // act
+        var result = mapper.Map<ICollection<B>>(value);
+
+        // assert
+        result.Has(1);
+        result.At(0).Name.Is(value[0].Name);
+        result.As<B[]>(); // EnumerableMapResolver resolves ICollection<T> → concrete T[]
+    }
+
+    /// <summary>
+    /// Tests that mapping an array to <see cref="IReadOnlyCollection{T}"/> produces a populated array
+    /// (EnumerableMapResolver resolves IReadOnlyCollection&lt;T&gt; → T[]).
+    /// </summary>
+    [Fact]
+    public void ToIReadOnlyCollection_Works()
+    {
+        // arrange
+        var mapper = Get<IMapper>();
+        var value = new[] { new A { Name = "name" } };
+
+        // act
+        var result = mapper.Map<IReadOnlyCollection<B>>(value);
+
+        // assert
+        result.Has(1);
+        result.At(0).Name.Is(value[0].Name);
+        result.As<B[]>(); // EnumerableMapResolver resolves IReadOnlyCollection<T> → concrete T[]
+    }
+
+    /// <summary>
     /// Source class with a Name property.
     /// </summary>
     private class A

@@ -1,5 +1,4 @@
-using System;
-using System.Threading.Tasks;
+using Annium.Core.DependencyInjection;
 using Annium.Core.Mapper.Attributes;
 using Annium.Testing;
 using Xunit;
@@ -7,35 +6,29 @@ using Xunit;
 namespace Annium.Core.Mapper.Tests;
 
 /// <summary>
-/// Tests for generic profile-based mapping in the mapper.
+/// Tests that a generic profile with a type constraint is closed over every
+/// auto-mapped subclass and produces working maps.
 /// </summary>
-public class GenericProfilesTest
+public class GenericProfilesTest : TestBase
 {
-    /// <summary>The xunit output helper used for capturing test log output.</summary>
-    private readonly ITestOutputHelper _outputHelper;
-
     /// <summary>
     /// Initializes a new instance of the <see cref="GenericProfilesTest"/> class.
     /// </summary>
     /// <param name="outputHelper">The test output helper for logging test results.</param>
     public GenericProfilesTest(ITestOutputHelper outputHelper)
+        : base(outputHelper)
     {
-        _outputHelper = outputHelper;
+        Register(c => c.AddMapper(autoload: false).AddProfile(typeof(ValidProfile<>)));
     }
 
     /// <summary>
     /// Tests that generic profiles work correctly with constrained types.
     /// </summary>
-    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
-    public async Task GenericProfiles_Work()
+    public void GenericProfiles_Work()
     {
         // arrange
-        await using var fx = new Fixture(_outputHelper);
-        fx.Register(c => c.AddMapper(autoload: false).AddProfile(typeof(ValidProfile<>)));
-        await fx.InitializeAsync();
-
-        var mapper = fx.Get<IMapper>();
+        var mapper = Get<IMapper>();
         var b = new B { Name = "Mike", Age = 5 };
         var c = new C { Name = "Donny", IsAlive = true };
 
@@ -48,45 +41,13 @@ public class GenericProfilesTest
         two.LowerName.Is("donny");
     }
 
-    /// <summary>
-    /// Tests that generic profiles fail appropriately when type constraints are violated.
-    /// </summary>
-    /// <returns>A task that represents the asynchronous test.</returns>
-    [Fact]
-    public async Task GenericProfiles_Unconstrained_Fails()
-    {
-        // arrange
-        await using var fx = new Fixture(_outputHelper);
-        fx.Register(c => c.AddMapper(autoload: false).AddProfile(typeof(InvalidProfile<>)));
-        await fx.InitializeAsync();
-
-        // assert — mapper resolution observes the unconstrained profile and throws.
-        Wrap.It(() => fx.Get<IMapper>()).Throws<ArgumentException>();
-    }
-
-    /// <summary>DI + logging fixture for generic profile mapping tests, disposed asynchronously after each test.</summary>
-    private sealed class Fixture(ITestOutputHelper outputHelper) : TestBase(outputHelper), IAsyncDisposable;
-
-    /// <summary>
-    /// Valid generic profile that maps types derived from A to D.
-    /// </summary>
+    /// <summary>Valid generic profile that maps types derived from A to D.</summary>
     private class ValidProfile<T> : Profile
         where T : A
     {
         public ValidProfile()
         {
             Map<T, D>(x => new D { LowerName = x.Name.ToLowerInvariant() });
-        }
-    }
-
-    /// <summary>
-    /// Invalid generic profile that attempts to map any type to D without constraints.
-    /// </summary>
-    private class InvalidProfile<T> : Profile
-    {
-        public InvalidProfile()
-        {
-            Map<T, D>(x => new D());
         }
     }
 

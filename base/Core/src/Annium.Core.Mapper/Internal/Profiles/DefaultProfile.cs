@@ -12,7 +12,7 @@ internal class DefaultProfile : Profile
     /// <summary>
     /// Initializes a new instance of the DefaultProfile class
     /// </summary>
-    public DefaultProfile()
+    internal DefaultProfile()
     {
         RegisterString();
         RegisterByte();
@@ -55,23 +55,23 @@ internal class DefaultProfile : Profile
         Map<string, TimeOnly>(x => TimeOnly.Parse(x, InvariantCulture));
 
         // to
-        Map<bool, string>(x => x.ToString(CurrentUICulture));
-        Map<int, string>(x => x.ToString(CurrentUICulture));
-        Map<uint, string>(x => x.ToString(CurrentUICulture));
-        Map<long, string>(x => x.ToString(CurrentUICulture));
-        Map<ulong, string>(x => x.ToString(CurrentUICulture));
-        Map<float, string>(x => x.ToString(CurrentUICulture));
-        Map<double, string>(x => x.ToString(CurrentUICulture));
-        Map<decimal, string>(x => x.ToString(CurrentUICulture));
+        Map<bool, string>(x => x.ToString(InvariantCulture));
+        Map<int, string>(x => x.ToString(InvariantCulture));
+        Map<uint, string>(x => x.ToString(InvariantCulture));
+        Map<long, string>(x => x.ToString(InvariantCulture));
+        Map<ulong, string>(x => x.ToString(InvariantCulture));
+        Map<float, string>(x => x.ToString(InvariantCulture));
+        Map<double, string>(x => x.ToString(InvariantCulture));
+        Map<decimal, string>(x => x.ToString(InvariantCulture));
         // generic, commonly used types
         Map<Guid, string>(x => x.ToString());
         Map<Uri, string>(x => x.ToString());
         // date/time built-in types
-        Map<DateTime, string>(x => x.ToString(CurrentUICulture));
-        Map<DateTimeOffset, string>(x => x.ToString(CurrentUICulture));
-        Map<DateOnly, string>(x => x.ToString(CurrentUICulture));
+        Map<DateTime, string>(x => x.ToString(InvariantCulture));
+        Map<DateTimeOffset, string>(x => x.ToString(InvariantCulture));
+        Map<DateOnly, string>(x => x.ToString(InvariantCulture));
         Map<TimeSpan, string>(x => x.ToString());
-        Map<TimeOnly, string>(x => x.ToString(CurrentUICulture));
+        Map<TimeOnly, string>(x => x.ToString(InvariantCulture));
     }
 
     /// <summary>
@@ -466,7 +466,8 @@ internal class DefaultProfile : Profile
         // to noda time
 
         // from string
-        // TODO: it's unexpected that Instant is parsed from milliseconds string
+        // Note: this Instant mapping intentionally accepts a Unix-millisecond numeric string; callers
+        // needing ISO-8601 should use InstantPattern directly. Kept narrow to avoid format ambiguity.
         Map<string, Instant>(x => Instant.FromUnixTimeMilliseconds(long.Parse(x, InvariantCulture)));
         Map<string, Duration>(x => Duration.FromTimeSpan(TimeSpan.Parse(x, InvariantCulture)));
         Map<string, IsoDayOfWeek>(x => x.ParseEnum<IsoDayOfWeek>());

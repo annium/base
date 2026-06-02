@@ -8,9 +8,14 @@ namespace Annium.Core.Mapper.Internal;
 internal class MapResolverContext : IMapResolverContext
 {
     /// <summary>
-    /// Gets the lazy-initialized map context
+    /// Gets the map context, forcing the deferred construction on first access.
     /// </summary>
-    public Lazy<IMapContext> MapContext { get; }
+    public IMapContext MapContext => _mapContext.Value;
+
+    /// <summary>
+    /// The lazy-initialized map context. Deferred to close the circular dependency back onto IMapper.
+    /// </summary>
+    private readonly Lazy<IMapContext> _mapContext;
 
     /// <summary>
     /// Function to get mapping delegates
@@ -28,13 +33,13 @@ internal class MapResolverContext : IMapResolverContext
     /// <param name="getMap">Function to get mapping delegates</param>
     /// <param name="resolveMapping">Function to resolve mappings</param>
     /// <param name="mapContext">The lazy-initialized map context</param>
-    public MapResolverContext(
+    internal MapResolverContext(
         Func<Type, Type, Delegate> getMap,
         Func<Type, Type, Mapping> resolveMapping,
         Lazy<IMapContext> mapContext
     )
     {
-        MapContext = mapContext;
+        _mapContext = mapContext;
         _getMap = getMap;
         _resolveMapping = resolveMapping;
     }
