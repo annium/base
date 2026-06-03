@@ -184,13 +184,13 @@ public class HasMapNullAndInstanceOfTest : TestBase
 /// Verifies that calling <c>With()</c> twice on the same <c>IMapConfigurationBuilder</c>
 /// throws <see cref="InvalidOperationException"/> immediately (at profile construction time).
 /// </summary>
-public class MapConfigurationBuilder_DoubleWith_ThrowsTest : TestBase
+public class MapConfigurationBuilderDoubleWithThrowsTest : TestBase
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="MapConfigurationBuilder_DoubleWith_ThrowsTest"/> class.
+    /// Initializes a new instance of the <see cref="MapConfigurationBuilderDoubleWithThrowsTest"/> class.
     /// </summary>
     /// <param name="outputHelper">The test output helper for logging test results.</param>
-    public MapConfigurationBuilder_DoubleWith_ThrowsTest(ITestOutputHelper outputHelper)
+    public MapConfigurationBuilderDoubleWithThrowsTest(ITestOutputHelper outputHelper)
         : base(outputHelper)
     {
         Register(c => c.AddMapper(autoload: false));
@@ -241,13 +241,13 @@ public class MapConfigurationBuilder_DoubleWith_ThrowsTest : TestBase
 /// and matching properties) but for which NO profile has registered an explicit configuration.
 /// HasMap probes HasConfiguration, not HasMapping, so resolver-buildable pairs are NOT counted.
 /// </summary>
-public class HasMap_ResolverBuildableButNoConfiguration_Test : TestBase
+public class HasMapResolverBuildableButNoConfigurationTest : TestBase
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="HasMap_ResolverBuildableButNoConfiguration_Test"/> class.
+    /// Initializes a new instance of the <see cref="HasMapResolverBuildableButNoConfigurationTest"/> class.
     /// </summary>
     /// <param name="outputHelper">The test output helper.</param>
-    public HasMap_ResolverBuildableButNoConfiguration_Test(ITestOutputHelper outputHelper)
+    public HasMapResolverBuildableButNoConfigurationTest(ITestOutputHelper outputHelper)
         : base(outputHelper)
     {
         // No AddProfile — Source→Target has NO registered configuration.

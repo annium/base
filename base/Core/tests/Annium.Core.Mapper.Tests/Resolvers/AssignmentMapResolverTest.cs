@@ -7,13 +7,13 @@ namespace Annium.Core.Mapper.Tests.Resolvers;
 /// G23: Verifies that AssignmentMapResolver handles a value-type (struct) source correctly,
 /// exercising the <c>if (src.IsValueType)</c> branch in <c>BuildResolvedBlock</c>.
 /// </summary>
-public class AssignmentMapResolver_StructSource_WorksTest : TestBase
+public class AssignmentMapResolverStructSourceWorksTest : TestBase
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="AssignmentMapResolver_StructSource_WorksTest"/> class.
+    /// Initializes a new instance of the <see cref="AssignmentMapResolverStructSourceWorksTest"/> class.
     /// </summary>
     /// <param name="outputHelper">The test output helper.</param>
-    public AssignmentMapResolver_StructSource_WorksTest(ITestOutputHelper outputHelper)
+    public AssignmentMapResolverStructSourceWorksTest(ITestOutputHelper outputHelper)
         : base(outputHelper)
     {
         Register(c => c.AddMapper(autoload: false));
@@ -64,13 +64,13 @@ public class AssignmentMapResolver_StructSource_WorksTest : TestBase
 /// Verifies that <c>AssignmentMapResolver</c> throws <see cref="MappingException"/>
 /// when the target type has a writable property that has no matching property on the source type.
 /// </summary>
-public class AssignmentMapResolver_MissingSourceProperty_ThrowsTest : TestBase
+public class AssignmentMapResolverMissingSourcePropertyThrowsTest : TestBase
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="AssignmentMapResolver_MissingSourceProperty_ThrowsTest"/> class.
+    /// Initializes a new instance of the <see cref="AssignmentMapResolverMissingSourcePropertyThrowsTest"/> class.
     /// </summary>
     /// <param name="outputHelper">The test output helper for logging test results.</param>
-    public AssignmentMapResolver_MissingSourceProperty_ThrowsTest(ITestOutputHelper outputHelper)
+    public AssignmentMapResolverMissingSourcePropertyThrowsTest(ITestOutputHelper outputHelper)
         : base(outputHelper)
     {
         Register(c => c.AddMapper(autoload: false));

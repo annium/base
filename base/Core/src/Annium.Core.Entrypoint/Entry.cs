@@ -12,8 +12,8 @@ namespace Annium.Core.Entrypoint;
 public readonly record struct Entry(
     IServiceProvider Provider,
     CancellationToken Ct,
-    ManualResetEventSlim _gate,
-    Action _cleanup
+    ManualResetEventSlim Gate,
+    Action Cleanup
 ) : ILogSubject, IAsyncDisposable
 {
     /// <summary>
@@ -47,11 +47,11 @@ public readonly record struct Entry(
 
         this.Trace("set gate");
 
-        _gate.Set();
+        Gate.Set();
 
         this.Trace("unsubscribe handlers");
 
-        _cleanup();
+        Cleanup();
 
         this.Trace("done");
     }

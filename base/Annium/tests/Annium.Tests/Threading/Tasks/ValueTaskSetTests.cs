@@ -20,7 +20,7 @@ public class ValueTaskSetTests
     [Fact]
     public async Task WhenAll_T_AllSucceed_ReturnsResults()
     {
-        var tasks = new List<ValueTask<int>> { VT(1), VT(2), VT(3) };
+        var tasks = new List<ValueTask<int>> { Vt(1), Vt(2), Vt(3) };
 
         var result = await ValueTaskSet.WhenAll(tasks);
 
@@ -38,7 +38,7 @@ public class ValueTaskSetTests
     [Fact]
     public async Task WhenAll_T_OneFaults_ThrowsAggregateException()
     {
-        var tasks = new List<ValueTask<int>> { VT(1), VTFault<int>(new InvalidOperationException("boom")), VT(3) };
+        var tasks = new List<ValueTask<int>> { Vt(1), VtFault<int>(new InvalidOperationException("boom")), Vt(3) };
 
         var ex = await Wrap.It(async () => await ValueTaskSet.WhenAll(tasks)).ThrowsAsync<AggregateException>();
         ex.InnerExceptions.Count.Is(1);
@@ -54,9 +54,9 @@ public class ValueTaskSetTests
     {
         var tasks = new List<ValueTask<int>>
         {
-            VTFault<int>(new InvalidOperationException("a")),
-            VT(2),
-            VTFault<int>(new ArgumentException("b")),
+            VtFault<int>(new InvalidOperationException("a")),
+            Vt(2),
+            VtFault<int>(new ArgumentException("b")),
         };
 
         var ex = await Wrap.It(async () => await ValueTaskSet.WhenAll(tasks)).ThrowsAsync<AggregateException>();
@@ -72,7 +72,7 @@ public class ValueTaskSetTests
     [Fact]
     public async Task WhenAll_NoResult_OneFaults_Throws()
     {
-        var tasks = new List<ValueTask> { VT(), VTFault(new InvalidOperationException("nope")), VT() };
+        var tasks = new List<ValueTask> { Vt(), VtFault(new InvalidOperationException("nope")), Vt() };
 
         var ex = await Wrap.It(async () => await ValueTaskSet.WhenAll(tasks)).ThrowsAsync<AggregateException>();
         ex.InnerExceptions.Count.Is(1);
@@ -97,13 +97,13 @@ public class ValueTaskSetTests
     /// <typeparam name="T">The type of the value.</typeparam>
     /// <param name="value">The value to wrap.</param>
     /// <returns>A completed ValueTask containing the value.</returns>
-    private static ValueTask<T> VT<T>(T value) => new(value);
+    private static ValueTask<T> Vt<T>(T value) => new(value);
 
     /// <summary>
     /// Creates a completed (non-result) ValueTask.
     /// </summary>
     /// <returns>A completed ValueTask.</returns>
-    private static ValueTask VT() => ValueTask.CompletedTask;
+    private static ValueTask Vt() => ValueTask.CompletedTask;
 
     /// <summary>
     /// Creates a ValueTask&lt;T&gt; that immediately faults with the given exception.
@@ -111,12 +111,12 @@ public class ValueTaskSetTests
     /// <typeparam name="T">The result type.</typeparam>
     /// <param name="ex">The exception to fault with.</param>
     /// <returns>A faulted ValueTask.</returns>
-    private static ValueTask<T> VTFault<T>(Exception ex) => new(Task.FromException<T>(ex));
+    private static ValueTask<T> VtFault<T>(Exception ex) => new(Task.FromException<T>(ex));
 
     /// <summary>
     /// Creates a ValueTask that immediately faults with the given exception.
     /// </summary>
     /// <param name="ex">The exception to fault with.</param>
     /// <returns>A faulted ValueTask.</returns>
-    private static ValueTask VTFault(Exception ex) => new(Task.FromException(ex));
+    private static ValueTask VtFault(Exception ex) => new(Task.FromException(ex));
 }

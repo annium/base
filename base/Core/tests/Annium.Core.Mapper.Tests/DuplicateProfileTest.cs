@@ -8,13 +8,13 @@ namespace Annium.Core.Mapper.Tests;
 /// last-wins semantics — the second <c>.With(...)</c> replaces the first registration because
 /// <c>Profile.Map&lt;TS,TD&gt;()</c> always writes a fresh builder into the dictionary.
 /// </summary>
-public class SingleProfile_LastWins_Test : TestBase
+public class SingleProfileLastWinsTest : TestBase
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="SingleProfile_LastWins_Test"/> class.
+    /// Initializes a new instance of the <see cref="SingleProfileLastWinsTest"/> class.
     /// </summary>
     /// <param name="outputHelper">The test output helper.</param>
-    public SingleProfile_LastWins_Test(ITestOutputHelper outputHelper)
+    public SingleProfileLastWinsTest(ITestOutputHelper outputHelper)
         : base(outputHelper)
     {
         Register(c => c.AddMapper(autoload: false).AddProfile<TwoRegistrationsProfile>());
