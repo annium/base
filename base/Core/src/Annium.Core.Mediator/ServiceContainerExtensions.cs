@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Annium.Core.DependencyInjection;
 using Annium.Core.Mediator.Internal;
 using Annium.Core.Runtime;
@@ -55,7 +56,7 @@ public static class ServiceContainerExtensions
     {
         container.Add<ChainBuilder>().AsSelf().Singleton();
         container.Add<NextBuilder>().AsSelf().Singleton();
-        container.Add<IMediator, Internal.Mediator>().AsSelf().Singleton();
+        container.Add<IMediator, Internal.Mediator>().Singleton();
 
         return container;
     }
@@ -72,8 +73,8 @@ public static class ServiceContainerExtensions
     )
     {
         container.Add(cfg).AsSelf().Singleton();
-        foreach (var handler in cfg.Handlers)
-            container.Add(handler.Implementation).AsSelf().Scoped();
+        foreach (var implementation in cfg.Handlers.Select(h => h.Implementation).Distinct())
+            container.Add(implementation).AsSelf().Scoped();
 
         return container;
     }

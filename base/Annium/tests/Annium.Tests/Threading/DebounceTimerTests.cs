@@ -43,7 +43,10 @@ public class DebounceTimerTests : TestBase
 
                 return ValueTask.CompletedTask;
             },
-            20,
+            // Debounce period (80ms) deliberately dominates the worst-case inter-chunk Task.Delay jitter
+            // (Task.Delay(1) can stretch to ~15ms under load); the three chunks therefore coalesce into a
+            // single fire per bulk regardless of scheduler jitter, keeping the fire count deterministic.
+            80,
             Logger
         );
 
@@ -59,8 +62,10 @@ public class DebounceTimerTests : TestBase
                 this.Trace("chunk delay");
                 await Task.Delay(1, TestContext.Current.CancellationToken);
             }
+            // Idle longer than the debounce period so the single coalesced fire lands within this bulk's
+            // window, before the next bulk's requests re-arm the timer.
             this.Trace("bulk delay");
-            await Task.Delay(50, TestContext.Current.CancellationToken);
+            await Task.Delay(200, TestContext.Current.CancellationToken);
         }
 
         // assert
@@ -90,7 +95,10 @@ public class DebounceTimerTests : TestBase
 
                 return ValueTask.CompletedTask;
             },
-            20,
+            // Debounce period (80ms) deliberately dominates the worst-case inter-chunk Task.Delay jitter
+            // (Task.Delay(1) can stretch to ~15ms under load); the three chunks therefore coalesce into a
+            // single fire per bulk regardless of scheduler jitter, keeping the fire count deterministic.
+            80,
             Logger
         );
 
@@ -106,8 +114,10 @@ public class DebounceTimerTests : TestBase
                 this.Trace("chunk delay");
                 await Task.Delay(1, TestContext.Current.CancellationToken);
             }
+            // Idle longer than the debounce period so the single coalesced fire lands within this bulk's
+            // window, before the next bulk's requests re-arm the timer.
             this.Trace("bulk delay");
-            await Task.Delay(50, TestContext.Current.CancellationToken);
+            await Task.Delay(200, TestContext.Current.CancellationToken);
         }
 
         // assert

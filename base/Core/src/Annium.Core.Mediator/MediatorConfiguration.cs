@@ -18,31 +18,52 @@ public class MediatorConfiguration
     /// <returns>Merged configuration containing all handlers and matches</returns>
     internal static MediatorConfiguration Merge(params MediatorConfiguration[] configurations)
     {
-        return new(
-            configurations.SelectMany(c => c.Handlers).ToList(),
-            configurations.SelectMany(c => c.Matches).ToList()
-        );
+        var handlers = configurations.SelectMany(c => c.Handlers).ToList();
+
+        // AddMatch dedups/ambiguity-checks matches within a single config; the same must hold across
+        // merged configs, otherwise duplicate (RequestedType, ExpectedType) entries make ChainBuilder's
+        // SingleOrDefault throw a cryptic "Sequence contains more than one element".
+        var matches = new List<Match>();
+        foreach (var match in configurations.SelectMany(c => c.Matches))
+        {
+            var existing = matches.FirstOrDefault(x =>
+                x.RequestedType == match.RequestedType && x.ExpectedType == match.ExpectedType
+            );
+            if (existing is null)
+            {
+                matches.Add(match);
+                continue;
+            }
+
+            if (existing.ResolvedType != match.ResolvedType)
+                throw new InvalidOperationException(
+                    $"Match {match} conflicts with {existing}: the same requested/expected type pair resolves to different types across configurations"
+                );
+            // identical match registered in another configuration — skip the duplicate
+        }
+
+        return new(handlers, matches);
     }
 
     /// <summary>
     /// Collection of registered request handlers
     /// </summary>
-    internal IEnumerable<Handler> Handlers => _handlers;
+    internal IReadOnlyList<Handler> Handlers => _handlers;
 
     /// <summary>
     /// Collection of registered type matches
     /// </summary>
-    internal IEnumerable<Match> Matches => _matches;
+    internal IReadOnlyList<Match> Matches => _matches;
 
     /// <summary>
     /// Internal storage for request handlers
     /// </summary>
-    private readonly IList<Handler> _handlers;
+    private readonly List<Handler> _handlers;
 
     /// <summary>
     /// Internal storage for type matches
     /// </summary>
-    private readonly IList<Match> _matches;
+    private readonly List<Match> _matches;
 
     /// <summary>
     /// Initializes a new empty mediator configuration
@@ -55,7 +76,7 @@ public class MediatorConfiguration
     /// </summary>
     /// <param name="handlers">List of request handlers</param>
     /// <param name="matches">List of type matches</param>
-    private MediatorConfiguration(IList<Handler> handlers, IList<Match> matches)
+    private MediatorConfiguration(List<Handler> handlers, List<Match> matches)
     {
         _handlers = handlers;
         _matches = matches;
@@ -104,20 +125,9 @@ public class MediatorConfiguration
     /// <returns>This configuration instance for method chaining</returns>
     public MediatorConfiguration AddMatch(Type requestType, Type expectedType, Type resolvedType)
     {
-        if (requestType.IsGenericTypeParameter || requestType.ContainsGenericParameters)
-            throw new InvalidOperationException(
-                $"Requested type {requestType.FriendlyName()} can't be registered in request/response match, because it is generic"
-            );
-
-        if (expectedType.IsGenericTypeParameter || expectedType.ContainsGenericParameters)
-            throw new InvalidOperationException(
-                $"Expected type {expectedType.FriendlyName()} can't be registered in request/response match, because it is generic"
-            );
-
-        if (resolvedType.IsGenericTypeParameter || resolvedType.ContainsGenericParameters)
-            throw new InvalidOperationException(
-                $"Resolved type {expectedType.FriendlyName()} can't be registered in request/response match, because it is generic"
-            );
+        ThrowIfGeneric(requestType, "Requested");
+        ThrowIfGeneric(expectedType, "Expected");
+        ThrowIfGeneric(resolvedType, "Resolved");
 
         if (!expectedType.IsAssignableFrom(resolvedType))
             throw new InvalidOperationException(
@@ -143,5 +153,18 @@ public class MediatorConfiguration
         }
 
         return this;
+    }
+
+    /// <summary>
+    /// Throws if the given type is an open generic (a generic type parameter or contains unbound generic parameters)
+    /// </summary>
+    /// <param name="type">Type to validate</param>
+    /// <param name="label">Role label used in the error message (e.g. "Requested", "Expected", "Resolved")</param>
+    private static void ThrowIfGeneric(Type type, string label)
+    {
+        if (type.IsGenericTypeParameter || type.ContainsGenericParameters)
+            throw new InvalidOperationException(
+                $"{label} type {type.FriendlyName()} can't be registered in request/response match, because it is generic"
+            );
     }
 }
