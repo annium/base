@@ -1,11 +1,12 @@
 using System;
+using System.Reflection;
 
 namespace Annium.Core.Mediator.Internal;
 
 /// <summary>
 /// Represents a single element in the mediator execution chain
 /// </summary>
-internal record ChainElement
+internal class ChainElement
 {
     /// <summary>
     /// Type of the handler service for this chain element
@@ -18,22 +19,21 @@ internal record ChainElement
     public Delegate? Next { get; }
 
     /// <summary>
-    /// Initializes a new chain element with a handler (final element)
+    /// Handler's HandleAsync method, resolved lazily on first dispatch and memoized. The element's
+    /// runtime parameter types are stable across requests, so resolving once (by parameter types,
+    /// which also disambiguates handlers implementing multiple handler interfaces) avoids a
+    /// reflective GetMethod lookup on every request.
     /// </summary>
-    /// <param name="handler">Type of the handler service</param>
-    public ChainElement(Type handler)
-    {
-        Handler = handler;
-    }
+    public MethodInfo? Handle { get; set; }
 
     /// <summary>
-    /// Initializes a new chain element with a handler and next delegate
+    /// Initializes a new chain element with a handler and an optional next delegate
     /// </summary>
     /// <param name="handler">Type of the handler service</param>
-    /// <param name="next">Delegate to invoke the next element in the chain</param>
-    public ChainElement(Type handler, Delegate next)
-        : this(handler)
+    /// <param name="next">Delegate to invoke the next element in the chain; null for the final element</param>
+    public ChainElement(Type handler, Delegate? next = null)
     {
+        Handler = handler;
         Next = next;
     }
 
