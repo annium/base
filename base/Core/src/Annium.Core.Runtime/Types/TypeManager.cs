@@ -26,19 +26,20 @@ public static class TypeManager
     /// Gets or creates a type manager instance for the specified assembly.
     /// </summary>
     /// <param name="assembly">The assembly to create a type manager for.</param>
-    /// <param name="logger">The logger instance to use for type manager operations.</param>
     /// <returns>A type manager instance for the specified assembly.</returns>
     /// <remarks>
     /// This method ensures that only one type manager instance exists per assembly.
+    /// Construction-time diagnostics use <see cref="VoidLogger.Instance"/>; a per-call logger
+    /// would be silently ignored on cache hits, so none is accepted.
     /// Example usage:
     /// <code>
-    /// var typeManager = TypeManager.GetInstance(typeof(Program).Assembly, logger);
+    /// var typeManager = TypeManager.GetInstance(typeof(Program).Assembly);
     /// </code>
     /// </remarks>
-    public static ITypeManager GetInstance(Assembly assembly, ILogger logger)
+    public static ITypeManager GetInstance(Assembly assembly)
     {
         var key = new CacheKey(assembly);
-        return _instances.GetOrAdd(key, k => new TypeManagerInstance(k.Assembly, logger));
+        return _instances.GetOrAdd(key, k => new TypeManagerInstance(k.Assembly, VoidLogger.Instance));
     }
 
     /// <summary>
@@ -68,11 +69,11 @@ public static class TypeManager
     private record CacheKey(Assembly Assembly)
     {
         /// <summary>
-        /// Determines whether two cache keys are equal based on their hash codes.
+        /// Determines whether two cache keys are equal based on their assembly identity.
         /// </summary>
         /// <param name="other">The other cache key to compare with.</param>
-        /// <returns>True if the hash codes are equal; otherwise, false.</returns>
-        public virtual bool Equals(CacheKey? other) => GetHashCode() == other?.GetHashCode();
+        /// <returns>True if both keys reference the same assembly; otherwise, false.</returns>
+        public virtual bool Equals(CacheKey? other) => other is not null && Assembly == other.Assembly;
 
         /// <summary>
         /// Gets the hash code for this cache key.

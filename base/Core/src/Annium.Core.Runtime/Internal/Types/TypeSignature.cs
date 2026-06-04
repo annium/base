@@ -14,8 +14,7 @@ internal sealed class TypeSignature : IEquatable<TypeSignature>
     /// </summary>
     /// <param name="instance">The object instance to create signature from</param>
     /// <returns>A TypeSignature based on the instance's type</returns>
-    public static TypeSignature Create(object instance) =>
-        Create(instance.GetType() ?? throw new ArgumentNullException(nameof(instance)));
+    public static TypeSignature Create(object instance) => Create(instance.GetType());
 
     /// <summary>
     /// Creates a TypeSignature from a Type
@@ -76,16 +75,6 @@ internal sealed class TypeSignature : IEquatable<TypeSignature>
         var matches = target._signature.Count(_signature.Contains);
 
         return matches * 100 - Size;
-
-        // // if target signature contains any different items - no match
-        // if (target._signature.Any(x => !_signature.Contains(x)))
-        //     return 0;
-        //
-        // // get number of target signature's item, this signature contains
-        // double matches = target._signature.Count(_signature.Contains);
-        //
-        // // return percentage relative to signature size - second layer of matching
-        // return (int) Math.Floor(matches / Size);
     }
 
     /// <summary>
@@ -93,7 +82,7 @@ internal sealed class TypeSignature : IEquatable<TypeSignature>
     /// </summary>
     /// <param name="obj">The other TypeSignature to compare with</param>
     /// <returns>True if the signatures are equal; otherwise, false</returns>
-    public bool Equals(TypeSignature? obj) => GetHashCode() == obj?.GetHashCode();
+    public bool Equals(TypeSignature? obj) => obj is not null && _signature.SequenceEqual(obj._signature);
 
     /// <summary>
     /// Determines whether this TypeSignature equals another object
@@ -106,7 +95,13 @@ internal sealed class TypeSignature : IEquatable<TypeSignature>
     /// Gets the hash code for this TypeSignature
     /// </summary>
     /// <returns>The hash code based on the signature properties</returns>
-    public override int GetHashCode() => HashCode.Combine(_signature);
+    public override int GetHashCode()
+    {
+        var hash = new HashCode();
+        foreach (var item in _signature)
+            hash.Add(item);
+        return hash.ToHashCode();
+    }
 
     /// <summary>
     /// Returns the string representation of this TypeSignature

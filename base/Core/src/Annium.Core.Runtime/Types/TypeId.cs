@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Annium.Core.Runtime.Internal.Types;
 
@@ -50,7 +51,7 @@ public abstract record TypeId
         if (baseId is null)
             return null;
 
-        var rawArgs = id.Substring(laIndex + 1, raIndex - laIndex - 1).Split(',');
+        var rawArgs = SplitGenericArgs(id.Substring(laIndex + 1, raIndex - laIndex - 1));
         var args = rawArgs.Select(x => TryParse(x, tm)).ToArray();
         if (args.Any(x => x is null))
             return null;
@@ -58,6 +59,37 @@ public abstract record TypeId
         var type = baseId.Type.MakeGenericType(args.Select(x => x!.Type).ToArray());
 
         return Create(type);
+    }
+
+    /// <summary>
+    /// Splits a generic argument ID list on top-level commas only, keeping nested generic
+    /// arguments (whose own argument lists contain commas inside angle brackets) intact.
+    /// </summary>
+    /// <param name="args">The raw argument substring between the outermost angle brackets</param>
+    /// <returns>The top-level argument ID strings</returns>
+    private static string[] SplitGenericArgs(string args)
+    {
+        var result = new List<string>();
+        var depth = 0;
+        var start = 0;
+        for (var i = 0; i < args.Length; i++)
+            switch (args[i])
+            {
+                case '<':
+                    depth++;
+                    break;
+                case '>':
+                    depth--;
+                    break;
+                case ',' when depth == 0:
+                    result.Add(args[start..i]);
+                    start = i + 1;
+                    break;
+            }
+
+        result.Add(args[start..]);
+
+        return result.ToArray();
     }
 
     /// <summary>

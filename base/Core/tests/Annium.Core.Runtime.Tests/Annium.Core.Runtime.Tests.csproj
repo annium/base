@@ -8,11 +8,15 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../../../Annium/src/Annium.Testing/Annium.Testing.csproj" />
+    <ProjectReference Include="../../src/Annium.Core.Runtime/Annium.Core.Runtime.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="coverlet.collector" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="xunit.runner.visualstudio" />
     <PackageReference Include="xunit.v3" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources/Fixtures/sample.txt" />
   </ItemGroup>
 </Project>

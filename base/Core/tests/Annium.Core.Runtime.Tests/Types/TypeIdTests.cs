@@ -95,6 +95,6 @@ public class TypeIdTests : TestBase
         var tm = Get<ITypeManager>();
         var parsed = TypeId.TryParse(id.Id, tm);
         (parsed == id).IsTrue();
-        parsed!.Type.Is(type);
+        parsed.NotNull().Type.Is(type);
     }
 }

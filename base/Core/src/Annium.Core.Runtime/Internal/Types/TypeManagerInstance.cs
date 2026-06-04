@@ -168,7 +168,7 @@ internal class TypeManagerInstance : ITypeManager, ILogSubject
 
         if (GetResolutionKeyProperty(baseType) is null)
             throw new TypeResolutionException(
-                typeof(object),
+                key.GetType(),
                 baseType,
                 $"Type '{baseType}' has no {nameof(ResolutionKeyAttribute)}"
             );
@@ -176,7 +176,7 @@ internal class TypeManagerInstance : ITypeManager, ILogSubject
         var descendants = GetImplementationDescendants(baseType).Where(x => x.HasKey && key.Equals(x.Key)).ToArray();
         if (descendants.Length > 1)
             throw new TypeResolutionException(
-                typeof(object),
+                key.GetType(),
                 baseType,
                 $"Ambiguous resolution between {string.Join(", ", descendants.Select(x => x.Type.FullName))}"
             );
@@ -290,7 +290,7 @@ internal class TypeManagerInstance : ITypeManager, ILogSubject
         baseType = baseType.IsGenericType ? baseType.GetGenericTypeDefinition() : baseType;
         var node = _hierarchy.FirstOrDefault(x => x.Key.Type == baseType);
 
-        return node.Key == null! ? Array.Empty<Descendant>() : node.Value.ToArray();
+        return node.Key == null ? Array.Empty<Descendant>() : node.Value.ToArray();
     }
 
     /// <summary>
@@ -302,20 +302,21 @@ internal class TypeManagerInstance : ITypeManager, ILogSubject
     private PropertyInfo ResolveResolutionIdProperty(object instance, PropertyInfo property)
     {
         var type = instance.GetType();
+        var declaringType = property.DeclaringType.NotNull();
 
         // if instance type is hierarchy - no need to worry
-        if (property.DeclaringType!.IsAssignableFrom(type))
+        if (declaringType.IsAssignableFrom(type))
             return property;
 
         var ancestor = new Ancestor(instance.GetType());
         if (!ancestor.HasIdProperty)
             throw new TypeResolutionException(
                 type,
-                property.DeclaringType,
+                declaringType,
                 $"Source type '{type}' has no '{nameof(ResolutionIdAttribute)}'"
             );
 
-        var realProperty = ancestor.IdProperty!;
+        var realProperty = ancestor.IdProperty.NotNull();
         if (realProperty.PropertyType != typeof(string))
             throw new InvalidOperationException(
                 $"Type '{ancestor.Type}' id property '{realProperty}' must be of type '{typeof(string)}'"
@@ -324,7 +325,7 @@ internal class TypeManagerInstance : ITypeManager, ILogSubject
         if (realProperty.Name != property.Name)
             throw new TypeResolutionException(
                 type,
-                property.DeclaringType,
+                declaringType,
                 $"Source type '{type}' '{nameof(ResolutionIdAttribute)}' is assigned to property named '{realProperty.Name}'."
                     + $"Expected property name is '{property.Name}'."
             );
@@ -341,24 +342,25 @@ internal class TypeManagerInstance : ITypeManager, ILogSubject
     private PropertyInfo ResolveResolutionKeyProperty(object instance, PropertyInfo property)
     {
         var type = instance.GetType();
+        var declaringType = property.DeclaringType.NotNull();
 
         // if instance type is hierarchy - no need to worry
-        if (property.DeclaringType!.IsAssignableFrom(type))
+        if (declaringType.IsAssignableFrom(type))
             return property;
 
         var ancestor = new Ancestor(instance.GetType());
         if (!ancestor.HasKeyProperty)
             throw new TypeResolutionException(
                 type,
-                property.DeclaringType,
+                declaringType,
                 $"Source type '{type}' has no '{nameof(ResolutionKeyAttribute)}'"
             );
 
-        var realProperty = ancestor.KeyProperty!;
+        var realProperty = ancestor.KeyProperty.NotNull();
         if (realProperty.Name != property.Name)
             throw new TypeResolutionException(
                 type,
-                property.DeclaringType,
+                declaringType,
                 $"Source type '{type}' '{nameof(ResolutionKeyAttribute)}' is assigned to property named '{realProperty.Name}'."
                     + $"Expected property name is '{property.Name}'."
             );
