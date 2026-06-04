@@ -50,7 +50,7 @@ public static class ChangeEvent
 /// Represents a change event that describes modifications to table data, including initialization, item addition/update, and deletion.
 /// </summary>
 /// <typeparam name="T">The type of items affected by the change event.</typeparam>
-public readonly struct ChangeEvent<T>
+public readonly struct ChangeEvent<T> : IEquatable<ChangeEvent<T>>
     where T : notnull
 {
     /// <summary>
@@ -91,10 +91,18 @@ public readonly struct ChangeEvent<T>
     /// <summary>
     /// Initializes a new change event for a single item operation (Set or Delete).
     /// </summary>
-    /// <param name="type">The type of change event.</param>
+    /// <param name="type">The type of change event (Set or Delete).</param>
     /// <param name="item">The item affected by the change.</param>
-    public ChangeEvent(ChangeEventType type, T item)
+    internal ChangeEvent(ChangeEventType type, T item)
     {
+        // Init events carry a collection, not a single item — use ChangeEvent.Init<T>() instead.
+        // Allowing Init here would leave Items null and throw on access/ToString/Equals.
+        if (type is ChangeEventType.Init)
+            throw new ArgumentException(
+                $"Use {nameof(ChangeEvent)}.{nameof(ChangeEvent.Init)} for Init events.",
+                nameof(type)
+            );
+
         Type = type;
         Item = item;
     }
@@ -114,16 +122,30 @@ public readonly struct ChangeEvent<T>
     /// </summary>
     /// <param name="other">The other change event to compare with.</param>
     /// <returns>True if the events are equal; otherwise, false.</returns>
-    public bool Equals(ChangeEvent<T>? other)
+    public bool Equals(ChangeEvent<T> other)
     {
-        if (other is null || Type != other.Value.Type)
+        if (Type != other.Type)
             return false;
 
         if (Type is ChangeEventType.Init)
-            return Items.SequenceEqual(other.Value.Items);
+            return Items.SequenceEqual(other.Items);
 
-        return Item.Equals(other.Value.Item);
+        return Item.Equals(other.Item);
     }
+
+    /// <summary>
+    /// Determines whether this change event is equal to another object.
+    /// </summary>
+    /// <param name="obj">The object to compare with.</param>
+    /// <returns>True if the object is an equal change event; otherwise, false.</returns>
+    public override bool Equals(object? obj) => obj is ChangeEvent<T> other && Equals(other);
+
+    /// <summary>
+    /// Returns a hash code for this change event.
+    /// </summary>
+    /// <returns>A hash code consistent with <see cref="Equals(ChangeEvent{T})"/>.</returns>
+    public override int GetHashCode() =>
+        Type is ChangeEventType.Init ? HashCode.Combine(Type, Items.Count) : HashCode.Combine(Type, Item);
 
     /// <summary>
     /// Returns a string representation of this change event.

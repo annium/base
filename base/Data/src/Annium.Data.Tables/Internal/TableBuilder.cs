@@ -106,12 +106,19 @@ internal class TableBuilder<T> : ITableBuilder<T>
     /// <exception cref="InvalidOperationException">Thrown when required configuration is missing.</exception>
     public ITable<T> Build()
     {
+        if (_permissions == 0)
+            throw new InvalidOperationException("Table must have at least one permission configured via Allow().");
+
         if (_getKey is null)
             throw new InvalidOperationException($"Table<{typeof(T).Name},{typeof(T).Name}> must have key");
 
-        var getKey = _getKey ?? throw new InvalidOperationException("Key resolution function not specified");
+        var getKey = _getKey;
         var hasChanged = _hasChanged ?? ((_, _) => true);
-        var update = _update ?? throw new InvalidOperationException("Update function not specified");
+        // an update delegate is only meaningful when the table can be updated; require it for
+        // Update-permitted tables, otherwise default to a no-op (it would never be invoked)
+        if (_permissions.HasFlag(TablePermission.Update) && _update is null)
+            throw new InvalidOperationException("Update function not specified");
+        var update = _update ?? ((_, _) => { });
         var isActive = _isActive ?? (_ => true);
 
         return new Table<T>(_permissions, getKey, hasChanged, update, isActive, _logger);

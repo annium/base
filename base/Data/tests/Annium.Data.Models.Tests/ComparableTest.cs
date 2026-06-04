@@ -34,6 +34,62 @@ public class ComparableTest
     }
 
     /// <summary>
+    /// Tests that Equals returns true when comparing an instance to itself.
+    /// </summary>
+    [Fact]
+    public void Equals_SameInstance_ReturnsTrue()
+    {
+        // arrange
+        var a = new Money(3, 7);
+
+        // assert
+        a.Equals(a).IsTrue();
+    }
+
+    /// <summary>
+    /// Tests that Equals returns false when the argument is null.
+    /// </summary>
+    [Fact]
+    public void Equals_Null_ReturnsFalse()
+    {
+        // arrange
+        var a = new Money(3, 7);
+
+        // assert
+        a.Equals(null).IsFalse();
+    }
+
+    /// <summary>
+    /// Tests that Equals returns true for two instances with equal field values.
+    /// </summary>
+    [Fact]
+    public void Equals_EqualValues_ReturnsTrue()
+    {
+        // arrange
+        var a = new Money(5, 99);
+        var b = new Money(5, 99);
+
+        // assert
+        a.Equals(b).IsTrue();
+    }
+
+    /// <summary>
+    /// Tests that Equals returns false for two instances that differ in any comparable field.
+    /// </summary>
+    [Fact]
+    public void Equals_DifferentValues_ReturnsFalse()
+    {
+        // arrange
+        var a = new Money(5, 99);
+        var differentMinor = new Money(5, 1);
+        var differentMajor = new Money(9, 99);
+
+        // assert
+        a.Equals(differentMinor).IsFalse();
+        a.Equals(differentMajor).IsFalse();
+    }
+
+    /// <summary>
     /// Tests that indirect comparison operations and operator overloads work correctly for comparable objects.
     /// </summary>
     [Fact]

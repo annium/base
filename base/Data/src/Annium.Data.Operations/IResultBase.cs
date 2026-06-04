@@ -7,8 +7,14 @@ namespace Annium.Data.Operations;
 /// Base interface for results that can be manipulated
 /// </summary>
 /// <typeparam name="T">The type of result that operations return</typeparam>
-public interface IResultBase<T> : ICloneableResultBase<T>
+public interface IResultBase<T>
 {
+    /// <summary>
+    /// Creates a copy of the result
+    /// </summary>
+    /// <returns>A copy of the result</returns>
+    T Copy();
+
     /// <summary>
     /// Clears all errors from the result
     /// </summary>
@@ -71,19 +77,6 @@ public interface IResultBase<T> : ICloneableResultBase<T>
     /// <param name="results">The results to join</param>
     /// <returns>The result instance for method chaining</returns>
     T Join(IReadOnlyCollection<IResultBase> results);
-}
-
-/// <summary>
-/// Interface for results that can be copied
-/// </summary>
-/// <typeparam name="T">The type of result that copy operations return</typeparam>
-public interface ICloneableResultBase<T>
-{
-    /// <summary>
-    /// Creates a copy of the result
-    /// </summary>
-    /// <returns>A copy of the result</returns>
-    T Copy();
 }
 
 /// <summary>
