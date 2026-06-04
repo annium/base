@@ -55,38 +55,55 @@ public static partial class IsShallowEqualExtensions
             .MakeGenericMethod(typeof(object), typeof(object));
 
         var breakLabel = Expression.Label(typeof(void));
-        expressions.Add(
-            Expression.Loop(
-                Expression.Block(
-                    // no next element in a - break
-                    Expression.IfThen(
-                        Expression.Not(Expression.Call(enumeratorAVar, moveNext)),
-                        Expression.Break(breakLabel)
-                    ),
-                    // no next element in b - different count, return false
-                    Expression.IfThen(
-                        Expression.Not(Expression.Call(enumeratorBVar, moveNext)),
-                        Expression.Return(returnTarget, Expression.Constant(false))
-                    ),
-                    Expression.IfThen(
-                        Expression.Not(
-                            Expression.Call(
-                                null,
-                                comparerMethod,
-                                Expression.Property(enumeratorAVar, current),
-                                Expression.Property(enumeratorBVar, current),
-                                m
-                            )
-                        ),
-                        Expression.Return(returnTarget, Expression.Constant(false))
-                    )
+        var loop = Expression.Loop(
+            Expression.Block(
+                // no next element in a - break
+                Expression.IfThen(
+                    Expression.Not(Expression.Call(enumeratorAVar, moveNext)),
+                    Expression.Break(breakLabel)
                 ),
-                breakLabel
+                // no next element in b - different count, return false
+                Expression.IfThen(
+                    Expression.Not(Expression.Call(enumeratorBVar, moveNext)),
+                    Expression.Return(returnTarget, Expression.Constant(false))
+                ),
+                Expression.IfThen(
+                    Expression.Not(
+                        Expression.Call(
+                            null,
+                            comparerMethod,
+                            Expression.Property(enumeratorAVar, current),
+                            Expression.Property(enumeratorBVar, current),
+                            m
+                        )
+                    ),
+                    Expression.Return(returnTarget, Expression.Constant(false))
+                )
+            ),
+            breakLabel
+        );
+
+        var dispose = typeof(IDisposable).GetMethod(nameof(IDisposable.Dispose))!;
+        // run the comparison loop and the trailing same-count check inside a try/finally so
+        // both enumerators are disposed on every exit path. Non-generic IEnumerator does not
+        // implement IDisposable, so dispose only when the runtime enumerator does.
+        Expression DisposeIfNeeded(Expression enumerator) =>
+            Expression.IfThen(
+                Expression.TypeIs(enumerator, typeof(IDisposable)),
+                Expression.Call(Expression.Convert(enumerator, typeof(IDisposable)), dispose)
+            );
+        expressions.Add(
+            Expression.TryFinally(
+                Expression.Block(
+                    loop,
+                    // return true, if no next element in b (means same count)
+                    Expression.Return(returnTarget, Expression.Not(Expression.Call(enumeratorBVar, moveNext)))
+                ),
+                Expression.Block(DisposeIfNeeded(enumeratorAVar), DisposeIfNeeded(enumeratorBVar))
             )
         );
 
-        // return true, if no next element in b (means same count)
-        expressions.Add(Expression.Label(returnTarget, Expression.Not(Expression.Call(enumeratorBVar, moveNext))));
+        expressions.Add(Expression.Label(returnTarget, Expression.Constant(false)));
 
         return Expression.Lambda(Expression.Block(vars, expressions), parameters);
     }

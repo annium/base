@@ -55,36 +55,50 @@ public static partial class IsShallowEqualExtensions
         expressions.Add(Expression.Assign(comparerVar, ResolveComparer(elementType, mapper)));
 
         var breakLabel = Expression.Label(typeof(void));
-        expressions.Add(
-            Expression.Loop(
-                Expression.Block(
-                    // no next element in a - break
-                    Expression.IfThen(
-                        Expression.Not(Expression.Call(enumeratorAVar, moveNext)),
-                        Expression.Break(breakLabel)
-                    ),
-                    // no next element in b - different count, return false
-                    Expression.IfThen(
-                        Expression.Not(Expression.Call(enumeratorBVar, moveNext)),
-                        Expression.Return(returnTarget, Expression.Constant(false))
-                    ),
-                    Expression.IfThen(
-                        Expression.Not(
-                            Expression.Invoke(
-                                comparerVar,
-                                Expression.Property(enumeratorAVar, current),
-                                Expression.Property(enumeratorBVar, current)
-                            )
-                        ),
-                        Expression.Return(returnTarget, Expression.Constant(false))
-                    )
+        var loop = Expression.Loop(
+            Expression.Block(
+                // no next element in a - break
+                Expression.IfThen(
+                    Expression.Not(Expression.Call(enumeratorAVar, moveNext)),
+                    Expression.Break(breakLabel)
                 ),
-                breakLabel
+                // no next element in b - different count, return false
+                Expression.IfThen(
+                    Expression.Not(Expression.Call(enumeratorBVar, moveNext)),
+                    Expression.Return(returnTarget, Expression.Constant(false))
+                ),
+                Expression.IfThen(
+                    Expression.Not(
+                        Expression.Invoke(
+                            comparerVar,
+                            Expression.Property(enumeratorAVar, current),
+                            Expression.Property(enumeratorBVar, current)
+                        )
+                    ),
+                    Expression.Return(returnTarget, Expression.Constant(false))
+                )
+            ),
+            breakLabel
+        );
+
+        var dispose = typeof(IDisposable).GetMethod(nameof(IDisposable.Dispose))!;
+        // run the comparison loop and the trailing same-count check inside a try/finally so
+        // both enumerators are disposed on every exit path (IEnumerator<T> : IDisposable)
+        expressions.Add(
+            Expression.TryFinally(
+                Expression.Block(
+                    loop,
+                    // return true, if no next element in b (means same count)
+                    Expression.Return(returnTarget, Expression.Not(Expression.Call(enumeratorBVar, moveNext)))
+                ),
+                Expression.Block(
+                    Expression.Call(Expression.Convert(enumeratorAVar, typeof(IDisposable)), dispose),
+                    Expression.Call(Expression.Convert(enumeratorBVar, typeof(IDisposable)), dispose)
+                )
             )
         );
 
-        // return true, if no next element in b (means same count)
-        expressions.Add(Expression.Label(returnTarget, Expression.Not(Expression.Call(enumeratorBVar, moveNext))));
+        expressions.Add(Expression.Label(returnTarget, Expression.Constant(false)));
 
         return Expression.Lambda(Expression.Block(vars, expressions), parameters);
     }

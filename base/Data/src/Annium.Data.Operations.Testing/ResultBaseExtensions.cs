@@ -212,6 +212,8 @@ public static class ResultBaseExtensions
         [CallerArgumentExpression(nameof(value))] string valueEx = ""
     )
     {
+        if (!value.IsSuccess)
+            throw new AssertionFailedException(message ?? $"{value.WrapWithExpression(valueEx)} is not Success");
         if (!EqualityComparer<TD>.Default.Equals(value.Data, expected))
             throw new AssertionFailedException(
                 message ?? $"{value.WrapWithExpression(valueEx)}.Data ({value.Data}) is not {expected}"

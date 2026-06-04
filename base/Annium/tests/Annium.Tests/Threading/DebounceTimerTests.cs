@@ -43,34 +43,30 @@ public class DebounceTimerTests : TestBase
 
                 return ValueTask.CompletedTask;
             },
-            // Debounce period (80ms) deliberately dominates the worst-case inter-chunk Task.Delay jitter
-            // (Task.Delay(1) can stretch to ~15ms under load); the three chunks therefore coalesce into a
-            // single fire per bulk regardless of scheduler jitter, keeping the fire count deterministic.
+            // Debounce period (80ms) is comfortably longer than a single concurrent burst, so each burst
+            // coalesces into one fire; short enough to keep the test fast.
             80,
             Logger
         );
 
-        // act
+        // act — each bulk fires a burst of concurrent requests that must coalesce into a single debounced
+        // fire. We wait for that fire to land before starting the next bulk, so the fire count is
+        // deterministic regardless of scheduler load: no reliance on a wall-clock idle gap between bulks
+        // (the old fixed Task.Delay raced the debounce period and coalesced bulks under CI load).
         this.Trace("schedule");
         for (var i = 0; i < 3; i++)
         {
-            this.Trace("bulk start");
-            for (var j = 0; j < 3; j++)
-            {
-                this.Trace("chunk start");
-                Parallel.ForEach(Enumerable.Range(0, 5), _ => timer.Request());
-                this.Trace("chunk delay");
-                await Task.Delay(1, TestContext.Current.CancellationToken);
-            }
-            // Idle longer than the debounce period so the single coalesced fire lands within this bulk's
-            // window, before the next bulk's requests re-arm the timer.
-            this.Trace("bulk delay");
-            await Task.Delay(200, TestContext.Current.CancellationToken);
+            this.Trace("bulk {i} request", i);
+            Parallel.ForEach(Enumerable.Range(0, 5), _ => timer.Request());
+
+            // wait until this bulk's coalesced fire has landed before re-arming the timer
+            var expected = i + 1;
+            await Wait.UntilAsync(() => state.Data.Count >= expected, 5_000);
         }
 
-        // assert
+        // assert — exactly one coalesced fire per bulk
         this.Trace("ensure state is valid");
-        await EnsureValid(state, 3, 5);
+        await EnsureValid(state, 3, 3);
 
         this.Trace("done");
     }
@@ -95,34 +91,30 @@ public class DebounceTimerTests : TestBase
 
                 return ValueTask.CompletedTask;
             },
-            // Debounce period (80ms) deliberately dominates the worst-case inter-chunk Task.Delay jitter
-            // (Task.Delay(1) can stretch to ~15ms under load); the three chunks therefore coalesce into a
-            // single fire per bulk regardless of scheduler jitter, keeping the fire count deterministic.
+            // Debounce period (80ms) is comfortably longer than a single concurrent burst, so each burst
+            // coalesces into one fire; short enough to keep the test fast.
             80,
             Logger
         );
 
-        // act
+        // act — each bulk fires a burst of concurrent requests that must coalesce into a single debounced
+        // fire. We wait for that fire to land before starting the next bulk, so the fire count is
+        // deterministic regardless of scheduler load: no reliance on a wall-clock idle gap between bulks
+        // (the old fixed Task.Delay raced the debounce period and coalesced bulks under CI load).
         this.Trace("schedule");
         for (var i = 0; i < 3; i++)
         {
-            this.Trace("bulk start");
-            for (var j = 0; j < 3; j++)
-            {
-                this.Trace("chunk start");
-                Parallel.ForEach(Enumerable.Range(0, 5), _ => timer.Request());
-                this.Trace("chunk delay");
-                await Task.Delay(1, TestContext.Current.CancellationToken);
-            }
-            // Idle longer than the debounce period so the single coalesced fire lands within this bulk's
-            // window, before the next bulk's requests re-arm the timer.
-            this.Trace("bulk delay");
-            await Task.Delay(200, TestContext.Current.CancellationToken);
+            this.Trace("bulk {i} request", i);
+            Parallel.ForEach(Enumerable.Range(0, 5), _ => timer.Request());
+
+            // wait until this bulk's coalesced fire has landed before re-arming the timer
+            var expected = i + 1;
+            await Wait.UntilAsync(() => state.Data.Count >= expected, 5_000);
         }
 
-        // assert
+        // assert — exactly one coalesced fire per bulk
         this.Trace("ensure state is valid");
-        await EnsureValid(state, 3, 5);
+        await EnsureValid(state, 3, 3);
 
         this.Trace("done");
     }

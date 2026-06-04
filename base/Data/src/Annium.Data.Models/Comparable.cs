@@ -37,9 +37,12 @@ public abstract record Comparable<T> : IEquatable<T>, IComparable<T>, IComparabl
     /// <returns>A value indicating the relative order of the instances</returns>
     public int CompareTo(object? obj)
     {
+        // IComparable contract: any instance is greater than null
+        if (obj is null)
+            return 1;
         if (obj is T other)
             return CompareTo(other);
-        throw new ArgumentException($"Cannot compare {typeof(T)} with {obj?.GetType().FullName ?? "null"}");
+        throw new ArgumentException($"Cannot compare {typeof(T)} with {obj.GetType().FullName}");
     }
 
     /// <summary>
@@ -54,7 +57,7 @@ public abstract record Comparable<T> : IEquatable<T>, IComparable<T>, IComparabl
     /// <param name="a">First instance</param>
     /// <param name="b">Second instance</param>
     /// <returns>True if first instance is greater than second</returns>
-    public static bool operator >(Comparable<T> a, Comparable<T> b) => Compare(a, b) == 1;
+    public static bool operator >(Comparable<T> a, Comparable<T> b) => Compare(a, b) > 0;
 
     /// <summary>
     /// Determines if the first instance is less than the second
@@ -62,7 +65,7 @@ public abstract record Comparable<T> : IEquatable<T>, IComparable<T>, IComparabl
     /// <param name="a">First instance</param>
     /// <param name="b">Second instance</param>
     /// <returns>True if first instance is less than second</returns>
-    public static bool operator <(Comparable<T> a, Comparable<T> b) => Compare(a, b) == -1;
+    public static bool operator <(Comparable<T> a, Comparable<T> b) => Compare(a, b) < 0;
 
     /// <summary>
     /// Determines if the first instance is greater than or equal to the second
@@ -103,5 +106,5 @@ public abstract record Comparable<T> : IEquatable<T>, IComparable<T>, IComparabl
     /// </summary>
     /// <param name="other">The instance to compare with</param>
     /// <returns>True if instances are equal</returns>
-    public bool Equals(T? other) => GetHashCode() == other?.GetHashCode();
+    public bool Equals(T? other) => other is not null && CompareTo(other) == 0;
 }

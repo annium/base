@@ -11,7 +11,7 @@ namespace Annium.Data.Operations.Serialization.MessagePack;
 /// <summary>
 /// MessagePack formatter resolver for Data.Operations types
 /// </summary>
-public class Resolver : IFormatterResolver
+public sealed class Resolver : IFormatterResolver
 {
     /// <summary>
     /// Gets the singleton instance of the resolver

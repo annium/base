@@ -1,4 +1,5 @@
 using System;
+using Annium;
 using Annium.Data.Operations.Serialization.Tests.Base;
 using Annium.Serialization.Abstractions;
 using Annium.Serialization.MessagePack;
@@ -37,7 +38,7 @@ public class BooleanResultTest : BooleanResultTestBase
     [InlineData(typeof(ReadOnlyMemory<byte>))]
     public void Simple(Type type)
     {
-        GetType().GetMethod(nameof(Simple_Base))!.MakeGenericMethod(type).Invoke(this, Array.Empty<object>());
+        GetType().GetMethod(nameof(Simple_Base)).NotNull().MakeGenericMethod(type).Invoke(this, Array.Empty<object>());
     }
 
     /// <summary>
@@ -48,6 +49,6 @@ public class BooleanResultTest : BooleanResultTestBase
     [InlineData(typeof(ReadOnlyMemory<byte>))]
     public void Data(Type type)
     {
-        GetType().GetMethod(nameof(Data_Base))!.MakeGenericMethod(type).Invoke(this, Array.Empty<object>());
+        GetType().GetMethod(nameof(Data_Base)).NotNull().MakeGenericMethod(type).Invoke(this, Array.Empty<object>());
     }
 }
