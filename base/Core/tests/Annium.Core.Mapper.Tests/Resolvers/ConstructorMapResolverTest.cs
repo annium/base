@@ -8,13 +8,13 @@ namespace Annium.Core.Mapper.Tests.Resolvers;
 /// G23: Verifies that ConstructorMapResolver handles a value-type (struct) source correctly,
 /// exercising the <c>if (src.IsValueType)</c> branch in <c>BuildResolvedBlock</c>.
 /// </summary>
-public class ConstructorMapResolver_StructSource_WorksTest : TestBase
+public class ConstructorMapResolverStructSourceWorksTest : TestBase
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="ConstructorMapResolver_StructSource_WorksTest"/> class.
+    /// Initializes a new instance of the <see cref="ConstructorMapResolverStructSourceWorksTest"/> class.
     /// </summary>
     /// <param name="outputHelper">The test output helper.</param>
-    public ConstructorMapResolver_StructSource_WorksTest(ITestOutputHelper outputHelper)
+    public ConstructorMapResolverStructSourceWorksTest(ITestOutputHelper outputHelper)
         : base(outputHelper)
     {
         Register(c => c.AddMapper(autoload: false));
@@ -65,13 +65,13 @@ public class ConstructorMapResolver_StructSource_WorksTest : TestBase
 /// Verifies that <c>ConstructorMapResolver</c> throws <see cref="MappingException"/>
 /// when the source type is missing a property required by the target's constructor parameter.
 /// </summary>
-public class ConstructorMapResolver_MissingProperty_ThrowsTest : TestBase
+public class ConstructorMapResolverMissingPropertyThrowsTest : TestBase
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="ConstructorMapResolver_MissingProperty_ThrowsTest"/> class.
+    /// Initializes a new instance of the <see cref="ConstructorMapResolverMissingPropertyThrowsTest"/> class.
     /// </summary>
     /// <param name="outputHelper">The test output helper for logging test results.</param>
-    public ConstructorMapResolver_MissingProperty_ThrowsTest(ITestOutputHelper outputHelper)
+    public ConstructorMapResolverMissingPropertyThrowsTest(ITestOutputHelper outputHelper)
         : base(outputHelper)
     {
         Register(c => c.AddMapper(autoload: false));

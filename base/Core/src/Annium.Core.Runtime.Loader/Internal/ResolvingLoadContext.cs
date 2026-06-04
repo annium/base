@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Loader;
-using System.Threading.Tasks;
 
 namespace Annium.Core.Runtime.Loader.Internal;
 
@@ -21,7 +20,7 @@ internal class ResolvingLoadContext : AssemblyLoadContext
     /// <summary>
     /// Collection of byte array-based assembly resolvers
     /// </summary>
-    private readonly IReadOnlyCollection<Func<AssemblyName, Task<byte[]>?>> _byteArrayResolvers;
+    private readonly IReadOnlyCollection<Func<AssemblyName, byte[]?>> _byteArrayResolvers;
 
     /// <summary>
     /// Initializes a new instance of ResolvingLoadContext with specified resolvers
@@ -30,7 +29,7 @@ internal class ResolvingLoadContext : AssemblyLoadContext
     /// <param name="byteArrayResolvers">Collection of functions that resolve assembly names to byte arrays</param>
     public ResolvingLoadContext(
         IReadOnlyCollection<Func<AssemblyName, string?>> pathResolvers,
-        IReadOnlyCollection<Func<AssemblyName, Task<byte[]>?>> byteArrayResolvers
+        IReadOnlyCollection<Func<AssemblyName, byte[]?>> byteArrayResolvers
     )
         : base(true)
     {
@@ -51,7 +50,7 @@ internal class ResolvingLoadContext : AssemblyLoadContext
             return LoadFromAssemblyPath(path);
 
         // try resolve from stream by fetching byteArray
-        var byteArray = _byteArrayResolvers.Select(x => x(assemblyName)?.Result).FirstOrDefault(x => x != null);
+        var byteArray = _byteArrayResolvers.Select(x => x(assemblyName)).FirstOrDefault(x => x != null);
         if (byteArray != null)
         {
             using var ms = new MemoryStream(byteArray);

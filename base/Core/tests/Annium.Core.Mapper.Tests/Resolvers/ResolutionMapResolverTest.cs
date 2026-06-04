@@ -10,13 +10,13 @@ namespace Annium.Core.Mapper.Tests.Resolvers;
 /// Verifies that <c>ResolutionMapResolver</c> throws <see cref="InvalidOperationException"/>
 /// when no concrete implementation of the abstract target type can be resolved for the source instance.
 /// </summary>
-public class ResolutionMapResolver_NoConcreteMatch_ThrowsTest : TestBase
+public class ResolutionMapResolverNoConcreteMatchThrowsTest : TestBase
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="ResolutionMapResolver_NoConcreteMatch_ThrowsTest"/> class.
+    /// Initializes a new instance of the <see cref="ResolutionMapResolverNoConcreteMatchThrowsTest"/> class.
     /// </summary>
     /// <param name="outputHelper">The test output helper for logging test results.</param>
-    public ResolutionMapResolver_NoConcreteMatch_ThrowsTest(ITestOutputHelper outputHelper)
+    public ResolutionMapResolverNoConcreteMatchThrowsTest(ITestOutputHelper outputHelper)
         : base(outputHelper)
     {
         Register(c => c.AddMapper(autoload: false));

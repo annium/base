@@ -10,7 +10,7 @@ namespace Annium.Net;
 /// <summary>
 /// Provides static factory methods for working with <see cref="IPEndPoint"/>.
 /// </summary>
-public static class IPEndPoints
+public static class IpEndPoints
 {
     /// <summary>
     /// The prefix used for TCP endpoints in URI format.

@@ -52,17 +52,20 @@ internal class TimeProvider : ITimeProviderSwitcher, ITimeProvider
     }
 
     /// <summary>
-    /// Switches to using real system time
+    /// Switches to using real system time. Requires that WithRealTime() was configured;
+    /// otherwise the keyed resolution throws.
     /// </summary>
     public void UseRealTime() => _provider = _sp.ResolveKeyed<IInternalTimeProvider>(TimeType.Real);
 
     /// <summary>
-    /// Switches to using relative time
+    /// Switches to using relative time. Requires that WithRelativeTime() was configured;
+    /// otherwise the keyed resolution throws.
     /// </summary>
     public void UseRelativeTime() => _provider = _sp.ResolveKeyed<IInternalTimeProvider>(TimeType.Relative);
 
     /// <summary>
-    /// Switches to using managed time
+    /// Switches to using managed time. Requires that WithManagedTime() was configured;
+    /// otherwise the keyed resolution throws.
     /// </summary>
     public void UseManagedTime() => _provider = _sp.ResolveKeyed<IInternalTimeProvider>(TimeType.Managed);
 }

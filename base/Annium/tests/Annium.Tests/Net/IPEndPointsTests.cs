@@ -9,10 +9,10 @@ using Xunit;
 namespace Annium.Tests.Net;
 
 /// <summary>
-/// Contains unit tests for <see cref="IPEndPoints"/> (review T10 — previously 0% covered;
+/// Contains unit tests for <see cref="IpEndPoints"/> (review T10 — previously 0% covered;
 /// also exercises the IPv4-resolution fix from review bug B1).
 /// </summary>
-public class IPEndPointsTests
+public class IpEndPointsTests
 {
     /// <summary>
     /// Verifies that <c>ParseAsync</c> throws <see cref="System.ArgumentOutOfRangeException"/> when
@@ -22,7 +22,7 @@ public class IPEndPointsTests
     [Fact]
     public async Task ParseAsync_InvalidDefaultPort_Negative_Throws()
     {
-        await Wrap.It(async () => await IPEndPoints.ParseAsync("127.0.0.1:80", defaultPort: -1))
+        await Wrap.It(async () => await IpEndPoints.ParseAsync("127.0.0.1:80", defaultPort: -1))
             .ThrowsAsync<ArgumentOutOfRangeException>();
     }
 
@@ -34,7 +34,7 @@ public class IPEndPointsTests
     [Fact]
     public async Task ParseAsync_InvalidDefaultPort_TooLarge_Throws()
     {
-        await Wrap.It(async () => await IPEndPoints.ParseAsync("127.0.0.1:80", defaultPort: 65536))
+        await Wrap.It(async () => await IpEndPoints.ParseAsync("127.0.0.1:80", defaultPort: 65536))
             .ThrowsAsync<ArgumentOutOfRangeException>();
     }
 
@@ -45,7 +45,7 @@ public class IPEndPointsTests
     [Fact]
     public async Task ParseAsync_IpLiteral_WithPort_ParsesCorrectly()
     {
-        var endpoint = await IPEndPoints.ParseAsync("127.0.0.1:8080", ct: TestContext.Current.CancellationToken);
+        var endpoint = await IpEndPoints.ParseAsync("127.0.0.1:8080", ct: TestContext.Current.CancellationToken);
 
         endpoint.Address.Is(IPAddress.Loopback);
         endpoint.Port.Is(8080);
@@ -58,7 +58,7 @@ public class IPEndPointsTests
     [Fact]
     public async Task ParseAsync_IpLiteral_NoPort_UsesDefaultPort()
     {
-        var endpoint = await IPEndPoints.ParseAsync(
+        var endpoint = await IpEndPoints.ParseAsync(
             "127.0.0.1",
             defaultPort: 9000,
             ct: TestContext.Current.CancellationToken
@@ -75,7 +75,7 @@ public class IPEndPointsTests
     [Fact]
     public async Task ParseAsync_Localhost_ResolvesToIPv4()
     {
-        var endpoint = await IPEndPoints.ParseAsync("localhost:1234", ct: TestContext.Current.CancellationToken);
+        var endpoint = await IpEndPoints.ParseAsync("localhost:1234", ct: TestContext.Current.CancellationToken);
 
         endpoint.Address.AddressFamily.Is(AddressFamily.InterNetwork);
         endpoint.Port.Is(1234);
@@ -91,7 +91,7 @@ public class IPEndPointsTests
     {
         // "[::invalid" is not a valid URI host segment — Uri.TryCreate rejects it, so the method
         // returns IPAddress.Loopback with the provided defaultPort.
-        var endpoint = await IPEndPoints.ParseAsync(
+        var endpoint = await IpEndPoints.ParseAsync(
             "[::invalid",
             defaultPort: 7777,
             ct: TestContext.Current.CancellationToken
@@ -112,7 +112,7 @@ public class IPEndPointsTests
     {
         // "999.999.999.999" is accepted by Uri.TryCreate (no letters → DNS path skipped),
         // but IPAddress.TryParse rejects it → final loopback fallback.
-        var endpoint = await IPEndPoints.ParseAsync(
+        var endpoint = await IpEndPoints.ParseAsync(
             "999.999.999.999:4321",
             defaultPort: 0,
             ct: TestContext.Current.CancellationToken

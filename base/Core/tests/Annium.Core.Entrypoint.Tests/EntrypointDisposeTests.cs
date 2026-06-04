@@ -43,11 +43,10 @@ public class EntrypointDisposeTests
         var consoleAfterSetup = CountConsoleCancelKeyPressHandlers();
         var unloadAfterSetup = CountUnloadingHandlers();
 
-        // If counts are -1 (introspection failed), skip strict assertion but still verify dispose below.
-        if (consoleAfterSetup >= 0)
-            consoleAfterSetup.Is(consoleBase + 3);
-        if (unloadAfterSetup >= 0)
-            unloadAfterSetup.Is(unloadBase + 3);
+        // Assert unconditionally: if introspection failed (count == -1) these fail loudly rather
+        // than silently no-op'ing, since consoleBase/unloadBase would also be -1 and the +3 mismatch surfaces.
+        consoleAfterSetup.Is(consoleBase + 3);
+        unloadAfterSetup.Is(unloadBase + 3);
 
         // act — dispose all
         foreach (var e in entries)
@@ -57,10 +56,8 @@ public class EntrypointDisposeTests
         var consoleAfterDispose = CountConsoleCancelKeyPressHandlers();
         var unloadAfterDispose = CountUnloadingHandlers();
 
-        if (consoleAfterDispose >= 0)
-            consoleAfterDispose.Is(consoleBase);
-        if (unloadAfterDispose >= 0)
-            unloadAfterDispose.Is(unloadBase);
+        consoleAfterDispose.Is(consoleBase);
+        unloadAfterDispose.Is(unloadBase);
     }
 
     /// <summary>
@@ -87,11 +84,75 @@ public class EntrypointDisposeTests
     private static int CountUnloadingHandlers()
     {
         var alc = AssemblyLoadContext.Default;
-        var field = typeof(AssemblyLoadContext).GetField("Unloading", BindingFlags.Instance | BindingFlags.NonPublic);
+        // The Unloading event is implemented with explicit add/remove over a private backing
+        // field named "_unloading" (not "Unloading"); fall back to "Unloading" for older runtimes.
+        var field =
+            typeof(AssemblyLoadContext).GetField("_unloading", BindingFlags.Instance | BindingFlags.NonPublic)
+            ?? typeof(AssemblyLoadContext).GetField("Unloading", BindingFlags.Instance | BindingFlags.NonPublic);
         if (field is null)
             return -1;
         var handler = (Delegate?)field.GetValue(alc);
         return handler?.GetInvocationList().Length ?? 0;
+    }
+
+    /// <summary>
+    /// Verifies that calling <see cref="Entrypoint.SetupAsync"/> a second time on the same
+    /// <see cref="Entrypoint"/> instance (after a successful first call) throws
+    /// <see cref="InvalidOperationException"/> due to the <c>_isAlreadyBuilt</c> guard.
+    /// The first <see cref="Entry"/> is disposed before the assertion so that OS-event handlers
+    /// registered by the first call are removed and do not leak into subsequent tests.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
+    [Fact]
+    public async Task SetupAsync_CalledTwice_ThrowsInvalidOperationException()
+    {
+        // arrange — first call succeeds; dispose the entry immediately to clean up OS handlers
+        var ep = new Entrypoint().UseServicePack<LoggingPack>();
+        var entry = await ep.SetupAsync();
+        await entry.DisposeAsync();
+
+        // act + assert — second call on the same Entrypoint instance must throw
+        await Wrap.It(async () => await ep.SetupAsync()).ThrowsAsync<InvalidOperationException>();
+    }
+
+    /// <summary>
+    /// Verifies that when <see cref="Entrypoint.SetupAsync"/> fails during the build phase
+    /// (i.e. a service pack's <c>ConfigureAsync</c> throws), the OS-event handlers that were
+    /// wired before the build attempt are unsubscribed and the static handler counts return to
+    /// the baseline measured before <c>SetupAsync</c> was called.
+    /// Also verifies that a fresh <see cref="Entrypoint"/> with a working pack can still succeed
+    /// after the failure, proving that the failure left no global poison state.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
+    [Fact]
+    public async Task SetupAsync_BuildFails_UnsubscribesHandlersAndAllowsFreshEntrypoint()
+    {
+        // arrange — snapshot baseline before the failing entrypoint is created
+        var consoleBase = CountConsoleCancelKeyPressHandlers();
+        var unloadBase = CountUnloadingHandlers();
+
+        // act — attempt to build; the ThrowingPack.ConfigureAsync throws, so SetupAsync throws
+        var failingEp = new Entrypoint().UseServicePack<ThrowingPack>();
+        Exception? caught = null;
+        try
+        {
+            await failingEp.SetupAsync();
+        }
+        catch (Exception ex)
+        {
+            caught = ex;
+        }
+
+        // assert — an exception must have been thrown
+        caught.IsNotNull();
+
+        // assert — handler counts returned to baseline (cleanup ran on the failure path)
+        CountConsoleCancelKeyPressHandlers().Is(consoleBase);
+        CountUnloadingHandlers().Is(unloadBase);
+
+        // assert — a fresh entrypoint with a working pack still succeeds (no global poison)
+        var freshEntry = await new Entrypoint().UseServicePack<LoggingPack>().SetupAsync();
+        await freshEntry.DisposeAsync();
     }
 
     /// <summary>
@@ -121,5 +182,21 @@ public class EntrypointDisposeTests
             provider.UseLogging(route => route.UseInMemory());
             return Task.CompletedTask;
         }
+    }
+
+    /// <summary>
+    /// Service pack whose <c>ConfigureAsync</c> always throws an <see cref="InvalidOperationException"/>,
+    /// simulating a build-phase failure so that the failure-path cleanup logic in
+    /// <see cref="Entrypoint.SetupAsync"/> can be exercised.
+    /// </summary>
+    private sealed class ThrowingPack : ServicePackBase
+    {
+        /// <summary>
+        /// Always throws <see cref="InvalidOperationException"/> to simulate a build failure.</summary>
+        /// <param name="container">The service container (not used).</param>
+        /// <param name="ct">Cancellation token (not used).</param>
+        /// <returns>Never returns normally.</returns>
+        public override Task ConfigureAsync(IServiceContainer container, CancellationToken ct) =>
+            throw new InvalidOperationException("Simulated build failure in ThrowingPack");
     }
 }

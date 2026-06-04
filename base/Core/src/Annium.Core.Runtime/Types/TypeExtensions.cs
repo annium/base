@@ -25,5 +25,5 @@ public static class TypeExtensions
     /// </summary>
     /// <param name="type">The type to get an ID string for</param>
     /// <returns>The string identifier for the type</returns>
-    public static string GetIdString(this Type type) => TypeId.Create(type).Id;
+    public static string GetIdString(this Type type) => type.GetTypeId().Id;
 }

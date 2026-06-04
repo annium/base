@@ -10,13 +10,13 @@ namespace Annium.Core.Mapper.Tests.Resolvers;
 /// Verifies that <c>DictionaryAssignmentMapResolver</c> throws <see cref="KeyNotFoundException"/>
 /// when the source dictionary is missing a key required by a writable target property.
 /// </summary>
-public class DictionaryAssignmentMapResolver_MissingKey_ThrowsTest : TestBase
+public class DictionaryAssignmentMapResolverMissingKeyThrowsTest : TestBase
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="DictionaryAssignmentMapResolver_MissingKey_ThrowsTest"/> class.
+    /// Initializes a new instance of the <see cref="DictionaryAssignmentMapResolverMissingKeyThrowsTest"/> class.
     /// </summary>
     /// <param name="outputHelper">The test output helper for logging test results.</param>
-    public DictionaryAssignmentMapResolver_MissingKey_ThrowsTest(ITestOutputHelper outputHelper)
+    public DictionaryAssignmentMapResolverMissingKeyThrowsTest(ITestOutputHelper outputHelper)
         : base(outputHelper)
     {
         Register(c => c.AddMapper(autoload: false));

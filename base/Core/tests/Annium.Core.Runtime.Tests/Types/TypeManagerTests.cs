@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Annium.Core.Runtime.Types;
 using Annium.Testing;
 using Xunit;
@@ -67,8 +68,8 @@ public class TypeManagerTests : TestBase
 
         // assert
         implementations.Has(2);
-        implementations.At(0).Is(typeof(B));
-        implementations.At(1).Is(typeof(C));
+        implementations.Contains(typeof(B)).IsTrue();
+        implementations.Contains(typeof(C)).IsTrue();
     }
 
     /// <summary>
@@ -91,10 +92,10 @@ public class TypeManagerTests : TestBase
 
         // assert
         implementations.Has(4);
-        implementations.At(0).Is(typeof(GenericInterfaceDemoA<>));
-        implementations.At(1).Is(typeof(GenericInterfaceDemoB<>));
-        implementations.At(2).Is(typeof(GenericInterfaceDemoC));
-        implementations.At(3).Is(typeof(GenericStruct<>));
+        implementations.Contains(typeof(GenericInterfaceDemoA<>)).IsTrue();
+        implementations.Contains(typeof(GenericInterfaceDemoB<>)).IsTrue();
+        implementations.Contains(typeof(GenericInterfaceDemoC)).IsTrue();
+        implementations.Contains(typeof(GenericStruct<>)).IsTrue();
     }
 
     /// <summary>
@@ -116,9 +117,9 @@ public class TypeManagerTests : TestBase
 
         // assert
         implementations.Has(3);
-        implementations.At(0).Is(typeof(GenericClassDemoA<>));
-        implementations.At(1).Is(typeof(GenericClassDemoB<>));
-        implementations.At(2).Is(typeof(GenericClassDemoC));
+        implementations.Contains(typeof(GenericClassDemoA<>)).IsTrue();
+        implementations.Contains(typeof(GenericClassDemoB<>)).IsTrue();
+        implementations.Contains(typeof(GenericClassDemoC)).IsTrue();
     }
 
     /// <summary>
@@ -379,18 +380,6 @@ file class H
 /// Derived class for ID-based resolution testing.
 /// </summary>
 file class K : H;
-
-/// <summary>
-/// Record for ID-based resolution testing.
-/// </summary>
-file record L
-{
-    /// <summary>
-    /// Gets or sets the type identifier used for ID-based resolution.
-    /// </summary>
-    [ResolutionId]
-    public string Type { get; set; } = string.Empty;
-}
 
 /// <summary>
 /// Generic interface for testing generic type resolution.

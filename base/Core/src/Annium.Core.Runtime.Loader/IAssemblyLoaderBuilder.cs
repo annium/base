@@ -1,6 +1,5 @@
 using System;
 using System.Reflection;
-using System.Threading.Tasks;
 
 namespace Annium.Core.Runtime.Loader;
 
@@ -21,7 +20,7 @@ public interface IAssemblyLoaderBuilder
     /// </summary>
     /// <param name="byteArrayResolver">Function that resolves assembly name to byte array</param>
     /// <returns>The builder instance for method chaining</returns>
-    IAssemblyLoaderBuilder AddResolver(Func<AssemblyName, Task<byte[]>?> byteArrayResolver);
+    IAssemblyLoaderBuilder AddResolver(Func<AssemblyName, byte[]?> byteArrayResolver);
 
     /// <summary>
     /// Builds the configured assembly loader

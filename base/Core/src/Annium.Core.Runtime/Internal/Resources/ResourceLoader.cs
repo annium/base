@@ -37,7 +37,7 @@ internal class ResourceLoader : IResourceLoader
             .Select(r =>
             {
                 var name = r[prefix.Length..];
-                using var rs = assembly.GetManifestResourceStream(r)!;
+                using var rs = assembly.GetManifestResourceStream(r).NotNull();
                 rs.Seek(0, SeekOrigin.Begin);
                 using var ms = new MemoryStream();
                 rs.CopyTo(ms);

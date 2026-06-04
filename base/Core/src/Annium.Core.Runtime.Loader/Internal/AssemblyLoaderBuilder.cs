@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Threading.Tasks;
 
 namespace Annium.Core.Runtime.Loader.Internal;
 
@@ -14,13 +13,12 @@ internal class AssemblyLoaderBuilder : IAssemblyLoaderBuilder
     /// <summary>
     /// Collection of path-based assembly resolvers
     /// </summary>
-    private readonly IList<Func<AssemblyName, string?>> _pathResolvers = new List<Func<AssemblyName, string?>>();
+    private readonly List<Func<AssemblyName, string?>> _pathResolvers = new();
 
     /// <summary>
     /// Collection of byte array-based assembly resolvers
     /// </summary>
-    private readonly IList<Func<AssemblyName, Task<byte[]>?>> _byteArrayResolvers =
-        new List<Func<AssemblyName, Task<byte[]>?>>();
+    private readonly List<Func<AssemblyName, byte[]?>> _byteArrayResolvers = new();
 
     /// <summary>
     /// Adds a path-based resolver for assembly loading
@@ -39,7 +37,7 @@ internal class AssemblyLoaderBuilder : IAssemblyLoaderBuilder
     /// </summary>
     /// <param name="byteArrayResolver">Function that resolves assembly name to byte array</param>
     /// <returns>The builder instance for method chaining</returns>
-    public IAssemblyLoaderBuilder AddResolver(Func<AssemblyName, Task<byte[]>?> byteArrayResolver)
+    public IAssemblyLoaderBuilder AddResolver(Func<AssemblyName, byte[]?> byteArrayResolver)
     {
         _byteArrayResolvers.Add(byteArrayResolver);
 

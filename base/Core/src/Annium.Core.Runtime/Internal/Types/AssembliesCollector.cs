@@ -49,7 +49,7 @@ internal class AssembliesCollector : ILogSubject
         // collect assemblies, already residing in AppDomain
         this.Trace("register AppDomain assemblies");
         foreach (var domainAssembly in AppDomain.CurrentDomain.GetAssemblies())
-            if (domainAssembly.FullName != null! && !allAssemblies.ContainsKey(domainAssembly.FullName))
+            if (domainAssembly.FullName != null && !allAssemblies.ContainsKey(domainAssembly.FullName))
             {
                 this.Trace<string, string>(
                     "{domainAssemblyName} - register with {domainAssemblyFullName}",
@@ -103,7 +103,12 @@ internal class AssembliesCollector : ILogSubject
             this.Trace<string?>("{name} - matched", name.Name);
             addMatchedAssembly(assembly);
             var dependencies = (Assembly[])
-                autoScanned.GetType().GetProperty(nameof(AutoScannedAttribute.Dependencies))!.GetValue(autoScanned)!;
+                autoScanned
+                    .GetType()
+                    .GetProperty(nameof(AutoScannedAttribute.Dependencies))
+                    .NotNull()
+                    .GetValue(autoScanned)
+                    .NotNull();
             foreach (var dependency in dependencies)
             {
                 this.Trace<string?, string>("{name} - add dependency {dependency}", name.Name, dependency.ShortName());
@@ -128,6 +133,16 @@ internal class AssembliesCollector : ILogSubject
                 return asm;
 
             this.Trace("load {name}", name);
-            return assemblies[name.FullName] = AppDomain.CurrentDomain.Load(name);
+            try
+            {
+                return assemblies[name.FullName] = AppDomain.CurrentDomain.Load(name);
+            }
+            catch (Exception e)
+            {
+                // Referenced assembly is unresolvable (missing/optional/native): the resolver
+                // contract returns null and the caller's `assembly is null` guard skips it.
+                this.Trace<string, string>("failed to load {name}: {error}", name.FullName, e.Message);
+                return null;
+            }
         };
 }
