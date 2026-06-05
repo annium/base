@@ -25,24 +25,7 @@ internal class ParallelExecutor<TSource> : ExecutorBase
     /// </summary>
     /// <param name="task">The task to run</param>
     /// <returns>A completed task</returns>
-    protected override Task RunTaskAsync(Delegate task)
-    {
-        _ = Task.Run(async () =>
-        {
-            try
-            {
-                await StartTaskAsync(task);
-                CompleteTask(task);
-            }
-            catch (OperationCanceledException) { }
-            catch (Exception ex)
-            {
-                this.Error(ex);
-            }
-        });
-
-        return Task.CompletedTask;
-    }
+    protected override Task RunTaskAsync(Delegate task) => RunTaskInBackgroundAsync(StartTaskAsync, task);
 
     /// <summary>
     /// Starts a task in the background

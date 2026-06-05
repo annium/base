@@ -75,8 +75,8 @@ internal class StageExecutor : IStageExecutor
         if (result.IsOk)
             return result;
 
-        // exception caught, rollback
-        await RollbackAsync(_stages.Take(executedStages), result);
+        // exception caught, rollback committed stages in reverse (LIFO) order
+        await RollbackAsync(_stages.Take(executedStages).Reverse(), result);
 
         return result;
     }
@@ -155,6 +155,8 @@ internal class StageExecutor : IStageExecutor
             await commitAsync();
         else if (task is Action commitSync)
             commitSync();
+        else if (task is not null)
+            throw new NotSupportedException($"Unsupported task type: {task.GetType()}");
     }
 
     /// <summary>

@@ -13,7 +13,7 @@ internal class BatchExecutor : IBatchExecutor
     /// <summary>
     /// List of handlers to execute in the batch
     /// </summary>
-    private readonly IList<Delegate> _handlers = new List<Delegate>();
+    private readonly List<Delegate> _handlers = new();
 
     /// <summary>
     /// Adds a synchronous operation to the batch
@@ -58,6 +58,8 @@ internal class BatchExecutor : IBatchExecutor
                     await handleAsync();
                 else if (handler is Action handleSync)
                     handleSync();
+                else
+                    throw new NotSupportedException($"Unsupported handler type: {handler.GetType()}");
             }
             catch (Exception exception)
             {

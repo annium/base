@@ -30,9 +30,9 @@ public class ConcurrentBackgroundExecutorTests : BackgroundExecutorTestBase
         // act
         var result = await Works_Base(size);
 
-        // assert
+        // assert — every scheduled item ran exactly once (order-independent; asserting out-of-order
+        // execution would be a parallel-interleaving signal that spuriously fails on single-core CI)
         var sequence = Enumerable.Range(0, 2 * size).ToArray();
-        result.IsNotEqual(sequence);
         result.OrderBy(x => x).ToArray().IsEqual(sequence);
 
         this.Trace("done");

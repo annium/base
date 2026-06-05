@@ -24,6 +24,7 @@ public abstract class BackgroundExecutorTestBase : TestBase
     /// <summary>
     /// The executor instance being tested. Materialized in <see cref="InitializeAsync"/> once the provider is built.
     /// </summary>
+    // assigned in InitializeAsync (called by the xunit lifecycle) before any test method runs
     private IExecutor _executor = null!;
 
     protected BackgroundExecutorTestBase(Func<ILogger, IExecutor> getExecutor, ITestOutputHelper outputHelper)
