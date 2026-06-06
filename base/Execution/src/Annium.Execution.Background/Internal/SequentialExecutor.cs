@@ -27,17 +27,25 @@ internal class SequentialExecutor<TSource> : ExecutorBase
     {
         try
         {
-            await Helper.RunTaskInForegroundAsync(task, Cts.Token);
+            try
+            {
+                await Helper.RunTaskInForegroundAsync(task, Cts.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                this.Trace("task canceled");
+            }
+            catch (Exception e)
+            {
+                this.Error(e);
+            }
         }
-        catch (OperationCanceledException)
+        finally
         {
-            this.Trace("task canceled");
+            // CompleteTask must run even if a catch handler (logging) throws, otherwise the drain
+            // counter never reaches zero and DisposeAsync deadlocks awaiting _runTcs — mirrors the
+            // finally in ExecutorBase.RunTaskInBackgroundAsync
+            CompleteTask(task);
         }
-        catch (Exception e)
-        {
-            this.Error(e);
-        }
-
-        CompleteTask(task);
     }
 }

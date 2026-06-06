@@ -21,7 +21,7 @@ public interface IBatchExecutor
     /// </summary>
     /// <param name="handler">The operation to add</param>
     /// <returns>The batch executor for method chaining</returns>
-    IBatchExecutor With(Func<Task> handler);
+    IBatchExecutor With(Func<ValueTask> handler);
 
     /// <summary>
     /// Executes all operations in the batch and returns the result

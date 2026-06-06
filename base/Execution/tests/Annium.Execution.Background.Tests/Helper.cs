@@ -8,16 +8,7 @@ namespace Annium.Execution.Background.Tests;
 internal static class Helper
 {
     /// <summary>
-    /// Simulates long-running synchronous work
+    /// Simulates long-running synchronous work by spinning for a fixed duration
     /// </summary>
-    public static void SyncLongWork() => SyncWork(400);
-
-    /// <summary>
-    /// Performs synchronous work by spinning for a specified duration
-    /// </summary>
-    /// <param name="delay">The delay duration in milliseconds</param>
-    private static void SyncWork(int delay)
-    {
-        SpinWait.SpinUntil(() => false, delay);
-    }
+    public static void SyncLongWork() => SpinWait.SpinUntil(() => false, 400);
 }

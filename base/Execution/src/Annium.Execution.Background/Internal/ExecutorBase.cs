@@ -52,7 +52,10 @@ internal abstract class ExecutorBase : IExecutor, ILogSubject
     /// <summary>
     /// Task completion source for signaling when all tasks are complete
     /// </summary>
-    private readonly TaskCompletionSource _runTcs = new();
+    // RunContinuationsAsynchronously: the last task to finish completes this gate from CompleteTask on a
+    // thread-pool fiber; without it, DisposeAsync's continuation (DisposeResourcesAsync / Cts.Dispose) would
+    // run inline on that fiber instead of the disposer's context
+    private readonly TaskCompletionSource _runTcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
     /// <summary>
     /// The main execution task
@@ -161,6 +164,7 @@ internal abstract class ExecutorBase : IExecutor, ILogSubject
     {
         this.Trace("start");
 
+        bool wasStarted;
         lock (_locker)
         {
             if (_state is State.Disposed)
@@ -168,6 +172,11 @@ internal abstract class ExecutorBase : IExecutor, ILogSubject
                 this.Trace("Executor is already {state}", _state);
                 return;
             }
+
+            // RunAsync (the channel's single reader) runs only once Start has moved the executor past
+            // Created. If we are disposing a never-started executor, DisposeAsync must drain the channel
+            // itself — otherwise buffered tasks are never consumed and _taskReader.Completion never fires.
+            wasStarted = _state is not State.Created;
 
             this.Trace("set state to disposed");
             _state = State.Disposed;
@@ -181,6 +190,12 @@ internal abstract class ExecutorBase : IExecutor, ILogSubject
 
         this.Trace("wait for task(s) to run");
         await _runTask;
+
+        if (!wasStarted)
+        {
+            this.Trace("executor was never started - drain pending tasks so the channel can complete");
+            await DrainPendingTasksAsync();
+        }
 
         this.Trace("wait for reader completion");
         // VSTHRD003: _taskReader.Completion is the channel's own lifecycle sentinel (completed by
@@ -331,6 +346,20 @@ internal abstract class ExecutorBase : IExecutor, ILogSubject
 
         // shutdown mode - runs only left tasks
         this.Trace("run tasks left");
+        await DrainPendingTasksAsync();
+
+        this.Trace("done");
+    }
+
+    /// <summary>
+    /// Drains and runs every task still buffered in the channel. Used both by the shutdown phase of
+    /// <see cref="RunAsync"/> and by <see cref="DisposeAsync"/> when the executor is disposed without
+    /// ever being started. The channel is configured single-reader, so the two callers are mutually
+    /// exclusive: RunAsync drains when the executor was started, DisposeAsync drains when it was not.
+    /// </summary>
+    /// <returns>A task representing the drain operation</returns>
+    private async Task DrainPendingTasksAsync()
+    {
         while (true)
         {
             if (!_taskReader.TryRead(out var task))
@@ -339,8 +368,6 @@ internal abstract class ExecutorBase : IExecutor, ILogSubject
             this.Trace("run task {id} ({num})", task.GetFullId(), Interlocked.Increment(ref _taskCounter));
             await RunTaskAsync(task);
         }
-
-        this.Trace("done");
     }
 
     /// <summary>

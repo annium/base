@@ -27,7 +27,7 @@ internal class BatchExecutor : IBatchExecutor
     /// </summary>
     /// <param name="handler">The operation to add</param>
     /// <returns>The batch executor for method chaining</returns>
-    public IBatchExecutor With(Func<Task> handler) => WithInternal(handler);
+    public IBatchExecutor With(Func<ValueTask> handler) => WithInternal(handler);
 
     /// <summary>
     /// Internal method for adding handlers to the batch
@@ -54,12 +54,7 @@ internal class BatchExecutor : IBatchExecutor
         {
             try
             {
-                if (handler is Func<Task> handleAsync)
-                    await handleAsync();
-                else if (handler is Action handleSync)
-                    handleSync();
-                else
-                    throw new NotSupportedException($"Unsupported handler type: {handler.GetType()}");
+                await FlowHelper.ExecuteAsync(handler);
             }
             catch (Exception exception)
             {
