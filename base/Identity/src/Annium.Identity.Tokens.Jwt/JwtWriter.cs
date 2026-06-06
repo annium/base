@@ -48,12 +48,21 @@ public sealed class JwtWriter : ITokenWriter<ClaimsPrincipal>
     {
         var now = _time.Now;
         var lifetime = overrides?.Lifetime ?? _options.Lifetime;
-        var audience = overrides?.Audience ?? _options.Audience ?? string.Empty;
+        // null/empty audience → omit the aud claim entirely (a null JwtPayload audience adds no claim),
+        // honoring JwtTokensOptions.Audience's "null means audience disabled" contract rather than emitting aud="".
+        var audience = overrides?.Audience ?? _options.Audience;
         var issuedAt = now.ToDateTimeUtc();
         var expires = (now + lifetime).ToDateTimeUtc();
 
         var header = new JwtHeader(new SigningCredentials(_options.SigningKey, _options.Algorithm));
-        var payload = new JwtPayload(_options.Issuer, audience, claims.Claims.ToArray(), issuedAt, expires, issuedAt);
+        var payload = new JwtPayload(
+            _options.Issuer,
+            string.IsNullOrEmpty(audience) ? null : audience,
+            claims.Claims.ToArray(),
+            issuedAt,
+            expires,
+            issuedAt
+        );
         var jwt = new JwtSecurityToken(header, payload);
 
         return _handler.WriteToken(jwt);

@@ -18,8 +18,7 @@ public class JwtReaderWriterRsaTests : JwtReaderWriterTestsBase
     [Fact]
     public void Works()
     {
-        var privateKey = RSA.Create().ImportPem(File.ReadAllText(Path.Combine("keys", "rsa_private.pem"))).GetKey();
-        var publicKey = RSA.Create().ImportPem(File.ReadAllText(Path.Combine("keys", "rsa_public.pem"))).GetKey();
+        var (privateKey, publicKey) = CreateKeys();
 
         Works_Base(privateKey, publicKey, SecurityAlgorithms.RsaSha256);
     }
@@ -30,8 +29,7 @@ public class JwtReaderWriterRsaTests : JwtReaderWriterTestsBase
     [Fact]
     public void Expired_ExpirationWindowNull_Fails()
     {
-        var privateKey = RSA.Create().ImportPem(File.ReadAllText(Path.Combine("keys", "rsa_private.pem"))).GetKey();
-        var publicKey = RSA.Create().ImportPem(File.ReadAllText(Path.Combine("keys", "rsa_public.pem"))).GetKey();
+        var (privateKey, publicKey) = CreateKeys();
 
         Expired_ExpirationWindowNull_Base(privateKey, publicKey, SecurityAlgorithms.RsaSha256);
     }
@@ -42,9 +40,66 @@ public class JwtReaderWriterRsaTests : JwtReaderWriterTestsBase
     [Fact]
     public void Expired_ExpirationWindow_Fails()
     {
+        var (privateKey, publicKey) = CreateKeys();
+
+        Expired_ExpirationWindow_Base(privateKey, publicKey, SecurityAlgorithms.RsaSha256);
+    }
+
+    /// <summary>T6.A: ValidateAudience override = false accepts an audience-mismatched token (RSA).</summary>
+    [Fact]
+    public void Read_WithAudienceValidationDisabled_AcceptsAudienceMismatch()
+    {
+        var (privateKey, publicKey) = CreateKeys();
+
+        Read_WithAudienceValidationDisabled_AcceptsAudienceMismatch_Base(
+            privateKey,
+            publicKey,
+            SecurityAlgorithms.RsaSha256
+        );
+    }
+
+    /// <summary>T6.A: ValidateLifetime override = false accepts an expired token (RSA).</summary>
+    [Fact]
+    public void Read_WithLifetimeValidationDisabled_AcceptsExpiredToken()
+    {
+        var (privateKey, publicKey) = CreateKeys();
+
+        Read_WithLifetimeValidationDisabled_AcceptsExpiredToken_Base(
+            privateKey,
+            publicKey,
+            SecurityAlgorithms.RsaSha256
+        );
+    }
+
+    /// <summary>T6.A: Audience override drives the emitted aud claim (RSA).</summary>
+    [Fact]
+    public void Write_WithAudienceOverride_EmitsAudienceClaim()
+    {
+        var (privateKey, _) = CreateKeys();
+
+        Write_WithAudienceOverride_EmitsAudienceClaim_Base(privateKey, SecurityAlgorithms.RsaSha256);
+    }
+
+    /// <summary>T6.A: Lifetime override drives the emitted exp - iat span (RSA).</summary>
+    [Fact]
+    public void Write_WithLifetimeOverride_EmitsCorrectExpClaim()
+    {
+        var (privateKey, _) = CreateKeys();
+
+        Write_WithLifetimeOverride_EmitsCorrectExpClaim_Base(privateKey, SecurityAlgorithms.RsaSha256);
+    }
+
+    /// <summary>
+    /// Loads the RSA private/public key pair from the test fixture PEM files. The created
+    /// <see cref="RSA"/> instances are intentionally not disposed — Microsoft.IdentityModel caches
+    /// signature providers by KeyId for the process lifetime, so disposing them breaks later tests.
+    /// </summary>
+    /// <returns>The private and public RSA security keys.</returns>
+    private static (RsaSecurityKey privateKey, RsaSecurityKey publicKey) CreateKeys()
+    {
         var privateKey = RSA.Create().ImportPem(File.ReadAllText(Path.Combine("keys", "rsa_private.pem"))).GetKey();
         var publicKey = RSA.Create().ImportPem(File.ReadAllText(Path.Combine("keys", "rsa_public.pem"))).GetKey();
 
-        Expired_ExpirationWindow_Base(privateKey, publicKey, SecurityAlgorithms.RsaSha256);
+        return (privateKey, publicKey);
     }
 }
