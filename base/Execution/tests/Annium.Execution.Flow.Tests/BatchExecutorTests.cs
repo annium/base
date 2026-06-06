@@ -64,4 +64,18 @@ public class BatchExecutorTests
         result.IsOk.IsFalse();
         trailingRan.IsTrue();
     }
+
+    /// <summary>
+    /// An empty batch (no handlers registered) must succeed immediately with an OK result.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
+    [Fact]
+    public async Task RunAsync_NoHandlers_ReturnsOk()
+    {
+        // act
+        var result = await Executor.Batch().RunAsync();
+
+        // assert
+        result.IsOk.IsTrue();
+    }
 }

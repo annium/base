@@ -30,14 +30,14 @@ public interface IStageExecutor
     /// <param name="commit">The commit operation</param>
     /// <param name="rollback">The rollback operation</param>
     /// <returns>The stage executor for method chaining</returns>
-    IStageExecutor Stage(Action commit, Func<Task> rollback);
+    IStageExecutor Stage(Action commit, Func<ValueTask> rollback);
 
     /// <summary>
     /// Adds a stage with an asynchronous commit operation
     /// </summary>
     /// <param name="commit">The commit operation</param>
     /// <returns>The stage executor for method chaining</returns>
-    IStageExecutor Stage(Func<Task> commit);
+    IStageExecutor Stage(Func<ValueTask> commit);
 
     /// <summary>
     /// Adds a stage with asynchronous commit and synchronous rollback operations
@@ -45,7 +45,7 @@ public interface IStageExecutor
     /// <param name="commit">The commit operation</param>
     /// <param name="rollback">The rollback operation</param>
     /// <returns>The stage executor for method chaining</returns>
-    IStageExecutor Stage(Func<Task> commit, Action rollback);
+    IStageExecutor Stage(Func<ValueTask> commit, Action rollback);
 
     /// <summary>
     /// Adds a stage with asynchronous commit and rollback operations
@@ -53,7 +53,7 @@ public interface IStageExecutor
     /// <param name="commit">The commit operation</param>
     /// <param name="rollback">The rollback operation</param>
     /// <returns>The stage executor for method chaining</returns>
-    IStageExecutor Stage(Func<Task> commit, Func<Task> rollback);
+    IStageExecutor Stage(Func<ValueTask> commit, Func<ValueTask> rollback);
 
     /// <summary>
     /// Executes all stages and returns the result
