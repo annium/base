@@ -22,6 +22,18 @@ public sealed class JwtReader : ITokenReader<ClaimsPrincipal>
     /// <summary>Per-instance handler — <see cref="JwtSecurityTokenHandler"/> read paths are thread-safe.</summary>
     private readonly JwtSecurityTokenHandler _handler = new();
 
+    /// <summary>Message for an expired token, shared by the manual ValidTo check and the exception mapping.</summary>
+    private const string ExpiredMessage = "Token is expired";
+
+    /// <summary>Message for a not-yet-valid token, shared by the manual ValidFrom check and the exception mapping.</summary>
+    private const string NotYetValidMessage = "Token is not yet valid";
+
+    /// <summary>Message for an invalid signature, shared by the signature-related exception-mapping arms.</summary>
+    private const string InvalidSignatureMessage = "Token has invalid signature";
+
+    /// <summary>Message for a decryption failure, shared by the encryption-key / decryption exception-mapping arms.</summary>
+    private const string DecryptionFailedMessage = "Token decryption failed";
+
     public JwtReader(JwtTokensOptions options, ITimeProvider time)
     {
         _options = options;
@@ -67,14 +79,10 @@ public sealed class JwtReader : ITokenReader<ClaimsPrincipal>
             {
                 var nowUtc = _time.Now.ToDateTimeUtc();
                 if (jwt.ValidFrom > nowUtc)
-                    return new TokenReadResult<ClaimsPrincipal>(
-                        TokenReadStatus.NotYetValid,
-                        null,
-                        "Token is not yet valid"
-                    );
+                    return new TokenReadResult<ClaimsPrincipal>(TokenReadStatus.NotYetValid, null, NotYetValidMessage);
 
                 if (jwt.ValidTo <= nowUtc)
-                    return new TokenReadResult<ClaimsPrincipal>(TokenReadStatus.Expired, null, "Token is expired");
+                    return new TokenReadResult<ClaimsPrincipal>(TokenReadStatus.Expired, null, ExpiredMessage);
             }
 
             var identity = new ClaimsIdentity(jwt.Claims, "JWT");
@@ -154,21 +162,18 @@ public sealed class JwtReader : ITokenReader<ClaimsPrincipal>
     private static (TokenReadStatus status, string message) MapValidationFailure(Exception ex) =>
         ex switch
         {
-            SecurityTokenExpiredException => (TokenReadStatus.Expired, "Token is expired"),
-            SecurityTokenNotYetValidException => (TokenReadStatus.NotYetValid, "Token is not yet valid"),
+            SecurityTokenExpiredException => (TokenReadStatus.Expired, ExpiredMessage),
+            SecurityTokenNotYetValidException => (TokenReadStatus.NotYetValid, NotYetValidMessage),
             // SignatureKeyNotFound derives from InvalidSignature, so the more-specific arm comes first.
-            SecurityTokenSignatureKeyNotFoundException => (
-                TokenReadStatus.InvalidSignature,
-                "Token has invalid signature"
-            ),
-            SecurityTokenInvalidSignatureException => (TokenReadStatus.InvalidSignature, "Token has invalid signature"),
+            SecurityTokenSignatureKeyNotFoundException => (TokenReadStatus.InvalidSignature, InvalidSignatureMessage),
+            SecurityTokenInvalidSignatureException => (TokenReadStatus.InvalidSignature, InvalidSignatureMessage),
             SecurityTokenInvalidAudienceException => (TokenReadStatus.InvalidClaims, "Token has invalid audience"),
             SecurityTokenInvalidIssuerException => (TokenReadStatus.InvalidClaims, "Token has invalid issuer"),
             SecurityTokenInvalidLifetimeException => (TokenReadStatus.InvalidClaims, "Token has invalid lifetime"),
             SecurityTokenNoExpirationException => (TokenReadStatus.InvalidClaims, "Token has no expiration claim"),
             SecurityTokenDecompressionFailedException => (TokenReadStatus.Malformed, "Token decompression failed"),
-            SecurityTokenEncryptionKeyNotFoundException => (TokenReadStatus.Malformed, "Token decryption failed"),
-            SecurityTokenDecryptionFailedException => (TokenReadStatus.Malformed, "Token decryption failed"),
+            SecurityTokenEncryptionKeyNotFoundException => (TokenReadStatus.Malformed, DecryptionFailedMessage),
+            SecurityTokenDecryptionFailedException => (TokenReadStatus.Malformed, DecryptionFailedMessage),
             _ => (TokenReadStatus.Unknown, ex.Message),
         };
 }

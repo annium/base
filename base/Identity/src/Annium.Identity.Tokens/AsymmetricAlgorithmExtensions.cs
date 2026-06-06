@@ -10,6 +10,12 @@ namespace Annium.Identity.Tokens;
 /// </summary>
 public static class AsymmetricAlgorithmExtensions
 {
+    /// <summary>Number of groups in a key-id fingerprint (12 × 4 = 240 bits of the SHA-256 hash).</summary>
+    private const int KeyIdGroupCount = 12;
+
+    /// <summary>Character width of each key-id fingerprint group.</summary>
+    private const int KeyIdGroupSize = 4;
+
     /// <summary>
     /// Imports a PEM-formatted key into the algorithm
     /// </summary>
@@ -37,9 +43,13 @@ public static class AsymmetricAlgorithmExtensions
         var kidBase32 = Base32.Rfc4648.Encode(kidHash);
         var chunks = new List<string>();
 
-        for (var i = 0; i < 12; i++)
+        // Fixed-length fingerprint: the 32-byte SHA-256 hash base32-encodes to 52 chars; we take the
+        // first 12 groups of 4 (240 bits) and join them as XXXX:...:XXXX. The 12-group format is a
+        // deliberate, stable key-id shape (pinned by tests) — 240 bits is far beyond any collision
+        // concern, so dropping the final chars is intentional, not truncation of needed entropy.
+        for (var i = 0; i < KeyIdGroupCount; i++)
         {
-            chunks.Add(kidBase32[(i * 4)..(i * 4 + 4)]);
+            chunks.Add(kidBase32[(i * KeyIdGroupSize)..(i * KeyIdGroupSize + KeyIdGroupSize)]);
         }
 
         return string.Join(':', chunks);

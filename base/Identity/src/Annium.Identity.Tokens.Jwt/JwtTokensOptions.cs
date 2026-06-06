@@ -11,6 +11,7 @@ namespace Annium.Identity.Tokens.Jwt;
 public sealed class JwtTokensOptions
 {
     /// <summary>Key used both to sign (writer) and verify (reader) the token.</summary>
+    // required — populated by AddJwtTokens' configure delegate before the reader/writer first resolve.
     public SecurityKey SigningKey { get; set; } = null!;
 
     /// <summary>JWT signing algorithm — e.g., <c>SecurityAlgorithms.RsaSha256</c>.</summary>
