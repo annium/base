@@ -25,6 +25,7 @@ public class ExecutorExtensionsTests : TestBase
     /// <summary>
     /// Schedules a synchronous Action that succeeds; ExecuteAsync returns true
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task ExecuteAsync_Action_Scheduled_ReturnsTrue()
     {
@@ -49,6 +50,7 @@ public class ExecutorExtensionsTests : TestBase
     /// <summary>
     /// When the executor is already disposed, ExecuteAsync(Action) returns false
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task ExecuteAsync_Action_NotScheduled_ReturnsFalse()
     {
@@ -67,6 +69,7 @@ public class ExecutorExtensionsTests : TestBase
     /// <summary>
     /// When the scheduled Action throws, ExecuteAsync propagates the exception to the awaiter
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task ExecuteAsync_Action_TaskThrows_PropagatesException()
     {
@@ -93,6 +96,7 @@ public class ExecutorExtensionsTests : TestBase
     /// <summary>
     /// Schedules a cancellable synchronous Action that succeeds; ExecuteAsync returns true
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task ExecuteAsync_CancellableAction_Scheduled_ReturnsTrue()
     {
@@ -116,6 +120,7 @@ public class ExecutorExtensionsTests : TestBase
     /// <summary>
     /// When the executor is already disposed, ExecuteAsync(Action{CancellationToken}) returns false
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task ExecuteAsync_CancellableAction_NotScheduled_ReturnsFalse()
     {
@@ -134,6 +139,7 @@ public class ExecutorExtensionsTests : TestBase
     /// <summary>
     /// When the scheduled Action{CancellationToken} throws, ExecuteAsync propagates the exception
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task ExecuteAsync_CancellableAction_TaskThrows_PropagatesException()
     {
@@ -160,6 +166,7 @@ public class ExecutorExtensionsTests : TestBase
     /// propagates it as OperationCanceledException to the caller (via SetCanceled on the relay TCS),
     /// not as a generic fault — distinguishes it from an ordinary exception path.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task ExecuteAsync_CancellableAction_TaskThrowsOperationCanceled_PropagatesCancellation()
     {
@@ -188,6 +195,7 @@ public class ExecutorExtensionsTests : TestBase
     /// <summary>
     /// Schedules a synchronous Func{T} that succeeds; result carries the value (IsT0)
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task ExecuteAsync_Func_Scheduled_ReturnsValue()
     {
@@ -210,6 +218,7 @@ public class ExecutorExtensionsTests : TestBase
     /// <summary>
     /// When the executor is already disposed, ExecuteAsync(Func{T}) returns None (IsT1)
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task ExecuteAsync_Func_NotScheduled_ReturnsNone()
     {
@@ -228,6 +237,7 @@ public class ExecutorExtensionsTests : TestBase
     /// <summary>
     /// When the scheduled Func{T} throws, ExecuteAsync propagates the exception
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task ExecuteAsync_Func_TaskThrows_PropagatesException()
     {
@@ -254,6 +264,7 @@ public class ExecutorExtensionsTests : TestBase
     /// <summary>
     /// Schedules a cancellable synchronous Func{T} that succeeds; result carries the value (IsT0)
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task ExecuteAsync_CancellableFunc_Scheduled_ReturnsValue()
     {
@@ -276,6 +287,7 @@ public class ExecutorExtensionsTests : TestBase
     /// <summary>
     /// When the executor is already disposed, ExecuteAsync(Func{CancellationToken,T}) returns None (IsT1)
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task ExecuteAsync_CancellableFunc_NotScheduled_ReturnsNone()
     {
@@ -294,6 +306,7 @@ public class ExecutorExtensionsTests : TestBase
     /// <summary>
     /// When the scheduled Func{CancellationToken, T} throws, ExecuteAsync propagates the exception
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task ExecuteAsync_CancellableFunc_TaskThrows_PropagatesException()
     {
@@ -322,6 +335,7 @@ public class ExecutorExtensionsTests : TestBase
     /// <summary>
     /// Schedules an async Func{ValueTask} that succeeds; ExecuteAsync returns true
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task ExecuteAsync_ValueTask_Scheduled_ReturnsTrue()
     {
@@ -353,6 +367,7 @@ public class ExecutorExtensionsTests : TestBase
     /// <summary>
     /// When the executor is already disposed, ExecuteAsync(Func{ValueTask}) returns false
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task ExecuteAsync_ValueTask_NotScheduled_ReturnsFalse()
     {
@@ -371,6 +386,7 @@ public class ExecutorExtensionsTests : TestBase
     /// <summary>
     /// When the scheduled Func{ValueTask} throws, ExecuteAsync propagates the exception
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task ExecuteAsync_ValueTask_TaskThrows_PropagatesException()
     {
@@ -405,6 +421,7 @@ public class ExecutorExtensionsTests : TestBase
     /// <summary>
     /// Schedules a cancellable async Func{ValueTask} that succeeds; ExecuteAsync returns true
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task ExecuteAsync_CancellableValueTask_Scheduled_ReturnsTrue()
     {
@@ -436,6 +453,7 @@ public class ExecutorExtensionsTests : TestBase
     /// <summary>
     /// When the executor is already disposed, ExecuteAsync(Func{CancellationToken,ValueTask}) returns false
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task ExecuteAsync_CancellableValueTask_NotScheduled_ReturnsFalse()
     {
@@ -454,6 +472,7 @@ public class ExecutorExtensionsTests : TestBase
     /// <summary>
     /// When the scheduled Func{CancellationToken,ValueTask} throws, ExecuteAsync propagates the exception
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task ExecuteAsync_CancellableValueTask_TaskThrows_PropagatesException()
     {
@@ -486,6 +505,7 @@ public class ExecutorExtensionsTests : TestBase
     /// ExecuteAsync propagates it as OperationCanceledException to the caller (via SetCanceled on the
     /// relay TCS), not as a generic fault — distinguishes it from an ordinary exception path.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task ExecuteAsync_CancellableValueTask_TaskThrowsOperationCanceled_PropagatesCancellation()
     {
@@ -520,6 +540,7 @@ public class ExecutorExtensionsTests : TestBase
     /// <summary>
     /// Schedules an async Func{ValueTask{T}} that succeeds; result carries the value (IsT0)
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task ExecuteAsync_ValueTaskOfT_Scheduled_ReturnsValue()
     {
@@ -550,6 +571,7 @@ public class ExecutorExtensionsTests : TestBase
     /// <summary>
     /// When the executor is already disposed, ExecuteAsync(Func{ValueTask{T}}) returns None (IsT1)
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task ExecuteAsync_ValueTaskOfT_NotScheduled_ReturnsNone()
     {
@@ -576,6 +598,7 @@ public class ExecutorExtensionsTests : TestBase
     /// <summary>
     /// When the scheduled Func{ValueTask{T}} throws, ExecuteAsync propagates the exception
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task ExecuteAsync_ValueTaskOfT_TaskThrows_PropagatesException()
     {
@@ -610,6 +633,7 @@ public class ExecutorExtensionsTests : TestBase
     /// <summary>
     /// Schedules a cancellable async Func{ValueTask{T}} that succeeds; result carries the value (IsT0)
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task ExecuteAsync_CancellableValueTaskOfT_Scheduled_ReturnsValue()
     {
@@ -640,6 +664,7 @@ public class ExecutorExtensionsTests : TestBase
     /// <summary>
     /// When the executor is already disposed, ExecuteAsync(Func{CancellationToken,ValueTask{T}}) returns None (IsT1)
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task ExecuteAsync_CancellableValueTaskOfT_NotScheduled_ReturnsNone()
     {
@@ -666,6 +691,7 @@ public class ExecutorExtensionsTests : TestBase
     /// <summary>
     /// When the scheduled Func{CancellationToken,ValueTask{T}} throws, ExecuteAsync propagates the exception
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task ExecuteAsync_CancellableValueTaskOfT_TaskThrows_PropagatesException()
     {
