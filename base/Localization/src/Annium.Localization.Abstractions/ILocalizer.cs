@@ -17,7 +17,7 @@ public interface ILocalizer
     /// Gets the localized string for the specified entry
     /// </summary>
     /// <param name="entry">The entry key</param>
-    /// <returns>The localized string</returns>
+    /// <returns>The localized string, or the entry key itself when no translation exists for the current culture</returns>
     string this[string entry] { get; }
 
     /// <summary>
@@ -25,7 +25,7 @@ public interface ILocalizer
     /// </summary>
     /// <param name="entry">The entry key</param>
     /// <param name="arguments">The formatting arguments</param>
-    /// <returns>The formatted localized string</returns>
+    /// <returns>The formatted localized string, or the entry key itself (with the format applied) when no translation exists for the current culture</returns>
     string this[string entry, params object[] arguments] { get; }
 
     /// <summary>
@@ -33,6 +33,6 @@ public interface ILocalizer
     /// </summary>
     /// <param name="entry">The entry key</param>
     /// <param name="arguments">The formatting arguments</param>
-    /// <returns>The formatted localized string</returns>
+    /// <returns>The formatted localized string, or the entry key itself (with the format applied) when no translation exists for the current culture</returns>
     string this[string entry, IEnumerable<object> arguments] { get; }
 }

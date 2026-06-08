@@ -7,6 +7,12 @@ namespace Annium.Localization.Abstractions;
 /// <summary>
 /// Interface for loading locale data
 /// </summary>
+/// <remarks>
+/// The contract is synchronous and load-once-and-cache: implementations resolve a locale on the
+/// first request for a given (target, culture) and cache the result, so any blocking I/O (e.g. the
+/// YAML backend reading a file) is acceptable only on that first call. Implementations must not
+/// perform per-call blocking work or invoke asynchronous APIs on this synchronous path.
+/// </remarks>
 public interface ILocaleStorage
 {
     /// <summary>
