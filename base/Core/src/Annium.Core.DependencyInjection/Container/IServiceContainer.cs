@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 
 // ReSharper disable once CheckNamespace
@@ -28,6 +29,19 @@ public interface IServiceContainer : IEnumerable<IServiceDescriptor>
     /// re-attach handlers on the clone if post-build notification is needed there.
     /// </remarks>
     event Action<IServiceProvider> OnBuild;
+
+    /// <summary>
+    /// Event raised when the provider produced by <see cref="BuildServiceProvider"/> is disposed —
+    /// the asynchronous counterpart of <see cref="OnBuild"/>. Subscribers run before the underlying
+    /// provider is torn down, so they can still resolve and flush provider-dependent services.
+    /// </summary>
+    /// <remarks>
+    /// The invocation list is captured at build time into the returned
+    /// <see cref="IServiceProviderContainer"/>; later (un)subscriptions on this container do not
+    /// affect an already-built provider. Like <see cref="OnBuild"/>, subscribers are not propagated
+    /// by <see cref="Clone"/>.
+    /// </remarks>
+    event Func<ValueTask> OnDisposed;
 
     /// <summary>
     /// Register manually created service descriptor
@@ -126,6 +140,9 @@ public interface IServiceContainer : IEnumerable<IServiceDescriptor>
     /// <summary>
     /// Build service provider
     /// </summary>
-    /// <returns>The built service provider</returns>
-    ServiceProvider BuildServiceProvider();
+    /// <returns>
+    /// The built service provider, wrapped in an <see cref="IServiceProviderContainer"/> whose
+    /// disposal fires <see cref="OnDisposed"/> before tearing down the underlying provider.
+    /// </returns>
+    IServiceProviderContainer BuildServiceProvider();
 }

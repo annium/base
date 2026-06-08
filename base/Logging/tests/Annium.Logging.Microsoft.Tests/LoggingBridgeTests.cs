@@ -102,8 +102,42 @@ public class LoggingBridgeTests
 
         logger.LogInformation("should be delivered");
 
-        await Wait.UntilAsync(() => sink.Logs.Count == 1);
+        await Wait.UntilAsync(() => sink.Logs.Count == 1, TestContext.Current.CancellationToken);
         sink.Logs.At(0).Message.Is("should be delivered");
+    }
+
+    /// <summary>
+    /// <see cref="LoggingBridge"/> maps <see cref="MicrosoftLogLevel.Critical"/> to
+    /// <see cref="AnniumLogLevel.Error"/> (see the <c>Map</c> switch expression). With a
+    /// Trace-or-above route filter, a <c>Critical</c>-level log call must reach the in-memory
+    /// sink with <c>Level == AnniumLogLevel.Error</c>. This test fails if the mapping arm is
+    /// changed to any other level (e.g. <c>Fatal</c>).
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
+    [Fact]
+    public async Task Log_Critical_MapsToAnniumError()
+    {
+        var (logger, sink) = BuildBridge(filterMinLevel: AnniumLogLevel.Trace);
+
+        logger.LogCritical("critical");
+
+        await Wait.UntilAsync(() => sink.Logs.Count == 1, TestContext.Current.CancellationToken);
+        sink.Logs.Has(1);
+        sink.Logs.At(0).Level.Is(AnniumLogLevel.Error);
+    }
+
+    /// <summary>
+    /// When no routes are registered (UseLogging is never called), the scheduler list is empty
+    /// and <see cref="ILogSentryBridge.IsLevelEnabled"/> must return false for every level —
+    /// exercising the zero-schedulers guard in <c>LogSentryBridge</c>.
+    /// </summary>
+    [Fact]
+    public void IsEnabled_NoRoutesRegistered_ReturnsFalse()
+    {
+        var logger = BuildBridgeNoRoutes();
+
+        logger.IsEnabled(MicrosoftLogLevel.Information).IsFalse();
+        logger.IsEnabled(MicrosoftLogLevel.Error).IsFalse();
     }
 
     /// <summary>
@@ -129,5 +163,24 @@ public class LoggingBridgeTests
         var logger = msProvider.CreateLogger("test-source");
 
         return (logger, sink);
+    }
+
+    /// <summary>
+    /// Wires up an MS logger bridge with no routes registered (UseLogging is not called),
+    /// so the scheduler list stays empty.
+    /// </summary>
+    /// <returns>The MS logger bridge with an empty scheduler list.</returns>
+    private static IMicrosoftLogger BuildBridgeNoRoutes()
+    {
+        var container = new ServiceContainer();
+        container.AddTime().WithManagedTime().SetDefault();
+        container.AddLogging<DefaultLogContext>();
+        container.Collection.AddLoggingBridge();
+
+        var provider = container.BuildServiceProvider();
+
+        // Intentionally do NOT call provider.UseLogging — the scheduler list stays empty.
+        var msProvider = provider.Resolve<IMicrosoftLoggerProvider>();
+        return msProvider.CreateLogger("test-source");
     }
 }

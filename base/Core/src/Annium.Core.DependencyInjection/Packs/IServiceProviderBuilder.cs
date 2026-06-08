@@ -1,6 +1,5 @@
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
 
 // ReSharper disable once CheckNamespace
 namespace Annium.Core.DependencyInjection;
@@ -41,6 +40,6 @@ public interface IServiceProviderBuilder
     /// On any non-normal exit, partial state is disposed in reverse order (final before transient).
     /// </summary>
     /// <param name="ct">Cancellation token threaded to every pack phase</param>
-    /// <returns>The built service provider</returns>
-    Task<ServiceProvider> BuildAsync(CancellationToken ct);
+    /// <returns>The built service provider container.</returns>
+    Task<IServiceProviderContainer> BuildAsync(CancellationToken ct);
 }

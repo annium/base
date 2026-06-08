@@ -46,7 +46,10 @@ internal class ConsoleLogHandler<TContext> : ILogHandler<TContext>
                 foreach (var msg in messages)
                 {
                     if (_color)
-                        System.Console.ForegroundColor = StaticState.LevelColors[msg.Level];
+                        // fall back to a neutral color for any level absent from the map (e.g. LogLevel.None)
+                        System.Console.ForegroundColor = StaticState.LevelColors.TryGetValue(msg.Level, out var c)
+                            ? c
+                            : ConsoleColor.White;
 
                     System.Console.WriteLine(_format(msg));
                 }

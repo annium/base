@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
 using Annium.Core.DependencyInjection;
 using Annium.Core.Runtime;
@@ -63,6 +62,19 @@ public class LogRouteSchedulerSelectionTests
     }
 
     /// <summary>
+    /// A BufferingLogHandler-derived handler with .WithImmediateScheduler() must route through
+    /// ImmediateLogScheduler, overriding the default background selection.
+    /// </summary>
+    [Fact]
+    public void Use_BufferingHandler_WithImmediateScheduler_OverridesToImmediate()
+    {
+        var schedulers = BuildSchedulers(route => route.Use(new BufferingSink()).WithImmediateScheduler());
+
+        schedulers.Has(1);
+        schedulers.At(0).As<ImmediateLogScheduler<DefaultLogContext>>();
+    }
+
+    /// <summary>
     /// Builds a service provider, applies the route configuration, and returns the schedulers list.
     /// </summary>
     /// <param name="configure">An action that configures the log route under test.</param>
@@ -80,21 +92,6 @@ public class LogRouteSchedulerSelectionTests
         provider.UseLogging<DefaultLogContext>(configure);
 
         return provider.Resolve<List<ILogScheduler<DefaultLogContext>>>();
-    }
-
-    /// <summary>
-    /// Minimal non-buffering sink for selection tests.
-    /// </summary>
-    private sealed class SyncSink : ILogHandler<DefaultLogContext>
-    {
-        /// <summary>
-        /// Completes immediately, discarding all messages — used only to verify scheduler selection.
-        /// </summary>
-        /// <param name="messages">The log messages passed by the scheduler.</param>
-        /// <param name="ct">Cancellation token.</param>
-        /// <returns>A completed <see cref="ValueTask"/>.</returns>
-        public ValueTask HandleAsync(IReadOnlyList<LogMessage<DefaultLogContext>> messages, CancellationToken ct) =>
-            ValueTask.CompletedTask;
     }
 
     /// <summary>

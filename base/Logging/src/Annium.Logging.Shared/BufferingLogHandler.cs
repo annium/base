@@ -50,7 +50,11 @@ public abstract class BufferingLogHandler<TContext> : ILogHandler<TContext>
             return;
         }
 
-        while (!ct.IsCancellationRequested)
+        // Drain the retry buffer regardless of ct: the loop is bounded (it breaks on an empty buffer or
+        // a repeat send failure), and gating it on ct would drop already-buffered events on shutdown —
+        // BackgroundLogScheduler cancels its token before the final drain, so a ct gate here loses the
+        // failure-buffer exactly when we most want it flushed.
+        while (true)
         {
             // pick slice to send
             lock (_eventsBuffer)

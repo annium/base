@@ -4,7 +4,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Annium.Logging.Shared.Internal;
 using Annium.Testing;
-using NodaTime;
 using Xunit;
 
 namespace Annium.Logging.Shared.Tests.Internal;
@@ -38,7 +37,7 @@ public class BackgroundLogSchedulerTests
         // enqueue batches — must yield briefly so the buffer flushes individual items
         for (var i = 0; i < batchCount; i++)
         {
-            scheduler.Handle(BuildMessage(i));
+            scheduler.Handle(LoggingTestHelpers.BuildMessage(i));
             // small wait so Buffer operator emits this item in its own batch (BufferCount=1
             // means "flush after 1 item" — the emission still happens asynchronously)
             await Task.Delay(15, TestContext.Current.CancellationToken);
@@ -78,26 +77,30 @@ public class BackgroundLogSchedulerTests
     }
 
     /// <summary>
-    /// Constructs a synthetic log message for scheduler plumbing.
+    /// <see cref="LogRouteConfiguration.BufferCount"/> equal to zero is degenerate
+    /// (a buffer that never fills is invalid). The constructor must reject it.
     /// </summary>
-    /// <param name="seq">Sequence number</param>
-    /// <returns>Log message instance</returns>
-    private static LogMessage<DefaultLogContext> BuildMessage(int seq) =>
-        new(
-            new DefaultLogContext(),
-            Instant.FromUnixTimeTicks(seq),
-            "test",
-            "id",
-            LogLevel.Info,
-            0,
-            $"msg-{seq}",
-            null,
-            string.Empty,
-            new Dictionary<string, object?>(),
-            "type",
-            "member",
-            0
-        );
+    [Fact]
+    public void Ctor_BufferCountZero_Throws()
+    {
+        var config = new LogRouteConfiguration { BufferTime = TimeSpan.FromMilliseconds(10), BufferCount = 0 };
+
+        Wrap.It(() => new BackgroundLogScheduler<DefaultLogContext>(_ => true, new NoOpSink(), config))
+            .Throws<ArgumentOutOfRangeException>();
+    }
+
+    /// <summary>
+    /// Negative <see cref="LogRouteConfiguration.BufferCount"/> is also invalid.
+    /// Mirrors the negative-<c>BufferTime</c> guard test.
+    /// </summary>
+    [Fact]
+    public void Ctor_BufferCountNegative_Throws()
+    {
+        var config = new LogRouteConfiguration { BufferTime = TimeSpan.FromMilliseconds(10), BufferCount = -1 };
+
+        Wrap.It(() => new BackgroundLogScheduler<DefaultLogContext>(_ => true, new NoOpSink(), config))
+            .Throws<ArgumentOutOfRangeException>();
+    }
 
     /// <summary>
     /// Deliberately slow async log handler — each batch call blocks for a fixed duration.
@@ -126,22 +129,5 @@ public class BackgroundLogSchedulerTests
             await Task.Delay(perBatch);
             Interlocked.Increment(ref _batchCount);
         }
-    }
-
-    /// <summary>
-    /// Minimal handler that ignores incoming batches — used by ctor-guard tests where the
-    /// scheduler is expected to fail before any handler call is made.
-    /// </summary>
-    private sealed class NoOpSink : ILogHandler<DefaultLogContext>
-    {
-        /// <summary>
-        /// Immediately completes without processing the batch — used by constructor-guard tests
-        /// where the scheduler is expected to fail before any handler call is made.
-        /// </summary>
-        /// <param name="messages">The batch of log messages (ignored).</param>
-        /// <param name="ct">Cancellation token (ignored).</param>
-        /// <returns>A completed value task.</returns>
-        public ValueTask HandleAsync(IReadOnlyList<LogMessage<DefaultLogContext>> messages, CancellationToken ct) =>
-            ValueTask.CompletedTask;
     }
 }

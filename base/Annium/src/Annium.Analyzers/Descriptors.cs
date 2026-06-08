@@ -34,6 +34,19 @@ internal static class Descriptors
     );
 
     /// <summary>
+    /// Diagnostic descriptor for detecting malformed (unbalanced-brace) log message templates.
+    /// </summary>
+    internal static readonly DiagnosticDescriptor Log0003MalformedLogMessageTemplate = new(
+        id: "LOG0003",
+        title: "Log message template is malformed",
+        // no format args are supplied, so the message is used verbatim — single braces render as-is
+        messageFormat: "Log message template has unbalanced '{' / '}' braces",
+        category: "Logging",
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true
+    );
+
+    /// <summary>
     /// Diagnostic descriptor for detecting explicit values passed to caller-info parameters of logging extension methods.
     /// </summary>
     internal static readonly DiagnosticDescriptor Log0002ExplicitCallerArgument = new(

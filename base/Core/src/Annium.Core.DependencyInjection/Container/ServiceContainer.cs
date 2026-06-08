@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Annium.Core.DependencyInjection.Internal.Builders;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -27,6 +28,11 @@ public class ServiceContainer : IServiceContainer
     /// Event raised when the service provider is built.
     /// </summary>
     public event Action<IServiceProvider> OnBuild = delegate { };
+
+    /// <summary>
+    /// Event raised when the built provider is disposed — async counterpart of <see cref="OnBuild"/>.
+    /// </summary>
+    public event Func<ValueTask> OnDisposed = () => ValueTask.CompletedTask;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ServiceContainer"/> class with a new service collection.
@@ -126,8 +132,9 @@ public class ServiceContainer : IServiceContainer
     /// Clone existing container.
     /// </summary>
     /// <remarks>
-    /// Only descriptors are copied. <see cref="OnBuild"/> subscribers are NOT propagated to the
-    /// clone — callers that need post-build notification on the clone must re-attach handlers to it.
+    /// Only descriptors are copied. <see cref="OnBuild"/> and <see cref="OnDisposed"/> subscribers are
+    /// NOT propagated to the clone — callers that need post-build/dispose notification on the clone
+    /// must re-attach handlers to it.
     /// </remarks>
     /// <returns>container clone</returns>
     public IServiceContainer Clone()
@@ -198,15 +205,30 @@ public class ServiceContainer : IServiceContainer
     }
 
     /// <summary>
-    /// Build service provider
+    /// Build service provider. The underlying provider is wrapped in an
+    /// <see cref="IServiceProviderContainer"/> that captures the current <see cref="OnDisposed"/>
+    /// invocation list and fires it before tearing down the provider on dispose.
     /// </summary>
-    /// <returns>The built service provider</returns>
-    public ServiceProvider BuildServiceProvider()
+    /// <returns>The built service provider container.</returns>
+    public IServiceProviderContainer BuildServiceProvider()
     {
         var sp = Collection.BuildServiceProvider();
-        OnBuild.Invoke(sp);
+        var onDisposed = OnDisposed;
+        var container = new ServiceProviderContainer(sp, () => InvokeOnDisposedAsync(onDisposed));
+        OnBuild.Invoke(container);
 
-        return sp;
+        return container;
+    }
+
+    /// <summary>
+    /// Sequentially awaits every subscriber on the captured <see cref="OnDisposed"/> invocation list.
+    /// </summary>
+    /// <param name="onDisposed">The invocation list captured at build time.</param>
+    /// <returns>A task that completes once all subscribers have run.</returns>
+    private static async ValueTask InvokeOnDisposedAsync(Func<ValueTask> onDisposed)
+    {
+        foreach (var handler in onDisposed.GetInvocationList())
+            await ((Func<ValueTask>)handler)().ConfigureAwait(false);
     }
 
     /// <summary>

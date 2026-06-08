@@ -78,7 +78,7 @@ public class Entrypoint
             _cts.Dispose();
         };
 
-        ServiceProvider provider;
+        IServiceProviderContainer provider;
         try
         {
             provider = await _serviceProviderBuilder.BuildAsync(_cts.Token).ConfigureAwait(false);

@@ -8,12 +8,12 @@ namespace Annium.Logging.Shared;
 public record LogRouteConfiguration
 {
     /// <summary>
-    /// Gets or sets the maximum time to buffer log messages before flushing
+    /// Gets the maximum time to buffer log messages before flushing
     /// </summary>
-    public TimeSpan BufferTime { get; set; } = TimeSpan.FromSeconds(5);
+    public TimeSpan BufferTime { get; init; } = TimeSpan.FromSeconds(5);
 
     /// <summary>
-    /// Gets or sets the maximum number of log messages to buffer before flushing
+    /// Gets the maximum number of log messages to buffer before flushing
     /// </summary>
-    public int BufferCount { get; set; } = 5;
+    public int BufferCount { get; init; } = 5;
 }

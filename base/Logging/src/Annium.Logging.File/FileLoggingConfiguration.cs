@@ -12,7 +12,7 @@ public record FileLoggingConfiguration<TContext> : LogRouteConfiguration
     where TContext : class
 {
     /// <summary>
-    /// Gets or sets the function to determine the file path for each log message.
+    /// Gets the function to determine the file path for each log message.
     /// </summary>
-    public Func<LogMessage<TContext>, string>? GetFile { get; set; }
+    public Func<LogMessage<TContext>, string>? GetFile { get; init; }
 }

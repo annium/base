@@ -114,17 +114,17 @@ internal class ServiceProviderBuilder : IServiceProviderBuilder
     /// </para>
     /// </summary>
     /// <param name="ct">Cancellation token threaded to every pack phase</param>
-    /// <returns>The built service provider.</returns>
+    /// <returns>The built service provider container.</returns>
     /// <exception cref="InvalidOperationException">Thrown when the builder has already produced a provider successfully.</exception>
     /// <exception cref="OperationCanceledException">Thrown when <paramref name="ct"/> is cancelled during a pack await or at a phase boundary check.</exception>
     /// <exception cref="AggregateException">Thrown when a dispose call inside the catch handler throws; <c>InnerExceptions[0]</c> is the original phase/cancel exception.</exception>
-    public async Task<ServiceProvider> BuildAsync(CancellationToken ct)
+    public async Task<IServiceProviderContainer> BuildAsync(CancellationToken ct)
     {
         if (_isAlreadyBuilt)
             throw new InvalidOperationException("ServiceProviderBuilder is already built");
 
         ServiceProvider? transient = null;
-        ServiceProvider? final = null;
+        IServiceProviderContainer? final = null;
 
         // Work on a clone of _container so a Configure/Register failure leaves _container
         // unchanged — the caller can retry from a clean baseline.
@@ -204,8 +204,8 @@ internal class ServiceProviderBuilder : IServiceProviderBuilder
     /// <returns>A task that completes once disposal finishes; it throws rather than returning a value when a dispose fails.</returns>
     internal static async Task DisposeWithAggregationAsync(
         Exception original,
-        ServiceProvider? final,
-        ServiceProvider? transient
+        IAsyncDisposable? final,
+        IAsyncDisposable? transient
     )
     {
         List<Exception>? disposeErrors = null;
@@ -224,7 +224,7 @@ internal class ServiceProviderBuilder : IServiceProviderBuilder
         aggregated.AddRange(disposeErrors);
         throw new AggregateException(aggregated);
 
-        async Task DisposeOneAsync(ServiceProvider sp)
+        async Task DisposeOneAsync(IAsyncDisposable sp)
         {
             try
             {

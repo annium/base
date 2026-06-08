@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Annium.Core.DependencyInjection;
 using Annium.Core.Mapper;
@@ -59,7 +60,38 @@ public static class ServiceContainerExtensions
             p.Map<string, LogLevel>(x => EnumExtensions.ParseEnum<LogLevel>((string)x));
         });
 
-        container.OnBuild += sp => sp.Resolve<LogRouter<TContext>>();
+        // capture the built provider so OnDisposed can resolve and tear down the schedulers (the
+        // schedulers live in an unregistered List singleton, so the provider never disposes them).
+        IServiceProvider? builtProvider = null;
+        container.OnBuild += sp =>
+        {
+            builtProvider = sp;
+            sp.Resolve<LogRouter<TContext>>();
+        };
+
+        // on provider disposal, dispose every scheduler (which in turn disposes its owned handler,
+        // e.g. FileLogHandler's gate). Background schedulers also drain buffered messages here.
+        container.OnDisposed += async () =>
+        {
+            if (builtProvider is null)
+                return;
+
+            var schedulers = builtProvider.Resolve<List<ILogScheduler<TContext>>>();
+            foreach (var scheduler in schedulers)
+                switch (scheduler)
+                {
+                    case IAsyncDisposable ad:
+                        await ad.DisposeAsync();
+                        break;
+                    case IDisposable d:
+                        // VSTHRD103: fallback for a scheduler that is only IDisposable; async disposal
+                        // is handled by the IAsyncDisposable arm above, so Dispose() is the correct call.
+#pragma warning disable VSTHRD103
+                        d.Dispose();
+#pragma warning restore VSTHRD103
+                        break;
+                }
+        };
 
         return container;
     }

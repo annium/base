@@ -6,7 +6,7 @@ namespace Annium.Logging.Shared.Internal;
 /// Interface for log schedulers that handle and filter log messages
 /// </summary>
 /// <typeparam name="TContext">The type of log context</typeparam>
-public interface ILogScheduler<TContext>
+internal interface ILogScheduler<TContext>
     where TContext : class
 {
     /// <summary>

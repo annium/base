@@ -53,9 +53,11 @@ public class ServiceProviderFactory : IServiceProviderFactory<IServiceProviderBu
     /// </summary>
     /// <param name="container">The service provider builder to build from</param>
     /// <param name="ct">Cancellation token threaded to every pack phase</param>
-    /// <returns>The built service provider</returns>
-    public Task<ServiceProvider> CreateServiceProviderAsync(IServiceProviderBuilder container, CancellationToken ct) =>
-        container.BuildAsync(ct);
+    /// <returns>The built service provider container.</returns>
+    public Task<IServiceProviderContainer> CreateServiceProviderAsync(
+        IServiceProviderBuilder container,
+        CancellationToken ct
+    ) => container.BuildAsync(ct);
 
     /// <summary>
     /// M.E.DI host bridge — the one documented sync-over-async in the framework, required by

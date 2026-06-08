@@ -17,7 +17,7 @@ public class BaseLoggerTest : TestBase
     /// <summary>
     /// Collection of captured log messages for testing
     /// </summary>
-    private readonly IList<LogMessage<Context>> _messages = new List<LogMessage<Context>>();
+    private readonly List<LogMessage<Context>> _messages = new();
 
     public BaseLoggerTest(ITestOutputHelper outputHelper)
         : base(outputHelper) { }
@@ -69,14 +69,15 @@ public class BaseLoggerTest : TestBase
     public void LogTrace_WritesTraceLogEntry()
     {
         // arrange
+        OverrideLogLevel(LogLevel.Trace); // global LogConfig gate defaults above Trace; restored on dispose
         var provider = GetProvider();
         var subject = provider.GetSubject();
 
         // act
-        subject.Info("sample");
+        subject.Trace("sample");
 
         // assert
-        _messages.At(0).Level.Is(LogLevel.Info);
+        _messages.At(0).Level.Is(LogLevel.Trace);
     }
 
     /// <summary>
@@ -86,14 +87,15 @@ public class BaseLoggerTest : TestBase
     public void LogDebug_WritesDebugLogEntry()
     {
         // arrange
+        OverrideLogLevel(LogLevel.Debug); // global LogConfig gate defaults above Debug; restored on dispose
         var provider = GetProvider();
         var subject = provider.GetSubject();
 
         // act
-        subject.Warn("sample");
+        subject.Debug("sample");
 
         // assert
-        _messages.At(0).Level.Is(LogLevel.Warn);
+        _messages.At(0).Level.Is(LogLevel.Debug);
     }
 
     /// <summary>
@@ -196,9 +198,9 @@ public class BaseLoggerTest : TestBase
         /// <summary>
         /// Gets the collection of captured log messages
         /// </summary>
-        public IList<LogMessage<Context>> Messages { get; }
+        public List<LogMessage<Context>> Messages { get; }
 
-        public LogHandler(IList<LogMessage<Context>> messages)
+        public LogHandler(List<LogMessage<Context>> messages)
         {
             Messages = messages;
         }

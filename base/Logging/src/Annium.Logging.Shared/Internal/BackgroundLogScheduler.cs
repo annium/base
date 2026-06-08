@@ -35,6 +35,14 @@ internal class BackgroundLogScheduler<TContext> : ILogScheduler<TContext>, ILogS
     private bool _isDisposed;
 
     /// <summary>
+    /// Atomic dispose guard: <c>0</c> until the first <see cref="DisposeAsync"/> wins the
+    /// <see cref="Interlocked.Exchange(ref int, int)"/>, then <c>1</c>. Makes disposal idempotent even
+    /// under a concurrent double-dispose (a scheduler can be reached by more than one OnDisposed
+    /// subscriber when AddLogging is called multiple times on the same container).
+    /// </summary>
+    private int _disposeGuard;
+
+    /// <summary>
     /// Channel reader for consuming log messages
     /// </summary>
     private readonly ChannelReader<LogMessage<TContext>> _messageReader;
@@ -58,6 +66,12 @@ internal class BackgroundLogScheduler<TContext> : ILogScheduler<TContext>, ILogS
     /// Subscription to the observable stream
     /// </summary>
     private readonly IDisposable _subscription;
+
+    /// <summary>
+    /// The handler this scheduler dispatches batches to. Retained so it can be disposed when the
+    /// scheduler is disposed (the handler may own resources, e.g. <c>FileLogHandler</c>'s gate).
+    /// </summary>
+    private readonly ILogHandler<TContext> _handler;
 
     /// <summary>
     /// Completion source signalled when the sink pipeline (Buffer → DoSequentialAsync → handler)
@@ -86,6 +100,7 @@ internal class BackgroundLogScheduler<TContext> : ILogScheduler<TContext>, ILogS
 
         Logger = VoidLogger.Instance;
         Filter = filter;
+        _handler = handler;
 
         var channel = Channel.CreateUnbounded<LogMessage<TContext>>(
             new UnboundedChannelOptions
@@ -104,7 +119,10 @@ internal class BackgroundLogScheduler<TContext> : ILogScheduler<TContext>, ILogS
             .Buffer(configuration.BufferTime, configuration.BufferCount)
             .Where(x => x.Count > 0)
             .DoSequentialAsync(async x => await handler.HandleAsync(x.AsReadOnly(), _observableCts.Token))
-            .Subscribe(_ => { }, () => _pipelineDrained.TrySetResult());
+            // onError unblocks the drain (rather than the default OnErrorNotImplementedException): a
+            // pipeline fault during teardown must still complete _pipelineDrained so DisposeAsync never
+            // hangs. Disposal robustness is prioritized over surfacing a terminal teardown error.
+            .Subscribe(_ => { }, _ => _pipelineDrained.TrySetResult(), () => _pipelineDrained.TrySetResult());
     }
 
     /// <summary>
@@ -116,8 +134,15 @@ internal class BackgroundLogScheduler<TContext> : ILogScheduler<TContext>, ILogS
         EnsureNotDisposed();
 
         lock (_messageWriter)
+        {
+            // re-check under the lock: DisposeAsync sets _isDisposed and then completes the writer under
+            // this same lock, so a Handle racing disposal could otherwise pass the outer check, find the
+            // writer already completed, and throw the misleading "must have been written" error. Surface
+            // the disposed state with the consistent exception instead.
+            EnsureNotDisposed();
             if (!_messageWriter.TryWrite(message))
                 throw new InvalidOperationException("Message must have been written to channel");
+        }
     }
 
     /// <summary>
@@ -166,11 +191,21 @@ internal class BackgroundLogScheduler<TContext> : ILogScheduler<TContext>, ILogS
     public async ValueTask DisposeAsync()
     {
         this.Trace("start");
-        EnsureNotDisposed();
+        // idempotent (atomic): a scheduler may be reached by more than one OnDisposed subscriber when
+        // AddLogging is called multiple times on the same container (the schedulers live in a shared
+        // singleton list), so a second dispose — even a concurrent one — must be a no-op rather than
+        // throw or double-dispose.
+        if (Interlocked.Exchange(ref _disposeGuard, 1) != 0)
+        {
+            this.Trace("already disposed, skip");
+            return;
+        }
+
         Volatile.Write(ref _isDisposed, true);
         lock (_messageWriter)
             _messageWriter.Complete();
         this.Trace("wait for reader completion");
+        // awaiting our own channel's completion, not a foreign task — VSTHRD003 false positive
 #pragma warning disable VSTHRD003
         await _messageReader.Completion;
 #pragma warning restore VSTHRD003
@@ -179,11 +214,30 @@ internal class BackgroundLogScheduler<TContext> : ILogScheduler<TContext>, ILogS
         this.Trace("await observable");
         await _observable.WhenCompletedAsync(Logger);
         this.Trace("await pipeline drain");
+        // awaiting our own pipeline-drain completion source, not a foreign task — VSTHRD003 false positive
 #pragma warning disable VSTHRD003
         await _pipelineDrained.Task;
 #pragma warning restore VSTHRD003
         this.Trace("dispose subscription");
         _subscription.Dispose();
+        _observableCts.Dispose();
+
+        // dispose the owned handler last — after the pipeline has drained, so no in-flight batch
+        // touches a handler resource (e.g. FileLogHandler's gate) after it is released.
+        switch (_handler)
+        {
+            case IAsyncDisposable ad:
+                await ad.DisposeAsync();
+                break;
+            case IDisposable d:
+                // VSTHRD103: fallback for a handler that is only IDisposable (e.g. FileLogHandler's
+                // gate); async disposal is handled by the IAsyncDisposable arm above, so Dispose() is correct.
+#pragma warning disable VSTHRD103
+                d.Dispose();
+#pragma warning restore VSTHRD103
+                break;
+        }
+
         this.Trace("done");
     }
 
