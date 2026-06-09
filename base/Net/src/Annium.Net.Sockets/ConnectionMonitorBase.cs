@@ -5,9 +5,12 @@ using Annium.Logging;
 namespace Annium.Net.Sockets;
 
 /// <summary>
-/// Base class for connection monitors that detect when socket connections are lost.
+/// Base class for connection monitors that detect when socket connections are lost. Implements
+/// <see cref="IConnectionMonitor"/> and centralizes the start/stop idempotency invariant
+/// (<see cref="Interlocked"/>-guarded running flag); subclasses supply only
+/// <see cref="HandleStart"/> / <see cref="HandleStop"/>.
 /// </summary>
-public abstract class ConnectionMonitorBase : ILogSubject
+public abstract class ConnectionMonitorBase : IConnectionMonitor, ILogSubject
 {
     /// <summary>
     /// Gets the logger instance.
@@ -27,11 +30,10 @@ public abstract class ConnectionMonitorBase : ILogSubject
     private int _isRunning;
 
     /// <summary>
-    /// Returns the current running flag using a volatile read so background callers (e.g. timer
-    /// callbacks) observe the latest write made by <see cref="Start"/> / <see cref="Stop"/>.
+    /// Gets whether the monitor is currently running, using a volatile read so background callers
+    /// (e.g. timer callbacks) observe the latest write made by <see cref="Start"/> / <see cref="Stop"/>.
     /// </summary>
-    /// <returns>1 when the monitor is running, 0 otherwise.</returns>
-    protected int ReadIsRunning() => Volatile.Read(ref _isRunning);
+    protected bool IsRunning => Volatile.Read(ref _isRunning) == 1;
 
     /// <summary>
     /// Initializes a new instance of the ConnectionMonitorBase class.

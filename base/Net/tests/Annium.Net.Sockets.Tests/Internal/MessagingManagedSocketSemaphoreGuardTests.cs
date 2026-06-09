@@ -28,8 +28,8 @@ public class MessagingManagedSocketSemaphoreGuardTests
     public async Task SendAsync_PreCancelledToken_DoesNotCorruptSemaphore()
     {
         // arrange — a MemoryStream is enough; we exercise the semaphore path only
-        var stream = new MemoryStream();
-        var socket = new MessagingManagedSocket(stream, ManagedSocketOptionsBase.Default, VoidLogger.Instance);
+        using var stream = new MemoryStream();
+        using var socket = new MessagingManagedSocket(stream, ManagedSocketOptionsBase.Default, VoidLogger.Instance);
 
         using var cts = new CancellationTokenSource();
         await cts.CancelAsync();

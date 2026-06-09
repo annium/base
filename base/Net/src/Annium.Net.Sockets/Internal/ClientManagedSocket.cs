@@ -70,6 +70,14 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
 
         TeardownUnderLock();
 
+        // TeardownUnderLock only disposes _listenCts when a live connection was torn down; on the
+        // never-connected (or double-dispose) path it returns early. Dispose _listenCts here so the
+        // constructor-created instance is always released. CTS.Dispose() is idempotent, so the
+        // connected path (already disposed under the lock) is a safe no-op.
+#pragma warning disable VSTHRD103
+        _listenCts.Dispose();
+#pragma warning restore VSTHRD103
+
         this.Trace("done");
     }
 
@@ -94,10 +102,11 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
 
         Stream? stream = null;
         IManagedSocket? socket = null;
+        Socket? nativeSocket = null;
         try
         {
             this.Trace("create native socket");
-            var nativeSocket = new Socket(SocketType.Stream, ProtocolType.Tcp);
+            nativeSocket = new Socket(SocketType.Stream, ProtocolType.Tcp);
 
             this.Trace("connect native socket to {endpoint}", endpoint);
             await nativeSocket.ConnectAsync(endpoint, ct);
@@ -147,13 +156,25 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
                     cn.Dispose();
 #pragma warning restore VSTHRD103
 
-                    return null;
+                    // return a non-null exception, not null: null is the success sentinel, which would
+                    // make the caller fire OnConnected and subscribe the stale pre-connect IsClosed task
+                    // even though the connection was just torn down. A non-null result routes the caller
+                    // through its failed-connect path instead.
+                    return new OperationCanceledException(ct);
                 }
 
                 this.Trace("save connection");
                 _cn = cn;
 
                 this.Trace("create listen cts");
+                // dispose the previous CTS before replacing it: the constructor-created instance
+                // is never used for a listen task and would otherwise leak on first connect;
+                // CancellationTokenSource.Dispose() is idempotent, so a reconnect (where teardown
+                // already disposed it) is safe.
+                // VSTHRD103: CancellationTokenSource.Dispose() is synchronous (no DisposeAsync).
+#pragma warning disable VSTHRD103
+                _listenCts.Dispose();
+#pragma warning restore VSTHRD103
                 _listenCts = new CancellationTokenSource();
 
                 this.Trace("create listen task");
@@ -176,6 +197,14 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
             this.Error("failed: {e}", e);
 
             Cleanup(stream, socket);
+
+            // if no Stream wrapped the native socket yet (e.g. nativeSocket.ConnectAsync threw on
+            // timeout/refusal), the NetworkStream never took ownership (ownsSocket: true) — dispose
+            // the native socket here to avoid leaking the OS handle on every failed connect.
+#pragma warning disable VSTHRD103
+            if (stream is null)
+                nativeSocket?.Dispose();
+#pragma warning restore VSTHRD103
 
             this.Trace("done (not connected)");
 

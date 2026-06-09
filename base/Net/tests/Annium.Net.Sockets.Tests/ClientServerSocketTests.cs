@@ -504,6 +504,9 @@ public class ClientServerSocketTests : TestBase
         var clientTcs = new TaskCompletionSource();
         var connectionIndex = 0;
         var connectionsCount = 3;
+        // seeded so the per-connection break points are deterministic and reproducible across runs
+        // (handlers run serially across reconnects, so a single shared instance is safe).
+        var breakRandom = new Random(12345);
 
         this.Trace("run server");
         await using var server = _runServer(
@@ -511,12 +514,15 @@ public class ClientServerSocketTests : TestBase
             {
                 this.Trace("start sending messages");
 
-                connectionIndex++;
+                // Interlocked + a local snapshot: the handler runs per accepted connection on a
+                // pool thread, so a non-atomic connectionIndex++ would be a data race if a reconnect
+                // ever overlapped the prior handler.
+                var idx = Interlocked.Increment(ref connectionIndex);
 
-                var complete = connectionIndex == connectionsCount;
+                var complete = idx == connectionsCount;
 
                 var i = 0;
-                var breakAtMessage = complete ? int.MaxValue : new Random().Next(1, messages.Count - 1);
+                var breakAtMessage = complete ? int.MaxValue : breakRandom.Next(1, messages.Count - 1);
                 foreach (var message in messages)
                 {
                     i++;
@@ -526,7 +532,7 @@ public class ClientServerSocketTests : TestBase
                     {
                         this.Trace(
                             "disconnect, connection {connectionIndex}/{connectionsCount} at message#{num}",
-                            connectionIndex,
+                            idx,
                             connectionsCount,
                             i
                         );
@@ -600,8 +606,8 @@ public class ClientServerSocketTests : TestBase
         Configure(streamType, serverOptions);
 
         // arrange
-        this.Trace("generate messages");
-        var disconnectCounter = 0;
+        this.Trace("prepare disconnect signal");
+        var disconnectedTcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 
         this.Trace("run server");
         await using var server = _runServer(
@@ -619,18 +625,20 @@ public class ClientServerSocketTests : TestBase
         ClientSocket.OnDisconnected += _ =>
         {
             this.Trace("disconnected");
-            Interlocked.Increment(ref disconnectCounter);
+            // first loss wins; with ReconnectDelay=1 the client may cycle, so we only assert the
+            // first OnDisconnected — not an exact count.
+            disconnectedTcs.TrySetResult();
         };
 
         this.Trace("connect");
         await ConnectAsync(server);
 
-        this.Trace("wait");
-        await Task.Delay(700, TestContext.Current.CancellationToken);
-
-        // assert
-        this.Trace("assert disconnected");
-        disconnectCounter.Is(1);
+        // assert — the client connection monitor (PingInterval=100/MaxPingDelay=500) gets no pong
+        // from the server (whose monitor is effectively disabled at 60s/300s) and fires
+        // OnDisconnected. Awaiting the signal (bounded) replaces a fixed Task.Delay(700), so the
+        // test no longer races a ~500ms timeout against a fixed window — robust under CI load.
+        this.Trace("assert disconnected within timeout");
+        await disconnectedTcs.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
 
         this.Trace("done");
     }
@@ -716,7 +724,7 @@ public class ClientServerSocketTests : TestBase
     {
         this.Trace("start");
 
-        _clientSocket?.Disconnect();
+        _clientSocket?.Dispose();
 
         this.Trace("done");
 

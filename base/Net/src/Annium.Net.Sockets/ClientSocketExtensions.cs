@@ -43,9 +43,9 @@ public static class ClientSocketExtensions
     /// <param name="socket">The client socket to monitor.</param>
     /// <param name="ct">Cancellation token.</param>
     /// <returns>A task that completes when the socket connects.</returns>
-    public static Task WhenConnectedAsync(this IClientSocket socket, CancellationToken ct = default)
+    public static async Task WhenConnectedAsync(this IClientSocket socket, CancellationToken ct = default)
     {
-        var tcs = new TaskCompletionSource();
+        var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 
         socket.Trace<string>("subscribe {tcs} to OnConnected", tcs.GetFullId());
 
@@ -53,12 +53,20 @@ public static class ClientSocketExtensions
         {
             socket.Trace<string>("set {tcs} to signaled state", tcs.GetFullId());
             tcs.TrySetResult();
-            socket.OnConnected -= HandleConnected;
         }
 
         socket.OnConnected += HandleConnected;
 
-        return tcs.Task.WaitAsync(ct);
+        // unsubscribe in finally so a cancelled wait does not leak the handler on the socket's
+        // OnConnected multicast list (the handler no longer self-unsubscribes).
+        try
+        {
+            await tcs.Task.WaitAsync(ct);
+        }
+        finally
+        {
+            socket.OnConnected -= HandleConnected;
+        }
     }
 
     /// <summary>

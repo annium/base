@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Security;
 using System.Net.Sockets;
@@ -20,7 +21,9 @@ public abstract class TestBase : Testing.TestBase
     /// <summary>
     /// Random number generator for test data
     /// </summary>
-    private readonly Random _random = new();
+    // seeded so generated message sizes/contents are deterministic and reproducible across runs
+    // (a failure on a particular size can be re-run; a fresh TestBase per test gives each its own sequence).
+    private readonly Random _random = new(12345);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TestBase"/> class
@@ -63,6 +66,47 @@ public abstract class TestBase : Testing.TestBase
             checkCertificateRevocation: true
         );
         return sslStream;
+    }
+
+    /// <summary>
+    /// Creates a plain (non-SSL) client-side stream over the connected socket. The returned
+    /// <see cref="NetworkStream"/> owns the socket (<c>ownsSocket: true</c>) so disposing the stream
+    /// in test teardown closes the socket.
+    /// </summary>
+    /// <param name="socket">The connected client socket.</param>
+    /// <returns>A plain client stream owning <paramref name="socket"/>.</returns>
+    protected static Task<Stream> CreatePlainClientStreamAsync(Socket socket)
+    {
+        return Task.FromResult<Stream>(new NetworkStream(socket, ownsSocket: true));
+    }
+
+    /// <summary>
+    /// Creates an authenticated SSL client-side stream over the connected socket. The inner
+    /// <see cref="NetworkStream"/> owns the socket (<c>ownsSocket: true</c>) and the
+    /// <see cref="SslStream"/> owns the inner stream, so disposing the returned stream in test
+    /// teardown closes the socket. Server certificate validation is disabled (tests use a self-signed cert).
+    /// </summary>
+    /// <param name="socket">The connected client socket.</param>
+    /// <returns>An authenticated SSL client stream owning <paramref name="socket"/>.</returns>
+    protected static async Task<Stream> CreateSslClientStreamAsync(Socket socket)
+    {
+        var networkStream = new NetworkStream(socket, ownsSocket: true);
+        var sslStream = new SslStream(networkStream, false, ValidateServerCertificate, null);
+
+        await sslStream.AuthenticateAsClientAsync(string.Empty);
+
+        return sslStream;
+
+        static bool ValidateServerCertificate(
+            object sender,
+            X509Certificate? certificate,
+            X509Chain? chain,
+            SslPolicyErrors sslPolicyErrors
+        )
+        {
+            // by design, no ssl verification in tests (cause it will require valid SSL certificate)
+            return true;
+        }
     }
 
     /// <summary>
