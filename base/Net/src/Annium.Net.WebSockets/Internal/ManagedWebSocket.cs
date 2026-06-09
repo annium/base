@@ -24,6 +24,17 @@ internal class ManagedWebSocket : ISendingReceivingWebSocket, ILogSubject
     private const int BufferSize = ManagedWebSocketDefaults.BufferSize;
 
     /// <summary>
+    /// Shared sentinel for a locally-closed receive result (cancellation / socket-not-open / OCE paths).
+    /// </summary>
+    private static readonly ReceiveResult _closedLocalResult = new(
+        WebSocketMessageType.Close,
+        0,
+        true,
+        WebSocketCloseStatus.ClosedLocal,
+        null
+    );
+
+    /// <summary>
     /// Event triggered when a text message is received.
     /// </summary>
     public event Action<ReadOnlyMemory<byte>> OnTextReceived = delegate { };
@@ -237,13 +248,13 @@ internal class ManagedWebSocket : ISendingReceivingWebSocket, ILogSubject
             if (ct.IsCancellationRequested)
             {
                 this.Trace("canceled with cancellation token");
-                return new ReceiveResult(WebSocketMessageType.Close, 0, true, WebSocketCloseStatus.ClosedLocal, null);
+                return _closedLocalResult;
             }
 
             if (_socket.State is not WebSocketState.Open)
             {
                 this.Trace("closed because socket is not open");
-                return new ReceiveResult(WebSocketMessageType.Close, 0, true, WebSocketCloseStatus.ClosedLocal, null);
+                return _closedLocalResult;
             }
 
             var result = await _socket.ReceiveAsync(buffer.FreeSpace, ct).ConfigureAwait(false);
@@ -265,7 +276,7 @@ internal class ManagedWebSocket : ISendingReceivingWebSocket, ILogSubject
         catch (OperationCanceledException)
         {
             this.Trace("closed locally with cancellation: {isCancellationRequested}", ct.IsCancellationRequested);
-            return new ReceiveResult(WebSocketMessageType.Close, 0, true, WebSocketCloseStatus.ClosedLocal, null);
+            return _closedLocalResult;
         }
         catch (WebSocketException e)
         {

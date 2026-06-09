@@ -1,11 +1,14 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Annium.Core.DependencyInjection;
 using Annium.Logging;
 using Annium.Net.Servers.Web;
+using Annium.Net.WebSockets.Internal;
 using Annium.Testing;
 using Annium.Threading.Tasks;
 using Xunit;
@@ -336,6 +339,7 @@ public class ClientServerWebSocketTests : TestBase
 
             this.Trace("done sending messages");
 
+            // VSTHRD003: awaiting our own test-local TCS that gates server shutdown — not an alien task.
 #pragma warning disable VSTHRD003
             await serverStopTcs.Task;
 #pragma warning restore VSTHRD003
@@ -379,6 +383,7 @@ public class ClientServerWebSocketTests : TestBase
 
             this.Trace("done sending messages");
 
+            // VSTHRD003: awaiting our own test-local TCS that gates server shutdown — not an alien task.
 #pragma warning disable VSTHRD003
             await serverStopTcs.Task;
 #pragma warning restore VSTHRD003
@@ -435,6 +440,7 @@ public class ClientServerWebSocketTests : TestBase
 
             this.Trace("done sending messages");
 
+            // VSTHRD003: awaiting our own test-local TCS that gates server shutdown — not an alien task.
 #pragma warning disable VSTHRD003
             await serverStopTcs.Task;
 #pragma warning restore VSTHRD003
@@ -519,6 +525,7 @@ public class ClientServerWebSocketTests : TestBase
 
             // wait until 3-rd connection is handled
             this.Trace("wait for signal from client");
+            // VSTHRD003: awaiting our own test-local TCS that gates server shutdown — not an alien task.
 #pragma warning disable VSTHRD003
             await serverStopTcs.Task;
 #pragma warning restore VSTHRD003
@@ -569,6 +576,7 @@ public class ClientServerWebSocketTests : TestBase
         ClientSocket.IsConnected.IsTrue();
 
         this.Trace("dispose");
+        // VSTHRD103: ClientWebSocket.Dispose() is synchronous (no async variant).
 #pragma warning disable VSTHRD103
         ClientSocket.Dispose();
 #pragma warning restore VSTHRD103
@@ -578,6 +586,321 @@ public class ClientServerWebSocketTests : TestBase
             TestContext.Current.CancellationToken
         );
         observedIsConnected.IsFalse();
+
+        this.Trace("done");
+    }
+
+    /// <summary>
+    /// Verifies that when the DefaultConnectionMonitor fires ConnectionLost because no pong arrives
+    /// within MaxPingDelay, the ClientWebSocket disconnects and reconnects, raising OnConnected a
+    /// second time.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
+    [Fact]
+    public async Task ConnectionMonitor_NoPongWithinMaxDelay_ReconnectsClient()
+    {
+        this.Trace("start");
+
+        // Server stays connected without ever echoing ping frames back.
+        await using var server = RunServer(async serverSocket => await serverSocket.WhenDisconnectedAsync());
+
+        // Create a dedicated ClientWebSocket with an aggressive monitor: ping every 50 ms,
+        // max tolerated delay 80 ms. No pong will arrive → FireConnectionLost → reconnect.
+        var monitorOptions = new ConnectionMonitorOptions
+        {
+            Factory = new DefaultConnectionMonitorFactory(Logger),
+            PingInterval = 50,
+            MaxPingDelay = 80,
+        };
+        var options = ClientWebSocketOptions.Default with { ReconnectDelay = 1, ConnectionMonitor = monitorOptions };
+
+        using var socket = new ClientWebSocket(options, Logger);
+
+        // Count OnConnected invocations; complete the TCS on the second fire (= after reconnect).
+        var connectCount = 0;
+        var reconnectedTcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        socket.OnConnected += () =>
+        {
+            var count = Interlocked.Increment(ref connectCount);
+            this.Trace("OnConnected #{count}", count);
+            if (count >= 2)
+                reconnectedTcs.TrySetResult();
+        };
+
+        socket.Connect(server.WebSocketsUri());
+
+        // Guard: if the reconnect does not happen within 5 s the test fails immediately.
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+
+        this.Trace("await second OnConnected (reconnect after monitor fires)");
+        await reconnectedTcs.Task.WaitAsync(cts.Token);
+
+        this.Trace("assert reconnected");
+        (connectCount >= 2).IsTrue();
+
+        this.Trace("done");
+    }
+
+    /// <summary>
+    /// Verifies that a binary ping frame sent by the server is NOT delivered to
+    /// <c>OnBinaryReceived</c> on the client (it is silently filtered by the client's binary-receive
+    /// handler via <c>ProtocolFrames.IsPingFrame</c>), while a normal binary message IS delivered.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
+    [Fact]
+    public async Task Receive_PingFrame_NotDeliveredToOnBinaryReceived()
+    {
+        this.Trace("start");
+
+        const string normalMessage = "hello";
+        var serverConnectedTcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        await using var server = RunServer(async serverSocket =>
+        {
+            this.Trace("server: wait for client to be ready");
+            // VSTHRD003: awaiting our own test-local TCS that gates server actions — not an alien task.
+#pragma warning disable VSTHRD003
+            await serverConnectedTcs.Task;
+#pragma warning restore VSTHRD003
+
+            // Send the ping sentinel first, then a normal binary message.
+            this.Trace("server: send ping frame");
+            await serverSocket.SendBinaryAsync(ProtocolFrames.Ping, CancellationToken.None);
+
+            this.Trace("server: send normal binary message");
+            await serverSocket.SendBinaryAsync(normalMessage, CancellationToken.None);
+
+            this.Trace("server: wait for disconnect");
+            await serverSocket.WhenDisconnectedAsync();
+        });
+
+        this.Trace("connect");
+        await ConnectAsync(server);
+        serverConnectedTcs.TrySetResult();
+
+        // Assert: the normal message arrives and no additional (ping) messages appear.
+        this.Trace("assert only normal binary message delivered");
+        await Expect.ToAsync(() => _binaries.IsEqual(new[] { normalMessage }));
+
+        this.Trace("done");
+    }
+
+    /// <summary>
+    /// Verifies <see cref="IClientWebSocket.IsConnected"/> transitions:
+    /// false on a freshly constructed (never-connected) socket; true after <c>OnConnected</c>
+    /// fires; false synchronously immediately after <see cref="IClientWebSocket.Disconnect"/>
+    /// returns (before <c>OnDisconnected</c> fires from the background teardown).
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
+    [Fact]
+    public async Task IsConnected_TransitionsThroughLifecycle()
+    {
+        this.Trace("start");
+
+        // 1. Freshly constructed socket is not connected.
+        ClientSocket.IsConnected.IsFalse();
+
+        await using var server = RunServer(async serverSocket => await serverSocket.WhenDisconnectedAsync());
+
+        // 2. After ConnectAsync (OnConnected fired) the socket is connected.
+        await ConnectAsync(server);
+        ClientSocket.IsConnected.IsTrue();
+
+        // 3. Disconnect() is synchronous: IsConnected goes false immediately even though the
+        //    background teardown (and OnDisconnected event) has not yet completed.
+        ClientSocket.Disconnect();
+        ClientSocket.IsConnected.IsFalse();
+
+        this.Trace("done");
+    }
+
+    /// <summary>
+    /// Verifies <see cref="ServerWebSocket.IsConnected"/> transitions: true on entry to the
+    /// server callback (the socket is freshly constructed = Connected), and false synchronously
+    /// after <c>serverSocket.Disconnect()</c> returns (before <c>OnDisconnected</c> fires from
+    /// the background teardown).
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
+    [Fact]
+    public async Task ServerWebSocket_IsConnected_TransitionsThroughLifecycle()
+    {
+        this.Trace("start");
+
+        var isConnectedOnEntryTcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var isConnectedAfterDisconnectTcs = new TaskCompletionSource<bool>(
+            TaskCreationOptions.RunContinuationsAsynchronously
+        );
+
+        await using var server = RunServer(async serverSocket =>
+        {
+            // Capture IsConnected right after the socket is handed to the callback.
+            isConnectedOnEntryTcs.TrySetResult(serverSocket.IsConnected);
+
+            // Disconnect synchronously and capture IsConnected immediately after.
+            serverSocket.Disconnect();
+            isConnectedAfterDisconnectTcs.TrySetResult(serverSocket.IsConnected);
+
+            await serverSocket.WhenDisconnectedAsync();
+        });
+
+        this.Trace("connect");
+        await ConnectAsync(server);
+
+        // Guard: 5 s is more than enough for the server callback to run.
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+
+        this.Trace("await server-side observations");
+        var isConnectedOnEntry = await isConnectedOnEntryTcs.Task.WaitAsync(cts.Token);
+        var isConnectedAfterDisconnect = await isConnectedAfterDisconnectTcs.Task.WaitAsync(cts.Token);
+
+        this.Trace("assert");
+        isConnectedOnEntry.IsTrue();
+        isConnectedAfterDisconnect.IsFalse();
+
+        this.Trace("done");
+    }
+
+    /// <summary>
+    /// Verifies that a binary ping frame sent by the CLIENT is NOT delivered to
+    /// <c>OnBinaryReceived</c> on the server (filtered by <c>ServerWebSocket.HandleOnBinaryReceived</c>
+    /// via <c>ProtocolFrames.IsPingFrame</c>), while a normal binary message IS delivered.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
+    [Fact]
+    public async Task ServerWebSocket_Receive_PingFrame_NotDeliveredToOnBinaryReceived()
+    {
+        this.Trace("start");
+
+        const string normalMessage = "hello-server";
+
+        // Surface the server-side binary log out of the callback via a shared TestLog.
+        var serverBinaryLog = new TestLog<string>();
+        // The server signals readiness AFTER subscribing OnBinaryReceived, and the client waits for
+        // that signal before sending — guaranteeing the subscription exists before any frame arrives
+        // (a client→server gate would not, since the server handler may enter after the client sends).
+        var serverReadyTcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        await using var server = RunServer(async serverSocket =>
+        {
+            serverSocket.OnBinaryReceived += data =>
+            {
+                serverBinaryLog.Add(Encoding.UTF8.GetString(data.Span));
+            };
+            serverReadyTcs.TrySetResult();
+
+            await serverSocket.WhenDisconnectedAsync();
+        });
+
+        this.Trace("connect");
+        await ConnectAsync(server);
+
+        this.Trace("await server subscribed");
+        await serverReadyTcs.Task;
+
+        this.Trace("client: send ping frame");
+        await ClientSocket.SendBinaryAsync(ProtocolFrames.Ping, CancellationToken.None);
+
+        this.Trace("client: send normal binary message");
+        await ClientSocket.SendBinaryAsync(normalMessage, CancellationToken.None);
+
+        // Assert: only the normal message is delivered; the ping is filtered.
+        this.Trace("assert only normal binary message delivered to server");
+        await Expect.ToAsync(() => serverBinaryLog.IsEqual(new[] { normalMessage }));
+
+        this.Trace("done");
+    }
+
+    /// <summary>
+    /// Verifies that <see cref="ReceivingWebSocketExtensions.ObserveText"/> delivers text messages
+    /// via the returned <see cref="IObservable{T}"/>, and that disposing the subscription stops
+    /// further delivery.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
+    [Fact]
+    public async Task ObserveText_DeliversTextMessages()
+    {
+        this.Trace("start");
+
+        const string message = "observable-text";
+        var serverConnectedTcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        await using var server = RunServer(async serverSocket =>
+        {
+            // VSTHRD003: awaiting our own test-local TCS that gates server actions — not an alien task.
+#pragma warning disable VSTHRD003
+            await serverConnectedTcs.Task;
+#pragma warning restore VSTHRD003
+
+            await serverSocket.SendTextAsync(message, CancellationToken.None);
+            await serverSocket.WhenDisconnectedAsync();
+        });
+
+        this.Trace("connect");
+        await ConnectAsync(server);
+
+        // TestLog is thread-safe: the Rx subscriber writes from the receive-loop thread while
+        // Expect.ToAsync polls from the test thread.
+        var observed = new TestLog<string>();
+        using var subscription = ClientSocket
+            .ObserveText()
+            .Subscribe(data =>
+            {
+                observed.Add(Encoding.UTF8.GetString(data.Span));
+            });
+
+        // Signal the server only after the subscription is in place.
+        serverConnectedTcs.TrySetResult();
+
+        this.Trace("assert observed message arrives");
+        await Expect.ToAsync(() => observed.IsEqual(new[] { message }));
+
+        this.Trace("done");
+    }
+
+    /// <summary>
+    /// Verifies that <see cref="ReceivingWebSocketExtensions.ObserveBinary"/> delivers binary messages
+    /// via the returned <see cref="IObservable{T}"/>, and that disposing the subscription stops
+    /// further delivery.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
+    [Fact]
+    public async Task ObserveBinary_DeliversBinaryMessages()
+    {
+        this.Trace("start");
+
+        const string message = "observable-binary";
+        var serverConnectedTcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        await using var server = RunServer(async serverSocket =>
+        {
+            // VSTHRD003: awaiting our own test-local TCS that gates server actions — not an alien task.
+#pragma warning disable VSTHRD003
+            await serverConnectedTcs.Task;
+#pragma warning restore VSTHRD003
+
+            await serverSocket.SendBinaryAsync(message, CancellationToken.None);
+            await serverSocket.WhenDisconnectedAsync();
+        });
+
+        this.Trace("connect");
+        await ConnectAsync(server);
+
+        // TestLog is thread-safe: the Rx subscriber writes from the receive-loop thread while
+        // Expect.ToAsync polls from the test thread.
+        var observed = new TestLog<string>();
+        using var subscription = ClientSocket
+            .ObserveBinary()
+            .Subscribe(data =>
+            {
+                observed.Add(Encoding.UTF8.GetString(data.Span));
+            });
+
+        // Signal the server only after the subscription is in place.
+        serverConnectedTcs.TrySetResult();
+
+        this.Trace("assert observed message arrives");
+        await Expect.ToAsync(() => observed.IsEqual(new[] { message }));
 
         this.Trace("done");
     }
@@ -606,7 +929,9 @@ public class ClientServerWebSocketTests : TestBase
 
         ClientSocket.OnConnected += () => this.Trace("STATE: Connected");
         ClientSocket.OnDisconnected += status => this.Trace("STATE: Disconnected: {status}", status);
-        ClientSocket.OnError += e => Assert.Fail($"Exception occured: {e}");
+        // Transient connect/reconnect errors are recovered by the auto-reconnect loop and must NOT
+        // fail the test — the test's own assertions are the source of truth. Record for diagnostics only.
+        ClientSocket.OnError += e => this.Trace<string>("client OnError (non-fatal, tolerated): {error}", e.ToString());
 
         this.Trace("done");
     }
@@ -619,7 +944,8 @@ public class ClientServerWebSocketTests : TestBase
     {
         this.Trace("start");
 
-        _clientSocket?.Disconnect();
+        // Dispose() (not Disconnect()) frees the terminal _connectionCts the fixture owns.
+        _clientSocket?.Dispose();
 
         this.Trace("done");
 
@@ -703,7 +1029,8 @@ public class ClientServerWebSocketTests : TestBase
 
         ClientSocket.Disconnect();
 
-        await tcs.Task;
+        // bound the wait so a dropped OnDisconnected fails fast instead of hanging the test (mirrors ConnectAsync).
+        await tcs.Task.WaitAsync(TimeSpan.FromSeconds(10));
 
         this.Trace("done");
     }

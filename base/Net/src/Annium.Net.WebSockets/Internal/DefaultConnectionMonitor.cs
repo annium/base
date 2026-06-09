@@ -96,7 +96,7 @@ internal class DefaultConnectionMonitor : ConnectionMonitorBase
         this.Trace("send ping");
         await _socket.SendBinaryAsync(ProtocolFrames.Ping);
 
-        if (ReadIsRunning() == 0)
+        if (!IsRunning)
         {
             this.Trace("skip - already stopped");
             return;
@@ -125,7 +125,7 @@ internal class DefaultConnectionMonitor : ConnectionMonitorBase
         if (!ProtocolFrames.IsPingFrame(data))
             return;
 
-        if (ReadIsRunning() == 0)
+        if (!IsRunning)
         {
             this.Trace("skip - already stopped");
             return;

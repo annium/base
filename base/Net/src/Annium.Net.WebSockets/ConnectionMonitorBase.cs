@@ -7,7 +7,7 @@ namespace Annium.Net.WebSockets;
 /// <summary>
 /// Base class for WebSocket connection monitoring implementations.
 /// </summary>
-public abstract class ConnectionMonitorBase : ILogSubject
+public abstract class ConnectionMonitorBase : IConnectionMonitor, ILogSubject
 {
     /// <summary>
     /// Gets the logger instance for this connection monitor.
@@ -20,11 +20,10 @@ public abstract class ConnectionMonitorBase : ILogSubject
     public event Action OnConnectionLost = delegate { };
 
     /// <summary>
-    /// Returns the current running flag using a volatile read so background callers (e.g. timer
-    /// callbacks) observe the latest write made by <see cref="Start"/> / <see cref="Stop"/>.
+    /// Gets a value indicating whether the monitor is running, using a volatile read so background
+    /// callers (e.g. timer callbacks) observe the latest write made by <see cref="Start"/> / <see cref="Stop"/>.
     /// </summary>
-    /// <returns>1 when the monitor is running, 0 otherwise.</returns>
-    protected int ReadIsRunning() => Volatile.Read(ref _isRunning);
+    protected bool IsRunning => Volatile.Read(ref _isRunning) == 1;
 
     /// <summary>
     /// Backing field for the running flag (1 = running, 0 = stopped).
