@@ -27,7 +27,7 @@ internal class DefaultConnectionMonitorFactory : IConnectionMonitorFactory
     /// <param name="socket">The WebSocket to monitor.</param>
     /// <param name="options">Configuration options for the monitor.</param>
     /// <returns>A new DefaultConnectionMonitor instance.</returns>
-    public ConnectionMonitorBase Create(ISendingReceivingWebSocket socket, ConnectionMonitorOptions options)
+    public IConnectionMonitor Create(ISendingReceivingWebSocket socket, ConnectionMonitorOptions options)
     {
         return new DefaultConnectionMonitor(socket, options, _logger);
     }

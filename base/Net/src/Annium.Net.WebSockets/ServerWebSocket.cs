@@ -51,12 +51,26 @@ public class ServerWebSocket : IServerWebSocket
     /// <summary>
     /// Connection monitor for detecting and handling connection issues.
     /// </summary>
-    private readonly ConnectionMonitorBase _connectionMonitor;
+    private readonly IConnectionMonitor _connectionMonitor;
 
     /// <summary>
     /// Current connection status of the WebSocket server.
     /// </summary>
     private Status _status = Status.Connected;
+
+    /// <summary>
+    /// Indicates whether the WebSocket is currently connected. Goes false synchronously inside
+    /// <see cref="Disconnect"/> (under <c>_locker</c>) so handlers firing later from the background
+    /// teardown observe the disconnected state.
+    /// </summary>
+    public bool IsConnected
+    {
+        get
+        {
+            lock (_locker)
+                return _status == Status.Connected;
+        }
+    }
 
     /// <summary>
     /// Initializes a new instance of the ServerWebSocket with specified native WebSocket, options, and logger.
@@ -80,6 +94,7 @@ public class ServerWebSocket : IServerWebSocket
         this.Trace<string>("paired with {socket}", _socket.GetFullId());
 
         this.Trace("subscribe to IsClosed");
+        // VSTHRD003: fire-and-forget continuation on our own IsClosed task; the async body catches all exceptions internally.
 #pragma warning disable VSTHRD003
         _ = _socket.IsClosed.ContinueWith(
             async task =>
@@ -121,6 +136,11 @@ public class ServerWebSocket : IServerWebSocket
     /// </summary>
     public void Dispose()
     {
+        // Stop the monitor first: ConnectionMonitorBase.Stop() is synchronous and idempotent and only
+        // halts the ping timer (it never touches the socket), so it adds no graceful-vs-forced race.
+        // Without it, Dispose() without a prior Disconnect() leaks the DefaultConnectionMonitor timer,
+        // which keeps pinging the dead socket.
+        _connectionMonitor.Stop();
         _socket.Dispose();
     }
 
@@ -228,6 +248,7 @@ public class ServerWebSocket : IServerWebSocket
         this.Trace("stop monitor");
         _connectionMonitor.Stop();
 
+        // VSTHRD003: awaiting our own IsClosed antecedent (already completed here) to read its close result.
 #pragma warning disable VSTHRD003
         var result = await task;
 #pragma warning restore VSTHRD003

@@ -74,6 +74,120 @@ public class WhenDisconnectedAsyncTests
     }
 
     /// <summary>
+    /// When the CancellationToken is already cancelled before <c>OnDisconnected</c> fires,
+    /// <see cref="ClientWebSocketExtensions.WhenDisconnectedAsync"/> must throw
+    /// <see cref="OperationCanceledException"/> and must NOT leave a handler subscribed —
+    /// raising <c>OnDisconnected</c> after the cancelled wait must not throw or produce
+    /// any side-effect from the leaked handler.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
+    [Fact]
+    public async Task WhenDisconnectedAsync_CtCancelledBeforeEvent_ThrowsAndUnsubscribes()
+    {
+        var socket = new FakeClientWebSocket();
+
+        var alreadyCancelled = new CancellationToken(canceled: true);
+        var task = socket.WhenDisconnectedAsync(alreadyCancelled);
+
+        // The task must fault with OperationCanceledException.
+        var threw = false;
+        try
+        {
+            await task;
+        }
+        catch (OperationCanceledException)
+        {
+            threw = true;
+        }
+
+        threw.IsTrue();
+
+        // The handler must have been removed in the finally block — this is the leak-prevention
+        // contract. Asserting the subscriber is gone is what would catch a removed finally-unsubscribe
+        // (raising the event alone never throws, leaked handler or not).
+        socket.HasDisconnectedSubscribers.IsFalse();
+
+        // Raising OnDisconnected after the cancelled wait must be a no-op (no stale handler present).
+        socket.RaiseDisconnected(WebSocketCloseStatus.ClosedRemote);
+    }
+
+    /// <summary>
+    /// When the CancellationToken is already cancelled before <c>OnConnected</c> fires,
+    /// <see cref="ClientWebSocketExtensions.WhenConnectedAsync"/> must throw
+    /// <see cref="OperationCanceledException"/> and must NOT leave a handler subscribed —
+    /// raising <c>OnConnected</c> after the cancelled wait must not throw or produce
+    /// any side-effect from the leaked handler.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
+    [Fact]
+    public async Task WhenConnectedAsync_CtCancelledBeforeEvent_ThrowsAndUnsubscribes()
+    {
+        var socket = new FakeClientWebSocket();
+
+        var alreadyCancelled = new CancellationToken(canceled: true);
+        var task = socket.WhenConnectedAsync(alreadyCancelled);
+
+        // The task must fault with OperationCanceledException.
+        var threw = false;
+        try
+        {
+            await task;
+        }
+        catch (OperationCanceledException)
+        {
+            threw = true;
+        }
+
+        threw.IsTrue();
+
+        // The handler must have been removed in the finally block — this is the leak-prevention
+        // contract. Asserting the subscriber is gone is what would catch a removed finally-unsubscribe
+        // (raising the event alone never throws, leaked handler or not).
+        socket.HasConnectedSubscribers.IsFalse();
+
+        // Raising OnConnected after the cancelled wait must be a no-op (no stale handler present).
+        socket.RaiseConnected();
+    }
+
+    /// <summary>
+    /// When the CancellationToken is already cancelled before <c>OnDisconnected</c> fires,
+    /// <see cref="ServerWebSocketExtensions.WhenDisconnectedAsync"/> must throw
+    /// <see cref="OperationCanceledException"/> and must NOT leave a handler subscribed —
+    /// raising <c>OnDisconnected</c> after the cancelled wait must not throw or produce
+    /// any side-effect from the leaked handler.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
+    [Fact]
+    public async Task Server_WhenDisconnectedAsync_CtCancelledBeforeEvent_ThrowsAndUnsubscribes()
+    {
+        var socket = new FakeServerWebSocket();
+
+        var alreadyCancelled = new CancellationToken(canceled: true);
+        var task = socket.WhenDisconnectedAsync(alreadyCancelled);
+
+        // The task must fault with OperationCanceledException.
+        var threw = false;
+        try
+        {
+            await task;
+        }
+        catch (OperationCanceledException)
+        {
+            threw = true;
+        }
+
+        threw.IsTrue();
+
+        // The handler must have been removed in the finally block — this is the leak-prevention
+        // contract. Asserting the subscriber is gone is what would catch a removed finally-unsubscribe
+        // (raising the event alone never throws, leaked handler or not).
+        socket.HasDisconnectedSubscribers.IsFalse();
+
+        // Raising OnDisconnected after the cancelled wait must be a no-op (no stale handler present).
+        socket.RaiseDisconnected(WebSocketCloseStatus.ClosedRemote);
+    }
+
+    /// <summary>
     /// Minimal <see cref="IClientWebSocket"/> fake exposing event raise methods. Non-event surface
     /// members throw <see cref="NotImplementedException"/> because the tests only exercise the
     /// event subscription path in the extension methods.
@@ -93,6 +207,13 @@ public class WhenDisconnectedAsyncTests
             add { }
             remove { }
         }
+
+        /// <summary>Gets a value indicating whether any handler is subscribed to <c>OnConnected</c>.</summary>
+        public bool HasConnectedSubscribers => OnConnected is not null;
+
+        /// <summary>Gets a value indicating whether any handler is subscribed to <c>OnDisconnected</c>.</summary>
+        public bool HasDisconnectedSubscribers => OnDisconnected is not null;
+
         public event Action<ReadOnlyMemory<byte>>? OnTextReceived
         {
             add { }
@@ -148,7 +269,13 @@ public class WhenDisconnectedAsyncTests
         /// <summary>Gets the no-op logger for this fake socket.</summary>
         public ILogger Logger { get; } = VoidLogger.Instance;
 
+        /// <summary>Gets a value indicating whether the fake socket is connected (always false).</summary>
+        public bool IsConnected => false;
+
         public event Action<WebSocketCloseStatus>? OnDisconnected;
+
+        /// <summary>Gets a value indicating whether any handler is subscribed to <c>OnDisconnected</c>.</summary>
+        public bool HasDisconnectedSubscribers => OnDisconnected is not null;
         public event Action<Exception>? OnError
         {
             add { }

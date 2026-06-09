@@ -64,7 +64,7 @@ public class ClientWebSocket : IClientWebSocket
     /// <summary>
     /// Connection monitor for detecting and handling connection issues.
     /// </summary>
-    private readonly ConnectionMonitorBase _connectionMonitor;
+    private readonly IConnectionMonitor _connectionMonitor;
 
     /// <summary>
     /// Timeout in milliseconds for connection attempts.
@@ -235,11 +235,19 @@ public class ClientWebSocket : IClientWebSocket
     }
 
     /// <summary>
-    /// Disposes the WebSocket client by triggering <see cref="Disconnect"/>.
+    /// Disposes the WebSocket client by triggering <see cref="Disconnect"/> and disposing the connection CTS.
     /// </summary>
     public void Dispose()
     {
         Disconnect();
+
+        // Disconnect() leaves _connectionCts pointing at a fresh, already-cancelled replacement
+        // (the "never points to a disposed instance" invariant). Dispose() is terminal: _status is
+        // Disconnected, so no Connect/Reconnect path will read the token again — dispose the
+        // replacement here to avoid leaking one CTS per socket lifetime.
+#pragma warning disable VSTHRD103
+        _connectionCts.Dispose();
+#pragma warning restore VSTHRD103
     }
 
     /// <summary>
@@ -264,21 +272,23 @@ public class ClientWebSocket : IClientWebSocket
         OnDisconnected(result.Status);
 
         this.Trace("schedule connection in {reconnectDelay}ms", _reconnectDelay);
-        // capture the active token under _locker so the background reconnect task observes a
-        // Disconnect() that lands during the delay (the field is rotated under the same lock).
-        CancellationToken reconnectCt;
-        lock (_locker)
-            reconnectCt = _connectionCts.Token;
         _ = Task.Run(async () =>
         {
             try
             {
+                // capture the active token under _locker so the background reconnect task observes a
+                // Disconnect() that lands during the delay (the field is rotated under the same lock).
+                CancellationToken reconnectCt;
+                lock (_locker)
+                    reconnectCt = _connectionCts.Token;
                 await Task.Delay(_reconnectDelay, reconnectCt);
                 this.Trace("trigger connect");
                 ConnectPrivate(uri);
                 this.Trace("done");
             }
             catch (OperationCanceledException) { }
+            // ODE: a terminal Dispose() disposed _connectionCts before/while we read its Token
+            catch (ObjectDisposedException) { }
             catch (Exception ex)
             {
                 this.Error("scheduled reconnect failed: {exception}", ex);
@@ -321,6 +331,8 @@ public class ClientWebSocket : IClientWebSocket
                 await task.ContinueWith(HandleConnected, uri, CancellationToken.None);
             }
             catch (OperationCanceledException) { }
+            // ODE: a concurrent Disconnect()/Dispose() rotated and disposed cts before we read cts.Token
+            catch (ObjectDisposedException) { }
             catch (Exception ex)
             {
                 this.Error("ConnectPrivate background connect failed: {exception}", ex);
@@ -342,6 +354,7 @@ public class ClientWebSocket : IClientWebSocket
         if (task.Exception is not null)
             this.Error(task.Exception);
 
+        // VSTHRD002: task.Result is safe — HandleConnected runs only as a ContinueWith callback on a completed antecedent.
 #pragma warning disable VSTHRD002
         lock (_locker)
         {
@@ -361,6 +374,7 @@ public class ClientWebSocket : IClientWebSocket
 
         if (task.Result is not null)
         {
+            // state! is safe: it is always the non-null Uri passed as the ContinueWith state argument in ConnectPrivate.
             var uri = (Uri)state!;
             this.Trace("failure: {exception}, init reconnect", task.Exception);
             ReconnectPrivate(uri, new WebSocketCloseResult(WebSocketCloseStatus.Error, task.Result));
@@ -453,6 +467,7 @@ public class ClientWebSocket : IClientWebSocket
             SetStatus(Status.Connecting);
         }
 
+        // VSTHRD002: task.Result is safe — HandleClosed runs only as a ContinueWith callback on a completed antecedent.
 #pragma warning disable VSTHRD002
         ReconnectPrivate(Uri, task.Result);
 #pragma warning restore VSTHRD002

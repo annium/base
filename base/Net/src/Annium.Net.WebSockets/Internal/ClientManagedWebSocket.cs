@@ -72,8 +72,15 @@ internal class ClientManagedWebSocket : IClientManagedWebSocket, ILogSubject
         this.Trace("start");
 
         var cn = TeardownUnderLock();
+        // VSTHRD103: Connection.Dispose() / CancellationTokenSource.Dispose() are synchronous (no async variant).
 #pragma warning disable VSTHRD103
         cn?.Dispose();
+
+        // TeardownUnderLock only disposes _listenCts when a live connection was torn down; on the
+        // never-connected (or double-dispose) path it returns early. Dispose _listenCts here so the
+        // constructor-created instance is always released. CTS.Dispose() is idempotent, so the
+        // connected path's earlier dispose is a safe no-op.
+        _listenCts.Dispose();
 #pragma warning restore VSTHRD103
 
         this.Trace("done");
@@ -120,11 +127,16 @@ internal class ClientManagedWebSocket : IClientManagedWebSocket, ILogSubject
                 if (ct.IsCancellationRequested)
                 {
                     this.Trace("connection canceled, dispose");
+                    // VSTHRD103: Connection.Dispose() is synchronous (no async variant).
 #pragma warning disable VSTHRD103
                     cn.Dispose();
 #pragma warning restore VSTHRD103
 
-                    return null;
+                    // return a non-null exception, not null: null is the success sentinel, which would
+                    // make the caller (ClientWebSocket.HandleConnected) fire OnConnected and subscribe
+                    // the stale pre-connect IsClosed task — firing a spurious OnDisconnected + reconnect.
+                    // Surfacing the cancellation routes the caller through its failed-connect path instead.
+                    return new OperationCanceledException(ct);
                 }
 
                 this.Trace("save connection");
@@ -135,6 +147,7 @@ internal class ClientManagedWebSocket : IClientManagedWebSocket, ILogSubject
                 // creates an instance that is otherwise leaked on first connect).
                 var oldListenCts = _listenCts;
                 _listenCts = new CancellationTokenSource();
+                // VSTHRD103: CancellationTokenSource.Dispose() is synchronous (no async variant).
 #pragma warning disable VSTHRD103
                 oldListenCts.Dispose();
 #pragma warning restore VSTHRD103
@@ -194,6 +207,7 @@ internal class ClientManagedWebSocket : IClientManagedWebSocket, ILogSubject
         }
 
         this.Trace("await listen task");
+        // VSTHRD003: intentionally awaiting our own IsClosed task to drain the listen loop before disposing.
 #pragma warning disable VSTHRD003
         await IsClosed;
 #pragma warning restore VSTHRD003
@@ -230,6 +244,7 @@ internal class ClientManagedWebSocket : IClientManagedWebSocket, ILogSubject
             cn.Managed.OnBinaryReceived -= HandleOnBinaryReceived;
 
             this.Trace("cancel listen cts");
+            // VSTHRD103: CancellationTokenSource.Cancel()/Dispose() are synchronous (no async variant).
 #pragma warning disable VSTHRD103
             _listenCts.Cancel();
             _listenCts.Dispose();

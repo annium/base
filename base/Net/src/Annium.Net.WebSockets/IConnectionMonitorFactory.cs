@@ -11,5 +11,5 @@ public interface IConnectionMonitorFactory
     /// <param name="socket">The WebSocket to monitor.</param>
     /// <param name="options">Configuration options for the connection monitor.</param>
     /// <returns>A connection monitor instance.</returns>
-    ConnectionMonitorBase Create(ISendingReceivingWebSocket socket, ConnectionMonitorOptions options);
+    IConnectionMonitor Create(ISendingReceivingWebSocket socket, ConnectionMonitorOptions options);
 }

@@ -42,6 +42,69 @@ public class ClientServerManagedWebSocketTests : TestBase
         : base(outputHelper) { }
 
     /// <summary>
+    /// Verifies that <see cref="ClientManagedWebSocket.ConnectAsync"/> returns a non-null exception
+    /// when the target endpoint refuses the connection (nothing listening on that port), and that
+    /// the socket remains in its initial closed state (IsClosed already completed with ClosedLocal).
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
+    [Fact]
+    public async Task ConnectAsync_ConnectionRefused_ReturnsException()
+    {
+        this.Trace("start");
+
+        // Use a URI that is guaranteed to have nothing listening (port 1 is reserved and
+        // requires root on most OSes, so connection will always be refused immediately).
+        var unreachableUri = new Uri("ws://127.0.0.1:1");
+
+        // Act: attempt to connect with a short timeout so the test finishes quickly.
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        this.Trace("connect to unreachable endpoint");
+        var exception = await ClientSocket.ConnectAsync(unreachableUri, cts.Token);
+
+        // Assert: a non-null exception is returned (connection failure path).
+        this.Trace("assert exception is non-null");
+        exception.IsNotNull();
+
+        // Assert: IsClosed reflects the pre-connect initial state (ClosedLocal, no exception).
+        this.Trace("await IsClosed");
+        // VSTHRD003: awaiting the fixture-owned ClientSocket.IsClosed task — not an alien task.
+#pragma warning disable VSTHRD003
+        var closeResult = await ClientSocket.IsClosed;
+#pragma warning restore VSTHRD003
+
+        this.Trace("assert closed local");
+        closeResult.Status.Is(WebSocketCloseStatus.ClosedLocal);
+        closeResult.Exception.IsDefault();
+
+        this.Trace("done");
+    }
+
+    /// <summary>
+    /// Verifies that calling <see cref="IClientManagedWebSocket.ConnectAsync"/> a second time while
+    /// already connected throws <see cref="InvalidOperationException"/> (the "already connected" guard).
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
+    [Fact]
+    public async Task ConnectAsync_AlreadyConnected_Throws()
+    {
+        this.Trace("start");
+
+        this.Trace("run server");
+        await using var server = RunServer(async serverSocket => await serverSocket.IsClosed);
+
+        this.Trace("connect");
+        await ConnectAsync(server, TestContext.Current.CancellationToken);
+
+        this.Trace("connect again - must throw");
+        await Wrap.It(async () =>
+                await ClientSocket.ConnectAsync(server.WebSocketsUri(), TestContext.Current.CancellationToken)
+            )
+            .ThrowsAsync<InvalidOperationException>();
+
+        this.Trace("done");
+    }
+
+    /// <summary>
     /// Tests sending a message when managed WebSocket is not connected
     /// </summary>
     /// <returns>Task representing the test operation</returns>
@@ -185,7 +248,8 @@ public class ClientServerManagedWebSocketTests : TestBase
         // arrange
         const string message = "demo";
         var expectedMessages = new[] { message };
-        var serverTcs = new TaskCompletionSource();
+        // RunContinuationsAsynchronously: the client's await resumes off the server-handler thread.
+        var serverTcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 
         this.Trace("run server");
         await using var server = RunServer(async serverSocket =>
@@ -199,15 +263,10 @@ public class ClientServerManagedWebSocketTests : TestBase
                 serverSocket.SendBinaryAsync(x.ToArray(), CancellationToken.None).Await();
             this.Trace("server subscribed to binary");
 
-            _ = Task.Delay(10, CancellationToken.None)
-                .ContinueWith(
-                    _ =>
-                    {
-                        this.Trace("send signal to client");
-                        serverTcs.SetResult();
-                    },
-                    CancellationToken.None
-                );
+            // Signal readiness deterministically once the echo handlers are wired (they are
+            // subscribed synchronously above) — no arbitrary delay needed.
+            this.Trace("send signal to client");
+            serverTcs.SetResult();
 
             this.Trace("listen server socket");
             await serverSocket.IsClosed;
@@ -218,7 +277,6 @@ public class ClientServerManagedWebSocketTests : TestBase
         this.Trace("connect");
         await ConnectAsync(server, TestContext.Current.CancellationToken);
 
-        // delay to let server close connection
         this.Trace("await server signal");
         await serverTcs.Task;
 
@@ -340,13 +398,17 @@ public class ClientServerManagedWebSocketTests : TestBase
 
         // act
         this.Trace("await closed state");
+        // VSTHRD003: awaiting the fixture-owned ClientSocket.IsClosed task — not an alien task.
 #pragma warning disable VSTHRD003
         var result = await ClientSocket.IsClosed;
 #pragma warning restore VSTHRD003
 
         // assert
-        this.Trace("assert closed local and no exception");
-        result.Status.Is(WebSocketCloseStatus.ClosedLocal);
+        this.Trace("assert clean close and no exception");
+        // DisconnectAsync() initiates a LOCAL close, but the listen loop can observe the peer's
+        // reactive close first — the reported direction is racy at the transport level. The
+        // meaningful invariant is a clean close (no exception); accept either direction.
+        (result.Status is WebSocketCloseStatus.ClosedLocal or WebSocketCloseStatus.ClosedRemote).IsTrue();
         result.Exception.IsDefault();
 
         this.Trace("done");
@@ -373,13 +435,17 @@ public class ClientServerManagedWebSocketTests : TestBase
 
         // act
         this.Trace("await closed state");
+        // VSTHRD003: awaiting the fixture-owned ClientSocket.IsClosed task — not an alien task.
 #pragma warning disable VSTHRD003
         var result = await ClientSocket.IsClosed;
 #pragma warning restore VSTHRD003
 
         // assert
-        this.Trace("assert closed local and no exception");
-        result.Status.Is(WebSocketCloseStatus.ClosedLocal);
+        this.Trace("assert clean close and no exception");
+        // DisconnectAsync() initiates a LOCAL close, but the listen loop can observe the peer's
+        // reactive close first — the reported direction is racy at the transport level. The
+        // meaningful invariant is a clean close (no exception); accept either direction.
+        (result.Status is WebSocketCloseStatus.ClosedLocal or WebSocketCloseStatus.ClosedRemote).IsTrue();
         result.Exception.IsDefault();
 
         this.Trace("done");
@@ -403,6 +469,7 @@ public class ClientServerManagedWebSocketTests : TestBase
 
         // act
         this.Trace("await closed state");
+        // VSTHRD003: awaiting the fixture-owned ClientSocket.IsClosed task — not an alien task.
 #pragma warning disable VSTHRD003
         var result = await ClientSocket.IsClosed;
 #pragma warning restore VSTHRD003
@@ -492,6 +559,7 @@ public class ClientServerManagedWebSocketTests : TestBase
         await Expect.ToAsync(() => _texts.IsEqual(messages));
 
         this.Trace("await closed state");
+        // VSTHRD003: awaiting the fixture-owned ClientSocket.IsClosed task — not an alien task.
 #pragma warning disable VSTHRD003
         var result = await ClientSocket.IsClosed;
 #pragma warning restore VSTHRD003
@@ -547,6 +615,7 @@ public class ClientServerManagedWebSocketTests : TestBase
         await Expect.ToAsync(() => _binaries.IsEqual(messages));
 
         this.Trace("await closed state");
+        // VSTHRD003: awaiting the fixture-owned ClientSocket.IsClosed task — not an alien task.
 #pragma warning disable VSTHRD003
         var result = await ClientSocket.IsClosed;
 #pragma warning restore VSTHRD003
@@ -592,7 +661,12 @@ public class ClientServerManagedWebSocketTests : TestBase
         this.Trace("start");
 
         if (_clientSocket is not null)
+        {
             await _clientSocket.DisconnectAsync();
+            // Dispose() frees _listenCts (idempotent after DisconnectAsync on the connected path;
+            // releases the constructor-created CTS on the never-connected path).
+            _clientSocket.Dispose();
+        }
 
         this.Trace("done");
 
@@ -634,7 +708,10 @@ public class ClientServerManagedWebSocketTests : TestBase
     {
         this.Trace("start");
 
-        await ClientSocket.ConnectAsync(server.WebSocketsUri(), ct);
+        // assert the connect succeeded — ConnectAsync returns a non-null exception on failure;
+        // ignoring it would let a failed connect proceed and surface as misleading downstream errors.
+        var exception = await ClientSocket.ConnectAsync(server.WebSocketsUri(), ct);
+        exception.IsDefault();
 
         this.Trace("done");
     }

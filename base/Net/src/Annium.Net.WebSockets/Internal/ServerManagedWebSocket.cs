@@ -208,6 +208,7 @@ internal class ServerManagedWebSocket : IServerManagedWebSocket, ILogSubject
             return new WebSocketCloseResult(WebSocketCloseStatus.Error, task.Exception?.GetBaseException());
         }
 
+        // VSTHRD002: task.Result is safe — the antecedent is completed and the faulted case is handled above.
 #pragma warning disable VSTHRD002
         return task.Result;
 #pragma warning restore VSTHRD002
