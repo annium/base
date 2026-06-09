@@ -240,6 +240,61 @@ public class MessagingBufferTests
 }
 
 /// <summary>
+/// Tests for messaging buffer invalid (negative) header detection
+/// </summary>
+public class MessagingBufferNegativeHeaderTests
+{
+    /// <summary>
+    /// Writing a 4-byte header whose int32 value is -1 must set HasInvalidHeader to true.
+    /// Note: ContainsFullMessage may also be true for negative lengths because
+    /// HeaderSize + (negative) can be less than the already-written 4 bytes; the
+    /// receiving loop guards on HasInvalidHeader before inspecting ContainsFullMessage.
+    /// </summary>
+    [Fact]
+    public void NegativeFrameHeader_MinusOne_SetsHasInvalidHeader()
+    {
+        using var buffer = new MessagingBuffer(16, 1024);
+
+        // Write a 4-byte header encoding -1 (negative length)
+        buffer.Write(BitConverter.GetBytes(-1));
+
+        // assert: invalid header is flagged
+        buffer.HasInvalidHeader.IsTrue();
+    }
+
+    /// <summary>
+    /// Writing a 4-byte header whose int32 value is -100 must also set HasInvalidHeader to true.
+    /// </summary>
+    [Fact]
+    public void NegativeFrameHeader_NegativeHundred_SetsHasInvalidHeader()
+    {
+        using var buffer = new MessagingBuffer(16, 1024);
+
+        // Write a 4-byte header encoding -100 (negative length)
+        buffer.Write(BitConverter.GetBytes(-100));
+
+        // assert: invalid header is flagged
+        buffer.HasInvalidHeader.IsTrue();
+    }
+
+    /// <summary>
+    /// After Reset() following an invalid header, HasInvalidHeader is cleared.
+    /// </summary>
+    [Fact]
+    public void NegativeFrameHeader_AfterReset_HasInvalidHeaderIsCleared()
+    {
+        using var buffer = new MessagingBuffer(16, 1024);
+
+        buffer.Write(BitConverter.GetBytes(-1));
+        buffer.HasInvalidHeader.IsTrue();
+
+        // Reset clears invalid-header state
+        buffer.Reset();
+        buffer.HasInvalidHeader.IsFalse();
+    }
+}
+
+/// <summary>
 /// Extension methods for messaging buffer testing
 /// </summary>
 file static class BufferExtensions

@@ -132,6 +132,9 @@ public class WhenDisconnectedAsyncTests
         /// <summary>Gets the logger associated with this server socket.</summary>
         public ILogger Logger { get; } = VoidLogger.Instance;
 
+        /// <summary>Always reports connected — this fake only exercises the event subscription path.</summary>
+        public bool IsConnected => true;
+
         public event Action<SocketCloseStatus>? OnDisconnected;
         public event Action<Exception>? OnError
         {

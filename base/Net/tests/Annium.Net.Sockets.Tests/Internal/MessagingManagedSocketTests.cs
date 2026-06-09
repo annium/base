@@ -596,15 +596,6 @@ public class MessagingManagedSocketTests : TestBase
     }
 
     /// <summary>
-    /// Initializes the test asynchronously
-    /// </summary>
-    /// <returns>A task representing the initialization</returns>
-    public override ValueTask InitializeAsync()
-    {
-        return base.InitializeAsync();
-    }
-
-    /// <summary>
     /// Disposes the test resources asynchronously
     /// </summary>
     /// <returns>A task representing the disposal</returns>
@@ -631,12 +622,7 @@ public class MessagingManagedSocketTests : TestBase
         switch (streamType)
         {
             case StreamType.Plain:
-                _createClientStreamAsync = async socket =>
-                {
-                    await Task.CompletedTask;
-
-                    return new NetworkStream(socket);
-                };
+                _createClientStreamAsync = CreatePlainClientStreamAsync;
 
                 _runServer = handleSocket =>
                 {
@@ -664,26 +650,7 @@ public class MessagingManagedSocketTests : TestBase
                 };
                 break;
             case StreamType.Ssl:
-                _createClientStreamAsync = async socket =>
-                {
-                    var networkStream = new NetworkStream(socket);
-                    var sslStream = new SslStream(networkStream, false, ValidateServerCertificate, null);
-
-                    await sslStream.AuthenticateAsClientAsync(string.Empty);
-
-                    return sslStream;
-
-                    bool ValidateServerCertificate(
-                        object sender,
-                        X509Certificate? certificate,
-                        X509Chain? chain,
-                        SslPolicyErrors sslPolicyErrors
-                    )
-                    {
-                        // by design, no ssl verification in tests (cause it will require valid SSL certificate)
-                        return true;
-                    }
-                };
+                _createClientStreamAsync = CreateSslClientStreamAsync;
 
                 _runServer = handleSocket =>
                 {
@@ -765,8 +732,6 @@ public class MessagingManagedSocketTests : TestBase
         );
 
         ManagedSocket.OnReceived += x => _messages.Add(x.ToArray());
-
-        await Task.CompletedTask;
 
         this.Trace("done");
     }

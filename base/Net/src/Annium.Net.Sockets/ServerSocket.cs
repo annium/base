@@ -34,6 +34,20 @@ public class ServerSocket : IServerSocket
     public event Action<Exception> OnError = delegate { };
 
     /// <summary>
+    /// Indicates whether the socket is currently connected to the client. Goes false synchronously
+    /// (under <c>_locker</c>) when <see cref="Disconnect"/> begins or the connection is closed, so
+    /// handlers firing later from the background teardown observe the disconnected state.
+    /// </summary>
+    public bool IsConnected
+    {
+        get
+        {
+            lock (_locker)
+                return _status == Status.Connected;
+        }
+    }
+
+    /// <summary>
     /// Thread synchronization lock for socket operations.
     /// </summary>
     private readonly Lock _locker = new();
@@ -46,7 +60,7 @@ public class ServerSocket : IServerSocket
     /// <summary>
     /// Connection monitor for health checking and connection management.
     /// </summary>
-    private readonly ConnectionMonitorBase _connectionMonitor;
+    private readonly IConnectionMonitor _connectionMonitor;
 
     /// <summary>
     /// Current connection status of the socket.
@@ -172,17 +186,23 @@ public class ServerSocket : IServerSocket
     }
 
     /// <summary>
-    /// Disposes the socket with **forced-close** semantics: synchronously disposes the
-    /// underlying managed socket so the stream is closed deterministically rather than via
-    /// the GC finalizer. Does NOT trigger a graceful disconnect — callers wanting graceful
-    /// close should call <see cref="Disconnect"/> first and wait for <see cref="OnDisconnected"/>
-    /// to fire (or use the <c>WhenDisconnectedAsync</c> extension) before invoking
-    /// <see cref="Dispose"/>. Mixing graceful and forced close in a single <see cref="Dispose"/>
-    /// body would race the synchronous teardown against the fire-and-forget
+    /// Disposes the socket with **forced-close** semantics: stops the connection monitor and
+    /// synchronously disposes the underlying managed socket so the stream is closed
+    /// deterministically rather than via the GC finalizer. Does NOT trigger a graceful disconnect
+    /// — callers wanting graceful close should call <see cref="Disconnect"/> first and wait for
+    /// <see cref="OnDisconnected"/> to fire (or use the <c>WhenDisconnectedAsync</c> extension)
+    /// before invoking <see cref="Dispose"/>. Mixing graceful and forced close in a single
+    /// <see cref="Dispose"/> body would race the synchronous teardown against the fire-and-forget
     /// <see cref="Disconnect"/> background task.
     /// </summary>
     public void Dispose()
     {
+        // Stop the monitor first: IConnectionMonitor.Stop() is synchronous and idempotent and
+        // only halts the monitor's ping timer (it never touches the socket), so it does not
+        // introduce the graceful-vs-forced race described above. Without it, disposing without a
+        // prior Disconnect() leaks the monitor timer, which keeps pinging the dead socket.
+        _connectionMonitor.Stop();
+
         _socket.Dispose();
     }
 

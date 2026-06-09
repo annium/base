@@ -11,5 +11,5 @@ public interface IConnectionMonitorFactory
     /// <param name="socket">The socket to monitor.</param>
     /// <param name="options">Configuration options for the monitor.</param>
     /// <returns>A connection monitor instance.</returns>
-    ConnectionMonitorBase Create(ISendingReceivingSocket socket, ConnectionMonitorOptions options);
+    IConnectionMonitor Create(ISendingReceivingSocket socket, ConnectionMonitorOptions options);
 }

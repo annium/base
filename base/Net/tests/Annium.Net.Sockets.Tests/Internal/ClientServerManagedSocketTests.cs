@@ -377,7 +377,7 @@ public class ClientServerManagedSocketTests : TestBase
         await using var server = _runServer(async (serverSocket, _) => await serverSocket.IsClosed);
 
         this.Trace("connect");
-        var cts = new CancellationTokenSource();
+        using var cts = new CancellationTokenSource();
         await ConnectAsync(server, cts.Token);
 
         this.Trace("disconnect");

@@ -18,5 +18,5 @@ public record ConnectionMonitorOptions
     /// <summary>
     /// Gets or sets the maximum delay allowed for ping responses in milliseconds (default: 300000ms).
     /// </summary>
-    public long MaxPingDelay { get; init; } = 300_000;
+    public int MaxPingDelay { get; init; } = 300_000;
 }

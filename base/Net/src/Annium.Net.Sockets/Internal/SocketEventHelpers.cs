@@ -20,27 +20,34 @@ internal static class SocketEventHelpers
     /// <param name="log">Log subject for tracing.</param>
     /// <param name="ct">Cancellation token applied to the wait.</param>
     /// <returns>The disconnect status reported by the first event invocation.</returns>
-    public static Task<SocketCloseStatus> WaitForDisconnectAsync(
+    public static async Task<SocketCloseStatus> WaitForDisconnectAsync(
         Action<Action<SocketCloseStatus>> subscribe,
         Action<Action<SocketCloseStatus>> unsubscribe,
         ILogSubject log,
         CancellationToken ct
     )
     {
-        var tcs = new TaskCompletionSource<SocketCloseStatus>();
+        var tcs = new TaskCompletionSource<SocketCloseStatus>(TaskCreationOptions.RunContinuationsAsynchronously);
 
         log.Trace<string>("subscribe {tcs} to OnDisconnected", tcs.GetFullId());
 
-        Action<SocketCloseStatus> handler = null!;
-        handler = status =>
+        Action<SocketCloseStatus> handler = status =>
         {
             log.Trace<string>("set {tcs} to signaled state", tcs.GetFullId());
             tcs.TrySetResult(status);
-            unsubscribe(handler);
         };
 
         subscribe(handler);
 
-        return tcs.Task.WaitAsync(ct);
+        // unsubscribe in finally so a cancelled wait does not leak the handler (the handler no
+        // longer self-unsubscribes).
+        try
+        {
+            return await tcs.Task.WaitAsync(ct);
+        }
+        finally
+        {
+            unsubscribe(handler);
+        }
     }
 }

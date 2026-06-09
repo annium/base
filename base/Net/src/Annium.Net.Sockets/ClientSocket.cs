@@ -61,7 +61,7 @@ public class ClientSocket : IClientSocket
     /// <summary>
     /// Connection monitor for health checking and reconnection logic.
     /// </summary>
-    private readonly ConnectionMonitorBase _connectionMonitor;
+    private readonly IConnectionMonitor _connectionMonitor;
 
     /// <summary>
     /// Timeout for connection attempts in milliseconds.
@@ -226,11 +226,19 @@ public class ClientSocket : IClientSocket
     }
 
     /// <summary>
-    /// Disposes the socket by triggering <see cref="Disconnect"/>.
+    /// Disposes the socket by triggering <see cref="Disconnect"/> and disposing the connection CTS.
     /// </summary>
     public void Dispose()
     {
         Disconnect();
+
+        // Disconnect() leaves _connectionCts pointing at a fresh, already-cancelled replacement
+        // (the "never points to a disposed instance" invariant). Dispose() is terminal: _status is
+        // Disconnected, so no Connect/Reconnect path will read the token again — dispose the
+        // replacement here to avoid leaking one CTS per socket lifetime.
+#pragma warning disable VSTHRD103
+        _connectionCts.Dispose();
+#pragma warning restore VSTHRD103
     }
 
     /// <summary>
@@ -259,12 +267,23 @@ public class ClientSocket : IClientSocket
         {
             try
             {
-                await Task.Delay(_reconnectDelay);
+                // observe the connection token so a Disconnect() during the backoff cancels the
+                // scheduled reconnect promptly. Read under _locker, where _connectionCts always
+                // points to the current (non-disposed) instance — disposal only targets the
+                // rotated-out old value.
+                CancellationToken ct;
+                lock (_locker)
+                    ct = _connectionCts.Token;
+                await Task.Delay(_reconnectDelay, ct);
                 this.Trace("trigger connect");
                 ConnectPrivate(config);
                 this.Trace("done");
             }
+            // OCE: the delay was cancelled by Disconnect(). ODE: _connectionCts was rotated and
+            // disposed out from under us between the token read and the delay registration. Both
+            // mean "teardown happened, abandon the scheduled reconnect".
             catch (OperationCanceledException) { }
+            catch (ObjectDisposedException) { }
             catch (Exception ex)
             {
                 this.Error("scheduled reconnect failed: {exception}", ex);
@@ -310,6 +329,10 @@ public class ClientSocket : IClientSocket
                 await task.ContinueWith(HandleConnected, config, CancellationToken.None);
             }
             catch (OperationCanceledException) { }
+            // ODE: a concurrent Disconnect() rotated and disposed cts before/while we read cts.Token
+            // — the same teardown race ReconnectPrivate handles; treat as expected cancellation
+            // rather than logging a spurious error.
+            catch (ObjectDisposedException) { }
             catch (Exception ex)
             {
                 this.Error("ConnectPrivate background connect failed: {exception}", ex);
@@ -331,6 +354,8 @@ public class ClientSocket : IClientSocket
         if (task.Exception is not null)
             this.Error(task.Exception);
 
+        // task.Result is non-blocking here: this runs as a ContinueWith continuation, so the
+        // antecedent connect task has already completed.
 #pragma warning disable VSTHRD002
         lock (_locker)
         {
@@ -350,6 +375,8 @@ public class ClientSocket : IClientSocket
 
         if (task.Result is not null)
         {
+            // state! is safe: it is always the non-null ConnectionConfig passed as the ContinueWith
+            // state argument in ConnectPrivate.
             var config = (ConnectionConfig)state!;
             this.Trace("failure: {exception}, init reconnect", task.Exception);
             ReconnectPrivate(config, new SocketCloseResult(SocketCloseStatus.Error, task.Result));
@@ -442,6 +469,8 @@ public class ClientSocket : IClientSocket
             SetStatus(Status.Connecting);
         }
 
+        // task.Result is non-blocking here: this runs as a ContinueWith continuation, so the
+        // antecedent IsClosed task has already completed.
 #pragma warning disable VSTHRD002
         ReconnectPrivate(Config, task.Result);
 #pragma warning restore VSTHRD002
