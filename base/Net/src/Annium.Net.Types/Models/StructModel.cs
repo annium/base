@@ -36,7 +36,7 @@ public sealed record StructModel(Namespace Namespace, bool IsAbstract, string Na
     /// Sets the generic type arguments for this struct.
     /// </summary>
     /// <param name="args">The generic type arguments</param>
-    public void SetArgs(IReadOnlyList<IRef> args)
+    internal void SetArgs(IReadOnlyList<IRef> args)
     {
         Args = args;
     }
@@ -45,7 +45,7 @@ public sealed record StructModel(Namespace Namespace, bool IsAbstract, string Na
     /// Sets the base class for this struct.
     /// </summary>
     /// <param name="base">The base class reference</param>
-    public void SetBase(IRef @base)
+    internal void SetBase(IRef @base)
     {
         Base = @base;
     }
@@ -54,7 +54,7 @@ public sealed record StructModel(Namespace Namespace, bool IsAbstract, string Na
     /// Sets the interfaces that this struct implements.
     /// </summary>
     /// <param name="interfaces">The implemented interfaces</param>
-    public void SetInterfaces(IReadOnlyList<IRef> interfaces)
+    internal void SetInterfaces(IReadOnlyList<IRef> interfaces)
     {
         Interfaces = interfaces;
     }
@@ -63,7 +63,7 @@ public sealed record StructModel(Namespace Namespace, bool IsAbstract, string Na
     /// Sets the field definitions for this struct.
     /// </summary>
     /// <param name="fields">The field definitions</param>
-    public void SetFields(IReadOnlyList<FieldModel> fields)
+    internal void SetFields(IReadOnlyList<FieldModel> fields)
     {
         Fields = fields;
     }

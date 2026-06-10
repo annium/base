@@ -15,8 +15,13 @@ namespace Annium.Net.Http.Internal;
 /// <summary>
 /// Internal implementation of IHttpRequest that provides HTTP request functionality with middleware support
 /// </summary>
-internal class HttpRequest : IHttpRequest
+internal class HttpRequest : IHttpRequestInternal
 {
+    /// <summary>
+    /// Reason phrase used for responses produced when the request is canceled before/at send time.
+    /// </summary>
+    private const string RequestCanceledMessage = "Request canceled";
+
     /// <summary>
     /// Delegate type for request configuration actions
     /// </summary>
@@ -426,7 +431,7 @@ internal class HttpRequest : IHttpRequest
             return HttpResponse.Abort(
                 Uri,
                 HttpStatusCode.RequestTimeout,
-                "Request canceled",
+                RequestCanceledMessage,
                 HttpResponse.EmptyHeaders,
                 HttpResponse.EmptyStringContent
             );
@@ -462,7 +467,7 @@ internal class HttpRequest : IHttpRequest
             return HttpResponse.Abort(
                 Uri,
                 HttpStatusCode.RequestTimeout,
-                "Request canceled",
+                RequestCanceledMessage,
                 HttpResponse.EmptyHeaders,
                 HttpResponse.EmptyStringContent
             );
@@ -521,7 +526,7 @@ internal class HttpRequest : IHttpRequest
             return HttpResponse.Abort(
                 Uri,
                 HttpStatusCode.RequestTimeout,
-                "Request canceled",
+                RequestCanceledMessage,
                 HttpResponse.EmptyHeaders,
                 HttpResponse.EmptyStringContent
             );

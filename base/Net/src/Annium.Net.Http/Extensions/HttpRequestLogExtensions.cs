@@ -101,9 +101,24 @@ public static class HttpRequestLogExtensions
         });
 }
 
+/// <summary>
+/// Specifies which parts of an HTTP request/response to include in trace logging.
+/// </summary>
 [Flags]
 public enum LogData
 {
+    /// <summary>
+    /// Log neither headers nor the response body (default).
+    /// </summary>
+    None = 0,
+
+    /// <summary>
+    /// Include request/response headers in the log output.
+    /// </summary>
     Headers = 1 << 0,
+
+    /// <summary>
+    /// Include the response body in the log output.
+    /// </summary>
     Response = 1 << 1,
 }

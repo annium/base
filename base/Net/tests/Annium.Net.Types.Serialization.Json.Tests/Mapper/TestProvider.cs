@@ -32,12 +32,12 @@ internal class TestProvider : ITestProvider
     /// <summary>
     /// The model mapper instance
     /// </summary>
-    private IModelMapper _mapper = default!;
+    private IModelMapper _mapper = default!; // set in Setup
 
     /// <summary>
     /// The serializer instance
     /// </summary>
-    private ISerializer<string> _serializer = default!;
+    private ISerializer<string> _serializer = default!; // set in Setup
 
     /// <summary>
     /// Configures the service container with necessary services

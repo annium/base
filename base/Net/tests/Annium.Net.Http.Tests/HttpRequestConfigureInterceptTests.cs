@@ -18,7 +18,7 @@ public class HttpRequestConfigureInterceptTests : TestBase
     /// <summary>
     /// The HTTP request factory for creating requests.
     /// </summary>
-    private IHttpRequestFactory _httpRequestFactory = null!;
+    private IHttpRequestFactory _httpRequestFactory = null!; // set in InitializeAsync
 
     /// <summary>
     /// Initializes a new instance of the HttpRequestConfigureInterceptTests class.

@@ -3,7 +3,7 @@ using System.Net.Mail;
 using System.Threading.Tasks;
 using Annium.Data.Operations;
 
-namespace Annium.Net.Mail;
+namespace Annium.Net.Mail.Testing;
 
 /// <summary>
 /// Test implementation of email service that captures sent emails instead of actually sending them

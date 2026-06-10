@@ -1,6 +1,7 @@
 using System.Net.Http;
 using System.Net.Mime;
 using System.Text;
+using Annium.Net.Http.Internal;
 
 // ReSharper disable once CheckNamespace
 namespace Annium.Net.Http;
@@ -19,7 +20,7 @@ public static class HttpRequestContentExtensions
     /// <returns>The HTTP request with attached JSON content</returns>
     public static IHttpRequest JsonContent<T>(this IHttpRequest request, T data)
     {
-        var content = request.Serializer.Serialize(MediaTypeNames.Application.Json, data);
+        var content = request.GetSerializer().Serialize(MediaTypeNames.Application.Json, data);
 
         return request.Attach(new StringContent(content, Encoding.UTF8, MediaTypeNames.Application.Json));
     }

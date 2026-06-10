@@ -38,6 +38,6 @@ public interface IServerBuilder
     /// <summary>
     /// Builds and returns the configured server instance.
     /// </summary>
-    /// <returns>The configured server instance.</returns>
+    /// <returns>The configured server instance, or null if the listener failed to bind to the requested address/port.</returns>
     IServer? Start();
 }

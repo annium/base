@@ -48,6 +48,11 @@ internal class Server : IServer, ILogSubject
     private readonly Task _whenStopped;
 
     /// <summary>
+    /// Guards against double disposal (0 = not disposed, 1 = disposed)
+    /// </summary>
+    private int _disposed;
+
+    /// <summary>
     /// Initializes a new instance of the Server class
     /// </summary>
     /// <param name="listener">TcpListener, server will be working with</param>
@@ -64,7 +69,7 @@ internal class Server : IServer, ILogSubject
         _listener = listener;
         _cts = new CancellationTokenSource();
         _handler = handler;
-        _whenStopped = Task.Factory.StartNew(RunAsync, TaskCreationOptions.LongRunning);
+        _whenStopped = Task.Factory.StartNew(RunAsync, TaskCreationOptions.LongRunning).Unwrap();
     }
 
     /// <summary>
@@ -73,10 +78,15 @@ internal class Server : IServer, ILogSubject
     /// <returns>A task that completes when the server has finished disposing.</returns>
     public async ValueTask DisposeAsync()
     {
+        // idempotent: a second DisposeAsync must be a no-op, not throw on the already-disposed _cts
+        if (Interlocked.Exchange(ref _disposed, 1) == 1)
+            return;
+
         await _cts.CancelAsync();
 #pragma warning disable VSTHRD003
         await _whenStopped;
 #pragma warning restore VSTHRD003
+        _cts.Dispose();
     }
 
     /// <summary>

@@ -12,7 +12,7 @@ namespace Annium.Net.Servers.Sockets;
 public static class ServerBuilder
 {
     /// <summary>
-    /// Creates a new server builder instance for the specified port
+    /// Creates a new server builder that listens on the loopback address at a dynamically assigned port
     /// </summary>
     /// <param name="sp">Service provider for dependency injection</param>
     /// <returns>A new server builder instance</returns>
@@ -22,7 +22,7 @@ public static class ServerBuilder
     }
 
     /// <summary>
-    /// Creates a new server builder instance for the specified port
+    /// Creates a new server builder that listens on the specified address at a dynamically assigned port
     /// </summary>
     /// <param name="sp">Service provider for dependency injection</param>
     /// <param name="address">IP address to listen on</param>
