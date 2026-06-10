@@ -19,12 +19,12 @@ public class AsResponseExtensionsTests : TestBase
     /// <summary>
     /// Factory for creating HTTP requests
     /// </summary>
-    private IHttpRequestFactory _httpRequestFactory = null!;
+    private IHttpRequestFactory _httpRequestFactory = null!; // set in InitializeAsync
 
     /// <summary>
     /// Serializer for JSON conversion operations
     /// </summary>
-    private Serializer _serializer = null!;
+    private Serializer _serializer = null!; // set in InitializeAsync
 
     /// <summary>
     /// Initializes a new instance of the AsResponseExtensionsTests class

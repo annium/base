@@ -37,8 +37,9 @@ public abstract class TestBase : Testing.TestBase
             {
                 await handle(ctx.Request, ctx.Response);
             }
-            catch
+            catch (Exception e)
             {
+                this.Error(e);
                 ctx.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
             }
             finally

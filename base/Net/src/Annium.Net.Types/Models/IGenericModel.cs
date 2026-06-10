@@ -20,4 +20,10 @@ public interface IGenericModel : IModel
     /// Includes properties and fields that are part of the type's structure.
     /// </summary>
     IReadOnlyList<FieldModel> Fields { get; }
+
+    /// <summary>
+    /// The interfaces this model inherits from or implements.
+    /// Empty when the type has no interfaces.
+    /// </summary>
+    IReadOnlyList<IRef> Interfaces { get; }
 }

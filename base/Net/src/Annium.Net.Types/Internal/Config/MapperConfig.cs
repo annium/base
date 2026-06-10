@@ -247,12 +247,12 @@ internal class MapperConfig : IMapperConfigInternal
         if (type != type.TryGetPure())
             throw new ArgumentException($"Can't register type {type.FriendlyName()} as Record type");
 
-        var arrayImplementation = type.GetInterfaces()
-            .SingleOrDefault(x => x.IsGenericType && x.GetGenericTypeDefinition() == BaseArrayType);
-        if (
-            arrayImplementation is null
-            || arrayImplementation.GetGenericArguments()[0].GetGenericTypeDefinition() != BaseRecordValueType
-        )
+        // a type may implement several IEnumerable<T>; pick the one whose element is KeyValuePair<,>
+        var arrayArgument = type.GetInterfaces()
+            .Where(x => x.IsGenericType && x.GetGenericTypeDefinition() == BaseArrayType)
+            .Select(x => x.GetGenericArguments()[0])
+            .FirstOrDefault(arg => arg.IsGenericType && arg.GetGenericTypeDefinition() == BaseRecordValueType);
+        if (arrayArgument is null)
             throw new ArgumentException(
                 $"Type {type.FriendlyName()} doesn't implement {_baseRecordType.FriendlyName()}"
             );

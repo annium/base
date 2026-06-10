@@ -19,11 +19,11 @@ public static class ModelRefExtensions
     public static bool IsFor(this IModelRef @ref, Type type) =>
         @ref switch
         {
-            IGenericModelRef x => x.Namespace == type.Namespace
+            IGenericModelRef x => x.Namespace == (type.Namespace ?? string.Empty)
                 && x.Name == type.PureName()
                 && type.IsGenericType
-                && x.Args.Length == type.GetGenericArguments().Length,
-            _ => @ref.Namespace == type.Namespace && @ref.Name == type.PureName(),
+                && x.Args.Count == type.GetGenericArguments().Length,
+            _ => @ref.Namespace == (type.Namespace ?? string.Empty) && @ref.Name == type.PureName(),
         };
 
     /// <summary>
@@ -40,7 +40,7 @@ public static class ModelRefExtensions
             {
                 IGenericModelRef x => x.Namespace == m.Namespace.ToString()
                     && x.Name == m.Name
-                    && x.Args.Length == m.Args.Count,
+                    && x.Args.Count == m.Args.Count,
                 _ => false,
             },
             _ => @ref switch

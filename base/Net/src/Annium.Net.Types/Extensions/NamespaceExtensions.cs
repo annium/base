@@ -39,7 +39,7 @@ public static class NamespaceExtensions
     public static Namespace From(this Namespace ns, Namespace target)
     {
         if (!ns.StartsWith(target))
-            throw new ArgumentException($"Namespace {ns} doesn't contain namespace {ns}");
+            throw new ArgumentException($"Namespace {ns} doesn't contain namespace {target}");
 
         return Namespace.New(ns.Skip(target.Count).ToArray());
     }

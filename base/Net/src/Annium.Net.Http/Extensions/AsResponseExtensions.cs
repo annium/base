@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Annium.Logging;
 using Annium.Net.Http.Internal;
 using OneOf;
 
@@ -30,12 +31,13 @@ public static class AsResponseExtensions
 
         try
         {
-            var data = await ContentParser.ParseAsync<T>(request.Serializer, response.Content);
+            var data = await ContentParser.ParseAsync<T>(request.GetSerializer(), response.Content);
 
             return new HttpResponse<T?>(response, data);
         }
-        catch
+        catch (Exception e)
         {
+            request.Error(e);
             return new HttpResponse<T?>(response, default);
         }
     }
@@ -60,11 +62,12 @@ public static class AsResponseExtensions
 
         try
         {
-            var data = await ContentParser.ParseAsync<T>(request.Serializer, response.Content);
+            var data = await ContentParser.ParseAsync<T>(request.GetSerializer(), response.Content);
             return new HttpResponse<T>(response, data ?? defaultData);
         }
-        catch
+        catch (Exception e)
         {
+            request.Error(e);
             return new HttpResponse<T>(response, defaultData);
         }
     }
@@ -83,23 +86,28 @@ public static class AsResponseExtensions
     )
     {
         var response = await request.RunAsync(ct);
+
+        if (response.IsNetworkError)
+            return new HttpResponse<OneOf<TSuccess, TFailure?>>(response, default(TFailure));
+
         if (response.IsAbort)
             return new HttpResponse<OneOf<TSuccess, TFailure?>>(response, default(TFailure));
 
         try
         {
-            var success = await ContentParser.ParseAsync<TSuccess>(request.Serializer, response.Content);
+            var success = await ContentParser.ParseAsync<TSuccess>(request.GetSerializer(), response.Content);
             if (!Equals(success, default(TSuccess)))
                 return new HttpResponse<OneOf<TSuccess, TFailure?>>(response, success);
 
-            var failure = await ContentParser.ParseAsync<TFailure>(request.Serializer, response.Content);
+            var failure = await ContentParser.ParseAsync<TFailure>(request.GetSerializer(), response.Content);
             if (!Equals(failure, default(TFailure)))
                 return new HttpResponse<OneOf<TSuccess, TFailure?>>(response, failure);
 
             return new HttpResponse<OneOf<TSuccess, TFailure?>>(response, default(TFailure));
         }
-        catch
+        catch (Exception e)
         {
+            request.Error(e);
             return new HttpResponse<OneOf<TSuccess, TFailure?>>(response, default(TFailure));
         }
     }
@@ -135,11 +143,11 @@ public static class AsResponseExtensions
 
         try
         {
-            var success = await ContentParser.ParseAsync<TSuccess>(request.Serializer, response.Content);
+            var success = await ContentParser.ParseAsync<TSuccess>(request.GetSerializer(), response.Content);
             if (!Equals(success, default(TSuccess)))
                 return new HttpResponse<OneOf<TSuccess, TFailure>>(response, success);
 
-            var failure = await ContentParser.ParseAsync<TFailure>(request.Serializer, response.Content);
+            var failure = await ContentParser.ParseAsync<TFailure>(request.GetSerializer(), response.Content);
             if (!Equals(failure, default(TFailure)))
                 return new HttpResponse<OneOf<TSuccess, TFailure>>(response, failure);
 

@@ -17,6 +17,11 @@ public interface IModelMapper
     /// </summary>
     /// <param name="type">The contextual type to map, containing type information and nullability context</param>
     /// <returns>A type reference representing the mapped type</returns>
+    /// <remarks>
+    /// The mapper is stateful: each call accumulates the models discovered for <paramref name="type"/>
+    /// and its dependencies into a shared context, so successive calls grow the set returned by
+    /// <see cref="GetModels"/>.
+    /// </remarks>
     IRef Map(ContextualType type);
 
     /// <summary>
@@ -24,5 +29,9 @@ public interface IModelMapper
     /// This includes all complex types (structs, interfaces, enums) that were processed.
     /// </summary>
     /// <returns>A read-only collection of all generated type models</returns>
+    /// <remarks>
+    /// In addition to returning the accumulated models, this triggers a one-time processing of all
+    /// explicitly included types before returning, so the result reflects both mapped and included types.
+    /// </remarks>
     IReadOnlyCollection<IModel> GetModels();
 }

@@ -30,7 +30,7 @@ public sealed record InterfaceModel(Namespace Namespace, string Name) : IGeneric
     /// Sets the generic type arguments for this interface.
     /// </summary>
     /// <param name="args">The generic type arguments</param>
-    public void SetArgs(IReadOnlyList<IRef> args)
+    internal void SetArgs(IReadOnlyList<IRef> args)
     {
         Args = args;
     }
@@ -39,7 +39,7 @@ public sealed record InterfaceModel(Namespace Namespace, string Name) : IGeneric
     /// Sets the interfaces that this interface inherits from.
     /// </summary>
     /// <param name="interfaces">The inherited interfaces</param>
-    public void SetInterfaces(IReadOnlyList<IRef> interfaces)
+    internal void SetInterfaces(IReadOnlyList<IRef> interfaces)
     {
         Interfaces = interfaces;
     }
@@ -48,7 +48,7 @@ public sealed record InterfaceModel(Namespace Namespace, string Name) : IGeneric
     /// Sets the field definitions for this interface.
     /// </summary>
     /// <param name="fields">The field definitions</param>
-    public void SetFields(IReadOnlyList<FieldModel> fields)
+    internal void SetFields(IReadOnlyList<FieldModel> fields)
     {
         Fields = fields;
     }
