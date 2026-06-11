@@ -370,6 +370,33 @@ public class ClientWebSocket : IClientWebSocket
                 task.Result is null ? "ok" : task.Result.ToString()
             );
             SetStatus(task.Result is null ? Status.Connected : Status.Connecting);
+
+            if (task.Result is null)
+            {
+                // Success: wire teardown and start the monitor while still holding _locker, so a
+                // concurrent Disconnect cannot interleave between the Connected flip and these steps
+                // and leave a started-but-orphaned monitor (Disconnect stops the monitor — it must
+                // observe a fully-started one, or none at all).
+                this.Trace("subscribe to IsClosed");
+                _ = _socket.IsClosed.ContinueWith(
+                    closedTask =>
+                    {
+                        try
+                        {
+                            HandleClosed(closedTask);
+                        }
+                        catch (OperationCanceledException) { }
+                        catch (Exception ex)
+                        {
+                            this.Error("HandleClosed failed: {exception}", ex);
+                        }
+                    },
+                    CancellationToken.None
+                );
+
+                this.Trace("start monitor");
+                _connectionMonitor.Start();
+            }
         }
 
         if (task.Result is not null)
@@ -382,28 +409,18 @@ public class ClientWebSocket : IClientWebSocket
         }
 #pragma warning restore VSTHRD002
 
-        this.Trace("subscribe to IsClosed");
-        _ = _socket.IsClosed.ContinueWith(
-            task =>
-            {
-                try
-                {
-                    HandleClosed(task);
-                }
-                catch (OperationCanceledException) { }
-                catch (Exception ex)
-                {
-                    this.Error("HandleClosed failed: {exception}", ex);
-                }
-            },
-            CancellationToken.None
-        );
+        // Fire OnConnected only if still Connected: a Disconnect that raced in right after the lock
+        // has already flipped status (and fires its own OnDisconnected), so don't emit a stale
+        // OnConnected on top of it.
+        bool connected;
+        lock (_locker)
+            connected = _status is Status.Connected;
 
-        this.Trace("start monitor");
-        _connectionMonitor.Start();
-
-        this.Trace("fire connected");
-        OnConnected();
+        if (connected)
+        {
+            this.Trace("fire connected");
+            OnConnected();
+        }
 
         this.Trace("done");
     }

@@ -118,11 +118,13 @@ public class ServerWebSocket : IServerWebSocket
             options.ConnectionMonitor.Factory?.Create(_socket, options.ConnectionMonitor)
             ?? new NoneConnectionMonitor(Logger);
 
-        this.Trace("start monitor");
-        _connectionMonitor.Start();
-
+        // subscribe before Start so the monitor's first FireConnectionLost can never fire into the
+        // void — Start may begin emitting connection-lost events synchronously from its timer.
         this.Trace("subscribe to OnConnectionLost");
         _connectionMonitor.OnConnectionLost += Disconnect;
+
+        this.Trace("start monitor");
+        _connectionMonitor.Start();
     }
 
     /// <summary>

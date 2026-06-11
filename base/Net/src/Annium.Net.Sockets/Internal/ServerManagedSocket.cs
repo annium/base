@@ -37,6 +37,14 @@ internal class ServerManagedSocket : IServerManagedSocket, ILogSubject
     private readonly IManagedSocket _socket;
 
     /// <summary>
+    /// Once-only teardown guard (1 = teardown ran). Set via <see cref="Interlocked"/>.CompareExchange
+    /// so the receive-trampoline unbind runs at most once across <see cref="Dispose"/>,
+    /// <see cref="DisconnectAsync"/>, and <see cref="HandleClosed"/> — preventing a late
+    /// <see cref="HandleClosed"/> from racing a completed <see cref="Dispose"/> on the event handler.
+    /// </summary>
+    private int _tornDown;
+
+    /// <summary>
     /// Initializes a new instance of the ServerManagedSocket class.
     /// </summary>
     /// <param name="stream">The client connection stream.</param>
@@ -70,15 +78,16 @@ internal class ServerManagedSocket : IServerManagedSocket, ILogSubject
     /// <summary>
     /// Disposes the server managed socket with forced-close semantics: unbinds the receive
     /// trampoline, disposes the inner managed socket, and closes the stream. Idempotent: a
-    /// follow-up <see cref="DisconnectAsync"/> is safe (its event unsubscribe is a no-op
-    /// after the first one; <see cref="Stream.Close"/> is idempotent; the inner socket's
+    /// follow-up <see cref="DisconnectAsync"/> is safe (the event unsubscribe is gated by the
+    /// once-only teardown claim; <see cref="Stream.Close"/> is idempotent; the inner socket's
     /// <see cref="IDisposable.Dispose"/> is idempotent).
     /// </summary>
     public void Dispose()
     {
         this.Trace("start");
 
-        _socket.OnReceived -= HandleOnReceived;
+        if (TryClaimTeardown())
+            UnbindEvents();
 
         try
         {
@@ -109,8 +118,11 @@ internal class ServerManagedSocket : IServerManagedSocket, ILogSubject
     {
         this.Trace("start");
 
-        this.Trace("unbind events");
-        _socket.OnReceived -= HandleOnReceived;
+        if (TryClaimTeardown())
+        {
+            this.Trace("unbind events");
+            UnbindEvents();
+        }
 
         try
         {
@@ -153,7 +165,8 @@ internal class ServerManagedSocket : IServerManagedSocket, ILogSubject
         if (task.Exception is not null)
             this.Error(task.Exception);
 
-        _socket.OnReceived -= HandleOnReceived;
+        if (TryClaimTeardown())
+            UnbindEvents();
 
         this.Trace("done");
 
@@ -179,5 +192,21 @@ internal class ServerManagedSocket : IServerManagedSocket, ILogSubject
     {
         this.Trace("trigger binary received");
         OnReceived(data);
+    }
+
+    /// <summary>
+    /// Atomically claims the once-only teardown right. Returns true for the first caller and
+    /// false for every subsequent caller (Dispose/DisconnectAsync/HandleClosed all race for it).
+    /// </summary>
+    /// <returns>True if this caller won the race and should unbind the receive trampoline.</returns>
+    private bool TryClaimTeardown() => Interlocked.CompareExchange(ref _tornDown, 1, 0) == 0;
+
+    /// <summary>
+    /// Unsubscribes the receive trampoline from the managed socket. Only called by the teardown
+    /// winner so the unsubscribe runs exactly once.
+    /// </summary>
+    private void UnbindEvents()
+    {
+        _socket.OnReceived -= HandleOnReceived;
     }
 }

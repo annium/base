@@ -73,9 +73,12 @@ internal class ClientManagedSocket : IClientManagedSocket, ILogSubject
         // TeardownUnderLock only disposes _listenCts when a live connection was torn down; on the
         // never-connected (or double-dispose) path it returns early. Dispose _listenCts here so the
         // constructor-created instance is always released. CTS.Dispose() is idempotent, so the
-        // connected path (already disposed under the lock) is a safe no-op.
+        // connected path (already disposed under the lock) is a safe no-op. Read+dispose under
+        // _locker so a concurrent ConnectAsync rotating the field (it installs a fresh CTS under the
+        // same lock) can't have us dispose the just-installed instance out from under its listen loop.
 #pragma warning disable VSTHRD103
-        _listenCts.Dispose();
+        lock (_locker)
+            _listenCts.Dispose();
 #pragma warning restore VSTHRD103
 
         this.Trace("done");
