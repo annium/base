@@ -1,4 +1,5 @@
 using System;
+using System.Text.Json;
 using Annium.Serialization.Abstractions.Attributes;
 using Annium.Testing;
 using Xunit;
@@ -10,6 +11,39 @@ namespace Annium.Serialization.Json.Tests.Converters;
 /// </summary>
 public class EnumJsonConverterTest : TestBase
 {
+    /// <summary>
+    /// Tests that serializing a basic enum value produces its string form
+    /// </summary>
+    [Fact]
+    public void Serialization_BasicEnum_ProducesStringForm()
+    {
+        // arrange
+        var serializer = GetSerializer();
+
+        // act
+        var result = serializer.Serialize(A.Y);
+
+        // assert
+        result.Is(@"""Y""");
+    }
+
+    /// <summary>
+    /// Tests that serializing a flags enum combination produces the expected flags string
+    /// </summary>
+    [Fact]
+    public void Serialization_FlagsEnum_ProducesFlagsString()
+    {
+        // arrange
+        var serializer = GetSerializer();
+        var value = B.Y | B.Z;
+
+        // act
+        var result = serializer.Serialize(value);
+
+        // assert
+        result.Is(@"""Y, Z""");
+    }
+
     /// <summary>
     /// Tests that basic enum serialization and deserialization works correctly
     /// </summary>
@@ -38,6 +72,34 @@ public class EnumJsonConverterTest : TestBase
         c2.Is(C.Z);
         c3.Is(C.X | C.Y | C.Z);
         c4.Is(C.Z);
+    }
+
+    /// <summary>
+    /// Tests that deserializing a boolean JSON token as a regular enum throws JsonException,
+    /// because EnumJsonConverter only accepts String or Number tokens.
+    /// </summary>
+    [Fact]
+    public void Deserialization_BasicEnum_BooleanToken_ThrowsJsonException()
+    {
+        // arrange
+        var serializer = GetSerializer();
+
+        // act / assert
+        Wrap.It(() => serializer.Deserialize<A>("true")).Throws<JsonException>();
+    }
+
+    /// <summary>
+    /// Tests that deserializing a boolean JSON token as a flags enum throws JsonException,
+    /// because FlagsEnumJsonConverter only accepts String or Number tokens.
+    /// </summary>
+    [Fact]
+    public void Deserialization_FlagsEnum_BooleanToken_ThrowsJsonException()
+    {
+        // arrange
+        var serializer = GetSerializer();
+
+        // act / assert
+        Wrap.It(() => serializer.Deserialize<B>("true")).Throws<JsonException>();
     }
 
     /// <summary>

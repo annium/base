@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 using Annium.Core.Runtime.Types;
 using Annium.Serialization.Abstractions.Attributes;
 using Annium.Testing;
@@ -215,6 +216,25 @@ public class ConstructorJsonConverterTest : TestBase
     }
 
     /// <summary>
+    /// Tests that a constructor parameter whose corresponding property carries JsonPropertyNameAttribute uses the custom JSON key name for both serialization and deserialization
+    /// </summary>
+    [Fact]
+    public void Deserialization_JsonPropertyName_Works()
+    {
+        // arrange
+        var serializer = GetSerializer();
+        var original = new WithJsonPropertyName(42);
+
+        // act
+        var serialized = serializer.Serialize(original);
+        var result = serializer.Deserialize<WithJsonPropertyName>(serialized);
+
+        // assert
+        serialized.Is(@"{""custom_name"":42}");
+        result.Value.Is(original.Value);
+    }
+
+    /// <summary>
     /// Tests that deserialization of tuple types works correctly
     /// </summary>
     [Fact]
@@ -425,5 +445,26 @@ public class ConstructorJsonConverterTest : TestBase
         /// </summary>
         [ResolutionId]
         public string Tid => GetType().GetIdString();
+    }
+
+    /// <summary>
+    /// Test class whose constructor parameter maps to a property decorated with JsonPropertyNameAttribute
+    /// </summary>
+    public class WithJsonPropertyName
+    {
+        /// <summary>
+        /// Gets the test value, serialized as "custom_name" due to JsonPropertyNameAttribute
+        /// </summary>
+        [JsonPropertyName("custom_name")]
+        public int Value { get; }
+
+        /// <summary>
+        /// Initializes a new instance of the WithJsonPropertyName class
+        /// </summary>
+        /// <param name="value">The value to initialize with</param>
+        public WithJsonPropertyName(int value)
+        {
+            Value = value;
+        }
     }
 }

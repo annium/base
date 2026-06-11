@@ -5,7 +5,7 @@ namespace Annium.Serialization.Json.Attributes;
 /// <summary>
 /// Specifies constant placeholder values when serializing an object as an array, used in conjunction with JsonAsArrayAttribute.
 /// </summary>
-[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = true)]
 public class JsonArrayPlaceholderAttribute : Attribute
 {
     /// <summary>

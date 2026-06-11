@@ -14,15 +14,15 @@ internal class StringSerializer : ISerializer<string>
     /// <summary>
     /// The MessagePack serializer options used for serialization and deserialization.
     /// </summary>
-    private readonly MessagePackSerializerOptions _opts;
+    private readonly MessagePackSerializerOptions _options;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="StringSerializer"/> class.
     /// </summary>
-    /// <param name="opts">The MessagePack serializer options to use.</param>
-    public StringSerializer(MessagePackSerializerOptions opts)
+    /// <param name="options">The MessagePack serializer options to use.</param>
+    public StringSerializer(MessagePackSerializerOptions options)
     {
-        _opts = opts;
+        _options = options;
     }
 
     /// <summary>
@@ -35,7 +35,7 @@ internal class StringSerializer : ISerializer<string>
     {
         try
         {
-            return MessagePackSerializer.Deserialize<T>(Convert.FromBase64String(value), _opts);
+            return MessagePackSerializer.Deserialize<T>(Convert.FromBase64String(value), _options);
         }
         catch (Exception e)
         {
@@ -56,7 +56,7 @@ internal class StringSerializer : ISerializer<string>
     {
         try
         {
-            return MessagePackSerializer.Deserialize(type, Convert.FromBase64String(value), _opts);
+            return MessagePackSerializer.Deserialize(type, Convert.FromBase64String(value), _options);
         }
         catch (Exception e)
         {
@@ -74,7 +74,7 @@ internal class StringSerializer : ISerializer<string>
     {
         try
         {
-            return Convert.ToBase64String(MessagePackSerializer.Serialize(value, _opts));
+            return Convert.ToBase64String(MessagePackSerializer.Serialize(value, _options));
         }
         catch (Exception e)
         {
@@ -95,7 +95,7 @@ internal class StringSerializer : ISerializer<string>
     {
         try
         {
-            return Convert.ToBase64String(MessagePackSerializer.Serialize(type, value, _opts));
+            return Convert.ToBase64String(MessagePackSerializer.Serialize(type, value, _options));
         }
         catch (Exception e)
         {

@@ -125,6 +125,44 @@ public class ObjectArrayJsonConverterTest : TestBase
     }
 
     /// <summary>
+    /// Tests that multiple [JsonArrayPlaceholder] attributes on a single type are all honored.
+    /// </summary>
+    [Fact]
+    public void Serialization_MultiplePlaceholders_Works()
+    {
+        // arrange
+        var serializer = GetSerializer();
+
+        var x = new D();
+        x.SetData("demo");
+
+        // act
+        var result = serializer.Serialize(x);
+
+        // assert
+        result.Is(@"[""x"",""demo"",null,null]");
+    }
+
+    /// <summary>
+    /// Tests that a type carrying multiple [JsonArrayPlaceholder] attributes round-trips.
+    /// </summary>
+    [Fact]
+    public void Deserialization_MultiplePlaceholders_Works()
+    {
+        // arrange
+        var serializer = GetSerializer();
+        var x = new D();
+        x.SetData("demo");
+        var str = serializer.Serialize(x);
+
+        // act
+        var result = serializer.Deserialize<D>(str);
+
+        // assert
+        result.Is(x);
+    }
+
+    /// <summary>
     /// Test record for basic object array serialization
     /// </summary>
     [JsonAsArray]
@@ -215,6 +253,27 @@ public class ObjectArrayJsonConverterTest : TestBase
         /// Ignored field for testing
         /// </summary>
         public bool Ignored;
+
+        /// <summary>
+        /// Sets the data string
+        /// </summary>
+        /// <param name="data">The data to set</param>
+        public void SetData(string data) => Data = data;
+    }
+
+    /// <summary>
+    /// Test record for object array serialization with multiple placeholders
+    /// </summary>
+    [JsonAsArray]
+    [JsonArrayPlaceholder(0, "x")]
+    [JsonArrayPlaceholder(3, null)]
+    public record D
+    {
+        /// <summary>
+        /// Gets the data string
+        /// </summary>
+        [JsonPropertyOrder(1)]
+        public string Data { get; private set; } = string.Empty;
 
         /// <summary>
         /// Sets the data string

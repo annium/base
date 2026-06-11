@@ -41,7 +41,7 @@ internal class GenericDictionaryJsonConverter<TKey, TValue> : JsonConverter<Dict
                 throw new JsonException();
 
             // TODO: try parse with & without quotes
-            var keyString = reader.GetString()!;
+            var keyString = reader.GetString().NotNull();
             keyString = keyString.StartsWith("{") || keyString.StartsWith("[") ? keyString : $@"""{keyString}""";
             var key = JsonSerializer.Deserialize<TKey>(keyString, options)!;
             reader.Read();

@@ -297,6 +297,25 @@ public class AbstractJsonConverterTest : TestBase
     }
 
     /// <summary>
+    /// Tests that the resolution property decorated with [JsonPropertyName] is found using the attribute name
+    /// rather than the raw or camelCase-converted property name
+    /// </summary>
+    [Fact]
+    public void Deserialization_JsonPropertyNameOnResolutionId_UsesAttributeName()
+    {
+        // arrange
+        var serializer = GetSerializer();
+        TaggedBase original = new TaggedChild { Payload = 99 };
+
+        // act - serialize uses the concrete type directly, round-trip via abstract base
+        var json = serializer.Serialize(original);
+        var result = serializer.Deserialize<TaggedBase>(json);
+
+        // assert - the "_type" field in JSON drove resolution to the correct concrete type
+        result.As<TaggedChild>().Payload.Is(99);
+    }
+
+    /// <summary>
     /// Base class for ID-based resolution testing
     /// </summary>
     public abstract class IdBase
@@ -541,4 +560,29 @@ public class AbstractJsonConverterTest : TestBase
     /// Interface for test value types
     /// </summary>
     public interface IValue;
+
+    /// <summary>
+    /// Abstract base for testing resolution via a [JsonPropertyName]-decorated id property.
+    /// The property is named "TypeDiscriminator" but mapped to "_type" in JSON.
+    /// </summary>
+    public abstract class TaggedBase
+    {
+        /// <summary>
+        /// Gets the type identifier; the JSON key is "_type" (not "typeDiscriminator" or "TypeDiscriminator")
+        /// </summary>
+        [ResolutionId]
+        [System.Text.Json.Serialization.JsonPropertyName("_type")]
+        public string TypeDiscriminator => GetType().GetIdString();
+    }
+
+    /// <summary>
+    /// Concrete subtype used in [JsonPropertyName] resolution test
+    /// </summary>
+    public class TaggedChild : TaggedBase
+    {
+        /// <summary>
+        /// Gets or sets the payload value
+        /// </summary>
+        public int Payload { get; set; }
+    }
 }

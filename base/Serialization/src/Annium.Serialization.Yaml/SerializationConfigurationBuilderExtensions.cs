@@ -8,6 +8,18 @@ using YamlDotNet.Serialization;
 namespace Annium.Serialization.Yaml;
 
 /// <summary>
+/// Delegate for configuring YAML serializer and deserializer builders with access to the service provider.
+/// </summary>
+/// <param name="provider">The service provider.</param>
+/// <param name="serializer">The YAML serializer builder to configure.</param>
+/// <param name="deserializer">The YAML deserializer builder to configure.</param>
+public delegate void ConfigureSerializer(
+    IServiceProvider provider,
+    SerializerBuilder serializer,
+    DeserializerBuilder deserializer
+);
+
+/// <summary>
 /// Extension methods for configuring YAML serialization.
 /// </summary>
 public static class SerializationConfigurationBuilderExtensions
@@ -15,10 +27,7 @@ public static class SerializationConfigurationBuilderExtensions
     /// <summary>
     /// Cache for YAML serializer and deserializer instances keyed by configuration.
     /// </summary>
-    private static readonly ConcurrentDictionary<
-        (SerializerKey, Action<IServiceProvider, SerializerBuilder, DeserializerBuilder>),
-        (ISerializer, IDeserializer)
-    > _options = new();
+    private static readonly ConcurrentDictionary<OptionsKey, (ISerializer, IDeserializer)> _options = new();
 
     /// <summary>
     /// Adds YAML serialization support with default configuration. Registers serializers for the
@@ -66,7 +75,7 @@ public static class SerializationConfigurationBuilderExtensions
     /// <returns>The configuration builder for method chaining.</returns>
     public static ISerializationConfigurationBuilder WithYaml(
         this ISerializationConfigurationBuilder builder,
-        Action<IServiceProvider, SerializerBuilder, DeserializerBuilder> configure,
+        ConfigureSerializer configure,
         bool isDefault = false
     )
     {
@@ -83,7 +92,7 @@ public static class SerializationConfigurationBuilderExtensions
     private static ISerializationConfigurationBuilder RegisterAll(
         ISerializationConfigurationBuilder builder,
         bool isDefault,
-        Action<IServiceProvider, SerializerBuilder, DeserializerBuilder> configure
+        ConfigureSerializer configure
     )
     {
         return builder
@@ -119,22 +128,23 @@ public static class SerializationConfigurationBuilderExtensions
     /// <returns>A function that resolves the serializer from a service provider.</returns>
     private static Func<IServiceProvider, TSerializer> ResolveSerializer<TSerializer>(
         string key,
-        Action<IServiceProvider, SerializerBuilder, DeserializerBuilder> configure,
+        ConfigureSerializer configure,
         Func<ISerializer, IDeserializer, TSerializer> factory
     ) =>
         sp =>
         {
             var (serializer, deserializer) = _options.GetOrAdd(
-                (SerializerKey.Create(key, Constants.MediaType), configure),
-                _ =>
+                new OptionsKey(SerializerKey.Create(key, Constants.MediaType), configure),
+                static (optionsKey, provider) =>
                 {
                     var serializerBuilder = new SerializerBuilder();
                     var deserializerBuilder = new DeserializerBuilder();
 
-                    configure(sp, serializerBuilder, deserializerBuilder);
+                    optionsKey.Configure(provider, serializerBuilder, deserializerBuilder);
 
                     return (serializerBuilder.Build(), deserializerBuilder.Build());
-                }
+                },
+                sp
             );
 
             return factory(serializer, deserializer);
@@ -177,4 +187,11 @@ public static class SerializationConfigurationBuilderExtensions
     /// <returns>A new <see cref="StreamSerializer"/> instance.</returns>
     private static StreamSerializer CreateStream(ISerializer serializer, IDeserializer deserializer) =>
         new(serializer, deserializer);
+
+    /// <summary>
+    /// Record representing a unique key for caching configured YAML serializer/deserializer pairs.
+    /// </summary>
+    /// <param name="SerializerKey">The serializer key.</param>
+    /// <param name="Configure">The configuration delegate.</param>
+    private record OptionsKey(SerializerKey SerializerKey, ConfigureSerializer Configure);
 }

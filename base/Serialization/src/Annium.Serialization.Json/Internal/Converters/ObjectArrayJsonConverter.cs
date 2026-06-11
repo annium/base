@@ -74,7 +74,7 @@ internal class ObjectArrayJsonConverter<T> : JsonConverter<T>
 
             // pad with null, if needed
             while (result.Count < order.Value)
-                result.Add(null!);
+                result.Add(null);
 
             // add if last
             if (result.Count == order.Value)
