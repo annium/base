@@ -87,6 +87,29 @@ public class GenericDictionaryJsonConverterTest : TestBase
         // assert
         result.At(key).Is(value);
     }
+
+    /// <summary>
+    /// Tests that a non-dictionary type implementing IEnumerable&lt;KeyValuePair&lt;,&gt;&gt; (e.g. List)
+    /// is not hijacked by the dictionary converter and round-trips via the default handling.
+    /// </summary>
+    [Fact]
+    public void Serialization_NonDictionaryKeyValuePairList_NotHijacked()
+    {
+        // arrange
+        var serializer = GetSerializer();
+        var source = new List<KeyValuePair<string, int>> { new("a", 1), new("b", 2) };
+
+        // act
+        var str = serializer.Serialize(source);
+        var result = serializer.Deserialize<List<KeyValuePair<string, int>>>(str);
+
+        // assert
+        result.Has(2);
+        result[0].Key.Is("a");
+        result[0].Value.Is(1);
+        result[1].Key.Is("b");
+        result[1].Value.Is(2);
+    }
 }
 
 /// <summary>

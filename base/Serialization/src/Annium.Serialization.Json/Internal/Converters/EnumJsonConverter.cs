@@ -37,8 +37,8 @@ internal class EnumJsonConverter<T> : JsonConverter<T>
     {
         if (reader.TokenType == JsonTokenType.String)
             return _cfg.DefaultValue.HasValue
-                ? reader.GetString()!.ParseEnum(_cfg.DefaultValue.Value)
-                : reader.GetString()!.ParseEnum<T>();
+                ? reader.GetString().NotNull().ParseEnum(_cfg.DefaultValue.Value)
+                : reader.GetString().NotNull().ParseEnum<T>();
 
         if (reader.TokenType == JsonTokenType.Number)
             return _cfg.DefaultValue.HasValue
@@ -92,8 +92,8 @@ internal class FlagsEnumJsonConverter<T> : JsonConverter<T>
     {
         if (reader.TokenType == JsonTokenType.String)
             return _cfg.DefaultValue.HasValue
-                ? reader.GetString()!.ParseFlags(_cfg.ValueSeparator, _cfg.DefaultValue.Value)
-                : reader.GetString()!.ParseFlags<T>(_cfg.ValueSeparator);
+                ? reader.GetString().NotNull().ParseFlags(_cfg.ValueSeparator, _cfg.DefaultValue.Value)
+                : reader.GetString().NotNull().ParseFlags<T>(_cfg.ValueSeparator);
 
         if (reader.TokenType == JsonTokenType.Number)
             return _cfg.DefaultValue.HasValue

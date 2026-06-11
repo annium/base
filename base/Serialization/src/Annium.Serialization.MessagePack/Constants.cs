@@ -8,5 +8,5 @@ public static class Constants
     /// <summary>
     /// The media type identifier for MessagePack serialization.
     /// </summary>
-    public static string MediaType = "MessagePack";
+    public const string MediaType = "MessagePack";
 }

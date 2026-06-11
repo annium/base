@@ -78,6 +78,7 @@ internal class SerializerInstance<TValue> : ISerializer<TValue>
     /// <typeparam name="T">The type to deserialize to.</typeparam>
     /// <param name="value">The value to deserialize.</param>
     /// <returns>The deserialized value.</returns>
+    // deserializer returns a value of the requested type T (null is cast through for nullable T)
     public T Deserialize<T>(TValue value) => (T)_deserialize(typeof(T), value)!;
 
     /// <summary>
