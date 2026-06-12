@@ -12,6 +12,11 @@ namespace Annium.NodaTime.Serialization.Json.Internal.Converters;
 internal sealed class NodaIsoDateIntervalConverter : ConverterBase<DateInterval>
 {
     /// <summary>
+    /// The ISO-8601 LocalDate pattern used to parse and format the interval endpoints.
+    /// </summary>
+    private static readonly LocalDatePattern _pattern = LocalDatePattern.Iso;
+
+    /// <summary>
     /// Reads a JSON string representation of a DateInterval in ISO-8601 format ("start/end").
     /// </summary>
     /// <param name="reader">The JSON reader to read from.</param>
@@ -29,7 +34,7 @@ internal sealed class NodaIsoDateIntervalConverter : ConverterBase<DateInterval>
                 $"Unexpected token parsing DateInterval. Expected String, got {reader.TokenType}."
             );
 
-        var text = reader.GetString()!;
+        var text = reader.GetString()!; // non-null: String token verified above
         var slash = text.IndexOf('/');
         if (slash == -1)
             throw new InvalidNodaDataException("Expected ISO-8601-formatted date interval; slash was missing.");
@@ -42,9 +47,8 @@ internal sealed class NodaIsoDateIntervalConverter : ConverterBase<DateInterval>
         if (endText == "")
             throw new InvalidNodaDataException("Expected ISO-8601-formatted date interval; end date was missing.");
 
-        var pattern = LocalDatePattern.Iso;
-        var start = pattern.Parse(startText).Value;
-        var end = pattern.Parse(endText).Value;
+        var start = _pattern.Parse(startText).Value;
+        var end = _pattern.Parse(endText).Value;
 
         return new DateInterval(start, end);
     }
@@ -57,8 +61,7 @@ internal sealed class NodaIsoDateIntervalConverter : ConverterBase<DateInterval>
     /// <param name="options">The serializer options to use.</param>
     public override void WriteImplementation(Utf8JsonWriter writer, DateInterval value, JsonSerializerOptions options)
     {
-        var pattern = LocalDatePattern.Iso;
-        var text = pattern.Format(value.Start) + "/" + pattern.Format(value.End);
+        var text = _pattern.Format(value.Start) + "/" + _pattern.Format(value.End);
         writer.WriteStringValue(text);
     }
 }

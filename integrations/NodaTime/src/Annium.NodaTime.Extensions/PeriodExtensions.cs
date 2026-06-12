@@ -1,3 +1,4 @@
+using System;
 using NodaTime;
 
 namespace Annium.NodaTime.Extensions;
@@ -45,8 +46,11 @@ public static class PeriodExtensions
     {
         var mt = (long)m.ToDuration().TotalTicks;
         var dt = (long)d.ToDuration().TotalTicks;
+        if (dt == 0)
+            throw new ArgumentException("Period unit must be non-zero.", nameof(d));
+        var rem = ((mt % dt) + dt) % dt; // floored remainder: floor toward -infinity for negative periods too
 
-        return Period.FromTicks(mt - mt % dt);
+        return Period.FromTicks(mt - rem);
     }
 
     /// <summary>
@@ -87,7 +91,9 @@ public static class PeriodExtensions
     {
         var mt = (long)m.ToDuration().TotalTicks;
         var dt = (long)d.ToDuration().TotalTicks;
-        var diff = mt % dt;
+        if (dt == 0)
+            throw new ArgumentException("Period unit must be non-zero.", nameof(d));
+        var diff = ((mt % dt) + dt) % dt; // floored remainder in [0, dt): correct rounding for negative periods too
 
         return Period.FromTicks(mt - diff + (dt > diff * 2L ? 0L : dt));
     }
@@ -130,7 +136,10 @@ public static class PeriodExtensions
     {
         var mt = (long)m.ToDuration().TotalTicks;
         var dt = (long)d.ToDuration().TotalTicks;
+        if (dt == 0)
+            throw new ArgumentException("Period unit must be non-zero.", nameof(d));
+        var rem = ((mt % dt) + dt) % dt; // floored remainder: ceil toward +infinity for negative periods too
 
-        return Period.FromTicks(mt + dt - mt % dt);
+        return Period.FromTicks(rem == 0 ? mt : mt + dt - rem);
     }
 }

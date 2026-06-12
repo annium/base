@@ -12,6 +12,11 @@ namespace Annium.NodaTime.Serialization.Json.Internal.Converters;
 internal sealed class NodaIsoIntervalConverter : ConverterBase<Interval>
 {
     /// <summary>
+    /// The extended ISO-8601 Instant pattern used to parse and format the interval endpoints.
+    /// </summary>
+    private static readonly InstantPattern _pattern = InstantPattern.ExtendedIso;
+
+    /// <summary>
     /// Reads a JSON string representation of an Interval in ISO-8601 format ("start/end", allowing empty start or end).
     /// </summary>
     /// <param name="reader">The JSON reader to read from.</param>
@@ -29,16 +34,15 @@ internal sealed class NodaIsoIntervalConverter : ConverterBase<Interval>
                 $"Unexpected token parsing Interval. Expected String, got {reader.TokenType}."
             );
 
-        var text = reader.GetString()!;
+        var text = reader.GetString()!; // non-null: String token verified above
         var slash = text.IndexOf('/');
         if (slash == -1)
             throw new InvalidNodaDataException("Expected ISO-8601-formatted interval; slash was missing.");
 
         var startText = text[..slash];
         var endText = text[(slash + 1)..];
-        var pattern = InstantPattern.ExtendedIso;
-        var start = startText == "" ? (Instant?)null : pattern.Parse(startText).Value;
-        var end = endText == "" ? (Instant?)null : pattern.Parse(endText).Value;
+        var start = startText == "" ? (Instant?)null : _pattern.Parse(startText).Value;
+        var end = endText == "" ? (Instant?)null : _pattern.Parse(endText).Value;
 
         return new Interval(start, end);
     }
@@ -51,9 +55,10 @@ internal sealed class NodaIsoIntervalConverter : ConverterBase<Interval>
     /// <param name="options">The serializer options to use.</param>
     public override void WriteImplementation(Utf8JsonWriter writer, Interval value, JsonSerializerOptions options)
     {
-        var pattern = InstantPattern.ExtendedIso;
         var text =
-            (value.HasStart ? pattern.Format(value.Start) : "") + "/" + (value.HasEnd ? pattern.Format(value.End) : "");
+            (value.HasStart ? _pattern.Format(value.Start) : "")
+            + "/"
+            + (value.HasEnd ? _pattern.Format(value.End) : "");
         writer.WriteStringValue(text);
     }
 }

@@ -1,3 +1,4 @@
+using System;
 using NodaTime;
 
 namespace Annium.NodaTime.Extensions;
@@ -45,8 +46,11 @@ public static class DurationExtensions
     {
         var mt = (long)m.TotalTicks;
         var dt = (long)d.TotalTicks;
+        if (dt == 0)
+            throw new ArgumentException("Duration unit must be non-zero.", nameof(d));
+        var rem = ((mt % dt) + dt) % dt; // floored remainder: floor toward -infinity for negative durations too
 
-        return Duration.FromTicks(mt - mt % dt);
+        return Duration.FromTicks(mt - rem);
     }
 
     /// <summary>
@@ -87,7 +91,9 @@ public static class DurationExtensions
     {
         var mt = (long)m.TotalTicks;
         var dt = (long)d.TotalTicks;
-        var diff = mt % dt;
+        if (dt == 0)
+            throw new ArgumentException("Duration unit must be non-zero.", nameof(d));
+        var diff = ((mt % dt) + dt) % dt; // floored remainder in [0, dt): correct rounding for negative durations too
 
         return Duration.FromTicks(mt - diff + (dt > diff * 2L ? 0L : dt));
     }
@@ -130,7 +136,10 @@ public static class DurationExtensions
     {
         var mt = (long)m.TotalTicks;
         var dt = (long)d.TotalTicks;
+        if (dt == 0)
+            throw new ArgumentException("Duration unit must be non-zero.", nameof(d));
+        var rem = ((mt % dt) + dt) % dt; // floored remainder: ceil toward +infinity for negative durations too
 
-        return Duration.FromTicks(mt + dt - mt % dt);
+        return Duration.FromTicks(rem == 0 ? mt : mt + dt - rem);
     }
 }

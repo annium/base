@@ -19,7 +19,7 @@ internal static class HelperExtensions
         if (reader.TokenType != JsonTokenType.PropertyName)
             return false;
 
-        var name = reader.GetString()!;
+        var name = reader.GetString()!; // non-null: PropertyName token verified above
 
         return name.Equals(property, StringComparison.InvariantCultureIgnoreCase);
     }
