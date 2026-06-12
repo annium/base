@@ -46,7 +46,9 @@ internal abstract class ExceptionPipeHandlerBase<TRequest, TResponse> : ILogSubj
         }
         catch (TargetInvocationException exception)
         {
-            return Failure(exception.InnerException!);
+            // TargetInvocationException.InnerException is typed Exception?; fall back to the wrapper
+            // so a null inner cause does not propagate a NullReferenceException out of this very handler.
+            return Failure(exception.InnerException ?? exception);
         }
         catch (Exception exception)
         {

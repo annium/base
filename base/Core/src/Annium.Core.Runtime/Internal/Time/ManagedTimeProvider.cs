@@ -35,6 +35,19 @@ internal class ManagedTimeProvider : ITimeManager, IInternalTimeProvider
     public long UnixSecondsNow { get; private set; }
 
     /// <summary>
+    /// Initializes the managed time provider, keeping all projected properties coherent with the
+    /// default <see cref="Now"/> (the Unix epoch) before the first <see cref="SetNow"/> call —
+    /// otherwise DateTimeNow would default to 0001-01-01 while Now reads as the epoch.
+    /// </summary>
+    public ManagedTimeProvider()
+    {
+        var now = Now;
+        DateTimeNow = now.ToDateTimeUtc();
+        UnixMsNow = now.ToUnixTimeMilliseconds();
+        UnixSecondsNow = now.ToUnixTimeSeconds();
+    }
+
+    /// <summary>
     /// Sets the current time to the specified instant
     /// </summary>
     /// <param name="now">The instant to set as current time</param>

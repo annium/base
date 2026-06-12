@@ -37,14 +37,14 @@ internal class StageExecutor : IStageExecutor
     /// <param name="commit">The commit operation</param>
     /// <param name="rollback">The rollback operation</param>
     /// <returns>The stage executor for method chaining</returns>
-    public IStageExecutor Stage(Action commit, Func<Task> rollback) => StageInternal(commit, rollback);
+    public IStageExecutor Stage(Action commit, Func<ValueTask> rollback) => StageInternal(commit, rollback);
 
     /// <summary>
     /// Adds a stage with an asynchronous commit operation
     /// </summary>
     /// <param name="commit">The commit operation</param>
     /// <returns>The stage executor for method chaining</returns>
-    public IStageExecutor Stage(Func<Task> commit) => StageInternal(commit);
+    public IStageExecutor Stage(Func<ValueTask> commit) => StageInternal(commit);
 
     /// <summary>
     /// Adds a stage with asynchronous commit and synchronous rollback operations
@@ -52,7 +52,7 @@ internal class StageExecutor : IStageExecutor
     /// <param name="commit">The commit operation</param>
     /// <param name="rollback">The rollback operation</param>
     /// <returns>The stage executor for method chaining</returns>
-    public IStageExecutor Stage(Func<Task> commit, Action rollback) => StageInternal(commit, rollback);
+    public IStageExecutor Stage(Func<ValueTask> commit, Action rollback) => StageInternal(commit, rollback);
 
     /// <summary>
     /// Adds a stage with asynchronous commit and rollback operations
@@ -60,7 +60,7 @@ internal class StageExecutor : IStageExecutor
     /// <param name="commit">The commit operation</param>
     /// <param name="rollback">The rollback operation</param>
     /// <returns>The stage executor for method chaining</returns>
-    public IStageExecutor Stage(Func<Task> commit, Func<Task> rollback) => StageInternal(commit, rollback);
+    public IStageExecutor Stage(Func<ValueTask> commit, Func<ValueTask> rollback) => StageInternal(commit, rollback);
 
     /// <summary>
     /// Executes all stages and returns the result
@@ -75,8 +75,8 @@ internal class StageExecutor : IStageExecutor
         if (result.IsOk)
             return result;
 
-        // exception caught, rollback
-        await RollbackAsync(_stages.Take(executedStages), result);
+        // exception caught, rollback committed stages in reverse (LIFO) order
+        await RollbackAsync(_stages.Take(executedStages).Reverse(), result);
 
         return result;
     }
@@ -102,7 +102,7 @@ internal class StageExecutor : IStageExecutor
     /// <param name="stages">The stages to commit</param>
     /// <param name="result">The result to store errors in</param>
     /// <returns>The number of stages that committed successfully</returns>
-    private static async Task<int> CommitAsync(IEnumerable<StageInfo> stages, IResult result)
+    private static async ValueTask<int> CommitAsync(IEnumerable<StageInfo> stages, IResult result)
     {
         var i = 0;
 
@@ -110,7 +110,7 @@ internal class StageExecutor : IStageExecutor
         {
             try
             {
-                await ExecuteAsync(stage.Commit);
+                await FlowHelper.ExecuteAsync(stage.Commit);
                 i++;
             }
             catch (Exception exception)
@@ -129,32 +129,19 @@ internal class StageExecutor : IStageExecutor
     /// <param name="stages">The stages to rollback</param>
     /// <param name="result">The result to store errors in</param>
     /// <returns>A task representing the rollback operation</returns>
-    private static async Task RollbackAsync(IEnumerable<StageInfo> stages, IResult result)
+    private static async ValueTask RollbackAsync(IEnumerable<StageInfo> stages, IResult result)
     {
         foreach (var stage in stages)
         {
             try
             {
-                await ExecuteAsync(stage.Rollback);
+                await FlowHelper.ExecuteAsync(stage.Rollback);
             }
             catch (Exception exception)
             {
                 result.Error(exception.Message);
             }
         }
-    }
-
-    /// <summary>
-    /// Executes a task delegate asynchronously
-    /// </summary>
-    /// <param name="task">The task to execute</param>
-    /// <returns>A task representing the execution</returns>
-    private static async ValueTask ExecuteAsync(Delegate? task)
-    {
-        if (task is Func<Task> commitAsync)
-            await commitAsync();
-        else if (task is Action commitSync)
-            commitSync();
     }
 
     /// <summary>

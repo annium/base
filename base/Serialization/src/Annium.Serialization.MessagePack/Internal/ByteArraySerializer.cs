@@ -13,15 +13,15 @@ internal class ByteArraySerializer : ISerializer<byte[]>
     /// <summary>
     /// The MessagePack serializer options used for serialization and deserialization.
     /// </summary>
-    private readonly MessagePackSerializerOptions _opts;
+    private readonly MessagePackSerializerOptions _options;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ByteArraySerializer"/> class.
     /// </summary>
-    /// <param name="opts">The MessagePack serializer options to use.</param>
-    public ByteArraySerializer(MessagePackSerializerOptions opts)
+    /// <param name="options">The MessagePack serializer options to use.</param>
+    public ByteArraySerializer(MessagePackSerializerOptions options)
     {
-        _opts = opts;
+        _options = options;
     }
 
     /// <summary>
@@ -34,7 +34,7 @@ internal class ByteArraySerializer : ISerializer<byte[]>
     {
         try
         {
-            return MessagePackSerializer.Deserialize<T>(value, _opts);
+            return MessagePackSerializer.Deserialize<T>(value, _options);
         }
         catch (Exception e)
         {
@@ -55,7 +55,7 @@ internal class ByteArraySerializer : ISerializer<byte[]>
     {
         try
         {
-            return MessagePackSerializer.Deserialize(type, value, _opts);
+            return MessagePackSerializer.Deserialize(type, value, _options);
         }
         catch (Exception e)
         {
@@ -76,7 +76,7 @@ internal class ByteArraySerializer : ISerializer<byte[]>
     {
         try
         {
-            return MessagePackSerializer.Serialize(value, _opts);
+            return MessagePackSerializer.Serialize(value, _options);
         }
         catch (Exception e)
         {
@@ -97,7 +97,7 @@ internal class ByteArraySerializer : ISerializer<byte[]>
     {
         try
         {
-            return MessagePackSerializer.Serialize(type, value, _opts);
+            return MessagePackSerializer.Serialize(type, value, _options);
         }
         catch (Exception e)
         {

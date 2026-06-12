@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Annium.Core.DependencyInjection;
 using Annium.Core.Runtime;
@@ -34,6 +32,7 @@ public class LogRouteSchedulerSelectionTests
     /// <summary>
     /// A handler derived from BufferingLogHandler should route through BackgroundLogScheduler by default.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task Use_BufferingHandler_DispatchesViaBackground()
     {
@@ -50,6 +49,7 @@ public class LogRouteSchedulerSelectionTests
     /// <summary>
     /// A non-buffering handler with .WithBackgroundScheduler() must route through BackgroundLogScheduler.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task Use_NonBufferingHandler_WithBackgroundScheduler_OverridesToBackground()
     {
@@ -62,8 +62,23 @@ public class LogRouteSchedulerSelectionTests
     }
 
     /// <summary>
+    /// A BufferingLogHandler-derived handler with .WithImmediateScheduler() must route through
+    /// ImmediateLogScheduler, overriding the default background selection.
+    /// </summary>
+    [Fact]
+    public void Use_BufferingHandler_WithImmediateScheduler_OverridesToImmediate()
+    {
+        var schedulers = BuildSchedulers(route => route.Use(new BufferingSink()).WithImmediateScheduler());
+
+        schedulers.Has(1);
+        schedulers.At(0).As<ImmediateLogScheduler<DefaultLogContext>>();
+    }
+
+    /// <summary>
     /// Builds a service provider, applies the route configuration, and returns the schedulers list.
     /// </summary>
+    /// <param name="configure">An action that configures the log route under test.</param>
+    /// <returns>The resolved list of <see cref="ILogScheduler{TContext}"/> instances registered by the route.</returns>
     private static IReadOnlyList<ILogScheduler<DefaultLogContext>> BuildSchedulers(
         Action<LogRoute<DefaultLogContext>> configure
     )
@@ -80,15 +95,6 @@ public class LogRouteSchedulerSelectionTests
     }
 
     /// <summary>
-    /// Minimal non-buffering sink for selection tests.
-    /// </summary>
-    private sealed class SyncSink : ILogHandler<DefaultLogContext>
-    {
-        public ValueTask HandleAsync(IReadOnlyList<LogMessage<DefaultLogContext>> messages, CancellationToken ct) =>
-            ValueTask.CompletedTask;
-    }
-
-    /// <summary>
     /// Minimal buffering sink — never sends, always buffers, just exists to verify scheduler selection.
     /// </summary>
     private sealed class BufferingSink : BufferingLogHandler<DefaultLogContext>
@@ -96,6 +102,12 @@ public class LogRouteSchedulerSelectionTests
         public BufferingSink()
             : base(new LogRouteConfiguration()) { }
 
+        /// <summary>
+        /// Signals that all buffered events were handled — this sink never actually sends anything,
+        /// it exists solely to exercise the buffering-handler scheduler-selection path.
+        /// </summary>
+        /// <param name="events">The buffered log messages to send.</param>
+        /// <returns>A <see cref="ValueTask{TResult}"/> that always resolves to <c>true</c>.</returns>
         protected override ValueTask<bool> SendEventsAsync(IReadOnlyCollection<LogMessage<DefaultLogContext>> events) =>
             new(true);
     }

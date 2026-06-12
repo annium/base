@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Annium.Core.DependencyInjection.Internal.Packs;
@@ -11,7 +13,8 @@ namespace Annium.Core.DependencyInjection.Internal.Packs;
 internal class ServiceProviderBuilder : IServiceProviderBuilder
 {
     /// <summary>
-    /// Flag indicating whether the service provider has already been built
+    /// Flag indicating whether the service provider has already been built successfully.
+    /// Only flipped on the normal return path of <see cref="BuildAsync"/>; a failed build leaves the builder re-buildable.
     /// </summary>
     private bool _isAlreadyBuilt;
 
@@ -23,7 +26,7 @@ internal class ServiceProviderBuilder : IServiceProviderBuilder
     /// <summary>
     /// The collection of service packs to be configured and registered
     /// </summary>
-    private readonly IList<ServicePackBase> _packs = new List<ServicePackBase>();
+    private readonly List<ServicePackBase> _packs = new();
 
     /// <summary>
     /// Initializes a new instance of the ServiceProviderBuilder class with an empty service container
@@ -57,103 +60,180 @@ internal class ServiceProviderBuilder : IServiceProviderBuilder
     }
 
     /// <summary>
-    /// Adds the specified service pack instance to the builder
+    /// Adds the specified service pack instance to the builder if not already added (by reference).
+    /// Identity-based dedup so callers can still register two distinct packs of the same type.
     /// </summary>
     /// <param name="servicePack">The service pack instance to add</param>
     /// <returns>The current service provider builder instance</returns>
     public IServiceProviderBuilder UseServicePack(ServicePackBase servicePack)
     {
-        _packs.Add(servicePack);
+        if (!_packs.Contains(servicePack))
+            _packs.Add(servicePack);
 
         return this;
     }
 
     /// <summary>
-    /// Builds the service provider by configuring, registering, and setting up all service packs.
+    /// Asynchronously builds the service provider by configuring, registering, and setting up all service packs.
     /// <para>
-    /// The three-phase <see cref="ServicePackBase"/> model is preserved: <c>Configure</c> populates
-    /// a staging container, a transient provider is materialized for <c>Register</c> (so packs can
-    /// consume Configure-phase services), then a final provider is built for <c>Setup</c>. The
-    /// transient provider is disposed before <c>Setup</c> runs to release any singletons it
+    /// The three-phase <see cref="ServicePackBase"/> model is preserved: <c>ConfigureAsync</c> populates
+    /// a staging container, a transient provider is materialized for <c>RegisterAsync</c> (so packs can
+    /// consume Configure-phase services), then a final provider is built for <c>SetupAsync</c>. The
+    /// transient provider is disposed before <c>SetupAsync</c> runs to release any singletons it
     /// materialized.
     /// </para>
     /// <para>
-    /// The builder is single-use: a second successful call throws <see cref="InvalidOperationException"/>.
-    /// A throw during Configure or Register leaves <see cref="_container"/> unchanged from its
-    /// pre-build state — Configure-phase additions are accumulated in a working clone that is
-    /// discarded on failure — so the caller can retry from a clean baseline after addressing the
-    /// fault.
+    /// Cancellation: the supplied <paramref name="ct"/> is threaded into every pack's
+    /// <c>Internal*Async</c> walker; cooperative checks at the Phase 3→4 and Phase 4→5 boundaries
+    /// close the windows where cancellation observed late in a phase would otherwise reach the next
+    /// phase's work uncancelled.
     /// </para>
     /// <para>
-    /// Pack authors: services materialized via the transient provider passed to <c>Register</c>
-    /// are released when the transient provider is disposed (immediately before <c>Setup</c> runs).
-    /// Do not cache references obtained from the transient provider beyond <c>Register</c>;
-    /// resolve again from the final provider in <c>Setup</c> if needed.
+    /// Disposal contract on non-normal exit: on any thrown exception the catch handler disposes
+    /// the already-built providers in reverse order (final before transient) via
+    /// <see cref="IAsyncDisposable.DisposeAsync"/> (the concrete <see cref="ServiceProvider"/>
+    /// type always implements it). If any dispose call throws, the original exception is preserved
+    /// as <c>InnerExceptions[0]</c> of an <see cref="AggregateException"/> whose subsequent inner
+    /// exceptions are the dispose errors in the order they occurred.
+    /// </para>
+    /// <para>
+    /// The builder is single-use on success only: a second call after a successful build throws
+    /// <see cref="InvalidOperationException"/>. A failed build leaves <c>_isAlreadyBuilt</c> false
+    /// so the caller may retry after addressing the fault.
+    /// </para>
+    /// <para>
+    /// Pack authors: services materialized via the transient provider passed to <c>RegisterAsync</c>
+    /// are released when the transient provider is disposed (immediately before <c>SetupAsync</c> runs).
+    /// Do not cache references obtained from the transient provider beyond <c>RegisterAsync</c>;
+    /// resolve again from the final provider in <c>SetupAsync</c> if needed.
+    /// </para>
+    /// <para>
+    /// Pack authors that spawn fire-and-forget work from <c>SetupAsync</c> without observing
+    /// <paramref name="ct"/> may leak after a downstream cancellation — same risk as today's sync
+    /// model; honour the token to participate in cooperative shutdown.
     /// </para>
     /// </summary>
-    /// <returns>The built service provider.</returns>
+    /// <param name="ct">Cancellation token threaded to every pack phase</param>
+    /// <returns>The built service provider container.</returns>
     /// <exception cref="InvalidOperationException">Thrown when the builder has already produced a provider successfully.</exception>
-    public ServiceProvider Build()
+    /// <exception cref="OperationCanceledException">Thrown when <paramref name="ct"/> is cancelled during a pack await or at a phase boundary check.</exception>
+    /// <exception cref="AggregateException">Thrown when a dispose call inside the catch handler throws; <c>InnerExceptions[0]</c> is the original phase/cancel exception.</exception>
+    public async Task<IServiceProviderContainer> BuildAsync(CancellationToken ct)
     {
         if (_isAlreadyBuilt)
             throw new InvalidOperationException("ServiceProviderBuilder is already built");
 
-        ServiceProvider? transientProvider = null;
-        ServiceProvider finalProvider;
+        ServiceProvider? transient = null;
+        IServiceProviderContainer? final = null;
 
         // Work on a clone of _container so a Configure/Register failure leaves _container
         // unchanged — the caller can retry from a clean baseline.
+        //
+        // OnBuild contract note: _container is `private` and neither public ctor of this class
+        // (ServiceProviderBuilder() / ServiceProviderBuilder(IServiceCollection)) nor any member
+        // of the IServiceProviderBuilder interface exposes it. There is therefore NO public path
+        // by which a caller could attach OnBuild subscribers to _container before BuildAsync —
+        // so the fact that Clone() does not propagate OnBuild subscribers (see ServiceContainer.Clone
+        // remarks) cannot drop any user-attached handlers. The only legitimate subscription path
+        // is inside pack.ConfigureAsync (Phase 1 below), whose `container` parameter IS
+        // workingContainer — those subscriptions attach to workingContainer and fire when
+        // workingContainer.BuildServiceProvider() is called for the final provider at Phase 4.
         var workingContainer = _container.Clone();
 
         try
         {
-            // Phase 1: Configure — accumulate in a staging container, then merge into the working clone
-            var configurationContainer = new ServiceContainer();
+            // Phase 1: Configure — packs register directly into workingContainer.
+            // A Configure failure leaves _container unchanged (workingContainer is already a clone),
+            // and event subscriptions attached via container.OnBuild += ... inside a pack remain on
+            // workingContainer (the parameter passed here) so they fire as documented at Phase 4.
             foreach (var pack in _packs)
-                pack.InternalConfigure(configurationContainer);
+                await pack.InternalConfigureAsync(workingContainer, ct).ConfigureAwait(false);
 
-            foreach (var descriptor in configurationContainer)
-                workingContainer.Add(descriptor);
+            // Phase 2: build transient provider for RegisterAsync's provider parameter. We build via
+            // the underlying IServiceCollection directly (not workingContainer.BuildServiceProvider())
+            // so OnBuild is NOT raised for the transient — subscribers expect a single notification
+            // for the stable final provider, not a short-lived transient that gets disposed at Phase 4.
+            transient = workingContainer.Collection.BuildServiceProvider();
 
-            // Phase 2: build transient provider for Register's provider parameter
-            transientProvider = workingContainer.BuildServiceProvider();
-
-            // Phase 3: Register — packs may consume Configure-phase services via transientProvider
+            // Phase 3: RegisterAsync — packs may consume Configure-phase services via transient
             // while adding additional registrations to workingContainer
             foreach (var pack in _packs)
-                pack.InternalRegister(workingContainer, transientProvider);
+                await pack.InternalRegisterAsync(workingContainer, transient, ct).ConfigureAwait(false);
 
-            // Phase 4: build the final provider capturing both Configure and Register registrations
-            finalProvider = workingContainer.BuildServiceProvider();
+            // Boundary check Phase 3 → Phase 4: cancellation observed between the last Phase 3 await
+            // and Phase 4's sync work surfaces here.
+            ct.ThrowIfCancellationRequested();
+
+            // Phase 4: build the final provider, then dispose the transient (async-first) and
+            // null the local so the catch handler does not double-dispose if a later phase faults.
+            final = workingContainer.BuildServiceProvider();
+            await transient.DisposeAsync().ConfigureAwait(false);
+            transient = null;
+
+            // Boundary check Phase 4 → Phase 5: cancellation observed during Phase 4's sync work
+            // surfaces here, before any SetupAsync runs.
+            ct.ThrowIfCancellationRequested();
+
+            // Phase 5: SetupAsync on the final provider
+            foreach (var pack in _packs)
+                await pack.InternalSetupAsync(final, ct).ConfigureAwait(false);
         }
-        catch
+        catch (Exception original)
         {
-            // workingContainer is discarded; _container remains untouched so the caller can retry
-            transientProvider?.Dispose();
+            await DisposeWithAggregationAsync(original, final, transient).ConfigureAwait(false);
             throw;
         }
-
-        // transient is no longer needed — dispose it before Setup runs to release any singletons
-        // it materialized during Register
-        transientProvider.Dispose();
 
         _isAlreadyBuilt = true;
 
-        // Phase 5: Setup on the final provider. If a pack throws here, finalProvider
-        // is already constructed and would otherwise leak (it isn't returned to the
-        // caller). Dispose it so the caller doesn't have to chase a hidden leak after
-        // a Setup failure.
-        try
-        {
-            foreach (var pack in _packs)
-                pack.InternalSetup(finalProvider);
-        }
-        catch
-        {
-            finalProvider.Dispose();
-            throw;
-        }
+        return final;
+    }
 
-        return finalProvider;
+    /// <summary>
+    /// Reverse-order disposal of partial build state. Iterates [final, transient] (nulls skipped);
+    /// each provider is disposed via <see cref="IAsyncDisposable.DisposeAsync"/> (the concrete
+    /// <see cref="ServiceProvider"/> type always implements it). If any dispose throws, the
+    /// original phase/cancel exception is rethrown as <c>InnerExceptions[0]</c> of an
+    /// <see cref="AggregateException"/>; dispose errors follow in the order they occurred. If
+    /// all disposes succeed, the method returns normally and the caller's <c>throw;</c> rethrows
+    /// the original with stack preserved.
+    /// </summary>
+    /// <param name="original">The original phase or cancellation exception that triggered teardown; preserved as the head of any aggregated failure.</param>
+    /// <param name="final">The final provider built so far, if any; disposed first. May be null.</param>
+    /// <param name="transient">The transient provider built during the failing phase, if any; disposed after <paramref name="final"/>. May be null.</param>
+    /// <returns>A task that completes once disposal finishes; it throws rather than returning a value when a dispose fails.</returns>
+    internal static async Task DisposeWithAggregationAsync(
+        Exception original,
+        IAsyncDisposable? final,
+        IAsyncDisposable? transient
+    )
+    {
+        List<Exception>? disposeErrors = null;
+
+        if (final is not null)
+            await DisposeOneAsync(final).ConfigureAwait(false);
+        if (transient is not null)
+            await DisposeOneAsync(transient).ConfigureAwait(false);
+
+        if (disposeErrors is null)
+            return;
+
+        // Seed the aggregate with `original` as InnerExceptions[0], then append dispose errors
+        // in the order they occurred. Avoids the new[]+Concat intermediate allocation.
+        var aggregated = new List<Exception>(disposeErrors.Count + 1) { original };
+        aggregated.AddRange(disposeErrors);
+        throw new AggregateException(aggregated);
+
+        async Task DisposeOneAsync(IAsyncDisposable sp)
+        {
+            try
+            {
+                await sp.DisposeAsync().ConfigureAwait(false);
+            }
+            catch (Exception e)
+            {
+                (disposeErrors ??= new List<Exception>()).Add(e);
+            }
+        }
     }
 }

@@ -15,17 +15,8 @@ public static partial class ResolveGenericArgumentsByImplementationExtension
     /// <param name="type">The class type to resolve arguments for.</param>
     /// <param name="target">The target generic parameter type.</param>
     /// <returns>An array of resolved type arguments, or null if resolution fails.</returns>
-    private static Type[]? ResolveClassArgumentsByGenericParameter(this Type type, Type target)
-    {
-        if (type.TryGetTargetImplementation(target, out var args))
-            return args;
-
-        // as of here:
-        // - type is open generic type with generic parameters
-        // - target is open/defined generic type with/without generic parameters
-
-        return type.CanBeUsedAsParameter(target) ? type.GetGenericArguments() : null;
-    }
+    private static Type[]? ResolveClassArgumentsByGenericParameter(this Type type, Type target) =>
+        type.ResolveArgumentsByGenericParameter(target);
 
     /// <summary>
     /// Resolves generic arguments for a class type when the target is another class type.
@@ -59,7 +50,7 @@ public static partial class ResolveGenericArgumentsByImplementationExtension
             return BuildArgs(type, baseType, target);
 
         // try resolve base type
-        return Helper.ResolveBase(type, target);
+        return ClassHelper.ResolveBase(type, target);
     }
 
     /// <summary>
@@ -93,14 +84,14 @@ public static partial class ResolveGenericArgumentsByImplementationExtension
             return null;
 
         // try resolve base type
-        return Helper.ResolveBase(type, target);
+        return ClassHelper.ResolveBase(type, target);
     }
 }
 
 /// <summary>
-/// Helper class for resolving generic arguments by implementation.
+/// Helper class for resolving generic arguments by implementation for class types.
 /// </summary>
-file class Helper
+file class ClassHelper
 {
     /// <summary>
     /// Resolves generic arguments for a base type.
@@ -111,13 +102,17 @@ file class Helper
     public static Type[]? ResolveBase(Type type, Type target)
     {
         var unboundBaseType = type.GetUnboundBaseType();
+        // ResolveBase runs only after callers verify type.BaseType is non-null (ResolveClassArgumentsBy* guards),
+        // so resolving the present base yields a non-null unbound type.
         var baseArgs = unboundBaseType!.ResolveGenericArgumentsByImplementation(target);
         if (baseArgs is null)
             return null;
 
+        // type.BaseType is non-null per the same caller guards.
         if (!type.BaseType!.GetGenericTypeDefinition().TryMakeGenericType(out var baseImplementation, baseArgs))
             return null;
 
+        // TryMakeGenericType returned true above, so baseImplementation was set.
         return type.ResolveGenericArgumentsByImplementation(baseImplementation!);
     }
 }

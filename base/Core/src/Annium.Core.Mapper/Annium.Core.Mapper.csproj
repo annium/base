@@ -11,4 +11,7 @@
   <ItemGroup>
     <PackageReference Include="AgileObjects.ReadableExpressions" />
   </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Annium.Core.Mapper.Tests" />
+  </ItemGroup>
 </Project>

@@ -1,23 +1,24 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Annium.Logging;
+using Annium.Net.WebSockets.Internal;
 
 namespace Annium.Net.WebSockets;
 
 /// <summary>
-/// Extension methods for client WebSocket operations
+/// Extension methods for client WebSocket operations.
 /// </summary>
 public static class ClientWebSocketExtensions
 {
     /// <summary>
-    /// Returns a task that completes when the WebSocket is connected
+    /// Returns a task that completes when the WebSocket is connected.
     /// </summary>
-    /// <param name="socket">The client WebSocket to monitor</param>
-    /// <param name="ct">Cancellation token to cancel the wait operation</param>
-    /// <returns>A task that completes when the WebSocket connects</returns>
-    public static Task WhenConnectedAsync(this IClientWebSocket socket, CancellationToken ct = default)
+    /// <param name="socket">The client WebSocket to monitor.</param>
+    /// <param name="ct">Cancellation token to cancel the wait operation.</param>
+    /// <returns>A task that completes when the WebSocket connects.</returns>
+    public static async Task WhenConnectedAsync(this IClientWebSocket socket, CancellationToken ct = default)
     {
-        var tcs = new TaskCompletionSource();
+        var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 
         socket.Trace<string>("subscribe {tcs} to OnConnected", tcs.GetFullId());
 
@@ -25,38 +26,36 @@ public static class ClientWebSocketExtensions
         {
             socket.Trace<string>("set {tcs} to signaled state", tcs.GetFullId());
             tcs.TrySetResult();
-            socket.OnConnected -= HandleConnected;
         }
 
         socket.OnConnected += HandleConnected;
 
-        return tcs.Task.WaitAsync(ct);
+        // unsubscribe in finally so a cancelled wait does not leak the handler on the socket's
+        // OnConnected multicast list (the handler no longer self-unsubscribes).
+        try
+        {
+            await tcs.Task.WaitAsync(ct);
+        }
+        finally
+        {
+            socket.OnConnected -= HandleConnected;
+        }
     }
 
     /// <summary>
-    /// Returns a task that completes when the WebSocket is disconnected
+    /// Returns a task that completes when the WebSocket is disconnected.
     /// </summary>
-    /// <param name="socket">The client WebSocket to monitor</param>
-    /// <param name="ct">Cancellation token to cancel the wait operation</param>
-    /// <returns>A task that completes when the WebSocket disconnects, returning the close status</returns>
+    /// <param name="socket">The client WebSocket to monitor.</param>
+    /// <param name="ct">Cancellation token to cancel the wait operation.</param>
+    /// <returns>A task that completes when the WebSocket disconnects, returning the close status.</returns>
     public static Task<WebSocketCloseStatus> WhenDisconnectedAsync(
         this IClientWebSocket socket,
         CancellationToken ct = default
-    )
-    {
-        var tcs = new TaskCompletionSource<WebSocketCloseStatus>();
-
-        socket.Trace<string>("subscribe {tcs} to OnDisconnected", tcs.GetFullId());
-
-        void HandleDisconnected(WebSocketCloseStatus status)
-        {
-            socket.Trace<string>("set {tcs} to signaled state", tcs.GetFullId());
-            tcs.TrySetResult(status);
-            socket.OnDisconnected -= HandleDisconnected;
-        }
-
-        socket.OnDisconnected += HandleDisconnected;
-
-        return tcs.Task.WaitAsync(ct);
-    }
+    ) =>
+        WebSocketEventHelpers.WaitForDisconnectAsync(
+            handler => socket.OnDisconnected += handler,
+            handler => socket.OnDisconnected -= handler,
+            socket,
+            ct
+        );
 }

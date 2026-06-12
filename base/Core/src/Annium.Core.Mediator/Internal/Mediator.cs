@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -24,8 +25,7 @@ internal class Mediator : IMediator
     /// <summary>
     /// Cache for storing built execution chains by input/output type pairs
     /// </summary>
-    private readonly IDictionary<ValueTuple<Type, Type>, IReadOnlyList<ChainElement>> _chainCache =
-        new Dictionary<ValueTuple<Type, Type>, IReadOnlyList<ChainElement>>();
+    private readonly ConcurrentDictionary<(Type, Type), IReadOnlyList<ChainElement>> _chainCache = new();
 
     /// <summary>
     /// Initializes a new instance of the Mediator class
@@ -47,12 +47,9 @@ internal class Mediator : IMediator
     /// <returns>Response of the specified type</returns>
     public async Task<TResponse> SendAsync<TResponse>(object request, CancellationToken ct = default)
     {
-        // get execution chain with last item, being final one
-        var chain = GetChain(request.GetType(), typeof(TResponse));
-
         // use scoped service provider
         await using var scope = _provider.CreateAsyncScope();
-        return (TResponse)await ChainExecutor.ExecuteAsync(scope.ServiceProvider, chain, request, ct);
+        return await DispatchAsync<TResponse>(scope.ServiceProvider, request, ct);
     }
 
     /// <summary>
@@ -63,17 +60,29 @@ internal class Mediator : IMediator
     /// <param name="request">Request object to process</param>
     /// <param name="ct">Cancellation token for the operation</param>
     /// <returns>Response of the specified type</returns>
-    public async Task<TResponse> SendAsync<TResponse>(
+    public Task<TResponse> SendAsync<TResponse>(
         IServiceProvider serviceProvider,
         object request,
         CancellationToken ct = default
+    ) => DispatchAsync<TResponse>(serviceProvider, request, ct);
+
+    /// <summary>
+    /// Builds (or reuses) the execution chain for the request and runs it on the given service provider
+    /// </summary>
+    /// <typeparam name="TResponse">Expected response type</typeparam>
+    /// <param name="provider">Service provider used to resolve handler instances</param>
+    /// <param name="request">Request object to process</param>
+    /// <param name="ct">Cancellation token for the operation</param>
+    /// <returns>Response of the specified type</returns>
+    private async Task<TResponse> DispatchAsync<TResponse>(
+        IServiceProvider provider,
+        object request,
+        CancellationToken ct
     )
     {
         // get execution chain with last item, being final one
         var chain = GetChain(request.GetType(), typeof(TResponse));
-
-        // use given service provider
-        return (TResponse)await ChainExecutor.ExecuteAsync(serviceProvider, chain, request, ct);
+        return (TResponse)await ChainExecutor.ExecuteAsync(provider, chain, request, ct);
     }
 
     /// <summary>
@@ -82,15 +91,6 @@ internal class Mediator : IMediator
     /// <param name="input">Input request type</param>
     /// <param name="output">Expected output response type</param>
     /// <returns>Execution chain for processing the request</returns>
-    private IReadOnlyList<ChainElement> GetChain(Type input, Type output)
-    {
-        lock (_chainCache)
-        {
-            var key = (input, output);
-            if (_chainCache.TryGetValue(key, out var chain))
-                return chain;
-
-            return _chainCache[key] = _chainBuilder.BuildExecutionChain(input, output);
-        }
-    }
+    private IReadOnlyList<ChainElement> GetChain(Type input, Type output) =>
+        _chainCache.GetOrAdd((input, output), _ => _chainBuilder.BuildExecutionChain(input, output));
 }

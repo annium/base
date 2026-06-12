@@ -10,7 +10,7 @@ namespace Annium.NodaTime.Serialization.Json.Tests;
 /// <summary>
 /// Tests for the converters exposed in Converters.
 /// </summary>
-public class ConvertersTest
+public class NodaConvertersTest
 {
     /// <summary>
     /// Tests that the OffsetConverter correctly serializes and deserializes Offset values.

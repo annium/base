@@ -39,6 +39,7 @@ public static class StringExtensions
     /// </summary>
     /// <param name="value">The string to check.</param>
     /// <param name="messages">The substrings to look for.</param>
+    /// <param name="message">Optional custom error message.</param>
     /// <param name="valueEx">The expression that produced the string.</param>
     /// <param name="messagesEx">The expression that produced the substrings.</param>
     /// <returns>The original string.</returns>
@@ -46,13 +47,15 @@ public static class StringExtensions
     public static string IsContainingAll(
         this string value,
         string[] messages,
+        string? message = null,
         [CallerArgumentExpression(nameof(value))] string valueEx = "",
         [CallerArgumentExpression(nameof(messages))] string messagesEx = ""
     )
     {
         if (!messages.All(value.Contains))
             throw new AssertionFailedException(
-                $"{value.WrapWithExpression(valueEx)} expected to contain all: `{messages.WrapWithExpression(messagesEx)}`"
+                message
+                    ?? $"{value.WrapWithExpression(valueEx)} expected to contain all: `{messages.WrapWithExpression(messagesEx)}`"
             );
 
         return value;

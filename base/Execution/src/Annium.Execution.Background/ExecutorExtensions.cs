@@ -11,6 +11,13 @@ namespace Annium.Execution.Background;
 public static class ExecutorExtensions
 {
     /// <summary>
+    /// Options for the result-relay <see cref="TaskCompletionSource"/>s: continuations resume on the
+    /// thread pool rather than inline on the executor task that completes the source, so the awaiting
+    /// caller never runs on (and blocks) the executor's own loop.
+    /// </summary>
+    private const TaskCreationOptions TcsOptions = TaskCreationOptions.RunContinuationsAsynchronously;
+
+    /// <summary>
     /// Executes a synchronous task and waits for completion
     /// </summary>
     /// <param name="executor">The executor instance</param>
@@ -18,7 +25,7 @@ public static class ExecutorExtensions
     /// <returns>True if the task was executed successfully, false if it could not be scheduled</returns>
     public static async ValueTask<bool> ExecuteAsync(this IExecutor executor, Action task)
     {
-        var tcs = new TaskCompletionSource<bool>();
+        var tcs = new TaskCompletionSource<bool>(TcsOptions);
         var scheduled = executor.Schedule(() =>
         {
             try
@@ -49,7 +56,7 @@ public static class ExecutorExtensions
     /// <returns>True if the task was executed successfully, false if it could not be scheduled</returns>
     public static async ValueTask<bool> ExecuteAsync(this IExecutor executor, Action<CancellationToken> task)
     {
-        var tcs = new TaskCompletionSource<bool>();
+        var tcs = new TaskCompletionSource<bool>(TcsOptions);
         var scheduled = executor.Schedule(ct =>
         {
             try
@@ -80,7 +87,7 @@ public static class ExecutorExtensions
     /// <returns>The result of the function or None if it could not be scheduled</returns>
     public static async ValueTask<OneOf<T, None>> ExecuteAsync<T>(this IExecutor executor, Func<T> task)
     {
-        var tcs = new TaskCompletionSource<OneOf<T, None>>();
+        var tcs = new TaskCompletionSource<OneOf<T, None>>(TcsOptions);
         var scheduled = executor.Schedule(() =>
         {
             try
@@ -113,7 +120,7 @@ public static class ExecutorExtensions
         Func<CancellationToken, T> task
     )
     {
-        var tcs = new TaskCompletionSource<OneOf<T, None>>();
+        var tcs = new TaskCompletionSource<OneOf<T, None>>(TcsOptions);
         var scheduled = executor.Schedule(ct =>
         {
             try
@@ -143,7 +150,7 @@ public static class ExecutorExtensions
     /// <returns>True if the task was executed successfully, false if it could not be scheduled</returns>
     public static async ValueTask<bool> ExecuteAsync(this IExecutor executor, Func<ValueTask> task)
     {
-        var tcs = new TaskCompletionSource<bool>();
+        var tcs = new TaskCompletionSource<bool>(TcsOptions);
         var scheduled = executor.Schedule(async () =>
         {
             try
@@ -174,7 +181,7 @@ public static class ExecutorExtensions
     /// <returns>True if the task was executed successfully, false if it could not be scheduled</returns>
     public static async ValueTask<bool> ExecuteAsync(this IExecutor executor, Func<CancellationToken, ValueTask> task)
     {
-        var tcs = new TaskCompletionSource<bool>();
+        var tcs = new TaskCompletionSource<bool>(TcsOptions);
         var scheduled = executor.Schedule(async ct =>
         {
             try
@@ -205,7 +212,7 @@ public static class ExecutorExtensions
     /// <returns>The result of the function or None if it could not be scheduled</returns>
     public static async ValueTask<OneOf<T, None>> ExecuteAsync<T>(this IExecutor executor, Func<ValueTask<T>> task)
     {
-        var tcs = new TaskCompletionSource<OneOf<T, None>>();
+        var tcs = new TaskCompletionSource<OneOf<T, None>>(TcsOptions);
         var scheduled = executor.Schedule(async () =>
         {
             try
@@ -238,7 +245,7 @@ public static class ExecutorExtensions
         Func<CancellationToken, ValueTask<T>> task
     )
     {
-        var tcs = new TaskCompletionSource<OneOf<T, None>>();
+        var tcs = new TaskCompletionSource<OneOf<T, None>>(TcsOptions);
         var scheduled = executor.Schedule(async ct =>
         {
             try

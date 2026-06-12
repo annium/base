@@ -22,7 +22,7 @@ internal class TestProvider : ITestProvider
     /// <summary>
     /// The model mapper instance for type mapping operations
     /// </summary>
-    private IModelMapper _mapper = default!;
+    private IModelMapper _mapper = default!; // set in Setup
 
     /// <summary>
     /// Configures the service container for testing

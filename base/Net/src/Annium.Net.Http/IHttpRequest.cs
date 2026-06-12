@@ -5,7 +5,6 @@ using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
 using Annium.Logging;
-using Annium.Net.Http.Internal;
 using Microsoft.Extensions.Primitives;
 
 namespace Annium.Net.Http;
@@ -217,9 +216,4 @@ public interface IHttpRequest : ILogSubject
     /// <param name="ct">The cancellation token</param>
     /// <returns>The HTTP response</returns>
     Task<IHttpResponse> RunAsync(CancellationToken ct = default);
-
-    /// <summary>
-    /// Gets the serializer for content processing
-    /// </summary>
-    internal Serializer Serializer { get; }
 }

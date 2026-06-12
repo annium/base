@@ -203,5 +203,5 @@ public static class ZonedDateTimeExtensions
     /// <returns>True if the ZonedDateTime represents midnight; otherwise, false.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsMidnight(this ZonedDateTime dateTime) =>
-        dateTime is { Hour: 0, Minute: 0 } and { Second: 0, Millisecond: 0 };
+        dateTime is { Hour: 0, Minute: 0 } and { Second: 0, NanosecondOfSecond: 0 };
 }

@@ -1,6 +1,4 @@
-using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Operations;
@@ -11,21 +9,8 @@ namespace Annium.Analyzers.Logging;
 /// Analyzer that ensures log message templates are constant strings and not interpolated strings.
 /// </summary>
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
-public class DynamicLogMessageTemplateAnalyzer : DiagnosticAnalyzer
+public sealed class DynamicLogMessageTemplateAnalyzer : DiagnosticAnalyzer
 {
-    /// <summary>
-    /// Collection of logging method names that should have constant message templates.
-    /// </summary>
-    private static readonly IReadOnlyCollection<string> _methodNames =
-    [
-        "Debug",
-        "Error",
-        "Info",
-        "Log",
-        "Trace",
-        "Warn",
-    ];
-
     /// <summary>
     /// Gets the supported diagnostics for this analyzer.
     /// </summary>
@@ -48,41 +33,32 @@ public class DynamicLogMessageTemplateAnalyzer : DiagnosticAnalyzer
     /// Analyzes an operation to check if it's a logging method call with a non-constant message template.
     /// </summary>
     /// <param name="ctx">The operation analysis context containing the operation to analyze.</param>
-    private void AnalyzeOperation(OperationAnalysisContext ctx)
+    private static void AnalyzeOperation(OperationAnalysisContext ctx)
     {
         if (ctx.Operation is not IInvocationOperation invocation)
             return;
 
-        // check assembly
-        var method = invocation.TargetMethod;
-        if (method.ContainingAssembly.Name != "Annium")
+        if (!AnalyzerHelpers.IsAnniumLoggingMethod(invocation.TargetMethod))
             return;
 
-        // check namespace
-        var ns = method.ContainingNamespace;
-        if (
-            ns.Name != "Logging"
-            || ns.ContainingNamespace.Name != "Annium"
-            || !ns.ContainingNamespace.ContainingNamespace.IsGlobalNamespace
-        )
-            return;
-
-        // check method name
-        if (!_methodNames.Contains(method.Name))
-            return;
-
-        // check method containing type
-        var typeName = $"LogSubject{method.Name}Extensions";
-        if (method.ContainingType.Name != typeName)
-            return;
-
-        // template is 2nd argument, after ILogSubject - ensure it's present
+        // Operation API includes the extension receiver as args[0]; the template is args[1].
         var args = invocation.Arguments;
         if (args.Length <= 1)
             return;
 
-        // ensure template is not interpolated string
-        if (args[1].Value is not IInterpolatedStringOperation)
+        // Only check when the second arg is a string (the message template). Overloads where args[1]
+        // is something else (e.g. Error(Exception) — args[1] is the Exception, not a template) skip the
+        // check. The template must be a compile-time constant string. This catches:
+        //   - $"interpolated" (IInterpolatedStringOperation)
+        //   - "prefix" + variable (IBinaryOperation on strings, non-constant)
+        //   - string.Concat(...), string.Format(...), $"{...}".ToString() (IInvocationOperation, non-constant)
+        //   - condition ? "a" : variable (IConditionalOperation, non-constant)
+        // Any string operation whose ConstantValue.HasValue is false is dynamic.
+        var templateValue = args[1].Value;
+        if (templateValue.Type?.SpecialType != SpecialType.System_String)
+            return;
+
+        if (templateValue.ConstantValue.HasValue)
             return;
 
         ctx.ReportDiagnostic(

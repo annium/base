@@ -9,57 +9,71 @@ using Annium.Net.Sockets.Internal;
 namespace Annium.Net.Sockets;
 
 /// <summary>
-/// Implementation of a server-side socket that handles communication with a connected client
+/// Implementation of a server-side socket that handles communication with a connected client.
 /// </summary>
 public class ServerSocket : IServerSocket
 {
     /// <summary>
-    /// Gets the logger instance
+    /// Gets the logger instance.
     /// </summary>
     public ILogger Logger { get; }
 
     /// <summary>
-    /// Event raised when binary data is received from the client
+    /// Event raised when binary data is received from the client.
     /// </summary>
     public event Action<ReadOnlyMemory<byte>> OnReceived = delegate { };
 
     /// <summary>
-    /// Event raised when the socket is disconnected from the client
+    /// Event raised when the socket is disconnected from the client.
     /// </summary>
     public event Action<SocketCloseStatus> OnDisconnected = delegate { };
 
     /// <summary>
-    /// Event raised when an error occurs during socket operations
+    /// Event raised when an error occurs during socket operations.
     /// </summary>
     public event Action<Exception> OnError = delegate { };
 
     /// <summary>
-    /// Thread synchronization lock for socket operations
+    /// Indicates whether the socket is currently connected to the client. Goes false synchronously
+    /// (under <c>_locker</c>) when <see cref="Disconnect"/> begins or the connection is closed, so
+    /// handlers firing later from the background teardown observe the disconnected state.
+    /// </summary>
+    public bool IsConnected
+    {
+        get
+        {
+            lock (_locker)
+                return _status == Status.Connected;
+        }
+    }
+
+    /// <summary>
+    /// Thread synchronization lock for socket operations.
     /// </summary>
     private readonly Lock _locker = new();
 
     /// <summary>
-    /// The underlying managed socket for actual network operations
+    /// The underlying managed socket for actual network operations.
     /// </summary>
     private readonly IServerManagedSocket _socket;
 
     /// <summary>
-    /// Connection monitor for health checking and connection management
+    /// Connection monitor for health checking and connection management.
     /// </summary>
-    private readonly ConnectionMonitorBase _connectionMonitor;
+    private readonly IConnectionMonitor _connectionMonitor;
 
     /// <summary>
-    /// Current connection status of the socket
+    /// Current connection status of the socket.
     /// </summary>
     private Status _status = Status.Connected;
 
     /// <summary>
-    /// Initializes a new instance of the ServerSocket class with specified options
+    /// Initializes a new instance of the ServerSocket class with specified options.
     /// </summary>
-    /// <param name="stream">The network stream for communication</param>
-    /// <param name="options">Configuration options for the socket</param>
-    /// <param name="logger">Logger instance for diagnostics</param>
-    /// <param name="ct">Cancellation token for the socket lifetime</param>
+    /// <param name="stream">The network stream for communication.</param>
+    /// <param name="options">Configuration options for the socket.</param>
+    /// <param name="logger">Logger instance for diagnostics.</param>
+    /// <param name="ct">Cancellation token for the socket lifetime.</param>
     public ServerSocket(Stream stream, ServerSocketOptions options, ILogger logger, CancellationToken ct = default)
     {
         Logger = logger;
@@ -86,7 +100,7 @@ public class ServerSocket : IServerSocket
                 catch (OperationCanceledException) { }
                 catch (Exception ex)
                 {
-                    this.Error(ex, "HandleClosed failed");
+                    this.Error("HandleClosed failed: {exception}", ex);
                 }
             },
             CancellationToken.None
@@ -98,19 +112,21 @@ public class ServerSocket : IServerSocket
             options.ConnectionMonitor.Factory?.Create(_socket, options.ConnectionMonitor)
             ?? new NoneConnectionMonitor(Logger);
 
-        this.Trace("start monitor");
-        _connectionMonitor.Start();
-
+        // subscribe before Start so the monitor's first FireConnectionLost can never fire into the
+        // void — Start may begin emitting connection-lost events synchronously from its timer.
         this.Trace("subscribe to OnConnectionLost");
         _connectionMonitor.OnConnectionLost += Disconnect;
+
+        this.Trace("start monitor");
+        _connectionMonitor.Start();
     }
 
     /// <summary>
-    /// Initializes a new instance of the ServerSocket class with default options
+    /// Initializes a new instance of the ServerSocket class with default options.
     /// </summary>
-    /// <param name="stream">The network stream for communication</param>
-    /// <param name="logger">Logger instance for diagnostics</param>
-    /// <param name="ct">Cancellation token for the socket lifetime</param>
+    /// <param name="stream">The network stream for communication.</param>
+    /// <param name="logger">Logger instance for diagnostics.</param>
+    /// <param name="ct">Cancellation token for the socket lifetime.</param>
     public ServerSocket(Stream stream, ILogger logger, CancellationToken ct = default)
         : this(stream, ServerSocketOptions.Default, logger, ct) { }
 
@@ -152,7 +168,7 @@ public class ServerSocket : IServerSocket
             catch (OperationCanceledException) { }
             catch (Exception ex)
             {
-                this.Error(ex, "Disconnect background teardown failed");
+                this.Error<string>("background disconnect teardown failed: {error}", ex.ToString());
             }
         });
 
@@ -160,11 +176,11 @@ public class ServerSocket : IServerSocket
     }
 
     /// <summary>
-    /// Sends binary data to the client asynchronously
+    /// Sends binary data to the client asynchronously.
     /// </summary>
-    /// <param name="data">The data to send</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>The status of the send operation</returns>
+    /// <param name="data">The data to send.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>The status of the send operation.</returns>
     public ValueTask<SocketSendStatus> SendAsync(ReadOnlyMemory<byte> data, CancellationToken ct = default)
     {
         this.Trace("send");
@@ -172,17 +188,30 @@ public class ServerSocket : IServerSocket
     }
 
     /// <summary>
-    /// Disposes the socket by triggering <see cref="Disconnect"/>.
+    /// Disposes the socket with **forced-close** semantics: stops the connection monitor and
+    /// synchronously disposes the underlying managed socket so the stream is closed
+    /// deterministically rather than via the GC finalizer. Does NOT trigger a graceful disconnect
+    /// — callers wanting graceful close should call <see cref="Disconnect"/> first and wait for
+    /// <see cref="OnDisconnected"/> to fire (or use the <c>WhenDisconnectedAsync</c> extension)
+    /// before invoking <see cref="Dispose"/>. Mixing graceful and forced close in a single
+    /// <see cref="Dispose"/> body would race the synchronous teardown against the fire-and-forget
+    /// <see cref="Disconnect"/> background task.
     /// </summary>
     public void Dispose()
     {
-        Disconnect();
+        // Stop the monitor first: IConnectionMonitor.Stop() is synchronous and idempotent and
+        // only halts the monitor's ping timer (it never touches the socket), so it does not
+        // introduce the graceful-vs-forced race described above. Without it, disposing without a
+        // prior Disconnect() leaks the monitor timer, which keeps pinging the dead socket.
+        _connectionMonitor.Stop();
+
+        _socket.Dispose();
     }
 
     /// <summary>
     /// Handles when the underlying socket is closed.
     /// </summary>
-    /// <param name="task">The socket close task result</param>
+    /// <param name="task">The socket close task result.</param>
     /// <returns>A task that completes after subscribers have been notified.</returns>
     private async Task HandleClosedAsync(Task<SocketCloseResult> task)
     {
@@ -221,9 +250,9 @@ public class ServerSocket : IServerSocket
     }
 
     /// <summary>
-    /// Updates the internal connection status
+    /// Updates the internal connection status.
     /// </summary>
-    /// <param name="status">The new status to set</param>
+    /// <param name="status">The new status to set.</param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void SetStatus(Status status)
     {
@@ -232,12 +261,12 @@ public class ServerSocket : IServerSocket
     }
 
     /// <summary>
-    /// Handles received data from the underlying socket, filtering out protocol frames
+    /// Handles received data from the underlying socket, filtering out protocol frames.
     /// </summary>
-    /// <param name="data">The received data</param>
+    /// <param name="data">The received data.</param>
     private void HandleOnReceived(ReadOnlyMemory<byte> data)
     {
-        if (data.Span.SequenceEqual(ProtocolFrames.Ping.Span))
+        if (ProtocolFrames.IsPingFrame(data))
         {
             this.Trace("skip ping frame");
             return;
@@ -248,17 +277,17 @@ public class ServerSocket : IServerSocket
     }
 
     /// <summary>
-    /// Internal connection status
+    /// Internal connection status.
     /// </summary>
     private enum Status
     {
         /// <summary>
-        /// Socket is disconnected
+        /// Socket is disconnected.
         /// </summary>
         Disconnected,
 
         /// <summary>
-        /// Socket is connected and ready for communication
+        /// Socket is connected and ready for communication.
         /// </summary>
         Connected,
     }

@@ -31,13 +31,13 @@ public static class DelegateExtensions
     }
 
     /// <summary>
-    /// Asserts that the wrapped asynchronous action throws an exception of the specified type.
+    /// Asserts that the wrapped asynchronous ValueTask action throws an exception of the specified type.
     /// </summary>
     /// <typeparam name="TException">The expected exception type.</typeparam>
-    /// <param name="action">The wrapped asynchronous action to execute.</param>
+    /// <param name="action">The wrapped asynchronous ValueTask action to execute.</param>
     /// <returns>The thrown exception.</returns>
     /// <exception cref="AssertionFailedException">Thrown when the action does not throw the expected exception.</exception>
-    public static async Task<TException> ThrowsAsync<TException>(this WrappedTaskAction action)
+    public static async ValueTask<TException> ThrowsAsync<TException>(this WrappedValueTaskAction action)
         where TException : Exception
     {
         try

@@ -7,6 +7,53 @@ using Xunit;
 namespace Annium.Core.Mapper.Tests.Resolvers;
 
 /// <summary>
+/// Verifies that <c>DictionaryAssignmentMapResolver</c> throws <see cref="KeyNotFoundException"/>
+/// when the source dictionary is missing a key required by a writable target property.
+/// </summary>
+public class DictionaryAssignmentMapResolverMissingKeyThrowsTest : TestBase
+{
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DictionaryAssignmentMapResolverMissingKeyThrowsTest"/> class.
+    /// </summary>
+    /// <param name="outputHelper">The test output helper for logging test results.</param>
+    public DictionaryAssignmentMapResolverMissingKeyThrowsTest(ITestOutputHelper outputHelper)
+        : base(outputHelper)
+    {
+        Register(c => c.AddMapper(autoload: false));
+    }
+
+    /// <summary>
+    /// Maps a dictionary that is missing a key required by the target's writable property.
+    /// The compiled mapping expression throws <see cref="KeyNotFoundException"/> at runtime.
+    /// The target property is typed <c>object?</c> so <c>InstanceOfMapResolver</c> handles
+    /// <c>object→object</c>; the KeyNotFoundException fires when the missing key is accessed.
+    /// </summary>
+    [Fact]
+    public void AssignmentMapping_MissingDictKey_ThrowsKeyNotFoundException()
+    {
+        // arrange
+        var mapper = Get<IMapper>();
+        // "Value" key is absent — the resolver's BuildDictKeyAccess emits a throw for it
+        var source = new Dictionary<string, object> { { "Other", "irrelevant" } };
+
+        // act + assert
+        Wrap.It(() => mapper.Map<Target>(source)).Throws<KeyNotFoundException>();
+    }
+
+    /// <summary>
+    /// Target with a default constructor and a writable <c>object?</c> property whose name
+    /// must appear in the source dictionary.  Using <c>object?</c> ensures
+    /// <c>InstanceOfMapResolver</c> can handle the <c>object→object</c> element conversion,
+    /// so expression build succeeds and the KeyNotFoundException fires at runtime.
+    /// </summary>
+    private class Target
+    {
+        /// <summary>Gets or sets the value that must be supplied by the dictionary.</summary>
+        public object? Value { get; set; }
+    }
+}
+
+/// <summary>
 /// Tests for dictionary-based property assignment mapping resolution in the mapper.
 /// </summary>
 /// <remarks>
@@ -69,6 +116,7 @@ public class DictionaryAssignmentMapResolverTest : TestBase
             .Ignore(x => new { x.IgnoredA, x.IgnoredB })
             .For(
                 x => new { x.Name, x.Age },
+                // "Serialized" is seeded as a boxed JSON string by the test below — ToString() is non-null
                 x => JsonSerializer.Deserialize<Info>(x["Serialized"].ToString()!, default(JsonSerializerOptions))
             );
     }

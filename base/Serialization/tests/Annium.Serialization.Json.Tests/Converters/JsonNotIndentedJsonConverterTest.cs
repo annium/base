@@ -26,6 +26,47 @@ public class JsonNotIndentedJsonConverterTest : TestBase
     }
 
     /// <summary>
+    /// Tests that a standalone object marked as not indented can be deserialized back to its original value
+    /// </summary>
+    [Fact]
+    public void Deserialization_Self_Works()
+    {
+        // arrange
+        var serializer = GetSerializer(opts => opts.WriteIndented = true);
+        var original = new B { Field = 7 };
+        var str = serializer.Serialize(original);
+
+        // act
+        var result = serializer.Deserialize<B>(str);
+
+        // assert
+        result.Field.Is(original.Field);
+    }
+
+    /// <summary>
+    /// Tests that an object containing a not-indented nested object can be deserialized back to its original value
+    /// </summary>
+    [Fact]
+    public void Deserialization_Inside_Works()
+    {
+        // arrange
+        var serializer = GetSerializer(opts => opts.WriteIndented = true);
+        var original = new A
+        {
+            Normal = 5,
+            NotIndented = new B { Field = 7 },
+        };
+        var str = serializer.Serialize(original);
+
+        // act
+        var result = serializer.Deserialize<A>(str);
+
+        // assert
+        result.Normal.Is(original.Normal);
+        result.NotIndented.Field.Is(original.NotIndented.Field);
+    }
+
+    /// <summary>
     /// Tests that serialization of not indented objects inside indented objects works correctly
     /// </summary>
     [Fact]
@@ -65,7 +106,7 @@ public class JsonNotIndentedJsonConverterTest : TestBase
         /// <summary>
         /// Gets the not indented property value
         /// </summary>
-        public B NotIndented { get; init; } = default!;
+        public B NotIndented { get; init; } = default!; // set via object initializer in tests
     }
 
     /// <summary>

@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.Loader;
-using System.Threading.Tasks;
 
 namespace Annium.Core.Runtime.Loader.Internal;
 
@@ -23,7 +22,7 @@ internal class AssemblyLoader : IAssemblyLoader
     /// <param name="byteArrayResolvers">Collection of functions that resolve assembly names to byte arrays</param>
     public AssemblyLoader(
         IReadOnlyCollection<Func<AssemblyName, string?>> pathResolvers,
-        IReadOnlyCollection<Func<AssemblyName, Task<byte[]>?>> byteArrayResolvers
+        IReadOnlyCollection<Func<AssemblyName, byte[]?>> byteArrayResolvers
     )
     {
         _context = new ResolvingLoadContext(pathResolvers, byteArrayResolvers);
@@ -45,10 +44,13 @@ internal class AssemblyLoader : IAssemblyLoader
         Load(
             asmName,
             assemblyName => registry.ContainsKey(assemblyName.FullName),
+            // in-progress sentinel: reserves the key to break recursion cycles; replaced with the
+            // real assembly by the register callback below, or detected as null on load failure.
             assemblyName => registry[assemblyName.FullName] = default!,
             (assemblyName, assembly) => registry[assemblyName.FullName] = assembly
         );
-        var result = registry[asmName.FullName];
+        if (!registry.TryGetValue(asmName.FullName, out var result) || result is null)
+            throw new InvalidOperationException($"Assembly '{name}' could not be loaded.");
 
         return result;
     }

@@ -18,7 +18,7 @@ public interface ISerializationConfigurationBuilder
     /// <typeparam name="TValue">The value type</typeparam>
     /// <typeparam name="TSerializer">The serializer type</typeparam>
     /// <param name="mediaType">The media type</param>
-    /// <param name="isDefault">Whether this is the default serializer</param>
+    /// <param name="isDefault">Whether this is the default serializer for the media type. Only honored when the builder's <see cref="Key"/> is the default (unnamed) key; for a named-key builder it has no effect.</param>
     /// <returns>The configuration builder for method chaining</returns>
     ISerializationConfigurationBuilder Register<TValue, TSerializer>(string mediaType, bool isDefault)
         where TSerializer : class, ISerializer<TValue>;
@@ -29,7 +29,7 @@ public interface ISerializationConfigurationBuilder
     /// <typeparam name="TValue">The value type</typeparam>
     /// <typeparam name="TSerializer">The serializer type</typeparam>
     /// <param name="mediaType">The media type</param>
-    /// <param name="isDefault">Whether this is the default serializer</param>
+    /// <param name="isDefault">Whether this is the default serializer for the media type. Only honored when the builder's <see cref="Key"/> is the default (unnamed) key; for a named-key builder it has no effect.</param>
     /// <param name="resolveSerializer">The serializer resolver function</param>
     /// <returns>The configuration builder for method chaining</returns>
     ISerializationConfigurationBuilder Register<TValue, TSerializer>(
@@ -46,7 +46,7 @@ public interface ISerializationConfigurationBuilder
     /// <typeparam name="TDestination">The destination type</typeparam>
     /// <typeparam name="TSerializer">The serializer type</typeparam>
     /// <param name="mediaType">The media type</param>
-    /// <param name="isDefault">Whether this is the default serializer</param>
+    /// <param name="isDefault">Whether this is the default serializer for the media type. Only honored when the builder's <see cref="Key"/> is the default (unnamed) key; for a named-key builder it has no effect.</param>
     /// <returns>The configuration builder for method chaining</returns>
     ISerializationConfigurationBuilder Register<TSource, TDestination, TSerializer>(string mediaType, bool isDefault)
         where TSerializer : class, ISerializer<TSource, TDestination>;
@@ -58,7 +58,7 @@ public interface ISerializationConfigurationBuilder
     /// <typeparam name="TDestination">The destination type</typeparam>
     /// <typeparam name="TSerializer">The serializer type</typeparam>
     /// <param name="mediaType">The media type</param>
-    /// <param name="isDefault">Whether this is the default serializer</param>
+    /// <param name="isDefault">Whether this is the default serializer for the media type. Only honored when the builder's <see cref="Key"/> is the default (unnamed) key; for a named-key builder it has no effect.</param>
     /// <param name="resolveSerializer">The serializer resolver function</param>
     /// <returns>The configuration builder for method chaining</returns>
     ISerializationConfigurationBuilder Register<TSource, TDestination, TSerializer>(

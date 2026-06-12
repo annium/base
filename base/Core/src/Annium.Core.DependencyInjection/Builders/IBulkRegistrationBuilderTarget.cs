@@ -6,7 +6,7 @@ namespace Annium.Core.DependencyInjection;
 /// <summary>
 /// Interface for bulk registration builder target operations.
 /// </summary>
-public interface IBulkRegistrationBuilderTarget : IBulkRegistrationBuilderLifetime
+public interface IBulkRegistrationBuilderTarget : IRegistrationBuilderLifetime
 {
     /// <summary>
     /// Registers all types as themselves.
@@ -41,6 +41,14 @@ public interface IBulkRegistrationBuilderTarget : IBulkRegistrationBuilderLifeti
     /// <param name="getKey">Function to compute the key for each type.</param>
     /// <returns>Target builder.</returns>
     IBulkRegistrationBuilderTarget AsKeyed(Type serviceType, Func<Type, object> getKey);
+
+    /// <summary>
+    /// Registers each type as each of its implemented interfaces using a single key per type
+    /// (every interface registration of that type shares the same key).
+    /// </summary>
+    /// <param name="getKey">Function to compute the key for each implementation type — applied once per type and reused across that type's interface registrations.</param>
+    /// <returns>Target builder.</returns>
+    IBulkRegistrationBuilderTarget AsKeyedInterfaces(Func<Type, object> getKey);
 
     /// <summary>
     /// Registers all types as self factories.

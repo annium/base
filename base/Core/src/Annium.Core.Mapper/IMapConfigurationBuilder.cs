@@ -11,16 +11,18 @@ namespace Annium.Core.Mapper;
 public interface IMapConfigurationBuilder<TS, TD>
 {
     /// <summary>
-    /// Configures a mapping expression from source to destination type
+    /// Configures a mapping expression from source to destination type.
     /// </summary>
-    /// <param name="map">The mapping expression</param>
-    void With(Expression<Func<TS, TD>> map);
+    /// <param name="map">The mapping expression.</param>
+    /// <returns>The configuration builder for method chaining.</returns>
+    IMapConfigurationBuilder<TS, TD> With(Expression<Func<TS, TD>> map);
 
     /// <summary>
-    /// Configures a contextual mapping expression from source to destination type
+    /// Configures a contextual mapping expression from source to destination type.
     /// </summary>
-    /// <param name="map">The contextual mapping expression factory</param>
-    void With(Func<IMapContext, Expression<Func<TS, TD>>> map);
+    /// <param name="map">The contextual mapping expression factory.</param>
+    /// <returns>The configuration builder for method chaining.</returns>
+    IMapConfigurationBuilder<TS, TD> With(Func<IMapContext, Expression<Func<TS, TD>>> map);
 
     /// <summary>
     /// Configures mapping for specific destination members using a source expression

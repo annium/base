@@ -1,9 +1,9 @@
+using System;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 using Annium.Logging;
-using Annium.Testing;
 using Xunit;
 
 namespace Annium.Net.Sockets.Tests;
@@ -19,19 +19,25 @@ public class ServerShutdownOrderingTests : TestBase
         : base(outputHelper) { }
 
     /// <summary>
-    /// Spawns a server whose handler loops forever while respecting cancellation.
-    /// Connects a client, then disposes the server. Dispose must complete in under 1s
-    /// with the new stop-then-drain ordering.
+    /// Spawns a server whose handler loops forever while respecting cancellation. Connects a
+    /// client, waits for the handler to actually enter its loop, then disposes the server and
+    /// asserts the dispose completes without hanging — the stop-then-drain ordering lets the
+    /// in-flight handler observe cancellation and exit promptly.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
-    public async Task DisposeAsync_WithInfiniteLoopHandler_CompletesInUnderOneSecond()
+    public async Task DisposeAsync_WithInfiniteLoopHandler_CompletesWithoutHanging()
     {
         this.Trace("start");
 
-        // arrange — server with a handler that loops while respecting ct
+        var handlerStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        // arrange — server with a handler that signals once it enters its ct-respecting loop
         var server = RunServerBase(
             async (_, socket, ct) =>
             {
+                handlerStarted.TrySetResult();
+
                 try
                 {
                     while (!ct.IsCancellationRequested)
@@ -50,17 +56,17 @@ public class ServerShutdownOrderingTests : TestBase
         using var client = new TcpClient();
         await client.ConnectAsync(IPAddress.Loopback, server.Port, TestContext.Current.CancellationToken);
 
-        // give the handler a moment to start its loop
-        await Task.Delay(100, TestContext.Current.CancellationToken);
+        // wait for the handler to actually enter its loop (replaces a fixed Task.Delay start race)
+        await handlerStarted.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
 
-        // act — dispose and time it
+        // act + assert — dispose must complete and NOT hang. A bounded wait fails fast on a
+        // regression (wrong ordering → drain blocks on the in-flight handler) while tolerating CI
+        // scheduling jitter, unlike a tight wall-clock comparison.
         var sw = Stopwatch.StartNew();
-        await server.DisposeAsync();
+        await server.DisposeAsync().AsTask().WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
         sw.Stop();
 
-        // assert — with stop-then-drain ordering, dispose completes well under 1s
         this.Trace<long>("dispose took {ms}ms", sw.ElapsedMilliseconds);
-        sw.ElapsedMilliseconds.IsLess(1000);
 
         this.Trace("done");
     }

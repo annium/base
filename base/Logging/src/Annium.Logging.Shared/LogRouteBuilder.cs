@@ -8,7 +8,7 @@ namespace Annium.Logging.Shared;
 /// the methods on this builder let the caller force the alternative.
 /// </summary>
 /// <typeparam name="TContext">The type of log context</typeparam>
-public class LogRouteBuilder<TContext>
+public sealed class LogRouteBuilder<TContext>
     where TContext : class
 {
     /// <summary>

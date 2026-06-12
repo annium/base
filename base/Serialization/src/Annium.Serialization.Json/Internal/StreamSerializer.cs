@@ -33,14 +33,15 @@ internal class StreamSerializer : ISerializer<Stream>
     /// <returns>The deserialized object.</returns>
     public T Deserialize<T>(Stream value)
     {
+        var bytes = ToBytes(value);
         try
         {
-            return JsonSerializer.Deserialize<T>(value, _options)!;
+            return JsonSerializer.Deserialize<T>(bytes, _options)!;
         }
         catch (JsonException e)
         {
             throw new JsonException(
-                $"Failed to deserialize {ToString(value)} as {typeof(T).FriendlyName()}",
+                $"Failed to deserialize {Encoding.UTF8.GetString(bytes)} as {typeof(T).FriendlyName()}",
                 e.Path,
                 e.LineNumber,
                 e.BytePositionInLine,
@@ -49,7 +50,10 @@ internal class StreamSerializer : ISerializer<Stream>
         }
         catch (Exception e)
         {
-            throw new JsonException($"Failed to deserialize {ToString(value)} as {typeof(T).FriendlyName()}", e);
+            throw new JsonException(
+                $"Failed to deserialize {Encoding.UTF8.GetString(bytes)} as {typeof(T).FriendlyName()}",
+                e
+            );
         }
     }
 
@@ -61,14 +65,15 @@ internal class StreamSerializer : ISerializer<Stream>
     /// <returns>The deserialized object.</returns>
     public object? Deserialize(Type type, Stream value)
     {
+        var bytes = ToBytes(value);
         try
         {
-            return JsonSerializer.Deserialize(value, type, _options);
+            return JsonSerializer.Deserialize(bytes, type, _options);
         }
         catch (JsonException e)
         {
             throw new JsonException(
-                $"Failed to deserialize {ToString(value)} as {type.FriendlyName()}",
+                $"Failed to deserialize {Encoding.UTF8.GetString(bytes)} as {type.FriendlyName()}",
                 e.Path,
                 e.LineNumber,
                 e.BytePositionInLine,
@@ -77,7 +82,10 @@ internal class StreamSerializer : ISerializer<Stream>
         }
         catch (Exception e)
         {
-            throw new JsonException($"Failed to deserialize {ToString(value)} as {type.FriendlyName()}", e);
+            throw new JsonException(
+                $"Failed to deserialize {Encoding.UTF8.GetString(bytes)} as {type.FriendlyName()}",
+                e
+            );
         }
     }
 
@@ -147,14 +155,15 @@ internal class StreamSerializer : ISerializer<Stream>
     }
 
     /// <summary>
-    /// Converts a stream to its string representation for error messages.
+    /// Reads the supplied stream to the end so its content is available both for deserialization
+    /// and for error messages (the stream is consumed once, up front).
     /// </summary>
-    /// <param name="value">The stream to convert.</param>
-    /// <returns>The string representation of the stream content.</returns>
-    private static string ToString(Stream value)
+    /// <param name="value">The stream to read.</param>
+    /// <returns>The full byte content of the stream.</returns>
+    private static byte[] ToBytes(Stream value)
     {
         using var ms = new MemoryStream();
         value.CopyTo(ms);
-        return Encoding.UTF8.GetString(ms.ToArray());
+        return ms.ToArray();
     }
 }

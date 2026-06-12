@@ -19,13 +19,13 @@ public static class Wrap
         new(action, delegateEx);
 
     /// <summary>
-    /// Wraps an asynchronous action with its expression for testing.
+    /// Wraps an asynchronous ValueTask action with its expression for testing.
     /// </summary>
-    /// <param name="action">The asynchronous action to wrap.</param>
+    /// <param name="action">The asynchronous ValueTask action to wrap.</param>
     /// <param name="delegateEx">The expression that produced the action.</param>
-    /// <returns>A wrapped asynchronous action.</returns>
-    public static WrappedTaskAction It(
-        Func<Task> action,
+    /// <returns>A wrapped asynchronous ValueTask action.</returns>
+    public static WrappedValueTaskAction It(
+        Func<ValueTask> action,
         [CallerArgumentExpression(nameof(action))] string delegateEx = ""
     ) => new(action, delegateEx);
 }
@@ -58,14 +58,14 @@ public readonly struct WrappedAction
 }
 
 /// <summary>
-/// Represents a wrapped asynchronous action for testing.
+/// Represents a wrapped asynchronous ValueTask action for testing.
 /// </summary>
-public readonly struct WrappedTaskAction
+public readonly struct WrappedValueTaskAction
 {
     /// <summary>
-    /// Gets the asynchronous action to execute.
+    /// Gets the asynchronous ValueTask action to execute.
     /// </summary>
-    public readonly Func<Task> Execute;
+    public readonly Func<ValueTask> Execute;
 
     /// <summary>
     /// Gets the expression that produced the action.
@@ -73,11 +73,11 @@ public readonly struct WrappedTaskAction
     public readonly string Expression;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="WrappedTaskAction"/> struct.
+    /// Initializes a new instance of the <see cref="WrappedValueTaskAction"/> struct.
     /// </summary>
-    /// <param name="execute">The asynchronous action to execute.</param>
+    /// <param name="execute">The asynchronous ValueTask action to execute.</param>
     /// <param name="expression">The expression that produced the action.</param>
-    public WrappedTaskAction(Func<Task> execute, string expression)
+    public WrappedValueTaskAction(Func<ValueTask> execute, string expression)
     {
         Execute = execute;
         Expression = expression;

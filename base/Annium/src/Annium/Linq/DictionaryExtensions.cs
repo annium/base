@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.CompilerServices;
 
 namespace Annium.Linq;
@@ -20,7 +19,11 @@ public static class DictionaryExtensions
     public static void RemoveAll<TKey, TValue>(this IDictionary<TKey, TValue> src, Func<TKey, bool> predicate)
         where TKey : notnull
     {
-        foreach (var key in src.Keys.Where(predicate).ToArray())
+        var toRemove = new List<TKey>();
+        foreach (var key in src.Keys)
+            if (predicate(key))
+                toRemove.Add(key);
+        foreach (var key in toRemove)
             src.Remove(key);
     }
 
@@ -33,8 +36,12 @@ public static class DictionaryExtensions
     /// <param name="predicate">A function to test each value for a condition.</param>
     public static void RemoveAll<TKey, TValue>(this IDictionary<TKey, TValue> src, Func<TValue, bool> predicate)
     {
-        foreach (var item in src.Where(x => predicate(x.Value)).ToArray())
-            src.Remove(item);
+        var toRemove = new List<TKey>();
+        foreach (var kvp in src)
+            if (predicate(kvp.Value))
+                toRemove.Add(kvp.Key);
+        foreach (var key in toRemove)
+            src.Remove(key);
     }
 
     /// <summary>
@@ -46,8 +53,12 @@ public static class DictionaryExtensions
     /// <param name="predicate">A function to test each key-value pair for a condition.</param>
     public static void RemoveAll<TKey, TValue>(this IDictionary<TKey, TValue> src, Func<TKey, TValue, bool> predicate)
     {
-        foreach (var item in src.Where(x => predicate(x.Key, x.Value)).ToArray())
-            src.Remove(item);
+        var toRemove = new List<TKey>();
+        foreach (var kvp in src)
+            if (predicate(kvp.Key, kvp.Value))
+                toRemove.Add(kvp.Key);
+        foreach (var key in toRemove)
+            src.Remove(key);
     }
 
     /// <summary>

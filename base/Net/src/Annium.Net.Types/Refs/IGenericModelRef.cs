@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace Annium.Net.Types.Refs;
 
 /// <summary>
@@ -9,5 +11,5 @@ public interface IGenericModelRef : IModelRef
     /// <summary>
     /// The generic type arguments for the referenced model.
     /// </summary>
-    IRef[] Args { get; }
+    IReadOnlyList<IRef> Args { get; }
 }

@@ -65,13 +65,14 @@ public class ContextualProfileTest : TestBase
     {
         // arrange
         var mapper = Get<IMapper>();
-        var payload = new OuterPayload(InnerPayload.B);
+        var payload = new SomePayload(InnerPayload.B, 42);
 
         // act
-        var result = mapper.Map<OuterModel>(payload);
+        var result = mapper.Map<SomeModel>(payload);
 
-        // assert
-        result.As<OuterModel>().X.Is(InnerModel.D);
+        // assert — exercises the For<TF>(member, ctx => x => ...) field-level overload
+        result.X.Is(InnerModel.D);
+        result.Value.Is(42);
     }
 
     /// <summary>
@@ -90,7 +91,7 @@ public class ContextualProfileTest : TestBase
         /// </summary>
         public ContextualProfile()
         {
-            Map<SomePayload, SomeModel>().For<InnerModel>(x => x.X, ctx => x => ctx.Map<InnerModel>(x));
+            Map<SomePayload, SomeModel>().For<InnerModel>(x => x.X, ctx => x => ctx.Map<InnerModel>(x.X));
             Map<InnerPayload, InnerModel>(x => x == InnerPayload.A ? InnerModel.C : InnerModel.D);
             Map<OuterPayload, OuterModel>(ctx => x => new OuterModel(ctx.Map<InnerModel>(x.X)));
         }

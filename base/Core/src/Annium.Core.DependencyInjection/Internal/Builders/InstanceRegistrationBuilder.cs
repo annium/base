@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using Annium.Core.DependencyInjection.Internal.Builders.Registrations;
 
@@ -8,13 +7,8 @@ namespace Annium.Core.DependencyInjection.Internal.Builders;
 /// <summary>
 /// Builder for instance-based service registrations.
 /// </summary>
-internal class InstanceRegistrationBuilder : IInstanceRegistrationBuilderBase
+internal class InstanceRegistrationBuilder : RegistrationBuilderBase, IInstanceRegistrationBuilderBase
 {
-    /// <summary>
-    /// The service container instance.
-    /// </summary>
-    private readonly IServiceContainer _container;
-
     /// <summary>
     /// The type being registered.
     /// </summary>
@@ -26,22 +20,6 @@ internal class InstanceRegistrationBuilder : IInstanceRegistrationBuilderBase
     private readonly object _instance;
 
     /// <summary>
-    /// The registrar for handling service registrations.
-    /// </summary>
-    private readonly Registrar _registrar;
-
-    /// <summary>
-    /// The collection of registrations accumulated during the AsX phase.
-    /// </summary>
-    private readonly List<IRegistration> _registrations = new();
-
-    /// <summary>
-    /// Whether at least one <c>AsX</c> call has populated the registrations. Used by
-    /// <see cref="Singleton"/> to fail fast if the caller forgot to specify registration targets.
-    /// </summary>
-    private bool _registrationsInitiated;
-
-    /// <summary>
     /// Initializes a new instance of the InstanceRegistrationBuilder class.
     /// </summary>
     /// <param name="container">The service container.</param>
@@ -49,41 +27,53 @@ internal class InstanceRegistrationBuilder : IInstanceRegistrationBuilderBase
     /// <param name="instance">The instance to register.</param>
     /// <param name="registrar">The registrar for handling registrations.</param>
     public InstanceRegistrationBuilder(IServiceContainer container, Type type, object instance, Registrar registrar)
+        : base(container, registrar)
     {
-        _container = container;
         _type = type;
         _instance = instance;
-        _registrar = registrar;
     }
 
     /// <summary>
     /// Registers the instance as its own type.
     /// </summary>
     /// <returns>The instance registration builder for method chaining.</returns>
-    public IInstanceRegistrationBuilderBase AsSelf() => WithRegistration(new InstanceRegistration(_type, _instance));
+    public IInstanceRegistrationBuilderBase AsSelf()
+    {
+        Track(new InstanceRegistration(_type, _instance));
+        return this;
+    }
 
     /// <summary>
     /// Registers the instance as the specified service type.
     /// </summary>
     /// <param name="serviceType">The service type to register as.</param>
     /// <returns>The instance registration builder for method chaining.</returns>
-    public IInstanceRegistrationBuilderBase As(Type serviceType) =>
-        WithRegistration(new InstanceRegistration(serviceType, _instance));
+    public IInstanceRegistrationBuilderBase As(Type serviceType)
+    {
+        Track(new InstanceRegistration(serviceType, _instance));
+        return this;
+    }
 
     /// <summary>
     /// Registers the instance as all interfaces implemented by its type.
     /// </summary>
     /// <returns>The instance registration builder for method chaining.</returns>
-    public IInstanceRegistrationBuilderBase AsInterfaces() =>
-        WithRegistrations(_type.GetInterfaces().Select(x => new InstanceRegistration(x, _instance)));
+    public IInstanceRegistrationBuilderBase AsInterfaces()
+    {
+        Track(_type.GetInterfaces().Select(x => new InstanceRegistration(x, _instance)));
+        return this;
+    }
 
     /// <summary>
     /// Registers the instance as its own type with the specified key.
     /// </summary>
     /// <param name="key">The key to associate with the service.</param>
     /// <returns>The instance registration builder for method chaining.</returns>
-    public IInstanceRegistrationBuilderBase AsKeyedSelf(object key) =>
-        WithRegistration(new KeyedInstanceRegistration(_type, key, _instance));
+    public IInstanceRegistrationBuilderBase AsKeyedSelf(object key)
+    {
+        Track(new KeyedInstanceRegistration(_type, key, _instance));
+        return this;
+    }
 
     /// <summary>
     /// Registers the instance as the specified service type with the specified key.
@@ -91,31 +81,54 @@ internal class InstanceRegistrationBuilder : IInstanceRegistrationBuilderBase
     /// <param name="serviceType">The service type to register as.</param>
     /// <param name="key">The key to associate with the service.</param>
     /// <returns>The instance registration builder for method chaining.</returns>
-    public IInstanceRegistrationBuilderBase AsKeyed(Type serviceType, object key) =>
-        WithRegistration(new KeyedInstanceRegistration(serviceType, key, _instance));
+    public IInstanceRegistrationBuilderBase AsKeyed(Type serviceType, object key)
+    {
+        Track(new KeyedInstanceRegistration(serviceType, key, _instance));
+        return this;
+    }
+
+    /// <summary>
+    /// Registers the instance as each of its implemented interfaces with the specified key.
+    /// </summary>
+    /// <param name="key">The key to associate with each interface registration.</param>
+    /// <returns>The instance registration builder for method chaining.</returns>
+    public IInstanceRegistrationBuilderBase AsKeyedInterfaces(object key)
+    {
+        Track(_type.GetInterfaces().Select(x => new KeyedInstanceRegistration(x, key, _instance)));
+        return this;
+    }
 
     /// <summary>
     /// Registers the instance as a factory that returns itself.
     /// </summary>
     /// <returns>The instance registration builder for method chaining.</returns>
-    public IInstanceRegistrationBuilderBase AsSelfFactory() =>
-        WithRegistration(new InstanceFactoryRegistration(_type, _instance));
+    public IInstanceRegistrationBuilderBase AsSelfFactory()
+    {
+        Track(new InstanceFactoryRegistration(_type, _instance));
+        return this;
+    }
 
     /// <summary>
     /// Registers the instance as a factory that returns the specified service type.
     /// </summary>
     /// <param name="serviceType">The service type the factory should return.</param>
     /// <returns>The instance registration builder for method chaining.</returns>
-    public IInstanceRegistrationBuilderBase AsFactory(Type serviceType) =>
-        WithRegistration(new InstanceFactoryRegistration(serviceType, _instance));
+    public IInstanceRegistrationBuilderBase AsFactory(Type serviceType)
+    {
+        Track(new InstanceFactoryRegistration(serviceType, _instance));
+        return this;
+    }
 
     /// <summary>
     /// Registers the instance as a keyed factory that returns itself.
     /// </summary>
     /// <param name="key">The key to associate with the factory.</param>
     /// <returns>The instance registration builder for method chaining.</returns>
-    public IInstanceRegistrationBuilderBase AsKeyedSelfFactory(object key) =>
-        WithRegistration(new KeyedInstanceFactoryRegistration(_type, key, _instance));
+    public IInstanceRegistrationBuilderBase AsKeyedSelfFactory(object key)
+    {
+        Track(new KeyedInstanceFactoryRegistration(_type, key, _instance));
+        return this;
+    }
 
     /// <summary>
     /// Registers the instance as a keyed factory that returns the specified service type.
@@ -123,8 +136,11 @@ internal class InstanceRegistrationBuilder : IInstanceRegistrationBuilderBase
     /// <param name="serviceType">The service type the factory should return.</param>
     /// <param name="key">The key to associate with the factory.</param>
     /// <returns>The instance registration builder for method chaining.</returns>
-    public IInstanceRegistrationBuilderBase AsKeyedFactory(Type serviceType, object key) =>
-        WithRegistration(new KeyedInstanceFactoryRegistration(serviceType, key, _instance));
+    public IInstanceRegistrationBuilderBase AsKeyedFactory(Type serviceType, object key)
+    {
+        Track(new KeyedInstanceFactoryRegistration(serviceType, key, _instance));
+        return this;
+    }
 
     /// <summary>
     /// Completes the registration with singleton lifetime.
@@ -132,37 +148,11 @@ internal class InstanceRegistrationBuilder : IInstanceRegistrationBuilderBase
     /// <returns>The service container.</returns>
     public IServiceContainer Singleton()
     {
-        if (!_registrationsInitiated)
-            throw new InvalidOperationException("Specify registration targets");
+        if (!RegistrationsInitiated)
+            throw new InvalidOperationException(NoRegistrationTargetsMessage);
 
-        _registrar.Register(_registrations, ServiceLifetime.Singleton);
+        Registrar.Register(Registrations, ServiceLifetime.Singleton);
 
-        return _container;
-    }
-
-    /// <summary>
-    /// Adds multiple registrations to the collection.
-    /// </summary>
-    /// <param name="registrations">The registrations to add.</param>
-    /// <returns>The instance registration builder for method chaining.</returns>
-    private IInstanceRegistrationBuilderBase WithRegistrations(IEnumerable<IRegistration> registrations)
-    {
-        _registrationsInitiated = true;
-        _registrations.AddRange(registrations);
-
-        return this;
-    }
-
-    /// <summary>
-    /// Adds a single registration to the collection.
-    /// </summary>
-    /// <param name="registration">The registration to add.</param>
-    /// <returns>The instance registration builder for method chaining.</returns>
-    private IInstanceRegistrationBuilderBase WithRegistration(IRegistration registration)
-    {
-        _registrationsInitiated = true;
-        _registrations.Add(registration);
-
-        return this;
+        return Container;
     }
 }

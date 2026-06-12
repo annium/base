@@ -14,6 +14,12 @@ public class ConfigurationBuilderTest : TestBase
         : base(outputHelper)
     {
         this.RegisterMapper();
+        var cfg = new Dictionary<string[], string>();
+        cfg[new[] { "plain" }] = "10";
+        cfg[new[] { "abstract", "type" }] = "ConfigOne";
+        cfg[new[] { "abstract", "value" }] = "14";
+        cfg[new[] { "enum" }] = "two";
+        Register((container, ct) => container.AddConfigurationAsync<Config>(x => x.Add(cfg), ct));
     }
 
     /// <summary>
@@ -22,14 +28,6 @@ public class ConfigurationBuilderTest : TestBase
     [Fact]
     public void BaseBuilding_Works()
     {
-        // arrange
-        var cfg = new Dictionary<string[], string>();
-        cfg[new[] { "plain" }] = "10";
-        cfg[new[] { "abstract", "type" }] = "ConfigOne";
-        cfg[new[] { "abstract", "value" }] = "14";
-        cfg[new[] { "enum" }] = "two";
-        Register(container => container.AddConfiguration<Config>(x => x.Add(cfg)));
-
         // act
         var result = Get<Config>();
         var nested = Get<SomeConfig>();

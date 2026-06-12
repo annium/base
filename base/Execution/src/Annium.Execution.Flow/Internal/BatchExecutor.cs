@@ -13,7 +13,7 @@ internal class BatchExecutor : IBatchExecutor
     /// <summary>
     /// List of handlers to execute in the batch
     /// </summary>
-    private readonly IList<Delegate> _handlers = new List<Delegate>();
+    private readonly List<Delegate> _handlers = new();
 
     /// <summary>
     /// Adds a synchronous operation to the batch
@@ -27,7 +27,7 @@ internal class BatchExecutor : IBatchExecutor
     /// </summary>
     /// <param name="handler">The operation to add</param>
     /// <returns>The batch executor for method chaining</returns>
-    public IBatchExecutor With(Func<Task> handler) => WithInternal(handler);
+    public IBatchExecutor With(Func<ValueTask> handler) => WithInternal(handler);
 
     /// <summary>
     /// Internal method for adding handlers to the batch
@@ -54,10 +54,7 @@ internal class BatchExecutor : IBatchExecutor
         {
             try
             {
-                if (handler is Func<Task> handleAsync)
-                    await handleAsync();
-                else if (handler is Action handleSync)
-                    handleSync();
+                await FlowHelper.ExecuteAsync(handler);
             }
             catch (Exception exception)
             {

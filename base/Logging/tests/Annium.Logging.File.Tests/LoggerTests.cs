@@ -59,7 +59,7 @@ public class LoggerTests : TestBase
         subject.Info("two");
 
         // assert
-        await Wait.UntilAsync(() => GetLog().Count == 2);
+        await Wait.UntilAsync(() => GetLog().Count == 2, TestContext.Current.CancellationToken);
         var log = GetLog();
         log.At(0).Contains("one").IsTrue();
         log.At(1).Contains("two").IsTrue();
@@ -82,7 +82,7 @@ public class LoggerTests : TestBase
         subject.Error(ex);
 
         // assert
-        await Wait.UntilAsync(() => GetLog().Any());
+        await Wait.UntilAsync(() => GetLog().Any(), TestContext.Current.CancellationToken);
         var log = GetLog().Join(Environment.NewLine);
         log.Contains("2 error(s) in").IsTrue();
         log.Contains("xxx").IsTrue();
@@ -106,9 +106,22 @@ public class LoggerTests : TestBase
         subject.Error(ex);
 
         // assert
-        await Wait.UntilAsync(() => GetLog().Any());
+        await Wait.UntilAsync(() => GetLog().Any(), TestContext.Current.CancellationToken);
         var log = GetLog().Join(Environment.NewLine);
         log.Contains("xxx").IsTrue();
+    }
+
+    /// <summary>
+    /// Tears down the test host, then deletes the temp log file. The base call runs first so the
+    /// logging provider (and its file handler) is disposed before the file is removed.
+    /// </summary>
+    /// <returns>A value task representing the disposal.</returns>
+    public override async ValueTask DisposeAsync()
+    {
+        await base.DisposeAsync();
+
+        if (System.IO.File.Exists(_logFile))
+            System.IO.File.Delete(_logFile);
     }
 
     /// <summary>

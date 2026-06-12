@@ -70,8 +70,9 @@ public class NullableExtensionsTests
         var validValue = Task.FromResult<string?>("data");
 
         // assert
+        // VSTHRD003: awaiting caller-provided Task<T?> to exercise NotNullAsync — analyzer false positive in test context.
 #pragma warning disable VSTHRD003
-        await Wrap.It(() => nullValue.NotNullAsync())
+        await Wrap.It(async () => await nullValue.NotNullAsync())
 #pragma warning restore VSTHRD003
             .ThrowsAsync<NullReferenceException>()
             .ReportsAsync($"{nameof(nullValue)} is null");
@@ -96,6 +97,7 @@ public class NullableExtensionsTests
             {
                 try
                 {
+                    // VSTHRD003: awaiting caller-provided Task<T?> to exercise NotNullAsync — analyzer false positive in test context.
 #pragma warning disable VSTHRD003
                     var failedValue = await nullValue.NotNullAsync();
 #pragma warning restore VSTHRD003
@@ -110,5 +112,39 @@ public class NullableExtensionsTests
 
         var verifiedValue = await validValue.NotNullAsync();
         verifiedValue.Is(true);
+    }
+
+    /// <summary>
+    /// Verifies that NotNullAsync on a ValueTask&lt;T?&gt; struct overload throws for a null result and
+    /// returns the value otherwise. Closes the TG6 ValueTask-overload gap from review-2026.05.15.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact]
+    public async Task EnsureNotNullAsync_ValueTask_Struct()
+    {
+        var nullValue = new ValueTask<bool?>((bool?)null);
+        var validValue = new ValueTask<bool?>(true);
+
+        await Wrap.It(async () => _ = await nullValue.NotNullAsync()).ThrowsAsync<NullReferenceException>();
+
+        var verified = await validValue.NotNullAsync();
+        verified.Is(true);
+    }
+
+    /// <summary>
+    /// Verifies that NotNullAsync on a ValueTask&lt;T?&gt; reference (class) overload throws for a null
+    /// result and returns the value otherwise. Closes the TG6 ValueTask reference-overload gap.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact]
+    public async Task EnsureNotNullAsync_ValueTask_Class()
+    {
+        var nullValue = new ValueTask<string?>((string?)null);
+        var validValue = new ValueTask<string?>("data");
+
+        await Wrap.It(async () => _ = await nullValue.NotNullAsync()).ThrowsAsync<NullReferenceException>();
+
+        var verified = await validValue.NotNullAsync();
+        verified.Is("data");
     }
 }

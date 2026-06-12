@@ -98,12 +98,12 @@ public class ConstructorJsonConverterFactory : JsonConverterFactory
     /// <returns>The built configuration.</returns>
     private static ConstructorJsonConverterConfiguration BuildConfiguration(ConstructorInfo constructor)
     {
-        var type = constructor.DeclaringType!;
+        var type = constructor.DeclaringType.NotNull();
         var parameters = constructor
             .GetParameters()
             .Select(x =>
             {
-                var property = type.GetProperty(x.Name!.PascalCase());
+                var property = type.GetProperty(x.Name.NotNull().PascalCase());
                 var name = property?.GetCustomAttribute<JsonPropertyNameAttribute>()?.Name ?? x.Name ?? string.Empty;
 
                 return new ConstructorJsonConverterConfiguration.ParameterItem(x.ParameterType, name);

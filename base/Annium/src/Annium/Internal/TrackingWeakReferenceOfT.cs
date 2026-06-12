@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+using System.Threading;
 
 namespace Annium.Internal;
 
@@ -13,7 +14,7 @@ internal sealed class TrackingWeakReference<T> : ITrackingWeakReference<T>
     /// <summary>
     /// A registry that maintains the association between target objects and their tracking references.
     /// </summary>
-    public static readonly ConditionalWeakTable<T, TrackingWeakReference<T>> Registry = new();
+    internal static readonly ConditionalWeakTable<T, TrackingWeakReference<T>> Registry = new();
 
     /// <summary>
     /// Occurs when the referenced object is collected by the garbage collector.
@@ -44,13 +45,31 @@ internal sealed class TrackingWeakReference<T> : ITrackingWeakReference<T>
     /// </summary>
     /// <param name="target">When this method returns, contains the referenced object if it is still alive; otherwise, null.</param>
     /// <returns>true if the referenced object is still alive; otherwise, false.</returns>
-    public bool TryGetTarget(out T target) => _ref.TryGetTarget(out target!);
+    public bool TryGetTarget(out T target) =>
+        // out target! mirrors WeakReference<T>.TryGetTarget's [MaybeNullWhen(false)] contract: target is set when returning true.
+        _ref.TryGetTarget(out target!);
 
     /// <summary>
-    /// Finalizes the instance and raises the <see cref="OnCollected"/> event.
+    /// Finalizes the instance and raises the <see cref="OnCollected"/> event off the finalizer thread.
+    /// Subscriber exceptions are swallowed so a bad subscriber cannot tear down finalization.
     /// </summary>
     ~TrackingWeakReference()
     {
-        OnCollected.Invoke();
+        var handler = OnCollected;
+        ThreadPool.UnsafeQueueUserWorkItem(
+            static state =>
+            {
+                try
+                {
+                    state.Invoke();
+                }
+                catch
+                {
+                    // Subscribers must not throw; an exception here would kill a worker thread otherwise.
+                }
+            },
+            handler,
+            preferLocal: false
+        );
     }
 }

@@ -78,4 +78,32 @@ public class HelperTest
         data.Has(1);
         data.At("{nested} data").As<string>().Is("demo");
     }
+
+    /// <summary>
+    /// When more data items are supplied than the template has placeholders,
+    /// <see cref="Helper.Process"/> must throw <see cref="InvalidOperationException"/>.
+    /// The guard is on line ~67-69 of Helper.cs: <c>if (extra > 0) throw ...</c>.
+    /// This test fails if that guard is removed or weakened.
+    /// </summary>
+    [Fact]
+    public void ExtraDataItems_ThrowsInvalidOperationException()
+    {
+        Wrap.It(() => Helper.Process("hello {name}", new object?[] { "alex", "extra" }))
+            .Throws<InvalidOperationException>();
+    }
+
+    /// <summary>
+    /// When data items exactly match the template placeholders,
+    /// <see cref="Helper.Process"/> must succeed and substitute the value.
+    /// Verifies the exact-match path does not throw and produces the expected message and data.
+    /// </summary>
+    [Fact]
+    public void ExactDataItems_DoesNotThrow_ProducesExpected()
+    {
+        var (message, data) = Helper.Process("hello {name}", new object?[] { "alex" });
+
+        message.Is("hello alex");
+        data.Has(1);
+        data.At("name").As<string>().Is("alex");
+    }
 }

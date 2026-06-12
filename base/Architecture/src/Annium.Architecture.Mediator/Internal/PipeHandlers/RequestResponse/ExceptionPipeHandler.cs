@@ -34,6 +34,11 @@ internal class ExceptionPipeHandler<TRequest, TResponse>
     /// <returns>A status result indicating an uncaught error with default response value</returns>
     protected override IStatusResult<OperationStatus, TResponse> GetFailure(Exception exception)
     {
-        return Result.Status(OperationStatus.UncaughtError, default(TResponse)!).Error(exception.Message);
+        // Do not surface raw exception messages to callers; the full exception is still logged
+        // by ExceptionPipeHandlerBase.Failure via ILogSubject.Trace.
+        // null Data is intentional for UncaughtError; failure result, Data is never consumed
+        return Result
+            .Status(OperationStatus.UncaughtError, default(TResponse)!)
+            .Error(PipeHandlerMessages.InternalError);
     }
 }

@@ -18,7 +18,7 @@ public class HttpRequestConfigureInterceptTests : TestBase
     /// <summary>
     /// The HTTP request factory for creating requests.
     /// </summary>
-    private readonly IHttpRequestFactory _httpRequestFactory;
+    private IHttpRequestFactory _httpRequestFactory = null!; // set in InitializeAsync
 
     /// <summary>
     /// Initializes a new instance of the HttpRequestConfigureInterceptTests class.
@@ -32,6 +32,16 @@ public class HttpRequestConfigureInterceptTests : TestBase
             container.AddSerializers().WithJson(true);
             container.AddHttpRequestFactory(true);
         });
+    }
+
+    /// <summary>
+    /// Initializes the test fixture by calling the base initializer and resolving the
+    /// <see cref="IHttpRequestFactory"/> from the DI container.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous initialization.</returns>
+    public override async ValueTask InitializeAsync()
+    {
+        await base.InitializeAsync();
         _httpRequestFactory = Get<IHttpRequestFactory>();
     }
 

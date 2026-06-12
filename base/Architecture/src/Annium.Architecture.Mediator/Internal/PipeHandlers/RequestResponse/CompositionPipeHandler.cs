@@ -38,6 +38,7 @@ internal class CompositionPipeHandler<TRequest, TResponse>
         IStatusResult<OperationStatus> compositionResult
     )
     {
+        // null Data is intentional for composition failure; Status≠Ok, Data is never consumed
         return Result.Status(compositionResult.Status, default(TResponse)!).Join(compositionResult);
     }
 }

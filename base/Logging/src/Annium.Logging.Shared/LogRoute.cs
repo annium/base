@@ -6,7 +6,7 @@ namespace Annium.Logging.Shared;
 /// Represents a logging route configuration for a specific context type.
 /// </summary>
 /// <typeparam name="TContext">The type of log context</typeparam>
-public class LogRoute<TContext>
+public sealed class LogRoute<TContext>
     where TContext : class
 {
     /// <summary>
@@ -88,11 +88,7 @@ public class LogRoute<TContext>
         if (_isConfigured)
             throw new InvalidOperationException("LogRoute is already configured");
 
-        Handler = handler;
-        Configuration = configuration ?? new LogRouteConfiguration();
-        _isConfigured = true;
-        _registerRoute(this);
-        return new LogRouteBuilder<TContext>(this);
+        return Apply(handler, configuration);
     }
 
     /// <summary>
@@ -113,7 +109,20 @@ public class LogRoute<TContext>
         if (_isConfigured)
             throw new InvalidOperationException("LogRoute is already configured");
 
-        Handler = factory(_sp);
+        // factory is invoked only after the already-configured guard, preserving the original ordering.
+        return Apply(factory(_sp), configuration);
+    }
+
+    /// <summary>
+    /// Shared tail for both <c>Use</c> overloads: records the handler + configuration, marks the route
+    /// configured, registers it, and returns the scheduler-override builder.
+    /// </summary>
+    /// <param name="handler">The resolved handler instance.</param>
+    /// <param name="configuration">Optional route configuration; defaults to a new <see cref="LogRouteConfiguration"/>.</param>
+    /// <returns>A builder exposing scheduler-override fluent hooks.</returns>
+    private LogRouteBuilder<TContext> Apply(ILogHandler<TContext> handler, LogRouteConfiguration? configuration)
+    {
+        Handler = handler;
         Configuration = configuration ?? new LogRouteConfiguration();
         _isConfigured = true;
         _registerRoute(this);

@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using Annium.Testing;
 using Annium.Threading.Tasks;
@@ -176,6 +177,61 @@ public class TaskSetTest
         v6.Is(6f);
         v7.Is(4u);
         v8.Is(8d);
+    }
+
+    /// <summary>
+    /// Verifies that WhenAll with one faulted task surfaces the original exception.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact]
+    public async Task WhenAll_2_OneFaults_SurfacesOriginalException()
+    {
+        // arrange
+        var t1 = Task.FromException<int>(new InvalidOperationException("boom"));
+        var t2 = T(true);
+
+        // act & assert
+        // VSTHRD003: awaiting TaskSet.WhenAll over caller-created faulted Tasks (Task.FromException) to exercise fault propagation — test-only.
+#pragma warning disable VSTHRD003
+        await Wrap.It(async () => await TaskSet.WhenAll(t1, t2)).ThrowsAsync<InvalidOperationException>();
+#pragma warning restore VSTHRD003
+    }
+
+    /// <summary>
+    /// Verifies that WhenAll with multiple faulted tasks surfaces an exception (first fault wins via await unwrapping).
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact]
+    public async Task WhenAll_2_MultipleFaults_SurfacesException()
+    {
+        // arrange
+        var t1 = Task.FromException<int>(new InvalidOperationException("first"));
+        var t2 = Task.FromException<bool>(new ArgumentException("second"));
+
+        // act & assert — awaiting Task.WhenAll unwraps AggregateException to the first inner exception
+        // VSTHRD003: awaiting TaskSet.WhenAll over caller-created faulted Tasks (Task.FromException) to exercise fault propagation — test-only.
+#pragma warning disable VSTHRD003
+        await Wrap.It(async () => await TaskSet.WhenAll(t1, t2)).ThrowsAsync<InvalidOperationException>();
+#pragma warning restore VSTHRD003
+    }
+
+    /// <summary>
+    /// Verifies that WhenAll with one faulted task among three surfaces the original exception.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact]
+    public async Task WhenAll_3_OneFaults_SurfacesOriginalException()
+    {
+        // arrange
+        var t1 = T(1);
+        var t2 = Task.FromException<bool>(new InvalidOperationException("boom"));
+        var t3 = T(2m);
+
+        // act & assert
+        // VSTHRD003: awaiting TaskSet.WhenAll over caller-created faulted Tasks (Task.FromException) to exercise fault propagation — test-only.
+#pragma warning disable VSTHRD003
+        await Wrap.It(async () => await TaskSet.WhenAll(t1, t2, t3)).ThrowsAsync<InvalidOperationException>();
+#pragma warning restore VSTHRD003
     }
 
     /// <summary>

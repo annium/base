@@ -33,12 +33,13 @@ internal class ErrorConverter : JsonConverter<Error>
         var currentDepth = reader.CurrentDepth;
         var canConvert = false;
         var message = string.Empty;
+        var reason = HttpFailureReason.Network;
 
         while (reader.Read())
         {
             if (reader.TokenType == JsonTokenType.EndObject && reader.CurrentDepth == currentDepth)
             {
-                return canConvert ? new Error(HttpFailureReason.Network, message) : null;
+                return canConvert ? new Error(reason, message) : null;
             }
 
             if (reader.TokenType == JsonTokenType.PropertyName)
@@ -50,7 +51,7 @@ internal class ErrorConverter : JsonConverter<Error>
                 switch (propertyName)
                 {
                     case nameof(Error.Reason):
-                        _ = JsonSerializer.Deserialize<HttpFailureReason>(ref reader, options);
+                        reason = JsonSerializer.Deserialize<HttpFailureReason>(ref reader, options);
                         canConvert = true;
                         break;
                     case nameof(Error.Message):
@@ -76,6 +77,8 @@ internal class ErrorConverter : JsonConverter<Error>
     public override void Write(Utf8JsonWriter writer, Error value, JsonSerializerOptions options)
     {
         writer.WriteStartObject();
+        writer.WritePropertyName(nameof(Error.Reason));
+        JsonSerializer.Serialize(writer, value.Reason, options);
         writer.WriteString("Message", value.Message);
         writer.WriteEndObject();
     }

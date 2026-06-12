@@ -1,9 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
-using System.Reflection;
 using Annium.Core.DependencyInjection;
-using Annium.Core.Runtime;
+using Annium.Core.Mapper.Internal;
 using Annium.Testing;
 using Xunit;
 
@@ -22,7 +21,10 @@ public class RepackerTest : TestBase
     /// </summary>
     /// <param name="outputHelper">The test output helper for logging test results.</param>
     public RepackerTest(ITestOutputHelper outputHelper)
-        : base(outputHelper) { }
+        : base(outputHelper)
+    {
+        Register(c => c.AddMapper(autoload: false));
+    }
 
     /// <summary>
     /// Verifies that binary expressions can be repacked correctly
@@ -164,6 +166,75 @@ public class RepackerTest : TestBase
     }
 
     /// <summary>
+    /// Verifies static-member access (MemberExpression.Expression == null) is repacked correctly.
+    /// </summary>
+    [Fact]
+    public void StaticMember_Works()
+    {
+        // act
+        var result = Repack<int, string>(_ => string.Empty);
+
+        // assert — static member access returns its constant regardless of input
+        result(0).Is(string.Empty);
+        result(42).Is(string.Empty);
+    }
+
+    /// <summary>
+    /// G24: Verifies that a MemberMemberBinding — produced by <c>new Outer { Inner = { Value = x } }</c>
+    /// where <c>Inner</c> is a readable, auto-initialized property — is repacked correctly.
+    /// The compiler emits a <see cref="System.Linq.Expressions.MemberMemberBinding"/> on <c>Outer.Inner</c>
+    /// containing a <see cref="System.Linq.Expressions.MemberAssignment"/> for <c>Inner.Value</c>.
+    /// </summary>
+    [Fact]
+    public void MemberMemberBinding_Works()
+    {
+        // act — the initializer syntax "Inner = { Value = x }" emits MemberMemberBinding
+        var result = Repack<int, Outer>(x => new Outer { Inner = { Value = x } });
+
+        // assert — repacked lambda must produce the correct nested value
+        var output = result(42);
+        output.Inner.Value.Is(42);
+    }
+
+    /// <summary>
+    /// G24: Verifies that a MemberListBinding — produced by <c>new Foo { Items = { x } }</c>
+    /// where <c>Items</c> is a <see cref="List{T}"/> auto-initialized property — is repacked correctly.
+    /// The compiler emits a <see cref="System.Linq.Expressions.MemberListBinding"/> on <c>Foo.Items</c>
+    /// that calls <c>Add(x)</c> on the existing list instance.
+    /// </summary>
+    [Fact]
+    public void MemberListBinding_Works()
+    {
+        // act — the initializer syntax "Items = { x }" emits MemberListBinding (Add call)
+        var result = Repack<int, FooWithItems>(x => new FooWithItems { Items = { x } });
+
+        // assert — repacked lambda must add the value to the auto-initialized list
+        var output = result(7);
+        output.Items.Has(1).At(0).Is(7);
+    }
+
+    /// <summary>Outer type whose Inner property is auto-initialized so MemberMemberBinding is valid at runtime.</summary>
+    private class Outer
+    {
+        /// <summary>Gets the auto-initialized nested object.</summary>
+        public Inner Inner { get; } = new Inner();
+    }
+
+    /// <summary>Nested type whose Value property is settable.</summary>
+    private class Inner
+    {
+        /// <summary>Gets or sets the value.</summary>
+        public int Value { get; set; }
+    }
+
+    /// <summary>Type whose Items list is auto-initialized so MemberListBinding is valid at runtime.</summary>
+    private class FooWithItems
+    {
+        /// <summary>Gets the auto-initialized list of integers.</summary>
+        public List<int> Items { get; } = new List<int>();
+    }
+
+    /// <summary>
     /// Repacks an expression and returns a compiled function
     /// </summary>
     /// <typeparam name="TS">The source type</typeparam>
@@ -172,12 +243,7 @@ public class RepackerTest : TestBase
     /// <returns>A compiled function representing the repacked expression</returns>
     private Func<TS, TR> Repack<TS, TR>(Expression<Func<TS, TR>> ex)
     {
-        var repacker = new ServiceContainer()
-            .AddRuntime(Assembly.GetCallingAssembly())
-            .AddMapper(false)
-            .BuildServiceProvider()
-            .Resolve<IRepacker>();
-
+        var repacker = Get<IRepacker>();
         var param = Expression.Parameter(typeof(TS));
 
         return ((Expression<Func<TS, TR>>)repacker.Repack(ex)(param)).Compile();

@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Annium.Core.DependencyInjection.Internal.Builders;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -27,6 +28,11 @@ public class ServiceContainer : IServiceContainer
     /// Event raised when the service provider is built.
     /// </summary>
     public event Action<IServiceProvider> OnBuild = delegate { };
+
+    /// <summary>
+    /// Event raised when the built provider is disposed — async counterpart of <see cref="OnBuild"/>.
+    /// </summary>
+    public event Func<ValueTask> OnDisposed = () => ValueTask.CompletedTask;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ServiceContainer"/> class with a new service collection.
@@ -123,8 +129,13 @@ public class ServiceContainer : IServiceContainer
         new SingleRegistrationBuilder(this, type, new Registrar(Register));
 
     /// <summary>
-    /// Clone existing container
+    /// Clone existing container.
     /// </summary>
+    /// <remarks>
+    /// Only descriptors are copied. <see cref="OnBuild"/> and <see cref="OnDisposed"/> subscribers are
+    /// NOT propagated to the clone — callers that need post-build/dispose notification on the clone
+    /// must re-attach handlers to it.
+    /// </remarks>
     /// <returns>container clone</returns>
     public IServiceContainer Clone()
     {
@@ -141,7 +152,7 @@ public class ServiceContainer : IServiceContainer
     /// </summary>
     /// <param name="descriptor">descriptor to find</param>
     /// <returns>whether given descriptor is registered in collection</returns>
-    /// <exception cref="NotSupportedException"></exception>
+    /// <exception cref="NotSupportedException">Thrown when <paramref name="descriptor"/> is not one of the six recognised <see cref="IServiceDescriptor"/> subtypes.</exception>
     public bool Contains(IServiceDescriptor descriptor)
     {
         var lifetime = (Microsoft.Extensions.DependencyInjection.ServiceLifetime)descriptor.Lifetime;
@@ -194,15 +205,30 @@ public class ServiceContainer : IServiceContainer
     }
 
     /// <summary>
-    /// Build service provider
+    /// Build service provider. The underlying provider is wrapped in an
+    /// <see cref="IServiceProviderContainer"/> that captures the current <see cref="OnDisposed"/>
+    /// invocation list and fires it before tearing down the provider on dispose.
     /// </summary>
-    /// <returns>The built service provider</returns>
-    public ServiceProvider BuildServiceProvider()
+    /// <returns>The built service provider container.</returns>
+    public IServiceProviderContainer BuildServiceProvider()
     {
         var sp = Collection.BuildServiceProvider();
-        OnBuild.Invoke(sp);
+        var onDisposed = OnDisposed;
+        var container = new ServiceProviderContainer(sp, () => InvokeOnDisposedAsync(onDisposed));
+        OnBuild.Invoke(container);
 
-        return sp;
+        return container;
+    }
+
+    /// <summary>
+    /// Sequentially awaits every subscriber on the captured <see cref="OnDisposed"/> invocation list.
+    /// </summary>
+    /// <param name="onDisposed">The invocation list captured at build time.</param>
+    /// <returns>A task that completes once all subscribers have run.</returns>
+    private static async ValueTask InvokeOnDisposedAsync(Func<ValueTask> onDisposed)
+    {
+        foreach (var handler in onDisposed.GetInvocationList())
+            await ((Func<ValueTask>)handler)().ConfigureAwait(false);
     }
 
     /// <summary>
@@ -220,6 +246,14 @@ public class ServiceContainer : IServiceContainer
     /// <summary>
     /// Registers a service descriptor in the container.
     /// </summary>
+    /// <remarks>
+    /// The <see cref="Contains"/>-based dedup gate is reliable only for non-factory descriptors
+    /// (type and instance) and for factory descriptors carrying a directly-supplied delegate with
+    /// a stable <c>Method</c> + <c>Target</c>. Builder-path factory descriptors (compiled via
+    /// expression trees in <c>Helper.Factory</c>) have a unique compiled identity per call and
+    /// will accumulate as duplicates on repeated <c>Add(...).AsX(...).In(...)</c> chains — see
+    /// the remarks on <see cref="IServiceContainer.Contains"/>.
+    /// </remarks>
     /// <param name="item">The service descriptor to register.</param>
     private void Register(IServiceDescriptor item)
     {

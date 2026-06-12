@@ -1,4 +1,4 @@
-﻿using System.Collections.Immutable;
+using System.Collections.Immutable;
 using System.Composition;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
@@ -13,21 +13,21 @@ namespace Annium.Analyzers;
 /// Provides a code fix for exception classes that don't follow the naming convention by appending "Exception" to their names.
 /// </summary>
 [ExportCodeFixProvider(LanguageNames.CSharp), Shared]
-public class ExceptionNameCodeFix : CodeFixProvider
+public sealed class ExceptionNameCodeFix : CodeFixProvider
 {
     /// <summary>
     /// Gets the diagnostic IDs that this code fix provider can fix.
     /// </summary>
-    public override ImmutableArray<string> FixableDiagnosticIds { get; } = [Descriptors.Pg0001ExceptionNameFormat.Id];
+    public override ImmutableArray<string> FixableDiagnosticIds { get; } = [Descriptors.An0001ExceptionNameFormat.Id];
 
     /// <summary>
-    /// Gets the fix all provider for this code fix provider.
+    /// Returns <see langword="null"/> to opt out of fix-all support. The underlying fix is a solution-level
+    /// rename via <c>Renamer.RenameSymbolAsync</c> (file-rename + cross-document identifier rewrite);
+    /// <see cref="WellKnownFixAllProviders.BatchFixer"/> would batch document-level edits but cannot replay
+    /// rename operations, so enabling it produces incorrect (file-name-mismatched) results in the IDE.
     /// </summary>
-    /// <returns>Returns null as this code fix provider doesn't support fix all operations.</returns>
-    public override FixAllProvider GetFixAllProvider()
-    {
-        return null!;
-    }
+    /// <returns><see langword="null"/> — fix-all is intentionally unsupported.</returns>
+    public override FixAllProvider? GetFixAllProvider() => null;
 
     /// <summary>
     /// Registers code fixes for the given context.
@@ -57,15 +57,15 @@ public class ExceptionNameCodeFix : CodeFixProvider
 
         context.RegisterCodeFix(
             CodeAction.Create(
-                equivalenceKey: "rename",
+                equivalenceKey: nameof(ExceptionNameCodeFix),
                 title: $"Rename to {suggestedName}",
-                createChangedSolution: async cancellationToken =>
+                createChangedSolution: async ct =>
                     await Renamer.RenameSymbolAsync(
                         solution,
                         classModel,
                         new SymbolRenameOptions(RenameInStrings: true, RenameInComments: true, RenameFile: true),
                         suggestedName,
-                        cancellationToken
+                        ct
                     )
             ),
             context.Diagnostics

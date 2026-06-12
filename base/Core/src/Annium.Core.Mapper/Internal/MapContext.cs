@@ -14,7 +14,7 @@ internal class MapContext : IMapContext
     /// Initializes a new instance of the MapContext class
     /// </summary>
     /// <param name="mapper">The mapper instance to use for nested mappings</param>
-    public MapContext(IMapper mapper)
+    internal MapContext(IMapper mapper)
     {
         _mapper = mapper;
     }

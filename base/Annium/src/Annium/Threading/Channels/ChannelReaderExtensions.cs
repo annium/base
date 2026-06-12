@@ -23,7 +23,7 @@ public static class ChannelReaderExtensions
     public static T Read<T>(this ChannelReader<T> reader)
     {
         if (!reader.TryRead(out var item))
-            throw new InvalidOperationException($"Failed to write to channel {item.GetFullId()}");
+            throw new InvalidOperationException("Failed to read from channel");
 
         return item;
     }
@@ -35,21 +35,19 @@ public static class ChannelReaderExtensions
     /// <param name="reader">The source channel reader.</param>
     /// <param name="writer">The target channel writer.</param>
     /// <param name="logger">The logger to use for logging.</param>
-    /// <returns>A disposable object that can be used to stop the pipe operation.</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static IDisposable Pipe<T>(this ChannelReader<T> reader, ChannelWriter<T> writer, ILogger logger)
+    /// <returns>An asynchronous disposable that, when disposed, cancels the background pipe loop and awaits its completion.</returns>
+    public static IAsyncDisposable Pipe<T>(this ChannelReader<T> reader, ChannelWriter<T> writer, ILogger logger)
     {
         var bridge = new LogBridge(typeof(ChannelReader<T>).FriendlyName(), logger);
         var cts = new CancellationTokenSource();
-        var gate = new ManualResetEventSlim();
-        _ = Task.Run(
+        var loop = Task.Run(
             async () =>
             {
                 try
                 {
-                    while (await reader.WaitToReadAsync(cts.Token))
+                    while (await reader.WaitToReadAsync(cts.Token).ConfigureAwait(false))
                     {
-                        var data = await reader.ReadAsync(cts.Token);
+                        var data = await reader.ReadAsync(cts.Token).ConfigureAwait(false);
                         writer.Write(data);
                     }
                 }
@@ -59,23 +57,24 @@ public static class ChannelReaderExtensions
                 {
                     bridge.Error(e);
                 }
-                finally
-                {
-                    gate.Set();
-                }
             },
             CancellationToken.None
         );
 
-        return Disposable.Create(() =>
+        return Disposable.Create(async () =>
         {
             bridge.Trace("cancel");
-            cts.Cancel();
-            bridge.Trace("wait");
-            gate.Wait(CancellationToken.None);
+            await cts.CancelAsync().ConfigureAwait(false);
+            bridge.Trace("await loop");
+            // VSTHRD003: awaiting loop Task during dispose teardown — intentional; CTS is cancelled before this point.
+#pragma warning disable VSTHRD003
+            await loop.ConfigureAwait(false);
+#pragma warning restore VSTHRD003
             bridge.Trace("dispose");
+            // VSTHRD103: CancellationTokenSource.Dispose() has no async overload; synchronous call after await is correct.
+#pragma warning disable VSTHRD103
             cts.Dispose();
-            gate.Dispose();
+#pragma warning restore VSTHRD103
             bridge.Trace("done");
         });
     }
@@ -86,11 +85,20 @@ public static class ChannelReaderExtensions
     /// <typeparam name="T">The type of items in the channel.</typeparam>
     /// <param name="reader">The channel reader.</param>
     /// <param name="delay">The delay in milliseconds between checks.</param>
+    /// <param name="ct">A cancellation token that aborts the wait.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static async Task WhenEmptyAsync<T>(this ChannelReader<T> reader, int delay = 25)
+    public static async ValueTask WhenEmptyAsync<T>(
+        this ChannelReader<T> reader,
+        int delay = PollingDefaults.PollDelayMs,
+        CancellationToken ct = default
+    )
     {
-        while (reader.TryPeek(out _))
-            await Task.Delay(delay);
+        try
+        {
+            while (reader.TryPeek(out _))
+                await Task.Delay(delay, ct).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException oce) when (oce.CancellationToken == ct) { }
     }
 }

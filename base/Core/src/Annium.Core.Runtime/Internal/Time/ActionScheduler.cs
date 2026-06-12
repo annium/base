@@ -45,23 +45,32 @@ internal class ActionScheduler : IActionScheduler, ILogSubject
     /// <returns>A cancellation action</returns>
     public Action Delay(Action handle, Duration timeout)
     {
-        var executeFlag = 1;
+        var cts = new CancellationTokenSource();
         _ = Task.Run(async () =>
         {
             try
             {
-                await Task.Delay(timeout.ToTimeSpan());
-                if (Volatile.Read(ref executeFlag) == 1)
-                    handle();
+                await Task.Delay(timeout.ToTimeSpan(), cts.Token);
+                handle();
             }
             catch (OperationCanceledException) { }
             catch (Exception ex)
             {
-                this.Error(ex, "scheduled action failed");
+                this.Error("scheduled action failed: {exception}", ex);
             }
         });
 
-        return () => Interlocked.Exchange(ref executeFlag, 0);
+        // CTS is intentionally not disposed: the returned cancel action must stay safe to invoke
+        // after the delay has already elapsed (when the background task is gone). Cancelling promptly
+        // unblocks the pending Task.Delay; the ObjectDisposedException guard is defensive only.
+        return () =>
+        {
+            try
+            {
+                cts.Cancel();
+            }
+            catch (ObjectDisposedException) { }
+        };
     }
 
     /// <summary>

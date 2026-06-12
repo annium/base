@@ -9,7 +9,9 @@ namespace Annium.Reflection;
 public static class IsConstructableExtension
 {
     /// <summary>
-    /// Determines whether the specified type is constructable (i.e., is a non-abstract class or value type).
+    /// Determines whether the specified type is constructable (i.e., is a non-abstract class or value type
+    /// AND is not an open generic type definition). Open generic types like <c>List&lt;&gt;</c> cannot be
+    /// instantiated via <see cref="Activator.CreateInstance(Type)"/> and so are reported as not constructable.
     /// </summary>
     /// <param name="type">The type to check.</param>
     /// <returns><c>true</c> if the type is constructable; otherwise, <c>false</c>.</returns>
@@ -19,6 +21,6 @@ public static class IsConstructableExtension
         if (type is null)
             throw new ArgumentNullException(nameof(type));
 
-        return (type.IsClass || type.IsValueType) && !type.IsAbstract;
+        return (type.IsClass || type.IsValueType) && !type.IsAbstract && !type.IsGenericTypeDefinition;
     }
 }

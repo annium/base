@@ -32,11 +32,15 @@ internal class EnumerableMapResolver : IMapResolver
     public Mapping ResolveMap(Type src, Type tgt, IMapConfiguration cfg, IMapResolverContext ctx) =>
         source =>
         {
-            var srcEl = src.GetEnumerableElementType()!;
-            var tgtEl = tgt.GetEnumerableElementType()!;
+            // guaranteed non-null: CanResolveMap already verified both types expose an enumerable element type.
+            // NotNull() validates the invariant at runtime with a diagnostic rather than a bare ! suppression.
+            var srcEl = src.GetEnumerableElementType().NotNull();
+            var tgtEl = tgt.GetEnumerableElementType().NotNull();
 
-            // if tgt is interface - resolve container type
-            if (tgt.IsInterface)
+            // if tgt is a generic interface - resolve container type
+            // (non-generic interfaces fall through; constructor lookup at line 72 surfaces a MappingException
+            // instead of the InvalidOperationException GetGenericTypeDefinition would throw on a non-generic type)
+            if (tgt.IsInterface && tgt.IsGenericType)
             {
                 var def = tgt.GetGenericTypeDefinition();
                 if (
@@ -51,13 +55,21 @@ internal class EnumerableMapResolver : IMapResolver
                     tgt = typeof(Dictionary<,>).MakeGenericType(tgt.GenericTypeArguments);
             }
 
+            // Enumerable.Select has two overloads — element-only (Func<TSource,TResult>) and
+            // element+index (Func<TSource,int,TResult>). GetMethods() order is not guaranteed, so match
+            // the element-only one explicitly; selectLambda is a Func<,> and would break against the indexed overload.
             var select = typeof(Enumerable)
                 .GetMethods()
-                .First(m => m.Name == nameof(Enumerable.Select))
+                .First(m =>
+                    m.Name == nameof(Enumerable.Select)
+                    && m.GetParameters() is { Length: 2 } ps
+                    && ps[1].ParameterType.IsGenericType
+                    && ps[1].ParameterType.GetGenericTypeDefinition() == typeof(Func<,>)
+                )
                 .MakeGenericMethod(srcEl, tgtEl);
             var selectLambda = BuildSelectLambda(srcEl, tgtEl, ctx);
             var selection = Expression.Call(select, source, selectLambda);
-            var toArray = typeof(Enumerable).GetMethod(nameof(Enumerable.ToArray))!.MakeGenericMethod(tgtEl);
+            var toArray = typeof(Enumerable).GetMethod(nameof(Enumerable.ToArray)).NotNull().MakeGenericMethod(tgtEl);
             var result = Expression.Condition(
                 Expression.Equal(source, Expression.Default(src)),
                 Expression.NewArrayInit(tgtEl),
@@ -72,7 +84,8 @@ internal class EnumerableMapResolver : IMapResolver
             if (constructor is null)
                 throw new MappingException(src, tgt, $"No constructor with single {parameter} parameter found.");
 
-            return Expression.New(constructor, selection);
+            // pass the null-guarded array (assignable to IEnumerable<tgtEl>) so a null source yields an empty collection
+            return Expression.New(constructor, result);
         };
 
     /// <summary>
@@ -101,17 +114,21 @@ internal class EnumerableMapResolver : IMapResolver
         // get map for element type
         var mapVar = Expression.Variable(typeof(Delegate));
         vars.Add(mapVar);
-        var getMap = typeof(IMapResolverContext).GetMethod(nameof(IMapResolverContext.GetMap))!;
-        var getTypeEx = Expression.Call(param, typeof(object).GetMethod(nameof(GetType))!);
+        var getTypeEx = Expression.Call(param, HelperExtensions.GetTypeMethod);
         body.Add(
             Expression.Assign(
                 mapVar,
-                Expression.Call(Expression.Constant(ctx), getMap, getTypeEx, Expression.Constant(tgtEl))
+                Expression.Call(
+                    Expression.Constant(ctx),
+                    HelperExtensions.GetMapMethod,
+                    getTypeEx,
+                    Expression.Constant(tgtEl)
+                )
             )
         );
 
         // invoke map and return result
-        var invokeMap = typeof(Delegate).GetMethod(nameof(Delegate.DynamicInvoke))!;
+        var invokeMap = HelperExtensions.DynamicInvokeMethod;
         body.Add(
             Expression.Label(
                 returnTarget,

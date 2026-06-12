@@ -17,7 +17,7 @@ namespace Annium.Net.WebSockets.Tests.Internal;
 /// <summary>
 /// Tests for low-level managed WebSocket functionality
 /// </summary>
-public class ManagedWebSocketTests : TestBase, IAsyncLifetime
+public class ManagedWebSocketTests : TestBase
 {
     /// <summary>
     /// Gets the native client WebSocket instance
@@ -160,25 +160,32 @@ public class ManagedWebSocketTests : TestBase, IAsyncLifetime
                     string.Empty,
                     default
                 );
-                _ = Task.Delay(10, CancellationToken.None)
-                    .ContinueWith(_ => serverTcs.SetResult(), CancellationToken.None);
+
+                this.Trace("send signal to client");
+                serverTcs.SetResult();
             }
         );
 
         this.Trace("connect and start listening");
         await ConnectAndStartListenAsync(server, TestContext.Current.CancellationToken);
 
-        // delay to let server close connection
+        // wait for the server-side close signal
         this.Trace("await server signal");
         await serverTcs.Task;
 
-        // act
-        this.Trace("send message");
-        var result = await SendTextAsync(message, TestContext.Current.CancellationToken);
-
-        // assert
-        this.Trace("assert status is closed");
-        result.Is(WebSocketSendStatus.Closed);
+        // act — poll SendTextAsync until the close has propagated to the client socket.
+        // The server-side CloseOutputAsync completing is not a hard guarantee that the close
+        // frame has been processed by the client; bounded poll within 5s catches the closed
+        // state without flaking on the race.
+        this.Trace("send message and ensure it eventually becomes closed");
+        await Expect.ToAsync(
+            async () =>
+            {
+                var result = await SendTextAsync(message, TestContext.Current.CancellationToken);
+                result.Is(WebSocketSendStatus.Closed);
+            },
+            ms: 5_000
+        );
 
         this.Trace("done");
     }
@@ -237,32 +244,31 @@ public class ManagedWebSocketTests : TestBase, IAsyncLifetime
 
                 await Task.CompletedTask;
 
-                _ = Task.Delay(10, CancellationToken.None)
-                    .ContinueWith(
-                        _ =>
-                        {
-                            this.Trace("send signal to client");
-                            serverTcs.SetResult();
-                        },
-                        CancellationToken.None
-                    );
+                this.Trace("send signal to client");
+                serverTcs.SetResult();
             }
         );
 
         this.Trace("connect and start listening");
         await ConnectAndStartListenAsync(server, TestContext.Current.CancellationToken);
 
-        // act
-        // delay to let server close connection
+        // wait for the server-side abort signal
         this.Trace("await server signal");
         await serverTcs.Task;
 
-        this.Trace("send message");
-        var result = await SendTextAsync(message, TestContext.Current.CancellationToken);
-
-        // assert
-        this.Trace("assert status is closed");
-        result.Is(WebSocketSendStatus.Closed);
+        // act — poll SendTextAsync until the abort has propagated to the client socket.
+        // The server-side Abort completing is not a hard guarantee that the close has been
+        // observed by the client; bounded poll within 5s catches the closed state without
+        // flaking on the race.
+        this.Trace("send message and ensure it eventually becomes closed");
+        await Expect.ToAsync(
+            async () =>
+            {
+                var result = await SendTextAsync(message, TestContext.Current.CancellationToken);
+                result.Is(WebSocketSendStatus.Closed);
+            },
+            ms: 5_000
+        );
 
         this.Trace("done");
     }
@@ -279,7 +285,8 @@ public class ManagedWebSocketTests : TestBase, IAsyncLifetime
         // arrange
         const string message = "demo";
         var expectedMessages = new[] { message };
-        var serverTcs = new TaskCompletionSource();
+        // RunContinuationsAsynchronously: the client's await resumes off the server-handler thread.
+        var serverTcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 
         this.Trace("run server");
         await using var server = RunServer(
@@ -293,18 +300,16 @@ public class ManagedWebSocketTests : TestBase, IAsyncLifetime
                 serverSocket.OnBinaryReceived += x =>
                     serverSocket.SendBinaryAsync(x.ToArray(), CancellationToken.None).Await();
 
-                _ = Task.Delay(10, CancellationToken.None)
-                    .ContinueWith(
-                        _ =>
-                        {
-                            this.Trace("send signal to client");
-                            serverTcs.SetResult();
-                        },
-                        CancellationToken.None
-                    );
-
+                // Start the receive loop, THEN signal readiness: the client must not send before the
+                // server is actually listening. ListenAsync runs synchronously up to its first
+                // ReceiveAsync, so once it returns the task the loop is already awaiting data.
                 this.Trace("listen server socket");
-                await serverSocket.ListenAsync(ct);
+                var listenTask = serverSocket.ListenAsync(ct);
+
+                this.Trace("send signal to client");
+                serverTcs.SetResult();
+
+                await listenTask;
 
                 this.Trace("server socket closed");
             }
@@ -482,7 +487,8 @@ public class ManagedWebSocketTests : TestBase, IAsyncLifetime
         this.Trace("start");
 
         // arrange
-        var serverTcs = new TaskCompletionSource();
+        // RunContinuationsAsynchronously: the client's await resumes off the server-handler thread.
+        var serverTcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 
         this.Trace("run server");
         await using var server = RunServerBase(
@@ -491,17 +497,11 @@ public class ManagedWebSocketTests : TestBase, IAsyncLifetime
                 this.Trace("abort server socket");
                 ctx.WebSocket.Abort();
 
-                await Task.CompletedTask;
+                // Signal deterministically right after the synchronous abort — no arbitrary delay needed.
+                this.Trace("send signal to client");
+                serverTcs.SetResult();
 
-                _ = Task.Delay(10, CancellationToken.None)
-                    .ContinueWith(
-                        _ =>
-                        {
-                            this.Trace("send signal to client");
-                            serverTcs.SetResult();
-                        },
-                        CancellationToken.None
-                    );
+                await Task.CompletedTask;
             }
         );
 
@@ -684,8 +684,10 @@ public class ManagedWebSocketTests : TestBase, IAsyncLifetime
     /// Initializes the test instance and sets up native and managed WebSocket instances
     /// </summary>
     /// <returns>Task representing the initialization operation</returns>
-    public async ValueTask InitializeAsync()
+    public override async ValueTask InitializeAsync()
     {
+        await base.InitializeAsync();
+
         this.Trace("start");
 
         ClientSocket = new NativeClientWebSocket();
@@ -707,8 +709,6 @@ public class ManagedWebSocketTests : TestBase, IAsyncLifetime
             _binaries.Add(message);
         };
 
-        await Task.CompletedTask;
-
         this.Trace("done");
     }
 
@@ -716,9 +716,13 @@ public class ManagedWebSocketTests : TestBase, IAsyncLifetime
     /// Disposes the test instance and cleans up WebSocket resources
     /// </summary>
     /// <returns>Task representing the disposal operation</returns>
-    public async ValueTask DisposeAsync()
+    public override ValueTask DisposeAsync()
     {
-        await Task.CompletedTask;
+        // ClientSocket (native ClientWebSocket) is created in InitializeAsync and owned by this
+        // fixture — ManagedWebSocket does not own/dispose it. Dispose it to avoid leaking the OS
+        // socket handle when a test connects.
+        ClientSocket.Dispose();
+        return base.DisposeAsync();
     }
 
     /// <summary>

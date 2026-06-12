@@ -35,23 +35,20 @@ internal class ConcurrentExecutor<TSource> : ExecutorBase
     /// </summary>
     /// <param name="task">The task to run</param>
     /// <returns>A completed task</returns>
-    protected override Task RunTaskAsync(Delegate task)
-    {
-        _ = Task.Run(async () =>
-        {
-            try
-            {
-                await StartTaskAsync(task);
-                CompleteTask(task);
-            }
-            catch (OperationCanceledException) { }
-            catch (Exception ex)
-            {
-                this.Error(ex);
-            }
-        });
+    protected override Task RunTaskAsync(Delegate task) => RunTaskInBackgroundAsync(StartTaskAsync, task);
 
-        return Task.CompletedTask;
+    /// <summary>
+    /// Disposes the concurrency semaphore once all scheduled tasks have drained and completed.
+    /// </summary>
+    /// <returns>A completed task</returns>
+    protected override ValueTask DisposeResourcesAsync()
+    {
+        // SemaphoreSlim has no async disposal; sync Dispose is the only option here
+#pragma warning disable VSTHRD103
+        _gate.Dispose();
+#pragma warning restore VSTHRD103
+
+        return ValueTask.CompletedTask;
     }
 
     /// <summary>

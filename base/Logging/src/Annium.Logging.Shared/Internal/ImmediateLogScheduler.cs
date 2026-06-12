@@ -1,5 +1,6 @@
 using System;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Annium.Logging.Shared.Internal;
 
@@ -11,7 +12,7 @@ namespace Annium.Logging.Shared.Internal;
 /// <c>WithImmediateScheduler()</c> override) blocks the caller until the buffering handler completes.
 /// </summary>
 /// <typeparam name="TContext">The type of log context</typeparam>
-internal class ImmediateLogScheduler<TContext> : ILogScheduler<TContext>
+internal class ImmediateLogScheduler<TContext> : ILogScheduler<TContext>, IAsyncDisposable
     where TContext : class
 {
     /// <summary>
@@ -23,6 +24,13 @@ internal class ImmediateLogScheduler<TContext> : ILogScheduler<TContext>
     /// The log handler for processing messages
     /// </summary>
     private readonly ILogHandler<TContext> _handler;
+
+    /// <summary>
+    /// Dispose guard: <c>0</c> until the first <see cref="DisposeAsync"/>, then <c>1</c>. Makes
+    /// disposal idempotent (a scheduler can be reached by more than one OnDisposed subscriber when
+    /// AddLogging is called multiple times on the same container).
+    /// </summary>
+    private int _disposed;
 
     public ImmediateLogScheduler(Func<LogMessage<TContext>, bool> filter, ILogHandler<TContext> handler)
     {
@@ -42,5 +50,30 @@ internal class ImmediateLogScheduler<TContext> : ILogScheduler<TContext>
 #pragma warning disable VSTHRD002
         _handler.HandleAsync(new[] { message }, CancellationToken.None).GetAwaiter().GetResult();
 #pragma warning restore VSTHRD002
+    }
+
+    /// <summary>
+    /// Disposes the owned handler if it holds resources. Invoked by the container's <c>OnDisposed</c>
+    /// callback when logging is torn down.
+    /// </summary>
+    /// <returns>A task that completes once the handler is disposed.</returns>
+    public async ValueTask DisposeAsync()
+    {
+        if (Interlocked.Exchange(ref _disposed, 1) != 0)
+            return;
+
+        switch (_handler)
+        {
+            case IAsyncDisposable ad:
+                await ad.DisposeAsync();
+                break;
+            case IDisposable d:
+                // VSTHRD103: fallback for a handler that is only IDisposable (e.g. FileLogHandler's
+                // gate); async disposal is handled by the IAsyncDisposable arm above, so Dispose() is correct.
+#pragma warning disable VSTHRD103
+                d.Dispose();
+#pragma warning restore VSTHRD103
+                break;
+        }
     }
 }

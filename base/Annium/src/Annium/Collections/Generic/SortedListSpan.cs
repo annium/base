@@ -1,15 +1,24 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Annium.Internal.Collections.Generic;
 
 namespace Annium.Collections.Generic;
 
 /// <summary>
 /// Represents a span of key-value pairs from a sorted list, with the ability to move the span's position.
 /// </summary>
+/// <remarks>
+/// Declared as <c>record</c> so two spans with the same public state (<see cref="Count"/>, <see cref="Start"/>,
+/// <see cref="End"/>) compare equal — relied on by <c>SortedListExtensions.GetChunks</c> tests and other
+/// range-comparison call sites. <b>Caveat:</b> the compiler-synthesized <c>with</c>-expression can reach
+/// <see cref="Start"/> directly (its setter is <c>private set</c>, but record copy ctors bypass that), so
+/// callers can construct an out-of-range span via <c>span with { Start = -1 }</c>. The <see cref="Move(int)"/>
+/// API is the only sanctioned way to reposition the span and includes bounds checking.
+/// </remarks>
 /// <typeparam name="TKey">The type of the keys in the sorted list.</typeparam>
 /// <typeparam name="TValue">The type of the values in the sorted list.</typeparam>
-public record SortedListSpan<TKey, TValue> : ISortedListSpan<TKey, TValue>
+public sealed record SortedListSpan<TKey, TValue> : ISortedListSpan<TKey, TValue>
     where TKey : notnull
 {
     /// <summary>
@@ -41,10 +50,7 @@ public record SortedListSpan<TKey, TValue> : ISortedListSpan<TKey, TValue>
     /// <exception cref="ArgumentOutOfRangeException">Thrown when the span parameters are invalid.</exception>
     public SortedListSpan(SortedList<TKey, TValue> collection, int start, int count)
     {
-        if (start < 0 || start + count > collection.Count)
-            throw new ArgumentOutOfRangeException(
-                $"Invalid span at {start} with length {count} for collection of size {collection.Count}"
-            );
+        IndexOutOfRangeMessage.ValidateSpanRange(start, count, collection.Count);
 
         _collection = collection;
         Start = start;
@@ -62,11 +68,14 @@ public record SortedListSpan<TKey, TValue> : ISortedListSpan<TKey, TValue>
         get
         {
             if (index < 0 || index >= Count)
-                throw new ArgumentOutOfRangeException($"Index {index} if out of range [0;{Count}]");
+                throw new ArgumentOutOfRangeException(nameof(index), IndexOutOfRangeMessage.For(index, Count));
 
-            var key = _collection.Keys[Start + index];
-
-            return KeyValuePair.Create(key, _collection[key]);
+            // Use parallel positional access on Keys / Values rather than Keys + key-based lookup:
+            // (a) O(1) instead of O(log n); (b) the key and value come from the same offset in the
+            // underlying SortedList, so the pair stays consistent even if the dictionary is mutated
+            // between the two reads (the alternative `_collection[key]` does a binary search on Keys
+            // and would return a value paired with a different position's key).
+            return KeyValuePair.Create(_collection.Keys[Start + index], _collection.Values[Start + index]);
         }
     }
 
@@ -93,11 +102,7 @@ public record SortedListSpan<TKey, TValue> : ISortedListSpan<TKey, TValue>
     public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
     {
         for (var i = 0; i < Count; i++)
-        {
-            var key = _collection.Keys[Start + i];
-
-            yield return KeyValuePair.Create(key, _collection[key]);
-        }
+            yield return KeyValuePair.Create(_collection.Keys[Start + i], _collection.Values[Start + i]);
     }
 
     /// <summary>
@@ -105,20 +110,4 @@ public record SortedListSpan<TKey, TValue> : ISortedListSpan<TKey, TValue>
     /// </summary>
     /// <returns>An enumerator that can be used to iterate through the span.</returns>
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-}
-
-/// <summary>
-/// Defines a span of key-value pairs from a sorted list with the ability to move the span's position.
-/// </summary>
-/// <typeparam name="TKey">The type of the keys in the sorted list.</typeparam>
-/// <typeparam name="TValue">The type of the values in the sorted list.</typeparam>
-public interface ISortedListSpan<TKey, TValue> : IReadOnlyIndexedSpan<KeyValuePair<TKey, TValue>>
-    where TKey : notnull
-{
-    /// <summary>
-    /// Moves the span by the specified offset.
-    /// </summary>
-    /// <param name="offset">The number of positions to move the span.</param>
-    /// <returns>True if the move was successful; otherwise, false.</returns>
-    bool Move(int offset);
 }

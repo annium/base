@@ -9,7 +9,7 @@ namespace Annium.Internal.Threading;
 /// Provides a synchronous timer that executes a handler with a state object at specified intervals.
 /// </summary>
 /// <typeparam name="T">The type of the state object.</typeparam>
-internal class SyncTimer<T> : SyncTimerBase
+internal sealed class SyncTimer<T> : SyncTimerBase
     where T : class
 {
     /// <summary>
@@ -35,7 +35,7 @@ internal class SyncTimer<T> : SyncTimerBase
     {
         _state = state;
         _handler = handler;
-        Timer = new Timer(Callback, null, dueTime, period);
+        Start(dueTime, period);
     }
 
     /// <summary>
@@ -50,7 +50,7 @@ internal class SyncTimer<T> : SyncTimerBase
 /// <summary>
 /// Provides a synchronous timer that executes a handler at specified intervals.
 /// </summary>
-internal class SyncTimer : SyncTimerBase
+internal sealed class SyncTimer : SyncTimerBase
 {
     /// <summary>
     /// The synchronous handler to execute.
@@ -68,7 +68,7 @@ internal class SyncTimer : SyncTimerBase
         : base(logger)
     {
         _handler = handler;
-        Timer = new Timer(Callback, null, dueTime, period);
+        Start(dueTime, period);
     }
 
     /// <summary>
@@ -83,61 +83,42 @@ internal class SyncTimer : SyncTimerBase
 /// <summary>
 /// Provides a base class for synchronous timers.
 /// </summary>
-internal abstract class SyncTimerBase : ISequentialTimer, ILogSubject
+/// <remarks>
+/// On <see cref="TimerBase.Dispose"/>, the underlying timer is drained via the
+/// <see cref="System.Threading.Timer.Dispose(WaitHandle)"/> overload before returning, so an in-flight
+/// <see cref="Handle"/> completes against still-live owner state. No <c>OnDrainCompleted</c> hook is
+/// needed: the wait handle is signaled only after the last synchronous callback body returns. If the
+/// drain exceeds <see cref="TimerConstants.DisposeWaitBudget"/>, the wait handle is intentionally leaked
+/// and a warning is logged so the still-running callback can complete safely; callers MUST NOT free shared
+/// state on timeout without independent synchronization.
+/// </remarks>
+internal abstract class SyncTimerBase : TimerBase, ISequentialTimer
 {
     /// <summary>
-    /// Gets the logger instance for tracing operations.
-    /// </summary>
-    public ILogger Logger { get; }
-
-    /// <summary>
-    /// Gets the underlying timer instance.
-    /// </summary>
-    protected Timer Timer { get; init; } = default!;
-
-    /// <summary>
     /// A flag indicating whether the timer is currently handling a callback (1) or not (0).
+    /// Intentionally NOT consulted in <see cref="TimerBase.Dispose"/> —
+    /// <see cref="System.Threading.Timer.Dispose(WaitHandle)"/> already drains synchronous callbacks fully
+    /// (the wait handle is signaled only after the last callback body returns). This CAS is purely to
+    /// prevent overlapping ticks during normal operation when the period is shorter than the callback
+    /// duration and the runtime schedules a second callback on a different ThreadPool thread.
     /// </summary>
-    private volatile int _isHandling;
+    private int _isHandling;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="SyncTimerBase"/> class.
+    /// Managed thread id of the thread currently executing <see cref="Handle"/>, or 0 if none. Used to
+    /// detect re-entrant disposal from inside <see cref="Handle"/> and skip the drain to avoid
+    /// <see cref="System.Threading.Timer.Dispose(WaitHandle)"/>'s documented self-deadlock when invoked
+    /// from the timer's callback thread.
+    /// </summary>
+    private int _callbackThreadId;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SyncTimerBase"/> class with an inert timer; derived ctors
+    /// MUST call <see cref="TimerBase.Start"/> as their last step to begin firing.
     /// </summary>
     /// <param name="logger">The logger instance for tracing operations.</param>
     protected SyncTimerBase(ILogger logger)
-    {
-        Logger = logger;
-    }
-
-    /// <summary>
-    /// Releases all resources used by the timer.
-    /// </summary>
-    public void Dispose()
-    {
-        Timer.Dispose();
-    }
-
-    /// <summary>
-    /// Changes the start time and the interval between method invocations for a timer.
-    /// </summary>
-    /// <param name="dueTime">The amount of time to delay before the first execution.</param>
-    /// <param name="period">The time interval between executions.</param>
-    /// <returns>true if the timer was successfully updated; otherwise, false.</returns>
-    public bool Change(int dueTime, int period)
-    {
-        return Timer.Change(dueTime, period);
-    }
-
-    /// <summary>
-    /// Changes the start time and the interval between method invocations for a timer.
-    /// </summary>
-    /// <param name="dueTime">The amount of time to delay before the first execution.</param>
-    /// <param name="period">The time interval between executions.</param>
-    /// <returns>true if the timer was successfully updated; otherwise, false.</returns>
-    public bool Change(TimeSpan dueTime, TimeSpan period)
-    {
-        return Timer.Change(dueTime, period);
-    }
+        : base(logger) { }
 
     /// <summary>
     /// Executes the timer's handler.
@@ -145,16 +126,24 @@ internal abstract class SyncTimerBase : ISequentialTimer, ILogSubject
     protected abstract void Handle();
 
     /// <summary>
-    /// The callback method that is called when the timer elapses.
+    /// Returns whether the current Dispose call is re-entrant (i.e. invoked from inside the callback's own thread).
+    /// Re-entrant disposal skips the drain to avoid self-deadlock — the in-flight callback owns the timer.
     /// </summary>
-    /// <param name="_">The state object passed to the timer (unused).</param>
-    protected void Callback(object? _)
+    /// <returns><see langword="true"/> when Dispose was called from within the callback thread; otherwise <see langword="false"/>.</returns>
+    protected override bool IsReentrantDispose() =>
+        Volatile.Read(ref _callbackThreadId) == Environment.CurrentManagedThreadId;
+
+    /// <summary>
+    /// The callback invoked by the underlying timer. Runs <see cref="Handle"/> under the
+    /// <see cref="_isHandling"/> CAS guard and traps exceptions so the timer keeps firing on subsequent ticks.
+    /// </summary>
+    /// <param name="state">The timer state object (unused).</param>
+    protected override void InvokeCallback(object? state)
     {
         if (Interlocked.CompareExchange(ref _isHandling, 1, 0) == 1)
-        {
             return;
-        }
 
+        Volatile.Write(ref _callbackThreadId, Environment.CurrentManagedThreadId);
         try
         {
             Handle();
@@ -165,7 +154,8 @@ internal abstract class SyncTimerBase : ISequentialTimer, ILogSubject
         }
         finally
         {
-            _isHandling = 0;
+            Volatile.Write(ref _callbackThreadId, 0);
+            Interlocked.Exchange(ref _isHandling, 0);
         }
     }
 }

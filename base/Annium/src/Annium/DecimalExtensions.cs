@@ -37,16 +37,18 @@ public static class DecimalExtensions
     /// </summary>
     /// <param name="value">The value to round.</param>
     /// <returns>The rounded value as a 32-bit integer.</returns>
+    /// <exception cref="OverflowException">Thrown when <paramref name="value"/> is outside the Int32 range.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int FloorInt32(this decimal value) => (int)Math.Floor(value);
+    public static int FloorInt32(this decimal value) => checked((int)Math.Floor(value));
 
     /// <summary>
     /// Rounds a decimal value down to the nearest integer.
     /// </summary>
     /// <param name="value">The value to round.</param>
     /// <returns>The rounded value as a 64-bit integer.</returns>
+    /// <exception cref="OverflowException">Thrown when <paramref name="value"/> is outside the Int64 range.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static long FloorInt64(this decimal value) => (long)Math.Floor(value);
+    public static long FloorInt64(this decimal value) => checked((long)Math.Floor(value));
 
     /// <summary>
     /// Rounds a decimal value down to the nearest decimal.
@@ -61,8 +63,9 @@ public static class DecimalExtensions
     /// </summary>
     /// <param name="value">The value to round.</param>
     /// <returns>The rounded value as a 32-bit integer.</returns>
+    /// <exception cref="OverflowException">Thrown when <paramref name="value"/> is outside the Int32 range.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int RoundInt32(this decimal value) => (int)Math.Round(value);
+    public static int RoundInt32(this decimal value) => checked((int)Math.Round(value));
 
     /// <summary>
     /// Rounds a decimal value to the nearest integer using the specified rounding mode.
@@ -70,16 +73,18 @@ public static class DecimalExtensions
     /// <param name="value">The value to round.</param>
     /// <param name="mode">The rounding mode to use.</param>
     /// <returns>The rounded value as a 32-bit integer.</returns>
+    /// <exception cref="OverflowException">Thrown when <paramref name="value"/> is outside the Int32 range.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int RoundInt32(this decimal value, MidpointRounding mode) => (int)Math.Round(value, mode);
+    public static int RoundInt32(this decimal value, MidpointRounding mode) => checked((int)Math.Round(value, mode));
 
     /// <summary>
     /// Rounds a decimal value to the nearest integer.
     /// </summary>
     /// <param name="value">The value to round.</param>
     /// <returns>The rounded value as a 64-bit integer.</returns>
+    /// <exception cref="OverflowException">Thrown when <paramref name="value"/> is outside the Int64 range.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static long RoundInt64(this decimal value) => (long)Math.Round(value);
+    public static long RoundInt64(this decimal value) => checked((long)Math.Round(value));
 
     /// <summary>
     /// Rounds a decimal value to the nearest integer using the specified rounding mode.
@@ -87,8 +92,9 @@ public static class DecimalExtensions
     /// <param name="value">The value to round.</param>
     /// <param name="mode">The rounding mode to use.</param>
     /// <returns>The rounded value as a 64-bit integer.</returns>
+    /// <exception cref="OverflowException">Thrown when <paramref name="value"/> is outside the Int64 range.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static long RoundInt64(this decimal value, MidpointRounding mode) => (long)Math.Round(value, mode);
+    public static long RoundInt64(this decimal value, MidpointRounding mode) => checked((long)Math.Round(value, mode));
 
     /// <summary>
     /// Rounds a decimal value to the nearest decimal.
@@ -132,52 +138,26 @@ public static class DecimalExtensions
     /// </summary>
     /// <param name="value">The value to round.</param>
     /// <returns>The rounded value as a 32-bit integer.</returns>
+    /// <exception cref="OverflowException">Thrown when <paramref name="value"/> is outside the Int32 range.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int CeilInt32(this decimal value) => (int)Math.Ceiling(value);
+    public static int CeilInt32(this decimal value) => checked((int)Math.Ceiling(value));
 
     /// <summary>
     /// Rounds a decimal value up to the nearest integer.
     /// </summary>
     /// <param name="value">The value to round.</param>
     /// <returns>The rounded value as a 64-bit integer.</returns>
+    /// <exception cref="OverflowException">Thrown when <paramref name="value"/> is outside the Int64 range.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static long CeilInt64(this decimal value) => (long)Math.Ceiling(value);
+    public static long CeilInt64(this decimal value) => checked((long)Math.Ceiling(value));
 
     /// <summary>
-    /// Rounds a double value up to the nearest double.
+    /// Rounds a decimal value up to the nearest double.
     /// </summary>
     /// <param name="value">The value to round.</param>
-    /// <returns>The rounded value as a double.</returns>
+    /// <returns>The rounded value as a decimal.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static double Ceil(this double value) => Math.Ceiling(value);
-
-    /// <summary>
-    /// Ensures a decimal value is within a specified range.
-    /// </summary>
-    /// <param name="value">The value to check.</param>
-    /// <param name="min">The minimum allowed value.</param>
-    /// <param name="max">The maximum allowed value.</param>
-    /// <returns>The value if it is within the range, or the nearest boundary value if it is outside the range.</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static decimal Within(this decimal value, decimal min, decimal max) => value.Above(min).Below(max);
-
-    /// <summary>
-    /// Ensures a decimal value is not less than a specified minimum.
-    /// </summary>
-    /// <param name="value">The value to check.</param>
-    /// <param name="min">The minimum allowed value.</param>
-    /// <returns>The value if it is greater than or equal to the minimum, or the minimum value if it is less.</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static decimal Above(this decimal value, decimal min) => Math.Max(value, min);
-
-    /// <summary>
-    /// Ensures a decimal value is not greater than a specified maximum.
-    /// </summary>
-    /// <param name="value">The value to check.</param>
-    /// <param name="max">The maximum allowed value.</param>
-    /// <returns>The value if it is less than or equal to the maximum, or the maximum value if it is greater.</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static decimal Below(this decimal value, decimal max) => Math.Min(value, max);
+    public static decimal Ceil(this decimal value) => Math.Ceiling(value);
 
     /// <summary>
     /// Formats a decimal value to a "pretty" representation by removing unnecessary decimal places while maintaining a specified precision.
@@ -221,32 +201,50 @@ public static class DecimalExtensions
     /// Rounds a decimal value down to the nearest multiple of a specified step.
     /// </summary>
     /// <param name="value">The value to round.</param>
-    /// <param name="step">The step value to round to.</param>
+    /// <param name="step">The step value to round to. Must be positive.</param>
     /// <returns>The rounded value as a decimal.</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static decimal FloorTo(this decimal value, decimal step) => value - value % step;
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="step"/> is zero or negative.</exception>
+    public static decimal FloorTo(this decimal value, decimal step)
+    {
+        if (step <= 0m)
+            throw new ArgumentOutOfRangeException(nameof(step), step, "Step must be a positive number.");
+
+        var rem = ((value % step) + step) % step;
+        return value - rem;
+    }
 
     /// <summary>
     /// Rounds a decimal value to the nearest multiple of a specified step.
     /// </summary>
     /// <param name="value">The value to round.</param>
-    /// <param name="step">The step value to round to.</param>
+    /// <param name="step">The step value to round to. Must be positive.</param>
     /// <returns>The rounded value as a decimal.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="step"/> is zero or negative.</exception>
     public static decimal RoundTo(this decimal value, decimal step)
     {
-        var diff = value % step;
+        if (step <= 0m)
+            throw new ArgumentOutOfRangeException(nameof(step), step, "Step must be a positive number.");
 
-        return value - diff + (step > diff * 2m ? 0m : step);
+        var rem = ((value % step) + step) % step;
+
+        return rem * 2m < step ? value - rem : value - rem + step;
     }
 
     /// <summary>
     /// Rounds a decimal value up to the nearest multiple of a specified step.
     /// </summary>
     /// <param name="value">The value to round.</param>
-    /// <param name="step">The step value to round to.</param>
+    /// <param name="step">The step value to round to. Must be positive.</param>
     /// <returns>The rounded value as a decimal.</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static decimal CeilTo(this decimal value, decimal step) => value + step - value % step;
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="step"/> is zero or negative.</exception>
+    public static decimal CeilTo(this decimal value, decimal step)
+    {
+        if (step <= 0m)
+            throw new ArgumentOutOfRangeException(nameof(step), step, "Step must be a positive number.");
+
+        var rem = ((value % step) + step) % step;
+        return rem == 0m ? value : value - rem + step;
+    }
 
     /// <summary>
     /// Aligns a decimal value by removing trailing zeros.

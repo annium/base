@@ -4,19 +4,19 @@ using System.Buffers;
 namespace Annium.Net.Sockets.Internal;
 
 /// <summary>
-/// A buffer implementation for messaging socket operations with frame length prefixes
+/// A buffer implementation for messaging socket operations with frame length prefixes.
 /// </summary>
 internal class MessagingBuffer : IDisposable
 {
     /// <summary>
-    /// The size of the message header in bytes (4 bytes for int32 length)
+    /// The size of the message header in bytes (4 bytes for int32 length).
     /// </summary>
     public const int HeaderSize = sizeof(int);
 
     /// <summary>
-    /// Wrap buffer free space as Memory
+    /// Wrap buffer free space as Memory.
     /// </summary>
-    /// <returns>Buffer free space as Memory</returns>
+    /// <returns>Buffer free space as Memory.</returns>
     public Memory<byte> FreeSpace
     {
         get
@@ -28,15 +28,15 @@ internal class MessagingBuffer : IDisposable
     }
 
     /// <summary>
-    /// Returns whether buffer is full
+    /// Returns whether buffer is full.
     /// </summary>
-    /// <returns>Whether buffer is full</returns>
+    /// <returns>Whether buffer is full.</returns>
     public bool IsFull => _buffer.Length == DataEnd;
 
     /// <summary>
-    /// Returns whether buffer contains full message
+    /// Returns whether buffer contains full message.
     /// </summary>
-    /// <returns>Whether buffer contains full message</returns>
+    /// <returns>Whether buffer contains full message.</returns>
     public bool ContainsFullMessage
     {
         get
@@ -48,23 +48,28 @@ internal class MessagingBuffer : IDisposable
     }
 
     /// <summary>
-    /// Returns whether buffer contains full message
+    /// Returns whether the resolved message size exceeds the configured maximum.
     /// </summary>
-    /// <returns>Whether buffer contains full message</returns>
+    /// <returns>Whether the resolved message size exceeds the configured maximum.</returns>
     public bool ExtremeMessageExpected
     {
         get
         {
             EnsureNotDisposed();
 
-            return _messageSize >= _maxMessageSize;
+            return _messageSize > _maxMessageSize;
         }
     }
 
     /// <summary>
-    /// Wrap buffer message as ReadOnlyMemory
+    /// Returns whether the resolved message header carried an invalid (negative) length.
     /// </summary>
-    /// <returns>Buffer data as ReadOnlyMemory</returns>
+    public bool HasInvalidHeader { get; private set; }
+
+    /// <summary>
+    /// Wrap buffer message as ReadOnlyMemory.
+    /// </summary>
+    /// <returns>Buffer data as ReadOnlyMemory.</returns>
     public ReadOnlyMemory<byte> Message
     {
         get
@@ -78,45 +83,45 @@ internal class MessagingBuffer : IDisposable
     }
 
     /// <summary>
-    /// Gets the end position of data in the buffer
+    /// Gets the end position of data in the buffer.
     /// </summary>
     private int DataEnd => _dataStart + _dataLength;
 
     /// <summary>
-    /// The maximum allowed message size for extreme message detection
+    /// The maximum allowed message size for extreme message detection.
     /// </summary>
     private readonly int _maxMessageSize;
 
     /// <summary>
-    /// The starting position of data in the buffer
+    /// The starting position of data in the buffer.
     /// </summary>
     private int _dataStart;
 
     /// <summary>
-    /// The length of data currently in the buffer
+    /// The length of data currently in the buffer.
     /// </summary>
     private int _dataLength;
 
     /// <summary>
-    /// The size of the current message being processed
+    /// The size of the current message being processed.
     /// </summary>
     private int _messageSize;
 
     /// <summary>
-    /// The underlying byte array buffer from the array pool
+    /// The underlying byte array buffer from the array pool.
     /// </summary>
     private byte[] _buffer;
 
     /// <summary>
-    /// Flag indicating whether the buffer has been disposed
+    /// Flag indicating whether the buffer has been disposed.
     /// </summary>
     private bool _isDisposed;
 
     /// <summary>
-    /// Initializes a new instance of the MessagingBuffer class
+    /// Initializes a new instance of the MessagingBuffer class.
     /// </summary>
-    /// <param name="size">The buffer size</param>
-    /// <param name="maxMessageSize">The maximum expected message size</param>
+    /// <param name="size">The buffer size.</param>
+    /// <param name="maxMessageSize">The maximum expected message size.</param>
     public MessagingBuffer(int size, int maxMessageSize)
     {
         _maxMessageSize = maxMessageSize;
@@ -124,18 +129,19 @@ internal class MessagingBuffer : IDisposable
     }
 
     /// <summary>
-    /// Reset buffer internal data length to 0, allowing write from start
+    /// Reset buffer internal data length to 0, allowing write from start.
     /// </summary>
     public void Reset()
     {
         EnsureNotDisposed();
 
+        // any prior invalid-header observation is tied to the bytes we are about to drop.
+        HasInvalidHeader = false;
+
         // if no data - simply reset state
         if (_dataLength == 0)
         {
             _dataStart = 0;
-            _dataLength = 0;
-            _messageSize = 0;
             return;
         }
 
@@ -164,7 +170,7 @@ internal class MessagingBuffer : IDisposable
     }
 
     /// <summary>
-    /// Track data size, written to buffer
+    /// Track data size, written to buffer.
     /// </summary>
     /// <param name="dataSize">
     /// count of elements, written to buffer
@@ -176,7 +182,7 @@ internal class MessagingBuffer : IDisposable
     }
 
     /// <summary>
-    /// Resize buffer up due to not enough capacity and track count of elements, written to buffer
+    /// Resize buffer up due to not enough capacity and track count of elements, written to buffer.
     /// </summary>
     public void Grow()
     {
@@ -199,7 +205,7 @@ internal class MessagingBuffer : IDisposable
     }
 
     /// <summary>
-    /// Disposes the buffer and returns it to the array pool
+    /// Disposes the buffer and returns it to the array pool.
     /// </summary>
     public void Dispose()
     {
@@ -210,23 +216,27 @@ internal class MessagingBuffer : IDisposable
     }
 
     /// <summary>
-    /// Returns a string representation of the buffer state
+    /// Returns a string representation of the buffer state.
     /// </summary>
-    /// <returns>A string describing the buffer state</returns>
+    /// <returns>A string describing the buffer state.</returns>
     public override string ToString() =>
         $"{_dataStart}->{_dataLength} [{(_messageSize > 0 ? HeaderSize + _messageSize : 0)} | {_buffer.Length}] {{max:{_maxMessageSize}}}";
 
     /// <summary>
-    /// Attempts to resolve the message size from the header if not already resolved
+    /// Attempts to resolve the message size from the header if not already resolved.
     /// </summary>
     private void TryResolveMessageSize()
     {
         if (_messageSize == 0 && _dataLength >= HeaderSize)
+        {
             _messageSize = BitConverter.ToInt32(new ReadOnlySpan<byte>(_buffer, _dataStart, HeaderSize));
+            if (_messageSize < 0)
+                HasInvalidHeader = true;
+        }
     }
 
     /// <summary>
-    /// Ensures the buffer has not been disposed
+    /// Ensures the buffer has not been disposed.
     /// </summary>
     /// <exception cref="ObjectDisposedException">Thrown when the buffer is disposed</exception>
     private void EnsureNotDisposed()

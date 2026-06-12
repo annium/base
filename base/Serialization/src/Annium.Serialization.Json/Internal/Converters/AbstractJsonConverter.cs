@@ -38,11 +38,11 @@ internal class AbstractJsonConverter<T> : JsonConverter<T>
     /// <returns>The converted object.</returns>
     public override T Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        var doc = JsonDocument.ParseValue(ref reader);
+        using var doc = JsonDocument.ParseValue(ref reader);
 
         var type = ResolveType(doc.RootElement, typeToConvert, options).ResolveByImplementation(typeToConvert);
         if (type is null)
-            throw new SerializationException($"Can't resolve concrete type for {type} by {typeToConvert}");
+            throw new SerializationException($"Can't resolve concrete type for {typeToConvert}");
 
         return (T)JsonSerializer.Deserialize(doc.RootElement.GetRawText(), type, options)!;
     }
@@ -93,10 +93,7 @@ internal class AbstractJsonConverter<T> : JsonConverter<T>
         JsonSerializerOptions options
     )
     {
-        var idPropertyName =
-            resolutionIdProperty.GetCustomAttribute<JsonPropertyNameAttribute>()?.Name
-            ?? options.PropertyNamingPolicy?.ConvertName(resolutionIdProperty.Name)
-            ?? resolutionIdProperty.Name;
+        var idPropertyName = GetResolutionPropertyName(resolutionIdProperty, options);
         if (!root.TryGetProperty(idPropertyName, out var idElement))
             throw new SerializationException(Error(baseType, "id property is missing"));
 
@@ -123,10 +120,7 @@ internal class AbstractJsonConverter<T> : JsonConverter<T>
         JsonSerializerOptions options
     )
     {
-        var keyPropertyName =
-            resolutionKeyProperty.GetCustomAttribute<JsonPropertyNameAttribute>()?.Name
-            ?? options.PropertyNamingPolicy?.ConvertName(resolutionKeyProperty.Name)
-            ?? resolutionKeyProperty.Name;
+        var keyPropertyName = GetResolutionPropertyName(resolutionKeyProperty, options);
         if (!root.TryGetProperty(keyPropertyName, out var keyElement))
             throw new SerializationException(Error(baseType, "key property is missing"));
 
@@ -163,4 +157,16 @@ internal class AbstractJsonConverter<T> : JsonConverter<T>
     /// <returns>The formatted error message.</returns>
     private string Error(Type baseType, string message) =>
         $"Can't resolve concrete type definition for '{baseType}': {message}";
+
+    /// <summary>
+    /// Resolves the JSON property name for a resolution property, honoring a
+    /// <see cref="JsonPropertyNameAttribute"/> and the configured naming policy.
+    /// </summary>
+    /// <param name="property">The resolution property.</param>
+    /// <param name="options">The serializer options.</param>
+    /// <returns>The JSON property name to look up.</returns>
+    private static string GetResolutionPropertyName(PropertyInfo property, JsonSerializerOptions options) =>
+        property.GetCustomAttribute<JsonPropertyNameAttribute>()?.Name
+        ?? options.PropertyNamingPolicy?.ConvertName(property.Name)
+        ?? property.Name;
 }

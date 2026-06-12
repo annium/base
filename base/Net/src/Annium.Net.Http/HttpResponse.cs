@@ -34,20 +34,22 @@ public class HttpResponse<T> : HttpResponse, IHttpResponse<T>
 public class HttpResponse : IHttpResponse
 {
     /// <summary>
-    /// Default HTTP response headers, useful for network error / aborted requests
+    /// A fresh set of empty HTTP response headers, useful for network error / aborted requests.
+    /// Returns a new instance per access so callers cannot mutate a shared sentinel.
     /// </summary>
-    public static readonly HttpResponseHeaders EmptyHeaders;
+    public static HttpResponseHeaders EmptyHeaders
+    {
+        get
+        {
+            using var message = new HttpResponseMessage();
+            return message.Headers;
+        }
+    }
 
     /// <summary>
     /// Empty StringContent, useful for network error / aborted requests
     /// </summary>
     public static HttpContent EmptyStringContent => new StringContent(string.Empty);
-
-    static HttpResponse()
-    {
-        using var message = new HttpResponseMessage();
-        EmptyHeaders = message.Headers;
-    }
 
     /// <summary>
     /// Initializes a new instance of the HttpResponse class for a network failed request
@@ -206,15 +208,5 @@ public class HttpResponse : IHttpResponse
             response.Uri,
             response.Headers,
             response.Content
-        )
-    {
-        IsAbort = response.IsAbort;
-        IsSuccess = response.IsSuccess;
-        IsFailure = response.IsFailure;
-        StatusCode = response.StatusCode;
-        StatusText = response.StatusText;
-        Uri = response.Uri;
-        Headers = response.Headers;
-        Content = response.Content;
-    }
+        ) { }
 }

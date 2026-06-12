@@ -10,7 +10,8 @@ namespace Annium.Internal.Threading;
 /// Provides a debounced timer that executes a handler with a state object after a period of inactivity.
 /// </summary>
 /// <typeparam name="T">The type of the state object.</typeparam>
-internal class DebounceTimer<T> : DebounceTimerBase
+internal sealed class DebounceTimer<T> : DebounceTimerBase
+    where T : class
 {
     /// <summary>
     /// The state object passed to the handler.
@@ -49,7 +50,7 @@ internal class DebounceTimer<T> : DebounceTimerBase
 /// <summary>
 /// Provides a debounced timer that executes a handler after a period of inactivity.
 /// </summary>
-internal class DebounceTimer : DebounceTimerBase
+internal sealed class DebounceTimer : DebounceTimerBase
 {
     /// <summary>
     /// The asynchronous handler to execute.
@@ -79,34 +80,28 @@ internal class DebounceTimer : DebounceTimerBase
 }
 
 /// <summary>
-/// Provides a base class for debounced timers.
+/// Base class for debounced timers. The gate / re-entrant-dispose / async-void dispatch machinery lives
+/// in <see cref="AsyncTimerGateBase"/>; this class adds the debounce-specific state (<see cref="_period"/>,
+/// <see cref="_isRequested"/>), the <see cref="Request"/> entry point, and the per-callback hooks that
+/// claim the pending request inside the gate and re-fire the timer if a fresh request arrived while the
+/// handler was running.
 /// </summary>
-internal abstract class DebounceTimerBase : IDebounceTimer, ILogSubject
+internal abstract class DebounceTimerBase : AsyncTimerGateBase, IDebounceTimer
 {
     /// <summary>
-    /// Gets the logger instance for tracing operations.
+    /// The time interval to wait before executing the handler. Volatile so cross-thread reads in
+    /// <see cref="Request"/> observe writes from <see cref="Change(int)"/> without a stale value
+    /// on weakly-ordered architectures.
     /// </summary>
-    public ILogger Logger { get; }
+    private volatile int _period;
 
     /// <summary>
-    /// The underlying timer instance.
+    /// A flag indicating whether a new request has been made (1) or not (0). Accessed exclusively via
+    /// <see cref="Interlocked"/> operations whose full memory barriers provide the cross-thread ordering
+    /// guarantees the volatile keyword would otherwise add — keeping the field plain matches the
+    /// <c>_isHandling</c> convention in <see cref="SyncTimerBase"/>.
     /// </summary>
-    private readonly Timer _timer;
-
-    /// <summary>
-    /// The time interval to wait before executing the handler.
-    /// </summary>
-    private int _period;
-
-    /// <summary>
-    /// A flag indicating whether a new request has been made (1) or not (0).
-    /// </summary>
-    private volatile int _isRequested;
-
-    /// <summary>
-    /// A flag indicating whether the timer is currently handling a callback (1) or not (0).
-    /// </summary>
-    private volatile int _isHandling;
+    private int _isRequested;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DebounceTimerBase"/> class.
@@ -114,18 +109,9 @@ internal abstract class DebounceTimerBase : IDebounceTimer, ILogSubject
     /// <param name="period">The time interval to wait before executing the handler.</param>
     /// <param name="logger">The logger instance for tracing operations.</param>
     protected DebounceTimerBase(int period, ILogger logger)
+        : base(logger)
     {
-        Logger = logger;
-        _timer = new Timer(Callback, null, Timeout.Infinite, Timeout.Infinite);
         _period = period;
-    }
-
-    /// <summary>
-    /// Releases all resources used by the timer.
-    /// </summary>
-    public void Dispose()
-    {
-        _timer.Dispose();
     }
 
     /// <summary>
@@ -138,47 +124,55 @@ internal abstract class DebounceTimerBase : IDebounceTimer, ILogSubject
     }
 
     /// <summary>
+    /// Changes the time interval to wait before executing the handler.
+    /// </summary>
+    /// <param name="period">The new time interval. Must fit in <see cref="int"/> milliseconds (~24.85 days); otherwise an <see cref="OverflowException"/> is thrown.</param>
+    public void Change(TimeSpan period) => Change(checked((int)period.TotalMilliseconds));
+
+    /// <summary>
     /// Requests the timer to execute the handler after the specified period.
     /// </summary>
     public void Request()
     {
-        _timer.Change(_period, Timeout.Infinite);
-        _isRequested = 1;
+        // Volatile read so cross-thread observers see Dispose's Interlocked.Exchange(_disposed, 1) in
+        // a timely fashion on weakly-ordered architectures (ARM64). The race between this check and
+        // Change below is still possible, but the catch (ObjectDisposedException) below handles it.
+        if (IsDisposed)
+            return;
+
+        // Set the requested flag BEFORE arming the timer so that if the callback fires between these two
+        // statements, its finally-block CompareExchange observes _isRequested == 1 and re-fires the timer.
+        // Otherwise the request would be silently lost when the timer fires before the Exchange completes.
+        Interlocked.Exchange(ref _isRequested, 1);
+        try
+        {
+            Change(_period, Timeout.Infinite);
+        }
+        catch (ObjectDisposedException)
+        {
+            // Race: Dispose() ran between the IsDisposed check above and Change. The intent of this
+            // call was to schedule a future firing, which Dispose() has already prevented; swallow safely.
+            // This guard MUST be here even though Request() also checks IsDisposed at entry, because the
+            // check and Change are not atomic. The same race fires from Callback's finally re-call.
+        }
     }
 
     /// <summary>
-    /// Executes the timer's handler.
+    /// Claims the pending request flag inside the gate's critical section so that a fresh request arriving
+    /// after the callback starts will trigger the post-release re-fire in <see cref="OnAfterGateReleased"/>.
     /// </summary>
-    /// <returns>A task representing the asynchronous operation.</returns>
-    protected abstract ValueTask HandleAsync();
+    protected override void OnAfterGateAcquired()
+    {
+        Interlocked.Exchange(ref _isRequested, 0);
+    }
 
     /// <summary>
-    /// The callback method that is called when the timer elapses.
+    /// Re-fires the timer if a fresh request arrived during <c>HandleAsync</c>. Skipped during dispose;
+    /// <see cref="Request"/> also guards on <see cref="TimerBase.IsDisposed"/>.
     /// </summary>
-    /// <param name="_">The state object passed to the timer (unused).</param>
-#pragma warning disable VSTHRD100
-    private async void Callback(object? _)
-#pragma warning restore VSTHRD100
+    protected override void OnAfterGateReleased()
     {
-        if (Interlocked.CompareExchange(ref _isHandling, 1, 0) == 1)
-            return;
-
-        _isRequested = 0;
-
-        try
-        {
-            await HandleAsync();
-        }
-        catch (Exception e)
-        {
-            this.Error(e);
-        }
-        finally
-        {
-            _isHandling = 0;
-
-            if (_isRequested == 1)
-                Request();
-        }
+        if (!IsDisposed && Interlocked.CompareExchange(ref _isRequested, 0, 1) == 1)
+            Request();
     }
 }

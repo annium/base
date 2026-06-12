@@ -73,6 +73,23 @@ public static class SerializationConfigurationBuilderExtensions
         bool isDefault = false
     )
     {
+        return RegisterAll(builder, isDefault, configure);
+    }
+
+    /// <summary>
+    /// Registers all four JSON serializer surfaces (byte[], ReadOnlyMemory&lt;byte&gt;, string, Stream)
+    /// against the supplied configuration delegate.
+    /// </summary>
+    /// <param name="builder">The serialization configuration builder.</param>
+    /// <param name="isDefault">Whether this should be the default serializer.</param>
+    /// <param name="configure">The configuration delegate.</param>
+    /// <returns>The configuration builder for chaining.</returns>
+    private static ISerializationConfigurationBuilder RegisterAll(
+        ISerializationConfigurationBuilder builder,
+        bool isDefault,
+        ConfigureSerializer configure
+    )
+    {
         return builder
             .Register<byte[], ByteArraySerializer>(
                 Constants.MediaType,

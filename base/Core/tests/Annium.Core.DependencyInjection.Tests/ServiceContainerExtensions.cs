@@ -231,62 +231,6 @@ internal static class ServiceContainerExtensions
     }
 
     /// <summary>
-    /// Verifies that the container has scoped Func factory registrations for the specified service type
-    /// </summary>
-    /// <param name="container">The service container to verify</param>
-    /// <param name="serviceType">The service type</param>
-    /// <param name="count">The expected number of factory registrations</param>
-    public static void HasScopedFuncFactory(this IServiceContainer container, Type serviceType, int count = 1)
-    {
-        container.HasFuncFactory(serviceType, ServiceLifetime.Scoped, count);
-    }
-
-    /// <summary>
-    /// Verifies that the container has keyed scoped Func factory registrations for the specified service type
-    /// </summary>
-    /// <param name="container">The service container to verify</param>
-    /// <param name="serviceType">The service type</param>
-    /// <param name="key">The service key</param>
-    /// <param name="count">The expected number of factory registrations</param>
-    public static void HasScopedFuncFactory(
-        this IServiceContainer container,
-        Type serviceType,
-        object key,
-        int count = 1
-    )
-    {
-        container.HasFuncFactory(serviceType, key, ServiceLifetime.Scoped, count);
-    }
-
-    /// <summary>
-    /// Verifies that the container has transient Func factory registrations for the specified service type
-    /// </summary>
-    /// <param name="container">The service container to verify</param>
-    /// <param name="serviceType">The service type</param>
-    /// <param name="count">The expected number of factory registrations</param>
-    public static void HasTransientFuncFactory(this IServiceContainer container, Type serviceType, int count = 1)
-    {
-        container.HasFuncFactory(serviceType, ServiceLifetime.Transient, count);
-    }
-
-    /// <summary>
-    /// Verifies that the container has keyed transient Func factory registrations for the specified service type
-    /// </summary>
-    /// <param name="container">The service container to verify</param>
-    /// <param name="serviceType">The service type</param>
-    /// <param name="key">The service key</param>
-    /// <param name="count">The expected number of factory registrations</param>
-    public static void HasTransientFuncFactory(
-        this IServiceContainer container,
-        Type serviceType,
-        object key,
-        int count = 1
-    )
-    {
-        container.HasFuncFactory(serviceType, key, ServiceLifetime.Transient, count);
-    }
-
-    /// <summary>
     /// Verifies that the container has a registration with the specified parameters
     /// </summary>
     /// <param name="container">The service container to verify</param>

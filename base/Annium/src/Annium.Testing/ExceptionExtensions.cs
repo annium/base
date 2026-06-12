@@ -98,17 +98,15 @@ public static class ExceptionExtensions
     /// <param name="messageEx">The expression that produced the message.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains the original exception.</returns>
     /// <exception cref="AssertionFailedException">Thrown when the exception message does not contain the specified text.</exception>
-    public static async Task<T> ReportsAsync<T>(
-        this Task<T> value,
+    public static async ValueTask<T> ReportsAsync<T>(
+        this ValueTask<T> value,
         string message,
         [CallerArgumentExpression(nameof(value))] string valueEx = "",
         [CallerArgumentExpression(nameof(message))] string messageEx = ""
     )
         where T : Exception
     {
-#pragma warning disable VSTHRD003
         var val = await value;
-#pragma warning restore VSTHRD003
 
         if (!val.Message.Contains(message))
             throw new AssertionFailedException(
@@ -128,17 +126,15 @@ public static class ExceptionExtensions
     /// <param name="messagesEx">The expression that produced the messages.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains the original exception.</returns>
     /// <exception cref="AssertionFailedException">Thrown when the exception message does not contain all of the specified texts.</exception>
-    public static async Task<T> ReportsAllAsync<T>(
-        this Task<T> value,
+    public static async ValueTask<T> ReportsAllAsync<T>(
+        this ValueTask<T> value,
         string[] messages,
         [CallerArgumentExpression(nameof(value))] string valueEx = "",
         [CallerArgumentExpression(nameof(messages))] string messagesEx = ""
     )
         where T : Exception
     {
-#pragma warning disable VSTHRD003
         var val = await value;
-#pragma warning restore VSTHRD003
 
         if (!messages.All(val.Message.Contains))
             throw new AssertionFailedException(
@@ -158,17 +154,15 @@ public static class ExceptionExtensions
     /// <param name="messageEx">The expression that produced the message.</param>
     /// <returns>A task that represents the asynchronous operation. The task result contains the original exception.</returns>
     /// <exception cref="AssertionFailedException">Thrown when the exception message does not exactly match the specified text.</exception>
-    public static async Task<T> ReportsExactlyAsync<T>(
-        this Task<T> value,
+    public static async ValueTask<T> ReportsExactlyAsync<T>(
+        this ValueTask<T> value,
         string message,
         [CallerArgumentExpression(nameof(value))] string valueEx = "",
         [CallerArgumentExpression(nameof(message))] string messageEx = ""
     )
         where T : Exception
     {
-#pragma warning disable VSTHRD003
         var val = await value;
-#pragma warning restore VSTHRD003
 
         val.Message.Is(
             message,

@@ -6,7 +6,7 @@ namespace Annium.Core.DependencyInjection;
 /// <summary>
 /// Base interface for single registration builder.
 /// </summary>
-public interface ISingleRegistrationBuilderBase : ISingleRegistrationBuilderLifetime
+public interface ISingleRegistrationBuilderBase : IRegistrationBuilderLifetime
 {
     /// <summary>
     /// Registers the type as itself.
@@ -41,6 +41,13 @@ public interface ISingleRegistrationBuilderBase : ISingleRegistrationBuilderLife
     /// <param name="key">The key for registration.</param>
     /// <returns>Builder.</returns>
     ISingleRegistrationBuilderBase AsKeyed(Type serviceType, object key);
+
+    /// <summary>
+    /// Registers the type as each of its implemented interfaces with the given key.
+    /// </summary>
+    /// <param name="key">The key for registration.</param>
+    /// <returns>Builder.</returns>
+    ISingleRegistrationBuilderBase AsKeyedInterfaces(object key);
 
     /// <summary>
     /// Registers the type as a self factory.

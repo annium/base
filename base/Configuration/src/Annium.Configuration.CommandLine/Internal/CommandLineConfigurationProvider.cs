@@ -17,6 +17,11 @@ internal class CommandLineConfigurationProvider : ConfigurationProviderBase
     private const string Separator = "|";
 
     /// <summary>
+    /// Sentinel for "no following argument" used when the current argument is the last one.
+    /// </summary>
+    private const string NoNextArg = "";
+
+    /// <summary>
     /// Command line arguments to process
     /// </summary>
     private readonly string[] _args;
@@ -49,7 +54,7 @@ internal class CommandLineConfigurationProvider : ConfigurationProviderBase
                 continue;
 
             var name = ParseName(value);
-            var next = i < _args.Length - 1 ? _args[i + 1] : string.Empty;
+            var next = i < _args.Length - 1 ? _args[i + 1] : NoNextArg;
 
             if (IsOption(value, next))
             {
@@ -67,27 +72,27 @@ internal class CommandLineConfigurationProvider : ConfigurationProviderBase
             }
             else if (IsFlag(value, next))
                 if (flags.Contains(name))
-                    throw new Exception($"Same flag '{value}' is used twice");
+                    throw new InvalidOperationException($"Same flag '{value}' is used twice");
                 else
                     flags.Add(name);
             else
-                throw new Exception($"Can't process value '{value}', followed by '{next}'");
+                throw new InvalidOperationException($"Can't process value '{value}', followed by '{next}'");
         }
 
         foreach (var name in flags)
-            Data[name.Split(Separator)] = true.ToString();
+            SetAt(name.Split(Separator), true.ToString());
 
         foreach (var (name, value) in options)
-            Data[name.Split(Separator)] = value;
+            SetAt(name.Split(Separator), value);
 
         foreach (var (name, values) in multiOptions)
         {
             var path = name.Split(Separator);
             for (var i = 0; i < values.Count; i++)
-                Data[path.Append(i.ToString()).ToArray()] = values[i];
+                SetAt(path.Append(i.ToString()).ToArray(), values[i]);
         }
 
-        return Data;
+        return Result;
     }
 
     /// <summary>
@@ -103,8 +108,7 @@ internal class CommandLineConfigurationProvider : ConfigurationProviderBase
     /// <param name="value">Current value to check</param>
     /// <param name="next">Next value in arguments</param>
     /// <returns>True if option with value, false otherwise</returns>
-    private bool IsOption(string value, string next) =>
-        IsOptionLike(value) && next != string.Empty && !IsOptionLike(next);
+    private bool IsOption(string value, string next) => IsOptionLike(value) && next != NoNextArg && !IsOptionLike(next);
 
     /// <summary>
     /// Determines if a value is a flag without a following value
@@ -112,8 +116,7 @@ internal class CommandLineConfigurationProvider : ConfigurationProviderBase
     /// <param name="value">Current value to check</param>
     /// <param name="next">Next value in arguments</param>
     /// <returns>True if flag, false otherwise</returns>
-    private bool IsFlag(string value, string next) =>
-        IsOptionLike(value) && (next == string.Empty || IsOptionLike(next));
+    private bool IsFlag(string value, string next) => IsOptionLike(value) && (next == NoNextArg || IsOptionLike(next));
 
     /// <summary>
     /// Determines if a value looks like an option or flag (starts with -)

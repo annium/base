@@ -26,13 +26,12 @@ public static partial class IsShallowEqualExtensions
     /// <summary>
     /// Cache of compiled comparer delegates for each type.
     /// </summary>
-    private static readonly IDictionary<Type, Delegate> _comparers = new Dictionary<Type, Delegate>();
+    private static readonly Dictionary<Type, Delegate> _comparers = new();
 
     /// <summary>
     /// Cache of raw lambda expressions for each type before compilation.
     /// </summary>
-    private static readonly IDictionary<Type, LambdaExpression> _rawComparers =
-        new Dictionary<Type, LambdaExpression>();
+    private static readonly Dictionary<Type, LambdaExpression> _rawComparers = new();
 
     /// <summary>
     /// Determines whether two values are shallowly equal using the default mapper
@@ -87,6 +86,7 @@ public static partial class IsShallowEqualExtensions
 
         var comparable = mapper.Map(value!, type);
 
+        Delegate comparer;
         lock (_locker)
         {
             try
@@ -97,9 +97,11 @@ public static partial class IsShallowEqualExtensions
             {
                 _comparersInProgress.Clear();
             }
-        }
 
-        var comparer = _comparers[type];
+            // read the cached comparer while still holding the lock — _comparers is a plain
+            // Dictionary, so reading it concurrently with the write inside ResolveComparer races
+            comparer = _comparers[type];
+        }
         // var str = RawComparers[type].ToReadableString();
 
         try
@@ -126,10 +128,15 @@ public static partial class IsShallowEqualExtensions
         if (!_comparersInProgress.Add(type))
             return BuildExtensionCallComparer(type, mapper);
 
-        comparer = _rawComparers[type] = BuildComparer(type, mapper);
+        comparer = BuildComparer(type, mapper);
         _comparersInProgress.Remove(type);
 
-        _comparers[type] = comparer.Compile();
+        // compile before publishing to either cache so a Compile() failure does not leave
+        // _rawComparers populated while _comparers is missing the type (which would poison it:
+        // ResolveComparer would early-return from the _rawComparers hit and never repopulate _comparers)
+        var compiled = comparer.Compile();
+        _rawComparers[type] = comparer;
+        _comparers[type] = compiled;
 
         return comparer;
     }

@@ -1,6 +1,9 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
+using System.Threading.Tasks;
 using Annium.Configuration.Abstractions;
 using Annium.Configuration.Tests.Lib;
 using Annium.Core.DependencyInjection;
@@ -18,19 +21,14 @@ namespace Annium.Configuration.Json.Tests;
 /// </summary>
 public class JsonConfigurationProviderTest : TestBase
 {
+    /// <summary>Path to the temporary JSON file written during constructor setup and deleted on dispose.</summary>
+    private readonly string _jsonFile;
+
     public JsonConfigurationProviderTest(ITestOutputHelper outputHelper)
         : base(outputHelper)
     {
         this.RegisterMapper();
-    }
 
-    /// <summary>
-    /// Tests that JSON configuration works correctly.
-    /// </summary>
-    [Fact]
-    public void JsonConfiguration_Works()
-    {
-        // arrange
         var cfg = new Config
         {
             Flag = true,
@@ -55,51 +53,141 @@ public class JsonConfigurationProviderTest : TestBase
             Tuple = ("demo|", 11),
         };
 
-        var jsonFile = string.Empty;
+        _jsonFile = Path.GetTempFileName();
+        var container = new ServiceContainer();
+        container.AddRuntime(GetType().Assembly);
+        container.AddTime().WithRealTime().SetDefault();
+        container.AddSerializers().WithJson(isDefault: true);
+        container.AddLogging();
+        var serializer = container.BuildServiceProvider().Resolve<ISerializer<string>>();
+        File.WriteAllText(_jsonFile, serializer.Serialize(cfg));
+
+        Register((c, ct) => c.AddConfigurationAsync<Config>(x => x.AddJsonFile(_jsonFile), ct));
+    }
+
+    /// <summary>Deletes the temporary JSON file created during construction and calls the base dispose.</summary>
+    /// <returns>A value task that completes when the temporary file has been deleted and the base class disposed.</returns>
+    public override async ValueTask DisposeAsync()
+    {
+        if (!string.IsNullOrWhiteSpace(_jsonFile) && File.Exists(_jsonFile))
+            File.Delete(_jsonFile);
+        await base.DisposeAsync();
+    }
+
+    /// <summary>
+    /// Tests that JSON configuration works correctly.
+    /// </summary>
+    [Fact]
+    public void JsonConfiguration_Works()
+    {
+        // act
+        var result = Get<Config>();
+        var nested = Get<SomeConfig>();
+
+        // assert
+        result.IsNotDefault();
+        result.Flag.IsTrue();
+        result.Plain.Is(7);
+        result.Nullable.IsNotDefault();
+        result.Nullable.Value.Is(3m);
+        Enumerable.SequenceEqual(result.Array, new[] { 4, 7 }).IsTrue();
+        result.Matrix.Has(2);
+        Enumerable.SequenceEqual(result.Matrix.At(0), new[] { 3, 2 }).IsTrue();
+        Enumerable.SequenceEqual(result.Matrix.At(1), new[] { 5, 4 }).IsTrue();
+        result.List.Has(2);
+        result.List[0].Plain.Is(8);
+        result.List[0].Array.IsEmpty();
+        result.List[1].Plain.Is(0);
+        Enumerable.SequenceEqual(result.List[1].Array, new[] { 2m, 6m }).IsTrue();
+        IDictionary<string, Val> dict = result.Dictionary;
+        dict.Has(1);
+        dict.At("demo").Plain.Is(14);
+        Enumerable.SequenceEqual(dict.At("demo").Array, new[] { 3m, 15m }).IsTrue();
+        result.Nested.Plain.Is(4);
+        Enumerable.SequenceEqual(result.Nested.Array, new[] { 4m, 13m }).IsTrue();
+        result.Abstract.As<ConfigTwo>().Value.Is(10);
+        result.Abstract.IsEqual(nested);
+        nested.Is(new ConfigTwo { Value = 10 });
+    }
+
+    /// <summary>
+    /// Malformed JSON content surfaces as a <see cref="System.Text.Json.JsonException"/> from
+    /// the provider; via the build pipeline it lands wrapped in <see cref="System.AggregateException"/>.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
+    [Fact]
+    public async Task Read_MalformedJson_ThrowsJsonException()
+    {
+        var bad = Path.GetTempFileName();
         try
         {
-            jsonFile = Path.GetTempFileName();
-            var container = new ServiceContainer();
-            container.AddRuntime(GetType().Assembly);
-            container.AddTime().WithRealTime().SetDefault();
-            container.AddSerializers().WithJson(isDefault: true);
-            container.AddLogging();
-            var serializer = container.BuildServiceProvider().Resolve<ISerializer<string>>();
-            File.WriteAllText(jsonFile, serializer.Serialize(cfg));
-            Register(c => c.AddConfiguration<Config>(x => x.AddJsonFile(jsonFile)));
+            File.WriteAllText(bad, "{bad json");
+            var container = ConfigurationFactory.CreateContainer();
+            container.AddJsonFile(bad, optional: false);
 
-            // act
-            var result = Get<Config>();
-            var nested = Get<SomeConfig>();
-
-            // assert
-            result.IsNotDefault();
-            result.Flag.IsTrue();
-            result.Plain.Is(7);
-            // result.Nullable.Is(3);
-            result.Array.SequenceEqual(new[] { 4, 7 }).IsTrue();
-            result.Matrix.Has(2);
-            result.Matrix.At(0).SequenceEqual(new[] { 3, 2 }).IsTrue();
-            result.Matrix.At(1).SequenceEqual(new[] { 5, 4 }).IsTrue();
-            result.List.Has(2);
-            result.List[0].Plain.Is(8);
-            result.List[0].Array.IsEmpty();
-            result.List[1].Plain.Is(0);
-            result.List[1].Array.SequenceEqual(new[] { 2m, 6m }).IsTrue();
-            IDictionary<string, Val> dict = result.Dictionary;
-            dict.Has(1);
-            dict.At("demo").Plain.Is(14);
-            dict.At("demo").Array.SequenceEqual(new[] { 3m, 15m }).IsTrue();
-            result.Nested.Plain.Is(4);
-            result.Nested.Array.SequenceEqual(new[] { 4m, 13m }).IsTrue();
-            result.Abstract.As<ConfigTwo>().Value.Is(10);
-            result.Abstract.IsEqual(nested);
-            nested.Is(new ConfigTwo { Value = 10 });
+            var ex = await Wrap.It(async () => await container.BuildAsync(TestContext.Current.CancellationToken))
+                .ThrowsAsync<AggregateException>();
+            ex.InnerExceptions.Has(1);
+            ex.InnerExceptions[0].As<JsonException>();
         }
         finally
         {
-            if (!string.IsNullOrWhiteSpace(jsonFile) && File.Exists(jsonFile))
-                File.Delete(jsonFile);
+            File.Delete(bad);
+        }
+    }
+
+    /// <summary>
+    /// JSON null literals (<c>"key": null</c>) reach the default branch of
+    /// <c>JsonConfigurationProvider.Process</c> and produce a string key via
+    /// <c>ProcessLeaf</c>. The flattened result must contain the key.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
+    [Fact]
+    public async Task Read_JsonWithNullLeaf_ProducesStringKey()
+    {
+        var path = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllText(path, "{\"key\": null}");
+            var container = ConfigurationFactory.CreateContainer();
+            container.AddJsonFile(path, optional: false);
+
+            await container.BuildAsync(TestContext.Current.CancellationToken);
+
+            var data = container.Get();
+            data.Keys.Any(k => k.Length == 1 && k[0].Equals("key", StringComparison.OrdinalIgnoreCase)).IsTrue();
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    /// <summary>
+    /// JSON boolean literals reach the default branch of <c>JsonConfigurationProvider.Process</c>
+    /// and produce a string key via <c>ProcessLeaf</c>. Both <c>true</c> and <c>false</c> values
+    /// flatten with their token string representation.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
+    [Fact]
+    public async Task Read_JsonWithBooleanLeaf_ProducesStringKey()
+    {
+        var path = Path.GetTempFileName();
+        try
+        {
+            File.WriteAllText(path, "{\"flag\": true, \"off\": false}");
+            var container = ConfigurationFactory.CreateContainer();
+            container.AddJsonFile(path, optional: false);
+
+            await container.BuildAsync(TestContext.Current.CancellationToken);
+
+            var data = container.Get();
+            data.Keys.Any(k => k.Length == 1 && k[0].Equals("flag", StringComparison.OrdinalIgnoreCase)).IsTrue();
+            data.Keys.Any(k => k.Length == 1 && k[0].Equals("off", StringComparison.OrdinalIgnoreCase)).IsTrue();
+        }
+        finally
+        {
+            File.Delete(path);
         }
     }
 }

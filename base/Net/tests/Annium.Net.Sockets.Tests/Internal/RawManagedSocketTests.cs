@@ -19,7 +19,7 @@ namespace Annium.Net.Sockets.Tests.Internal;
 /// <summary>
 /// Tests for raw managed socket functionality
 /// </summary>
-public class RawManagedSocketTests : TestBase, IAsyncLifetime
+public class RawManagedSocketTests : TestBase
 {
     /// <summary>
     /// Gets the client socket instance
@@ -168,10 +168,12 @@ public class RawManagedSocketTests : TestBase, IAsyncLifetime
         await using var server = RunServerBase(
             async (_, socket, _) =>
             {
+                // Leading delay gives the client time to ConnectAndStartListen before the close.
                 await Task.Delay(50, CancellationToken.None);
                 socket.LingerState = new LingerOption(true, 0);
                 socket.Close();
-                await Task.Delay(50, CancellationToken.None);
+
+                this.Trace("send signal to client");
                 serverTcs.SetResult();
             }
         );
@@ -179,17 +181,23 @@ public class RawManagedSocketTests : TestBase, IAsyncLifetime
         this.Trace("connect and start listening");
         await ConnectAndStartListenAsync(server, TestContext.Current.CancellationToken);
 
-        // delay to let server close connection
+        // wait for the server-side close signal
         this.Trace("await server signal");
         await serverTcs.Task;
 
-        // act
-        this.Trace("send message");
-        var result = await ManagedSocket.SendAsync(message, TestContext.Current.CancellationToken);
-
-        // assert
-        this.Trace("assert close is received");
-        result.Is(SocketSendStatus.Closed);
+        // act — poll SendAsync until the RST/FIN has propagated to the client socket.
+        // socket.Close() completing on the server is not a hard guarantee that the client
+        // socket has observed the disconnect; bounded poll within 5s catches the closed
+        // state without flaking on the race.
+        this.Trace("send message and ensure it eventually becomes closed");
+        await Expect.ToAsync(
+            async () =>
+            {
+                var result = await ManagedSocket.SendAsync(message, TestContext.Current.CancellationToken);
+                result.Is(SocketSendStatus.Closed);
+            },
+            ms: 5_000
+        );
 
         this.Trace("done");
     }
@@ -468,19 +476,10 @@ public class RawManagedSocketTests : TestBase, IAsyncLifetime
     }
 
     /// <summary>
-    /// Initializes the test asynchronously
-    /// </summary>
-    /// <returns>A task representing the initialization</returns>
-    public ValueTask InitializeAsync()
-    {
-        return ValueTask.CompletedTask;
-    }
-
-    /// <summary>
     /// Disposes the test resources asynchronously
     /// </summary>
     /// <returns>A task representing the disposal</returns>
-    public async ValueTask DisposeAsync()
+    public override async ValueTask DisposeAsync()
     {
         this.Trace("start");
 
@@ -488,6 +487,8 @@ public class RawManagedSocketTests : TestBase, IAsyncLifetime
             await _clientStream.DisposeAsync();
 
         this.Trace("done");
+
+        await base.DisposeAsync();
     }
 
     /// <summary>
@@ -500,12 +501,7 @@ public class RawManagedSocketTests : TestBase, IAsyncLifetime
         switch (streamType)
         {
             case StreamType.Plain:
-                _createClientStreamAsync = async socket =>
-                {
-                    await Task.CompletedTask;
-
-                    return new NetworkStream(socket);
-                };
+                _createClientStreamAsync = CreatePlainClientStreamAsync;
 
                 _runServer = handleSocket =>
                 {
@@ -533,26 +529,7 @@ public class RawManagedSocketTests : TestBase, IAsyncLifetime
                 };
                 break;
             case StreamType.Ssl:
-                _createClientStreamAsync = async socket =>
-                {
-                    var networkStream = new NetworkStream(socket);
-                    var sslStream = new SslStream(networkStream, false, ValidateServerCertificate, null);
-
-                    await sslStream.AuthenticateAsClientAsync(string.Empty);
-
-                    return sslStream;
-
-                    bool ValidateServerCertificate(
-                        object sender,
-                        X509Certificate? certificate,
-                        X509Chain? chain,
-                        SslPolicyErrors sslPolicyErrors
-                    )
-                    {
-                        // by design, no ssl verification in tests (cause it will require valid SSL certificate)
-                        return true;
-                    }
-                };
+                _createClientStreamAsync = CreateSslClientStreamAsync;
 
                 _runServer = handleSocket =>
                 {
@@ -629,8 +606,6 @@ public class RawManagedSocketTests : TestBase, IAsyncLifetime
         );
 
         ManagedSocket.OnReceived += x => _stream.AddRange(x.ToArray());
-
-        await Task.CompletedTask;
 
         this.Trace("done");
     }

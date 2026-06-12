@@ -13,13 +13,15 @@ namespace Annium.Logging.File.Internal;
 /// Supports writing to multiple files based on message content and provides thread-safe file operations.
 /// </summary>
 /// <typeparam name="TContext">The type of the log context</typeparam>
-internal class FileLogHandler<TContext> : BufferingLogHandler<TContext>
+internal class FileLogHandler<TContext> : BufferingLogHandler<TContext>, IDisposable
     where TContext : class
 {
     /// <summary>
-    /// Synchronization gate for thread-safe file operations.
+    /// Synchronization gate serializing file writes. A <see cref="SemaphoreSlim"/> (not an
+    /// <see cref="AutoResetEvent"/>) so the gate can be held correctly across the <c>await</c> in
+    /// <see cref="SendEventsAsync"/>.
     /// </summary>
-    private readonly AutoResetEvent _gate = new(true);
+    private readonly SemaphoreSlim _gate = new(1, 1);
 
     /// <summary>
     /// Function to format log messages for file output.
@@ -53,9 +55,9 @@ internal class FileLogHandler<TContext> : BufferingLogHandler<TContext>
         if (_cfg.GetFile is null)
             throw new InvalidOperationException("GetFile resolver is not set");
 
+        await _gate.WaitAsync();
         try
         {
-            _gate.WaitOne();
             var entries = events.GroupBy(_cfg.GetFile);
             var results = await Task.WhenAll(entries.Select(x => WriteEventsToFileAsync(x.Key, x.ToArray())));
 
@@ -63,7 +65,7 @@ internal class FileLogHandler<TContext> : BufferingLogHandler<TContext>
         }
         finally
         {
-            _gate.Set();
+            _gate.Release();
         }
     }
 
@@ -81,7 +83,6 @@ internal class FileLogHandler<TContext> : BufferingLogHandler<TContext>
                 await System.IO.File.WriteAllTextAsync(file, string.Empty);
 
             await System.IO.File.AppendAllLinesAsync(file, events.Select(_format));
-            await System.IO.File.AppendAllTextAsync(file, string.Empty);
             return true;
         }
         catch (Exception e)
@@ -90,4 +91,10 @@ internal class FileLogHandler<TContext> : BufferingLogHandler<TContext>
             return false;
         }
     }
+
+    /// <summary>
+    /// Disposes the synchronization gate. Invoked by the owning scheduler when logging is torn down
+    /// (via the container's <c>OnDisposed</c> callback).
+    /// </summary>
+    public void Dispose() => _gate.Dispose();
 }

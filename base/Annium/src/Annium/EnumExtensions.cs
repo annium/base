@@ -83,10 +83,7 @@ public static class EnumExtensions
     public static T ParseEnum<T>(this string str, T defaultValue)
         where T : struct, Enum
     {
-        if (str.TryParseEnum<T>(out var value))
-            return value;
-
-        return defaultValue;
+        return str.TryParseEnum<T>(out var value) ? value : defaultValue;
     }
 
     /// <summary>
@@ -99,10 +96,7 @@ public static class EnumExtensions
     public static T ParseEnum<T>(this ValueType raw, T defaultValue)
         where T : struct, Enum
     {
-        if (raw.TryParseEnum<T>(out var value))
-            return value;
-
-        return defaultValue;
+        return raw.TryParseEnum<T>(out var value) ? value : defaultValue;
     }
 
     /// <summary>
@@ -173,6 +167,7 @@ public static class EnumExtensions
 
         foreach (var item in type.GetFields().Where(x => x.IsStatic))
         {
+            // GetValue(null) returns the static enum field's value (non-null); ToString() on the converted primitive is non-null.
             var value = (ValueType)item.GetValue(null)!;
 
             result.Add(item.Name.ToLowerInvariant(), value);
@@ -232,9 +227,11 @@ public static class EnumExtensions
         // if not flags - simply add all values
         if (type.GetCustomAttribute<FlagsAttribute>() is null)
             foreach (var item in type.GetFields().Where(x => x.IsStatic))
+                // GetValue(null) returns the static enum field's value, which is non-null.
                 result.Add((ValueType)Convert.ChangeType(item.GetValue(null)!, valueType));
         else
         {
+            // GetValue(null) returns each static enum field's value, which is non-null.
             var values = type.GetFields()
                 .Where(x => x.IsStatic)
                 .Select(x => (long)Convert.ChangeType(x.GetValue(null)!, typeof(long)))
@@ -276,6 +273,7 @@ public static class EnumExtensions
     /// <param name="values">The values to combine.</param>
     /// <returns>The combined value.</returns>
     /// <exception cref="ArgumentException">Thrown when the enumeration type is not supported.</exception>
+    // CA2021: Cast<byte/ushort/...>().Aggregate is correct here — CastValues is called only after GetTypeCode() confirms the underlying type, so the cast cannot fail at runtime.
 #pragma warning disable CA2021
     [SuppressMessage("ReSharper", "SuspiciousTypeConversion.Global")]
     private static T CastValues<T>(IReadOnlyCollection<T> values)

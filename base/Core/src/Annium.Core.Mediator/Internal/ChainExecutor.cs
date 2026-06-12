@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Annium.Core.DependencyInjection;
@@ -34,22 +35,44 @@ internal static class ChainExecutor
 
         var parameters = new List<object> { request, cancellationToken };
         if (hasNext)
-            parameters.Add(element.Next!.DynamicInvoke(provider, chain, index + 1)!);
+            parameters.Add(element.Next.NotNull().DynamicInvoke(provider, chain, index + 1).NotNull());
 
         var handler = element.Handler;
-        // hasNext=true means the current handler is a Pipe handler (3 params: request, ct, next);
-        // hasNext=false means it's the Final handler (2 params: request, ct).
-        var handleMethodName = hasNext ? Constants.PipeHandlerHandleAsyncName : Constants.FinalHandlerHandleAsyncName;
-        var handleMethod = handler.GetMethod(handleMethodName, parameters.Select(p => p.GetType()).ToArray())!;
-        var result = handleMethod.Invoke(provider.Resolve(handler), parameters.ToArray())!;
+        // Both IPipeRequestHandler and IFinalRequestHandler name the method "HandleAsync"; the pipe/final
+        // distinction is in the parameter count (3 with next when hasNext, else 2), captured in `parameters` above.
+        // Resolve the method once per chain element (its parameter types are stable) and memoize it.
+        var handleMethod = element.Handle;
+        if (handleMethod is null)
+        {
+            handleMethod = handler
+                .GetMethod(Constants.HandleAsyncName, parameters.Select(p => p.GetType()).ToArray())
+                .NotNull();
+            element.Handle = handleMethod;
+        }
+
+        // DoNotWrapExceptions: let a handler's own exceptions (e.g. OperationCanceledException) propagate
+        // directly instead of being wrapped in a TargetInvocationException by reflection.
+        var result = handleMethod
+            .Invoke(
+                provider.Resolve(handler),
+                BindingFlags.DoNotWrapExceptions,
+                binder: null,
+                parameters.ToArray(),
+                culture: null
+            )
+            .NotNull();
         await (Task)result;
 
         return result
             .GetType()
+            // VSTHRD103: nameof(Task<>.Result) is a reflection member-name reference, not a blocking .Result access
 #pragma warning disable VSTHRD103
-            .GetProperty(nameof(Task<>.Result))!
+            .GetProperty(nameof(Task<>.Result))
+            .NotNull()
 #pragma warning restore VSTHRD103
-            .GetGetMethod()!
-            .Invoke(result, Array.Empty<object>())!;
+            .GetGetMethod()
+            .NotNull()
+            .Invoke(result, Array.Empty<object>())
+            .NotNull();
     }
 }

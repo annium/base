@@ -8,13 +8,13 @@ internal class ProfileInstance
     /// <summary>
     /// Gets the profile instance
     /// </summary>
-    public Profile Instance { get; }
+    internal Profile Instance { get; }
 
     /// <summary>
     /// Initializes a new instance of the ProfileInstance class
     /// </summary>
     /// <param name="instance">The profile instance to wrap</param>
-    public ProfileInstance(Profile instance)
+    internal ProfileInstance(Profile instance)
     {
         Instance = instance;
     }

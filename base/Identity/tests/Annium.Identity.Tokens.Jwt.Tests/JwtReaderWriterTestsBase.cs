@@ -2,11 +2,9 @@ using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
-using Annium;
+using System.Threading;
 using Annium.Core.DependencyInjection;
 using Annium.Core.Runtime;
-using Annium.Identity.Tokens;
-using Annium.NodaTime.Extensions;
 using Annium.Testing;
 using Microsoft.IdentityModel.Tokens;
 using NodaTime;
@@ -106,13 +104,13 @@ public class JwtReaderWriterTestsBase
 
         // assert - encoded is non-empty
         encoded.IsNotDefault();
-        encoded.Length.Is(encoded.Length); // sanity (used to silence unused-var)
 
         // act - read
         var result = reader.Read(encoded);
 
         // assert - read
         result.Status.Is(TokenReadStatus.Ok);
+        result.Error.IsNull();
         result.Claims.IsNotDefault();
         var claims = result.Claims!.Claims.ToArray();
         claims.FirstOrDefault(c => c.Type == "jti").IsNotDefault().Value.Is(tokenId);
@@ -136,7 +134,7 @@ public class JwtReaderWriterTestsBase
         string signatureAlgorithm
     )
     {
-        // arrange — write a token with a 1-hour past lifetime
+        // arrange — write a token with a 1 ms lifetime so it expires almost immediately
         var issuer = "service";
         var audience = "audience";
         var lifetime = Duration.FromMilliseconds(1); // immediately expires
@@ -149,10 +147,10 @@ public class JwtReaderWriterTestsBase
             Duration.FromSeconds(10),
             lifetime
         );
-        var encoded = writer.Write(new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim("k", "v") }, "JWT")));
+        var encoded = writer.Write(MinimalPrincipal());
 
         // wait so the token's ValidTo (now + 1ms) is in the past
-        System.Threading.Thread.Sleep(50);
+        Thread.Sleep(50);
 
         var (reader, _, _) = Resolve(publicKey, signatureAlgorithm, issuer, audience, expirationWindow: null, lifetime);
 
@@ -188,12 +186,11 @@ public class JwtReaderWriterTestsBase
             Duration.FromSeconds(10),
             lifetime
         );
-        var encoded = writer.Write(new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim("k", "v") }, "JWT")));
+        var encoded = writer.Write(MinimalPrincipal());
 
-        // wait so the token expires (lifetime 1ms) plus ClockSkew (10s applied below) — need
-        // to wait > 10s for the MS library to treat it as expired. We use a tighter
-        // ClockSkew here (1ms) so the test stays fast.
-        System.Threading.Thread.Sleep(50);
+        // wait until the token (1 ms lifetime + 1 ms ClockSkew on the reader configured below) is
+        // past expiry, so the MS library treats it as expired and the reader maps that to Expired.
+        Thread.Sleep(50);
 
         var (reader, _, _) = Resolve(
             publicKey,
@@ -251,7 +248,7 @@ public class JwtReaderWriterTestsBase
             time
         );
 
-        var encoded = writer.Write(new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim("k", "v") }, "JWT")));
+        var encoded = writer.Write(MinimalPrincipal());
 
         // sanity — without override the read must fail (audience mismatch)
         reader.Read(encoded).Status.Is(TokenReadStatus.InvalidClaims);
@@ -304,10 +301,10 @@ public class JwtReaderWriterTestsBase
             time
         );
 
-        var encoded = writer.Write(new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim("k", "v") }, "JWT")));
+        var encoded = writer.Write(MinimalPrincipal());
 
         // wait long enough that ValidTo + ClockSkew has passed even under concurrent test load
-        System.Threading.Thread.Sleep(500);
+        Thread.Sleep(500);
 
         // sanity — without override the read must fail (expired)
         reader.Read(encoded).Status.Is(TokenReadStatus.Expired);
@@ -342,10 +339,7 @@ public class JwtReaderWriterTestsBase
         );
 
         // act
-        var encoded = writer.Write(
-            new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim("k", "v") }, "JWT")),
-            new JwtWriteOverrides(Audience: "per-call-aud")
-        );
+        var encoded = writer.Write(MinimalPrincipal(), new JwtWriteOverrides(Audience: "per-call-aud"));
 
         // assert — decoded aud claim is the per-call override
         var jwt = new JwtSecurityTokenHandler().ReadJwtToken(encoded);
@@ -378,10 +372,7 @@ public class JwtReaderWriterTestsBase
         );
 
         // act
-        var encoded = writer.Write(
-            new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim("k", "v") }, "JWT")),
-            new JwtWriteOverrides(Lifetime: Duration.FromHours(2))
-        );
+        var encoded = writer.Write(MinimalPrincipal(), new JwtWriteOverrides(Lifetime: Duration.FromHours(2)));
 
         // assert — decoded ValidTo - ValidFrom matches the per-call override (modulo 1s rounding)
         var jwt = new JwtSecurityTokenHandler().ReadJwtToken(encoded);
@@ -396,10 +387,18 @@ public class JwtReaderWriterTestsBase
     /// concrete <see cref="JwtReader"/> / <see cref="JwtWriter"/> instances directly.
     /// </summary>
     /// <returns>The resolved time provider.</returns>
-    private static ITimeProvider ResolveTime()
+    protected static ITimeProvider ResolveTime()
     {
         var container = new ServiceContainer();
         container.AddTime().WithRealTime().SetDefault();
         return container.BuildServiceProvider().Resolve<ITimeProvider>();
     }
+
+    /// <summary>
+    /// Builds the minimal single-claim principal (<c>k=v</c>) used by the scenarios that only need
+    /// a token to exist (expiry / audience / lifetime checks), where the specific claims are irrelevant.
+    /// </summary>
+    /// <returns>A claims principal carrying a single <c>k=v</c> claim.</returns>
+    protected static ClaimsPrincipal MinimalPrincipal() =>
+        new(new ClaimsIdentity(new[] { new Claim("k", "v") }, "JWT"));
 }

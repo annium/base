@@ -30,15 +30,15 @@ public static class CancellationTokenExtensions
         /// <summary>
         /// The cancellation token being awaited.
         /// </summary>
-        private readonly CancellationToken _cancellationToken;
+        private readonly CancellationToken _ct;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CancellationTokenAwaiter"/> struct.
         /// </summary>
-        /// <param name="cancellationToken">The cancellation token to await.</param>
-        public CancellationTokenAwaiter(CancellationToken cancellationToken)
+        /// <param name="ct">The cancellation token to await.</param>
+        public CancellationTokenAwaiter(CancellationToken ct)
         {
-            _cancellationToken = cancellationToken;
+            _ct = ct;
         }
 
         /// <summary>
@@ -57,18 +57,18 @@ public static class CancellationTokenExtensions
         /// Gets a value indicating whether the awaited operation has completed.
         /// </summary>
         /// <returns>True if the cancellation token has been cancelled; otherwise, false.</returns>
-        public bool IsCompleted => _cancellationToken.IsCancellationRequested;
+        public bool IsCompleted => _ct.IsCancellationRequested;
 
         /// <summary>
         /// Schedules the continuation action that's invoked when the instance completes.
         /// </summary>
         /// <param name="continuation">The action to invoke when the operation completes.</param>
-        public void OnCompleted(Action continuation) => _cancellationToken.Register(continuation);
+        public void OnCompleted(Action continuation) => _ct.Register(continuation);
 
         /// <summary>
         /// Schedules the continuation action that's invoked when the instance completes.
         /// </summary>
         /// <param name="continuation">The action to invoke when the operation completes.</param>
-        public void UnsafeOnCompleted(Action continuation) => _cancellationToken.Register(continuation);
+        public void UnsafeOnCompleted(Action continuation) => _ct.Register(continuation);
     }
 }

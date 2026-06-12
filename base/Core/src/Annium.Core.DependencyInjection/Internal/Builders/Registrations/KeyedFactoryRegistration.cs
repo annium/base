@@ -51,11 +51,5 @@ internal class KeyedFactoryRegistration : IRegistration
             (sp, key) => Expression.Invoke(Expression.Constant(_factory), sp, key),
             lifetime
         );
-
-        // yield return Factory(
-        //     KeyValueType(_keyType, _serviceType),
-        //     sp => KeyValue(_keyType, _serviceType, _key, Expression.Invoke(Expression.Constant(_factory), sp)),
-        //     lifetime
-        // );
     }
 }

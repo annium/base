@@ -19,12 +19,12 @@ public class AsResponseExtensionsTests : TestBase
     /// <summary>
     /// Factory for creating HTTP requests
     /// </summary>
-    private readonly IHttpRequestFactory _httpRequestFactory;
+    private IHttpRequestFactory _httpRequestFactory = null!; // set in InitializeAsync
 
     /// <summary>
     /// Serializer for JSON conversion operations
     /// </summary>
-    private readonly Serializer _serializer;
+    private Serializer _serializer = null!; // set in InitializeAsync
 
     /// <summary>
     /// Initializes a new instance of the AsResponseExtensionsTests class
@@ -48,6 +48,16 @@ public class AsResponseExtensionsTests : TestBase
                 );
             container.AddHttpRequestFactory(true);
         });
+    }
+
+    /// <summary>
+    /// Resolves the <see cref="IHttpRequestFactory"/> and <see cref="Serializer"/> instances
+    /// from the DI container after the base async initialization completes.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous initialization.</returns>
+    public override async ValueTask InitializeAsync()
+    {
+        await base.InitializeAsync();
         _httpRequestFactory = Get<IHttpRequestFactory>();
         _serializer = Get<Serializer>();
     }

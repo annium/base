@@ -22,8 +22,15 @@ public static class ServiceContainerExtensions
         var options = new LocalizationOptions();
         configure(options);
 
+        if (!options.IsStorageConfigured)
+            throw new InvalidOperationException(
+                "No locale storage backend was configured. Call UseInMemoryStorage() or UseYamlStorage() inside AddLocalization."
+            );
+
         foreach (var service in options.LocaleStorageServices)
             container.Add(service);
+
+        options.DetachLocaleStorage();
 
         container.Add(options.CultureAccessor).AsSelf().Singleton();
 

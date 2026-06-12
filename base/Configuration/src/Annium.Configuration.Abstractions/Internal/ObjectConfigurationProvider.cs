@@ -1,8 +1,10 @@
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Annium;
 using Annium.Reflection;
 
 namespace Annium.Configuration.Abstractions.Internal;
@@ -12,6 +14,11 @@ namespace Annium.Configuration.Abstractions.Internal;
 /// </summary>
 internal class ObjectConfigurationProvider : ConfigurationProviderBase
 {
+    /// <summary>
+    /// Cached empty argument array reused when invoking parameterless members via reflection.
+    /// </summary>
+    private static readonly object[] _noArgs = Array.Empty<object>();
+
     /// <summary>
     /// The configuration object to read data from
     /// </summary>
@@ -32,21 +39,20 @@ internal class ObjectConfigurationProvider : ConfigurationProviderBase
     /// <returns>Dictionary containing configuration keys and values</returns>
     public override IReadOnlyDictionary<string[], string> Read()
     {
-        var result = new Dictionary<string[], string>();
+        Init();
 
         if (_config is not null)
-            Process(Array.Empty<string>(), result.Add, _config);
+            Process(Array.Empty<string>(), _config);
 
-        return result;
+        return Result;
     }
 
     /// <summary>
     /// Processes an object value and adds its data to the configuration
     /// </summary>
     /// <param name="prefix">Key prefix for the current path</param>
-    /// <param name="addValue">Action to add key-value pairs</param>
     /// <param name="value">Object value to process</param>
-    private void Process(string[] prefix, Action<string[], string> addValue, object? value)
+    private void Process(string[] prefix, object? value)
     {
         if (value is null)
             return;
@@ -56,19 +62,19 @@ internal class ObjectConfigurationProvider : ConfigurationProviderBase
         switch (variant)
         {
             case TypeVariant.Object:
-                ProcessObject(prefix, addValue, value);
+                ProcessObject(prefix, value);
                 break;
             case TypeVariant.Dictionary:
-                ProcessDictionary(prefix, addValue, value);
+                ProcessDictionary(prefix, value);
                 break;
             case TypeVariant.Enumerable:
-                ProcessEnumerable(prefix, addValue, value);
+                ProcessEnumerable(prefix, value);
                 break;
             case TypeVariant.Nullable:
-                ProcessNullable(prefix, addValue, value);
+                ProcessNullable(prefix, value);
                 break;
             case TypeVariant.Primitive:
-                ProcessPrimitive(prefix, addValue, value);
+                ProcessPrimitive(prefix, value);
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(variant), $"Can't process type {type.FriendlyName()}");
@@ -79,9 +85,8 @@ internal class ObjectConfigurationProvider : ConfigurationProviderBase
     /// Processes an object by iterating through its properties and fields
     /// </summary>
     /// <param name="prefix">Key prefix for the current path</param>
-    /// <param name="addValue">Action to add key-value pairs</param>
     /// <param name="value">Object to process</param>
-    private void ProcessObject(string[] prefix, Action<string[], string> addValue, object value)
+    private void ProcessObject(string[] prefix, object value)
     {
         var type = value.GetType();
         var members = Helper.GetMembers(type);
@@ -92,7 +97,7 @@ internal class ObjectConfigurationProvider : ConfigurationProviderBase
             var memberValue = member.GetPropertyOrFieldValue(value);
 
             if (memberValue is not null)
-                Process(memberPath, addValue, memberValue);
+                Process(memberPath, memberValue);
         }
     }
 
@@ -100,30 +105,40 @@ internal class ObjectConfigurationProvider : ConfigurationProviderBase
     /// Processes a dictionary by iterating through its key-value pairs
     /// </summary>
     /// <param name="prefix">Key prefix for the current path</param>
-    /// <param name="addValue">Action to add key-value pairs</param>
     /// <param name="value">Dictionary to process</param>
-    private void ProcessDictionary(string[] prefix, Action<string[], string> addValue, object value)
+    private void ProcessDictionary(string[] prefix, object value)
     {
         var type = value.GetType();
         var dictionaryType =
             type.GetTargetImplementation(typeof(IDictionary<,>))
             ?? type.GetTargetImplementation(typeof(IReadOnlyDictionary<,>));
-        var keyType = dictionaryType!.GetGenericArguments()[0];
+        if (dictionaryType is null)
+            throw new InvalidOperationException(
+                $"Value of type {type} is not assignable to IDictionary<,> or IReadOnlyDictionary<,>"
+            );
+        var keyType = dictionaryType.GetGenericArguments()[0];
         var valueType = dictionaryType.GetGenericArguments()[1];
         var keyValueType = typeof(KeyValuePair<,>).MakeGenericType(keyType, valueType);
-        var getKey = keyValueType.GetProperty(nameof(KeyValuePair<,>.Key))!.GetMethod!;
-        var getValue = keyValueType.GetProperty(nameof(KeyValuePair<,>.Value))!.GetMethod!;
+        var getKey = keyValueType.GetProperty(nameof(KeyValuePair<,>.Key)).NotNull().GetMethod.NotNull();
+        var getValue = keyValueType.GetProperty(nameof(KeyValuePair<,>.Value)).NotNull().GetMethod.NotNull();
 
         foreach (var item in (IEnumerable)value)
         {
-            var itemValue = getValue.Invoke(item, Array.Empty<object>());
+            var itemValue = getValue.Invoke(item, _noArgs);
             if (itemValue is null)
                 continue;
 
-            var itemKey = getKey.Invoke(item, Array.Empty<object>())!;
-            var memberPath = prefix.Append(itemKey.ToString()!).ToArray();
+            var itemKey =
+                getKey.Invoke(item, _noArgs)
+                ?? throw new InvalidOperationException($"Dictionary key is null at path: {string.Join('.', prefix)}");
+            var keyText =
+                itemKey.ToString()
+                ?? throw new InvalidOperationException(
+                    $"Key.ToString() returned null for type {itemKey.GetType().FullName} at path: {string.Join('.', prefix)}"
+                );
+            var memberPath = prefix.Append(keyText).ToArray();
 
-            Process(memberPath, addValue, itemValue);
+            Process(memberPath, itemValue);
         }
     }
 
@@ -131,9 +146,8 @@ internal class ObjectConfigurationProvider : ConfigurationProviderBase
     /// Processes an enumerable by iterating through its items with indices
     /// </summary>
     /// <param name="prefix">Key prefix for the current path</param>
-    /// <param name="addValue">Action to add key-value pairs</param>
     /// <param name="value">Enumerable to process</param>
-    private void ProcessEnumerable(string[] prefix, Action<string[], string> addValue, object value)
+    private void ProcessEnumerable(string[] prefix, object value)
     {
         var index = 0;
 
@@ -144,7 +158,7 @@ internal class ObjectConfigurationProvider : ConfigurationProviderBase
 
             var memberPath = prefix.Append((index++).ToString()).ToArray();
 
-            Process(memberPath, addValue, item);
+            Process(memberPath, item);
         }
     }
 
@@ -152,32 +166,30 @@ internal class ObjectConfigurationProvider : ConfigurationProviderBase
     /// Processes a nullable value by extracting its underlying value
     /// </summary>
     /// <param name="prefix">Key prefix for the current path</param>
-    /// <param name="addValue">Action to add key-value pairs</param>
     /// <param name="value">Nullable value to process</param>
-    private void ProcessNullable(string[] prefix, Action<string[], string> addValue, object value)
+    private void ProcessNullable(string[] prefix, object value)
     {
         var type = value.GetType();
-        var getValueOrDefault = type.GetMethod(nameof(Nullable<>.GetValueOrDefault), Type.EmptyTypes)!;
-        var innerValue = getValueOrDefault.Invoke(value, Array.Empty<object>());
+        var getValueOrDefault = type.GetMethod(nameof(Nullable<>.GetValueOrDefault), Type.EmptyTypes).NotNull();
+        var innerValue = getValueOrDefault.Invoke(value, _noArgs);
         if (innerValue is null)
             return;
 
-        Process(prefix, addValue, innerValue);
+        Process(prefix, innerValue);
     }
 
     /// <summary>
     /// Processes a primitive value by converting it to string
     /// </summary>
     /// <param name="prefix">Key prefix for the current path</param>
-    /// <param name="addValue">Action to add key-value pairs</param>
     /// <param name="value">Primitive value to process</param>
-    private void ProcessPrimitive(string[] prefix, Action<string[], string> addValue, object value)
+    private void ProcessPrimitive(string[] prefix, object value)
     {
         var valueString = value.ToString();
         if (valueString is null)
             return;
 
-        addValue(prefix, valueString);
+        SetAt(prefix, valueString);
     }
 }
 
@@ -187,44 +199,30 @@ internal class ObjectConfigurationProvider : ConfigurationProviderBase
 file static class Helper
 {
     /// <summary>
-    /// Cache for type variants to improve performance
+    /// Cache for type variants to improve performance. ConcurrentDictionary is required because
+    /// BuildAsync loads sources in parallel via Task.WhenAll, so Read() may run concurrently.
     /// </summary>
-    private static readonly Dictionary<Type, TypeVariant> _variants = new();
+    private static readonly ConcurrentDictionary<Type, TypeVariant> _variants = new();
 
     /// <summary>
-    /// Cache for type members to improve performance
+    /// Cache for type members to improve performance. ConcurrentDictionary is required because
+    /// BuildAsync loads sources in parallel via Task.WhenAll, so Read() may run concurrently.
     /// </summary>
-    private static readonly Dictionary<Type, IReadOnlyCollection<MemberInfo>> _members = new();
+    private static readonly ConcurrentDictionary<Type, IReadOnlyCollection<MemberInfo>> _members = new();
 
     /// <summary>
     /// Gets the type variant for a given type
     /// </summary>
     /// <param name="type">Type to get variant for</param>
     /// <returns>Type variant of the specified type</returns>
-    public static TypeVariant GetVariant(Type type)
-    {
-        if (_variants.TryGetValue(type, out var variant))
-            return variant;
-
-        _variants[type] = variant = ResolveVariant(type);
-
-        return variant;
-    }
+    public static TypeVariant GetVariant(Type type) => _variants.GetOrAdd(type, ResolveVariant);
 
     /// <summary>
     /// Gets the accessible members for a given type
     /// </summary>
     /// <param name="type">Type to get members for</param>
     /// <returns>Collection of accessible members</returns>
-    public static IReadOnlyCollection<MemberInfo> GetMembers(Type type)
-    {
-        if (_members.TryGetValue(type, out var members))
-            return members;
-
-        _members[type] = members = ResolveMembers(type);
-
-        return members;
-    }
+    public static IReadOnlyCollection<MemberInfo> GetMembers(Type type) => _members.GetOrAdd(type, ResolveMembers);
 
     /// <summary>
     /// Resolves the type variant for a type
@@ -260,7 +258,13 @@ file static class Helper
     {
         return type.GetAllProperties(BindingFlags.Public | BindingFlags.Instance)
             .Where(x => x.CanRead && x.GetMethod?.GetParameters().Length == 0)
-            .Concat(type.GetAllFields(BindingFlags.Public | BindingFlags.Instance).OfType<MemberInfo>())
+            // readonly fields are skipped by ConfigurationProcessor.ProcessObject's restore (it filters
+            // !IsInitOnly); excluding them here keeps the flatten and restore member sets symmetric.
+            .Concat(
+                type.GetAllFields(BindingFlags.Public | BindingFlags.Instance)
+                    .Where(f => !f.IsInitOnly)
+                    .OfType<MemberInfo>()
+            )
             .ToArray();
     }
 }

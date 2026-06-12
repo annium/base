@@ -21,15 +21,13 @@ public interface IConfigurationContainer
     /// this container in registration order.
     /// </summary>
     /// <param name="source">Source to register</param>
-    /// <returns>The container for method chaining</returns>
-    IConfigurationContainer AddSource(IConfigurationSource source);
+    void AddSource(IConfigurationSource source);
 
     /// <summary>
     /// Adds configuration data to the container
     /// </summary>
     /// <param name="config">Configuration data to add</param>
-    /// <returns>The container for method chaining</returns>
-    IConfigurationContainer Add(IReadOnlyDictionary<string[], string> config);
+    void Add(IReadOnlyDictionary<string[], string> config);
 
     /// <summary>
     /// Gets all configuration data from the container

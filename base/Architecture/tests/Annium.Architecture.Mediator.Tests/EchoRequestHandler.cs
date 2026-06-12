@@ -39,3 +39,16 @@ internal interface IThrowing
     /// </summary>
     bool Throw { get; }
 }
+
+/// <summary>
+/// Shared throwing request fixture: a request that carries a settable <see cref="IThrowing.Throw"/>
+/// flag so tests can drive both the exception and the success paths of an exception pipe handler
+/// without defining a per-test-class request type.
+/// </summary>
+internal class ThrowingRequest : IThrowing
+{
+    /// <summary>
+    /// Gets or sets a value indicating whether an exception should be thrown.
+    /// </summary>
+    public bool Throw { get; set; }
+}

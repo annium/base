@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 using Annium.Core.DependencyInjection;
 using Annium.Core.Runtime;
 using Annium.Testing;
@@ -151,16 +149,5 @@ public class LogRouteRegistrationTests
         var registered = new List<LogRoute<DefaultLogContext>>();
         var route = new LogRoute<DefaultLogContext>(sp, registered.Add);
         return (route, registered);
-    }
-
-    /// <summary>
-    /// Minimal non-buffering log handler — used as a placeholder handler for registration
-    /// assertions. The body is never invoked because tests assert on the routes list,
-    /// not on dispatch behaviour.
-    /// </summary>
-    private sealed class SyncSink : ILogHandler<DefaultLogContext>
-    {
-        public ValueTask HandleAsync(IReadOnlyList<LogMessage<DefaultLogContext>> messages, CancellationToken ct) =>
-            ValueTask.CompletedTask;
     }
 }

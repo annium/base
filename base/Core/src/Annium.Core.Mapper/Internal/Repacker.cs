@@ -14,12 +14,9 @@ internal class Repacker : IRepacker
     /// </summary>
     /// <param name="ex">The expression to repack</param>
     /// <returns>The repacked mapping</returns>
-    public Mapping Repack(Expression? ex) =>
+    public Mapping Repack(Expression ex) =>
         source =>
         {
-            if (ex is null)
-                return null!;
-
             return ex switch
             {
                 BinaryExpression binary => Binary(binary)(source),
@@ -74,7 +71,17 @@ internal class Repacker : IRepacker
     /// <param name="ex">The lambda expression</param>
     /// <returns>The repacked mapping</returns>
     private Mapping Lambda(LambdaExpression ex) =>
-        source => Expression.Lambda(Repack(ex.Body)(source), (ParameterExpression)source);
+        source =>
+        {
+            // a repacked lambda must be parameterized by the substituted source — only a ParameterExpression
+            // can become a Lambda parameter; non-parameter sources here would silently produce a malformed tree.
+            if (source is not ParameterExpression parameter)
+                throw new InvalidOperationException(
+                    $"Lambda repack requires a ParameterExpression source; got {source.GetType().Name}."
+                );
+
+            return Expression.Lambda(Repack(ex.Body)(parameter), parameter);
+        };
 
     /// <summary>
     /// Repacks a list initialization expression
@@ -94,7 +101,12 @@ internal class Repacker : IRepacker
     /// <param name="ex">The member expression</param>
     /// <returns>The repacked mapping</returns>
     private Mapping Member(MemberExpression ex) =>
-        source => Expression.MakeMemberAccess(Repack(ex.Expression)(source), ex.Member);
+        source =>
+            // ex.Expression is null for static member access — there is no source-derived sub-expression to repack
+            ex.Expression
+                is null
+                ? Expression.MakeMemberAccess(null, ex.Member)
+                : Expression.MakeMemberAccess(Repack(ex.Expression)(source), ex.Member);
 
     /// <summary>
     /// Repacks a member initialization expression
@@ -105,14 +117,26 @@ internal class Repacker : IRepacker
         source =>
             Expression.MemberInit(
                 (NewExpression)Repack(ex.NewExpression)(source),
-                ex.Bindings.Select(b =>
-                {
-                    if (b is MemberAssignment ma)
-                        return ma.Update(Repack(ma.Expression)(source));
-
-                    return b;
-                })
+                ex.Bindings.Select(b => RepackBinding(b, source))
             );
+
+    /// <summary>
+    /// Repacks a member binding, recursing into nested list and member bindings so that any
+    /// embedded source expressions are substituted rather than silently passed through.
+    /// </summary>
+    /// <param name="binding">The member binding to repack.</param>
+    /// <param name="source">The current source expression.</param>
+    /// <returns>The repacked member binding.</returns>
+    private MemberBinding RepackBinding(MemberBinding binding, Expression source) =>
+        binding switch
+        {
+            MemberAssignment ma => ma.Update(Repack(ma.Expression)(source)),
+            MemberListBinding ml => ml.Update(
+                ml.Initializers.Select(i => i.Update(i.Arguments.Select(a => Repack(a)(source))))
+            ),
+            MemberMemberBinding mm => mm.Update(mm.Bindings.Select(inner => RepackBinding(inner, source))),
+            _ => throw new InvalidOperationException($"Unsupported MemberBinding kind: {binding.BindingType}"),
+        };
 
     /// <summary>
     /// Repacks a method call expression
@@ -121,11 +145,13 @@ internal class Repacker : IRepacker
     /// <returns>The repacked mapping</returns>
     private Mapping MethodCall(MethodCallExpression ex) =>
         source =>
-            Expression.Call(
-                Repack(ex.Object)(source),
-                ex.Method,
-                ex.Arguments.Select(a => Repack(a)(source)).ToArray()
-            );
+        {
+            // ex.Object is null for static method calls — Expression.Call has a no-instance overload for that
+            var args = ex.Arguments.Select(a => Repack(a)(source)).ToArray();
+            return ex.Object is null
+                ? Expression.Call(ex.Method, args)
+                : Expression.Call(Repack(ex.Object)(source), ex.Method, args);
+        };
 
     /// <summary>
     /// Repacks a new object expression
@@ -133,7 +159,14 @@ internal class Repacker : IRepacker
     /// <param name="ex">The new expression</param>
     /// <returns>The repacked mapping</returns>
     private Mapping New(NewExpression ex) =>
-        source => Expression.New(ex.Constructor!, ex.Arguments.Select(a => Repack(a)(source)));
+        source =>
+            // NewExpression.Constructor is null when the expression names a value-type default ctor
+            // via Expression.New(Type) — fall through to the typed New(Type) overload so struct-shaped
+            // MapWith bodies (`x => new MyStruct { ... }`) repack without throwing.
+            ex.Constructor
+                is null
+                ? Expression.New(ex.Type)
+                : Expression.New(ex.Constructor, ex.Arguments.Select(a => Repack(a)(source)));
 
     /// <summary>
     /// Repacks a new array expression

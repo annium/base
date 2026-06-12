@@ -105,6 +105,9 @@ public sealed record ConfigOne : SomeConfig
     /// </summary>
     public uint Value { get; set; }
 
+    /// <summary>
+    /// Initializes a new instance of <see cref="ConfigOne"/>.
+    /// </summary>
     public ConfigOne()
     {
         Type = nameof(ConfigOne);
@@ -122,6 +125,9 @@ public sealed record ConfigTwo : SomeConfig
     /// </summary>
     public long Value { get; set; }
 
+    /// <summary>
+    /// Initializes a new instance of <see cref="ConfigTwo"/>.
+    /// </summary>
     public ConfigTwo()
     {
         Type = nameof(ConfigTwo);

@@ -8,5 +8,5 @@ public static class Constants
     /// <summary>
     /// The media type identifier for binary string serialization.
     /// </summary>
-    public static string MediaType = "BinaryString";
+    public const string MediaType = "BinaryString";
 }

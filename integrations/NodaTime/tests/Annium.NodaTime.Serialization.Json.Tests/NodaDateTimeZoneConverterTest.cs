@@ -49,4 +49,14 @@ public class NodaDateTimeZoneConverterTest
         var json = "\"America/DOES_NOT_EXIST\"";
         Wrap.It(() => JsonSerializer.Deserialize<DateTimeZone>(json, With(_converter))).Throws<JsonException>();
     }
+
+    /// <summary>
+    /// Tests that deserializing a non-String token (a JSON number) throws a JsonException —
+    /// the CheckData guard raises InvalidNodaDataException which ConverterBase.Read wraps.
+    /// </summary>
+    [Fact]
+    public void Deserialize_NonStringToken_Throws()
+    {
+        Wrap.It(() => JsonSerializer.Deserialize<DateTimeZone>("42", With(_converter))).Throws<JsonException>();
+    }
 }

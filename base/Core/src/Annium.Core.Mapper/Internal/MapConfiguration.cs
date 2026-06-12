@@ -13,7 +13,7 @@ internal class MapConfiguration : IMapConfiguration
     /// <summary>
     /// Gets an empty mapping configuration instance
     /// </summary>
-    public static IMapConfiguration Empty { get; } = new MapConfiguration();
+    internal static IMapConfiguration Empty { get; } = new MapConfiguration();
 
     /// <summary>
     /// Gets the global mapping function
@@ -44,8 +44,11 @@ internal class MapConfiguration : IMapConfiguration
     /// Sets the global mapping expression
     /// </summary>
     /// <param name="mapWith">The mapping expression</param>
-    public void SetMapWith(LambdaExpression mapWith)
+    internal void SetMapWith(LambdaExpression mapWith)
     {
+        if (MapWith is not null)
+            throw new InvalidOperationException("MapWith already set");
+
         MapWith = _ => mapWith;
     }
 
@@ -53,8 +56,11 @@ internal class MapConfiguration : IMapConfiguration
     /// Sets the global mapping expression factory
     /// </summary>
     /// <param name="mapWith">The mapping expression factory</param>
-    public void SetMapWith(Func<IMapContext, LambdaExpression> mapWith)
+    internal void SetMapWith(Func<IMapContext, LambdaExpression> mapWith)
     {
+        if (MapWith is not null)
+            throw new InvalidOperationException("MapWith already set");
+
         MapWith = mapWith;
     }
 
@@ -63,7 +69,7 @@ internal class MapConfiguration : IMapConfiguration
     /// </summary>
     /// <param name="properties">The properties to configure</param>
     /// <param name="mapWith">The mapping expression</param>
-    public void AddMapWithFor(IReadOnlyCollection<PropertyInfo> properties, LambdaExpression mapWith)
+    internal void AddMapWithFor(IReadOnlyCollection<PropertyInfo> properties, LambdaExpression mapWith)
     {
         foreach (var property in properties)
             _memberMaps[property] = _ => mapWith;
@@ -74,7 +80,10 @@ internal class MapConfiguration : IMapConfiguration
     /// </summary>
     /// <param name="properties">The properties to configure</param>
     /// <param name="mapWith">The mapping expression factory</param>
-    public void AddMapWithFor(IReadOnlyCollection<PropertyInfo> properties, Func<IMapContext, LambdaExpression> mapWith)
+    internal void AddMapWithFor(
+        IReadOnlyCollection<PropertyInfo> properties,
+        Func<IMapContext, LambdaExpression> mapWith
+    )
     {
         foreach (var property in properties)
             _memberMaps[property] = mapWith;
@@ -84,7 +93,7 @@ internal class MapConfiguration : IMapConfiguration
     /// Adds properties to the ignored members collection
     /// </summary>
     /// <param name="properties">The properties to ignore</param>
-    public void Ignore(IReadOnlyCollection<PropertyInfo> properties)
+    internal void Ignore(IReadOnlyCollection<PropertyInfo> properties)
     {
         foreach (var property in properties)
             _ignoredMembers.Add(property);

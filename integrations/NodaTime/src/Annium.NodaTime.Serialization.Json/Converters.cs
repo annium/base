@@ -150,8 +150,8 @@ public static class Converters
             // We rely on CalendarSystem.Iso being a singleton here.
             Preconditions.CheckArgument(
                 calendar == CalendarSystem.Iso,
-                "Values of type {0} must (currently) use the ISO calendar in order to be serialized.",
-                typeof(T).Name
+                typeof(T).Name,
+                $"Values of type {typeof(T).Name} must (currently) use the ISO calendar in order to be serialized."
             );
         };
 }

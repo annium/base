@@ -15,15 +15,15 @@ internal class StreamSerializer : ISerializer<Stream>
     /// <summary>
     /// The MessagePack serializer options used for serialization and deserialization.
     /// </summary>
-    private readonly MessagePackSerializerOptions _opts;
+    private readonly MessagePackSerializerOptions _options;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="StreamSerializer"/> class.
     /// </summary>
-    /// <param name="opts">The MessagePack serializer options to use.</param>
-    public StreamSerializer(MessagePackSerializerOptions opts)
+    /// <param name="options">The MessagePack serializer options to use.</param>
+    public StreamSerializer(MessagePackSerializerOptions options)
     {
-        _opts = opts;
+        _options = options;
     }
 
     /// <summary>
@@ -36,7 +36,7 @@ internal class StreamSerializer : ISerializer<Stream>
     {
         try
         {
-            return MessagePackSerializer.Deserialize<T>(value, _opts);
+            return MessagePackSerializer.Deserialize<T>(value, _options);
         }
         catch (Exception e)
         {
@@ -57,7 +57,7 @@ internal class StreamSerializer : ISerializer<Stream>
     {
         try
         {
-            return MessagePackSerializer.Deserialize(type, value, _opts);
+            return MessagePackSerializer.Deserialize(type, value, _options);
         }
         catch (Exception e)
         {
@@ -76,7 +76,7 @@ internal class StreamSerializer : ISerializer<Stream>
         try
         {
             var ms = new MemoryStream();
-            MessagePackSerializer.Serialize(ms, value, _opts);
+            MessagePackSerializer.Serialize(ms, value, _options);
             ms.Position = 0;
             return ms;
         }
@@ -100,7 +100,7 @@ internal class StreamSerializer : ISerializer<Stream>
         try
         {
             var ms = new MemoryStream();
-            MessagePackSerializer.Serialize(type, ms, value, _opts);
+            MessagePackSerializer.Serialize(type, ms, value, _options);
             ms.Position = 0;
             return ms;
         }

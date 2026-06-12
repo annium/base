@@ -14,30 +14,17 @@ namespace Annium.Architecture.ViewModel.Internal.PipeHandlers.Request;
 /// <typeparam name="TRequestOut">The output underlying request type</typeparam>
 /// <typeparam name="TResponse">The response type</typeparam>
 internal class MappingSinglePipeHandler<TRequestIn, TRequestOut, TResponse>
-    : IPipeRequestHandler<TRequestIn, TRequestOut, TResponse, TResponse>,
-        ILogSubject
+    : MappingPipeHandlerBase,
+        IPipeRequestHandler<TRequestIn, TRequestOut, TResponse, TResponse>
     where TRequestIn : IRequest<TRequestOut>
 {
-    /// <summary>
-    /// Gets the logger for this pipe handler
-    /// </summary>
-    public ILogger Logger { get; }
-
-    /// <summary>
-    /// The mapper instance used to map between types.
-    /// </summary>
-    private readonly IMapper _mapper;
-
     /// <summary>
     /// Initializes a new instance of the MappingSinglePipeHandler class
     /// </summary>
     /// <param name="mapper">The mapper instance</param>
     /// <param name="logger">The logger instance</param>
     public MappingSinglePipeHandler(IMapper mapper, ILogger logger)
-    {
-        _mapper = mapper;
-        Logger = logger;
-    }
+        : base(mapper, logger) { }
 
     /// <summary>
     /// Handles the single request by mapping it from view model type to underlying type
@@ -53,7 +40,7 @@ internal class MappingSinglePipeHandler<TRequestIn, TRequestOut, TResponse>
     )
     {
         this.Trace("Map request: {requestIn} -> {requestOut}", typeof(TRequestIn), typeof(TRequestOut));
-        var mappedRequest = _mapper.Map<TRequestOut>(request);
+        var mappedRequest = Mapper.Map<TRequestOut>(request);
 
         return next(mappedRequest, ct);
     }

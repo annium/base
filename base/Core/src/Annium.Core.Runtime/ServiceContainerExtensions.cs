@@ -37,7 +37,7 @@ public static class ServiceContainerExtensions
     /// </remarks>
     public static IServiceContainer AddRuntime(this IServiceContainer container, Assembly assembly)
     {
-        container.Add(TypeManager.GetInstance(assembly, VoidLogger.Instance)).As<ITypeManager>().Singleton();
+        container.Add(TypeManager.GetInstance(assembly)).As<ITypeManager>().Singleton();
         container.Add<ITypeResolver, TypeResolver>().Singleton();
 
         return container;
@@ -74,8 +74,8 @@ public static class ServiceContainerExtensions
     /// <code>
     /// var container = new ServiceContainer();
     /// container.AddTime()
-    ///     .UseSystemTime() // or other time provider configuration
-    ///     .Build();
+    ///     .WithRealTime() // or .WithRelativeTime() / .WithManagedTime()
+    ///     .SetDefault();
     /// </code>
     /// </remarks>
     public static ITimeConfigurationBuilder AddTime(

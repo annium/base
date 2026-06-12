@@ -11,6 +11,16 @@ namespace Annium.Logging.Shared;
 public static class LogMessageExtensions
 {
     /// <summary>
+    /// Format for a full local/UTC date-and-time stamp.
+    /// </summary>
+    private const string DateTimeFormat = "dd.MM.yy HH:mm:ss.fff";
+
+    /// <summary>
+    /// Format for a time-only stamp.
+    /// </summary>
+    private const string TimeFormat = "HH:mm:ss.fff";
+
+    /// <summary>
     /// The current system time zone
     /// </summary>
     private static readonly DateTimeZone _currentTz = DateTimeZoneProviders.Tzdb.GetSystemDefault();
@@ -71,7 +81,7 @@ public static class LogMessageExtensions
     public static string LocalDateTime<TContext>(LogMessage<TContext> m)
         where TContext : class
     {
-        return m.Instant.InZone(_currentTz).LocalDateTime.ToString("dd.MM.yy HH:mm:ss.fff", null);
+        return m.Instant.InZone(_currentTz).LocalDateTime.ToString(DateTimeFormat, null);
     }
 
     /// <summary>
@@ -84,7 +94,7 @@ public static class LogMessageExtensions
     public static string LocalTime<TContext>(LogMessage<TContext> m)
         where TContext : class
     {
-        return m.Instant.InZone(_currentTz).LocalDateTime.ToString("HH:mm:ss.fff", null);
+        return m.Instant.InZone(_currentTz).LocalDateTime.ToString(TimeFormat, null);
     }
 
     /// <summary>
@@ -97,7 +107,7 @@ public static class LogMessageExtensions
     public static string UtcDateTime<TContext>(LogMessage<TContext> m)
         where TContext : class
     {
-        return m.Instant.InZone(_utcTz).LocalDateTime.ToString("dd.MM.yy HH:mm:ss.fff", null);
+        return m.Instant.InZone(_utcTz).LocalDateTime.ToString(DateTimeFormat, null);
     }
 
     /// <summary>
@@ -110,6 +120,6 @@ public static class LogMessageExtensions
     public static string UtcTime<TContext>(LogMessage<TContext> m)
         where TContext : class
     {
-        return m.Instant.InZone(_utcTz).LocalDateTime.ToString("HH:mm:ss.fff", null);
+        return m.Instant.InZone(_utcTz).LocalDateTime.ToString(TimeFormat, null);
     }
 }

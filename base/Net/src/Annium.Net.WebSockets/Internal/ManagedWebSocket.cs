@@ -9,40 +9,51 @@ using Annium.Logging;
 namespace Annium.Net.WebSockets.Internal;
 
 /// <summary>
-/// Internal managed WebSocket implementation that handles low-level WebSocket operations
+/// Internal managed WebSocket implementation that handles low-level WebSocket operations.
 /// </summary>
 internal class ManagedWebSocket : ISendingReceivingWebSocket, ILogSubject
 {
     /// <summary>
-    /// Gets the logger instance for this managed WebSocket
+    /// Gets the logger instance for this managed WebSocket.
     /// </summary>
     public ILogger Logger { get; }
 
     /// <summary>
-    /// Default buffer size for WebSocket message receiving operations
+    /// Default buffer size for WebSocket message receiving operations.
     /// </summary>
-    private const int BufferSize = 65_536;
+    private const int BufferSize = ManagedWebSocketDefaults.BufferSize;
 
     /// <summary>
-    /// Event triggered when a text message is received
+    /// Shared sentinel for a locally-closed receive result (cancellation / socket-not-open / OCE paths).
+    /// </summary>
+    private static readonly ReceiveResult _closedLocalResult = new(
+        WebSocketMessageType.Close,
+        0,
+        true,
+        WebSocketCloseStatus.ClosedLocal,
+        null
+    );
+
+    /// <summary>
+    /// Event triggered when a text message is received.
     /// </summary>
     public event Action<ReadOnlyMemory<byte>> OnTextReceived = delegate { };
 
     /// <summary>
-    /// Event triggered when a binary message is received
+    /// Event triggered when a binary message is received.
     /// </summary>
     public event Action<ReadOnlyMemory<byte>> OnBinaryReceived = delegate { };
 
     /// <summary>
-    /// The underlying native WebSocket instance
+    /// The underlying native WebSocket instance.
     /// </summary>
     private readonly WebSocket _socket;
 
     /// <summary>
-    /// Initializes a new instance of the ManagedWebSocket class
+    /// Initializes a new instance of the ManagedWebSocket class.
     /// </summary>
-    /// <param name="socket">The underlying native WebSocket instance</param>
-    /// <param name="logger">Logger instance for tracing and error reporting</param>
+    /// <param name="socket">The underlying native WebSocket instance.</param>
+    /// <param name="logger">Logger instance for tracing and error reporting.</param>
     public ManagedWebSocket(WebSocket socket, ILogger logger)
     {
         Logger = logger;
@@ -50,32 +61,32 @@ internal class ManagedWebSocket : ISendingReceivingWebSocket, ILogSubject
     }
 
     /// <summary>
-    /// Sends a text message over the WebSocket
+    /// Sends a text message over the WebSocket.
     /// </summary>
-    /// <param name="text">The text message data to send</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>The status of the send operation</returns>
+    /// <param name="text">The text message data to send.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>The status of the send operation.</returns>
     public ValueTask<WebSocketSendStatus> SendTextAsync(ReadOnlyMemory<byte> text, CancellationToken ct = default)
     {
         return SendAsync(text, WebSocketMessageType.Text, ct);
     }
 
     /// <summary>
-    /// Sends a binary message over the WebSocket
+    /// Sends a binary message over the WebSocket.
     /// </summary>
-    /// <param name="data">The binary data to send</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>The status of the send operation</returns>
+    /// <param name="data">The binary data to send.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>The status of the send operation.</returns>
     public ValueTask<WebSocketSendStatus> SendBinaryAsync(ReadOnlyMemory<byte> data, CancellationToken ct = default)
     {
         return SendAsync(data, WebSocketMessageType.Binary, ct);
     }
 
     /// <summary>
-    /// Starts listening for incoming WebSocket messages until the connection is closed
+    /// Starts listening for incoming WebSocket messages until the connection is closed.
     /// </summary>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>The result of the WebSocket closure</returns>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>The result of the WebSocket closure.</returns>
     public async Task<WebSocketCloseResult> ListenAsync(CancellationToken ct)
     {
         using var buffer = new ManagedBuffer(BufferSize);
@@ -87,23 +98,22 @@ internal class ManagedWebSocket : ISendingReceivingWebSocket, ILogSubject
             var (isClosed, result) = await ReceiveAsync(buffer, ct);
             if (isClosed)
             {
-                this.Trace(
-                    result.Exception is not null
-                        ? $"stop with {result.Status}: {result.Exception}"
-                        : $"stop with {result.Status}"
-                );
+                if (result.Exception is not null)
+                    this.Trace("stop with {status}: {exception}", result.Status, result.Exception);
+                else
+                    this.Trace("stop with {status}", result.Status);
                 return result;
             }
         }
     }
 
     /// <summary>
-    /// Sends data over the WebSocket with specified message type
+    /// Sends data over the WebSocket with specified message type.
     /// </summary>
-    /// <param name="data">The data to send</param>
-    /// <param name="messageType">The type of WebSocket message (Text or Binary)</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>The status of the send operation</returns>
+    /// <param name="data">The data to send.</param>
+    /// <param name="messageType">The type of WebSocket message (Text or Binary).</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>The status of the send operation.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private async ValueTask<WebSocketSendStatus> SendAsync(
         ReadOnlyMemory<byte> data,
@@ -178,11 +188,11 @@ internal class ManagedWebSocket : ISendingReceivingWebSocket, ILogSubject
     }
 
     /// <summary>
-    /// Receives a complete WebSocket message into the provided buffer
+    /// Receives a complete WebSocket message into the provided buffer.
     /// </summary>
-    /// <param name="buffer">The buffer to store received data</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>A tuple indicating if the connection is closed and the close result</returns>
+    /// <param name="buffer">The buffer to store received data.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>A tuple indicating if the connection is closed and the close result.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private async ValueTask<(bool IsClosed, WebSocketCloseResult Result)> ReceiveAsync(
         ManagedBuffer buffer,
@@ -225,11 +235,11 @@ internal class ManagedWebSocket : ISendingReceivingWebSocket, ILogSubject
     }
 
     /// <summary>
-    /// Receives a chunk of data from the WebSocket into the buffer's free space
+    /// Receives a chunk of data from the WebSocket into the buffer's free space.
     /// </summary>
-    /// <param name="buffer">The buffer to receive data into</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>The result of the receive operation including message type and bytes received</returns>
+    /// <param name="buffer">The buffer to receive data into.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>The result of the receive operation including message type and bytes received.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private async ValueTask<ReceiveResult> ReceiveChunkAsync(ManagedBuffer buffer, CancellationToken ct)
     {
@@ -238,13 +248,13 @@ internal class ManagedWebSocket : ISendingReceivingWebSocket, ILogSubject
             if (ct.IsCancellationRequested)
             {
                 this.Trace("canceled with cancellation token");
-                return new ReceiveResult(WebSocketMessageType.Close, 0, true, WebSocketCloseStatus.ClosedLocal, null);
+                return _closedLocalResult;
             }
 
             if (_socket.State is not WebSocketState.Open)
             {
                 this.Trace("closed because socket is not open");
-                return new ReceiveResult(WebSocketMessageType.Close, 0, true, WebSocketCloseStatus.ClosedLocal, null);
+                return _closedLocalResult;
             }
 
             var result = await _socket.ReceiveAsync(buffer.FreeSpace, ct).ConfigureAwait(false);
@@ -266,7 +276,7 @@ internal class ManagedWebSocket : ISendingReceivingWebSocket, ILogSubject
         catch (OperationCanceledException)
         {
             this.Trace("closed locally with cancellation: {isCancellationRequested}", ct.IsCancellationRequested);
-            return new ReceiveResult(WebSocketMessageType.Close, 0, true, WebSocketCloseStatus.ClosedLocal, null);
+            return _closedLocalResult;
         }
         catch (WebSocketException e)
         {

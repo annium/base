@@ -35,7 +35,7 @@ internal class JsonConfigurationProvider : ConfigurationProviderBase
 
         Process(doc.RootElement);
 
-        return Data;
+        return Result;
     }
 
     /// <summary>
@@ -46,9 +46,9 @@ internal class JsonConfigurationProvider : ConfigurationProviderBase
     {
         foreach (var property in token.EnumerateObject())
         {
-            Context.Push(property.Name);
+            Push(property.Name);
             Process(property.Value);
-            Context.Pop();
+            Pop();
         }
     }
 
@@ -61,9 +61,9 @@ internal class JsonConfigurationProvider : ConfigurationProviderBase
         var index = 0;
         foreach (var item in token.EnumerateArray())
         {
-            Context.Push(index.ToString());
+            Push(index.ToString());
             Process(item);
-            Context.Pop();
+            Pop();
             index++;
         }
     }
@@ -74,7 +74,7 @@ internal class JsonConfigurationProvider : ConfigurationProviderBase
     /// <param name="token">JSON element representing a leaf value</param>
     private void ProcessLeaf(JsonElement token)
     {
-        Data[Path] = token.ToString();
+        Set(token.ToString());
     }
 
     /// <summary>

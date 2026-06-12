@@ -7,6 +7,60 @@ using Xunit;
 namespace Annium.Core.Mapper.Tests.Resolvers;
 
 /// <summary>
+/// Verifies that <c>DictionaryConstructorMapResolver</c> throws <see cref="KeyNotFoundException"/>
+/// when the source dictionary is missing a key required by a constructor parameter.
+/// </summary>
+public class DictionaryConstructorMapResolverMissingKeyThrowsTest : TestBase
+{
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DictionaryConstructorMapResolverMissingKeyThrowsTest"/> class.
+    /// </summary>
+    /// <param name="outputHelper">The test output helper for logging test results.</param>
+    public DictionaryConstructorMapResolverMissingKeyThrowsTest(ITestOutputHelper outputHelper)
+        : base(outputHelper)
+    {
+        Register(c => c.AddMapper(autoload: false));
+    }
+
+    /// <summary>
+    /// Maps a dictionary that is missing the key required by the target's sole constructor parameter.
+    /// The compiled mapping expression throws <see cref="KeyNotFoundException"/> at runtime.
+    /// The constructor parameter is typed <c>object?</c> so <c>InstanceOfMapResolver</c> handles
+    /// <c>object→object</c>; the KeyNotFoundException fires when the missing key is accessed.
+    /// </summary>
+    [Fact]
+    public void ConstructorMapping_MissingDictKey_ThrowsKeyNotFoundException()
+    {
+        // arrange
+        var mapper = Get<IMapper>();
+        // "Value" key is absent — the resolver's BuildDictKeyAccess emits a throw for it
+        var source = new Dictionary<string, object> { { "Other", "irrelevant" } };
+
+        // act + assert
+        Wrap.It(() => mapper.Map<Target>(source)).Throws<KeyNotFoundException>();
+    }
+
+    /// <summary>
+    /// Target with no default constructor so <c>DictionaryConstructorMapResolver</c> is selected.
+    /// The constructor parameter is typed <c>object?</c> so <c>InstanceOfMapResolver</c> resolves
+    /// the <c>object→object</c> conversion; the KeyNotFoundException fires when the "Value" key
+    /// is absent from the source dictionary.
+    /// </summary>
+    private class Target
+    {
+        /// <summary>Gets the value supplied via the constructor.</summary>
+        public object? Value { get; }
+
+        /// <summary>Initializes a new instance of <see cref="Target"/>.</summary>
+        /// <param name="value">The value expected from the "Value" dict key.</param>
+        public Target(object? value)
+        {
+            Value = value;
+        }
+    }
+}
+
+/// <summary>
 /// Tests for dictionary constructor-based mapping resolution in the mapper.
 /// </summary>
 /// <remarks>
@@ -63,6 +117,7 @@ public class DictionaryConstructorMapResolverTest : TestBase
             .Ignore(x => new { x.IgnoredA, x.IgnoredB })
             .For(
                 x => new { x.Name, x.Age },
+                // "Serialized" is seeded as a boxed JSON string by the test below — ToString() is non-null
                 x => JsonSerializer.Deserialize<Info>(x["Serialized"].ToString()!, default(JsonSerializerOptions))
             );
     }

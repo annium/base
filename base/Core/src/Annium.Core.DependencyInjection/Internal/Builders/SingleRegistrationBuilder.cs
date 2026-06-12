@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using Annium.Core.DependencyInjection.Internal.Builders.Registrations;
 
@@ -8,33 +7,12 @@ namespace Annium.Core.DependencyInjection.Internal.Builders;
 /// <summary>
 /// Builder for single type service registrations.
 /// </summary>
-internal class SingleRegistrationBuilder : ISingleRegistrationBuilderBase
+internal class SingleRegistrationBuilder : RegistrationBuilderBase, ISingleRegistrationBuilderBase
 {
-    /// <summary>
-    /// The service container instance.
-    /// </summary>
-    private readonly IServiceContainer _container;
-
     /// <summary>
     /// The type being registered.
     /// </summary>
     private readonly Type _type;
-
-    /// <summary>
-    /// The registrar for handling service registrations.
-    /// </summary>
-    private readonly Registrar _registrar;
-
-    /// <summary>
-    /// The collection of registrations accumulated during the AsX phase.
-    /// </summary>
-    private readonly List<IRegistration> _registrations = new();
-
-    /// <summary>
-    /// Whether at least one <c>AsX</c> call has populated the registrations. Used by
-    /// <see cref="In"/> to fail fast if the caller forgot to specify registration targets.
-    /// </summary>
-    private bool _registrationsInitiated;
 
     /// <summary>
     /// Whether the caller already registered the type as itself via <see cref="AsSelf"/>.
@@ -51,10 +29,9 @@ internal class SingleRegistrationBuilder : ISingleRegistrationBuilderBase
     /// <param name="type">The type being registered.</param>
     /// <param name="registrar">The registrar for handling registrations.</param>
     public SingleRegistrationBuilder(IServiceContainer container, Type type, Registrar registrar)
+        : base(container, registrar)
     {
-        _container = container;
         _type = type;
-        _registrar = registrar;
     }
 
     /// <summary>
@@ -64,7 +41,8 @@ internal class SingleRegistrationBuilder : ISingleRegistrationBuilderBase
     public ISingleRegistrationBuilderBase AsSelf()
     {
         _selfAdded = true;
-        return WithRegistration(new TypeRegistration(_type, _type));
+        Track(new TypeRegistration(_type, _type));
+        return this;
     }
 
     /// <summary>
@@ -74,7 +52,8 @@ internal class SingleRegistrationBuilder : ISingleRegistrationBuilderBase
     /// <returns>The single registration builder for method chaining.</returns>
     public ISingleRegistrationBuilderBase As(Type serviceType)
     {
-        return WithRegistration(new TypeRegistration(serviceType, _type));
+        Track(new TypeRegistration(serviceType, _type));
+        return this;
     }
 
     /// <summary>
@@ -83,7 +62,8 @@ internal class SingleRegistrationBuilder : ISingleRegistrationBuilderBase
     /// <returns>The single registration builder for method chaining.</returns>
     public ISingleRegistrationBuilderBase AsInterfaces()
     {
-        return WithRegistrations(_type.GetInterfaces().Select(x => new TypeRegistration(x, _type)));
+        Track(_type.GetInterfaces().Select(x => new TypeRegistration(x, _type)));
+        return this;
     }
 
     /// <summary>
@@ -93,7 +73,8 @@ internal class SingleRegistrationBuilder : ISingleRegistrationBuilderBase
     /// <returns>The single registration builder for method chaining.</returns>
     public ISingleRegistrationBuilderBase AsKeyedSelf(object key)
     {
-        return WithRegistration(new KeyedTypeRegistration(_type, key, _type));
+        Track(new KeyedTypeRegistration(_type, key, _type));
+        return this;
     }
 
     /// <summary>
@@ -104,7 +85,19 @@ internal class SingleRegistrationBuilder : ISingleRegistrationBuilderBase
     /// <returns>The single registration builder for method chaining.</returns>
     public ISingleRegistrationBuilderBase AsKeyed(Type serviceType, object key)
     {
-        return WithRegistration(new KeyedTypeRegistration(serviceType, key, _type));
+        Track(new KeyedTypeRegistration(serviceType, key, _type));
+        return this;
+    }
+
+    /// <summary>
+    /// Registers the type as each of its implemented interfaces with the specified key.
+    /// </summary>
+    /// <param name="key">The key to associate with each interface registration.</param>
+    /// <returns>The single registration builder for method chaining.</returns>
+    public ISingleRegistrationBuilderBase AsKeyedInterfaces(object key)
+    {
+        Track(_type.GetInterfaces().Select(x => new KeyedTypeRegistration(x, key, _type)));
+        return this;
     }
 
     /// <summary>
@@ -113,7 +106,8 @@ internal class SingleRegistrationBuilder : ISingleRegistrationBuilderBase
     /// <returns>The single registration builder for method chaining.</returns>
     public ISingleRegistrationBuilderBase AsSelfFactory()
     {
-        return WithRegistration(new TypeFactoryRegistration(_type, _type));
+        Track(new TypeFactoryRegistration(_type, _type));
+        return this;
     }
 
     /// <summary>
@@ -123,7 +117,8 @@ internal class SingleRegistrationBuilder : ISingleRegistrationBuilderBase
     /// <returns>The single registration builder for method chaining.</returns>
     public ISingleRegistrationBuilderBase AsFactory(Type serviceType)
     {
-        return WithRegistration(new TypeFactoryRegistration(serviceType, _type));
+        Track(new TypeFactoryRegistration(serviceType, _type));
+        return this;
     }
 
     /// <summary>
@@ -133,7 +128,8 @@ internal class SingleRegistrationBuilder : ISingleRegistrationBuilderBase
     /// <returns>The single registration builder for method chaining.</returns>
     public ISingleRegistrationBuilderBase AsKeyedSelfFactory(object key)
     {
-        return WithRegistration(new KeyedTypeFactoryRegistration(_type, key, _type));
+        Track(new KeyedTypeFactoryRegistration(_type, key, _type));
+        return this;
     }
 
     /// <summary>
@@ -144,7 +140,8 @@ internal class SingleRegistrationBuilder : ISingleRegistrationBuilderBase
     /// <returns>The single registration builder for method chaining.</returns>
     public ISingleRegistrationBuilderBase AsKeyedFactory(Type serviceType, object key)
     {
-        return WithRegistration(new KeyedTypeFactoryRegistration(serviceType, key, _type));
+        Track(new KeyedTypeFactoryRegistration(serviceType, key, _type));
+        return this;
     }
 
     /// <summary>
@@ -160,14 +157,14 @@ internal class SingleRegistrationBuilder : ISingleRegistrationBuilderBase
     /// <returns>The service container.</returns>
     public IServiceContainer In(ServiceLifetime lifetime)
     {
-        if (!_registrationsInitiated)
-            throw new InvalidOperationException("Specify registration targets");
+        if (!RegistrationsInitiated)
+            throw new InvalidOperationException(NoRegistrationTargetsMessage);
 
         if (!_selfAdded)
-            _registrations.Add(new TypeRegistration(_type, _type));
-        _registrar.Register(_registrations, lifetime);
+            Registrations.Add(new TypeRegistration(_type, _type));
+        Registrar.Register(Registrations, lifetime);
 
-        return _container;
+        return Container;
     }
 
     /// <summary>
@@ -187,30 +184,4 @@ internal class SingleRegistrationBuilder : ISingleRegistrationBuilderBase
     /// </summary>
     /// <returns>The service container.</returns>
     public IServiceContainer Transient() => In(ServiceLifetime.Transient);
-
-    /// <summary>
-    /// Adds multiple registrations to the collection.
-    /// </summary>
-    /// <param name="registrations">The registrations to add.</param>
-    /// <returns>The single registration builder for method chaining.</returns>
-    private ISingleRegistrationBuilderBase WithRegistrations(IEnumerable<IRegistration> registrations)
-    {
-        _registrationsInitiated = true;
-        _registrations.AddRange(registrations);
-
-        return this;
-    }
-
-    /// <summary>
-    /// Adds a single registration to the collection.
-    /// </summary>
-    /// <param name="registration">The registration to add.</param>
-    /// <returns>The single registration builder for method chaining.</returns>
-    private ISingleRegistrationBuilderBase WithRegistration(IRegistration registration)
-    {
-        _registrationsInitiated = true;
-        _registrations.Add(registration);
-
-        return this;
-    }
 }

@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using Annium;
 using Annium.Data.Operations.Serialization.Tests.Base;
 using Annium.Serialization.Abstractions;
 using Annium.Serialization.Json;
@@ -33,7 +34,7 @@ public class ResultTest : ResultTestBase
     [InlineData(typeof(Stream))]
     public void Simple(Type type)
     {
-        GetType().GetMethod(nameof(Simple_Base))!.MakeGenericMethod(type).Invoke(this, Array.Empty<object>());
+        GetType().GetMethod(nameof(Simple_Base)).NotNull().MakeGenericMethod(type).Invoke(this, Array.Empty<object>());
     }
 
     /// <summary>
@@ -47,6 +48,6 @@ public class ResultTest : ResultTestBase
     [InlineData(typeof(Stream))]
     public void Data(Type type)
     {
-        GetType().GetMethod(nameof(Data_Base))!.MakeGenericMethod(type).Invoke(this, Array.Empty<object>());
+        GetType().GetMethod(nameof(Data_Base)).NotNull().MakeGenericMethod(type).Invoke(this, Array.Empty<object>());
     }
 }

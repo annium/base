@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using Annium.Configuration.Abstractions;
@@ -37,11 +38,16 @@ internal class YamlConfigurationProvider : ConfigurationProviderBase
         stream.Load(reader);
 
         if (stream.Documents.Count == 0)
-            return Data;
+            return Result;
 
-        Process((YamlMappingNode)stream.Documents[0].RootNode);
+        if (stream.Documents[0].RootNode is not YamlMappingNode root)
+            throw new InvalidOperationException(
+                $"YAML root must be a mapping node, got {stream.Documents[0].RootNode.GetType().Name}"
+            );
 
-        return Data;
+        Process(root);
+
+        return Result;
     }
 
     /// <summary>
@@ -52,16 +58,26 @@ internal class YamlConfigurationProvider : ConfigurationProviderBase
     {
         foreach (var (key, value) in node.Children)
         {
-            Context.Push(((YamlScalarNode)key).Value!);
+            if (key is not YamlScalarNode scalarKey)
+                throw new InvalidOperationException($"YAML mapping key must be a scalar, got {key.GetType().Name}");
+
+            if (scalarKey.Value is null)
+                throw new InvalidOperationException($"YAML mapping key cannot be null at path: {PathString}");
+
+            Push(scalarKey.Value);
 
             if (value is YamlMappingNode map)
                 Process(map);
             else if (value is YamlSequenceNode seq)
                 Process(seq);
+            else if (value is YamlScalarNode scalarValue)
+                Process(scalarValue);
             else
-                Process((YamlScalarNode)value);
+                throw new InvalidOperationException(
+                    $"Unexpected YAML node type {value.GetType().Name} at {PathString}"
+                );
 
-            Context.Pop();
+            Pop();
         }
     }
 
@@ -74,26 +90,39 @@ internal class YamlConfigurationProvider : ConfigurationProviderBase
         var index = 0;
         foreach (var item in node)
         {
-            Context.Push(index.ToString());
+            Push(index.ToString());
 
             if (item is YamlMappingNode map)
                 Process(map);
             else if (item is YamlSequenceNode seq)
                 Process(seq);
+            else if (item is YamlScalarNode scalarItem)
+                Process(scalarItem);
             else
-                Process((YamlScalarNode)item);
+                throw new InvalidOperationException($"Unexpected YAML node type {item.GetType().Name} at {PathString}");
 
-            Context.Pop();
+            Pop();
             index++;
         }
     }
 
     /// <summary>
-    /// Processes a YAML scalar node by adding its value to the configuration data
+    /// Processes a YAML scalar node by adding its value to the configuration data.
     /// </summary>
-    /// <param name="token">YAML scalar node to process</param>
+    /// <param name="token">YAML scalar node to process.</param>
+    /// <remarks>
+    /// <see cref="YamlScalarNode.Value"/> is declared <c>string?</c>. Under default YamlDotNet
+    /// parsing of well-formed input it is never null (e.g. <c>key: ~</c> produces <c>Value = "~"</c>,
+    /// not <c>null</c>); a null only arises from an uninitialized / programmatically constructed
+    /// scalar. This defensive guard silently skips that state so the entry is absent from the
+    /// resulting configuration rather than crashing with NRE downstream. A null mapping KEY (see
+    /// <see cref="Process(YamlMappingNode)"/>) is treated differently — a null key cannot be
+    /// encoded into the configuration path and throws.
+    /// </remarks>
     private void Process(YamlScalarNode token)
     {
-        Data[Path] = token.Value!;
+        if (token.Value is null)
+            return;
+        Set(token.Value);
     }
 }

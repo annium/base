@@ -1,3 +1,4 @@
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Annium.Testing;
@@ -27,5 +28,19 @@ public class CancellationTokenExtensionsTest
 
         // assert
         cts.Token.IsCancellationRequested.IsTrue();
+    }
+
+    /// <summary>
+    /// Verifies that calling GetResult on an awaiter for a non-cancelled token throws InvalidOperationException.
+    /// </summary>
+    [Fact]
+    public void GetAwaiter_GetResult_NotCancelled_ThrowsInvalidOperationException()
+    {
+        // arrange
+        var ct = new CancellationToken();
+        var awaiter = ct.GetAwaiter();
+
+        // act & assert
+        Wrap.It(() => awaiter.GetResult()).Throws<InvalidOperationException>();
     }
 }

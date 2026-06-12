@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 
 // ReSharper disable once CheckNamespace
 namespace Annium.Reflection;
@@ -15,17 +14,8 @@ public static partial class ResolveGenericArgumentsByImplementationExtension
     /// <param name="type">The interface type to resolve arguments for.</param>
     /// <param name="target">The target generic parameter type.</param>
     /// <returns>An array of resolved type arguments, or null if resolution fails.</returns>
-    private static Type[]? ResolveInterfaceArgumentsByGenericParameter(this Type type, Type target)
-    {
-        if (type.TryGetTargetImplementation(target, out var args))
-            return args;
-
-        // as of here:
-        // - type is open generic type with generic parameters
-        // - target is open/defined generic type with/without generic parameters
-
-        return type.CanBeUsedAsParameter(target) ? type.GetGenericArguments() : null;
-    }
+    private static Type[]? ResolveInterfaceArgumentsByGenericParameter(this Type type, Type target) =>
+        type.ResolveArgumentsByGenericParameter(target);
 
     /// <summary>
     /// Resolves generic arguments for an interface type when the target is another interface type.
@@ -48,15 +38,6 @@ public static partial class ResolveGenericArgumentsByImplementationExtension
         if (type.GetGenericTypeDefinition() == target.GetGenericTypeDefinition())
             return BuildArgs(type, type, target);
 
-        // find interface, that is implementation of target's generic definition
-        var targetBase = target.GetGenericTypeDefinition();
-        var implementation = type.GetInterfaces()
-            .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == targetBase);
-
-        if (implementation is null)
-            return null;
-
-        // implementation is generic interface type with same base definition, as target
-        return BuildArgs(type, implementation, target);
+        return type.ResolveArgumentsByInterfaceImplementation(target);
     }
 }

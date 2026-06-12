@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.Loader;
 using System.Threading;
+using System.Threading.Tasks;
 using Annium.Core.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -20,6 +21,13 @@ public class Entrypoint
     /// Indicates whether the entrypoint has already been built
     /// </summary>
     private bool _isAlreadyBuilt;
+
+    /// <summary>
+    /// Cancellation source for application-wide shutdown. Field (not local) so it can be threaded
+    /// into <see cref="IServiceProviderBuilder.BuildAsync"/> after the OS-event handlers that
+    /// cancel it are wired.
+    /// </summary>
+    private CancellationTokenSource? _cts;
 
     /// <summary>
     /// The service provider builder for configuring dependencies
@@ -42,20 +50,23 @@ public class Entrypoint
     }
 
     /// <summary>
-    /// Sets up and builds the entry point with configured services
+    /// Asynchronously sets up and builds the entry point with configured services.
+    /// Wires Console.CancelKeyPress and AssemblyLoadContext.Default.Unloading to cancel
+    /// <see cref="Entry.Ct"/>, then builds the service provider directly through
+    /// <see cref="IServiceProviderBuilder.BuildAsync"/> — no <see cref="ServiceProviderFactory"/>
+    /// indirection on the Annium-native path.
     /// </summary>
     /// <returns>A configured Entry instance ready for use</returns>
-    public Entry Setup()
+    public async Task<Entry> SetupAsync()
     {
         if (_isAlreadyBuilt)
             throw new InvalidOperationException("Entrypoint is already built");
-        _isAlreadyBuilt = true;
 
         var gate = new ManualResetEventSlim(false);
-        var cts = new CancellationTokenSource();
+        _cts = new CancellationTokenSource();
 
-        Action<AssemblyLoadContext> onUnloading = _ => HandleEnd(cts, gate);
-        ConsoleCancelEventHandler onCancelKeyPress = (_, _) => HandleEnd(cts, gate);
+        Action<AssemblyLoadContext> onUnloading = _ => HandleEnd(_cts, gate);
+        ConsoleCancelEventHandler onCancelKeyPress = (_, _) => HandleEnd(_cts, gate);
 
         AssemblyLoadContext.Default.Unloading += onUnloading;
         Console.CancelKeyPress += onCancelKeyPress;
@@ -64,15 +75,28 @@ public class Entrypoint
         {
             AssemblyLoadContext.Default.Unloading -= onUnloading;
             Console.CancelKeyPress -= onCancelKeyPress;
-            cts.Dispose();
+            _cts.Dispose();
         };
 
-        return new Entry(
-            new ServiceProviderFactory().CreateServiceProvider(_serviceProviderBuilder),
-            cts.Token,
-            gate,
-            cleanup
-        );
+        IServiceProviderContainer provider;
+        try
+        {
+            provider = await _serviceProviderBuilder.BuildAsync(_cts.Token).ConfigureAwait(false);
+        }
+        catch
+        {
+            // Unhook handlers + dispose CTS so a failed Setup leaves no dangling subscriptions.
+            // _isAlreadyBuilt stays false, so the caller may retry SetupAsync on this same
+            // Entrypoint — ServiceProviderBuilder.BuildAsync is itself rebuildable after failure
+            // (AC #5 sub-bullet "_isAlreadyBuilt set only on the normal return path").
+            cleanup();
+            throw;
+        }
+
+        // Flip the "already built" flag only on success — mirrors ServiceProviderBuilder.BuildAsync.
+        _isAlreadyBuilt = true;
+
+        return new Entry(provider, _cts.Token, gate, cleanup);
     }
 
     /// <summary>

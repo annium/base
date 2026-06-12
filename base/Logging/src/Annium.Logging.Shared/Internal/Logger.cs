@@ -38,7 +38,7 @@ internal class Logger : ILogger
         IReadOnlyList<object?> data
     )
     {
-        var subjectType = subject is ILogBridge bridge ? bridge.Type : subject.GetType().FriendlyName();
+        var subjectType = ResolveSubjectType(subject);
         var subjectId = subject.GetId();
 
         _sentryBridge.Register(subjectType, subjectId, file, member, line, level, message, null, data);
@@ -55,9 +55,18 @@ internal class Logger : ILogger
     /// <param name="data">Additional data items</param>
     public void Error(object subject, string file, string member, int line, Exception ex, IReadOnlyList<object?> data)
     {
-        var subjectType = subject is ILogBridge bridge ? bridge.Type : subject.GetType().FriendlyName();
+        var subjectType = ResolveSubjectType(subject);
         var subjectId = subject.GetId();
 
         _sentryBridge.Register(subjectType, subjectId, file, member, line, LogLevel.Error, ex.Message, ex, data);
     }
+
+    /// <summary>
+    /// Resolves the subject's type name: the <see cref="ILogBridge.Type"/> for a bridge subject,
+    /// otherwise the subject's runtime type friendly name.
+    /// </summary>
+    /// <param name="subject">The logging subject.</param>
+    /// <returns>The resolved subject type name.</returns>
+    private static string ResolveSubjectType(object subject) =>
+        subject is ILogBridge bridge ? bridge.Type : subject.GetType().FriendlyName();
 }

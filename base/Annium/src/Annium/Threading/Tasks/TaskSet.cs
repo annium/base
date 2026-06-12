@@ -2,6 +2,9 @@ using System.Threading.Tasks;
 
 namespace Annium.Threading.Tasks;
 
+// TaskSet uses task.Result after Task.WhenAll guarantees completion (VSTHRD103); awaits caller-supplied
+// tasks via Task.WhenAll, not locally-created ones (VSTHRD003); naming follows tuple-return convention,
+// not the async suffix (VSTHRD200).
 #pragma warning disable VSTHRD200
 #pragma warning disable VSTHRD103
 #pragma warning disable VSTHRD003
@@ -20,7 +23,7 @@ public static class TaskSet
     /// <returns>A tuple containing the results of both tasks.</returns>
     public static async Task<(T1, T2)> WhenAll<T1, T2>(Task<T1> t1, Task<T2> t2)
     {
-        await Task.WhenAll(t1, t2);
+        await Task.WhenAll(t1, t2).ConfigureAwait(false);
 
         return (t1.Result, t2.Result);
     }
@@ -37,7 +40,7 @@ public static class TaskSet
     /// <returns>A tuple containing the results of all tasks.</returns>
     public static async Task<(T1, T2, T3)> WhenAll<T1, T2, T3>(Task<T1> t1, Task<T2> t2, Task<T3> t3)
     {
-        await Task.WhenAll(t1, t2, t3);
+        await Task.WhenAll(t1, t2, t3).ConfigureAwait(false);
 
         return (t1.Result, t2.Result, t3.Result);
     }
@@ -61,7 +64,7 @@ public static class TaskSet
         Task<T4> t4
     )
     {
-        await Task.WhenAll(t1, t2, t3, t4);
+        await Task.WhenAll(t1, t2, t3, t4).ConfigureAwait(false);
 
         return (t1.Result, t2.Result, t3.Result, t4.Result);
     }
@@ -88,7 +91,7 @@ public static class TaskSet
         Task<T5> t5
     )
     {
-        await Task.WhenAll(t1, t2, t3, t4, t5);
+        await Task.WhenAll(t1, t2, t3, t4, t5).ConfigureAwait(false);
 
         return (t1.Result, t2.Result, t3.Result, t4.Result, t5.Result);
     }
@@ -118,7 +121,7 @@ public static class TaskSet
         Task<T6> t6
     )
     {
-        await Task.WhenAll(t1, t2, t3, t4, t5, t6);
+        await Task.WhenAll(t1, t2, t3, t4, t5, t6).ConfigureAwait(false);
 
         return (t1.Result, t2.Result, t3.Result, t4.Result, t5.Result, t6.Result);
     }
@@ -151,7 +154,7 @@ public static class TaskSet
         Task<T7> t7
     )
     {
-        await Task.WhenAll(t1, t2, t3, t4, t5, t6, t7);
+        await Task.WhenAll(t1, t2, t3, t4, t5, t6, t7).ConfigureAwait(false);
 
         return (t1.Result, t2.Result, t3.Result, t4.Result, t5.Result, t6.Result, t7.Result);
     }
@@ -187,7 +190,7 @@ public static class TaskSet
         Task<T8> t8
     )
     {
-        await Task.WhenAll(t1, t2, t3, t4, t5, t6, t7, t8);
+        await Task.WhenAll(t1, t2, t3, t4, t5, t6, t7, t8).ConfigureAwait(false);
 
         return (t1.Result, t2.Result, t3.Result, t4.Result, t5.Result, t6.Result, t7.Result, t8.Result);
     }

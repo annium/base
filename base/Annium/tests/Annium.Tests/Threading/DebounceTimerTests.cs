@@ -1,9 +1,11 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Annium.Logging;
 using Annium.Testing;
 using Annium.Threading;
+using Annium.Threading.Tasks;
 using Xunit;
 
 namespace Annium.Tests.Threading;
@@ -41,29 +43,30 @@ public class DebounceTimerTests : TestBase
 
                 return ValueTask.CompletedTask;
             },
-            20,
+            // Debounce period (80ms) is comfortably longer than a single concurrent burst, so each burst
+            // coalesces into one fire; short enough to keep the test fast.
+            80,
             Logger
         );
 
-        // act
+        // act — each bulk fires a burst of concurrent requests that must coalesce into a single debounced
+        // fire. We wait for that fire to land before starting the next bulk, so the fire count is
+        // deterministic regardless of scheduler load: no reliance on a wall-clock idle gap between bulks
+        // (the old fixed Task.Delay raced the debounce period and coalesced bulks under CI load).
         this.Trace("schedule");
         for (var i = 0; i < 3; i++)
         {
-            this.Trace("bulk start");
-            for (var j = 0; j < 3; j++)
-            {
-                this.Trace("chunk start");
-                Parallel.ForEach(Enumerable.Range(0, 5), _ => timer.Request());
-                this.Trace("chunk delay");
-                await Task.Delay(1, TestContext.Current.CancellationToken);
-            }
-            this.Trace("bulk delay");
-            await Task.Delay(50, TestContext.Current.CancellationToken);
+            this.Trace("bulk {i} request", i);
+            Parallel.ForEach(Enumerable.Range(0, 5), _ => timer.Request());
+
+            // wait until this bulk's coalesced fire has landed before re-arming the timer
+            var expected = i + 1;
+            await Wait.UntilAsync(() => state.Data.Count >= expected, 5_000);
         }
 
-        // assert
+        // assert — exactly one coalesced fire per bulk
         this.Trace("ensure state is valid");
-        await EnsureValid(state, 3, 5);
+        await EnsureValid(state, 3, 3);
 
         this.Trace("done");
     }
@@ -88,29 +91,30 @@ public class DebounceTimerTests : TestBase
 
                 return ValueTask.CompletedTask;
             },
-            20,
+            // Debounce period (80ms) is comfortably longer than a single concurrent burst, so each burst
+            // coalesces into one fire; short enough to keep the test fast.
+            80,
             Logger
         );
 
-        // act
+        // act — each bulk fires a burst of concurrent requests that must coalesce into a single debounced
+        // fire. We wait for that fire to land before starting the next bulk, so the fire count is
+        // deterministic regardless of scheduler load: no reliance on a wall-clock idle gap between bulks
+        // (the old fixed Task.Delay raced the debounce period and coalesced bulks under CI load).
         this.Trace("schedule");
         for (var i = 0; i < 3; i++)
         {
-            this.Trace("bulk start");
-            for (var j = 0; j < 3; j++)
-            {
-                this.Trace("chunk start");
-                Parallel.ForEach(Enumerable.Range(0, 5), _ => timer.Request());
-                this.Trace("chunk delay");
-                await Task.Delay(1, TestContext.Current.CancellationToken);
-            }
-            this.Trace("bulk delay");
-            await Task.Delay(50, TestContext.Current.CancellationToken);
+            this.Trace("bulk {i} request", i);
+            Parallel.ForEach(Enumerable.Range(0, 5), _ => timer.Request());
+
+            // wait until this bulk's coalesced fire has landed before re-arming the timer
+            var expected = i + 1;
+            await Wait.UntilAsync(() => state.Data.Count >= expected, 5_000);
         }
 
-        // assert
+        // assert — exactly one coalesced fire per bulk
         this.Trace("ensure state is valid");
-        await EnsureValid(state, 3, 5);
+        await EnsureValid(state, 3, 3);
 
         this.Trace("done");
     }
@@ -139,6 +143,45 @@ public class DebounceTimerTests : TestBase
     }
 
     /// <summary>
+    /// Verifies that Request() called after DisposeAsync() does not throw (review T7 — post-dispose guard).
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact]
+    public async Task Request_AfterDispose_DoesNotThrow()
+    {
+        var timer = Timers.Debounce(static () => ValueTask.CompletedTask, 10, Logger);
+        await timer.DisposeAsync();
+
+        // Must not throw — the IsDisposed guard + ObjectDisposedException catch in Request() absorbs the race.
+        timer.Request();
+        timer.Request();
+    }
+
+    /// <summary>
+    /// Verifies that Request() racing concurrently with DisposeAsync() neither hangs nor surfaces an unhandled
+    /// exception (review T7 — race window between IsDisposed check and timer.Change).
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact]
+    public async Task Request_RaceWithDispose_NeitherHangsNorThrows()
+    {
+        var timer = Timers.Debounce(static () => ValueTask.CompletedTask, 10, Logger);
+        var ct = TestContext.Current.CancellationToken;
+
+        var requester = Task.Run(
+            () =>
+            {
+                for (var i = 0; i < 1000; i++)
+                    timer.Request();
+            },
+            ct
+        );
+
+        await timer.DisposeAsync();
+        await requester;
+    }
+
+    /// <summary>
     /// A class that maintains a queue of integers for testing.
     /// </summary>
     private class State
@@ -155,5 +198,61 @@ public class DebounceTimerTests : TestBase
         {
             Data.Enqueue(Data.Count);
         }
+    }
+
+    /// <summary>
+    /// Verifies that Change(TimeSpan) updates the period; the new TimeSpan overload must be
+    /// observable when subsequent Request() events fire at the new interval.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact]
+    public async Task Change_TimeSpan_UpdatesPeriod()
+    {
+        this.Trace("start");
+
+        // arrange — start with a long period (1s) so the first Request would not fire within the test window.
+        var state = new State();
+        using var timer = Timers.Debounce(
+            state,
+            s =>
+            {
+                s.Push();
+                return ValueTask.CompletedTask;
+            },
+            1_000,
+            Logger
+        );
+
+        // act — change to 10ms before requesting.
+        timer.Change(TimeSpan.FromMilliseconds(10));
+        timer.Request();
+        await Wait.UntilAsync(() => state.Data.Count == 1, 500);
+
+        // assert
+        state.Data.Count.Is(1);
+    }
+
+    /// <summary>
+    /// Verifies that Change(TimeSpan) throws OverflowException for TimeSpans whose total milliseconds
+    /// exceed int.MaxValue. Loud failure is preferable to silent overflow into a negative period.
+    /// </summary>
+    [Fact]
+    public void Change_TimeSpan_Overflow_Throws()
+    {
+        // arrange
+        var state = new State();
+        using var timer = Timers.Debounce(
+            state,
+            s =>
+            {
+                s.Push();
+                return ValueTask.CompletedTask;
+            },
+            20,
+            Logger
+        );
+
+        // act / assert — TimeSpan.MaxValue overflows int.MaxValue ms.
+        Wrap.It(() => timer.Change(TimeSpan.MaxValue)).Throws<OverflowException>();
     }
 }

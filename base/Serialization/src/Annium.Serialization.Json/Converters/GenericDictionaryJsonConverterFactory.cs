@@ -25,7 +25,15 @@ public class GenericDictionaryJsonConverterFactory : JsonConverterFactory
     /// <returns>True if the type is a generic dictionary; otherwise, false.</returns>
     public override bool CanConvert(Type objectType)
     {
-        return GetKeyValueType(objectType) is not null;
+        if (GetKeyValueType(objectType) is not { } kv)
+            return false;
+
+        // the converter materializes a Dictionary<TKey, TValue>; only claim types that result is
+        // assignable to (Dictionary<,> itself and the IDictionary<,>/IReadOnlyDictionary<,>/IEnumerable<,>
+        // interfaces). Concrete siblings like SortedDictionary<,> or List<KeyValuePair<,>> fall back to
+        // System.Text.Json's default handling instead of being mis-materialized as a Dictionary.
+        var dictionaryType = typeof(Dictionary<,>).MakeGenericType(kv.Item1, kv.Item2);
+        return objectType.IsAssignableFrom(dictionaryType);
     }
 
     /// <summary>
@@ -36,7 +44,7 @@ public class GenericDictionaryJsonConverterFactory : JsonConverterFactory
     /// <returns>A JSON converter for the specified dictionary type.</returns>
     public override JsonConverter CreateConverter(Type typeToConvert, JsonSerializerOptions options)
     {
-        var (key, value) = GetKeyValueType(typeToConvert)!.Value;
+        var (key, value) = GetKeyValueType(typeToConvert).NotNull();
 
         return (JsonConverter)
             Activator.CreateInstance(typeof(GenericDictionaryJsonConverter<,>).MakeGenericType(key, value))!;

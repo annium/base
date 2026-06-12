@@ -1,7 +1,10 @@
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using Annium.Linq;
 using Annium.Testing;
 using Xunit;
+using EnumerableExtensions = Annium.Linq.EnumerableExtensions;
 
 namespace Annium.Tests.Linq;
 
@@ -46,7 +49,7 @@ public class EnumerableExtensionsTest
         var nonIdentityRuns = 0;
         for (var i = 0; i < 1000; i++)
         {
-            var shuffled = Annium.Linq.EnumerableExtensions.Shuffle(source).ToArray();
+            var shuffled = EnumerableExtensions.Shuffle(source).ToArray();
             if (!shuffled.SequenceEqual(source))
                 nonIdentityRuns++;
         }
@@ -55,5 +58,103 @@ public class EnumerableExtensionsTest
         // 90 % is a very lenient floor that still cleanly fails the Next(0, 1) regression (which
         // would produce 0 non-identity runs).
         nonIdentityRuns.IsGreaterOrEqual(900);
+    }
+
+    /// <summary>Yield wraps a non-null value into a single-element sequence.</summary>
+    [Fact]
+    public void Yield_NonNull_ReturnsSingleElement()
+    {
+        var result = "hello".Yield().ToArray();
+
+        result.IsEqual(new[] { "hello" });
+    }
+
+    /// <summary>Yield on a null reference returns an empty sequence.</summary>
+    [Fact]
+    public void Yield_Null_ReturnsEmpty()
+    {
+        string? source = null;
+
+        var result = source!.Yield().ToArray();
+
+        result.Length.Is(0);
+    }
+
+    /// <summary>WhereNot keeps elements for which the predicate is false.</summary>
+    [Fact]
+    public void WhereNot_KeepsNonMatching()
+    {
+        var src = new[] { 1, 2, 3, 4 };
+
+        var result = src.WhereNot(x => x % 2 == 0).ToArray();
+
+        result.IsEqual(new[] { 1, 3 });
+    }
+
+    /// <summary>None returns true when no element matches the predicate.</summary>
+    [Fact]
+    public void None_NoMatch_ReturnsTrue()
+    {
+        var src = new[] { 1, 3, 5 };
+
+        src.None(x => x % 2 == 0).IsTrue();
+    }
+
+    /// <summary>None returns false when any element matches the predicate.</summary>
+    [Fact]
+    public void None_AnyMatch_ReturnsFalse()
+    {
+        var src = new[] { 1, 2, 3 };
+
+        src.None(x => x % 2 == 0).IsFalse();
+    }
+
+    /// <summary>Join with the default empty separator concatenates strings tightly.</summary>
+    [Fact]
+    public void Join_DefaultSeparator_ConcatsTight()
+    {
+        var src = new[] { "a", "b", "c" };
+
+        src.Join().Is("abc");
+    }
+
+    /// <summary>Join with a separator interleaves the separator between elements.</summary>
+    [Fact]
+    public void Join_WithSeparator_Interleaves()
+    {
+        var src = new[] { "a", "b", "c" };
+
+        src.Join(", ").Is("a, b, c");
+    }
+
+    /// <summary>
+    /// ToSortedList with unique keys returns a SortedList whose keys are in ascending order
+    /// and whose values correspond to the source elements.
+    /// </summary>
+    [Fact]
+    public void ToSortedList_UniqueKeys_ReturnsSortedList()
+    {
+        // arrange — intentionally out of order so that sorted order is observable
+        var items = new[] { 3, 1, 4, 2 };
+
+        // act
+        var result = items.ToSortedList(x => x);
+
+        // assert — SortedList keys are always in ascending order
+        result.Count.Is(4);
+        result.Keys.IsEqual(new[] { 1, 2, 3, 4 });
+        result.Values.IsEqual(new[] { 1, 2, 3, 4 });
+    }
+
+    /// <summary>
+    /// ToSortedList with duplicate keys throws because the underlying ToDictionary
+    /// rejects duplicate keys with an ArgumentException.
+    /// </summary>
+    [Fact]
+    public void ToSortedList_DuplicateKeys_Throws()
+    {
+        var items = new[] { 1, 2, 1 };
+
+        Wrap.It(() => items.ToSortedList(x => x)).Throws<ArgumentException>();
     }
 }

@@ -15,15 +15,6 @@ public class ObjectConfigurationProviderTest : TestBase
         : base(outputHelper)
     {
         this.RegisterMapper();
-    }
-
-    /// <summary>
-    /// Tests that object configuration provider works correctly.
-    /// </summary>
-    [Fact]
-    public void Works()
-    {
-        // arrange
         var cfg = new Config
         {
             Flag = true,
@@ -46,8 +37,15 @@ public class ObjectConfigurationProviderTest : TestBase
             Abstract = new ConfigTwo { Value = 10 },
             Tuple = ("demo|", 11),
         };
-        Register(container => container.AddConfiguration<Config>(x => x.Add(cfg)));
+        Register((container, ct) => container.AddConfigurationAsync<Config>(x => x.Add(cfg), ct));
+    }
 
+    /// <summary>
+    /// Tests that object configuration provider works correctly.
+    /// </summary>
+    [Fact]
+    public void Works()
+    {
         // act
         var result = Get<Config>();
         var nested = Get<SomeConfig>();
@@ -74,5 +72,7 @@ public class ObjectConfigurationProviderTest : TestBase
         result.Abstract.As<ConfigTwo>().Value.Is(10);
         result.Abstract.IsEqual(nested);
         nested.IsEqual(new ConfigTwo { Value = 10 });
+        result.Tuple.Item1.Is("demo|");
+        result.Tuple.Item2.Is(11);
     }
 }

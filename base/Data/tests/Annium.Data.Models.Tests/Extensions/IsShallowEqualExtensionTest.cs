@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using Annium.Data.Models.Extensions;
 using Annium.Testing;
@@ -261,35 +262,31 @@ public class IsShallowEqualExtensionTest
     }
 
     /// <summary>
-    /// Tests that shallow equality works correctly when comparing with anonymous objects.
+    /// Tests that shallow equality returns true for two non-generic IEnumerable instances with identical elements.
     /// </summary>
     [Fact]
-    // TODO: fix, not valid
-    public void IsShallowEqual_ToAnonymousObject_Works()
+    public void IsShallowEqual_NonGenericEnumerable_Equal_ReturnsTrue()
     {
         // arrange
-        var now = DateTimeOffset.Now;
-        var src = new Big
-        {
-            Samples = new[]
-            {
-                new Sample { Date = now + TimeSpan.FromDays(1), Point = new Point(1, 2) },
-                new Sample { Date = now + TimeSpan.FromHours(1), Point = new Point(4, 3) },
-            },
-            Keys = new Dictionary<string, Key> { { "a", new Key(5, 3) }, { "c", new Key(2, 4) } },
-        };
-        var tgt = new
-        {
-            Samples = new[]
-            {
-                new { Date = now + TimeSpan.FromDays(1), Point = new Point(1, 2) },
-                new { Date = now + TimeSpan.FromHours(1), Point = new Point(4, 3) },
-            },
-            Keys = new Dictionary<string, Key> { { "a", new Key(5, 3) }, { "c", new Key(2, 4) } },
-        };
+        var a = new NonGenericCollection(1, 2, 3);
+        var b = new NonGenericCollection(1, 2, 3);
 
         // assert
-        src.IsShallowEqual(tgt).IsFalse();
+        a.IsShallowEqual(b).IsTrue();
+    }
+
+    /// <summary>
+    /// Tests that shallow equality returns false for two non-generic IEnumerable instances with different element counts.
+    /// </summary>
+    [Fact]
+    public void IsShallowEqual_NonGenericEnumerable_DifferentCount_ReturnsFalse()
+    {
+        // arrange
+        var a = new NonGenericCollection(1, 2, 3);
+        var b = new NonGenericCollection(1, 2);
+
+        // assert
+        a.IsShallowEqual(b).IsFalse();
     }
 }
 
@@ -386,4 +383,31 @@ internal class Key
         X = x;
         Y = y;
     }
+}
+
+/// <summary>
+/// Test fixture that implements only the non-generic <see cref="IEnumerable"/> interface (not <see cref="IEnumerable{T}"/>),
+/// exercising the <c>BuildNonGenericEnumerableComparer</c> path in IsShallowEqual.
+/// </summary>
+internal class NonGenericCollection : IEnumerable
+{
+    /// <summary>
+    /// The backing items exposed through the non-generic enumerator.
+    /// </summary>
+    private readonly object[] _items;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="NonGenericCollection"/> class.
+    /// </summary>
+    /// <param name="items">The items to store in this collection.</param>
+    public NonGenericCollection(params object[] items)
+    {
+        _items = items;
+    }
+
+    /// <summary>
+    /// Returns a non-generic enumerator over the stored items.
+    /// </summary>
+    /// <returns>An enumerator for the stored items.</returns>
+    public IEnumerator GetEnumerator() => _items.GetEnumerator();
 }

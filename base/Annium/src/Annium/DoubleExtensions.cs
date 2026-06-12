@@ -9,6 +9,11 @@ namespace Annium;
 public static class DoubleExtensions
 {
     /// <summary>
+    /// Error message thrown by step-validating methods (FloorTo, CeilTo) when step is non-finite or non-positive.
+    /// </summary>
+    private const string StepError = "Step must be a positive, finite number.";
+
+    /// <summary>
     /// Calculates the relative difference between two values.
     /// </summary>
     /// <param name="value">The value to compare.</param>
@@ -36,16 +41,18 @@ public static class DoubleExtensions
     /// </summary>
     /// <param name="value">The value to round.</param>
     /// <returns>The rounded value as a 32-bit integer.</returns>
+    /// <exception cref="OverflowException">Thrown when <paramref name="value"/> is NaN or outside the Int32 range.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int FloorInt32(this double value) => (int)Math.Floor(value);
+    public static int FloorInt32(this double value) => checked((int)Math.Floor(value));
 
     /// <summary>
     /// Rounds a value down to the nearest 64-bit integer.
     /// </summary>
     /// <param name="value">The value to round.</param>
     /// <returns>The rounded value as a 64-bit integer.</returns>
+    /// <exception cref="OverflowException">Thrown when <paramref name="value"/> is NaN or outside the Int64 range.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static long FloorInt64(this double value) => (long)Math.Floor(value);
+    public static long FloorInt64(this double value) => checked((long)Math.Floor(value));
 
     /// <summary>
     /// Rounds a value down to the nearest double.
@@ -60,8 +67,9 @@ public static class DoubleExtensions
     /// </summary>
     /// <param name="value">The value to round.</param>
     /// <returns>The rounded value as a 32-bit integer.</returns>
+    /// <exception cref="OverflowException">Thrown when <paramref name="value"/> is NaN or outside the Int32 range.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int RoundInt32(this double value) => (int)Math.Round(value);
+    public static int RoundInt32(this double value) => checked((int)Math.Round(value));
 
     /// <summary>
     /// Rounds a value to the nearest 32-bit integer using the specified rounding mode.
@@ -69,16 +77,18 @@ public static class DoubleExtensions
     /// <param name="value">The value to round.</param>
     /// <param name="mode">The rounding mode to use.</param>
     /// <returns>The rounded value as a 32-bit integer.</returns>
+    /// <exception cref="OverflowException">Thrown when <paramref name="value"/> is NaN or outside the Int32 range.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int RoundInt32(this double value, MidpointRounding mode) => (int)Math.Round(value, mode);
+    public static int RoundInt32(this double value, MidpointRounding mode) => checked((int)Math.Round(value, mode));
 
     /// <summary>
     /// Rounds a value to the nearest 64-bit integer.
     /// </summary>
     /// <param name="value">The value to round.</param>
     /// <returns>The rounded value as a 64-bit integer.</returns>
+    /// <exception cref="OverflowException">Thrown when <paramref name="value"/> is NaN or outside the Int64 range.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static long RoundInt64(this double value) => (long)Math.Round(value);
+    public static long RoundInt64(this double value) => checked((long)Math.Round(value));
 
     /// <summary>
     /// Rounds a value to the nearest 64-bit integer using the specified rounding mode.
@@ -86,8 +96,9 @@ public static class DoubleExtensions
     /// <param name="value">The value to round.</param>
     /// <param name="mode">The rounding mode to use.</param>
     /// <returns>The rounded value as a 64-bit integer.</returns>
+    /// <exception cref="OverflowException">Thrown when <paramref name="value"/> is NaN or outside the Int64 range.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static long RoundInt64(this double value, MidpointRounding mode) => (long)Math.Round(value, mode);
+    public static long RoundInt64(this double value, MidpointRounding mode) => checked((long)Math.Round(value, mode));
 
     /// <summary>
     /// Rounds a value to the nearest double.
@@ -130,16 +141,18 @@ public static class DoubleExtensions
     /// </summary>
     /// <param name="value">The value to round.</param>
     /// <returns>The rounded value as a 32-bit integer.</returns>
+    /// <exception cref="OverflowException">Thrown when <paramref name="value"/> is NaN or outside the Int32 range.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int CeilInt32(this double value) => (int)Math.Ceiling(value);
+    public static int CeilInt32(this double value) => checked((int)Math.Ceiling(value));
 
     /// <summary>
     /// Rounds a value up to the nearest 64-bit integer.
     /// </summary>
     /// <param name="value">The value to round.</param>
     /// <returns>The rounded value as a 64-bit integer.</returns>
+    /// <exception cref="OverflowException">Thrown when <paramref name="value"/> is NaN or outside the Int64 range.</exception>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static long CeilInt64(this double value) => (long)Math.Ceiling(value);
+    public static long CeilInt64(this double value) => checked((long)Math.Ceiling(value));
 
     /// <summary>
     /// Rounds a value up to the nearest double.
@@ -150,41 +163,20 @@ public static class DoubleExtensions
     public static double Ceil(this double value) => Math.Ceiling(value);
 
     /// <summary>
-    /// Ensures that a value is within a specified range.
-    /// </summary>
-    /// <param name="value">The value to check.</param>
-    /// <param name="min">The minimum allowed value.</param>
-    /// <param name="max">The maximum allowed value.</param>
-    /// <returns>The value if it is within the range, or the nearest boundary value if it is outside the range.</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static double Within(this double value, double min, double max) => value.Above(min).Below(max);
-
-    /// <summary>
-    /// Ensures that a value is not less than a specified minimum.
-    /// </summary>
-    /// <param name="value">The value to check.</param>
-    /// <param name="min">The minimum allowed value.</param>
-    /// <returns>The value if it is greater than or equal to the minimum, or the minimum value if it is less.</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static double Above(this double value, double min) => Math.Max(value, min);
-
-    /// <summary>
-    /// Ensures that a value is not greater than a specified maximum.
-    /// </summary>
-    /// <param name="value">The value to check.</param>
-    /// <param name="max">The maximum allowed value.</param>
-    /// <returns>The value if it is less than or equal to the maximum, or the maximum value if it is greater.</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static double Below(this double value, double max) => Math.Min(value, max);
-
-    /// <summary>
     /// Rounds a value down to the nearest multiple of a specified step.
     /// </summary>
-    /// <param name="value">The value to round.</param>
-    /// <param name="step">The step size to round to.</param>
+    /// <param name="value">The value to round. <see cref="double.NaN"/> and infinities propagate to the result.</param>
+    /// <param name="step">The step size to round to. Must be a positive, finite number.</param>
     /// <returns>The rounded value as a double.</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static double FloorTo(this double value, double step) => value - value % step;
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="step"/> is non-finite or not positive.</exception>
+    public static double FloorTo(this double value, double step)
+    {
+        if (!double.IsFinite(step) || step <= 0d)
+            throw new ArgumentOutOfRangeException(nameof(step), step, StepError);
+
+        var rem = ((value % step) + step) % step;
+        return value - rem;
+    }
 
     /// <summary>
     /// Rounds a value to the nearest multiple of a specified step.
@@ -194,17 +186,24 @@ public static class DoubleExtensions
     /// <returns>The rounded value as a double.</returns>
     public static double RoundTo(this double value, double step)
     {
-        var diff = value % step;
+        var rem = ((value % step) + step) % step;
 
-        return value - diff + (step > diff * 2d ? 0d : step);
+        return rem * 2d < step ? value - rem : value - rem + step;
     }
 
     /// <summary>
     /// Rounds a value up to the nearest multiple of a specified step.
     /// </summary>
-    /// <param name="value">The value to round.</param>
-    /// <param name="step">The step size to round to.</param>
+    /// <param name="value">The value to round. <see cref="double.NaN"/> and infinities propagate to the result.</param>
+    /// <param name="step">The step size to round to. Must be a positive, finite number.</param>
     /// <returns>The rounded value as a double.</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static double CeilTo(this double value, double step) => value + step - value % step;
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="step"/> is non-finite or not positive.</exception>
+    public static double CeilTo(this double value, double step)
+    {
+        if (!double.IsFinite(step) || step <= 0d)
+            throw new ArgumentOutOfRangeException(nameof(step), step, StepError);
+
+        var rem = ((value % step) + step) % step;
+        return rem == 0d ? value : value - rem + step;
+    }
 }

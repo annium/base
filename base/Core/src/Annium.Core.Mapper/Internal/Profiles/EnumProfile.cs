@@ -12,6 +12,8 @@ internal class EnumProfile<T> : Profile
     /// <summary>
     /// Initializes a new instance of the EnumProfile class
     /// </summary>
+    // must stay public: closed generic EnumProfile<T> instances are DI-activated by reflection
+    // (ActivatorUtilities) for autoloaded [AutoMapped] enum types, which requires a public constructor
     public EnumProfile()
     {
         Map<T, string>(x => x.ToString());

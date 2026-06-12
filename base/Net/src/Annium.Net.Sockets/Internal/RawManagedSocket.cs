@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,60 +8,50 @@ using Annium.Logging;
 namespace Annium.Net.Sockets.Internal;
 
 /// <summary>
-/// Implementation of a managed socket for raw data transmission without message framing
+/// Implementation of a managed socket for raw data transmission without message framing.
 /// </summary>
 internal class RawManagedSocket : IManagedSocket, ILogSubject
 {
     /// <summary>
-    /// Gets the logger instance
+    /// Gets the logger instance.
     /// </summary>
     public ILogger Logger { get; }
 
     /// <summary>
-    /// Event raised when data is received
+    /// Event raised when data is received.
     /// </summary>
     public event Action<ReadOnlyMemory<byte>> OnReceived = delegate { };
 
     /// <summary>
-    /// The underlying network stream
+    /// The underlying network stream.
     /// </summary>
     private readonly Stream _stream;
 
     /// <summary>
-    /// Configuration options for the socket
+    /// Configuration options for the socket.
     /// </summary>
     private readonly ManagedSocketOptionsBase _options;
 
     /// <summary>
-    /// Counter for bytes sent
+    /// Initializes a new instance of the RawManagedSocket class.
     /// </summary>
-    private long _sendCounter;
-
-    /// <summary>
-    /// Counter for bytes received
-    /// </summary>
-    private long _recvCounter;
-
-    /// <summary>
-    /// Initializes a new instance of the RawManagedSocket class
-    /// </summary>
-    /// <param name="socket">The network stream</param>
-    /// <param name="options">Configuration options</param>
-    /// <param name="logger">Logger instance for diagnostics</param>
-    public RawManagedSocket(Stream socket, ManagedSocketOptionsBase options, ILogger logger)
+    /// <param name="stream">The network stream.</param>
+    /// <param name="options">Configuration options.</param>
+    /// <param name="logger">Logger instance for diagnostics.</param>
+    public RawManagedSocket(Stream stream, ManagedSocketOptionsBase options, ILogger logger)
     {
         Logger = logger;
-        _stream = socket;
+        _stream = stream;
         _options = options;
         this.Trace("buffer size: {bufferSize}", options.BufferSize);
     }
 
     /// <summary>
-    /// Sends data asynchronously
+    /// Sends data asynchronously.
     /// </summary>
-    /// <param name="data">The data to send</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>The status of the send operation</returns>
+    /// <param name="data">The data to send.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>The status of the send operation.</returns>
     public async ValueTask<SocketSendStatus> SendAsync(ReadOnlyMemory<byte> data, CancellationToken ct = default)
     {
         this.Trace("{dataLength} - start", data.Length);
@@ -76,70 +65,29 @@ internal class RawManagedSocket : IManagedSocket, ILogSubject
         try
         {
             await _stream.WriteAsync(data, ct).ConfigureAwait(false);
-            this.Trace("{dataLength} - send succeed (total: {total})", data.Length, _sendCounter += data.Length);
+            this.Trace("{dataLength} - send succeed", data.Length);
 
             return SocketSendStatus.Ok;
         }
-        catch (OperationCanceledException)
-        {
-            this.Trace("{dataLength} - canceled with OperationCanceledException", data.Length);
-            return SocketSendStatus.Canceled;
-        }
-        catch (InvalidOperationException e)
-        {
-            this.Trace("{dataLength} - closed with InvalidOperationException: {e}", data.Length, e);
-            return SocketSendStatus.Closed;
-        }
-        catch (IOException e) when (e.InnerException is ObjectDisposedException)
-        {
-            this.Trace("{dataLength} - closed with IOException(ObjectDisposedException)", data.Length);
-            return SocketSendStatus.Closed;
-        }
-        catch (IOException e) when (e.InnerException is SocketException)
-        {
-            this.Trace("{dataLength} - closed with IOException(SocketException)", data.Length);
-            return SocketSendStatus.Closed;
-        }
         catch (Exception e)
         {
-            this.Error("{dataLength} - closed with {error}", data.Length, e);
-            return SocketSendStatus.Closed;
+            return Helper.ClassifySendException(e, this);
         }
     }
 
     /// <summary>
-    /// Starts listening for incoming data asynchronously
+    /// Starts listening for incoming data asynchronously.
     /// </summary>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>A task that completes with the socket close result when listening ends</returns>
-    public Task<SocketCloseResult> ListenAsync(CancellationToken ct) =>
-        Task.Run(
-            async () =>
-            {
-                using var buffer = new RawBuffer(_options.BufferSize);
-
-                this.Trace("start");
-
-                while (true)
-                {
-                    this.Trace("next");
-                    var (isClosed, result) = await ReceiveAsync(buffer, ct);
-                    if (isClosed)
-                    {
-                        this.Trace(
-                            result.Exception is not null
-                                ? $"stop with {result.Status}: {result.Exception}"
-                                : $"stop with {result.Status}"
-                        );
-                        return result;
-                    }
-                }
-            },
-            CancellationToken.None
-        );
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>A task that completes with the socket close result when listening ends.</returns>
+    public async Task<SocketCloseResult> ListenAsync(CancellationToken ct)
+    {
+        using var buffer = new RawBuffer(_options.BufferSize);
+        return await Helper.RunListenLoopAsync(() => ReceiveAsync(buffer, ct), this);
+    }
 
     /// <summary>
-    /// Disposes the socket resources
+    /// Disposes the socket resources.
     /// </summary>
     public void Dispose()
     {
@@ -147,11 +95,11 @@ internal class RawManagedSocket : IManagedSocket, ILogSubject
     }
 
     /// <summary>
-    /// Receives data into the buffer asynchronously
+    /// Receives data into the buffer asynchronously.
     /// </summary>
-    /// <param name="buffer">The buffer to receive data into</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>A tuple indicating if the socket is closed and the close result</returns>
+    /// <param name="buffer">The buffer to receive data into.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>A tuple indicating if the socket is closed and the close result.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private async ValueTask<(bool IsClosed, SocketCloseResult Result)> ReceiveAsync(
         RawBuffer buffer,
@@ -166,7 +114,7 @@ internal class RawManagedSocket : IManagedSocket, ILogSubject
 
         // read chunk into buffer
         this.Trace("receive chunk");
-        var receiveResult = await ReceiveChunkAsync(buffer, ct).ConfigureAwait(false);
+        var receiveResult = await Helper.ReceiveChunkAsync(_stream, buffer.FreeSpace, ct, this).ConfigureAwait(false);
 
         // if close received - return false, indicating socket is closed
         if (receiveResult.Status.HasValue)
@@ -185,60 +133,5 @@ internal class RawManagedSocket : IManagedSocket, ILogSubject
         this.Trace("done");
 
         return (false, new SocketCloseResult(SocketCloseStatus.ClosedRemote, null));
-    }
-
-    /// <summary>
-    /// Receives a chunk of data from the stream
-    /// </summary>
-    /// <param name="buffer">The buffer to receive data into</param>
-    /// <param name="ct">Cancellation token</param>
-    /// <returns>The result of the receive operation</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private async ValueTask<ReceiveResult> ReceiveChunkAsync(RawBuffer buffer, CancellationToken ct)
-    {
-        this.Trace("start");
-
-        try
-        {
-            if (ct.IsCancellationRequested)
-            {
-                this.Trace("canceled with cancellation token");
-                return new ReceiveResult(0, SocketCloseStatus.ClosedLocal, null);
-            }
-
-            this.Trace("wait for message");
-            var bytesRead = await _stream.ReadAsync(buffer.FreeSpace, ct).ConfigureAwait(false);
-            this.Trace("received {bytesRead} bytes (total: {total})", bytesRead, _recvCounter += bytesRead);
-
-            return new ReceiveResult(bytesRead, bytesRead <= 0 ? SocketCloseStatus.ClosedRemote : null, null);
-        }
-        catch (OperationCanceledException)
-        {
-            this.Trace("closed locally with cancellation: {isCancellationRequested}", ct.IsCancellationRequested);
-            return new ReceiveResult(0, SocketCloseStatus.ClosedLocal, null);
-        }
-        catch (IOException e) when (e.InnerException is ObjectDisposedException)
-        {
-            this.Trace("closed with ObjectDisposedException");
-            return new ReceiveResult(0, SocketCloseStatus.ClosedLocal, null);
-        }
-        catch (IOException e) when (e.InnerException is SocketException se)
-        {
-            var status =
-                se.SocketErrorCode is SocketError.OperationAborted
-                    ? SocketCloseStatus.ClosedLocal
-                    : SocketCloseStatus.ClosedRemote;
-            this.Trace("{status} with SocketException (code: {code}): {e}", status, se.SocketErrorCode, se);
-            return new ReceiveResult(0, status, null);
-        }
-        catch (Exception e)
-        {
-            this.Trace("Error: {e}", e);
-            return new ReceiveResult(0, SocketCloseStatus.Error, e);
-        }
-        finally
-        {
-            this.Trace("done");
-        }
     }
 }

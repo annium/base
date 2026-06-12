@@ -11,6 +11,47 @@ namespace Annium.Reflection;
 public static partial class ResolveGenericArgumentsByImplementationExtension
 {
     /// <summary>
+    /// Resolves generic arguments by locating the interface on <paramref name="type"/> whose generic
+    /// definition matches the interface <paramref name="target"/>'s, then building args from it. Shared
+    /// by the struct and interface resolvers' interface-target tails.
+    /// </summary>
+    /// <param name="type">The type to resolve arguments for.</param>
+    /// <param name="target">The target interface type.</param>
+    /// <returns>An array of resolved type arguments, or null if no matching interface is implemented.</returns>
+    private static Type[]? ResolveArgumentsByInterfaceImplementation(this Type type, Type target)
+    {
+        // find interface, that is implementation of target's generic definition
+        var targetBase = target.GetGenericTypeDefinition();
+        var implementation = type.GetInterfaces()
+            .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == targetBase);
+
+        if (implementation is null)
+            return null;
+
+        // implementation is generic interface type with same base definition, as target
+        return BuildArgs(type, implementation, target);
+    }
+
+    /// <summary>
+    /// Resolves generic arguments when the target is a generic parameter. Shared by the class, interface,
+    /// and struct resolvers, whose logic is identical.
+    /// </summary>
+    /// <param name="type">The type to resolve arguments for.</param>
+    /// <param name="target">The target generic parameter type.</param>
+    /// <returns>An array of resolved type arguments, or null if resolution fails.</returns>
+    private static Type[]? ResolveArgumentsByGenericParameter(this Type type, Type target)
+    {
+        if (type.TryGetTargetImplementation(target, out var args))
+            return args;
+
+        // as of here:
+        // - type is open generic type with generic parameters
+        // - target is open/defined generic type with/without generic parameters
+
+        return type.CanBeUsedAsParameter(target) ? type.GetGenericArguments() : null;
+    }
+
+    /// <summary>
     /// Builds generic arguments for a type based on source and target types.
     /// </summary>
     /// <param name="type">The type to build arguments for.</param>
@@ -25,7 +66,7 @@ public static partial class ResolveGenericArgumentsByImplementationExtension
         if (!succeed)
             return null;
 
-        var unresolvedArgs = args.Count(a => a.IsGenericTypeParameter);
+        var unresolvedArgs = CountUnresolved(args);
         if (unresolvedArgs == 0 || unresolvedArgs == args.Length)
             return args;
 
@@ -44,7 +85,7 @@ public static partial class ResolveGenericArgumentsByImplementationExtension
                         return null;
             }
 
-            var currentlyUnresolved = args.Count(a => a.IsGenericTypeParameter);
+            var currentlyUnresolved = CountUnresolved(args);
             if (currentlyUnresolved == 0 || currentlyUnresolved == unresolvedArgs)
                 break;
 
@@ -68,19 +109,14 @@ public static partial class ResolveGenericArgumentsByImplementationExtension
             return false;
 
         target = implementation;
-        Type[] sourceArgs;
-        Type[] targetArgs;
-        if (target.IsArray)
+        (Type[]? sourceArgs, Type[]? targetArgs) = target switch
         {
-            sourceArgs = new[] { source.GetElementType()! };
-            targetArgs = new[] { target.GetElementType()! };
-        }
-        else if (target.IsGenericType)
-        {
-            sourceArgs = source.GetGenericArguments();
-            targetArgs = target.GetGenericArguments();
-        }
-        else
+            // GetElementType() is non-null for array types; this arm runs only when IsArray is true.
+            { IsArray: true } => (new[] { source.GetElementType()! }, new[] { target.GetElementType()! }),
+            { IsGenericType: true } => (source.GetGenericArguments(), target.GetGenericArguments()),
+            _ => (null, null),
+        };
+        if (sourceArgs is null || targetArgs is null)
             return false;
 
         for (var i = 0; i < sourceArgs.Length; i++)
@@ -95,6 +131,21 @@ public static partial class ResolveGenericArgumentsByImplementationExtension
         }
 
         return true;
+    }
+
+    /// <summary>
+    /// Counts unresolved generic type parameters in an arg array. Allocation-free counterpart to
+    /// `args.Count(a => a.IsGenericTypeParameter)` for the hot reflection path.
+    /// </summary>
+    /// <param name="args">The arg array to scan.</param>
+    /// <returns>The number of entries that are still generic type parameters.</returns>
+    private static int CountUnresolved(Type[] args)
+    {
+        var count = 0;
+        foreach (var a in args)
+            if (a.IsGenericTypeParameter)
+                count++;
+        return count;
     }
 
     /// <summary>

@@ -28,6 +28,8 @@ internal class ExceptionPipeHandler<TRequest>
     /// <returns>A status result indicating an uncaught error</returns>
     protected override IStatusResult<OperationStatus> GetFailure(Exception exception)
     {
-        return Result.Status(OperationStatus.UncaughtError).Error(exception.Message);
+        // Do not surface raw exception messages to callers; the full exception is still logged
+        // by ExceptionPipeHandlerBase.Failure via ILogSubject.Trace.
+        return Result.Status(OperationStatus.UncaughtError).Error(PipeHandlerMessages.InternalError);
     }
 }

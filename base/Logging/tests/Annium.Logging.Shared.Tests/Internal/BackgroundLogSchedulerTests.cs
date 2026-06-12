@@ -4,7 +4,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Annium.Logging.Shared.Internal;
 using Annium.Testing;
-using NodaTime;
 using Xunit;
 
 namespace Annium.Logging.Shared.Tests.Internal;
@@ -20,6 +19,7 @@ public class BackgroundLogSchedulerTests
     /// With a sink that sleeps 500ms per batch, queue 5 batches and assert that DisposeAsync
     /// only returns after all 5 have been handled.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task DisposeAsync_WithSlowSink_AwaitsFinalBatch()
     {
@@ -37,7 +37,7 @@ public class BackgroundLogSchedulerTests
         // enqueue batches — must yield briefly so the buffer flushes individual items
         for (var i = 0; i < batchCount; i++)
         {
-            scheduler.Handle(BuildMessage(i));
+            scheduler.Handle(LoggingTestHelpers.BuildMessage(i));
             // small wait so Buffer operator emits this item in its own batch (BufferCount=1
             // means "flush after 1 item" — the emission still happens asynchronously)
             await Task.Delay(15, TestContext.Current.CancellationToken);
@@ -77,26 +77,30 @@ public class BackgroundLogSchedulerTests
     }
 
     /// <summary>
-    /// Constructs a synthetic log message for scheduler plumbing.
+    /// <see cref="LogRouteConfiguration.BufferCount"/> equal to zero is degenerate
+    /// (a buffer that never fills is invalid). The constructor must reject it.
     /// </summary>
-    /// <param name="seq">Sequence number</param>
-    /// <returns>Log message instance</returns>
-    private static LogMessage<DefaultLogContext> BuildMessage(int seq) =>
-        new(
-            new DefaultLogContext(),
-            Instant.FromUnixTimeTicks(seq),
-            "test",
-            "id",
-            LogLevel.Info,
-            0,
-            $"msg-{seq}",
-            null,
-            string.Empty,
-            new Dictionary<string, object?>(),
-            "type",
-            "member",
-            0
-        );
+    [Fact]
+    public void Ctor_BufferCountZero_Throws()
+    {
+        var config = new LogRouteConfiguration { BufferTime = TimeSpan.FromMilliseconds(10), BufferCount = 0 };
+
+        Wrap.It(() => new BackgroundLogScheduler<DefaultLogContext>(_ => true, new NoOpSink(), config))
+            .Throws<ArgumentOutOfRangeException>();
+    }
+
+    /// <summary>
+    /// Negative <see cref="LogRouteConfiguration.BufferCount"/> is also invalid.
+    /// Mirrors the negative-<c>BufferTime</c> guard test.
+    /// </summary>
+    [Fact]
+    public void Ctor_BufferCountNegative_Throws()
+    {
+        var config = new LogRouteConfiguration { BufferTime = TimeSpan.FromMilliseconds(10), BufferCount = -1 };
+
+        Wrap.It(() => new BackgroundLogScheduler<DefaultLogContext>(_ => true, new NoOpSink(), config))
+            .Throws<ArgumentOutOfRangeException>();
+    }
 
     /// <summary>
     /// Deliberately slow async log handler — each batch call blocks for a fixed duration.
@@ -104,10 +108,20 @@ public class BackgroundLogSchedulerTests
     /// </summary>
     private sealed class SlowSink(TimeSpan perBatch) : ILogHandler<DefaultLogContext>
     {
+        /// <summary>Underlying counter incremented after each batch completes; read via <see cref="BatchCount"/>.</summary>
         private int _batchCount;
 
+        /// <summary>Thread-safe snapshot of the number of batches processed so far.</summary>
         public int BatchCount => Volatile.Read(ref _batchCount);
 
+        /// <summary>
+        /// Sleeps for <c>perBatch</c> to simulate a slow sink, then increments the batch counter.
+        /// Intentionally ignores <paramref name="ct"/> to verify that <c>DisposeAsync</c> waits
+        /// for natural completion.
+        /// </summary>
+        /// <param name="messages">The batch of log messages to handle.</param>
+        /// <param name="ct">Cancellation token (intentionally ignored by this stub).</param>
+        /// <returns>A value task that completes after the simulated delay.</returns>
         public async ValueTask HandleAsync(IReadOnlyList<LogMessage<DefaultLogContext>> messages, CancellationToken ct)
         {
             // intentionally ignore CT — the test asserts that DisposeAsync waits for the
@@ -115,15 +129,5 @@ public class BackgroundLogSchedulerTests
             await Task.Delay(perBatch);
             Interlocked.Increment(ref _batchCount);
         }
-    }
-
-    /// <summary>
-    /// Minimal handler that ignores incoming batches — used by ctor-guard tests where the
-    /// scheduler is expected to fail before any handler call is made.
-    /// </summary>
-    private sealed class NoOpSink : ILogHandler<DefaultLogContext>
-    {
-        public ValueTask HandleAsync(IReadOnlyList<LogMessage<DefaultLogContext>> messages, CancellationToken ct) =>
-            ValueTask.CompletedTask;
     }
 }

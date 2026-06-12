@@ -100,6 +100,52 @@ public class HashCodeSeqTest
     }
 
     /// <summary>
+    /// Verifies that combining an empty sequence of values returns the documented seed hash (19).
+    /// Also verifies the same for the KVP overload.
+    /// </summary>
+    [Fact]
+    public void Combine_EmptySequence_ReturnsBaseHash()
+    {
+        // arrange
+        const int seed = 19;
+
+        // act + assert — generic overload
+        HashCodeSeq.Combine(Enumerable.Empty<int>()).Is(seed);
+
+        // act + assert — KVP overload
+        HashCodeSeq.Combine(Enumerable.Empty<KeyValuePair<int, int>>()).Is(seed);
+    }
+
+    /// <summary>
+    /// Verifies that the KVP overload is order-sensitive: the same pairs in a different order
+    /// produce a different hash.
+    /// </summary>
+    [Fact]
+    public void Combine_KeyValuePairs_DifferentOrder_ProducesDifferentHash()
+    {
+        // arrange
+        var ordered = new[]
+        {
+            new KeyValuePair<int, string>(1, "a"),
+            new KeyValuePair<int, string>(2, "b"),
+            new KeyValuePair<int, string>(3, "c"),
+        };
+        var reordered = new[]
+        {
+            new KeyValuePair<int, string>(3, "c"),
+            new KeyValuePair<int, string>(1, "a"),
+            new KeyValuePair<int, string>(2, "b"),
+        };
+
+        // act
+        var hashOrdered = HashCodeSeq.Combine(ordered.AsEnumerable());
+        var hashReordered = HashCodeSeq.Combine(reordered.AsEnumerable());
+
+        // assert
+        (hashOrdered == hashReordered).IsFalse();
+    }
+
+    /// <summary>
     /// Represents a base record for testing, implementing ICopyable.
     /// </summary>
     internal abstract record Base : ICopyable<Base>

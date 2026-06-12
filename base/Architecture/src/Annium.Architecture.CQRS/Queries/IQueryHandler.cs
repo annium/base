@@ -12,3 +12,10 @@ namespace Annium.Architecture.CQRS.Queries;
 public interface IQueryHandler<TRequest, TResponse>
     : IFinalRequestHandler<TRequest, IStatusResult<OperationStatus, TResponse>>
     where TRequest : IQuery;
+
+/// <summary>
+/// Handler interface for queries that return only a status (no data payload — e.g. existence checks).
+/// </summary>
+/// <typeparam name="TRequest">The query request type</typeparam>
+public interface IQueryHandler<TRequest> : IFinalRequestHandler<TRequest, IStatusResult<OperationStatus>>
+    where TRequest : IQuery;

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Annium.Testing;
 using Xunit;
@@ -14,8 +15,23 @@ namespace Annium.Execution.Flow.Tests;
 public class StageExecutorTests
 {
     /// <summary>
+    /// An empty stage executor (no stages registered) must succeed immediately with an OK result.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
+    [Fact]
+    public async Task RunAsync_NoStages_ReturnsOk()
+    {
+        // act
+        var result = await Executor.Staged().RunAsync();
+
+        // assert
+        result.IsOk.IsTrue();
+    }
+
+    /// <summary>
     /// When all stages commit successfully, none of their rollbacks run.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task RunAsync_AllStagesSucceed_NoRollbackInvoked()
     {
@@ -39,6 +55,7 @@ public class StageExecutorTests
     /// must roll back. Previously the counter incremented before the <c>await</c>, so the
     /// failing stage (3) was included in the rollback set — undoing work that never happened.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task RunAsync_5Stages_StageThreeThrows_RollsBackStagesOneAndTwoOnly()
     {
@@ -86,11 +103,12 @@ public class StageExecutorTests
     /// Async-commit path: the <c>Func&lt;Task&gt;</c> branch of <c>ExecuteAsync</c> must be
     /// exercised. Mixed async + sync stages all commit successfully with no rollback.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task RunAsync_AsyncAndSyncCommits_AllRunAndNoRollback()
     {
         // arrange
-        var commitOrder = new System.Collections.Generic.List<int>();
+        var commitOrder = new List<int>();
         var rollbackCount = 0;
 
         // act
@@ -129,6 +147,7 @@ public class StageExecutorTests
     /// the <c>Func&lt;Task&gt;</c> branch of <c>ExecuteAsync</c> combined with the
     /// counter-after-await fix).
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task RunAsync_AsyncCommitThrows_PriorStagesRollBack()
     {
@@ -161,6 +180,7 @@ public class StageExecutorTests
     /// When the very first stage throws during commit, no stage committed successfully and no
     /// rollback runs.
     /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
     public async Task RunAsync_FirstStageThrows_NoRollbackInvoked()
     {
@@ -177,5 +197,169 @@ public class StageExecutorTests
         // assert
         result.IsOk.IsFalse();
         rollbackCount.Is(0);
+    }
+
+    /// <summary>
+    /// Stage(Action commit, Func&lt;ValueTask&gt; rollback): when stage 2 commit throws, stage 1's
+    /// async rollback must be awaited and its side-effect observed.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
+    [Fact]
+    public async Task RunAsync_SyncCommitAsyncRollback_CommitFails_AsyncRollbackRuns()
+    {
+        // arrange
+        var asyncRollbackRan = false;
+
+        // act
+        var result = await Executor
+            .Staged()
+            .Stage(
+                commit: () => { },
+                rollback: async () =>
+                {
+                    await Task.Yield();
+                    asyncRollbackRan = true;
+                }
+            )
+            .Stage(commit: () => throw new InvalidOperationException("stage 2 boom"), rollback: () => { })
+            .RunAsync();
+
+        // assert
+        result.IsOk.IsFalse();
+        asyncRollbackRan.IsTrue();
+    }
+
+    /// <summary>
+    /// Stage(Func&lt;ValueTask&gt; commit, Func&lt;ValueTask&gt; rollback): when stage 2 async commit throws,
+    /// stage 1's async rollback must be awaited and its side-effect observed.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
+    [Fact]
+    public async Task RunAsync_AsyncCommitAsyncRollback_CommitFails_AsyncRollbackRuns()
+    {
+        // arrange
+        var asyncRollbackRan = false;
+
+        // act
+        var result = await Executor
+            .Staged()
+            .Stage(
+                commit: async () => await Task.Yield(),
+                rollback: async () =>
+                {
+                    await Task.Yield();
+                    asyncRollbackRan = true;
+                }
+            )
+            .Stage(
+                commit: async () =>
+                {
+                    await Task.Yield();
+                    throw new InvalidOperationException("async stage 2 boom");
+                },
+                rollback: () => { }
+            )
+            .RunAsync();
+
+        // assert
+        result.IsOk.IsFalse();
+        asyncRollbackRan.IsTrue();
+    }
+
+    /// <summary>
+    /// When a rollback itself throws, the error is collected into the result alongside the
+    /// original commit error, and sibling rollbacks (for other committed stages) still run —
+    /// i.e. a throwing rollback does not abort the remaining rollbacks.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
+    [Fact]
+    public async Task RunAsync_RollbackThrows_CollectsBothErrorsAndContinuesRemainingRollbacks()
+    {
+        // arrange
+        var siblingRollbackRan = false;
+
+        // act — three stages commit; stage 3's commit throws; stage 2's rollback also throws;
+        // stage 1's rollback (siblingRollbackRan) must still run.
+        var result = await Executor
+            .Staged()
+            .Stage(commit: () => { }, rollback: () => siblingRollbackRan = true)
+            .Stage(commit: () => { }, rollback: () => throw new InvalidOperationException("rollback boom"))
+            .Stage(commit: () => throw new InvalidOperationException("commit boom"), rollback: () => { })
+            .RunAsync();
+
+        // assert — overall failure
+        result.IsOk.IsFalse();
+
+        // both the commit error and the rollback error are recorded
+        result.PlainErrors.Has(2);
+
+        // sibling rollback still ran despite stage-2's rollback having thrown
+        siblingRollbackRan.IsTrue();
+    }
+
+    /// <summary>
+    /// Stage(Action commit) with no rollback: when commit throws RunAsync must return a failed
+    /// result without propagating the exception — the absent rollback is a no-op.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
+    [Fact]
+    public async Task RunAsync_SyncCommitNoRollback_CommitThrows_ResultNotOkNoException()
+    {
+        // act
+        var result = await Executor
+            .Staged()
+            .Stage(commit: () => throw new InvalidOperationException("sync boom"))
+            .RunAsync();
+
+        // assert
+        result.IsOk.IsFalse();
+        result.PlainErrors.Has(1);
+    }
+
+    /// <summary>
+    /// Stage(Func&lt;ValueTask&gt; commit) with no rollback: when the async commit throws RunAsync
+    /// must return a failed result without propagating the exception.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
+    [Fact]
+    public async Task RunAsync_AsyncCommitNoRollback_CommitThrows_ResultNotOkNoException()
+    {
+        // act
+        var result = await Executor
+            .Staged()
+            .Stage(commit: async () =>
+            {
+                await Task.Yield();
+                throw new InvalidOperationException("async boom");
+            })
+            .RunAsync();
+
+        // assert
+        result.IsOk.IsFalse();
+        result.PlainErrors.Has(1);
+    }
+
+    /// <summary>
+    /// Stage(<see cref="Func{ValueTask}"/> commit, <see cref="Action"/> rollback): when stage 1's
+    /// async commit succeeds and stage 2's commit throws, stage 1's sync <see cref="Action"/>
+    /// rollback must run.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
+    [Fact]
+    public async Task RunAsync_AsyncCommitSyncRollback_PriorStageRollbackRuns()
+    {
+        // arrange
+        var rolledBack = false;
+
+        // act
+        var result = await Executor
+            .Staged()
+            .Stage(commit: async () => await Task.Yield(), rollback: (Action)(() => rolledBack = true))
+            .Stage(commit: () => throw new InvalidOperationException("stage 2 boom"), rollback: () => { })
+            .RunAsync();
+
+        // assert
+        result.IsOk.IsFalse();
+        rolledBack.IsTrue();
     }
 }

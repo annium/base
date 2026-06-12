@@ -9,7 +9,7 @@ namespace Annium.Collections.Generic;
 /// Represents a double-ended queue (deque) with configurable directionality.
 /// </summary>
 /// <typeparam name="T">The type of elements in the queue.</typeparam>
-public class DoubleEdgeQueue<T> : IDoubleEdgeQueue<T>
+public sealed class DoubleEdgeQueue<T> : IDoubleEdgeQueue<T>
 {
     /// <summary>
     /// Indicates whether the queue operates in direct mode.
@@ -26,13 +26,20 @@ public class DoubleEdgeQueue<T> : IDoubleEdgeQueue<T>
     /// </summary>
     /// <exception cref="InvalidOperationException">Thrown if the queue is empty.</exception>
     public T First =>
-        _entries.Count > 0 ? _entries.First!.Value : throw new InvalidOperationException("queue is empty");
+        // First is non-null when Count > 0 (LinkedList invariant).
+        _entries.Count > 0
+            ? _entries.First!.Value
+            : throw new InvalidOperationException("queue is empty");
 
     /// <summary>
     /// Gets the last element in the queue.
     /// </summary>
     /// <exception cref="InvalidOperationException">Thrown if the queue is empty.</exception>
-    public T Last => _entries.Count > 0 ? _entries.Last!.Value : throw new InvalidOperationException("queue is empty");
+    public T Last =>
+        // Last is non-null when Count > 0 (LinkedList invariant).
+        _entries.Count > 0
+            ? _entries.Last!.Value
+            : throw new InvalidOperationException("queue is empty");
 
     /// <summary>
     /// The underlying linked list storing the elements.
@@ -46,6 +53,7 @@ public class DoubleEdgeQueue<T> : IDoubleEdgeQueue<T>
     /// <param name="isDirect">If true, operates in direct mode; otherwise, in reverse mode.</param>
     public DoubleEdgeQueue(IEnumerable<T> entries, bool isDirect)
     {
+        // IDE0306: collection-expression not applicable to LinkedList<T>; constructor overload required.
 #pragma warning disable IDE0306
         _entries = new LinkedList<T>(entries);
 #pragma warning restore IDE0306

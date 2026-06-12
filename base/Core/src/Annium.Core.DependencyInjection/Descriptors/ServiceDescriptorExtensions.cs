@@ -62,6 +62,8 @@ public static class ServiceDescriptorExtensions
             IKeyedFactoryServiceDescriptor x => new MicrosoftServiceDescriptor(
                 x.ServiceType,
                 x.Key,
+                // ! bridges M.E.DI's keyed-factory ctor signature Func<IServiceProvider, object?, object>
+                // (nullable key) to Annium's stricter Func<IServiceProvider, object, object> (non-null key).
                 x.ImplementationFactory!,
                 (MicrosoftServiceLifetime)x.Lifetime
             ),

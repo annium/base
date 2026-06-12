@@ -41,7 +41,7 @@ internal sealed class NodaDateTimeZoneConverter : ConverterBase<DateTimeZone>
             $"Unexpected token parsing instant. Expected String, got {reader.TokenType}."
         );
 
-        var timeZoneId = reader.GetString()!;
+        var timeZoneId = reader.GetString()!; // non-null: String token verified by CheckData above
 
         return _provider[timeZoneId];
     }

@@ -44,12 +44,12 @@ internal class KeyedTypeRegistration : IRegistration
     /// <returns>The collection of service descriptors</returns>
     public IEnumerable<IServiceDescriptor> ResolveServiceDescriptors(ServiceLifetime lifetime)
     {
+        // Always emit a keyed factory descriptor that routes through the non-keyed implementation
+        // registration. This is INTENTIONALLY asymmetric with TypeRegistration's same-types
+        // optimization: keyed lookups must share the underlying singleton instance with non-keyed
+        // lookups of the implementation type. A direct keyed-type descriptor would let M.E.DI
+        // create a separate keyed singleton, breaking that shared-instance contract (covered by
+        // SingleRegistrationTest.AsKeyedSelf_Works and BulkRegistrationTest.AsKeyedSelf_Works).
         yield return Factory(_serviceType, _key, (sp, _) => Resolve(sp, _implementationType), lifetime);
-
-        // yield return Factory(
-        //     KeyValueType(_keyType, _serviceType),
-        //     sp => KeyValue(_keyType, _serviceType, _key, Resolve(sp, _implementationType)),
-        //     lifetime
-        // );
     }
 }

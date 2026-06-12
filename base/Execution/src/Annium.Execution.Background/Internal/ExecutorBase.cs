@@ -52,7 +52,10 @@ internal abstract class ExecutorBase : IExecutor, ILogSubject
     /// <summary>
     /// Task completion source for signaling when all tasks are complete
     /// </summary>
-    private readonly TaskCompletionSource _runTcs = new();
+    // RunContinuationsAsynchronously: the last task to finish completes this gate from CompleteTask on a
+    // thread-pool fiber; without it, DisposeAsync's continuation (DisposeResourcesAsync / Cts.Dispose) would
+    // run inline on that fiber instead of the disposer's context
+    private readonly TaskCompletionSource _runTcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
     /// <summary>
     /// The main execution task
@@ -68,6 +71,12 @@ internal abstract class ExecutorBase : IExecutor, ILogSubject
     /// Counter tracking the number of running tasks
     /// </summary>
     private int _taskCounter;
+
+    /// <summary>
+    /// Registration of <see cref="Stop"/> on the caller's start token; disposed in
+    /// <see cref="DisposeAsync"/> so a non-default token source does not retain this executor.
+    /// </summary>
+    private CancellationTokenRegistration _stopRegistration;
 
     /// <summary>
     /// Initializes a new instance of the ExecutorBase class
@@ -93,40 +102,28 @@ internal abstract class ExecutorBase : IExecutor, ILogSubject
     /// </summary>
     /// <param name="task">The task to schedule</param>
     /// <returns>True if the task was successfully scheduled, false otherwise</returns>
-    public bool Schedule(Action task)
-    {
-        return TryScheduleTask(task);
-    }
+    public bool Schedule(Action task) => TryScheduleTask(task);
 
     /// <summary>
     /// Schedules a synchronous task for execution with cancellation support
     /// </summary>
     /// <param name="task">The task to schedule</param>
     /// <returns>True if the task was successfully scheduled, false otherwise</returns>
-    public bool Schedule(Action<CancellationToken> task)
-    {
-        return TryScheduleTask(task);
-    }
+    public bool Schedule(Action<CancellationToken> task) => TryScheduleTask(task);
 
     /// <summary>
     /// Schedules an asynchronous task for execution
     /// </summary>
     /// <param name="task">The task to schedule</param>
     /// <returns>True if the task was successfully scheduled, false otherwise</returns>
-    public bool Schedule(Func<ValueTask> task)
-    {
-        return TryScheduleTask(task);
-    }
+    public bool Schedule(Func<ValueTask> task) => TryScheduleTask(task);
 
     /// <summary>
     /// Schedules an asynchronous task for execution with cancellation support
     /// </summary>
     /// <param name="task">The task to schedule</param>
     /// <returns>True if the task was successfully scheduled, false otherwise</returns>
-    public bool Schedule(Func<CancellationToken, ValueTask> task)
-    {
-        return TryScheduleTask(task);
-    }
+    public bool Schedule(Func<CancellationToken, ValueTask> task) => TryScheduleTask(task);
 
     /// <summary>
     /// Starts the executor
@@ -149,7 +146,7 @@ internal abstract class ExecutorBase : IExecutor, ILogSubject
 
         // change to state to unavailable
         this.Trace("register stop on token cancellation");
-        ct.Register(Stop);
+        _stopRegistration = ct.Register(Stop);
 
         this.Trace("run");
         _runTask = Task.Run(RunAsync, CancellationToken.None).ConfigureAwait(false);
@@ -167,6 +164,7 @@ internal abstract class ExecutorBase : IExecutor, ILogSubject
     {
         this.Trace("start");
 
+        bool wasStarted;
         lock (_locker)
         {
             if (_state is State.Disposed)
@@ -174,6 +172,11 @@ internal abstract class ExecutorBase : IExecutor, ILogSubject
                 this.Trace("Executor is already {state}", _state);
                 return;
             }
+
+            // RunAsync (the channel's single reader) runs only once Start has moved the executor past
+            // Created. If we are disposing a never-started executor, DisposeAsync must drain the channel
+            // itself — otherwise buffered tasks are never consumed and _taskReader.Completion never fires.
+            wasStarted = _state is not State.Created;
 
             this.Trace("set state to disposed");
             _state = State.Disposed;
@@ -188,7 +191,15 @@ internal abstract class ExecutorBase : IExecutor, ILogSubject
         this.Trace("wait for task(s) to run");
         await _runTask;
 
+        if (!wasStarted)
+        {
+            this.Trace("executor was never started - drain pending tasks so the channel can complete");
+            await DrainPendingTasksAsync();
+        }
+
         this.Trace("wait for reader completion");
+        // VSTHRD003: _taskReader.Completion is the channel's own lifecycle sentinel (completed by
+        // TryComplete above), not foreign work — awaiting it directly is the correct drain pattern
 #pragma warning disable VSTHRD003
         await _taskReader.Completion.ConfigureAwait(false);
 #pragma warning restore VSTHRD003
@@ -197,9 +208,20 @@ internal abstract class ExecutorBase : IExecutor, ILogSubject
         TryFinish(_taskCounter);
 
         this.Trace("wait for task(s) to finish");
+        // VSTHRD003: _runTcs is this executor's own disposal drain-gate (set by CompleteTask/TryFinish
+        // when the last in-flight task finishes), not foreign work — DisposeAsync must await it directly
 #pragma warning disable VSTHRD003
         await _runTcs.Task;
 #pragma warning restore VSTHRD003
+
+        this.Trace("dispose subclass-owned resources");
+        await DisposeResourcesAsync();
+
+        this.Trace("unregister stop from start token");
+        await _stopRegistration.DisposeAsync();
+
+        this.Trace("dispose cts");
+        Cts.Dispose();
 
         this.Trace("done");
     }
@@ -210,6 +232,48 @@ internal abstract class ExecutorBase : IExecutor, ILogSubject
     /// <param name="task">The task to run</param>
     /// <returns>A task representing the execution</returns>
     protected abstract Task RunTaskAsync(Delegate task);
+
+    /// <summary>
+    /// Runs <paramref name="task"/> on a background thread-pool fiber via the supplied
+    /// <paramref name="start"/> delegate, marking it complete afterwards and surfacing any fault
+    /// through the logger. Shared by the fire-and-forget executors (parallel / concurrent); returns a
+    /// completed task immediately so the dispatch loop is not blocked.
+    /// </summary>
+    /// <param name="start">The differentiated per-executor start logic (e.g. semaphore-gated or not)</param>
+    /// <param name="task">The task to run</param>
+    /// <returns>A completed task</returns>
+    protected Task RunTaskInBackgroundAsync(Func<Delegate, Task> start, Delegate task)
+    {
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await start(task);
+            }
+            catch (OperationCanceledException) { }
+            catch (Exception ex)
+            {
+                this.Error(ex);
+            }
+            finally
+            {
+                // always decrement the drain counter so DisposeAsync's _runTcs gate completes even if
+                // start propagates (it currently swallows internally, but the contract must not rely on that)
+                CompleteTask(task);
+            }
+        });
+
+        return Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Disposes resources owned by a subclass. Invoked once at the end of <see cref="DisposeAsync"/>,
+    /// after all scheduled tasks have drained and completed, so subclass-owned resources (e.g. a
+    /// semaphore) are released only when no scheduled work can still reference them. Base-owned
+    /// resources (the <see cref="Cts"/>) are disposed by <see cref="DisposeAsync"/> itself.
+    /// </summary>
+    /// <returns>A task representing the resource disposal</returns>
+    protected virtual ValueTask DisposeResourcesAsync() => ValueTask.CompletedTask;
 
     /// <summary>
     /// Marks a task as completed and decrements the task counter
@@ -282,6 +346,20 @@ internal abstract class ExecutorBase : IExecutor, ILogSubject
 
         // shutdown mode - runs only left tasks
         this.Trace("run tasks left");
+        await DrainPendingTasksAsync();
+
+        this.Trace("done");
+    }
+
+    /// <summary>
+    /// Drains and runs every task still buffered in the channel. Used both by the shutdown phase of
+    /// <see cref="RunAsync"/> and by <see cref="DisposeAsync"/> when the executor is disposed without
+    /// ever being started. The channel is configured single-reader, so the two callers are mutually
+    /// exclusive: RunAsync drains when the executor was started, DisposeAsync drains when it was not.
+    /// </summary>
+    /// <returns>A task representing the drain operation</returns>
+    private async Task DrainPendingTasksAsync()
+    {
         while (true)
         {
             if (!_taskReader.TryRead(out var task))
@@ -290,8 +368,6 @@ internal abstract class ExecutorBase : IExecutor, ILogSubject
             this.Trace("run task {id} ({num})", task.GetFullId(), Interlocked.Increment(ref _taskCounter));
             await RunTaskAsync(task);
         }
-
-        this.Trace("done");
     }
 
     /// <summary>

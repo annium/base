@@ -13,7 +13,7 @@ internal class LogSentry<TContext> : ILogSentry<TContext>
     /// <summary>
     /// Buffer for storing log messages before handler is set
     /// </summary>
-    private readonly IList<LogMessage<TContext>> _messagesBuffer = new List<LogMessage<TContext>>();
+    private readonly List<LogMessage<TContext>> _messagesBuffer = new();
 
     /// <summary>
     /// The current message handler
@@ -51,5 +51,9 @@ internal class LogSentry<TContext> : ILogSentry<TContext>
 
         foreach (var message in _messagesBuffer)
             _handler(message);
+
+        // release the forwarded startup messages — they are never re-read, and holding them would
+        // pin their Exception / Data payloads for the lifetime of this singleton.
+        _messagesBuffer.Clear();
     }
 }

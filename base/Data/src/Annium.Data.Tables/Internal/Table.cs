@@ -81,6 +81,11 @@ internal sealed class Table<T> : ITable<T>, ILogSubject
     private readonly CancellationTokenSource _observableCts = new();
 
     /// <summary>
+    /// Guards against repeated disposal so DisposeAsync is idempotent (0 = live, 1 = disposed).
+    /// </summary>
+    private int _disposed;
+
+    /// <summary>
     /// Observable stream of change events.
     /// </summary>
     private readonly IObservable<ChangeEvent<T>> _observable;
@@ -145,6 +150,11 @@ internal sealed class Table<T> : ITable<T>, ILogSubject
     /// <returns>A ValueTask representing the asynchronous dispose operation.</returns>
     public async ValueTask DisposeAsync()
     {
+        // IAsyncDisposable contract: DisposeAsync must be safely callable more than once,
+        // including concurrently — only the first caller runs the teardown
+        if (Interlocked.CompareExchange(ref _disposed, 1, 0) != 0)
+            return;
+
         this.Trace("start, complete writer");
         _eventWriter.Complete();
 
@@ -153,6 +163,9 @@ internal sealed class Table<T> : ITable<T>, ILogSubject
 
         this.Trace("await observable completion");
         await _observable.WhenCompletedAsync(Logger);
+
+        this.Trace("dispose cts");
+        _observableCts.Dispose();
 
         this.Trace("clear table");
         lock (_locker)
@@ -247,7 +260,11 @@ internal sealed class Table<T> : ITable<T>, ILogSubject
             if (isActive)
             {
                 lock (_locker)
-                    AddEvent(ChangeEvent.Set(existing!));
+                    // guard against a concurrent Delete that removed the key between the
+                    // initial read and here — without this a Set event could be emitted
+                    // after the Delete event for an item no longer in the table
+                    if (_table.ContainsKey(key))
+                        AddEvent(ChangeEvent.Set(existing!));
             }
         }
         else
@@ -255,8 +272,13 @@ internal sealed class Table<T> : ITable<T>, ILogSubject
             EnsurePermission(TablePermission.Add);
             lock (_locker)
             {
-                _table[key] = entry;
-                AddEvent(ChangeEvent.Set(entry));
+                // another thread may have added the same new key after our initial read; only
+                // add and emit the Set event once to avoid a duplicate Set for a single add
+                if (!_table.ContainsKey(key))
+                {
+                    _table[key] = entry;
+                    AddEvent(ChangeEvent.Set(entry));
+                }
             }
         }
 

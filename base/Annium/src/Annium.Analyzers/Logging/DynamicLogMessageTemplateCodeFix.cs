@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Composition;
-using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,10 +14,19 @@ namespace Annium.Analyzers.Logging;
 
 /// <summary>
 /// Converts an interpolated-string log call into the static-template / named-args form expected by Annium logging,
-/// e.g. <c>logger.Trace($"run for {id}")</c> becomes <c>logger.Trace("run for {id}", id)</c>.
+/// e.g. <c>this.Trace($"run for {id}")</c> becomes <c>this.Trace("run for {id}", id)</c>.
 /// </summary>
+/// <remarks>
+/// <b>Operation-vs-Syntax argument-index impedance:</b> the analyzer fires when <c>IInvocationOperation.Arguments[1]</c>
+/// (the template) is an interpolated string. At the operation layer <c>args[0]</c> is the extension-method receiver
+/// (the <c>this ILogSubject</c>) and <c>args[1]</c> is the template. At the syntax layer the receiver appears as
+/// the member-access target of the invocation (<c>this.Trace(...)</c>) — NOT as a syntax argument — so the template
+/// appears at <c>InvocationExpressionSyntax.ArgumentList.Arguments[0]</c> in the typical positional shape. To stay
+/// robust against named-argument shapes (<c>this.Trace(message: $"...")</c>) this code fix locates the
+/// interpolated string by scanning the syntax arguments, not by position alone.
+/// </remarks>
 [ExportCodeFixProvider(LanguageNames.CSharp), Shared]
-public class DynamicLogMessageTemplateCodeFix : CodeFixProvider
+public sealed class DynamicLogMessageTemplateCodeFix : CodeFixProvider
 {
     /// <summary>
     /// Diagnostic IDs handled by this code fix.
@@ -48,11 +56,29 @@ public class DynamicLogMessageTemplateCodeFix : CodeFixProvider
         if (invocation is null)
             return;
 
+        // Locate the interpolated-string argument by scanning syntax arguments instead of indexing
+        // positionally — this handles the named-argument shape `this.Trace(message: $"...")` as well as
+        // the typical positional one.
         var arguments = invocation.ArgumentList.Arguments;
-        if (arguments.Count == 0)
+        var interpolatedIndex = -1;
+        InterpolatedStringExpressionSyntax? interpolated = null;
+        for (var i = 0; i < arguments.Count; i++)
+        {
+            if (arguments[i].Expression is InterpolatedStringExpressionSyntax candidate)
+            {
+                interpolatedIndex = i;
+                interpolated = candidate;
+                break;
+            }
+        }
+        if (interpolated is null)
             return;
 
-        if (arguments[0].Expression is not InterpolatedStringExpressionSyntax interpolated)
+        // Refuse the auto-fix when any interpolation carries an alignment or format clause
+        // (e.g. `{x,10:F2}`). Converting these to structured-log placeholders silently drops the
+        // formatting directive; the developer should resolve manually rather than have semantics
+        // changed under them.
+        if (HasAlignmentOrFormat(interpolated))
             return;
 
         var diagnostic = context.Diagnostics[0];
@@ -60,7 +86,8 @@ public class DynamicLogMessageTemplateCodeFix : CodeFixProvider
         context.RegisterCodeFix(
             CodeAction.Create(
                 title: "Convert to static log template",
-                createChangedDocument: ct => ConvertAsync(context.Document, invocation, interpolated, ct),
+                createChangedDocument: ct =>
+                    ConvertAsync(context.Document, invocation, interpolated, interpolatedIndex, ct),
                 equivalenceKey: nameof(DynamicLogMessageTemplateCodeFix)
             ),
             diagnostic
@@ -68,24 +95,61 @@ public class DynamicLogMessageTemplateCodeFix : CodeFixProvider
     }
 
     /// <summary>
-    /// Builds a new invocation with the interpolated first argument replaced by a literal template
+    /// Returns <see langword="true"/> if any interpolation inside <paramref name="interpolated"/> carries
+    /// a non-null <see cref="InterpolationSyntax.AlignmentClause"/> or
+    /// <see cref="InterpolationSyntax.FormatClause"/>. Such formatting cannot be preserved by the
+    /// structured-template rewrite, so the code fix refuses these inputs rather than dropping the
+    /// directive silently.
+    /// </summary>
+    /// <param name="interpolated">The interpolated string to inspect.</param>
+    /// <returns><see langword="true"/> when any interpolation has alignment or format; otherwise <see langword="false"/>.</returns>
+    private static bool HasAlignmentOrFormat(InterpolatedStringExpressionSyntax interpolated)
+    {
+        foreach (var part in interpolated.Contents)
+        {
+            if (
+                part is InterpolationSyntax interpolation
+                && (interpolation.AlignmentClause is not null || interpolation.FormatClause is not null)
+            )
+                return true;
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// Builds a new invocation with the interpolated argument replaced by a literal template
     /// and each interpolation captured as an additional argument.
     /// </summary>
     /// <param name="document">Document containing the invocation.</param>
     /// <param name="invocation">Original invocation syntax.</param>
     /// <param name="interpolated">The interpolated-string argument to be converted.</param>
+    /// <param name="interpolatedIndex">Index of the interpolated argument in the original argument list.</param>
     /// <param name="ct">Cancellation token.</param>
     /// <returns>The updated document.</returns>
     private static async Task<Document> ConvertAsync(
         Document document,
         InvocationExpressionSyntax invocation,
         InterpolatedStringExpressionSyntax interpolated,
+        int interpolatedIndex,
         CancellationToken ct
     )
     {
+        // Pre-pass: count baseName occurrences so we can suffix EVERY repeat from 1 (not from 2 on the
+        // first occurrence's repeat). `$"{x} and {x}"` becomes `"{x1} and {x2}", x, x` — both slots are
+        // suffixed and named consistently, instead of the asymmetric `{x}, {x2}` shape.
+        var baseNameTotals = new Dictionary<string, int>();
+        foreach (var part in interpolated.Contents)
+        {
+            if (part is InterpolationSyntax interpolation)
+            {
+                var baseName = DerivePlaceholderName(interpolation.Expression);
+                baseNameTotals[baseName] = baseNameTotals.TryGetValue(baseName, out var c) ? c + 1 : 1;
+            }
+        }
+
         var template = new StringBuilder();
         var captured = new List<ExpressionSyntax>();
-        var nameCounts = new Dictionary<string, int>();
+        var baseNameSeen = new Dictionary<string, int>();
 
         foreach (var part in interpolated.Contents)
         {
@@ -96,16 +160,10 @@ public class DynamicLogMessageTemplateCodeFix : CodeFixProvider
                     break;
                 case InterpolationSyntax interpolation:
                     var baseName = DerivePlaceholderName(interpolation.Expression);
-                    var name = baseName;
-                    if (nameCounts.TryGetValue(baseName, out var count))
-                    {
-                        nameCounts[baseName] = count + 1;
-                        name = $"{baseName}{count + 1}";
-                    }
-                    else
-                    {
-                        nameCounts[baseName] = 1;
-                    }
+                    var occurrence = baseNameSeen.TryGetValue(baseName, out var seen) ? seen + 1 : 1;
+                    baseNameSeen[baseName] = occurrence;
+                    // Suffix from 1 only when the base name appears more than once in the template.
+                    var name = baseNameTotals[baseName] > 1 ? $"{baseName}{occurrence}" : baseName;
 
                     template.Append('{').Append(name).Append('}');
                     captured.Add(interpolation.Expression.WithoutTrivia());
@@ -118,13 +176,20 @@ public class DynamicLogMessageTemplateCodeFix : CodeFixProvider
             SyntaxFactory.Literal(template.ToString())
         );
 
+        // Preserve every argument other than the interpolated one in its original position, then append
+        // the captured interpolation values. Locating the interpolated argument by index (rather than
+        // by `Skip(1)`) handles named-argument shapes correctly.
         var existing = invocation.ArgumentList.Arguments;
-        var nodes = new List<SyntaxNodeOrToken> { SyntaxFactory.Argument(literal) };
-
-        foreach (var arg in existing.Skip(1))
+        var nodes = new List<SyntaxNodeOrToken>();
+        for (var i = 0; i < existing.Count; i++)
         {
-            nodes.Add(SyntaxFactory.Token(SyntaxKind.CommaToken).WithTrailingTrivia(SyntaxFactory.Space));
-            nodes.Add(arg);
+            if (i == interpolatedIndex)
+                nodes.Add(SyntaxFactory.Argument(literal));
+            else
+                nodes.Add(existing[i].WithoutTrivia());
+
+            if (i < existing.Count - 1)
+                nodes.Add(SyntaxFactory.Token(SyntaxKind.CommaToken).WithTrailingTrivia(SyntaxFactory.Space));
         }
 
         foreach (var expr in captured)
@@ -137,7 +202,9 @@ public class DynamicLogMessageTemplateCodeFix : CodeFixProvider
         var newInvocation = invocation.WithArgumentList(newArgList);
 
         var root = await document.GetSyntaxRootAsync(ct).ConfigureAwait(false);
-        var newRoot = root!.ReplaceNode(invocation, newInvocation);
+        if (root is null)
+            return document;
+        var newRoot = root.ReplaceNode(invocation, newInvocation);
 
         return document.WithSyntaxRoot(newRoot);
     }

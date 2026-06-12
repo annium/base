@@ -16,25 +16,28 @@ internal class NextBuilder
     /// <summary>
     /// Cached reference to ChainExecutor.ExecuteAsync method
     /// </summary>
-    private readonly MethodInfo _executeAsync = typeof(ChainExecutor).GetMethod(
-        nameof(ChainExecutor.ExecuteAsync),
-        BindingFlags.Public | BindingFlags.Static
-    )!;
+    private static readonly MethodInfo _executeAsync = typeof(ChainExecutor)
+        .GetMethod(nameof(ChainExecutor.ExecuteAsync), BindingFlags.Public | BindingFlags.Static)
+        .NotNull();
 
     /// <summary>
     /// Cached reference to Task.GetAwaiter method
     /// </summary>
-    private readonly MethodInfo _getAwaiter = typeof(Task<object>).GetMethod(nameof(Task<>.GetAwaiter))!;
+    private static readonly MethodInfo _getAwaiter = typeof(Task<object>)
+        .GetMethod(nameof(Task<>.GetAwaiter))
+        .NotNull();
 
     /// <summary>
     /// Cached reference to TaskAwaiter.GetResult method
     /// </summary>
-    private readonly MethodInfo _getResult = typeof(TaskAwaiter<object>).GetMethod(nameof(TaskAwaiter<>.GetResult))!;
+    private static readonly MethodInfo _getResult = typeof(TaskAwaiter<object>)
+        .GetMethod(nameof(TaskAwaiter<>.GetResult))
+        .NotNull();
 
     /// <summary>
     /// Cached reference to Task.FromResult method
     /// </summary>
-    private readonly MethodInfo _fromResult = typeof(Task).GetMethod(nameof(Task.FromResult))!;
+    private static readonly MethodInfo _fromResult = typeof(Task).GetMethod(nameof(Task.FromResult)).NotNull();
 
     /// <summary>
     /// Builds a delegate function for invoking the next handler in the chain

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -121,14 +122,20 @@ public static class StringExtensions
     /// Repeats the string a specified number of times.
     /// </summary>
     /// <param name="value">The string to repeat.</param>
-    /// <param name="count">The number of times to repeat the string.</param>
-    /// <returns>A string that is the result of repeating the input string the specified number of times.</returns>
+    /// <param name="count">The number of times to repeat the string. Must be non-negative.</param>
+    /// <returns>An empty string when <paramref name="count"/> is zero or <paramref name="value"/> is empty; otherwise the input repeated <paramref name="count"/> times.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when <paramref name="count"/> is negative.</exception>
     public static string Repeat(this string value, int count)
     {
-        if (string.IsNullOrEmpty(value) || count <= 0)
-            return value;
+        ArgumentOutOfRangeException.ThrowIfNegative(count);
 
-        return new StringBuilder(value.Length * count).AppendJoin(value, new string[count + 1]).ToString();
+        if (count == 0 || string.IsNullOrEmpty(value))
+            return string.Empty;
+
+        var builder = new StringBuilder(value.Length * count);
+        for (var i = 0; i < count; i++)
+            builder.Append(value);
+        return builder.ToString();
     }
 
     /// <summary>
@@ -244,7 +251,7 @@ public static class StringExtensions
     /// <returns>true if the conversion was successful; otherwise, false.</returns>
     public static bool TryFromHexStringToByteArray(this string str, out byte[] byteArray)
     {
-        byteArray = Array.Empty<byte>();
+        byteArray = [];
 
         if (string.IsNullOrEmpty(str) || str.Length % 2 != 0)
             return false;
@@ -271,16 +278,27 @@ public static class StringExtensions
 
     #region Like
 
+    /// <summary>Cache mapping LIKE patterns to their compiled regular expressions.</summary>
+    private static readonly ConcurrentDictionary<string, Regex> _likeCache = new();
+
     /// <summary>
     /// Compares the string against a given pattern.
     /// </summary>
     /// <param name="str">The string.</param>
     /// <param name="pattern">The pattern to match, where "*" means any sequence of characters, and "?" means any single character.</param>
     /// <returns><c>true</c> if the string matches the given pattern; otherwise <c>false</c>.</returns>
-    public static bool IsLike(this string str, string pattern)
+    public static bool IsLike(this string str, string pattern) =>
+        _likeCache.GetOrAdd(pattern, BuildLikeRegex).IsMatch(str);
+
+    /// <summary>
+    /// Builds the compiled regex used by <see cref="IsLike"/> from a wildcard pattern.
+    /// </summary>
+    /// <param name="pattern">The wildcard pattern (<c>*</c> for any sequence, <c>?</c> for any single character).</param>
+    /// <returns>A compiled, case-insensitive regex anchored at both ends.</returns>
+    private static Regex BuildLikeRegex(string pattern)
     {
         var rePattern = "^" + Regex.Escape(pattern).Replace(@"\*", ".*").Replace(@"\?", ".") + "$";
-        return new Regex(rePattern, RegexOptions.IgnoreCase | RegexOptions.Singleline).IsMatch(str);
+        return new Regex(rePattern, RegexOptions.IgnoreCase | RegexOptions.Singleline | RegexOptions.Compiled);
     }
 
     #endregion
@@ -312,17 +330,11 @@ public static class StringExtensions
     /// </summary>
     /// <param name="c">The character to check.</param>
     /// <returns>The symbol type of the character.</returns>
-    private static Symbol GetSymbol(char c)
-    {
-        if (char.IsUpper(c))
-            return Symbol.Upper;
-        if (char.IsLower(c))
-            return Symbol.Lower;
-        if (char.IsDigit(c))
-            return Symbol.Digit;
-
-        return Symbol.Other;
-    }
+    private static Symbol GetSymbol(char c) =>
+        char.IsUpper(c) ? Symbol.Upper
+        : char.IsLower(c) ? Symbol.Lower
+        : char.IsDigit(c) ? Symbol.Digit
+        : Symbol.Other;
 
     /// <summary>
     /// Creates a lookup table for hexadecimal characters.
