@@ -1,3 +1,4 @@
+using System;
 using Annium.Testing;
 using NodaTime;
 using Xunit;
@@ -147,5 +148,68 @@ public class DurationExtensionsTest
     {
         Duration.FromSeconds(50).RoundTo(Duration.FromSeconds(15)).Is(Duration.FromSeconds(45));
         Duration.FromSeconds(55).RoundTo(Duration.FromSeconds(15)).Is(Duration.FromSeconds(60));
+    }
+
+    /// <summary>
+    /// Tests that FloorTo throws ArgumentException when the unit duration is zero.
+    /// </summary>
+    [Fact]
+    public void FloorTo_ZeroUnit_Throws()
+    {
+        Wrap.It(() => Duration.FromSeconds(5).FloorTo(Duration.Zero)).Throws<ArgumentException>();
+    }
+
+    /// <summary>
+    /// Tests that RoundTo throws ArgumentException when the unit duration is zero.
+    /// </summary>
+    [Fact]
+    public void RoundTo_ZeroUnit_Throws()
+    {
+        Wrap.It(() => Duration.FromSeconds(5).RoundTo(Duration.Zero)).Throws<ArgumentException>();
+    }
+
+    /// <summary>
+    /// Tests that CeilTo throws ArgumentException when the unit duration is zero.
+    /// </summary>
+    [Fact]
+    public void CeilTo_ZeroUnit_Throws()
+    {
+        Wrap.It(() => Duration.FromSeconds(5).CeilTo(Duration.Zero)).Throws<ArgumentException>();
+    }
+
+    /// <summary>
+    /// Tests that FloorTo floors a negative duration toward negative infinity (not toward zero).
+    /// </summary>
+    [Fact]
+    public void FloorTo_NegativeDuration_FloorsTowardNegativeInfinity()
+    {
+        Duration.FromTicks(-5).FloorTo(Duration.FromTicks(3)).Is(Duration.FromTicks(-6));
+    }
+
+    /// <summary>
+    /// Tests that CeilTo ceils a negative duration toward positive infinity (smallest multiple >= input).
+    /// </summary>
+    [Fact]
+    public void CeilTo_NegativeDuration_CeilsTowardPositiveInfinity()
+    {
+        Duration.FromTicks(-5).CeilTo(Duration.FromTicks(3)).Is(Duration.FromTicks(-3));
+    }
+
+    /// <summary>
+    /// Tests that RoundTo rounds a negative duration to the nearest multiple (here -6, one step away, not -3).
+    /// </summary>
+    [Fact]
+    public void RoundTo_NegativeDuration_RoundsToNearestMultiple()
+    {
+        Duration.FromTicks(-5).RoundTo(Duration.FromTicks(3)).Is(Duration.FromTicks(-6));
+    }
+
+    /// <summary>
+    /// Tests that CeilTo returns the input unchanged when it is already an exact multiple of the unit.
+    /// </summary>
+    [Fact]
+    public void CeilTo_ExactMultiple_ReturnsInput()
+    {
+        Duration.FromSeconds(60).CeilTo(Duration.FromSeconds(15)).Is(Duration.FromSeconds(60));
     }
 }

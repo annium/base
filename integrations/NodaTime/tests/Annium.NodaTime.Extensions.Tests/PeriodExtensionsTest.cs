@@ -1,3 +1,4 @@
+using System;
 using Annium.Testing;
 using NodaTime;
 using Xunit;
@@ -147,5 +148,68 @@ public class PeriodExtensionsTest
     {
         Period.FromSeconds(50).RoundTo(Period.FromSeconds(15)).Normalize().Is(Period.FromSeconds(45).Normalize());
         Period.FromSeconds(55).RoundTo(Period.FromSeconds(15)).Normalize().Is(Period.FromSeconds(60).Normalize());
+    }
+
+    /// <summary>
+    /// Tests that FloorTo throws ArgumentException when the unit period is zero.
+    /// </summary>
+    [Fact]
+    public void FloorTo_ZeroUnit_Throws()
+    {
+        Wrap.It(() => Period.FromSeconds(5).FloorTo(Period.Zero)).Throws<ArgumentException>();
+    }
+
+    /// <summary>
+    /// Tests that RoundTo throws ArgumentException when the unit period is zero.
+    /// </summary>
+    [Fact]
+    public void RoundTo_ZeroUnit_Throws()
+    {
+        Wrap.It(() => Period.FromSeconds(5).RoundTo(Period.Zero)).Throws<ArgumentException>();
+    }
+
+    /// <summary>
+    /// Tests that CeilTo throws ArgumentException when the unit period is zero.
+    /// </summary>
+    [Fact]
+    public void CeilTo_ZeroUnit_Throws()
+    {
+        Wrap.It(() => Period.FromSeconds(5).CeilTo(Period.Zero)).Throws<ArgumentException>();
+    }
+
+    /// <summary>
+    /// Tests that FloorTo floors a negative period toward negative infinity (not toward zero).
+    /// </summary>
+    [Fact]
+    public void FloorTo_NegativePeriod_FloorsTowardNegativeInfinity()
+    {
+        Period.FromTicks(-5).FloorTo(Period.FromTicks(3)).Normalize().Is(Period.FromTicks(-6).Normalize());
+    }
+
+    /// <summary>
+    /// Tests that CeilTo ceils a negative period toward positive infinity (smallest multiple >= input).
+    /// </summary>
+    [Fact]
+    public void CeilTo_NegativePeriod_CeilsTowardPositiveInfinity()
+    {
+        Period.FromTicks(-5).CeilTo(Period.FromTicks(3)).Normalize().Is(Period.FromTicks(-3).Normalize());
+    }
+
+    /// <summary>
+    /// Tests that RoundTo rounds a negative period to the nearest multiple (here -6, one step away, not -3).
+    /// </summary>
+    [Fact]
+    public void RoundTo_NegativePeriod_RoundsToNearestMultiple()
+    {
+        Period.FromTicks(-5).RoundTo(Period.FromTicks(3)).Normalize().Is(Period.FromTicks(-6).Normalize());
+    }
+
+    /// <summary>
+    /// Tests that CeilTo returns the input unchanged when it is already an exact multiple of the unit.
+    /// </summary>
+    [Fact]
+    public void CeilTo_ExactMultiple_ReturnsInput()
+    {
+        Period.FromSeconds(60).CeilTo(Period.FromSeconds(15)).Normalize().Is(Period.FromSeconds(60).Normalize());
     }
 }

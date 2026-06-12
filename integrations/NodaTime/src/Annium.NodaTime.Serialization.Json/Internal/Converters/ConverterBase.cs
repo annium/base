@@ -49,7 +49,7 @@ internal abstract class ConverterBase<T> : JsonConverter<T>
         if (reader.TokenType == JsonTokenType.Null)
         {
             Preconditions.CheckData(typeToConvert == _nullableT, $"Cannot convert null value to {typeToConvert}");
-            return default!;
+            return default!; // nullable target verified above; default(T) boxes back to the requested null T?
         }
 
         // Handle empty strings automatically
@@ -59,7 +59,7 @@ internal abstract class ConverterBase<T> : JsonConverter<T>
             if (value == string.Empty)
             {
                 Preconditions.CheckData(typeToConvert == _nullableT, $"Cannot convert null value to {typeToConvert}");
-                return default!;
+                return default!; // nullable target verified above; default(T) boxes back to the requested null T?
             }
         }
 

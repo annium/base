@@ -19,7 +19,7 @@ public record SeqConfiguration : LogRouteConfiguration
     /// Gets or sets the base URI of the Seq server where log events will be sent.
     /// Should include the protocol and port (e.g., https://seq.example.com:5341).
     /// </summary>
-    public Uri Endpoint { get; init; } = null!;
+    public Uri Endpoint { get; init; } = null!; // required — populated from configuration before use
 
     /// <summary>
     /// Gets or sets the API key for authenticating with the Seq server.

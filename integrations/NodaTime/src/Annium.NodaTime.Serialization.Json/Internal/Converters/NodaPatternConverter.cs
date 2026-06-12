@@ -58,7 +58,7 @@ internal sealed class NodaPatternConverter<T> : ConverterBase<T>
                 $"Unexpected token parsing {typeof(T).Name}. Expected String, got {reader.TokenType}."
             );
 
-        return _pattern.Parse(reader.GetString()!).Value;
+        return _pattern.Parse(reader.GetString()!).Value; // non-null: String token verified above
     }
 
     /// <summary>

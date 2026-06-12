@@ -62,44 +62,10 @@ public class NodaIntervalConverterTest
     }
 
     /// <summary>
-    /// Tests that Interval values can be serialized with camel case naming policy.
-    /// </summary>
-    [Fact]
-    public void Serialize_InObject_CamelCase()
-    {
-        var startInstant = Instant.FromUtc(2012, 1, 2, 3, 4, 5);
-        var endInstant = Instant.FromUtc(2013, 6, 7, 8, 9, 10);
-        var interval = new Interval(startInstant, endInstant);
-
-        var testObject = new TestObject { Interval = interval };
-
-        var json = JsonSerializer.Serialize(testObject, With(_converters));
-        json.Is("{\"interval\":{\"start\":\"2012-01-02T03:04:05Z\",\"end\":\"2013-06-07T08:09:10Z\"}}");
-    }
-
-    /// <summary>
     /// Tests that Interval values can be deserialized when contained within another object.
     /// </summary>
     [Fact]
     public void Deserialize_InObject()
-    {
-        var json = "{\"interval\":{\"start\":\"2012-01-02T03:04:05Z\",\"end\":\"2013-06-07T08:09:10Z\"}}";
-
-        var testObject = JsonSerializer.Deserialize<TestObject>(json, With(_converters))!;
-
-        var interval = testObject.Interval;
-
-        var startInstant = Instant.FromUtc(2012, 1, 2, 3, 4, 5);
-        var endInstant = Instant.FromUtc(2013, 6, 7, 8, 9, 10);
-        var expectedInterval = new Interval(startInstant, endInstant);
-        interval.Is(expectedInterval);
-    }
-
-    /// <summary>
-    /// Tests that Interval values can be deserialized with camel case naming policy.
-    /// </summary>
-    [Fact]
-    public void Deserialize_InObject_CamelCase()
     {
         var json = "{\"interval\":{\"start\":\"2012-01-02T03:04:05Z\",\"end\":\"2013-06-07T08:09:10Z\"}}";
 

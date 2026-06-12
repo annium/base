@@ -16,7 +16,7 @@ public record GraylogConfiguration : LogRouteConfiguration
     /// <summary>
     /// Gets the Graylog server endpoint URI where GELF messages will be transmitted via HTTP POST requests.
     /// </summary>
-    public Uri Endpoint { get; init; } = null!;
+    public Uri Endpoint { get; init; } = null!; // required — populated from configuration before use
 
     /// <summary>
     /// Gets the project name used as the host identifier in GELF messages for grouping and filtering logs within Graylog.
