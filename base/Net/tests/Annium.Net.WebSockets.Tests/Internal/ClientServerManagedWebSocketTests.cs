@@ -80,6 +80,38 @@ public class ClientServerManagedWebSocketTests : TestBase
     }
 
     /// <summary>
+    /// Verifies that a connect attempt to an unroutable address does not hang: cancelling the
+    /// supplied token aborts the in-flight connect promptly and returns a non-null exception.
+    /// This is what lets <see cref="ClientWebSocket"/>'s per-attempt ConnectTimeout make progress
+    /// (cancel the stuck attempt, then reconnect) instead of getting stuck in a single attempt —
+    /// the OS default connect timeout is otherwise ~75s.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
+    [Fact]
+    public async Task ConnectAsync_Unroutable_CancelAbortsPromptly()
+    {
+        this.Trace("start");
+
+        // 192.0.2.1 is RFC 5737 TEST-NET-1: guaranteed unroutable, so the TCP SYN goes unanswered
+        // and the connect blocks until it is cancelled (no fast RST like a refused local port).
+        var unroutableUri = new Uri("ws://192.0.2.1:9");
+
+        using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(500));
+
+        this.Trace("connect to unroutable endpoint with a 500ms cancellation");
+        var connectTask = ClientSocket.ConnectAsync(unroutableUri, cts.Token);
+
+        // the connect must resolve (with an exception) well before the OS-default connect timeout;
+        // WaitAsync bounds the test so a regression (cancellation not honored) fails instead of hanging
+        var exception = await connectTask.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
+
+        this.Trace("assert exception is non-null");
+        exception.IsNotNull();
+
+        this.Trace("done");
+    }
+
+    /// <summary>
     /// Verifies that calling <see cref="IClientManagedWebSocket.ConnectAsync"/> a second time while
     /// already connected throws <see cref="InvalidOperationException"/> (the "already connected" guard).
     /// </summary>
