@@ -14,6 +14,10 @@ internal class LoggingBridgeProvider : ILoggerProvider
     /// </summary>
     private readonly ILogSentryBridge _sentryBridge;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="LoggingBridgeProvider"/> class.
+    /// </summary>
+    /// <param name="sentryBridge">Bridge the created loggers forward Microsoft.Extensions.Logging messages to.</param>
     public LoggingBridgeProvider(ILogSentryBridge sentryBridge)
     {
         _sentryBridge = sentryBridge;

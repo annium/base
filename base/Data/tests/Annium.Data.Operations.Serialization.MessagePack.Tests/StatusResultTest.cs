@@ -14,6 +14,10 @@ namespace Annium.Data.Operations.Serialization.MessagePack.Tests;
 /// </summary>
 public class StatusResultTest : StatusResultTestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="StatusResultTest"/> class.
+    /// </summary>
+    /// <param name="outputHelper">xUnit test output helper the test host logs through.</param>
     public StatusResultTest(ITestOutputHelper outputHelper)
         : base(outputHelper)
     {

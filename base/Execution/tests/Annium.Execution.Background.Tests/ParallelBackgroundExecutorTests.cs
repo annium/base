@@ -12,6 +12,10 @@ namespace Annium.Execution.Background.Tests;
 /// </summary>
 public class ParallelBackgroundExecutorTests : BackgroundExecutorTestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ParallelBackgroundExecutorTests"/> class.
+    /// </summary>
+    /// <param name="outputHelper">xUnit test output helper the test host logs through.</param>
     public ParallelBackgroundExecutorTests(ITestOutputHelper outputHelper)
         : base(Executor.Parallel<ParallelBackgroundExecutorTests>, outputHelper) { }
 

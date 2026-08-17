@@ -8,6 +8,10 @@ namespace Annium.Tests;
 /// </summary>
 public class ArrayExtensionsTest : TestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ArrayExtensionsTest"/> class.
+    /// </summary>
+    /// <param name="outputHelper">xUnit test output helper the test host logs through.</param>
     public ArrayExtensionsTest(ITestOutputHelper outputHelper)
         : base(outputHelper) { }
 

@@ -13,6 +13,10 @@ internal class Logger : ILogger
     /// </summary>
     private readonly ILogSentryBridge _sentryBridge;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Logger"/> class.
+    /// </summary>
+    /// <param name="sentryBridge">Bridge the logged messages are forwarded to.</param>
     public Logger(ILogSentryBridge sentryBridge)
     {
         _sentryBridge = sentryBridge;

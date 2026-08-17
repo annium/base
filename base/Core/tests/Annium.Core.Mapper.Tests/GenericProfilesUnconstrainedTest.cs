@@ -36,6 +36,9 @@ public class GenericProfilesUnconstrainedTest : TestBase
     /// </summary>
     private class InvalidProfile<T> : Profile
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="InvalidProfile{T}"/> class.
+        /// </summary>
         public InvalidProfile()
         {
             Map<T, D>(_ => new D());

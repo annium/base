@@ -17,6 +17,7 @@ public class ExpiringCollectionTest : TestBase
     /// <summary>
     /// Initializes a new instance of the <see cref="ExpiringCollectionTest"/> class.
     /// </summary>
+    /// <param name="outputHelper">xUnit test output helper the test host logs through.</param>
     public ExpiringCollectionTest(ITestOutputHelper outputHelper)
         : base(outputHelper) { }
 

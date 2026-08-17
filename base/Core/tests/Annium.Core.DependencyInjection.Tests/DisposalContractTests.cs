@@ -559,6 +559,8 @@ internal sealed class DisposeHook
 /// Hook that records the order of dispose calls into a shared list. Used by the
 /// final-then-transient regression guard (#13).
 /// </summary>
+/// <param name="tag">Label appended to the sink when this hook is disposed.</param>
+/// <param name="sink">Shared list collecting dispose order across hooks.</param>
 internal sealed class OrderedDisposeHook(string tag, List<string> sink) : IDisposable
 {
     /// <summary>Appends the tag supplied at construction to the shared sink under a lock.</summary>
@@ -669,6 +671,9 @@ internal sealed class ChildPack : ServicePackBase
 /// </summary>
 internal sealed class ParentPack : ServicePackBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ParentPack"/> class.
+    /// </summary>
     public ParentPack() => Add<ChildPack>();
 
     /// <summary>

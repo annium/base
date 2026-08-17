@@ -20,6 +20,7 @@ public class ChannelReaderExtensionsTests : TestBase
     /// <summary>
     /// Initializes a new instance of the <see cref="ChannelReaderExtensionsTests"/> class.
     /// </summary>
+    /// <param name="outputHelper">xUnit test output helper the test host logs through.</param>
     public ChannelReaderExtensionsTests(ITestOutputHelper outputHelper)
         : base(outputHelper) { }
 
@@ -211,6 +212,10 @@ public class ChannelReaderExtensionsTests : TestBase
         /// <summary>The exception instance thrown by every write attempt.</summary>
         private readonly Exception _ex;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ThrowingChannelWriter{T}"/> class.
+        /// </summary>
+        /// <param name="ex">Exception thrown by every write attempt.</param>
         public ThrowingChannelWriter(Exception ex)
         {
             _ex = ex;

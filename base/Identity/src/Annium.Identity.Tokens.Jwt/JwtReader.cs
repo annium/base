@@ -34,6 +34,11 @@ public sealed class JwtReader : ITokenReader<ClaimsPrincipal>
     /// <summary>Message for a decryption failure, shared by the encryption-key / decryption exception-mapping arms.</summary>
     private const string DecryptionFailedMessage = "Token decryption failed";
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="JwtReader"/> class.
+    /// </summary>
+    /// <param name="options">Token validation options (issuer, audience, keys, lifetime).</param>
+    /// <param name="time">Time provider used to evaluate token lifetime.</param>
     public JwtReader(JwtTokensOptions options, ITimeProvider time)
     {
         _options = options;

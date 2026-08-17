@@ -691,6 +691,7 @@ public class MediatorTest
     /// registrations once via <see cref="Configure"/> before <see cref="Annium.Testing.TestBase.InitializeAsync"/>
     /// is invoked.
     /// </summary>
+    /// <param name="outputHelper">xUnit test output helper the test host logs through.</param>
     private sealed class Fixture(ITestOutputHelper outputHelper) : TestBase(outputHelper), IAsyncDisposable
     {
         /// <summary>
@@ -787,6 +788,7 @@ public class MediatorTest
         public string Value { get; }
 
         /// <summary>Initializes a new instance of the <see cref="Request{T}"/> class.</summary>
+        /// <param name="value">Payload carried by the request.</param>
         public Request(T value)
         {
             Value = JsonSerializer.Serialize(value, _options);
@@ -801,6 +803,7 @@ public class MediatorTest
         public T Value { get; }
 
         /// <summary>Initializes a new instance of the <see cref="Response{T}"/> class.</summary>
+        /// <param name="value">Payload carried by the response.</param>
         public Response(string value)
         {
             // test payloads always serialize to non-null JSON; T is unconstrained so NotNull() can't bind here
@@ -823,6 +826,8 @@ public class MediatorTest
         private readonly Func<TRequest, bool> _validate;
 
         /// <summary>Initializes a new instance of the <see cref="ValidationHandler{TRequest, TResponse}"/> class.</summary>
+        /// <param name="validate">Predicate deciding whether the request passes validation.</param>
+        /// <param name="logger">Logger used for tracing.</param>
         public ValidationHandler(Func<TRequest, bool> validate, ILogger logger)
         {
             _validate = validate;
@@ -870,6 +875,7 @@ public class MediatorTest
         public ILogger Logger { get; }
 
         /// <summary>Initializes a new instance of the <see cref="OpenFinalHandler{TRequest, TResponse}"/> class.</summary>
+        /// <param name="logger">Logger used for tracing.</param>
         public OpenFinalHandler(ILogger logger)
         {
             Logger = logger;
@@ -899,6 +905,7 @@ public class MediatorTest
         public ILogger Logger { get; }
 
         /// <summary>Initializes a new instance of the <see cref="ClosedFinalHandler"/> class.</summary>
+        /// <param name="logger">Logger used for tracing.</param>
         public ClosedFinalHandler(ILogger logger)
         {
             Logger = logger;
@@ -926,6 +933,7 @@ public class MediatorTest
         public ILogger Logger { get; }
 
         /// <summary>Initializes a new instance of the <see cref="ThrowingFinalHandler"/> class.</summary>
+        /// <param name="logger">Logger used for tracing.</param>
         public ThrowingFinalHandler(ILogger logger)
         {
             Logger = logger;
@@ -948,6 +956,7 @@ public class MediatorTest
         public ILogger Logger { get; }
 
         /// <summary>Initializes a new instance of the <see cref="CancelObservingFinalHandler"/> class.</summary>
+        /// <param name="logger">Logger used for tracing.</param>
         public CancelObservingFinalHandler(ILogger logger)
         {
             Logger = logger;
@@ -979,6 +988,7 @@ public class MediatorTest
         public ILogger Logger { get; }
 
         /// <summary>Initializes a new instance of the <see cref="CancelObservingPipeHandler"/> class.</summary>
+        /// <param name="logger">Logger used for tracing.</param>
         public CancelObservingPipeHandler(ILogger logger)
         {
             Logger = logger;
@@ -1010,6 +1020,7 @@ public class MediatorTest
         public ILogger Logger { get; }
 
         /// <summary>Initializes a new instance of the <see cref="PassthroughPipeHandler"/> class.</summary>
+        /// <param name="logger">Logger used for tracing.</param>
         public PassthroughPipeHandler(ILogger logger)
         {
             Logger = logger;
@@ -1056,6 +1067,8 @@ public class MediatorTest
         private readonly InstanceCollector _collector;
 
         /// <summary>Initializes a new instance of the <see cref="ScopeProbeHandler"/> class.</summary>
+        /// <param name="collector">Collector recording each resolved handler instance.</param>
+        /// <param name="logger">Logger used for tracing.</param>
         public ScopeProbeHandler(InstanceCollector collector, ILogger logger)
         {
             _collector = collector;

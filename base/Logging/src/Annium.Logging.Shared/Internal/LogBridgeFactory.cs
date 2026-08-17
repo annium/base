@@ -17,6 +17,10 @@ internal sealed class LogBridgeFactory : ILogBridgeFactory
     /// </summary>
     private readonly ConcurrentDictionary<string, ILogBridge> _instances = new();
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="LogBridgeFactory"/> class.
+    /// </summary>
+    /// <param name="logger">Logger the produced bridges write through.</param>
     public LogBridgeFactory(ILogger logger)
     {
         _logger = logger;

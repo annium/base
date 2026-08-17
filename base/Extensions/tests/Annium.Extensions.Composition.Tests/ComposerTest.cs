@@ -163,6 +163,9 @@ public class ComposerTest : TestBase
     /// </summary>
     private class EmailComposer : Composer<IEmail>
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="EmailComposer"/> class.
+        /// </summary>
         public EmailComposer()
         {
             Field(p => p.Email).LoadWith(ctx => ctx.Label);
@@ -174,6 +177,9 @@ public class ComposerTest : TestBase
     /// </summary>
     private class LoginComposer : Composer<ILogin>
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="LoginComposer"/> class.
+        /// </summary>
         public LoginComposer()
         {
             Field(p => p.Login).LoadWith(ctx => ctx.Label);
@@ -206,6 +212,9 @@ public class ComposerTest : TestBase
     /// </summary>
     private class PersonComposer : Composer<Person>
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PersonComposer"/> class.
+        /// </summary>
         public PersonComposer()
         {
             Field(p => p.Name).LoadWith(ctx => ctx.Label);

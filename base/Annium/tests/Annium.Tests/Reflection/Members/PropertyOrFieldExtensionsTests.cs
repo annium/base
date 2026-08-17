@@ -183,6 +183,10 @@ public class PropertyOrFieldExtensionsTests
     /// </summary>
     private sealed class NoDefault
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="NoDefault"/> class.
+        /// </summary>
+        /// <param name="x">Unused argument — the type exists only to lack a default constructor.</param>
         public NoDefault(int x)
         {
             _ = x;
@@ -195,6 +199,9 @@ public class PropertyOrFieldExtensionsTests
     /// </summary>
     private sealed class InternalCtorOnly
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="InternalCtorOnly"/> class.
+        /// </summary>
         internal InternalCtorOnly() { }
     }
 }

@@ -20,6 +20,11 @@ internal sealed class CommandLineConfigurationSource : IConfigurationSource
     /// <summary>Whether a parse failure is silenced.</summary>
     public bool Optional { get; }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CommandLineConfigurationSource"/> class.
+    /// </summary>
+    /// <param name="args">The command-line arguments to parse, or <c>null</c> to read the process arguments.</param>
+    /// <param name="optional">Whether a parse failure is silenced instead of thrown.</param>
     public CommandLineConfigurationSource(string[]? args, bool optional)
     {
         _args = args;

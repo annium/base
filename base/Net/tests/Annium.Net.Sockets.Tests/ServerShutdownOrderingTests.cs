@@ -15,6 +15,10 @@ namespace Annium.Net.Sockets.Tests;
 /// </summary>
 public class ServerShutdownOrderingTests : TestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ServerShutdownOrderingTests"/> class.
+    /// </summary>
+    /// <param name="outputHelper">xUnit test output helper the test host logs through.</param>
     public ServerShutdownOrderingTests(ITestOutputHelper outputHelper)
         : base(outputHelper) { }
 

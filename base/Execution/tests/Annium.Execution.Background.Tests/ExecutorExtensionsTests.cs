@@ -15,6 +15,10 @@ namespace Annium.Execution.Background.Tests;
 /// </summary>
 public class ExecutorExtensionsTests : TestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ExecutorExtensionsTests"/> class.
+    /// </summary>
+    /// <param name="outputHelper">xUnit test output helper the test host logs through.</param>
     public ExecutorExtensionsTests(ITestOutputHelper outputHelper)
         : base(outputHelper) { }
 

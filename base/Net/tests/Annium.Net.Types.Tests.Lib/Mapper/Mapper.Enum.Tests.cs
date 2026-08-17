@@ -49,6 +49,9 @@ public abstract class MapperEnumTestsBase : TestBase
 /// </summary>
 file enum Sample
 {
+    /// <summary>First sample member.</summary>
     A = 1,
+
+    /// <summary>Second sample member, with a non-sequential value.</summary>
     B = 3,
 }

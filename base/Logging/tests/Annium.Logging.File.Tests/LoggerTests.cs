@@ -21,6 +21,10 @@ public class LoggerTests : TestBase
     /// </summary>
     private readonly string _logFile = Path.GetTempFileName();
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="LoggerTests"/> class.
+    /// </summary>
+    /// <param name="outputHelper">xUnit test output helper the test host logs through.</param>
     public LoggerTests(ITestOutputHelper outputHelper)
         : base(outputHelper)
     {

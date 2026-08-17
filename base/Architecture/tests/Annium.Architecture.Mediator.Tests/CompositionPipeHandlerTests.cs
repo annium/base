@@ -13,6 +13,10 @@ namespace Annium.Architecture.Mediator.Tests;
 /// </summary>
 public class CompositionPipeHandlerTests : TestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CompositionPipeHandlerTests"/> class.
+    /// </summary>
+    /// <param name="outputHelper">xUnit test output helper the test host logs through.</param>
     public CompositionPipeHandlerTests(ITestOutputHelper outputHelper)
         : base(outputHelper)
     {
@@ -132,6 +136,9 @@ public class CompositionPipeHandlerTests : TestBase
     // ReSharper disable once UnusedType.Local
     private class UserNameComposer : Composer<IUserName>
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="UserNameComposer"/> class.
+        /// </summary>
         public UserNameComposer()
         {
             Field(e => e.UserName).LoadWith(ctx => ctx.Root.IsComposedSuccessfully ? ctx.Label.ToLower() : null!);
@@ -144,6 +151,9 @@ public class CompositionPipeHandlerTests : TestBase
     // ReSharper disable once UnusedType.Local
     private class PasswordComposer : Composer<IPassword>
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PasswordComposer"/> class.
+        /// </summary>
         public PasswordComposer()
         {
             Field(e => e.Password).LoadWith(ctx => ctx.Root.IsComposedSuccessfully ? ctx.Label.ToLower() : null!);

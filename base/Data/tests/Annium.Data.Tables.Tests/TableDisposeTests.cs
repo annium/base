@@ -11,6 +11,10 @@ namespace Annium.Data.Tables.Tests;
 /// </summary>
 public class TableDisposeTests : TestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TableDisposeTests"/> class.
+    /// </summary>
+    /// <param name="outputHelper">xUnit test output helper the test host logs through.</param>
     public TableDisposeTests(ITestOutputHelper outputHelper)
         : base(outputHelper)
     {

@@ -14,6 +14,10 @@ namespace Annium.Data.Operations.Serialization.MessagePack.Tests;
 /// </summary>
 public class BooleanResultTest : BooleanResultTestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="BooleanResultTest"/> class.
+    /// </summary>
+    /// <param name="outputHelper">xUnit test output helper the test host logs through.</param>
     public BooleanResultTest(ITestOutputHelper outputHelper)
         : base(outputHelper)
     {

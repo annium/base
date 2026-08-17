@@ -71,6 +71,10 @@ file class DelegatingHttpHandler : IHttpHandler
     /// <summary>The delegate that handles each incoming HTTP request.</summary>
     private readonly Func<HttpListenerContext, CancellationToken, Task> _handle;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DelegatingHttpHandler"/> class.
+    /// </summary>
+    /// <param name="handle">Callback invoked for each accepted HTTP request.</param>
     public DelegatingHttpHandler(Func<HttpListenerContext, CancellationToken, Task> handle)
     {
         _handle = handle;
@@ -91,6 +95,10 @@ file class DelegatingWebSocketHandler : IWebSocketHandler
     /// <summary>The delegate that handles each incoming WebSocket request.</summary>
     private readonly Func<HttpListenerWebSocketContext, CancellationToken, Task> _handle;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DelegatingWebSocketHandler"/> class.
+    /// </summary>
+    /// <param name="handle">Callback invoked for each accepted web socket.</param>
     public DelegatingWebSocketHandler(Func<HttpListenerWebSocketContext, CancellationToken, Task> handle)
     {
         _handle = handle;

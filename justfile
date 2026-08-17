@@ -27,8 +27,9 @@ ensure-no-changes:
     echo "=== ensure-no-changes ==="
     if [[ -n "$(git status --porcelain)" ]]; then
         echo "Changes detected:"
-        git status
-        git --no-pager diff --no-color --exit-code
+        git status --short
+        git --no-pager diff --no-color HEAD
+        exit 1
     fi
 
 update:
@@ -39,7 +40,7 @@ update:
 clean:
     @echo "=== $0 ==="
     dotnet tool run xs clean -sc -ic
-    find . -type f -name '*.nupkg' | xargs -I% rm %
+    find . -type f \( -name '*.nupkg' -o -name '*.snupkg' \) -delete
 
 build:
     #!/usr/bin/env bash
@@ -61,8 +62,8 @@ pack:
 
 publish apiKey:
     @echo "=== $0 ==="
-    dotnet nuget push "*.nupkg" --source https://api.nuget.org/v3/index.json --api-key "$1"
-    find . -type f -name '*.nupkg' | xargs -I% rm %
+    dotnet nuget push "*.nupkg" --source https://api.nuget.org/v3/index.json --api-key "$1" --skip-duplicate
+    find . -type f \( -name '*.nupkg' -o -name '*.snupkg' \) -delete
 
 # docs
 
@@ -159,6 +160,8 @@ ci-release apiKey repository githubToken:
     just ci-set-package-version
     just clean
     just build
+    just docs-lint
+    just test
     just pack
     just publish "$1"
     just ci-push-tag "$2" "$3"
@@ -176,4 +179,8 @@ ci-push-tag repository githubToken:
     echo "=== ci-push-tag ==="
     packageVersion=$(dotnet tool run versioning get-version -v $(cat version))
     git remote set-url origin https://x-access-token:"$2"@github.com/"$1".git
+    if git ls-remote --exit-code --tags origin "v$packageVersion" >/dev/null 2>&1; then
+        echo "tag v$packageVersion already published, skipping"
+        exit 0
+    fi
     git push origin v$packageVersion

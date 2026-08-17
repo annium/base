@@ -154,25 +154,42 @@ public class EnumExtensionsTest
         result.At(1).Is(NonFlagsSimpleEnum.One);
     }
 
+    /// <summary>
+    /// Plain (non-<see cref="System.FlagsAttribute"/>) enum used to check that flag enumeration
+    /// falls back to the single matching member.
+    /// </summary>
     private enum NonFlagsSimpleEnum
     {
+        /// <summary>No value.</summary>
         None = 0,
+
+        /// <summary>First value.</summary>
         One = 1,
+
+        /// <summary>Second value.</summary>
         Two = 2,
     }
 
+    /// <summary>
+    /// Flags enum with <see cref="System.ComponentModel.DescriptionAttribute"/>-annotated members,
+    /// used to exercise description and flag-splitting extensions.
+    /// </summary>
     [Flags]
     private enum TestEnum
     {
+        /// <summary>No flag set.</summary>
         [Description("empty")]
         None = 0,
 
+        /// <summary>First flag.</summary>
         [Description("a")]
         One = 1,
 
+        /// <summary>Second flag.</summary>
         [Description("b")]
         Two = 2,
 
+        /// <summary>Third flag, described with a non-lowercase description.</summary>
         [Description("Other")]
         Three = 4,
     }

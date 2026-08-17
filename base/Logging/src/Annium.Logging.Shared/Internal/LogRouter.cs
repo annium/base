@@ -14,6 +14,11 @@ internal class LogRouter<TContext>
     /// </summary>
     private readonly IEnumerable<ILogScheduler<TContext>> _schedulers;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="LogRouter{TContext}"/> class and subscribes it to the sentry.
+    /// </summary>
+    /// <param name="sentry">Sentry whose messages are routed.</param>
+    /// <param name="schedulers">Schedulers a routed message is offered to.</param>
     public LogRouter(ILogSentry<TContext> sentry, IReadOnlyCollection<ILogScheduler<TContext>> schedulers)
     {
         sentry.SetHandler(Send);

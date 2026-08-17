@@ -14,6 +14,10 @@ public class ValuesAttribute : BaseAttribute
     /// </summary>
     public string[] Values { get; }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ValuesAttribute"/> class.
+    /// </summary>
+    /// <param name="values">The set of values the annotated member accepts.</param>
     public ValuesAttribute(params string[] values)
     {
         Values = values;

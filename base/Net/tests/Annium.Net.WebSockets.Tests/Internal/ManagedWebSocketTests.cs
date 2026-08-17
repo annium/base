@@ -47,6 +47,10 @@ public class ManagedWebSocketTests : TestBase
     /// </summary>
     private readonly TestLog<string> _binaries = new();
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ManagedWebSocketTests"/> class.
+    /// </summary>
+    /// <param name="outputHelper">xUnit test output helper the test host logs through.</param>
     public ManagedWebSocketTests(ITestOutputHelper outputHelper)
         : base(outputHelper) { }
 

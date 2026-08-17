@@ -24,6 +24,11 @@ internal class ConsoleLogHandler<TContext> : ILogHandler<TContext>
     /// </summary>
     private readonly bool _color;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ConsoleLogHandler{TContext}"/> class.
+    /// </summary>
+    /// <param name="format">Formatter turning a log message into the console line.</param>
+    /// <param name="color">Whether lines are colored per log level.</param>
     public ConsoleLogHandler(Func<LogMessage<TContext>, string> format, bool color)
     {
         _format = format;

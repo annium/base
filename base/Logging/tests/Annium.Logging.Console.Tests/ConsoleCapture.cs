@@ -36,6 +36,9 @@ internal class ConsoleCapture : IDisposable
     /// </summary>
     private readonly StringWriter _writer = new();
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ConsoleCapture"/> class.
+    /// </summary>
     private ConsoleCapture()
     {
         _locker.Enter();

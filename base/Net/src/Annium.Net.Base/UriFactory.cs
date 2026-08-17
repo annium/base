@@ -46,6 +46,12 @@ public class UriFactory
     /// </summary>
     private readonly UriQuery _query = UriQuery.New();
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="UriFactory"/> class from a full set of components.
+    /// </summary>
+    /// <param name="baseUri">Absolute base URI, or <c>null</c> when the factory builds a relative URI.</param>
+    /// <param name="uri">Path component, or <c>null</c> when not set yet.</param>
+    /// <param name="query">Query parameters to copy into the new factory.</param>
     private UriFactory(Uri? baseUri, string? uri, UriQuery query)
     {
         ArgumentNullException.ThrowIfNull(query);
@@ -58,6 +64,10 @@ public class UriFactory
         _query = query.Copy();
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="UriFactory"/> class rooted at an absolute base URI.
+    /// </summary>
+    /// <param name="baseUri">Absolute base URI the built URIs are resolved against.</param>
     private UriFactory(Uri baseUri)
     {
         ArgumentNullException.ThrowIfNull(baseUri);
@@ -67,6 +77,9 @@ public class UriFactory
         _baseUri = baseUri;
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="UriFactory"/> class with no base URI.
+    /// </summary>
     private UriFactory() { }
 
     /// <summary>

@@ -13,6 +13,10 @@ namespace Annium.Execution.Background.Tests;
 /// </summary>
 public class ConcurrentBackgroundExecutorTests : BackgroundExecutorTestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ConcurrentBackgroundExecutorTests"/> class.
+    /// </summary>
+    /// <param name="outputHelper">xUnit test output helper the test host logs through.</param>
     public ConcurrentBackgroundExecutorTests(ITestOutputHelper outputHelper)
         : base(x => Executor.Concurrent<ConcurrentBackgroundExecutorTests>(x), outputHelper) { }
 

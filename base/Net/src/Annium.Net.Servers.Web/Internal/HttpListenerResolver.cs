@@ -28,6 +28,9 @@ internal class HttpListenerResolver
     /// </summary>
     public static readonly HttpListenerResolver Instance = new();
 
+    /// <summary>
+    /// Prevents external instantiation — the resolver is consumed through <see cref="Instance"/>.
+    /// </summary>
     private HttpListenerResolver() { }
 
     /// <summary>

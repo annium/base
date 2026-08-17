@@ -21,6 +21,10 @@ public class YamlConfigurationProviderTest : TestBase
     /// </summary>
     private readonly string _yamlFile;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="YamlConfigurationProviderTest"/> class.
+    /// </summary>
+    /// <param name="outputHelper">xUnit test output helper the test host logs through.</param>
     public YamlConfigurationProviderTest(ITestOutputHelper outputHelper)
         : base(outputHelper)
     {

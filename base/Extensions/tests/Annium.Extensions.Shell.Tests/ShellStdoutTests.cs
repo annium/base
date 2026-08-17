@@ -14,6 +14,10 @@ namespace Annium.Extensions.Shell.Tests;
 /// </summary>
 public class ShellStdoutTests : TestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ShellStdoutTests"/> class.
+    /// </summary>
+    /// <param name="outputHelper">xUnit test output helper the test host logs through.</param>
     public ShellStdoutTests(ITestOutputHelper outputHelper)
         : base(outputHelper)
     {

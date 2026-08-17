@@ -11,6 +11,10 @@ namespace Annium.Data.Tables.Tests;
 /// </summary>
 public class TableSourceExtensionsTests : TestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TableSourceExtensionsTests"/> class.
+    /// </summary>
+    /// <param name="outputHelper">xUnit test output helper the test host logs through.</param>
     public TableSourceExtensionsTests(ITestOutputHelper outputHelper)
         : base(outputHelper)
     {

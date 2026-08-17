@@ -178,5 +178,7 @@ public class DictionaryExtensionsTest
     }
 
     /// <summary>Minimal test record used by value-selector merge overload tests.</summary>
+    /// <param name="Id">Item identifier.</param>
+    /// <param name="Name">Item name.</param>
     private record Item(int Id, string Name);
 }

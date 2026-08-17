@@ -190,6 +190,13 @@ public class ComplexFieldMappingTest : TestBase
         /// </summary>
         public int Age { get; }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="C"/> class.
+        /// </summary>
+        /// <param name="ignoredA">Unmapped constructor argument, ignored by the profile.</param>
+        /// <param name="ignoredB">Second unmapped constructor argument, ignored by the profile.</param>
+        /// <param name="name">Mapped name value.</param>
+        /// <param name="age">Mapped age value.</param>
         public C(int ignoredA, long ignoredB, string name, int age)
         {
             IgnoredA = ignoredA;

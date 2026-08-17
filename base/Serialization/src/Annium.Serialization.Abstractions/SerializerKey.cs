@@ -35,6 +35,11 @@ public readonly record struct SerializerKey
     /// </summary>
     public bool IsDefault => Key == Constants.DefaultKey;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SerializerKey"/> struct.
+    /// </summary>
+    /// <param name="key">Logical serializer key.</param>
+    /// <param name="mediaType">Media type the serializer handles.</param>
     private SerializerKey(string key, string mediaType)
     {
         Key = key;

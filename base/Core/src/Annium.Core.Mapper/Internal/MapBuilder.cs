@@ -322,6 +322,9 @@ internal class MapBuilder : IMapBuilder, ILogSubject
         /// </summary>
         private volatile Delegate? _map;
 
+        /// <summary>
+        /// Prevents external instantiation — entries are created through <see cref="Create"/>.
+        /// </summary>
         private Entry() { }
 
         /// <summary>

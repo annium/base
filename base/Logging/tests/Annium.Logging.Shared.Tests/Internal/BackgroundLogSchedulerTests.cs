@@ -106,6 +106,7 @@ public class BackgroundLogSchedulerTests
     /// Deliberately slow async log handler — each batch call blocks for a fixed duration.
     /// Thread-safe batch counter for assertion.
     /// </summary>
+    /// <param name="perBatch">Duration each handled batch blocks for.</param>
     private sealed class SlowSink(TimeSpan perBatch) : ILogHandler<DefaultLogContext>
     {
         /// <summary>Underlying counter incremented after each batch completes; read via <see cref="BatchCount"/>.</summary>

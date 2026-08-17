@@ -32,6 +32,11 @@ internal class ImmediateLogScheduler<TContext> : ILogScheduler<TContext>, IAsync
     /// </summary>
     private int _disposed;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ImmediateLogScheduler{TContext}"/> class.
+    /// </summary>
+    /// <param name="filter">Predicate deciding whether a message is accepted by this route.</param>
+    /// <param name="handler">Handler each message is dispatched to synchronously.</param>
     public ImmediateLogScheduler(Func<LogMessage<TContext>, bool> filter, ILogHandler<TContext> handler)
     {
         Filter = filter;

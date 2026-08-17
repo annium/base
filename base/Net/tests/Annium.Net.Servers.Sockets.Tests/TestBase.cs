@@ -63,6 +63,11 @@ file class DelegateHandler : IHandler
     /// <summary>The delegate that handles each accepted socket connection.</summary>
     private readonly Func<IServiceProvider, Socket, CancellationToken, Task> _handle;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DelegateHandler"/> class.
+    /// </summary>
+    /// <param name="sp">Service provider used to resolve dependencies.</param>
+    /// <param name="handle">Callback invoked for each accepted socket.</param>
     public DelegateHandler(IServiceProvider sp, Func<IServiceProvider, Socket, CancellationToken, Task> handle)
     {
         _sp = sp;

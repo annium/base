@@ -53,6 +53,11 @@ public sealed class LogRoute<TContext>
     /// </summary>
     private readonly Action<LogRoute<TContext>> _registerRoute;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="LogRoute{TContext}"/> class.
+    /// </summary>
+    /// <param name="sp">Service provider used to resolve handlers configured on the route.</param>
+    /// <param name="registerRoute">Callback registering a derived route with the owning configuration.</param>
     internal LogRoute(IServiceProvider sp, Action<LogRoute<TContext>> registerRoute)
     {
         _sp = sp;

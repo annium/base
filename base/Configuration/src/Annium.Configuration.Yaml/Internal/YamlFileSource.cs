@@ -13,6 +13,11 @@ internal sealed class YamlFileSource : FileConfigurationSourceBase
     /// </summary>
     protected override string FormatLabel => "Yaml";
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="YamlFileSource"/> class.
+    /// </summary>
+    /// <param name="path">Path of the YAML file to read.</param>
+    /// <param name="optional">Whether a missing or unreadable file is silenced instead of thrown.</param>
     public YamlFileSource(string path, bool optional)
         : base(path, optional) { }
 

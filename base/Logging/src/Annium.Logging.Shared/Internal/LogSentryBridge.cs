@@ -35,6 +35,13 @@ internal class LogSentryBridge<TContext> : ILogSentryBridge
     /// </summary>
     private readonly IReadOnlyCollection<ILogScheduler<TContext>> _schedulers;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="LogSentryBridge{TContext}"/> class.
+    /// </summary>
+    /// <param name="timeProvider">Time provider used to stamp messages.</param>
+    /// <param name="context">Context attached to every produced message.</param>
+    /// <param name="logSentry">Sentry the produced messages are registered with.</param>
+    /// <param name="schedulers">Schedulers consulted to decide whether a level is enabled.</param>
     public LogSentryBridge(
         ITimeProvider timeProvider,
         TContext context,

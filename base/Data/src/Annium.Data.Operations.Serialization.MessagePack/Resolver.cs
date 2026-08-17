@@ -46,6 +46,9 @@ public sealed class Resolver : IFormatterResolver
         { typeof(IStatusResult<,>), typeof(StatusDataResultFormatter<,>) },
     };
 
+    /// <summary>
+    /// Prevents external instantiation — the resolver is consumed through its singleton instance.
+    /// </summary>
     private Resolver() { }
 
     /// <summary>

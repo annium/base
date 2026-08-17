@@ -106,7 +106,7 @@ public static class ServiceContainerExtensions
 /// <summary>
 /// HttpClientWrapper for being accessible in DI
 /// </summary>
-/// <param name="HttpClient"></param>
+/// <param name="HttpClient">The wrapped client, owned and disposed by this wrapper.</param>
 file record HttpClientWrapper(HttpClient HttpClient) : IDisposable
 {
     /// <summary>

@@ -113,6 +113,7 @@ public class ServerSocketExtensionsTests
         /// <summary>Always false — this fake is never actually connected.</summary>
         public bool IsConnected => false;
 
+        /// <summary>Backing delegate for <see cref="OnDisconnected"/>.</summary>
         private event Action<SocketCloseStatus>? _onDisconnected;
 
         /// <summary>Raised when the socket disconnects; routes through the backing field so subscriber count is observable.</summary>
@@ -122,12 +123,14 @@ public class ServerSocketExtensionsTests
             remove => _onDisconnected -= value;
         }
 
+        /// <summary>Never raised — declared to satisfy the interface; this fake does not signal that the socket reports an error.</summary>
         public event Action<Exception>? OnError
         {
             add { }
             remove { }
         }
 
+        /// <summary>Never raised — declared to satisfy the interface; this fake does not signal that the socket receives data.</summary>
         public event Action<ReadOnlyMemory<byte>>? OnReceived
         {
             add { }

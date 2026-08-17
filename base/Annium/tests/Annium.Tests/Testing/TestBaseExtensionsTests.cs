@@ -70,6 +70,9 @@ public class TestBaseExtensionsTests
     /// </summary>
     private sealed class InnerTest : TestBase
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="InnerTest"/> class.
+        /// </summary>
         public InnerTest()
             : base(new NullOutputHelper()) { }
     }

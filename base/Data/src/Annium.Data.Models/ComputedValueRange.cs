@@ -6,6 +6,8 @@ namespace Annium.Data.Models;
 /// A value range implementation that computes start and end values using functions
 /// </summary>
 /// <typeparam name="T">The type of values in the range</typeparam>
+/// <param name="_getStart">Function computing the start value of the range.</param>
+/// <param name="_getEnd">Function computing the end value of the range.</param>
 public sealed record ComputedValueRange<T>(Func<T> _getStart, Func<T> _getEnd) : ValueRange<T>
     where T : IComparable<T>
 {

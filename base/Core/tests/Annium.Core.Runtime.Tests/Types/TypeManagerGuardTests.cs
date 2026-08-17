@@ -309,6 +309,10 @@ file class KeyedBase
     [ResolutionKey]
     public string Kind { get; }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="KeyedBase"/> class.
+    /// </summary>
+    /// <param name="kind">Resolution key identifying the concrete type.</param>
     protected KeyedBase(string kind)
     {
         Kind = kind;
@@ -323,6 +327,9 @@ file class KeyedBase
 [ResolutionKeyValue("alpha")]
 file class KeyedAlpha : KeyedBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="KeyedAlpha"/> class.
+    /// </summary>
     public KeyedAlpha()
         : base("alpha") { }
 }

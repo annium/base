@@ -12,6 +12,10 @@ namespace Annium.Net.WebSockets.Tests;
 /// </summary>
 public abstract class TestBase : Testing.TestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TestBase"/> class.
+    /// </summary>
+    /// <param name="outputHelper">xUnit test output helper the test host logs through.</param>
     protected TestBase(ITestOutputHelper outputHelper)
         : base(outputHelper) { }
 
@@ -46,6 +50,11 @@ file class WebSocketHandler : IWebSocketHandler
     /// </summary>
     private readonly Func<IServiceProvider, HttpListenerWebSocketContext, CancellationToken, Task> _handle;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="WebSocketHandler"/> class.
+    /// </summary>
+    /// <param name="sp">Service provider used to resolve dependencies.</param>
+    /// <param name="handle">Callback invoked for each accepted web socket.</param>
     public WebSocketHandler(
         IServiceProvider sp,
         Func<IServiceProvider, HttpListenerWebSocketContext, CancellationToken, Task> handle

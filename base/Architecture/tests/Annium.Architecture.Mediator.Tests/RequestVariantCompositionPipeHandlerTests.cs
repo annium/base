@@ -19,6 +19,7 @@ public class RequestVariantCompositionPipeHandlerTests : TestBase
     /// Initializes a new instance and wires the request-only composition pipe handler together with
     /// a final handler that returns <c>IStatusResult&lt;OperationStatus&gt;</c>.
     /// </summary>
+    /// <param name="outputHelper">xUnit test output helper the test host logs through.</param>
     public RequestVariantCompositionPipeHandlerTests(ITestOutputHelper outputHelper)
         : base(outputHelper)
     {

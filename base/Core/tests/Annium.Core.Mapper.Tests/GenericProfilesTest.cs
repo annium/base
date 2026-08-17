@@ -45,6 +45,9 @@ public class GenericProfilesTest : TestBase
     private class ValidProfile<T> : Profile
         where T : A
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ValidProfile{T}"/> class.
+        /// </summary>
         public ValidProfile()
         {
             Map<T, D>(x => new D { LowerName = x.Name.ToLowerInvariant() });

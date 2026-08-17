@@ -15,6 +15,10 @@ namespace Annium.Extensions.Workers.Tests;
 /// </summary>
 public class WorkerTests : TestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="WorkerTests"/> class.
+    /// </summary>
+    /// <param name="outputHelper">xUnit test output helper the test host logs through.</param>
     public WorkerTests(ITestOutputHelper outputHelper)
         : base(outputHelper)
     {
@@ -136,6 +140,11 @@ file class WorkerBase : WorkerBase<WorkerData>, ILogSubject
     /// </summary>
     private readonly SharedLog _log;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="WorkerBase"/> class.
+    /// </summary>
+    /// <param name="log">Shared log the worker records its lifecycle into.</param>
+    /// <param name="logger">Logger used for tracing.</param>
     public WorkerBase(SharedLog log, ILogger logger)
     {
         Logger = logger;

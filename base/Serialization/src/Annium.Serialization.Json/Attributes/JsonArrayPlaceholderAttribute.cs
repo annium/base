@@ -11,6 +11,8 @@ public class JsonArrayPlaceholderAttribute : Attribute
     /// <summary>
     /// Works in couple with <see cref="JsonAsArrayAttribute"/> to specify constant placeholder values, when serializing object as array.
     /// </summary>
+    /// <param name="order">Position of the placeholder in the serialized array.</param>
+    /// <param name="value">The constant value written at that position.</param>
     public JsonArrayPlaceholderAttribute(int order, object? value)
     {
         Order = order;

@@ -34,6 +34,14 @@ public class ValidationContext<TValue>
     /// </summary>
     private readonly ILocalizer _localizer;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ValidationContext{TValue}"/> class.
+    /// </summary>
+    /// <param name="root">The root value being validated.</param>
+    /// <param name="label">Human-readable label of the validated value.</param>
+    /// <param name="field">Name of the field currently being validated.</param>
+    /// <param name="result">Result the validation errors are collected into.</param>
+    /// <param name="localizer">Localizer used to translate error messages.</param>
     internal ValidationContext(TValue root, string label, string field, IResult result, ILocalizer localizer)
     {
         Root = root;

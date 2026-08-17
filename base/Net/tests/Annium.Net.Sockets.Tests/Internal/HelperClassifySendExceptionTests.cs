@@ -127,5 +127,6 @@ public class HelperClassifySendExceptionTests
     }
 
     /// <summary>Test-only exception used to exercise the default classification arm.</summary>
+    /// <param name="message">The exception message.</param>
     private sealed class CustomException(string message) : Exception(message);
 }

@@ -72,6 +72,10 @@ file class WebSocketHandler : IWebSocketHandler
     /// </summary>
     private readonly ILogger _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="WebSocketHandler"/> class.
+    /// </summary>
+    /// <param name="logger">Logger used for tracing.</param>
     public WebSocketHandler(ILogger logger)
     {
         _logger = logger;

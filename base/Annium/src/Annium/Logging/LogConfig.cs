@@ -18,6 +18,10 @@ public static class LogConfig
     /// </summary>
     public static LogLevel Level => (LogLevel)Volatile.Read(ref _level);
 
+    /// <summary>
+    /// Initializes the global log level from the <c>-trace</c> / <c>-debug</c> command-line switches,
+    /// falling back to the <c>ANNIUM_LOG</c> environment variable and then to <see cref="LogLevel.Info"/>.
+    /// </summary>
     static LogConfig()
     {
         var args = Environment.GetCommandLineArgs();

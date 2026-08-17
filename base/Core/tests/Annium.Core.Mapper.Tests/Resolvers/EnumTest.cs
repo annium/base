@@ -47,10 +47,16 @@ public class EnumTest : TestBase
         mapper.Map<Sex>("female").Is(Sex.Female);
     }
 
+    /// <summary>
+    /// Two-member enum used as the source / target of enum mapping tests.
+    /// </summary>
     [AutoMapped]
     private enum Sex
     {
+        /// <summary>Male.</summary>
         Male,
+
+        /// <summary>Female.</summary>
         Female,
     }
 }

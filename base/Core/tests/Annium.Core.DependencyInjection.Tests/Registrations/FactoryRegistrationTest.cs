@@ -9,6 +9,10 @@ namespace Annium.Core.DependencyInjection.Tests.Registrations;
 /// </summary>
 public class FactoryRegistrationTest : TestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="FactoryRegistrationTest"/> class.
+    /// </summary>
+    /// <param name="outputHelper">xUnit test output helper the test host logs through.</param>
     public FactoryRegistrationTest(ITestOutputHelper outputHelper)
         : base(outputHelper) { }
 
@@ -262,6 +266,10 @@ public class FactoryRegistrationTest : TestBase
     /// </summary>
     private sealed class E : C, IX, IY
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="E"/> class.
+        /// </summary>
+        /// <param name="x">Dependency forwarded to the base class.</param>
         public E(A x)
             : base(x) { }
     }
@@ -271,6 +279,10 @@ public class FactoryRegistrationTest : TestBase
     /// </summary>
     private sealed class D : C, IX
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="D"/> class.
+        /// </summary>
+        /// <param name="x">Dependency forwarded to the base class.</param>
         public D(A x)
             : base(x) { }
     }
@@ -285,6 +297,10 @@ public class FactoryRegistrationTest : TestBase
         /// </summary>
         public A A { get; }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="C"/> class.
+        /// </summary>
+        /// <param name="a">Dependency exposed through <see cref="A"/>.</param>
         protected C(A a)
         {
             A = a;

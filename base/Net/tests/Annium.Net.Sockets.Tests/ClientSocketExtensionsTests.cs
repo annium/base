@@ -238,24 +238,28 @@ public class ClientSocketExtensionsTests
         /// <summary>Always false — this fake is not connected.</summary>
         public bool IsConnected => false;
 
+        /// <summary>Never raised — declared to satisfy the interface; this fake does not signal that the socket connects.</summary>
         public event Action? OnConnected
         {
             add { }
             remove { }
         }
 
+        /// <summary>Never raised — declared to satisfy the interface; this fake does not signal that the socket disconnects.</summary>
         public event Action<SocketCloseStatus>? OnDisconnected
         {
             add { }
             remove { }
         }
 
+        /// <summary>Never raised — declared to satisfy the interface; this fake does not signal that the socket reports an error.</summary>
         public event Action<Exception>? OnError
         {
             add { }
             remove { }
         }
 
+        /// <summary>Never raised — declared to satisfy the interface; this fake does not signal that the socket receives data.</summary>
         public event Action<ReadOnlyMemory<byte>>? OnReceived
         {
             add { }
@@ -297,6 +301,7 @@ public class ClientSocketExtensionsTests
         /// <summary>Always false — this fake is never actually connected.</summary>
         public bool IsConnected => false;
 
+        /// <summary>Backing delegate for <see cref="OnConnected"/>.</summary>
         private event Action? _onConnected;
 
         /// <summary>Event raised when the socket connects successfully.</summary>
@@ -306,18 +311,21 @@ public class ClientSocketExtensionsTests
             remove => _onConnected -= value;
         }
 
+        /// <summary>Never raised — declared to satisfy the interface; this fake does not signal that the socket disconnects.</summary>
         public event Action<SocketCloseStatus>? OnDisconnected
         {
             add { }
             remove { }
         }
 
+        /// <summary>Never raised — declared to satisfy the interface; this fake does not signal that the socket reports an error.</summary>
         public event Action<Exception>? OnError
         {
             add { }
             remove { }
         }
 
+        /// <summary>Never raised — declared to satisfy the interface; this fake does not signal that the socket receives data.</summary>
         public event Action<ReadOnlyMemory<byte>>? OnReceived
         {
             add { }
@@ -364,12 +372,14 @@ public class ClientSocketExtensionsTests
         /// <summary>Always false — this fake is never actually connected.</summary>
         public bool IsConnected => false;
 
+        /// <summary>Never raised — declared to satisfy the interface; this fake does not signal that the socket connects.</summary>
         public event Action OnConnected
         {
             add { }
             remove { }
         }
 
+        /// <summary>Backing delegate for <see cref="OnDisconnected"/>.</summary>
         private event Action<SocketCloseStatus>? _onDisconnected;
 
         /// <summary>Event raised when the socket disconnects, carrying the close status.</summary>
@@ -379,12 +389,14 @@ public class ClientSocketExtensionsTests
             remove => _onDisconnected -= value;
         }
 
+        /// <summary>Never raised — declared to satisfy the interface; this fake does not signal that the socket reports an error.</summary>
         public event Action<Exception>? OnError
         {
             add { }
             remove { }
         }
 
+        /// <summary>Never raised — declared to satisfy the interface; this fake does not signal that the socket receives data.</summary>
         public event Action<ReadOnlyMemory<byte>>? OnReceived
         {
             add { }

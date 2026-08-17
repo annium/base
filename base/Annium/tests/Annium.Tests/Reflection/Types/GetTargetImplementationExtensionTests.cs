@@ -409,6 +409,10 @@ public partial class GetTargetImplementationExtensionTests
         /// </summary>
         public int X { get; }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="StructParamatered"/> class.
+        /// </summary>
+        /// <param name="x">Value stored in <see cref="X"/>.</param>
         public StructParamatered(int x)
         {
             X = x;

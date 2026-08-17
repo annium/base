@@ -42,6 +42,10 @@ public sealed record UriQuery
     /// </summary>
     private readonly IDictionary<string, StringValues> _data;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="UriQuery"/> class over the given parameter storage.
+    /// </summary>
+    /// <param name="data">Dictionary the query parameters are stored in.</param>
     private UriQuery(IDictionary<string, StringValues> data)
     {
         _data = data;

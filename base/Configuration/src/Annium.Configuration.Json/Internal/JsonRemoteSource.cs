@@ -15,6 +15,12 @@ internal sealed class JsonRemoteSource : RemoteConfigurationSourceBase
     /// </summary>
     protected override string FormatLabel => "Json";
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="JsonRemoteSource"/> class.
+    /// </summary>
+    /// <param name="uri">Address the JSON document is fetched from.</param>
+    /// <param name="optional">Whether a fetch failure is silenced instead of thrown.</param>
+    /// <param name="timeout">Request timeout, or <c>null</c> to use the default.</param>
     public JsonRemoteSource(Uri uri, bool optional, TimeSpan? timeout)
         : base(uri, optional, timeout) { }
 

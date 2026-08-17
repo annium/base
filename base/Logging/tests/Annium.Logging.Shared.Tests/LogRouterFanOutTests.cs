@@ -15,6 +15,10 @@ namespace Annium.Logging.Shared.Tests;
 /// </summary>
 public class LogRouterFanOutTests : TestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="LogRouterFanOutTests"/> class.
+    /// </summary>
+    /// <param name="outputHelper">xUnit test output helper the test host logs through.</param>
     public LogRouterFanOutTests(ITestOutputHelper outputHelper)
         : base(outputHelper) { }
 

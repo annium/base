@@ -90,6 +90,7 @@ public class ConnectionMonitorBaseTests
     /// <see cref="HandleStart"/> and <see cref="HandleStop"/> are invoked and exposes
     /// the protected <c>IsRunning</c> property for assertion.
     /// </summary>
+    /// <param name="logger">Logger used for tracing.</param>
     private sealed class CountingConnectionMonitor(ILogger logger) : ConnectionMonitorBase(logger)
     {
         /// <summary>Number of times <see cref="HandleStart"/> was called.</summary>

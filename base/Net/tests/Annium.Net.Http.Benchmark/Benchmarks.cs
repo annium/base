@@ -33,6 +33,9 @@ public class Benchmarks
     /// </summary>
     private readonly IHttpRequestFactory _httpRequestFactory;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Benchmarks"/> class.
+    /// </summary>
     public Benchmarks()
     {
         var container = new ServiceContainer();

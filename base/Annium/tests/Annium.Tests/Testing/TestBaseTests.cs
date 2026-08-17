@@ -53,11 +53,18 @@ public class TestBaseTests : TestBase
     /// </summary>
     private sealed class SomeService
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SomeService"/> class.
+        /// </summary>
         public SomeService()
         {
             Name = "default";
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SomeService"/> class.
+        /// </summary>
+        /// <param name="name">Display name.</param>
         public SomeService(string name)
         {
             Name = name;

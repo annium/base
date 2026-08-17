@@ -10,6 +10,7 @@ namespace Annium.Testing.Tests;
 /// Tests for <see cref="TestBase"/> IAsyncLifetime reshape: verifies that provider materialisation,
 /// registration-window enforcement, and ergonomic overloads all behave as specified.
 /// </summary>
+/// <param name="outputHelper">xUnit test output helper the test host logs through.</param>
 public sealed class TestBaseLifecycleTests(ITestOutputHelper outputHelper) : TestBase(outputHelper)
 {
     // ---------------------------------------------------------------------------
@@ -17,12 +18,14 @@ public sealed class TestBaseLifecycleTests(ITestOutputHelper outputHelper) : Tes
     // ---------------------------------------------------------------------------
 
     /// <summary>Minimal concrete subclass — no extra behaviour.</summary>
+    /// <param name="outputHelper">xUnit test output helper the test host logs through.</param>
     private sealed class Subject(ITestOutputHelper outputHelper) : TestBase(outputHelper);
 
     /// <summary>
     /// Subclass that overrides <see cref="Testing.TestBase.InitializeAsync"/> and
     /// captures <see cref="Testing.TestBase.Provider"/> after chaining the base call.
     /// </summary>
+    /// <param name="outputHelper">xUnit test output helper the test host logs through.</param>
     private sealed class OverridingSubject(ITestOutputHelper outputHelper) : TestBase(outputHelper)
     {
         /// <summary>Provider captured inside the overridden InitializeAsync, after base call.</summary>
@@ -44,6 +47,7 @@ public sealed class TestBaseLifecycleTests(ITestOutputHelper outputHelper) : Tes
     private sealed class EmptyPack : ServicePackBase;
 
     /// <summary>Trivial marker service used to verify registrations wire through to the built provider.</summary>
+    /// <param name="tag">Value the marker carries, used to identify the registration.</param>
     private sealed class Marker(string tag)
     {
         /// <summary>Gets the tag string supplied at construction time.</summary>

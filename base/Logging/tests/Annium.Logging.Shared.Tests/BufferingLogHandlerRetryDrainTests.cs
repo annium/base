@@ -131,6 +131,10 @@ public class BufferingLogHandlerRetryDrainTests
         /// <summary>Whether the very first <see cref="SendEventsAsync"/> call should be forced to fail.</summary>
         private readonly bool _failFirstCall;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="FailThenSucceedSink"/> class.
+        /// </summary>
+        /// <param name="failFirstCall">Whether the first handle call throws before succeeding.</param>
         public FailThenSucceedSink(bool failFirstCall)
             : base(new LogRouteConfiguration { BufferTime = TimeSpan.FromMilliseconds(100), BufferCount = 100 })
         {
@@ -176,6 +180,11 @@ public class BufferingLogHandlerRetryDrainTests
         /// <summary>Number of leading <see cref="SendEventsAsync"/> calls that are forced to fail before success.</summary>
         private readonly int _failCount;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SmallBufferCountSink"/> class.
+        /// </summary>
+        /// <param name="failCount">Number of leading handle calls that throw.</param>
+        /// <param name="bufferCount">Buffer size the underlying route is configured with.</param>
         public SmallBufferCountSink(int failCount, int bufferCount = 100)
             : base(new LogRouteConfiguration { BufferTime = TimeSpan.FromMilliseconds(100), BufferCount = bufferCount })
         {

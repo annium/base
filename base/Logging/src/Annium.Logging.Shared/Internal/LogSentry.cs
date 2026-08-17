@@ -25,6 +25,9 @@ internal class LogSentry<TContext> : ILogSentry<TContext>
     /// </summary>
     private bool _isHandlerSet;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="LogSentry{TContext}"/> class, buffering messages until a handler is set.
+    /// </summary>
     public LogSentry()
     {
         _handler = _messagesBuffer.Add;

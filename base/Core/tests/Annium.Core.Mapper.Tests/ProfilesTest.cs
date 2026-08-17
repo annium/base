@@ -96,6 +96,11 @@ public class ProfilesTest : TestBase
         /// </summary>
         public DateTime Created { get; }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ImagePayload"/> class.
+        /// </summary>
+        /// <param name="image">Image reference carried by the payload.</param>
+        /// <param name="created">Creation timestamp.</param>
         public ImagePayload(string image, DateTime created)
         {
             Image = image;
@@ -155,6 +160,11 @@ public class ProfilesTest : TestBase
         /// </summary>
         public DateTime Created { get; }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="LinkModel"/> class.
+        /// </summary>
+        /// <param name="link">Link the image maps to, if any.</param>
+        /// <param name="created">Creation timestamp.</param>
         public LinkModel(string? link, DateTime created)
         {
             Link = link;

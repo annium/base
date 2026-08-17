@@ -14,6 +14,10 @@ public class HelpAttribute : BaseAttribute
     /// </summary>
     public string Help { get; }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="HelpAttribute"/> class.
+    /// </summary>
+    /// <param name="help">Help text describing the annotated member.</param>
     public HelpAttribute(string help)
     {
         Help = help;

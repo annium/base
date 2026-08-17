@@ -92,10 +92,18 @@ public class StatusResultTest
         failedClone.Data.Is("goodbye");
     }
 
+    /// <summary>
+    /// Access outcomes used as the status value in status-result tests.
+    /// </summary>
     private enum Access
     {
+        /// <summary>Access granted.</summary>
         Allowed,
+
+        /// <summary>Access refused.</summary>
         Denied,
+
+        /// <summary>Access could not be determined.</summary>
         Error,
     }
 }

@@ -145,6 +145,10 @@ public class BaseTest : TestBase
         /// </summary>
         public string? Name { get; }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="B"/> class.
+        /// </summary>
+        /// <param name="name">Display name.</param>
         public B(string? name)
         {
             Name = name;
@@ -166,6 +170,11 @@ public class BaseTest : TestBase
         /// </summary>
         public string? Value { get; }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="D"/> class.
+        /// </summary>
+        /// <param name="inner">Nested instance mapped alongside the value.</param>
+        /// <param name="value">The wrapped value.</param>
         public D(A? inner, string? value)
         {
             Inner = inner;

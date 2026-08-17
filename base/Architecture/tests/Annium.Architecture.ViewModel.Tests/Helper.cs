@@ -68,6 +68,10 @@ internal sealed class StubMapper : IMapper
     /// <summary>The fixed instance returned by every <c>Map</c> call.</summary>
     private readonly object _result;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="StubMapper"/> class.
+    /// </summary>
+    /// <param name="result">Value every map call returns.</param>
     public StubMapper(object result)
     {
         _result = result;

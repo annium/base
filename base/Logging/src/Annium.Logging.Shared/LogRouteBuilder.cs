@@ -16,6 +16,10 @@ public sealed class LogRouteBuilder<TContext>
     /// </summary>
     private readonly LogRoute<TContext> _route;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="LogRouteBuilder{TContext}"/> class.
+    /// </summary>
+    /// <param name="route">Route the builder configures.</param>
     internal LogRouteBuilder(LogRoute<TContext> route)
     {
         _route = route;

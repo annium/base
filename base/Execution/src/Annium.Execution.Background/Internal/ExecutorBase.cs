@@ -413,11 +413,29 @@ internal abstract class ExecutorBase : IExecutor, ILogSubject
         _runTcs.TrySetResult();
     }
 
+    /// <summary>
+    /// Lifecycle states an executor moves through, in order.
+    /// </summary>
     private enum State : byte
     {
+        /// <summary>
+        /// Constructed but not started — scheduling is rejected.
+        /// </summary>
         Created = 0,
+
+        /// <summary>
+        /// Running — scheduled tasks are accepted and executed.
+        /// </summary>
         Started = 1,
+
+        /// <summary>
+        /// Stopped accepting new tasks; already-scheduled ones are still draining.
+        /// </summary>
         Stopped = 2,
+
+        /// <summary>
+        /// Fully disposed — the drain has completed and all resources are released.
+        /// </summary>
         Disposed = 3,
     }
 }

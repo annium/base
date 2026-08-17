@@ -35,6 +35,10 @@ public class ObjectCacheTests : TestBase
     /// </summary>
     private const string Disposed = "Disposed";
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ObjectCacheTests"/> class.
+    /// </summary>
+    /// <param name="outputHelper">xUnit test output helper the test host logs through.</param>
     public ObjectCacheTests(ITestOutputHelper outputHelper)
         : base(outputHelper)
     {
@@ -155,6 +159,10 @@ public class ObjectCacheTests : TestBase
         /// </summary>
         private readonly TestLog<string> _log;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ItemProvider"/> class.
+        /// </summary>
+        /// <param name="log">Shared log recording create / suspend / resume calls.</param>
         public ItemProvider(TestLog<string> log)
         {
             _log = log;
@@ -228,6 +236,10 @@ public class ObjectCacheTests : TestBase
         /// </summary>
         private readonly ItemKey _id;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Item"/> class.
+        /// </summary>
+        /// <param name="id">Identifier.</param>
         public Item(ItemKey id)
         {
             _id = id;

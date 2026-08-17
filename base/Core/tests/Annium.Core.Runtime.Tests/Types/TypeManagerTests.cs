@@ -328,6 +328,10 @@ file class D
     [ResolutionKey]
     public string Type { get; }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="D"/> class.
+    /// </summary>
+    /// <param name="type">Resolution key identifying the concrete type.</param>
     protected D(string type)
     {
         Type = type;
@@ -340,6 +344,9 @@ file class D
 [ResolutionKeyValue(nameof(E))]
 file class E : D
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="E"/> class.
+    /// </summary>
     public E()
         : base(nameof(E)) { }
 }
@@ -350,6 +357,9 @@ file class E : D
 [ResolutionKeyValue(nameof(F))]
 file class F : D
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="F"/> class.
+    /// </summary>
     public F()
         : base(nameof(F)) { }
 }
@@ -360,6 +370,9 @@ file class F : D
 [ResolutionKeyValue(nameof(F))]
 file class G : D
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="G"/> class.
+    /// </summary>
     public G()
         : base(nameof(F)) { }
 }

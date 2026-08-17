@@ -5,6 +5,7 @@ namespace Annium.Extensions.Shell.Internal;
 /// <summary>
 /// Internal implementation of cross-platform shell command execution
 /// </summary>
+/// <param name="getShellInstance">Factory producing a shell instance for the parsed command arguments.</param>
 internal class Shell(Func<string[], IShellInstance> getShellInstance) : IShell
 {
     /// <summary>

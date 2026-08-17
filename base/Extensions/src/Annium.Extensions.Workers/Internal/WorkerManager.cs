@@ -39,6 +39,11 @@ internal sealed class WorkerManager<TKey> : IWorkerManager<TKey>, IAsyncDisposab
     /// </summary>
     private bool _isDisposed;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="WorkerManager{TKey}"/> class.
+    /// </summary>
+    /// <param name="sp">Service provider used to resolve per-key worker scopes.</param>
+    /// <param name="logger">Logger for tracing worker lifecycle.</param>
     public WorkerManager(IServiceProvider sp, ILogger logger)
     {
         Logger = logger;

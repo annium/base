@@ -6,6 +6,8 @@ namespace Annium.Data.Models;
 /// A value range implementation with mutable start and end values
 /// </summary>
 /// <typeparam name="T">The type of values in the range</typeparam>
+/// <param name="_start">Initial start value of the range.</param>
+/// <param name="_end">Initial end value of the range.</param>
 public sealed record ManagedValueRange<T>(T _start, T _end) : ValueRange<T>
     where T : IComparable<T>
 {

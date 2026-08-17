@@ -10,6 +10,10 @@ namespace Annium.Core.DependencyInjection.Tests.Registrations;
 /// </summary>
 public class InstanceRegistrationTest : TestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="InstanceRegistrationTest"/> class.
+    /// </summary>
+    /// <param name="outputHelper">xUnit test output helper the test host logs through.</param>
     public InstanceRegistrationTest(ITestOutputHelper outputHelper)
         : base(outputHelper) { }
 
@@ -220,6 +224,10 @@ public class InstanceRegistrationTest : TestBase
     /// </summary>
     private sealed class D : C, ID
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="D"/> class.
+        /// </summary>
+        /// <param name="x">Dependency forwarded to the base class.</param>
         public D(A x)
             : base(x) { }
     }
@@ -230,6 +238,10 @@ public class InstanceRegistrationTest : TestBase
     private class C : IC
     {
         // ReSharper disable once UnusedParameter.Local
+        /// <summary>
+        /// Initializes a new instance of the <see cref="C"/> class.
+        /// </summary>
+        /// <param name="_">Unused dependency — present only to require constructor injection.</param>
         protected C(A _) { }
     }
 

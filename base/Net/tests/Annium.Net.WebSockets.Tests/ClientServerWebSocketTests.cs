@@ -40,6 +40,10 @@ public class ClientServerWebSocketTests : TestBase
     /// </summary>
     private readonly TestLog<string> _binaries = new();
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ClientServerWebSocketTests"/> class.
+    /// </summary>
+    /// <param name="outputHelper">xUnit test output helper the test host logs through.</param>
     public ClientServerWebSocketTests(ITestOutputHelper outputHelper)
         : base(outputHelper) { }
 

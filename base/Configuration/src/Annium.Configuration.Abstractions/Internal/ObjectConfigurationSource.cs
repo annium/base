@@ -16,6 +16,11 @@ internal sealed class ObjectConfigurationSource : IConfigurationSource
     /// <summary>Whether a flatten failure is silenced.</summary>
     public bool Optional { get; }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ObjectConfigurationSource"/> class.
+    /// </summary>
+    /// <param name="config">The object graph to flatten into configuration entries.</param>
+    /// <param name="optional">Whether a flatten failure is silenced instead of thrown.</param>
     public ObjectConfigurationSource(object? config, bool optional)
     {
         _config = config;

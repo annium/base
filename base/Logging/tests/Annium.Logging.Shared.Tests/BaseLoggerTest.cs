@@ -19,6 +19,10 @@ public class BaseLoggerTest : TestBase
     /// </summary>
     private readonly List<LogMessage<Context>> _messages = new();
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="BaseLoggerTest"/> class.
+    /// </summary>
+    /// <param name="outputHelper">xUnit test output helper the test host logs through.</param>
     public BaseLoggerTest(ITestOutputHelper outputHelper)
         : base(outputHelper) { }
 
@@ -200,6 +204,10 @@ public class BaseLoggerTest : TestBase
         /// </summary>
         public List<LogMessage<Context>> Messages { get; }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="LogHandler"/> class.
+        /// </summary>
+        /// <param name="messages">List every handled message is appended to.</param>
         public LogHandler(List<LogMessage<Context>> messages)
         {
             Messages = messages;

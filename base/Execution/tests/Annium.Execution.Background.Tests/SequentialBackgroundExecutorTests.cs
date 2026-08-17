@@ -11,6 +11,10 @@ namespace Annium.Execution.Background.Tests;
 /// </summary>
 public class SequentialBackgroundExecutorTests : BackgroundExecutorTestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SequentialBackgroundExecutorTests"/> class.
+    /// </summary>
+    /// <param name="outputHelper">xUnit test output helper the test host logs through.</param>
     public SequentialBackgroundExecutorTests(ITestOutputHelper outputHelper)
         : base(Executor.Sequential<SequentialBackgroundExecutorTests>, outputHelper) { }
 

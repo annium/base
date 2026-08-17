@@ -309,10 +309,18 @@ public class ResultExtensionsTest
     // Private helpers
     // -------------------------------------------------------------------------
 
+    /// <summary>
+    /// Status codes used as the status value in status-result extension tests.
+    /// </summary>
     private enum HttpStatus
     {
+        /// <summary>Request succeeded.</summary>
         Ok,
+
+        /// <summary>Requested resource does not exist.</summary>
         NotFound,
+
+        /// <summary>Request failed on the server side.</summary>
         ServerError,
     }
 }

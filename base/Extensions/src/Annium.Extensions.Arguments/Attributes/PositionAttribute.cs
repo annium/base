@@ -19,6 +19,11 @@ public class PositionAttribute : BaseAttribute
     /// </summary>
     public bool IsRequired { get; }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="PositionAttribute"/> class.
+    /// </summary>
+    /// <param name="position">Zero-based index of the positional argument.</param>
+    /// <param name="isRequired">Whether the argument must be supplied.</param>
     public PositionAttribute(int position, bool isRequired = true)
     {
         Position = position;

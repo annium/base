@@ -86,9 +86,10 @@ public class ReceivingSocketExtensionsTests
     /// </summary>
     private sealed class FakeReceivingSocket : IReceivingSocket
     {
+        /// <summary>Backing delegate for <see cref="OnReceived"/>, raised by <c>Raise</c>.</summary>
         private event Action<ReadOnlyMemory<byte>>? _onReceived;
 
-        /// <inheritdoc />
+        /// <summary>Event raised when the fake socket receives data.</summary>
         public event Action<ReadOnlyMemory<byte>> OnReceived
         {
             add { _onReceived += value; }

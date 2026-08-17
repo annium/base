@@ -18,6 +18,10 @@ namespace Annium.Architecture.Mediator.Tests;
 /// </summary>
 public class ValidationPipeHandlerTests : TestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ValidationPipeHandlerTests"/> class.
+    /// </summary>
+    /// <param name="outputHelper">xUnit test output helper the test host logs through.</param>
     public ValidationPipeHandlerTests(ITestOutputHelper outputHelper)
         : base(outputHelper)
     {
@@ -119,6 +123,9 @@ public class ValidationPipeHandlerTests : TestBase
     // ReSharper disable once UnusedType.Local
     private class UserNameValidator : Validator<IUserName>
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="UserNameValidator"/> class.
+        /// </summary>
         public UserNameValidator()
         {
             Field(e => e.UserName).Required();
@@ -131,6 +138,9 @@ public class ValidationPipeHandlerTests : TestBase
     // ReSharper disable once UnusedType.Local
     private class PasswordValidator : Validator<IPassword>
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PasswordValidator"/> class.
+        /// </summary>
         public PasswordValidator()
         {
             Field(e => e.Password).Required();

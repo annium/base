@@ -19,6 +19,11 @@ public class OptionAttribute : BaseAttribute
     /// </summary>
     public bool IsRequired { get; }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="OptionAttribute"/> class.
+    /// </summary>
+    /// <param name="alias">Short alias the option can also be given by, or <c>null</c> for none.</param>
+    /// <param name="isRequired">Whether the option must be supplied.</param>
     public OptionAttribute(string? alias = null, bool isRequired = false)
     {
         Alias = alias;

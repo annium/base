@@ -21,6 +21,10 @@ namespace Annium.Logging.Console.Tests;
 /// </summary>
 public class ConsoleColorTests : TestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ConsoleColorTests"/> class.
+    /// </summary>
+    /// <param name="outputHelper">xUnit test output helper the test host logs through.</param>
     public ConsoleColorTests(ITestOutputHelper outputHelper)
         : base(outputHelper) { }
 

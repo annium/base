@@ -9,6 +9,10 @@ namespace Annium.Core.DependencyInjection.Tests.Registrations;
 /// </summary>
 public class KeyedFactoryRegistrationTest : TestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="KeyedFactoryRegistrationTest"/> class.
+    /// </summary>
+    /// <param name="outputHelper">xUnit test output helper the test host logs through.</param>
     public KeyedFactoryRegistrationTest(ITestOutputHelper outputHelper)
         : base(outputHelper) { }
 
@@ -194,6 +198,10 @@ public class KeyedFactoryRegistrationTest : TestBase
         /// </summary>
         public string Key { get; }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="D"/> class.
+        /// </summary>
+        /// <param name="key">Lookup key.</param>
         public D(string key)
         {
             Key = key;

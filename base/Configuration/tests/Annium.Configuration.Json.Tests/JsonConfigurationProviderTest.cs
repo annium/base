@@ -24,6 +24,10 @@ public class JsonConfigurationProviderTest : TestBase
     /// <summary>Path to the temporary JSON file written during constructor setup and deleted on dispose.</summary>
     private readonly string _jsonFile;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="JsonConfigurationProviderTest"/> class.
+    /// </summary>
+    /// <param name="outputHelper">xUnit test output helper the test host logs through.</param>
     public JsonConfigurationProviderTest(ITestOutputHelper outputHelper)
         : base(outputHelper)
     {

@@ -99,6 +99,9 @@ public class LogRouteSchedulerSelectionTests
     /// </summary>
     private sealed class BufferingSink : BufferingLogHandler<DefaultLogContext>
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="BufferingSink"/> class.
+        /// </summary>
         public BufferingSink()
             : base(new LogRouteConfiguration()) { }
 

@@ -19,6 +19,10 @@ namespace Annium.Architecture.Mediator.Tests;
 [Collection("LogConfigMutating")]
 public class ExceptionPipeHandlerTests : TestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ExceptionPipeHandlerTests"/> class.
+    /// </summary>
+    /// <param name="outputHelper">xUnit test output helper the test host logs through.</param>
     public ExceptionPipeHandlerTests(ITestOutputHelper outputHelper)
         : base(outputHelper)
     {

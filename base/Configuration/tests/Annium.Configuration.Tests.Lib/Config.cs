@@ -134,9 +134,15 @@ public sealed record ConfigTwo : SomeConfig
     }
 }
 
+/// <summary>
+/// Two-member enum used to exercise enum binding in configuration tests.
+/// </summary>
 [AutoMapped]
 public enum SomeEnum
 {
+    /// <summary>First member.</summary>
     One,
+
+    /// <summary>Second member.</summary>
     Two,
 }

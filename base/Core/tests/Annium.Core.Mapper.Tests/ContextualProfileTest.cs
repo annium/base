@@ -100,21 +100,27 @@ public class ContextualProfileTest : TestBase
     /// <summary>
     /// Record representing a payload with nested enum value and integer.
     /// </summary>
+    /// <param name="X">Nested payload carrying the enum value.</param>
+    /// <param name="Value">Arbitrary integer carried alongside.</param>
     private record SomePayload(InnerPayload X, int Value);
 
     /// <summary>
     /// Record representing a model with nested enum value and integer.
     /// </summary>
+    /// <param name="X">Nested model carrying the enum value.</param>
+    /// <param name="Value">Arbitrary integer carried alongside.</param>
     private record SomeModel(InnerModel X, int Value);
 
     /// <summary>
     /// Record representing a payload with nested enum value.
     /// </summary>
+    /// <param name="X">Nested payload carrying the enum value.</param>
     private record OuterPayload(InnerPayload X);
 
     /// <summary>
     /// Record representing a model with nested enum value.
     /// </summary>
+    /// <param name="X">Nested model carrying the enum value.</param>
     private record OuterModel(InnerModel X);
 
     /// <summary>

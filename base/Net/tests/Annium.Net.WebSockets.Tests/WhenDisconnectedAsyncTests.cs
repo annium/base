@@ -200,8 +200,13 @@ public class WhenDisconnectedAsyncTests
         /// <summary>Always returns <see langword="false"/>; connection state is not simulated.</summary>
         public bool IsConnected => false;
 
+        /// <summary>Raised when the socket connects.</summary>
         public event Action? OnConnected;
+
+        /// <summary>Raised when the socket disconnects.</summary>
         public event Action<WebSocketCloseStatus>? OnDisconnected;
+
+        /// <summary>Never raised — declared to satisfy the interface; this fake does not signal that the socket reports an error.</summary>
         public event Action<Exception>? OnError
         {
             add { }
@@ -214,11 +219,14 @@ public class WhenDisconnectedAsyncTests
         /// <summary>Gets a value indicating whether any handler is subscribed to <c>OnDisconnected</c>.</summary>
         public bool HasDisconnectedSubscribers => OnDisconnected is not null;
 
+        /// <summary>Never raised — declared to satisfy the interface; this fake does not signal that the socket receives a text frame.</summary>
         public event Action<ReadOnlyMemory<byte>>? OnTextReceived
         {
             add { }
             remove { }
         }
+
+        /// <summary>Never raised — declared to satisfy the interface; this fake does not signal that the socket receives a binary frame.</summary>
         public event Action<ReadOnlyMemory<byte>>? OnBinaryReceived
         {
             add { }
@@ -272,20 +280,27 @@ public class WhenDisconnectedAsyncTests
         /// <summary>Gets a value indicating whether the fake socket is connected (always false).</summary>
         public bool IsConnected => false;
 
+        /// <summary>Raised when the socket disconnects.</summary>
         public event Action<WebSocketCloseStatus>? OnDisconnected;
 
         /// <summary>Gets a value indicating whether any handler is subscribed to <c>OnDisconnected</c>.</summary>
         public bool HasDisconnectedSubscribers => OnDisconnected is not null;
+
+        /// <summary>Never raised — declared to satisfy the interface; this fake does not signal that the socket reports an error.</summary>
         public event Action<Exception>? OnError
         {
             add { }
             remove { }
         }
+
+        /// <summary>Never raised — declared to satisfy the interface; this fake does not signal that the socket receives a text frame.</summary>
         public event Action<ReadOnlyMemory<byte>>? OnTextReceived
         {
             add { }
             remove { }
         }
+
+        /// <summary>Never raised — declared to satisfy the interface; this fake does not signal that the socket receives a binary frame.</summary>
         public event Action<ReadOnlyMemory<byte>>? OnBinaryReceived
         {
             add { }

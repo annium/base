@@ -19,6 +19,9 @@ internal class StaticState
     /// </summary>
     public static readonly IReadOnlyDictionary<LogLevel, ConsoleColor> LevelColors;
 
+    /// <summary>
+    /// Builds the per-level console color map shared by all console handlers.
+    /// </summary>
     static StaticState()
     {
         var colors = new Dictionary<LogLevel, ConsoleColor>

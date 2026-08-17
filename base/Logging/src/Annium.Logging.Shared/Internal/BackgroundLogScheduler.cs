@@ -80,6 +80,13 @@ internal class BackgroundLogScheduler<TContext> : ILogScheduler<TContext>, ILogS
     /// </summary>
     private readonly TaskCompletionSource _pipelineDrained = new();
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="BackgroundLogScheduler{TContext}"/> class.
+    /// </summary>
+    /// <param name="filter">Predicate deciding whether a message is accepted by this route.</param>
+    /// <param name="handler">Handler the buffered batches are flushed to.</param>
+    /// <param name="configuration">Buffering configuration (buffer time and count).</param>
+    /// <exception cref="ArgumentOutOfRangeException">Thrown when the configured buffer time or count is not positive.</exception>
     public BackgroundLogScheduler(
         Func<LogMessage<TContext>, bool> filter,
         ILogHandler<TContext> handler,

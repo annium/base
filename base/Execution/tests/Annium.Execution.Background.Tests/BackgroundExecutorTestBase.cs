@@ -31,6 +31,11 @@ public abstract class BackgroundExecutorTestBase : TestBase
     // assigned in InitializeAsync (called by the xunit lifecycle) before any test method runs
     private IExecutor _executor = null!;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="BackgroundExecutorTestBase"/> class.
+    /// </summary>
+    /// <param name="getExecutor">Factory producing the executor flavour under test.</param>
+    /// <param name="outputHelper">xUnit test output helper the test host logs through.</param>
     protected BackgroundExecutorTestBase(Func<ILogger, IExecutor> getExecutor, ITestOutputHelper outputHelper)
         : base(outputHelper)
     {

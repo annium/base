@@ -18,6 +18,10 @@ public class BulkRegistrationTest : TestBase
     /// <summary>Shared single-element <c>[A]</c> type list for bulk tests that need only one type.</summary>
     private static readonly Type[] _aOnly = [typeof(A)];
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="BulkRegistrationTest"/> class.
+    /// </summary>
+    /// <param name="outputHelper">xUnit test output helper the test host logs through.</param>
     public BulkRegistrationTest(ITestOutputHelper outputHelper)
         : base(outputHelper) { }
 
@@ -409,6 +413,9 @@ public class BulkRegistrationTest : TestBase
         /// </summary>
         public static int InstancesCount { get; private set; }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="B"/> class.
+        /// </summary>
         public B()
         {
             InstancesCount++;

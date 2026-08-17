@@ -76,6 +76,22 @@ public record LogMessage<TContext>
     /// </summary>
     public int Line { get; }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="LogMessage{TContext}"/> class.
+    /// </summary>
+    /// <param name="context">Context the message was produced in.</param>
+    /// <param name="instant">Moment the message was produced.</param>
+    /// <param name="subjectType">Type name of the logging subject.</param>
+    /// <param name="subjectId">Identifier of the logging subject instance.</param>
+    /// <param name="level">Severity of the message.</param>
+    /// <param name="threadId">Managed thread id the message was produced on.</param>
+    /// <param name="message">Rendered message text.</param>
+    /// <param name="exception">Exception attached to the message, if any.</param>
+    /// <param name="messageTemplate">Unrendered message template.</param>
+    /// <param name="data">Values bound to the template placeholders.</param>
+    /// <param name="type">Source file type the call originated from.</param>
+    /// <param name="member">Source member the call originated from.</param>
+    /// <param name="line">Source line the call originated from.</param>
     internal LogMessage(
         TContext context,
         Instant instant,

@@ -130,6 +130,11 @@ public class BuildAsyncMergeOrderTests
         /// <summary>The fixed key-value data returned by <c>LoadAsync</c>.</summary>
         private readonly IReadOnlyDictionary<string[], string> _data;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="StubSource"/> class.
+        /// </summary>
+        /// <param name="entries">Key/value pairs this source contributes.</param>
+        /// <param name="optional">Whether a load failure is silenced instead of thrown.</param>
         public StubSource(IEnumerable<(string[] key, string value)> entries, bool optional)
         {
             var dict = new Dictionary<string[], string>();
@@ -156,6 +161,11 @@ public class BuildAsyncMergeOrderTests
         /// <summary>The exception thrown unconditionally by <c>LoadAsync</c>.</summary>
         private readonly Exception _ex;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ThrowingSource"/> class.
+        /// </summary>
+        /// <param name="ex">Exception thrown on every load attempt.</param>
+        /// <param name="optional">Whether a load failure is silenced instead of thrown.</param>
         public ThrowingSource(Exception ex, bool optional)
         {
             _ex = ex;
@@ -180,6 +190,10 @@ public class BuildAsyncMergeOrderTests
         /// <summary>Shared empty dictionary returned when the cancellation token is not signalled.</summary>
         private static readonly IReadOnlyDictionary<string[], string> _empty = new Dictionary<string[], string>();
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CancelObservingSource"/> class.
+        /// </summary>
+        /// <param name="optional">Whether a load failure is silenced instead of thrown.</param>
         public CancelObservingSource(bool optional)
         {
             Optional = optional;

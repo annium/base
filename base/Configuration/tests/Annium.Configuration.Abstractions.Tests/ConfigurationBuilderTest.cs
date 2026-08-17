@@ -10,6 +10,10 @@ namespace Annium.Configuration.Abstractions.Tests;
 /// </summary>
 public class ConfigurationBuilderTest : TestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ConfigurationBuilderTest"/> class.
+    /// </summary>
+    /// <param name="outputHelper">xUnit test output helper the test host logs through.</param>
     public ConfigurationBuilderTest(ITestOutputHelper outputHelper)
         : base(outputHelper)
     {

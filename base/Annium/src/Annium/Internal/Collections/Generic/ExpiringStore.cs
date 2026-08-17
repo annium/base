@@ -190,5 +190,7 @@ internal sealed class ExpiringStore<TKey, TValue> : IDisposable, IAsyncDisposabl
     /// <summary>
     /// An entry stored in the dictionary, pairing the value with its expiration instant.
     /// </summary>
+    /// <param name="Value">The stored value.</param>
+    /// <param name="Expires">The instant at which the value stops being served.</param>
     private sealed record Entry(TValue Value, Instant Expires);
 }

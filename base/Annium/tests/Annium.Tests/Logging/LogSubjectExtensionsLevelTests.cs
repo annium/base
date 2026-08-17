@@ -299,6 +299,9 @@ public class LogSubjectExtensionsLevelTests
     /// <summary>
     /// Represents a single log entry captured by <see cref="CapturingLogger"/>.
     /// </summary>
+    /// <param name="Level">Level the entry was logged at.</param>
+    /// <param name="Message">Rendered message text.</param>
+    /// <param name="Data">Values bound to the message template.</param>
     private sealed record CapturedEntry(LogLevel Level, string Message, IReadOnlyList<object?> Data);
 
     /// <summary>
@@ -357,6 +360,10 @@ public class LogSubjectExtensionsLevelTests
     /// </summary>
     private sealed class TestSubject : ILogSubject
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="TestSubject"/> class.
+        /// </summary>
+        /// <param name="logger">Logger used for tracing.</param>
         public TestSubject(ILogger logger) => Logger = logger;
 
         /// <summary>

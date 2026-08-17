@@ -12,6 +12,10 @@ namespace Annium.Configuration.CommandLine.Tests;
 /// </summary>
 public class CommandLineConfigurationProviderTest : TestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CommandLineConfigurationProviderTest"/> class.
+    /// </summary>
+    /// <param name="outputHelper">xUnit test output helper the test host logs through.</param>
     public CommandLineConfigurationProviderTest(ITestOutputHelper outputHelper)
         : base(outputHelper)
     {

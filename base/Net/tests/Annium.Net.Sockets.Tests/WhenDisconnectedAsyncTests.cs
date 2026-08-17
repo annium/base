@@ -84,13 +84,20 @@ public class WhenDisconnectedAsyncTests
         /// <summary>Gets a value indicating whether the socket is currently connected.</summary>
         public bool IsConnected => false;
 
+        /// <summary>Raised when the socket connects.</summary>
         public event Action? OnConnected;
+
+        /// <summary>Raised when the socket disconnects.</summary>
         public event Action<SocketCloseStatus>? OnDisconnected;
+
+        /// <summary>Never raised — declared to satisfy the interface; this fake does not signal that the socket reports an error.</summary>
         public event Action<Exception>? OnError
         {
             add { }
             remove { }
         }
+
+        /// <summary>Never raised — declared to satisfy the interface; this fake does not signal that the socket receives data.</summary>
         public event Action<ReadOnlyMemory<byte>>? OnReceived
         {
             add { }
@@ -135,12 +142,17 @@ public class WhenDisconnectedAsyncTests
         /// <summary>Always reports connected — this fake only exercises the event subscription path.</summary>
         public bool IsConnected => true;
 
+        /// <summary>Raised when the socket disconnects.</summary>
         public event Action<SocketCloseStatus>? OnDisconnected;
+
+        /// <summary>Never raised — declared to satisfy the interface; this fake does not signal that the socket reports an error.</summary>
         public event Action<Exception>? OnError
         {
             add { }
             remove { }
         }
+
+        /// <summary>Never raised — declared to satisfy the interface; this fake does not signal that the socket receives data.</summary>
         public event Action<ReadOnlyMemory<byte>>? OnReceived
         {
             add { }

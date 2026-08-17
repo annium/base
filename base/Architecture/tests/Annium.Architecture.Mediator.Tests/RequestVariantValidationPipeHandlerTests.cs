@@ -19,6 +19,7 @@ public class RequestVariantValidationPipeHandlerTests : TestBase
     /// Initializes a new instance and wires the request-only validation pipe handler together with
     /// a final handler that returns <c>IStatusResult&lt;OperationStatus&gt;</c>.
     /// </summary>
+    /// <param name="outputHelper">xUnit test output helper the test host logs through.</param>
     public RequestVariantValidationPipeHandlerTests(ITestOutputHelper outputHelper)
         : base(outputHelper)
     {

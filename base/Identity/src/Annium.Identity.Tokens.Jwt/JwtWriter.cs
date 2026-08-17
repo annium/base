@@ -21,6 +21,11 @@ public sealed class JwtWriter : ITokenWriter<ClaimsPrincipal>
     /// <summary>Per-instance handler — <c>JwtSecurityTokenHandler.WriteToken(SecurityToken)</c> is thread-safe.</summary>
     private readonly JwtSecurityTokenHandler _handler = new();
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="JwtWriter"/> class.
+    /// </summary>
+    /// <param name="options">Token issuing options (issuer, audience, keys, lifetime).</param>
+    /// <param name="time">Time provider used to stamp token validity bounds.</param>
     public JwtWriter(JwtTokensOptions options, ITimeProvider time)
     {
         _options = options;

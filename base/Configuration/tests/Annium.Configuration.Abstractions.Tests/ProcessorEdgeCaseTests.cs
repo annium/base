@@ -290,6 +290,10 @@ public class ProcessorEdgeCaseTests
         /// <summary>The single value returned for every lookup and the sole element in the enumerator.</summary>
         private readonly TValue _value;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="NullKeyDictionary{TValue}"/> class.
+        /// </summary>
+        /// <param name="value">The wrapped value.</param>
         public NullKeyDictionary(TValue value) => _value = value;
 
         /// <summary>Always 1 — this dictionary contains exactly one entry with a null key.</summary>
@@ -302,6 +306,8 @@ public class ProcessorEdgeCaseTests
         public IEnumerable<TValue> Values => new[] { _value };
 
         /// <summary>Returns the stored value regardless of <paramref name="key"/>.</summary>
+        /// <param name="key">Ignored — the dictionary holds a single value under the <see langword="null"/> key.</param>
+        /// <returns>The single stored value.</returns>
         public TValue this[string? key] => _value;
 
         /// <summary>

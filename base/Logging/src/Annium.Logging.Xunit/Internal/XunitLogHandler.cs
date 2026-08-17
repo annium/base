@@ -24,6 +24,11 @@ internal class XunitLogHandler<TContext> : ILogHandler<TContext>
     /// </summary>
     private readonly Func<LogMessage<TContext>, string> _format;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="XunitLogHandler{TContext}"/> class.
+    /// </summary>
+    /// <param name="outputHelper">xUnit output helper the messages are written to.</param>
+    /// <param name="format">Formatter turning a log message into the output line.</param>
     public XunitLogHandler(ITestOutputHelper outputHelper, Func<LogMessage<TContext>, string> format)
     {
         _outputHelper = outputHelper;

@@ -38,6 +38,11 @@ internal class FileLogHandler<TContext> : BufferingLogHandler<TContext>, IDispos
     /// </summary>
     private readonly ConcurrentDictionary<string, bool> _files = new();
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="FileLogHandler{TContext}"/> class.
+    /// </summary>
+    /// <param name="format">Formatter turning a log message into the file line.</param>
+    /// <param name="cfg">File logging configuration (target file resolution and buffering).</param>
     public FileLogHandler(Func<LogMessage<TContext>, string> format, FileLoggingConfiguration<TContext> cfg)
         : base(cfg)
     {

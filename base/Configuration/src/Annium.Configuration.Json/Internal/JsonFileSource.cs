@@ -13,6 +13,11 @@ internal sealed class JsonFileSource : FileConfigurationSourceBase
     /// </summary>
     protected override string FormatLabel => "Json";
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="JsonFileSource"/> class.
+    /// </summary>
+    /// <param name="path">Path of the JSON file to read.</param>
+    /// <param name="optional">Whether a missing or unreadable file is silenced instead of thrown.</param>
     public JsonFileSource(string path, bool optional)
         : base(path, optional) { }
 

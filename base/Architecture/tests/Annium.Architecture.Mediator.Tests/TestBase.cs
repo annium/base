@@ -13,6 +13,10 @@ namespace Annium.Architecture.Mediator.Tests;
 /// </summary>
 public class TestBase : Testing.TestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TestBase"/> class.
+    /// </summary>
+    /// <param name="outputHelper">xUnit test output helper the test host logs through.</param>
     public TestBase(ITestOutputHelper outputHelper)
         : base(outputHelper) { }
 

@@ -141,95 +141,143 @@ public sealed class AsyncDisposableBox : DisposableBoxBase<AsyncDisposableBox>, 
     /// <summary>
     /// Adds a synchronous disposable resource to the box.
     /// </summary>
+    /// <param name="box">The box to add the resource to.</param>
+    /// <param name="disposable">The synchronous disposable resource to add.</param>
+    /// <returns>The same box instance, so operators can be chained.</returns>
     public static AsyncDisposableBox operator +(AsyncDisposableBox box, IDisposable disposable) =>
         box.AddSyncDisposable(disposable);
 
     /// <summary>
     /// Removes a synchronous disposable resource from the box.
     /// </summary>
+    /// <param name="box">The box to remove the resource from.</param>
+    /// <param name="disposable">The synchronous disposable resource to remove.</param>
+    /// <returns>The same box instance, so operators can be chained.</returns>
     public static AsyncDisposableBox operator -(AsyncDisposableBox box, IDisposable disposable) =>
         box.RemoveSyncDisposable(disposable);
 
     /// <summary>
     /// Adds a collection of synchronous disposable resources to the box.
     /// </summary>
+    /// <param name="box">The box to add the resources to.</param>
+    /// <param name="disposables">The synchronous disposable resources to add.</param>
+    /// <returns>The same box instance, so operators can be chained.</returns>
     public static AsyncDisposableBox operator +(AsyncDisposableBox box, IEnumerable<IDisposable> disposables) =>
         box.AddSyncDisposables(disposables);
 
     /// <summary>
     /// Removes a collection of synchronous disposable resources from the box.
     /// </summary>
+    /// <param name="box">The box to remove the resources from.</param>
+    /// <param name="disposables">The synchronous disposable resources to remove.</param>
+    /// <returns>The same box instance, so operators can be chained.</returns>
     public static AsyncDisposableBox operator -(AsyncDisposableBox box, IEnumerable<IDisposable> disposables) =>
         box.RemoveSyncDisposables(disposables);
 
     /// <summary>
     /// Adds an asynchronous disposable resource to the box.
     /// </summary>
+    /// <param name="box">The box to add the resource to.</param>
+    /// <param name="disposable">The asynchronous disposable resource to add.</param>
+    /// <returns>The same box instance, so operators can be chained.</returns>
     public static AsyncDisposableBox operator +(AsyncDisposableBox box, IAsyncDisposable disposable) =>
         box.AddAsyncDisposable(disposable);
 
     /// <summary>
     /// Removes an asynchronous disposable resource from the box.
     /// </summary>
+    /// <param name="box">The box to remove the resource from.</param>
+    /// <param name="disposable">The asynchronous disposable resource to remove.</param>
+    /// <returns>The same box instance, so operators can be chained.</returns>
     public static AsyncDisposableBox operator -(AsyncDisposableBox box, IAsyncDisposable disposable) =>
         box.RemoveAsyncDisposable(disposable);
 
     /// <summary>
     /// Adds a collection of asynchronous disposable resources to the box.
     /// </summary>
+    /// <param name="box">The box to add the resources to.</param>
+    /// <param name="disposables">The asynchronous disposable resources to add.</param>
+    /// <returns>The same box instance, so operators can be chained.</returns>
     public static AsyncDisposableBox operator +(AsyncDisposableBox box, IEnumerable<IAsyncDisposable> disposables) =>
         box.AddAsyncDisposables(disposables);
 
     /// <summary>
     /// Removes a collection of asynchronous disposable resources from the box.
     /// </summary>
+    /// <param name="box">The box to remove the resources from.</param>
+    /// <param name="disposables">The asynchronous disposable resources to remove.</param>
+    /// <returns>The same box instance, so operators can be chained.</returns>
     public static AsyncDisposableBox operator -(AsyncDisposableBox box, IEnumerable<IAsyncDisposable> disposables) =>
         box.RemoveAsyncDisposables(disposables);
 
     /// <summary>
     /// Adds a synchronous dispose action to the box.
     /// </summary>
+    /// <param name="box">The box to add the action to.</param>
+    /// <param name="dispose">The synchronous dispose action to add.</param>
+    /// <returns>The same box instance, so operators can be chained.</returns>
     public static AsyncDisposableBox operator +(AsyncDisposableBox box, Action dispose) => box.AddSyncDispose(dispose);
 
     /// <summary>
     /// Removes a synchronous dispose action from the box.
     /// </summary>
+    /// <param name="box">The box to remove the action from.</param>
+    /// <param name="dispose">The synchronous dispose action to remove.</param>
+    /// <returns>The same box instance, so operators can be chained.</returns>
     public static AsyncDisposableBox operator -(AsyncDisposableBox box, Action dispose) =>
         box.RemoveSyncDispose(dispose);
 
     /// <summary>
     /// Adds a collection of synchronous dispose actions to the box.
     /// </summary>
+    /// <param name="box">The box to add the actions to.</param>
+    /// <param name="disposes">The synchronous dispose actions to add.</param>
+    /// <returns>The same box instance, so operators can be chained.</returns>
     public static AsyncDisposableBox operator +(AsyncDisposableBox box, IEnumerable<Action> disposes) =>
         box.AddSyncDisposes(disposes);
 
     /// <summary>
     /// Removes a collection of synchronous dispose actions from the box.
     /// </summary>
+    /// <param name="box">The box to remove the actions from.</param>
+    /// <param name="disposes">The synchronous dispose actions to remove.</param>
+    /// <returns>The same box instance, so operators can be chained.</returns>
     public static AsyncDisposableBox operator -(AsyncDisposableBox box, IEnumerable<Action> disposes) =>
         box.RemoveSyncDisposes(disposes);
 
     /// <summary>
     /// Adds an asynchronous dispose function to the box.
     /// </summary>
+    /// <param name="box">The box to add the function to.</param>
+    /// <param name="dispose">The asynchronous dispose function to add.</param>
+    /// <returns>The same box instance, so operators can be chained.</returns>
     public static AsyncDisposableBox operator +(AsyncDisposableBox box, Func<ValueTask> dispose) =>
         box.AddAsyncDispose(dispose);
 
     /// <summary>
     /// Removes an asynchronous dispose function from the box.
     /// </summary>
+    /// <param name="box">The box to remove the function from.</param>
+    /// <param name="dispose">The asynchronous dispose function to remove.</param>
+    /// <returns>The same box instance, so operators can be chained.</returns>
     public static AsyncDisposableBox operator -(AsyncDisposableBox box, Func<ValueTask> dispose) =>
         box.RemoveAsyncDispose(dispose);
 
     /// <summary>
     /// Adds a collection of asynchronous dispose functions to the box.
     /// </summary>
+    /// <param name="box">The box to add the functions to.</param>
+    /// <param name="disposes">The asynchronous dispose functions to add.</param>
+    /// <returns>The same box instance, so operators can be chained.</returns>
     public static AsyncDisposableBox operator +(AsyncDisposableBox box, IEnumerable<Func<ValueTask>> disposes) =>
         box.AddAsyncDisposes(disposes);
 
     /// <summary>
     /// Removes a collection of asynchronous dispose functions from the box.
     /// </summary>
+    /// <param name="box">The box to remove the functions from.</param>
+    /// <param name="disposes">The asynchronous dispose functions to remove.</param>
+    /// <returns>The same box instance, so operators can be chained.</returns>
     public static AsyncDisposableBox operator -(AsyncDisposableBox box, IEnumerable<Func<ValueTask>> disposes) =>
         box.RemoveAsyncDisposes(disposes);
 }

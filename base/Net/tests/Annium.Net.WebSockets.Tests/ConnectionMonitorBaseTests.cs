@@ -55,6 +55,7 @@ public class ConnectionMonitorBaseTests
     /// Concrete <see cref="ConnectionMonitorBase"/> subclass that counts how many times
     /// <c>HandleStart</c> and <c>HandleStop</c> are invoked.
     /// </summary>
+    /// <param name="logger">Logger used for tracing.</param>
     private sealed class CountingConnectionMonitor(ILogger logger) : ConnectionMonitorBase(logger)
     {
         /// <summary>Number of times <c>HandleStart</c> was called.</summary>

@@ -14,6 +14,9 @@ internal class TcpListenerResolver
     /// </summary>
     public static readonly TcpListenerResolver Instance = new();
 
+    /// <summary>
+    /// Prevents external instantiation — the resolver is consumed through <see cref="Instance"/>.
+    /// </summary>
     private TcpListenerResolver() { }
 
     /// <summary>

@@ -11,6 +11,10 @@ namespace Annium.Core.DependencyInjection.Tests.Registrations;
 /// </summary>
 public class SingleRegistrationTest : TestBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SingleRegistrationTest"/> class.
+    /// </summary>
+    /// <param name="outputHelper">xUnit test output helper the test host logs through.</param>
     public SingleRegistrationTest(ITestOutputHelper outputHelper)
         : base(outputHelper) { }
 
@@ -324,6 +328,9 @@ public class SingleRegistrationTest : TestBase
         /// </summary>
         public static int InstancesCount { get; private set; }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="B"/> class.
+        /// </summary>
         public B()
         {
             InstancesCount++;
