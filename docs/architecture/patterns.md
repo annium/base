@@ -120,7 +120,7 @@ Testing conventions enforced across the repo:
 - One test project per `src/` project, named `{Package}.Tests`.
 - Method naming: `Method_Scenario_ExpectedResult` (e.g., `Parse_InvalidInput_Fails`).
 - Tests inherit `TestBase` unless they truly need no DI/logging.
-- xunit.v3 is the sole runner; `xunit.runner.visualstudio` wires it into `dotnet test`.
+- xunit.v3 is the sole runner, hosted on Microsoft.Testing.Platform; `dotnet test` opts in via `global.json`.
 
 See the practical walkthrough in [Testing guide](../guides/testing.md).
 

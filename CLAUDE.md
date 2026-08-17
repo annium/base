@@ -18,12 +18,12 @@ All code changes MUST be reflected in documentation. When making changes:
 | `just setup` | Restore dotnet tools (CSharpier, xs.cli, doclint, docfx, versioning) |
 | `just format` | Format with CSharpier + `xs format` |
 | `just build` | Build `Annium.Base.sln` in Release |
-| `just test` | Run all tests (xunit.v3, TRX logger) |
+| `just test` | Run all tests (xunit.v3 on Microsoft.Testing.Platform, TRX report) |
 | `just clean` | `xs clean` and remove stray `*.nupkg` |
 | `just docs-build` | Build DocFX site into `_site/` |
 | `just` | List every recipe |
 
-Single test: `dotnet test base/<Module>/tests/<Module>.Tests/<Module>.Tests.csproj --filter "FullyQualifiedName~Name"`.
+Single test: `dotnet test --project base/<Module>/tests/<Module>.Tests/<Module>.Tests.csproj --filter "FullyQualifiedName~Name"`.
 
 ## Project Structure
 
@@ -78,7 +78,7 @@ Every module follows the same shape: `base/<Group>/src/<Package>/` + `base/<Grou
 |---------|------|-------|
 | Target framework / warnings | `Directory.Build.props` | `net10.0`, `Nullable=enable`, `WarningsAsErrors`, SourceLink enabled |
 | Package versions | `Directory.Packages.props` | Central — `ManagePackageVersionsCentrally=true`; xunit.v3, MessagePack, NodaTime, etc. pinned here |
-| SDK pin | `global.json` | `version=10.0.0`, `rollForward=latestMinor`, `allowPrerelease=true` |
+| SDK pin / test runner | `global.json` | `version=10.0.0`, `rollForward=latestMinor`, `allowPrerelease=true`; `test.runner=Microsoft.Testing.Platform` |
 | Formatter | `.csharpierrc` + `.editorconfig` | 120 col width, 4-space indent; CSharpier run via tool manifest |
 | Analyzers | `Directory.Build.props` (`EnableNETAnalyzers`, `AnalysisMode=Default`) + `base/Annium/src/Annium.Analyzers` | Exception-naming, visibility rules; `AD0001` suppressed globally |
 | Package version at build | `just build` reads `./version` via `xx versioning get-version` | Passed to MSBuild as `PackageVersion` |
@@ -110,13 +110,13 @@ container.AddServicePack<MyFeaturePack>();
 
 ## Testing
 
-- **Framework**: xunit.v3 + `xunit.runner.visualstudio`.
+- **Framework**: xunit.v3 on Microsoft.Testing.Platform (MTP). No VSTest — test projects are `OutputType=Exe` and reference only `xunit.v3`; `global.json` carries `"test": { "runner": "Microsoft.Testing.Platform" }`.
 - **Base class**: inherit `Annium.Testing.TestBase` to get DI, in-memory logs, xunit log bridge, and `OutputHelper`.
 - **Assertions**: fluent extensions on any value — `.Is(expected)`, `.IsTrue()`, `.IsFalse()`, `.IsNotNull()`, `.Has(count)`, `.IsEmpty()`, `.IsEqual(expected)` (see `base/Annium/src/Annium.Testing/*Extensions.cs`).
 - **Exception testing**: `Wrap.It(() => SomeAction()).Throws<SomeException>()`.
 - **Naming**: `Method_Scenario_ExpectedResult` (e.g., `Parse_InvalidInput_Fails`).
 - **Run a subset**: `dotnet test --filter "FullyQualifiedName~TestBase"` or `--filter "ClassName.MethodName"`.
-- **Traits**: `make test` / `just test` writes TRX logs named `test-results.trx` per project.
+- **Traits**: `just test` passes `--report-xunit-trx`, writing a TRX per project under `bin/Release/net10.0/TestResults/`.
 
 ## Documentation
 
@@ -140,7 +140,7 @@ container.AddServicePack<MyFeaturePack>();
 | `just format-full` | Also runs `dotnet format style` and `dotnet format analyzers` |
 | `just ensure-no-changes` | CI guard: fails if the working tree is dirty |
 | `just build` | Computes package version from `./version`, builds Release |
-| `just test` | Runs xunit.v3 tests with TRX logger |
+| `just test` | Runs xunit.v3 tests with `--report-xunit-trx` |
 | `just clean` | `xs clean` + removes stray `*.nupkg` |
 | `just update` | Reinstalls all dotnet tools and runs `xs update all` |
 | `just pack` | Creates `.nupkg` + `.snupkg` with computed version |

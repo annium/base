@@ -19,7 +19,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Single Test Execution:**
 ```bash
-dotnet test path/to/TestProject.csproj --filter "TestMethodName"
+dotnet test --project path/to/TestProject.csproj --filter "TestMethodName"
 dotnet test --filter "ClassName.TestMethodName"
 ```
 

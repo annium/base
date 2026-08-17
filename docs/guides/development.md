@@ -22,7 +22,7 @@ just setup            # dotnet tool restore: CSharpier, xs.cli, doclint, docfx, 
 ```bash
 just format           # CSharpier + `xs format -sc -ic`
 just build            # Release build of Annium.Base.sln
-just test             # Every test project via xunit.v3 + TRX logger
+just test             # Every test project via xunit.v3 + TRX report
 ```
 
 `just format-full` additionally runs `dotnet format style` and `dotnet format analyzers` — useful before a release but slow enough that it's not part of the default loop.
@@ -31,7 +31,7 @@ just test             # Every test project via xunit.v3 + TRX logger
 
 ```bash
 # One project
-dotnet test base/Core/tests/Annium.Core.Mediator.Tests/Annium.Core.Mediator.Tests.csproj
+dotnet test --project base/Core/tests/Annium.Core.Mediator.Tests/Annium.Core.Mediator.Tests.csproj
 
 # One test by FQN fragment
 dotnet test --filter "FullyQualifiedName~Mediator"

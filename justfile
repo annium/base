@@ -50,7 +50,7 @@ build:
 
 test:
     @echo "=== $0 ==="
-    dotnet test -c Release --no-build --nologo --logger "trx;LogFilePrefix=test-results.trx"
+    dotnet test -c Release --no-build --report-xunit-trx
 
 pack:
     #!/usr/bin/env bash

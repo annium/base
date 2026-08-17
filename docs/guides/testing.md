@@ -7,12 +7,14 @@
 Every `src/<Package>` has a sibling `tests/<Package>.Tests`. The test csproj references:
 
 - `xunit.v3` + `xunit.v3.extensibility.core`
-- `xunit.runner.visualstudio`
-- `Microsoft.NET.Test.Sdk`
 - `Annium.Testing` (this project)
 - The package under test
 
 Versions are pinned in `Directory.Packages.props`.
+
+Test projects are `<OutputType>Exe</OutputType>` — xunit.v3 runs on
+[Microsoft.Testing.Platform](https://aka.ms/dotnet-test) (MTP), not VSTest. The repo opts into the MTP
+`dotnet test` experience via `global.json` (`"test": { "runner": "Microsoft.Testing.Platform" }`).
 
 ## TestBase
 
@@ -129,8 +131,8 @@ Where xunit.v3 fixtures are needed (e.g., shared TCP server), place them in the 
 ## Running
 
 ```bash
-just test                                     # every project, Release, TRX logger
-dotnet test base/Core/tests/Annium.Core.Mediator.Tests/
+just test                                     # every project, Release, TRX report
+dotnet test --project base/Core/tests/Annium.Core.Mediator.Tests/
 dotnet test --filter "ClassName=SomeTest"
 dotnet test --filter "Category=Integration"   # if you add xunit categories
 ```

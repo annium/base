@@ -1,4 +1,5 @@
-using Xunit;
+using Xunit.Sdk;
+using Xunit.v3;
 
 // These are real-network integration tests: each test class spins up an HttpListener-backed
 // WebSocket server and a live client. Running test collections in parallel makes them contend for
@@ -6,4 +7,4 @@ using Xunit;
 // round-trips that exceed the Expect.ToAsync timeout — i.e. intermittent "message never arrived"
 // flakiness. Disabling parallelization makes the suite deterministic (and, because the tests are
 // I/O-bound, no slower in practice).
-[assembly: CollectionBehavior(DisableTestParallelization = true)]
+[assembly: Parallelization(Mode = ParallelMode.None)]
