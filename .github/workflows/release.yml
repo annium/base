@@ -8,60 +8,12 @@ on:
 permissions:
   contents: write
   actions: read
-  checks: write
-  pull-requests: write
-  pages: write
-  id-token: write
 
 concurrency:
   group: release-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
-  init:
-    runs-on: ubuntu-latest
-    outputs:
-      run_ci: ${{ steps.check.outputs.run_ci }}
-    steps:
-      - name: Check if CI should run
-        id: check
-        run: echo "run_ci=${{ !contains(github.event.head_commit.message, 'skip ci') }}" >> $GITHUB_OUTPUT
-
   release:
-    runs-on: ubuntu-latest
-    needs: init
-    if: ${{ needs.init.outputs.run_ci == 'true' }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v6
-        with:
-          dotnet-version: '10.0.x'
-
-      - name: Setup just
-        uses: extractions/setup-just@v4
-
-      - name: Run
-        run: just ci-release "${{ secrets.NUGET_API_KEY }}" "${{ github.repository }}" "${{ secrets.GITHUB_TOKEN }}"
-
-      - name: Upload test results
-        uses: actions/upload-artifact@v7
-        if: always()
-        with:
-          name: test-results
-          path: '**/*.trx'
-          if-no-files-found: warn
-          retention-days: 30
-
-#      - name: Upload Pages artifact
-#        uses: actions/upload-pages-artifact@v3
-#        with:
-#          path: '_site'
-#
-#      - name: Deploy to GitHub Pages
-#        id: deployment
-#        uses: actions/deploy-pages@v4
+    uses: annium/workflows/.github/workflows/dotnet-release.yml@v1
+    secrets: inherit
