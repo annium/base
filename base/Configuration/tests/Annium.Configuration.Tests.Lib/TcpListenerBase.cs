@@ -75,6 +75,13 @@ public abstract class TcpListenerBase : IAsyncDisposable
             catch (ObjectDisposedException)
             { /* expected on dispose */
             }
+            catch (SocketException) when (Cts.IsCancellationRequested)
+            {
+                // Aborting a pending AcceptTcpClientAsync via Stop() surfaces a platform-specific
+                // failure: ObjectDisposedException on Windows/macOS, but SocketException
+                // (EINVAL, "Invalid argument") on Linux. Only expected once teardown has begun —
+                // an accept failure before that is a real fault and still propagates.
+            }
             catch (IOException)
             { /* client disconnected */
             }
@@ -123,6 +130,9 @@ public abstract class TcpListenerBase : IAsyncDisposable
             }
             catch (ObjectDisposedException)
             { /* expected on listener.Stop */
+            }
+            catch (SocketException)
+            { /* expected on listener.Stop; see the accept-loop filter for the platform split */
             }
             catch (IOException)
             { /* client disconnected during dispose */
