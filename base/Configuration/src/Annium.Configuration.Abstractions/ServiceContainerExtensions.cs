@@ -18,6 +18,7 @@ public static class ServiceContainerExtensions
     /// <summary>
     /// Registers a configuration instance in the service container
     /// </summary>
+    /// <typeparam name="T">The configuration type being registered.</typeparam>
     /// <param name="container">The service container</param>
     /// <param name="configuration">The configuration instance to register</param>
     /// <returns>The service container for method chaining</returns>
@@ -34,6 +35,7 @@ public static class ServiceContainerExtensions
     /// <summary>
     /// Registers a configuration built from the provided async configuration function.
     /// </summary>
+    /// <typeparam name="T">The configuration type to build and register.</typeparam>
     /// <param name="container">The service container.</param>
     /// <param name="configure">Async function to configure the configuration container. Receives the same cancellation token threaded into <see cref="ConfigurationContainerExtensions.BuildAsync"/>.</param>
     /// <param name="ct">Cancellation token forwarded to the configure delegate and to <see cref="ConfigurationContainerExtensions.BuildAsync"/>.</param>
@@ -75,6 +77,7 @@ public static class ServiceContainerExtensions
     /// action runs synchronously and does not observe <paramref name="ct"/>; the cancellation token is
     /// forwarded only into <see cref="ConfigurationContainerExtensions.BuildAsync"/>.
     /// </remarks>
+    /// <typeparam name="T">The configuration type to build and register.</typeparam>
     /// <param name="container">The service container.</param>
     /// <param name="configure">Action to configure the configuration container.</param>
     /// <param name="ct">Cancellation token forwarded to <see cref="ConfigurationContainerExtensions.BuildAsync"/>.</param>

@@ -207,6 +207,7 @@ public class ChannelReaderExtensionsTests : TestBase
     /// ChannelWriter that throws a caller-supplied exception from TryWrite. Used to exercise
     /// the general-exception branch in <see cref="ChannelReaderExtensions.Pipe{T}"/>.
     /// </summary>
+    /// <typeparam name="T">The element type carried through the channel being written to.</typeparam>
     private sealed class ThrowingChannelWriter<T> : ChannelWriter<T>
     {
         /// <summary>The exception instance thrown by every write attempt.</summary>

@@ -397,21 +397,26 @@ file class K : H;
 /// <summary>
 /// Generic interface for testing generic type resolution.
 /// </summary>
+/// <typeparam name="T1">The first generic parameter, varied by implementations to test resolution.</typeparam>
+/// <typeparam name="T2">The second generic parameter, varied by implementations to test resolution.</typeparam>
 file interface IGenericInterface<T1, T2>;
 
 /// <summary>
 /// Generic struct implementing IGenericInterface.
 /// </summary>
+/// <typeparam name="T">The type substituted for the interface's first parameter; the second is fixed to <c>string</c>.</typeparam>
 file record struct GenericStruct<T> : IGenericInterface<T, string>;
 
 /// <summary>
 /// Generic class implementing IGenericInterface with int as second parameter.
 /// </summary>
+/// <typeparam name="T">The type substituted for the interface's first parameter; the second is fixed to <c>int</c>.</typeparam>
 file class GenericInterfaceDemoA<T> : IGenericInterface<T, int>;
 
 /// <summary>
 /// Generic class implementing IGenericInterface with long as second parameter.
 /// </summary>
+/// <typeparam name="T">The type substituted for the interface's first parameter; the second is fixed to <c>long</c>.</typeparam>
 file class GenericInterfaceDemoB<T> : IGenericInterface<T, long>;
 
 /// <summary>
@@ -422,16 +427,20 @@ file class GenericInterfaceDemoC : IGenericInterface<string, bool>;
 /// <summary>
 /// Generic base class for testing generic class resolution.
 /// </summary>
+/// <typeparam name="T1">The first generic parameter, varied by derived types to test resolution.</typeparam>
+/// <typeparam name="T2">The second generic parameter, varied by derived types to test resolution.</typeparam>
 file class GenericClass<T1, T2>;
 
 /// <summary>
 /// Generic class inheriting from GenericClass with int as second parameter.
 /// </summary>
+/// <typeparam name="T">The type substituted for the base class's first parameter; the second is fixed to <c>int</c>.</typeparam>
 file class GenericClassDemoA<T> : GenericClass<T, int>;
 
 /// <summary>
 /// Generic class inheriting from GenericClass with long as second parameter.
 /// </summary>
+/// <typeparam name="T">The type substituted for the base class's first parameter; the second is fixed to <c>long</c>.</typeparam>
 file class GenericClassDemoB<T> : GenericClass<T, long>;
 
 /// <summary>

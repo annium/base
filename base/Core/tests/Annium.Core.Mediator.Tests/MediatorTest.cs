@@ -815,6 +815,8 @@ public class MediatorTest
     private interface IResponse;
 
     /// <summary>Handler that validates requests before processing.</summary>
+    /// <typeparam name="TRequest">The request type this stage validates and forwards to the next handler.</typeparam>
+    /// <typeparam name="TResponse">The response type produced once validation succeeds and the next handler runs.</typeparam>
     private class ValidationHandler<TRequest, TResponse>
         : IPipeRequestHandler<TRequest, TRequest, TResponse, IBooleanResult<TResponse>>,
             ILogSubject
@@ -867,6 +869,8 @@ public class MediatorTest
     }
 
     /// <summary>Final handler for open generic requests that transforms the request value.</summary>
+    /// <typeparam name="TRequest">The request type handled, constrained to be assignable to <typeparamref name="TResponse"/>.</typeparam>
+    /// <typeparam name="TResponse">The response type constructed and returned, constrained to <c>Base</c> with a parameterless constructor.</typeparam>
     private class OpenFinalHandler<TRequest, TResponse> : IFinalRequestHandler<TRequest, TResponse>, ILogSubject
         where TRequest : TResponse
         where TResponse : Base, new()

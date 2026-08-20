@@ -45,6 +45,7 @@ internal class ConfigurationBuilder : IConfigurationBuilder
     /// <summary>
     /// Builds an instance of type T from the configuration data
     /// </summary>
+    /// <typeparam name="T">The configuration type to build.</typeparam>
     /// <returns>Configured instance of type T</returns>
     public T Build<T>()
         where T : new()

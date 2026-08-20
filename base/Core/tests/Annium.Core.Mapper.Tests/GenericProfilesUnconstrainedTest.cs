@@ -34,6 +34,7 @@ public class GenericProfilesUnconstrainedTest : TestBase
     /// <summary>
     /// Invalid generic profile that attempts to map any type to D without constraints.
     /// </summary>
+    /// <typeparam name="T">The profile's unconstrained source type, which the mapper must reject at resolution time.</typeparam>
     private class InvalidProfile<T> : Profile
     {
         /// <summary>
