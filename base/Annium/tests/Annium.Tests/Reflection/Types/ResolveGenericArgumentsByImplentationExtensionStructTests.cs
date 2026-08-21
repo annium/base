@@ -167,6 +167,10 @@ public class ResolveGenericArgumentsByImplementationExtensionStructTests
     /// <summary>
     /// A struct used for testing generic parameter constraints.
     /// </summary>
+    /// <typeparam name="T1">The type parameter constrained to reference types.</typeparam>
+    /// <typeparam name="T2">The type parameter constrained to value types.</typeparam>
+    /// <typeparam name="T3">The unconstrained type parameter.</typeparam>
+    /// <typeparam name="T4">The type parameter constrained to implement IEnumerable over T1.</typeparam>
     private struct BaseStruct<T1, T2, T3, T4> : IBase<T1, T2, T3, T4>
         where T1 : class
         where T2 : struct
@@ -175,6 +179,10 @@ public class ResolveGenericArgumentsByImplementationExtensionStructTests
     /// <summary>
     /// An interface used for testing base constraints.
     /// </summary>
+    /// <typeparam name="T1">The type parameter constrained to reference types.</typeparam>
+    /// <typeparam name="T2">The type parameter constrained to value types.</typeparam>
+    /// <typeparam name="T3">The unconstrained type parameter.</typeparam>
+    /// <typeparam name="T4">The type parameter constrained to implement IEnumerable over T1.</typeparam>
     private interface IBase<T1, T2, T3, T4>
         where T1 : class
         where T2 : struct
@@ -198,18 +206,21 @@ public class ResolveGenericArgumentsByImplementationExtensionStructTests
     /// <summary>
     /// An interface used for testing class constraints.
     /// </summary>
+    /// <typeparam name="T">The type parameter constrained to reference types.</typeparam>
     private interface IClassConstraint<T>
         where T : class;
 
     /// <summary>
     /// An interface used for testing new constraints.
     /// </summary>
+    /// <typeparam name="T">The type parameter constrained to have a public parameterless constructor.</typeparam>
     private interface INewConstraint<T>
         where T : new();
 
     /// <summary>
     /// An interface used for testing enumerable constraints.
     /// </summary>
+    /// <typeparam name="T">The type parameter constrained to implement IEnumerable.</typeparam>
     private interface IEnumerableConstraint<T>
         where T : IEnumerable;
 }

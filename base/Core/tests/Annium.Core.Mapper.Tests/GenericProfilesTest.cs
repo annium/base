@@ -42,6 +42,7 @@ public class GenericProfilesTest : TestBase
     }
 
     /// <summary>Valid generic profile that maps types derived from A to D.</summary>
+    /// <typeparam name="T">The profile's source type, constrained to <c>A</c>.</typeparam>
     private class ValidProfile<T> : Profile
         where T : A
     {

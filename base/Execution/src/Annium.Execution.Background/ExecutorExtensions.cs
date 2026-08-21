@@ -82,6 +82,7 @@ public static class ExecutorExtensions
     /// <summary>
     /// Executes a synchronous function and waits for completion
     /// </summary>
+    /// <typeparam name="T">The type of the result produced by the function.</typeparam>
     /// <param name="executor">The executor instance</param>
     /// <param name="task">The function to execute</param>
     /// <returns>The result of the function or None if it could not be scheduled</returns>
@@ -112,6 +113,7 @@ public static class ExecutorExtensions
     /// <summary>
     /// Executes a synchronous function with cancellation support and waits for completion
     /// </summary>
+    /// <typeparam name="T">The type of the result produced by the function.</typeparam>
     /// <param name="executor">The executor instance</param>
     /// <param name="task">The function to execute</param>
     /// <returns>The result of the function or None if it could not be scheduled</returns>
@@ -207,6 +209,7 @@ public static class ExecutorExtensions
     /// <summary>
     /// Executes an asynchronous function and waits for completion
     /// </summary>
+    /// <typeparam name="T">The type of the result produced by the function.</typeparam>
     /// <param name="executor">The executor instance</param>
     /// <param name="task">The function to execute</param>
     /// <returns>The result of the function or None if it could not be scheduled</returns>
@@ -237,6 +240,7 @@ public static class ExecutorExtensions
     /// <summary>
     /// Executes an asynchronous function with cancellation support and waits for completion
     /// </summary>
+    /// <typeparam name="T">The type of the result produced by the function.</typeparam>
     /// <param name="executor">The executor instance</param>
     /// <param name="task">The function to execute</param>
     /// <returns>The result of the function or None if it could not be scheduled</returns>

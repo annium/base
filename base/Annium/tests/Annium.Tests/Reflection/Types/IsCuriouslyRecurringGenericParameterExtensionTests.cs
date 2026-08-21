@@ -36,6 +36,7 @@ public class IsCuriouslyRecurringGenericParameterExtensionTests
     /// <summary>
     /// A demo class used for testing curiously recurring generic parameters.
     /// </summary>
+    /// <typeparam name="T">The curiously-recurring type parameter, constrained to derive from Demo of itself.</typeparam>
     private class Demo<T>
         where T : Demo<T>;
 }

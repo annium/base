@@ -40,6 +40,7 @@ public class TryMakeGenericTypeExtensionTests
     /// <summary>
     /// A demo class used for testing generic type creation.
     /// </summary>
+    /// <typeparam name="T">The type parameter constrained to reference types, closed over via TryMakeGenericType.</typeparam>
     private class Demo<T>
         where T : class;
 }

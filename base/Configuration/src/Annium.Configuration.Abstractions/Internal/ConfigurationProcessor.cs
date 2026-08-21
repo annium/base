@@ -12,6 +12,7 @@ namespace Annium.Configuration.Abstractions.Internal;
 /// <summary>
 /// Processes configuration data and converts it to strongly typed objects
 /// </summary>
+/// <typeparam name="T">The configuration type this processor builds and populates.</typeparam>
 internal class ConfigurationProcessor<T>
     where T : new()
 {

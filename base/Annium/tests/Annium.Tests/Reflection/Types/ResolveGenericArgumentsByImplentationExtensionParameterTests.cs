@@ -254,42 +254,49 @@ public class ResolveGenericArgumentsByImplementationExtensionParameterTests
     /// <summary>
     /// A base class that recursively references itself through its generic parameter.
     /// </summary>
+    /// <typeparam name="T">The curiously-recurring type parameter, constrained to derive from RecurringBase of itself.</typeparam>
     private class RecurringBase<T>
         where T : RecurringBase<T>;
 
     /// <summary>
     /// Interface constraint that requires the type parameter to implement IEquatable.
     /// </summary>
+    /// <typeparam name="T">The type parameter constrained to implement IEquatable of itself.</typeparam>
     private interface IEquatableConstraint<T>
         where T : IEquatable<T>;
 
     /// <summary>
     /// Interface constraint that requires the type parameter to be a class.
     /// </summary>
+    /// <typeparam name="T">The type parameter constrained to reference types.</typeparam>
     private interface IClassConstraint<T>
         where T : class;
 
     /// <summary>
     /// Interface constraint that requires the type parameter to be a struct.
     /// </summary>
+    /// <typeparam name="T">The type parameter constrained to value types.</typeparam>
     private interface IStructConstraint<T>
         where T : struct;
 
     /// <summary>
     /// Interface constraint that requires the type parameter to have a default constructor.
     /// </summary>
+    /// <typeparam name="T">The type parameter constrained to have a public parameterless constructor.</typeparam>
     private interface INewConstraint<T>
         where T : new();
 
     /// <summary>
     /// Interface constraint that requires the type parameter to be a class and implement a base interface.
     /// </summary>
+    /// <typeparam name="T">The type parameter constrained to derive from ClassBase.</typeparam>
     private interface IClassBaseConstraint<T>
         where T : ClassBase;
 
     /// <summary>
     /// Interface constraint that requires the type parameter to implement IEnumerable.
     /// </summary>
+    /// <typeparam name="T">The type parameter constrained to implement IEnumerable.</typeparam>
     private interface IEnumerableConstraint<T>
         where T : IEnumerable;
 

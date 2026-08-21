@@ -66,11 +66,13 @@ public class GetUnboundBaseTypeExtensionTests
     private class Derived : Base;
 
     /// <summary>An open generic base class used to exercise unbound-type resolution.</summary>
+    /// <typeparam name="T">The free type parameter left unbound by direct subclasses.</typeparam>
     private class GenericBase<T>;
 
     /// <summary>A class that closes <see cref="GenericBase{T}"/> with a concrete type argument (<c>int</c>).</summary>
     private class IntDerived : GenericBase<int>;
 
     /// <summary>A class that inherits <see cref="GenericBase{T}"/> while keeping the type parameter open.</summary>
+    /// <typeparam name="T">The type parameter forwarded unbound to <c>GenericBase</c>.</typeparam>
     private class OpenDerived<T> : GenericBase<T>;
 }

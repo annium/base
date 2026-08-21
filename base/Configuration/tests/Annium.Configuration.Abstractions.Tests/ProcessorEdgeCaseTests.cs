@@ -285,6 +285,7 @@ public class ProcessorEdgeCaseTests
     /// entry has a null key. Used solely to exercise the null-key guard in
     /// <c>ObjectConfigurationProvider.ProcessDictionary</c>.
     /// </summary>
+    /// <typeparam name="TValue">The type of the single value stored under the null key.</typeparam>
     private sealed class NullKeyDictionary<TValue> : IReadOnlyDictionary<string?, TValue>
     {
         /// <summary>The single value returned for every lookup and the sole element in the enumerator.</summary>

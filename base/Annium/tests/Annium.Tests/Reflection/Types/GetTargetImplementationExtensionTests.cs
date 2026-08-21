@@ -340,12 +340,16 @@ public partial class GetTargetImplementationExtensionTests
     /// <summary>
     /// A class used for testing parent other inheritance.
     /// </summary>
+    /// <typeparam name="T1">The element type whose array (<c>T1[]</c>) closes the first and fourth type arguments of the base <c>Base&lt;,,,&gt;</c> and <c>IParentOther&lt;,&gt;</c>.</typeparam>
+    /// <typeparam name="T2">The struct-constrained type used directly as the second type argument of the base <c>Base&lt;,,,&gt;</c>.</typeparam>
     private class ParentOther<T1, T2> : Base<T1[], T2, bool, IEnumerable<T1[]>>, IParentOther<T1, T2>
         where T2 : struct;
 
     /// <summary>
     /// A class used for testing parent two inheritance.
     /// </summary>
+    /// <typeparam name="T1">The struct-constrained type passed straight through as the first type argument of the base <c>ParentOne&lt;,&gt;</c>.</typeparam>
+    /// <typeparam name="T2">The <c>IEnumerable</c>-constrained type wrapped in <c>IReadOnlyList&lt;T2&gt;</c> to close the second type argument of the base <c>ParentOne&lt;,&gt;</c>.</typeparam>
     private class ParentTwo<T1, T2> : ParentOne<T1, IReadOnlyList<T2>>, IParentTwo<T1, T2>
         where T1 : struct
         where T2 : IEnumerable;
@@ -353,12 +357,18 @@ public partial class GetTargetImplementationExtensionTests
     /// <summary>
     /// A class used for testing parent one inheritance.
     /// </summary>
+    /// <typeparam name="T1">The struct-constrained type used as the second type argument of the base <c>Base&lt;,,,&gt;</c>.</typeparam>
+    /// <typeparam name="T2">The type wrapped in <c>List&lt;T2&gt;</c> to close the first and (via <c>IEnumerable&lt;List&lt;T2&gt;&gt;</c>) fourth type arguments of the base <c>Base&lt;,,,&gt;</c>.</typeparam>
     private class ParentOne<T1, T2> : Base<List<T2>, T1, int, IEnumerable<List<T2>>>, IParentOne<T1, T2>
         where T1 : struct;
 
     /// <summary>
     /// A base class used for testing inheritance.
     /// </summary>
+    /// <typeparam name="T1">The class-constrained element type, also required as the element type of the <c>IEnumerable&lt;T1&gt;</c> constraint on <c>T4</c>.</typeparam>
+    /// <typeparam name="T2">The struct-constrained type parameter.</typeparam>
+    /// <typeparam name="T3">The unconstrained type parameter.</typeparam>
+    /// <typeparam name="T4">The type parameter constrained to <c>IEnumerable&lt;T1&gt;</c>.</typeparam>
     private class Base<T1, T2, T3, T4> : IBase<T1, T2, T3, T4>
         where T1 : class
         where T2 : struct
@@ -367,6 +377,10 @@ public partial class GetTargetImplementationExtensionTests
     /// <summary>
     /// A base struct used for testing inheritance.
     /// </summary>
+    /// <typeparam name="T1">The class-constrained element type, also required as the element type of the <c>IEnumerable&lt;T1&gt;</c> constraint on <c>T4</c>.</typeparam>
+    /// <typeparam name="T2">The struct-constrained type parameter.</typeparam>
+    /// <typeparam name="T3">The unconstrained type parameter.</typeparam>
+    /// <typeparam name="T4">The type parameter constrained to <c>IEnumerable&lt;T1&gt;</c>.</typeparam>
     private struct BaseStruct<T1, T2, T3, T4> : IBase<T1, T2, T3, T4>
         where T1 : class
         where T2 : struct
@@ -375,12 +389,16 @@ public partial class GetTargetImplementationExtensionTests
     /// <summary>
     /// An interface used for testing parent other inheritance.
     /// </summary>
+    /// <typeparam name="T1">The element type whose array (<c>T1[]</c>) closes the first and fourth type arguments of the base <c>IBase&lt;,,,&gt;</c>.</typeparam>
+    /// <typeparam name="T2">The struct-constrained type used directly as the second type argument of the base <c>IBase&lt;,,,&gt;</c>.</typeparam>
     private interface IParentOther<T1, T2> : IBase<T1[], T2, bool, IEnumerable<T1[]>>
         where T2 : struct;
 
     /// <summary>
     /// An interface used for testing parent two inheritance.
     /// </summary>
+    /// <typeparam name="T1">The struct-constrained type passed straight through as the first type argument of the base <c>IParentOne&lt;,&gt;</c>.</typeparam>
+    /// <typeparam name="T2">The <c>IEnumerable</c>-constrained type wrapped in <c>IReadOnlyList&lt;T2&gt;</c> to close the second type argument of the base <c>IParentOne&lt;,&gt;</c>.</typeparam>
     private interface IParentTwo<T1, T2> : IParentOne<T1, IReadOnlyList<T2>>
         where T1 : struct
         where T2 : IEnumerable;
@@ -388,12 +406,18 @@ public partial class GetTargetImplementationExtensionTests
     /// <summary>
     /// An interface used for testing parent one inheritance.
     /// </summary>
+    /// <typeparam name="T1">The struct-constrained type used as the second type argument of the base <c>IBase&lt;,,,&gt;</c>.</typeparam>
+    /// <typeparam name="T2">The type wrapped in <c>List&lt;T2&gt;</c> to close the first and (via <c>IEnumerable&lt;List&lt;T2&gt;&gt;</c>) fourth type arguments of the base <c>IBase&lt;,,,&gt;</c>.</typeparam>
     private interface IParentOne<T1, T2> : IBase<List<T2>, T1, int, IEnumerable<List<T2>>>
         where T1 : struct;
 
     /// <summary>
     /// An interface used for testing base inheritance.
     /// </summary>
+    /// <typeparam name="T1">The class-constrained element type, also required as the element type of the <c>IEnumerable&lt;T1&gt;</c> constraint on <c>T4</c>.</typeparam>
+    /// <typeparam name="T2">The struct-constrained type parameter.</typeparam>
+    /// <typeparam name="T3">The unconstrained type parameter.</typeparam>
+    /// <typeparam name="T4">The type parameter constrained to <c>IEnumerable&lt;T1&gt;</c>.</typeparam>
     private interface IBase<T1, T2, T3, T4>
         where T1 : class
         where T2 : struct
@@ -442,24 +466,28 @@ public partial class GetTargetImplementationExtensionTests
     /// <summary>
     /// An interface used for testing class constraints.
     /// </summary>
+    /// <typeparam name="T">The class-constrained type parameter under test.</typeparam>
     private interface IClassConstraint<T>
         where T : class;
 
     /// <summary>
     /// An interface used for testing struct constraints.
     /// </summary>
+    /// <typeparam name="T">The struct-constrained type parameter under test.</typeparam>
     private interface IStructConstraint<T>
         where T : struct;
 
     /// <summary>
     /// An interface used for testing new constraints.
     /// </summary>
+    /// <typeparam name="T">The type parameter under test that requires a public parameterless constructor.</typeparam>
     private interface INewConstraint<T>
         where T : new();
 
     /// <summary>
     /// An interface used for testing parameter constraints.
     /// </summary>
+    /// <typeparam name="T">The type parameter under test that must implement <c>IEnumerable</c>.</typeparam>
     private interface IParameterConstraint<T>
         where T : IEnumerable;
 }
