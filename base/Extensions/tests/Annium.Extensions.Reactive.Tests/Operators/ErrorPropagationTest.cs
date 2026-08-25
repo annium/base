@@ -76,6 +76,33 @@ public class ErrorPropagationTest : TestBase
         AssertForwardsError(source => source.SelectSequentialAsync(x => Task.FromResult(x)));
 
     /// <summary>
+    /// A tracked source that fails tells its subscribers so, and does not leave a later subscriber waiting
+    /// for a sequence that has already ended.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public async Task TrackCompletion_SourceFails_ReachesSubscribersAndTerminates()
+    {
+        // arrange
+        var subject = new Subject<int>();
+        var tracked = subject.TrackCompletion(Logger);
+        var early = new TaskCompletionSource<Exception>();
+        using var subscription = tracked.Subscribe(_ => { }, e => early.TrySetResult(e), () => { });
+
+        // act
+        subject.OnError(new InvalidOperationException("source failed"));
+
+        // assert - the subscriber present at the time hears about it
+        await Bounded(early.Task);
+        (await early.Task).As<InvalidOperationException>().Message.Is("source failed");
+
+        // and one arriving afterwards is not left subscribed to a source that will never speak again
+        var late = new TaskCompletionSource();
+        using var lateSubscription = tracked.Subscribe(_ => { }, _ => late.TrySetResult(), () => late.TrySetResult());
+        await Bounded(late.Task);
+    }
+
+    /// <summary>
     /// Subscribes to the operator under test and asserts the source's failure reaches the subscriber.
     /// </summary>
     /// <param name="apply">Applies the operator to a source.</param>

@@ -23,7 +23,7 @@ public static class TrackCompletionOperatorExtensions
     {
         var ctx = new CompletionContext<T>(source, logger);
 
-        source.Subscribe(delegate { }, ctx.Complete, ctx.CompletionCt);
+        source.Subscribe(delegate { }, ctx.Fail, ctx.Complete, ctx.CompletionCt);
 
         ctx.Trace("create observable");
 
@@ -32,14 +32,7 @@ public static class TrackCompletionOperatorExtensions
             var target = observer.GetFullId();
             ctx.Trace<string>("{target} - handle", target);
 
-            if (!ctx.IsCompleted)
-                return ctx.Subscribe(observer);
-
-            ctx.Trace<string>("{target} - complete", target);
-            observer.OnCompleted();
-            ctx.Trace<string>("{target} - completed", target);
-
-            return Disposable.Empty;
+            return ctx.Subscribe(observer);
         });
     }
 }
@@ -54,6 +47,11 @@ file record CompletionContext<T> : ILogSubject
     /// Gets a value indicating whether the source observable has completed
     /// </summary>
     public bool IsCompleted { get; private set; }
+
+    /// <summary>
+    /// Gets the failure the source ended with, or null if it completed normally or has not ended yet
+    /// </summary>
+    public Exception? Error { get; private set; }
 
     /// <summary>
     /// Gets the logger instance for this completion context
@@ -98,17 +96,69 @@ file record CompletionContext<T> : ILogSubject
     /// <returns>A disposable subscription</returns>
     public IDisposable Subscribe(IObserver<T> observer)
     {
+        Exception? error;
         lock (this)
         {
             this.Trace("start");
 
-            _incompleteObservers.Add(observer);
-            var subscription = _source.Subscribe(observer.OnNext, observer.OnError);
+            if (!IsCompleted)
+            {
+                _incompleteObservers.Add(observer);
+                var subscription = _source.Subscribe(observer.OnNext, observer.OnError);
 
-            this.Trace("done");
+                this.Trace("done");
 
-            return subscription;
+                return subscription;
+            }
+
+            error = Error;
         }
+
+        // the source has already ended - hand that outcome on, rather than subscribe to a source that will never speak again
+        this.Trace<string>("{observer} - already ended", observer.GetFullId());
+        if (error is null)
+            observer.OnCompleted();
+        else
+            observer.OnError(error);
+
+        return Disposable.Empty;
+    }
+
+    /// <summary>
+    /// Marks the observable as failed and passes the failure to all incomplete observers
+    /// </summary>
+    /// <param name="error">The failure the source ended with</param>
+    public void Fail(Exception error)
+    {
+        this.Trace("start");
+
+        IReadOnlyCollection<IObserver<T>> observers;
+        lock (this)
+        {
+            if (IsCompleted)
+            {
+                this.Trace("source already ended");
+                return;
+            }
+
+            IsCompleted = true;
+            Error = error;
+
+            this.Trace("fail {incompleteObserversCount} observers", _incompleteObservers.Count);
+            observers = _incompleteObservers.ToArray();
+            _incompleteObservers.Clear();
+        }
+
+        foreach (var observer in observers)
+        {
+            this.Trace<string>("fail {observer}", observer.GetFullId());
+            observer.OnError(error);
+        }
+
+        this.Trace("cancel cts");
+        _completionCts.Cancel();
+
+        this.Trace("done");
     }
 
     /// <summary>
