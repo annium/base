@@ -19,4 +19,12 @@ public sealed class ArgumentParseException : Exception
     /// <param name="message">Description of what could not be parsed.</param>
     public ArgumentParseException(string message)
         : base(message) { }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ArgumentParseException"/> class.
+    /// </summary>
+    /// <param name="message">Description of what could not be parsed.</param>
+    /// <param name="innerException">The failure that made the value unparsable.</param>
+    public ArgumentParseException(string message, Exception innerException)
+        : base(message, innerException) { }
 }

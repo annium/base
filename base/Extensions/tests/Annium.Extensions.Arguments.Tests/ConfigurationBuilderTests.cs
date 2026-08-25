@@ -149,6 +149,32 @@ public class ConfigurationBuilderTests : TestBase
     }
 
     /// <summary>
+    /// A value that cannot be converted to the property's type is a usage error like any other, and is
+    /// reported as one - not as whatever the conversion happened to throw.
+    /// </summary>
+    [Fact]
+    public void Build_ValueOfTheWrongType_ThrowsArgumentParseException()
+    {
+        // act & assert
+        var error = Wrap.It(() => Build<TypedConfiguration>("-count", "abc")).Throws<ArgumentParseException>();
+        error.Message.Contains("abc").IsTrue("the message must name the value that could not be converted");
+        error.Message.Contains(nameof(TypedConfiguration.Count)).IsTrue("and the option it was given for");
+    }
+
+    /// <summary>
+    /// A value that can be converted still binds.
+    /// </summary>
+    [Fact]
+    public void Build_ValueOfTheRightType_Binds()
+    {
+        // act
+        var cfg = Build<TypedConfiguration>("-count", "3");
+
+        // assert
+        cfg.Count.Is(3);
+    }
+
+    /// <summary>
     /// Builds a configuration of the given type from a command line.
     /// </summary>
     /// <typeparam name="T">The configuration type to build.</typeparam>
@@ -241,4 +267,16 @@ public class AliasedConfiguration
     /// </summary>
     [Option("o")]
     public string Output { get; set; } = string.Empty;
+}
+
+/// <summary>
+/// Configuration with a non-string option.
+/// </summary>
+public class TypedConfiguration
+{
+    /// <summary>
+    /// Gets or sets how many.
+    /// </summary>
+    [Option]
+    public int Count { get; set; }
 }

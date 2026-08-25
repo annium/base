@@ -234,6 +234,19 @@ internal class ConfigurationBuilder : IConfigurationBuilder
                 $"Given value '{value}' isn't in allowed values: {string.Join(", ", values)}"
             );
 
-        return _mapper.Map(value, type);
+        // every other way a command line can be wrong is reported as an ArgumentParseException; a value the
+        // mapper cannot convert used to come out as whatever the conversion threw, so a caller catching
+        // usage errors to print help missed exactly the most ordinary mistake of all
+        try
+        {
+            return _mapper.Map(value, type);
+        }
+        catch (Exception e)
+        {
+            throw new ArgumentParseException(
+                $"Given value '{value}' for '{property.Name}' is not a valid {type.FriendlyName()}",
+                e
+            );
+        }
     }
 }
