@@ -112,6 +112,32 @@ public class CommanderTests : TestBase
     }
 
     /// <summary>
+    /// Asking a command for help prints its usage rather than running it: what it takes, which parts are
+    /// required, and what each one is for.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public async Task RunAsync_CommandWithHelp_PrintsItsUsage()
+    {
+        // arrange
+        var trace = Get<Trace>();
+
+        // act
+        var output = await CaptureAsync(() =>
+            Commander.RunAsync<HelpGroup>(Provider, ["deploy", "-help"], TestContext.Current.CancellationToken)
+        );
+
+        // assert
+        trace.Calls.IsEmpty("asking for help must not run the command");
+        output.Contains("deploy").IsTrue("the usage line must name the command");
+        output.Contains("target").IsTrue("and its required position");
+        output.Contains("[tag]").IsTrue("with an optional position in brackets");
+        output.Contains("-force").IsTrue("flags are listed");
+        output.Contains("-o|-output").IsTrue("and an aliased option shows both spellings");
+        output.Contains("where to deploy to").IsTrue("each argument's description is shown");
+    }
+
+    /// <summary>
     /// Runs the given call with the console redirected, and returns what it printed.
     /// </summary>
     /// <param name="act">The call to run.</param>
@@ -287,5 +313,100 @@ public class DefaultingGroup : Group, ICommandDescriptor
     public DefaultingGroup()
     {
         Add<DefaultGreetCommand>();
+    }
+}
+
+/// <summary>
+/// Configuration exercising every shape the help builder renders.
+/// </summary>
+public class DeployConfiguration
+{
+    /// <summary>
+    /// Gets or sets where to deploy to.
+    /// </summary>
+    [Position(1)]
+    [Help("where to deploy to")]
+    public string Target { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the optional tag to deploy.
+    /// </summary>
+    [Position(2, isRequired: false)]
+    [Help("which tag to deploy")]
+    public string Tag { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the output directory.
+    /// </summary>
+    [Option("o")]
+    [Help("where to write the result")]
+    public string Output { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets a value indicating whether to deploy regardless.
+    /// </summary>
+    [Option]
+    [Help("deploy even if checks fail")]
+    public bool Force { get; set; }
+}
+
+/// <summary>
+/// Command that records the deployment it was asked for.
+/// </summary>
+public class DeployCommand : Command<DeployConfiguration>, ICommandDescriptor
+{
+    /// <summary>
+    /// Gets the identifier this command is invoked by.
+    /// </summary>
+    public static string Id => "deploy";
+
+    /// <summary>
+    /// Gets the description of this command.
+    /// </summary>
+    public static string Description => "deploys the thing";
+
+    /// <summary>
+    /// The trace this command records into.
+    /// </summary>
+    private readonly Trace _trace;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DeployCommand"/> class.
+    /// </summary>
+    /// <param name="trace">The trace to record into.</param>
+    public DeployCommand(Trace trace)
+    {
+        _trace = trace;
+    }
+
+    /// <summary>
+    /// Records the deployment.
+    /// </summary>
+    /// <param name="cfg">The command configuration.</param>
+    /// <param name="ct">Cancellation token.</param>
+    public override void Handle(DeployConfiguration cfg, CancellationToken ct) => _trace.Add($"deploy {cfg.Target}");
+}
+
+/// <summary>
+/// A group holding the command whose help is under test.
+/// </summary>
+public class HelpGroup : Group, ICommandDescriptor
+{
+    /// <summary>
+    /// Gets the identifier of this group.
+    /// </summary>
+    public static string Id => string.Empty;
+
+    /// <summary>
+    /// Gets the description of this group.
+    /// </summary>
+    public static string Description => "a group with a documented command";
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="HelpGroup"/> class.
+    /// </summary>
+    public HelpGroup()
+    {
+        Add<DeployCommand>();
     }
 }
