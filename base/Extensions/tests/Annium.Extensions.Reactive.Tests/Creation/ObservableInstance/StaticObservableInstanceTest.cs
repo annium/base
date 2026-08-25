@@ -118,6 +118,45 @@ public class StaticObservableInstanceTest : TestBase
     }
 
     /// <summary>
+    /// A subscriber arriving after the factory failed is told about the failure, not that the sequence
+    /// completed normally. Replaying the wrong terminal notification is the same silent swallow as
+    /// replaying none.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public async Task Resubscribed_AfterItFailed_ReportsTheFailure()
+    {
+        // arrange
+        var instance = ObservableExt.StaticAsyncInstance<int>(
+            _ => throw new InvalidOperationException("factory failed"),
+            TestContext.Current.CancellationToken,
+            Get<ILogger>()
+        );
+
+        var first = new TaskCompletionSource<Exception>();
+        var subscription = instance.Subscribe(_ => { }, e => first.TrySetResult(e), () => { });
+        await Bounded.AwaitAsync(first.Task);
+        // VSTHRD103: IDisposable is the only shape Rx subscriptions offer
+#pragma warning disable VSTHRD103
+        subscription.Dispose();
+#pragma warning restore VSTHRD103
+
+        // act - a second consumer arrives after the failure
+        var second = new TaskCompletionSource<Exception?>();
+        using var lateSubscription = instance.Subscribe(
+            _ => { },
+            e => second.TrySetResult(e),
+            () => second.TrySetResult(null)
+        );
+
+        // assert
+        await Bounded.AwaitAsync(second.Task);
+        var error = await second.Task;
+        error.IsNotDefault("a subscriber arriving after a failure must hear about the failure");
+        error.As<InvalidOperationException>().Message.Is("factory failed");
+    }
+
+    /// <summary>
     /// A sample data class used for testing observable events.
     /// </summary>
     private class Sample

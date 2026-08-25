@@ -37,6 +37,11 @@ internal class StaticObservableInstance<T> : ObservableInstanceBase<T>, IObserva
     private bool _isEnded;
 
     /// <summary>
+    /// The failure the run ended with, or null if it completed normally
+    /// </summary>
+    private Exception? _error;
+
+    /// <summary>
     /// Initializes a new instance of the StaticObservableInstance class
     /// </summary>
     /// <param name="factory">Factory function that produces an async disposal function</param>
@@ -86,9 +91,15 @@ internal class StaticObservableInstance<T> : ObservableInstanceBase<T>, IObserva
             }
         }
 
-        // there is nothing left to join. Saying so beats attaching to a source that will never speak again
-        this.Trace("already ended - complete subscriber at once");
-        observer.OnCompleted();
+        // there is nothing left to join. Saying so beats attaching to a source that will never speak again -
+        // and it has to be what actually happened: replaying a completion over a failure swallows it just
+        // as thoroughly as replaying nothing at all
+        var error = Volatile.Read(ref _error);
+        this.Trace("already ended - terminate subscriber at once");
+        if (error is null)
+            observer.OnCompleted();
+        else
+            observer.OnError(error);
 
         return Disposable.Empty;
     }
@@ -122,14 +133,14 @@ internal class StaticObservableInstance<T> : ObservableInstanceBase<T>, IObserva
             this.Trace("dispose");
             await disposeAsync();
             this.Trace("invoke onCompleted");
-            End();
+            End(null);
             ctx.OnCompleted();
             this.Trace("done");
         }
         catch (Exception e)
         {
             this.Trace("Error: {e}", e);
-            End();
+            End(e);
             ctx.OnError(e);
         }
     }
@@ -139,9 +150,13 @@ internal class StaticObservableInstance<T> : ObservableInstanceBase<T>, IObserva
     /// arriving while that notification is being delivered would otherwise be added to a run that has
     /// nothing left to say
     /// </summary>
-    private void End()
+    /// <param name="error">The failure the run ended with, or null if it completed normally</param>
+    private void End(Exception? error)
     {
         lock (Lock)
+        {
+            _error = error;
             _isEnded = true;
+        }
     }
 }
