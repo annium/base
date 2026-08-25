@@ -157,6 +157,76 @@ public class StaticObservableInstanceTest : TestBase
     }
 
     /// <summary>
+    /// A failure in the dispose delegate the factory returned reaches the subscribers that are there at
+    /// the time. Reporting it went through the same guard that disposal had just armed, so the report
+    /// itself threw and the subscribers were left waiting on a run that had already ended.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public async Task DisposeThrows_ReachesTheSubscribersPresentAtTheTime()
+    {
+        // arrange
+        var instance = ObservableExt.StaticAsyncInstance<int>(
+            _ => Task.FromResult<Func<Task>>(() => throw new InvalidOperationException("dispose failed")),
+            TestContext.Current.CancellationToken,
+            Get<ILogger>()
+        );
+
+        // act
+        var terminal = new TaskCompletionSource<Exception?>();
+        using var subscription = instance.Subscribe(
+            _ => { },
+            e => terminal.TrySetResult(e),
+            () => terminal.TrySetResult(null)
+        );
+
+        // assert
+        await Bounded.AwaitAsync(terminal.Task);
+        var error = await terminal.Task;
+        error.IsNotDefault("a failing disposal must reach the subscribers, not silence them");
+        error.As<InvalidOperationException>().Message.Is("dispose failed");
+    }
+
+    /// <summary>
+    /// A subscriber arriving while the terminal notification is being delivered is told about it too. The
+    /// run is marked finished before that notification goes out precisely so this subscriber takes the
+    /// already-ended path instead of joining a run with nothing left to say.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public async Task Subscribed_WhileTerminalNotificationIsDelivered_IsAlsoTold()
+    {
+        // arrange
+        var instance = ObservableExt.StaticAsyncInstance<int>(
+            _ => Task.FromResult<Func<Task>>(() => Task.CompletedTask),
+            TestContext.Current.CancellationToken,
+            Get<ILogger>()
+        );
+
+        var late = new TaskCompletionSource();
+        var lateNotifications = 0;
+
+        // act - the second subscriber arrives from inside the first one's completion callback, which is
+        // the only way to land inside that window deterministically
+        using var subscription = instance.Subscribe(
+            _ => { },
+            () =>
+                instance.Subscribe(
+                    _ => { },
+                    () =>
+                    {
+                        Interlocked.Increment(ref lateNotifications);
+                        late.TrySetResult();
+                    }
+                )
+        );
+
+        // assert
+        await Bounded.AwaitAsync(late.Task);
+        Volatile.Read(ref lateNotifications).Is(1, "the late subscriber must be completed exactly once");
+    }
+
+    /// <summary>
     /// A sample data class used for testing observable events.
     /// </summary>
     private class Sample

@@ -134,14 +134,14 @@ internal class StaticObservableInstance<T> : ObservableInstanceBase<T>, IObserva
             await disposeAsync();
             this.Trace("invoke onCompleted");
             End(null);
-            ctx.OnCompleted();
+            Terminate(null);
             this.Trace("done");
         }
         catch (Exception e)
         {
             this.Trace("Error: {e}", e);
             End(e);
-            ctx.OnError(e);
+            Terminate(e);
         }
     }
 

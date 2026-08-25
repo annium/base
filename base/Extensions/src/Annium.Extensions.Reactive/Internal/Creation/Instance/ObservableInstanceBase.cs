@@ -65,6 +65,37 @@ internal abstract class ObservableInstanceBase<T> : ILogSubject
     }
 
     /// <summary>
+    /// Delivers the sequence's terminal notification to the current subscribers, bypassing the disposal
+    /// guard. This is the instance reporting how its own run ended, and a run ends precisely when disposal
+    /// has been initiated - routing it through the guard meant for a still-running factory made the report
+    /// throw, leaving those subscribers with nothing at all
+    /// </summary>
+    /// <param name="error">The failure the run ended with, or null if it completed normally</param>
+    protected void Terminate(Exception? error)
+    {
+        var subscribers = GetSubscribersSlice();
+
+        if (error is not null)
+        {
+            foreach (var observer in subscribers)
+                observer.OnError(error);
+
+            return;
+        }
+
+        if (_isCompleted)
+        {
+            this.Trace("Observable already completed");
+            return;
+        }
+
+        _isCompleted = true;
+
+        foreach (var observer in subscribers)
+            observer.OnCompleted();
+    }
+
+    /// <summary>
     /// Emits a value to all current subscribers
     /// </summary>
     /// <param name="value">The value to emit</param>
