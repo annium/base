@@ -125,7 +125,7 @@ internal abstract class ShellInstanceBase : IShellInstance, ILogSubject
 
         var result = StartProcess(process, ct).Task;
 
-        return new ShellAsyncResult(process.StandardInput, process.StandardOutput, process.StandardError, result);
+        return new ShellAsyncResult(process.StandardInput, result);
     }
 
     /// <summary>

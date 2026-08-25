@@ -25,6 +25,62 @@ public class ShellStdoutTests : TestBase
     }
 
     /// <summary>
+    /// A command started rather than awaited still reports its whole output through its result. The output
+    /// and error streams are drained internally and deliberately not handed out - two readers on one stream
+    /// split the bytes between them.
+    /// Skipped on Windows - this test drives a POSIX shell.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
+    [Fact]
+    public async Task Start_ResultCarriesTheWholeOutput()
+    {
+        if (OperatingSystem.IsWindows())
+            return;
+
+        // arrange
+        var shell = Get<IShell>();
+
+        // act - repeated, because a split between two readers would show up as an occasional short read
+        for (var i = 0; i < 10; i++)
+        {
+            var started = shell.Cmd("sh", "-c", "echo hello-from-start").Start(TestContext.Current.CancellationToken);
+
+            // assert
+#pragma warning disable VSTHRD003
+            var result = await started.Result;
+#pragma warning restore VSTHRD003
+            result.IsSuccess.IsTrue();
+            result.Output.Trim().Is("hello-from-start");
+        }
+    }
+
+    /// <summary>
+    /// What the caller writes to a started command's input reaches it.
+    /// Skipped on Windows - this test drives a POSIX shell.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
+    [Fact]
+    public async Task Start_InputReachesTheCommand()
+    {
+        if (OperatingSystem.IsWindows())
+            return;
+
+        // arrange
+        var shell = Get<IShell>();
+        var started = shell.Cmd("cat").Start(TestContext.Current.CancellationToken);
+
+        // act
+        await started.Input.WriteLineAsync("through stdin");
+        started.Input.Close();
+
+        // assert
+#pragma warning disable VSTHRD003
+        var result = await started.Result;
+#pragma warning restore VSTHRD003
+        result.Output.Trim().Is("through stdin");
+    }
+
+    /// <summary>
     /// A ~100 KB stdout payload is captured in full; no truncation.
     /// Skipped on Windows — this test uses a POSIX shell to generate the payload.
     /// </summary>
