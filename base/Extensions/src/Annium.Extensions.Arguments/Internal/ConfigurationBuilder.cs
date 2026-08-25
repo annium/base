@@ -72,6 +72,26 @@ internal class ConfigurationBuilder : IConfigurationBuilder
     }
 
     /// <summary>
+    /// Determines whether the command line asks for help, without binding it to anything.
+    /// </summary>
+    /// <param name="args">Array of command line arguments to inspect</param>
+    /// <returns>True when help was asked for</returns>
+    public bool IsHelpRequested(string[] args)
+    {
+        foreach (var arg in args)
+        {
+            // everything past the delimiter belongs to the command, not to this
+            if (arg.Length > 0 && arg.All(c => c == Constants.OptionSign))
+                return false;
+
+            if (arg.StartsWith(Constants.OptionSign) && arg.PascalCase() == HelpName)
+                return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
     /// Sets positional argument values on the configuration object based on position attributes.
     /// </summary>
     /// <typeparam name="T">The configuration type</typeparam>
@@ -100,6 +120,13 @@ internal class ConfigurationBuilder : IConfigurationBuilder
             property.SetValue(value, GetValue(property, property.PropertyType, positions[i - 1]));
             i++;
         }
+
+        // arguments read past and dropped let a mistyped invocation run as though the surplus had never
+        // been typed
+        if (positions.Length >= i)
+            throw new ArgumentParseException(
+                $"Unexpected positional arguments: {string.Join(", ", positions.Skip(i - 1).Select(x => $"'{x}'"))}"
+            );
     }
 
     /// <summary>
@@ -197,7 +224,15 @@ internal class ConfigurationBuilder : IConfigurationBuilder
             .FirstOrDefault();
 
         if (property != null!)
+        {
             property.SetValue(value, GetValue(property, property.PropertyType, raw));
+
+            return;
+        }
+
+        // parsed and then discarded: whoever typed them past the delimiter meant them for something
+        if (raw.Length > 0)
+            throw new ArgumentParseException($"Raw arguments '{raw}' given, but nothing takes them");
     }
 
     /// <summary>
@@ -253,6 +288,11 @@ internal class ConfigurationBuilder : IConfigurationBuilder
 
         return new OptionSpec(names, kinds);
     }
+
+    /// <summary>
+    /// The normalised spelling the help flag answers to.
+    /// </summary>
+    private const string HelpName = "Help";
 
     /// <summary>
     /// The normalised names an option answers to: its property name, and its alias when it has one.

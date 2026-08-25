@@ -361,6 +361,30 @@ public class ConfigurationBuilderTests : TestBase
     }
 
     /// <summary>
+    /// More positional arguments than the command declares is a usage error. They used to be read past and
+    /// dropped, so a mistyped invocation ran as though the surplus had never been typed.
+    /// </summary>
+    [Fact]
+    public void Build_MorePositionsThanDeclared_Throws()
+    {
+        // act & assert
+        var error = Wrap.It(() => Build<PositionalConfiguration>("build", "release", "extra"))
+            .Throws<ArgumentParseException>();
+        error.Message.Contains("extra").IsTrue("the message must name what could not be placed");
+    }
+
+    /// <summary>
+    /// Arguments after the raw delimiter need somewhere to go. With no property to receive them they were
+    /// parsed and then discarded.
+    /// </summary>
+    [Fact]
+    public void Build_RawWithoutSomewhereToPutIt_Throws()
+    {
+        // act & assert
+        Wrap.It(() => Build<PositionalConfiguration>("build", "--", "secret")).Throws<ArgumentParseException>();
+    }
+
+    /// <summary>
     /// Builds a configuration of the given type from a command line.
     /// </summary>
     /// <typeparam name="T">The configuration type to build.</typeparam>

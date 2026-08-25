@@ -89,7 +89,7 @@ public abstract class Group : CommandBase
             return;
         }
 
-        if (configurationBuilder.Build<HelpConfiguration>(args).Help)
+        if (configurationBuilder.IsHelpRequested(args))
         {
             Console.WriteLine(helpBuilder.BuildHelp(id, description, _commands));
             return;

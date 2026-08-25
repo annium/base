@@ -13,4 +13,16 @@ internal interface IConfigurationBuilder
     /// <returns>A fully populated configuration object of type T</returns>
     T Build<T>(string[] args)
         where T : new();
+
+    /// <summary>
+    /// Determines whether the command line asks for help, without binding it to anything.
+    /// </summary>
+    /// <param name="args">Array of command line arguments to inspect</param>
+    /// <returns>True when help was asked for</returns>
+    /// <remarks>
+    /// This runs over arguments belonging to whatever command is about to handle them, so it cannot go
+    /// through <see cref="Build{T}"/>: a type that accepts only the help flag would reject everything else
+    /// the command legitimately takes.
+    /// </remarks>
+    bool IsHelpRequested(string[] args);
 }

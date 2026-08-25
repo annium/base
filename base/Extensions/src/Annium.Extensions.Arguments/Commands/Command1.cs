@@ -30,7 +30,7 @@ public abstract class Command<T> : CommandBase
     /// <returns>A completed task</returns>
     public override Task ProcessAsync(string id, string description, string[] args, CancellationToken ct)
     {
-        if (Root.ConfigurationBuilder.Build<HelpConfiguration>(args).Help)
+        if (Root.ConfigurationBuilder.IsHelpRequested(args))
         {
             Console.WriteLine(Root.HelpBuilder.BuildHelp(id, description, typeof(T)));
             return Task.CompletedTask;
