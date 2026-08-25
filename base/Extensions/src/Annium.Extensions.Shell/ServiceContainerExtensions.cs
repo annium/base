@@ -20,20 +20,12 @@ public static class ServiceContainerExtensions
     {
         services.Add<IShell, Internal.Shell>().Singleton();
 
-        if (OperatingSystem.IsWindows())
-            services
-                .Add<Func<string[], IShellInstance>>(sp =>
-                    cmd => new WindowsShellInstance(cmd, sp.GetRequiredService<ILogger>())
-                )
-                .AsSelf()
-                .Singleton();
-        else
-            services
-                .Add<Func<string[], IShellInstance>>(sp =>
-                    cmd => new UnixShellInstance(cmd, sp.GetRequiredService<ILogger>())
-                )
-                .AsSelf()
-                .Singleton();
+        // one implementation for every platform: the Windows path used to route the command line through
+        // cmd.exe, and once it stopped doing that nothing about starting the process differed
+        services
+            .Add<Func<string[], IShellInstance>>(sp => cmd => new ShellInstance(cmd, sp.GetRequiredService<ILogger>()))
+            .AsSelf()
+            .Singleton();
 
         return services;
     }

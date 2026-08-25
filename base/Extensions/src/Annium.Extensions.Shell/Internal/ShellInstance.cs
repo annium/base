@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,7 +13,7 @@ namespace Annium.Extensions.Shell.Internal;
 /// <summary>
 /// Base class for platform-specific shell instance implementations
 /// </summary>
-internal abstract class ShellInstanceBase : IShellInstance, ILogSubject
+internal sealed class ShellInstance : IShellInstance, ILogSubject
 {
     /// <summary>
     /// Gets the logger instance for shell operations
@@ -22,12 +23,12 @@ internal abstract class ShellInstanceBase : IShellInstance, ILogSubject
     /// <summary>
     /// The command and arguments to execute
     /// </summary>
-    protected readonly IReadOnlyList<string> Cmd;
+    private readonly IReadOnlyList<string> _cmd;
 
     /// <summary>
     /// Process start configuration information
     /// </summary>
-    protected readonly ProcessStartInfo StartInfo;
+    private readonly ProcessStartInfo _startInfo;
 
     /// <summary>
     /// Indicates whether the command contains sensitive information that should not be logged
@@ -44,11 +45,11 @@ internal abstract class ShellInstanceBase : IShellInstance, ILogSubject
     /// </summary>
     /// <param name="cmd">The command and arguments to execute</param>
     /// <param name="logger">The logger instance for shell operations</param>
-    protected ShellInstanceBase(IReadOnlyList<string> cmd, ILogger logger)
+    public ShellInstance(IReadOnlyList<string> cmd, ILogger logger)
     {
-        Cmd = cmd;
+        _cmd = cmd;
         Logger = logger;
-        StartInfo = new ProcessStartInfo();
+        _startInfo = new ProcessStartInfo();
     }
 
     /// <summary>
@@ -58,7 +59,7 @@ internal abstract class ShellInstanceBase : IShellInstance, ILogSubject
     /// <returns>The shell instance for method chaining</returns>
     public IShellInstance Configure(Action<ProcessStartInfo> configure)
     {
-        configure(StartInfo);
+        configure(_startInfo);
 
         return this;
     }
@@ -130,10 +131,37 @@ internal abstract class ShellInstanceBase : IShellInstance, ILogSubject
     }
 
     /// <summary>
-    /// Creates and configures a platform-specific process for command execution
+    /// Creates and configures the process for command execution
     /// </summary>
+    /// <remarks>
+    /// The executable is launched directly rather than through a shell: routing the command line through
+    /// one made every metacharacter in an argument - and arguments here are paths and branch names, i.e.
+    /// outside input - interpreted by the shell instead of passed to the program. Shell builtins are not
+    /// available as a consequence. ArgumentList passes each argument untouched, where the joined Arguments
+    /// string would be re-parsed and an argument containing a space or a quote would not survive.
+    /// </remarks>
     /// <returns>A configured Process instance ready for execution</returns>
-    protected abstract Process GetProcess();
+    private Process GetProcess()
+    {
+        var process = new Process { EnableRaisingEvents = true };
+
+        process.StartInfo = _startInfo;
+        process.StartInfo.UseShellExecute = false;
+        process.StartInfo.RedirectStandardInput = true;
+        process.StartInfo.RedirectStandardOutput = true;
+        process.StartInfo.RedirectStandardError = true;
+
+        process.StartInfo.FileName = _cmd[0];
+
+        // StartInfo is this instance's own, kept so that Configure survives between runs - so the argument
+        // list has to be rebuilt rather than appended to, or a second run of the same command inherits the
+        // first run's arguments
+        process.StartInfo.ArgumentList.Clear();
+        foreach (var arg in _cmd.Skip(1))
+            process.StartInfo.ArgumentList.Add(arg);
+
+        return process;
+    }
 
     /// <summary>
     /// Starts the process and sets up monitoring for completion and cancellation

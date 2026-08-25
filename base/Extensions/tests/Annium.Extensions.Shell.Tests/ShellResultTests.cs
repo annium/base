@@ -32,6 +32,30 @@ public class ShellResultTests : TestBase
     }
 
     /// <summary>
+    /// Running the same command instance twice runs the same command twice, rather than the second run
+    /// inheriting the first run's arguments.
+    /// Skipped on Windows - these tests drive POSIX utilities.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
+    [Fact]
+    public async Task RunAsync_SameInstanceTwice_DoesNotAccumulateArguments()
+    {
+        if (OperatingSystem.IsWindows())
+            return;
+
+        // arrange
+        var command = Get<IShell>().Cmd("echo", "hi");
+
+        // act
+        var first = await command.RunAsync(TestContext.Current.CancellationToken);
+        var second = await command.RunAsync(TestContext.Current.CancellationToken);
+
+        // assert
+        first.Output.Trim().Is("hi");
+        second.Output.Trim().Is("hi", "the second run must not inherit the first run's arguments");
+    }
+
+    /// <summary>
     /// A command marked sensitive keeps its arguments out of the logs - that is the whole point of the
     /// flag, and a secret passed as an argument is exactly what it is used for.
     /// Skipped on Windows - these tests drive POSIX utilities.
