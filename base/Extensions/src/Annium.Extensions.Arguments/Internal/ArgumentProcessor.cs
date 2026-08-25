@@ -58,11 +58,11 @@ internal class ArgumentProcessor : IArgumentProcessor
             }
             else if (IsFlag(value, next))
                 if (flags.Contains(name))
-                    throw new Exception($"Same flag '{value}' is used twice");
+                    throw new ArgumentParseException($"Same flag '{value}' is used twice");
                 else
                     flags.Add(name);
             else
-                throw new Exception($"Can't process value '{value}', followed by '{next}'");
+                throw new ArgumentParseException($"Can't process value '{value}', followed by '{next}'");
         }
 
         return new RawConfiguration(

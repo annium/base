@@ -83,13 +83,13 @@ internal class ConfigurationBuilder : IConfigurationBuilder
         foreach (var (property, attribute) in properties)
         {
             if (attribute.Position != i)
-                throw new Exception(
+                throw new ArgumentParseException(
                     $"Position argument expected to have position '{i}', but got position '{attribute.Position}"
                 );
 
             if (i > positions.Length)
                 if (attribute.IsRequired)
-                    throw new Exception($"Required position argument '{property.Name}' has no value");
+                    throw new ArgumentParseException($"Required position argument '{property.Name}' has no value");
                 else
                     break;
 
@@ -145,7 +145,7 @@ internal class ConfigurationBuilder : IConfigurationBuilder
             var key = FindOptionName(plainOptionsKeys, property.Name, attribute.Alias);
             if (key == null)
                 if (attribute.IsRequired)
-                    throw new Exception($"Required option argument '{property.Name}' has no value");
+                    throw new ArgumentParseException($"Required option argument '{property.Name}' has no value");
                 else
                     continue;
 
@@ -167,7 +167,7 @@ internal class ConfigurationBuilder : IConfigurationBuilder
             else if ((key = FindOptionName(plainOptionsKeys, property.Name, attribute.Alias)) != null)
                 raw = new[] { plainOptions[key] };
             else if (attribute.IsRequired)
-                throw new Exception($"Required multi option argument '{property.Name}' has no value");
+                throw new ArgumentParseException($"Required multi option argument '{property.Name}' has no value");
             else
                 continue;
 
@@ -230,7 +230,9 @@ internal class ConfigurationBuilder : IConfigurationBuilder
     {
         var values = property.GetCustomAttribute<ValuesAttribute>()?.Values;
         if (values != null && !values.Contains(value))
-            throw new Exception($"Given value '{value}' isn't in allowed values: {string.Join(", ", values)}");
+            throw new ArgumentParseException(
+                $"Given value '{value}' isn't in allowed values: {string.Join(", ", values)}"
+            );
 
         return _mapper.Map(value, type);
     }
