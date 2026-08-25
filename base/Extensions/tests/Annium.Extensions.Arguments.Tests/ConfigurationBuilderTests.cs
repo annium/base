@@ -396,6 +396,30 @@ public class ConfigurationBuilderTests : TestBase
     }
 
     /// <summary>
+    /// The check reads the command line the same way binding does. Reading it without knowing which
+    /// options are flags let a flag swallow the position after it, so a genuinely surplus argument moved
+    /// into the flag's place and the check saw nothing wrong.
+    /// </summary>
+    [Fact]
+    public void EnsureNothingIsLeftOver_SurplusAfterAFlag_Throws()
+    {
+        // act & assert
+        var error = Wrap.It(() => LeftOver(["-verbose", "extra", "surplus"], typeof(FlagAndPositionConfiguration)))
+            .Throws<ArgumentParseException>();
+        error.Message.Contains("surplus").IsTrue("the message must name what could not be placed");
+    }
+
+    /// <summary>
+    /// And a command line the type does account for still passes, flag and all.
+    /// </summary>
+    [Fact]
+    public void EnsureNothingIsLeftOver_FlagAndItsDeclaredPosition_Passes()
+    {
+        // act & assert
+        LeftOver(["-verbose", "extra"], typeof(FlagAndPositionConfiguration));
+    }
+
+    /// <summary>
     /// Arguments after the raw delimiter need somewhere to go. With no property to receive them they were
     /// parsed and then discarded.
     /// </summary>

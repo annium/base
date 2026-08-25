@@ -98,7 +98,13 @@ internal class ConfigurationBuilder : IConfigurationBuilder
     /// <param name="configurationTypes">Every configuration type the command binds</param>
     public void EnsureNothingIsLeftOver(string[] args, params Type[] configurationTypes)
     {
-        var raw = _argumentProcessor.Compose(args, OptionSpec.Empty);
+        // read the same way binding will read it: without knowing which options are flags, a flag swallows
+        // the position after it and a surplus argument moves into its place unnoticed
+        var options = configurationTypes
+            .SelectMany(type => _configurationProcessor.GetPropertiesWithAttribute<OptionAttribute>(type))
+            .ToArray();
+
+        var raw = _argumentProcessor.Compose(args, Spec(options));
 
         var declaredPositions = configurationTypes
             .Select(type => _configurationProcessor.GetPropertiesWithAttribute<PositionAttribute>(type).Length)
