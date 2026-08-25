@@ -76,6 +76,64 @@ public class StaticObservableInstanceTest : TestBase
     }
 
     /// <summary>
+    /// The factory runs once per instance. Subscribing again after it finished used to start a second run
+    /// over the first run's disposal state, which failed on its first call and then failed again trying to
+    /// report that failure - leaving the new subscriber with no values, no completion and no error, and an
+    /// exception nobody observed.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public async Task Resubscribed_AfterItFinished_RunsTheFactoryOnceAndSaysSo()
+    {
+        // arrange
+        var runs = 0;
+        var instance = ObservableExt.StaticAsyncInstance<int>(
+            async ctx =>
+            {
+                Interlocked.Increment(ref runs);
+                await Task.Delay(10, ctx.Ct);
+
+                return () => Task.CompletedTask;
+            },
+            TestContext.Current.CancellationToken,
+            Get<ILogger>()
+        );
+
+        var first = new TaskCompletionSource();
+        var subscription = instance.Subscribe(_ => { }, () => first.TrySetResult());
+        await Bounded(first.Task);
+        // VSTHRD103: IDisposable is the only shape Rx subscriptions offer
+#pragma warning disable VSTHRD103
+        subscription.Dispose();
+#pragma warning restore VSTHRD103
+
+        // act - a second consumer arrives after the run is over
+        var second = new TaskCompletionSource();
+        using var lateSubscription = instance.Subscribe(_ => { }, () => second.TrySetResult());
+
+        // assert
+        await Bounded(second.Task);
+        Volatile.Read(ref runs).Is(1, "the factory must not run again for a later subscriber");
+    }
+
+    /// <summary>
+    /// Fails the test if the given task has not finished within five seconds, so a regression that leaves a
+    /// subscriber waiting is reported as such instead of hanging the run.
+    /// </summary>
+    /// <param name="task">The task being bounded.</param>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    private static async Task Bounded(Task task)
+    {
+#pragma warning disable VSTHRD003
+        var completed = await Task.WhenAny(
+            task,
+            Task.Delay(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken)
+        );
+#pragma warning restore VSTHRD003
+        (completed == task).IsTrue("the subscriber must not be left waiting");
+    }
+
+    /// <summary>
     /// A sample data class used for testing observable events.
     /// </summary>
     private class Sample
