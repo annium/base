@@ -23,6 +23,66 @@ public class ChannelExtensionsTests : TestBase
         : base(outputHelper) { }
 
     /// <summary>
+    /// A channel that finishes completes the observable, so a consumer awaiting its end is not left waiting
+    /// for a channel nobody will write to again.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public async Task Completed_Channel_CompletesTheObservable()
+    {
+        // arrange
+        var channel = Channel.CreateUnbounded<int>();
+        var completed = new TaskCompletionSource();
+        using var subscription = channel.Reader.AsObservable().Subscribe(_ => { }, () => completed.TrySetResult());
+
+        // act
+        await channel.Writer.WriteAsync(1, TestContext.Current.CancellationToken);
+        channel.Writer.Complete();
+
+        // assert
+        await Bounded(completed.Task);
+    }
+
+    /// <summary>
+    /// A channel completed with a failure hands that failure on rather than passing for a clean end.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public async Task Failed_Channel_FailsTheObservable()
+    {
+        // arrange
+        var channel = Channel.CreateUnbounded<int>();
+        var failure = new TaskCompletionSource<Exception>();
+        using var subscription = channel
+            .Reader.AsObservable()
+            .Subscribe(_ => { }, e => failure.TrySetResult(e), () => { });
+
+        // act
+        channel.Writer.Complete(new InvalidOperationException("writer failed"));
+
+        // assert
+        await Bounded(failure.Task);
+        (await failure.Task).As<InvalidOperationException>().Message.Is("writer failed");
+    }
+
+    /// <summary>
+    /// Fails the test if the given task has not finished within five seconds, so a regression that turns an
+    /// end-of-channel into an unbounded wait is reported as such instead of hanging the run.
+    /// </summary>
+    /// <param name="task">The task being bounded.</param>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    private static async Task Bounded(Task task)
+    {
+#pragma warning disable VSTHRD003
+        var completed = await Task.WhenAny(
+            task,
+            Task.Delay(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken)
+        );
+#pragma warning restore VSTHRD003
+        (completed == task).IsTrue("a channel that ended must not leave the consumer waiting");
+    }
+
+    /// <summary>
     /// Tests that events are emitted correctly when converting a channel reader to an observable,
     /// including proper disposal behavior.
     /// </summary>

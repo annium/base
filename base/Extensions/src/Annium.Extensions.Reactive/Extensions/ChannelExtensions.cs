@@ -28,12 +28,26 @@ public static class ChannelExtensions
                         var data = await reader.ReadAsync(ct);
                         observer.OnNext(data);
                     }
+
+                    // the channel is finished: telling the observer so is what lets anyone awaiting the end
+                    // of this observable stop waiting
+                    observer.OnCompleted();
                 }
-                catch (OperationCanceledException) { }
-                catch (ChannelClosedException) { }
-                catch (Exception)
+                catch (OperationCanceledException)
                 {
-                    //
+                    // the subscription itself was disposed - there is nobody left to notify
+                }
+                catch (ChannelClosedException e)
+                {
+                    // the writer completed the channel, possibly with a failure of its own
+                    if (e.InnerException is null)
+                        observer.OnCompleted();
+                    else
+                        observer.OnError(e.InnerException);
+                }
+                catch (Exception e)
+                {
+                    observer.OnError(e);
                 }
 
                 return onDisposed ?? Disposed;
