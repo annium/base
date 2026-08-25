@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Annium.Core.DependencyInjection;
 using Annium.Execution.Background;
@@ -180,9 +181,31 @@ internal sealed class WorkerManager<TKey> : IWorkerManager<TKey>, IAsyncDisposab
         this.Trace("await workers");
         await _executor.DisposeAsync();
 
-        this.Trace("clear entries");
+        this.Trace("take entries");
+        Entry[] entries;
         lock (_entries)
+        {
+            entries = _entries.Values.ToArray();
             _entries.Clear();
+        }
+
+        // a worker started and never stopped still holds whatever it opened, and the manager is the only
+        // thing left that knows about it. Failures are logged per worker so one bad stop does not strand the rest
+        this.Trace<int>("dispose {count} remaining workers", entries.Length);
+        foreach (var entry in entries)
+        {
+            try
+            {
+                this.Trace<string>("await disposal of entry {entry}", entry.GetFullId());
+                await entry.WorkerBase.DisposeAsync();
+                entry.SetStopped();
+            }
+            catch (Exception e)
+            {
+                this.Error(e);
+                entry.SetStopFailed(e);
+            }
+        }
 
         this.Trace("done");
     }

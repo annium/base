@@ -117,6 +117,30 @@ public class WorkerTests : TestBase
             log.GetLog(keyB).IsEqual(new[] { "start B", "done B" });
         });
     }
+
+    /// <summary>
+    /// Disposing the manager stops the workers it is still holding. They own whatever they opened on start,
+    /// so dropping them leaves that open with nothing left to close it.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public async Task Dispose_WithRunningWorkers_StopsThem()
+    {
+        // arrange
+        var log = Get<SharedLog>();
+        var keyA = new WorkerData("A");
+        var keyB = new WorkerData("B");
+        var manager = Get<IWorkerManager<WorkerData>>();
+        await manager.StartAsync(keyA);
+        await manager.StartAsync(keyB);
+
+        // act - the manager goes away while both workers are still running
+        await ((IAsyncDisposable)manager).DisposeAsync();
+
+        // assert
+        log.GetLog(keyA).IsEqual(new[] { "start A", "done A" });
+        log.GetLog(keyB).IsEqual(new[] { "start B", "done B" });
+    }
 }
 
 /// <summary>
