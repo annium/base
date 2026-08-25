@@ -225,10 +225,11 @@ internal abstract class ShellInstanceBase : IShellInstance, ILogSubject
                     // far are still valuable
                 }
 
-                if (killed)
-                    tcs.TrySetCanceled();
-                else
-                    tcs.TrySetResult(GetResult(process.ExitCode, stdout, stderr));
+                // the result is read, and the process released, BEFORE the caller is unblocked: completing
+                // the task first let RunAsync's `using` dispose the very same process from its own thread
+                // while this one was still disposing it. A later, sequential second Dispose from that
+                // `using` is harmless — two concurrent ones are not
+                var result = killed ? null : GetResult(process.ExitCode, stdout, stderr);
 
                 try
                 {
@@ -238,6 +239,11 @@ internal abstract class ShellInstanceBase : IShellInstance, ILogSubject
                 {
                     this.Warn("Process.Dispose() failed: {e}", ex);
                 }
+
+                if (killed)
+                    tcs.TrySetCanceled();
+                else
+                    tcs.TrySetResult(result!);
             });
         }
 
