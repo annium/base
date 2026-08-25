@@ -44,12 +44,18 @@ internal class HelpBuilder : IHelpBuilder
         sb.AppendLine();
         sb.AppendLine(description);
 
-        // commands
+        // commands - a group with none registered is a mistake worth saying out loud, and Max would
+        // otherwise throw on the empty sequence, on a path that now always runs when nothing matched
         sb.AppendLine();
-        sb.AppendLine("Commands:");
-        var maxCommandlength = commands.Max(e => e.Id.Length);
-        foreach (var cmd in commands.OrderBy(e => e.Id))
-            sb.AppendLine($"  {cmd.Id.PadRight(maxCommandlength)}  {cmd.Description}");
+        if (commands.Count == 0)
+            sb.AppendLine("No commands registered.");
+        else
+        {
+            sb.AppendLine("Commands:");
+            var maxCommandlength = commands.Max(e => e.Id.Length);
+            foreach (var cmd in commands.OrderBy(e => e.Id))
+                sb.AppendLine($"  {cmd.Id.PadRight(maxCommandlength)}  {cmd.Description}");
+        }
 
         return sb.ToString();
     }

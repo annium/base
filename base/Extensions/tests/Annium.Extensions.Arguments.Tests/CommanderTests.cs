@@ -138,6 +138,24 @@ public class CommanderTests : TestBase
     }
 
     /// <summary>
+    /// A group holding no commands still prints something rather than throwing. Nothing matches in an
+    /// empty group, and this path now always prints the group's help, so an empty one reaches the help
+    /// builder on every invocation.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public async Task RunAsync_EmptyGroup_PrintsHelpRatherThanThrowing()
+    {
+        // act
+        var output = await CaptureAsync(() =>
+            Commander.RunAsync<EmptyGroup>(Provider, [], TestContext.Current.CancellationToken)
+        );
+
+        // assert
+        output.Contains("a group with nothing in it").IsTrue("the group's own description must still show");
+    }
+
+    /// <summary>
     /// Runs the given call with the console redirected, and returns what it printed.
     /// </summary>
     /// <param name="act">The call to run.</param>
@@ -409,4 +427,20 @@ public class HelpGroup : Group, ICommandDescriptor
     {
         Add<DeployCommand>();
     }
+}
+
+/// <summary>
+/// A group with no commands registered.
+/// </summary>
+public class EmptyGroup : Group, ICommandDescriptor
+{
+    /// <summary>
+    /// Gets the identifier of this group.
+    /// </summary>
+    public static string Id => string.Empty;
+
+    /// <summary>
+    /// Gets the description of this group.
+    /// </summary>
+    public static string Description => "a group with nothing in it";
 }
