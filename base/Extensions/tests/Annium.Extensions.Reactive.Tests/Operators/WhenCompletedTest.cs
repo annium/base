@@ -25,7 +25,7 @@ public class WhenCompletedTest : TestBase
     /// </summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Fact]
-    public async Task SubscribeAsync_OnErrorWorksCorrectly()
+    public async Task WhenCompletedAsync_SourceCompletes_ReturnsAfterAllValues()
     {
         // arrange
         var log = new TestLog<long>();

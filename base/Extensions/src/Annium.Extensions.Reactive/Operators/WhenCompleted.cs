@@ -23,10 +23,17 @@ public static class WhenCompletedExtensions
         ctx.Trace("subscribe");
         using var _ = source.Subscribe(
             delegate { },
+            e =>
+            {
+                // a source that fails has ended just as surely as one that completes; without this the
+                // awaiting caller waits forever for a completion that can no longer come
+                ctx.Trace("fail");
+                tcs.TrySetException(e);
+            },
             () =>
             {
                 ctx.Trace("set - start");
-                tcs.SetResult(null);
+                tcs.TrySetResult(null);
                 ctx.Trace("set - done");
             }
         );

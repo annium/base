@@ -12,6 +12,31 @@ namespace Annium.Extensions.Reactive.Internal;
 internal static class ExecutorTeardown
 {
     /// <summary>
+    /// Disposes the executor on a background task, then forwards the source's failure to the observer.
+    /// </summary>
+    /// <typeparam name="T">The observed sequence element type</typeparam>
+    /// <param name="executor">The executor to dispose</param>
+    /// <param name="observer">The observer to notify</param>
+    /// <param name="error">The failure raised by the source</param>
+    public static void FailInBackground<T>(IExecutor executor, IObserver<T> observer, Exception error)
+    {
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await executor.DisposeAsync();
+            }
+            catch (Exception)
+            {
+                // the source's failure is what the observer needs to hear about; a teardown problem on
+                // top of it must not replace or hide it
+            }
+
+            observer.OnError(error);
+        });
+    }
+
+    /// <summary>
     /// Disposes the executor on a background task, then calls <see cref="IObserver{T}.OnCompleted"/>.
     /// If the disposal throws a non-cancellation exception, forwards it via <see cref="IObserver{T}.OnError"/>.
     /// </summary>

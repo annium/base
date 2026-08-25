@@ -34,6 +34,9 @@ public static class SelectParallelAsyncOperatorExtensions
                     {
                         observer.OnNext(await selector(x));
                     }),
+                // without an onError the source's failure had nowhere to go: the downstream
+                // observer never heard of it and the executor was left running
+                e => ExecutorTeardown.FailInBackground(executor, observer, e),
                 () => ExecutorTeardown.CompleteInBackground(executor, observer)
             );
         });
