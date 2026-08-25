@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using System.Threading;
 using System.Threading.Tasks;
 using Annium.Testing;
 using Xunit;
@@ -123,10 +125,12 @@ public class ErrorPropagationTest : TestBase
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Fact]
     public Task DoSequentialAsync_HandlerThrowsMidSequence_ReportsTheFailure() =>
-        AssertFailureBeatsCompletion(source =>
-            source.DoSequentialAsync(x =>
-                x == 3 ? throw new InvalidOperationException("handler failed") : Task.CompletedTask
-            )
+        AssertFailureBeatsCompletion(
+            source =>
+                source.DoSequentialAsync(x =>
+                    x == 3 ? throw new InvalidOperationException("handler failed") : Task.CompletedTask
+                ),
+            sequential: true
         );
 
     /// <summary>
@@ -135,10 +139,12 @@ public class ErrorPropagationTest : TestBase
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Fact]
     public Task SelectSequentialAsync_SelectorThrowsMidSequence_ReportsTheFailure() =>
-        AssertFailureBeatsCompletion(source =>
-            source.SelectSequentialAsync(x =>
-                x == 3 ? throw new InvalidOperationException("handler failed") : Task.FromResult(x)
-            )
+        AssertFailureBeatsCompletion(
+            source =>
+                source.SelectSequentialAsync(x =>
+                    x == 3 ? throw new InvalidOperationException("handler failed") : Task.FromResult(x)
+                ),
+            sequential: true
         );
 
     /// <summary>
@@ -147,10 +153,12 @@ public class ErrorPropagationTest : TestBase
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Fact]
     public Task DoParallelAsync_HandlerThrowsMidSequence_ReportsTheFailure() =>
-        AssertFailureBeatsCompletion(source =>
-            source.DoParallelAsync(x =>
-                x == 3 ? throw new InvalidOperationException("handler failed") : Task.CompletedTask
-            )
+        AssertFailureBeatsCompletion(
+            source =>
+                source.DoParallelAsync(x =>
+                    x == 3 ? throw new InvalidOperationException("handler failed") : Task.CompletedTask
+                ),
+            sequential: false
         );
 
     /// <summary>
@@ -159,10 +167,12 @@ public class ErrorPropagationTest : TestBase
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Fact]
     public Task SelectParallelAsync_SelectorThrowsMidSequence_ReportsTheFailure() =>
-        AssertFailureBeatsCompletion(source =>
-            source.SelectParallelAsync(x =>
-                x == 3 ? throw new InvalidOperationException("handler failed") : Task.FromResult(x)
-            )
+        AssertFailureBeatsCompletion(
+            source =>
+                source.SelectParallelAsync(x =>
+                    x == 3 ? throw new InvalidOperationException("handler failed") : Task.FromResult(x)
+                ),
+            sequential: false
         );
 
     /// <summary>
@@ -241,20 +251,45 @@ public class ErrorPropagationTest : TestBase
     /// completion that was in flight at the same time.
     /// </summary>
     /// <param name="apply">Applies the operator to a source.</param>
+    /// <param name="sequential">Whether the operator runs its handler on a sequential executor.</param>
     /// <returns>A task representing the asynchronous test operation.</returns>
-    private static async Task AssertFailureBeatsCompletion(Func<IObservable<int>, IObservable<int>> apply)
+    private static async Task AssertFailureBeatsCompletion(
+        Func<IObservable<int>, IObservable<int>> apply,
+        bool sequential
+    )
     {
         // arrange - Range emits and completes synchronously, so the completion is scheduled while the
         // handler for the third value has not run yet
         var terminal = new TaskCompletionSource<Exception?>();
+        var received = new List<int>();
+        var afterTerminal = 0;
         using var subscription = apply(Observable.Range(1, 5))
-            .Subscribe(_ => { }, e => terminal.TrySetResult(e), () => terminal.TrySetResult(null));
+            .Subscribe(
+                x =>
+                {
+                    if (terminal.Task.IsCompleted)
+                        Interlocked.Increment(ref afterTerminal);
+                    lock (received)
+                        received.Add(x);
+                },
+                e => terminal.TrySetResult(e),
+                () => terminal.TrySetResult(null)
+            );
 
         // assert
         await Bounded(terminal.Task);
         var error = await terminal.Task;
         error.IsNotDefault("the handler failure must not be lost to the source's completion");
         error.As<InvalidOperationException>().Message.Is("handler failed");
+
+        // nothing may arrive after the sequence has ended, whichever executor is underneath
+        Volatile.Read(ref afterTerminal).Is(0, "no value may be emitted after the terminal notification");
+
+        // and on the sequential executor nothing after the failing item runs at all - items go one at a
+        // time, so the failure is seen before the next one starts
+        if (sequential)
+            lock (received)
+                received.Contains(4).IsFalse("nothing after the failing item may run on a sequential executor");
     }
 
     /// <summary>

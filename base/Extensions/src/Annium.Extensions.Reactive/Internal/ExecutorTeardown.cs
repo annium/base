@@ -22,9 +22,15 @@ namespace Annium.Extensions.Reactive.Internal;
 internal sealed class ExecutorTeardown<T>
 {
     /// <summary>
-    /// Gets a value indicating whether the sequence has already failed, so scheduled work still queued
-    /// behind the failure can stop rather than emit values after it.
+    /// Gets a value indicating whether the sequence has already failed, so scheduled work that has not
+    /// started yet can skip its handler instead of doing work whose result nobody wants.
     /// </summary>
+    /// <remarks>
+    /// This is not an ordering guarantee. On the sequential executor it is one - items run strictly one
+    /// at a time, so nothing after the failing item starts. On the parallel executor the later items are
+    /// already in flight and will finish, so values may still be emitted after the failure was recorded.
+    /// They are emitted before the terminal notification either way, so the sequence stays well-formed.
+    /// </remarks>
     public bool HasFailed => Volatile.Read(ref _error) is not null;
 
     /// <summary>
@@ -67,6 +73,29 @@ internal sealed class ExecutorTeardown<T>
         Interlocked.CompareExchange(ref _error, error, null);
 
         Terminate();
+    }
+
+    /// <summary>
+    /// Abandons the subscription without notifying anyone: the subscriber disposed it, and Rx does not
+    /// ask for a terminal notification after that. The executor is still disposed - otherwise its
+    /// background loop outlives the subscription that created it.
+    /// </summary>
+    public void Cancel()
+    {
+        if (Interlocked.Exchange(ref _teardownStarted, 1) == 1)
+            return;
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await _executor.DisposeAsync();
+            }
+            catch (Exception)
+            {
+                // nobody is left to tell
+            }
+        });
     }
 
     /// <summary>

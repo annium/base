@@ -1,3 +1,4 @@
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Annium.Execution.Background;
@@ -29,11 +30,12 @@ public static class SelectSequentialAsyncOperatorExtensions
         {
             var executor = Executor.Sequential<IObservable<TSource>>(VoidLogger.Instance).Start();
             var teardown = new ExecutorTeardown<TResult>(executor, observer);
-            return source.Subscribe(
+            var subscription = source.Subscribe(
                 x =>
                     executor.Schedule(async () =>
                     {
-                        // work queued behind a failure must not emit values after it
+                        // work that has not started yet can skip the handler once the sequence has
+                        // failed - on the parallel executor the items already in flight still finish
                         if (teardown.HasFailed)
                             return;
 
@@ -55,6 +57,14 @@ public static class SelectSequentialAsyncOperatorExtensions
                 teardown.Fail,
                 teardown.Complete
             );
+
+            // the source subscription alone would leave the executor's background loop running for a
+            // subscriber that disposed before the source ever ended
+            return Disposable.Create(() =>
+            {
+                subscription.Dispose();
+                teardown.Cancel();
+            });
         });
     }
 }
