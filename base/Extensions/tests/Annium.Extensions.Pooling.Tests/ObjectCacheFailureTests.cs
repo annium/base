@@ -30,6 +30,10 @@ public class ObjectCacheFailureTests : TestBase
             container.AddObjectCache<string, Flaky, FlakyProvider>(
                 Annium.Core.DependencyInjection.ServiceLifetime.Singleton
             );
+            container.Add<BrittleProvider>().AsSelf().Singleton();
+            container.AddObjectCache<string, Brittle, BrittleProvider>(
+                Annium.Core.DependencyInjection.ServiceLifetime.Singleton
+            );
         });
     }
 
@@ -117,6 +121,28 @@ public class ObjectCacheFailureTests : TestBase
 
         (failures > 0).IsTrue("the factory failure must be reported to the callers waiting on it");
     }
+
+    /// <summary>
+    /// Disposing the cache reaches every entry, even when disposing one of them fails. Each entry holds a
+    /// resource of its own, so stopping at the first failure leaks all the ones after it.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public async Task DisposeAsync_OneEntryFailsToDispose_TheRestAreStillDisposed()
+    {
+        // arrange - every entry records the attempt and then throws, so the count is what is being pinned
+        // and the outcome does not depend on which entry the cache happens to reach first
+        var provider = Get<BrittleProvider>();
+        var cache = Get<IObjectCache<string, Brittle>>();
+        foreach (var key in new[] { "a", "b", "c" })
+            await (await cache.GetAsync(key, TestContext.Current.CancellationToken)).DisposeAsync();
+
+        // act
+        await ((IAsyncDisposable)cache).DisposeAsync();
+
+        // assert
+        provider.DisposeAttempts.Is(3, "every entry must be disposed, not just the ones before the first failure");
+    }
 }
 
 /// <summary>
@@ -165,5 +191,49 @@ public class FlakyProvider : ObjectCacheProvider<string, Flaky>
             throw new InvalidOperationException($"cannot create '{id}'");
 
         return new Flaky(id);
+    }
+}
+
+/// <summary>
+/// A cached value whose disposal always fails.
+/// </summary>
+/// <param name="Key">The key this value was created for.</param>
+public sealed record Brittle(string Key);
+
+/// <summary>
+/// Provider that counts disposal attempts and fails every one of them.
+/// </summary>
+public class BrittleProvider : ObjectCacheProvider<string, Brittle>
+{
+    /// <summary>
+    /// Gets how many values the cache has tried to dispose.
+    /// </summary>
+    public int DisposeAttempts => Volatile.Read(ref _disposeAttempts);
+
+    /// <summary>
+    /// Number of disposal attempts so far.
+    /// </summary>
+    private int _disposeAttempts;
+
+    /// <summary>
+    /// Creates a value.
+    /// </summary>
+    /// <param name="id">The key to create a value for.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>The created value.</returns>
+    public override Task<OneOf<Brittle, IDisposableReference<Brittle>>> CreateAsync(string id, CancellationToken ct) =>
+        Task.FromResult(OneOf<Brittle, IDisposableReference<Brittle>>.FromT0(new Brittle(id)));
+
+    /// <summary>
+    /// Records the attempt, then fails.
+    /// </summary>
+    /// <param name="key">The key identifying the value.</param>
+    /// <param name="value">The value being disposed.</param>
+    /// <returns>Nothing - this always throws.</returns>
+    public override Task DisposeAsync(string key, Brittle value)
+    {
+        Interlocked.Increment(ref _disposeAttempts);
+
+        throw new InvalidOperationException($"cannot dispose '{key}'");
     }
 }

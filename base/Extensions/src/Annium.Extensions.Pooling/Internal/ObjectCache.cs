@@ -183,11 +183,20 @@ internal sealed class ObjectCache<TKey, TValue> : IObjectCache<TKey, TValue>, IL
 
             foreach (var (key, entry) in cacheEntries)
             {
-                this.Trace("await {entry} value", entry);
-                await entry.WaitAsync();
-                this.Trace("dispose {entry}", entry);
-                entry.Dispose();
-                await _provider.DisposeAsync(key, entry.Value);
+                // each entry holds a resource of its own, so a failure disposing one must not stop the rest
+                // from being disposed
+                try
+                {
+                    this.Trace("await {entry} value", entry);
+                    await entry.WaitAsync();
+                    this.Trace("dispose {entry}", entry);
+                    entry.Dispose();
+                    await _provider.DisposeAsync(key, entry.Value);
+                }
+                catch (Exception e)
+                {
+                    this.Error(e);
+                }
             }
 
             this.Trace("done");
