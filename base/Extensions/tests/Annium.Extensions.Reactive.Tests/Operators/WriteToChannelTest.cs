@@ -37,6 +37,75 @@ public class WriteToChannelTest
     }
 
     /// <summary>
+    /// A source that completes completes the channel, so a reader draining it stops rather than waiting
+    /// for values nobody will write.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public async Task WriteToChannel_SourceCompletes_CompletesTheWriter()
+    {
+        // arrange
+        var channel = Channel.CreateUnbounded<int>();
+        var subject = new Subject<int>();
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
+        subject.WriteToChannel(channel.Writer, cts.Token);
+
+        // act
+        subject.OnNext(1);
+        subject.OnCompleted();
+
+        // assert - drained first: an unbounded channel reports completion only once it is empty
+        (await channel.Reader.ReadAsync(TestContext.Current.CancellationToken)).Is(1);
+#pragma warning disable VSTHRD003
+        await Bounded(channel.Reader.Completion);
+#pragma warning restore VSTHRD003
+    }
+
+    /// <summary>
+    /// A source that fails completes the channel with that failure, rather than throwing it back at
+    /// whoever emitted it and leaving the reader waiting.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public async Task WriteToChannel_SourceFails_FailsTheWriter()
+    {
+        // arrange
+        var channel = Channel.CreateUnbounded<int>();
+        var subject = new Subject<int>();
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
+        subject.WriteToChannel(channel.Writer, cts.Token);
+
+        // act - the emitter must not be the one left to deal with this
+        subject.OnError(new InvalidOperationException("source failed"));
+
+        // assert
+#pragma warning disable VSTHRD003
+        await Bounded(channel.Reader.Completion);
+#pragma warning restore VSTHRD003
+#pragma warning disable VSTHRD003
+        var error = await Wrap.It(async () => await channel.Reader.Completion).ThrowsAsync<InvalidOperationException>();
+#pragma warning restore VSTHRD003
+        error.Message.Is("source failed");
+    }
+
+    /// <summary>
+    /// Fails the test if the given task has not finished within five seconds, so a regression that turns an
+    /// end-of-source into an unbounded wait is reported as such instead of hanging the run.
+    /// </summary>
+    /// <param name="task">The task being bounded.</param>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    private static async Task Bounded(Task task)
+    {
+#pragma warning disable VSTHRD003
+        var completed = await Task.WhenAny(
+            task,
+            Task.Delay(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken)
+        );
+#pragma warning restore VSTHRD003
+        (completed == task).IsTrue("a source that ended must not leave the reader waiting");
+    }
+
+    /// <summary>
     /// Cancelling the subscription stops the writing: values emitted afterwards are not delivered.
     /// </summary>
     /// <returns>A task representing the asynchronous test operation.</returns>

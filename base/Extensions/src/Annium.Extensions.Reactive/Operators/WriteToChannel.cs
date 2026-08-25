@@ -17,6 +17,11 @@ public static class WriteToChannelExtensions
     /// <param name="source">The source observable to read from</param>
     /// <param name="writer">The channel writer to write values to</param>
     /// <param name="ct">Cancellation token for the subscription</param>
+    /// <remarks>
+    /// The end of the source is the end of the channel: completing the writer is what lets a reader
+    /// draining it stop, and hands a failing source on to that reader instead of throwing it back at
+    /// whoever emitted it.
+    /// </remarks>
     public static void WriteToChannel<T>(this IObservable<T> source, ChannelWriter<T> writer, CancellationToken ct) =>
-        source.Subscribe(writer.Write, ct);
+        source.Subscribe(writer.Write, e => writer.TryComplete(e), () => writer.TryComplete(), ct);
 }

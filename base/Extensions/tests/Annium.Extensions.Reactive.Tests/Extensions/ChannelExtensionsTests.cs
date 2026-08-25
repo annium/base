@@ -98,8 +98,11 @@ public class ChannelExtensionsTests : TestBase
         var data = Enumerable.Range(0, dataSize).ToArray();
         var channel = Channel.CreateUnbounded<int>();
 
+        // written directly rather than through WriteToChannel: that ends the channel with its source, and
+        // this test is about a channel that is still open when its subscription is disposed
         this.Trace("write to channel");
-        Observable.Range(0, dataSize).WriteToChannel(channel.Writer, CancellationToken.None);
+        foreach (var item in data)
+            channel.Writer.TryWrite(item);
         var log = new TestLog<int>();
         var disposeCounter = 0;
 
