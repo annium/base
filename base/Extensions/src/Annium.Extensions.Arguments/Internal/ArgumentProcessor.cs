@@ -15,8 +15,9 @@ internal class ArgumentProcessor : IArgumentProcessor
     /// flags, options, multi-options, and raw content after delimiter.
     /// </summary>
     /// <param name="args">Array of command line arguments to process</param>
+    /// <param name="flagNames">Names and aliases of the options that are flags, and so never take a value</param>
     /// <returns>A structured raw configuration containing parsed argument data</returns>
-    public RawConfiguration Compose(string[] args)
+    public RawConfiguration Compose(string[] args, IReadOnlyCollection<string> flagNames)
     {
         var positions = new List<string>();
         var flags = new List<string>();
@@ -42,7 +43,11 @@ internal class ArgumentProcessor : IArgumentProcessor
             var name = value.PascalCase();
             var next = i < args.Length - 1 ? args[i + 1] : string.Empty;
 
-            if (IsOption(value, next))
+            // a flag never takes a value, so the token after it is somebody else's - reading it as this
+            // option's value silently loses the flag and the argument at once
+            var isKnownFlag = flagNames.Contains(name);
+
+            if (!isKnownFlag && IsOption(value, next))
             {
                 if (multiOptions.ContainsKey(name))
                     multiOptions[name].Add(next);
@@ -56,7 +61,7 @@ internal class ArgumentProcessor : IArgumentProcessor
 
                 i++;
             }
-            else if (IsFlag(value, next))
+            else if (isKnownFlag || IsFlag(value, next))
                 if (flags.Contains(name))
                     throw new ArgumentParseException($"Same flag '{value}' is used twice");
                 else

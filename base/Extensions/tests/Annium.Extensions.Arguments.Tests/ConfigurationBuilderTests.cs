@@ -175,6 +175,49 @@ public class ConfigurationBuilderTests : TestBase
     }
 
     /// <summary>
+    /// A flag followed by a positional argument stays a flag, and the positional argument stays one. A
+    /// flag never takes a value, so swallowing the next token loses both of them at once.
+    /// </summary>
+    [Fact]
+    public void Build_FlagFollowedByAPosition_KeepsBoth()
+    {
+        // act
+        var cfg = Build<FlagAndPositionConfiguration>("-verbose", "report.txt");
+
+        // assert
+        cfg.Verbose.IsTrue("the flag must be set");
+        cfg.Path.Is("report.txt", "and the value after it must remain a position");
+    }
+
+    /// <summary>
+    /// The same by alias.
+    /// </summary>
+    [Fact]
+    public void Build_FlagByAliasFollowedByAPosition_KeepsBoth()
+    {
+        // act
+        var cfg = Build<FlagAndPositionConfiguration>("-v", "report.txt");
+
+        // assert
+        cfg.Verbose.IsTrue("the flag must be set when given by its alias");
+        cfg.Path.Is("report.txt");
+    }
+
+    /// <summary>
+    /// A non-boolean option still takes the token after it.
+    /// </summary>
+    [Fact]
+    public void Build_OptionFollowedByItsValue_StillTakesIt()
+    {
+        // act
+        var cfg = Build<FlagAndPositionConfiguration>("-name", "world", "report.txt");
+
+        // assert
+        cfg.Name.Is("world");
+        cfg.Path.Is("report.txt");
+    }
+
+    /// <summary>
     /// Builds a configuration of the given type from a command line.
     /// </summary>
     /// <typeparam name="T">The configuration type to build.</typeparam>
@@ -279,4 +322,28 @@ public class TypedConfiguration
     /// </summary>
     [Option]
     public int Count { get; set; }
+}
+
+/// <summary>
+/// Configuration combining a flag, an option and an optional position.
+/// </summary>
+public class FlagAndPositionConfiguration
+{
+    /// <summary>
+    /// Gets or sets whether to be verbose.
+    /// </summary>
+    [Option("v")]
+    public bool Verbose { get; set; }
+
+    /// <summary>
+    /// Gets or sets who to greet.
+    /// </summary>
+    [Option]
+    public string Name { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the path to work on.
+    /// </summary>
+    [Position(1, isRequired: false)]
+    public string Path { get; set; } = string.Empty;
 }

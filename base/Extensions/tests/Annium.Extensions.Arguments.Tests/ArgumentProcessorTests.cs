@@ -1,3 +1,4 @@
+using System;
 using Annium.Extensions.Arguments.Internal;
 using Annium.Testing;
 using Xunit;
@@ -100,5 +101,6 @@ public class ArgumentProcessorTests
     /// </summary>
     /// <param name="args">The command line to parse.</param>
     /// <returns>The parsed configuration.</returns>
-    private static RawConfiguration Compose(params string[] args) => new ArgumentProcessor().Compose(args);
+    private static RawConfiguration Compose(params string[] args) =>
+        new ArgumentProcessor().Compose(args, Array.Empty<string>());
 }

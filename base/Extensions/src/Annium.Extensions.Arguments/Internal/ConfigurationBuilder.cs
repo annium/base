@@ -55,7 +55,18 @@ internal class ConfigurationBuilder : IConfigurationBuilder
     public T Build<T>(string[] args)
         where T : new()
     {
-        var raw = _argumentProcessor.Compose(args);
+        // the lexer cannot tell a flag from an option by shape, so it is told which names are flags
+        var flagNames = _configurationProcessor
+            .GetPropertiesWithAttribute<OptionAttribute>(typeof(T))
+            .Where(e => e.property.PropertyType == typeof(bool))
+            .SelectMany(e =>
+                e.attribute.Alias is null
+                    ? new[] { e.property.Name }
+                    : new[] { e.property.Name, e.attribute.Alias.PascalCase() }
+            )
+            .ToHashSet();
+
+        var raw = _argumentProcessor.Compose(args, flagNames);
 
         var value = new T();
 
