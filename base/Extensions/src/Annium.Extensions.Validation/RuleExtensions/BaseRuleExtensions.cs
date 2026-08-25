@@ -307,10 +307,10 @@ public static class BaseRuleExtensions
         rule.Add(
             (context, value) =>
             {
-                if (value?.CompareTo(min) == -1)
+                if (value?.CompareTo(min) < 0)
                     context.Error(string.IsNullOrEmpty(message) ? "Value is less, than given minimum" : message);
 
-                if (value?.CompareTo(max) == 1)
+                if (value?.CompareTo(max) > 0)
                     context.Error(string.IsNullOrEmpty(message) ? "Value is greater, than given maximum" : message);
             }
         );
