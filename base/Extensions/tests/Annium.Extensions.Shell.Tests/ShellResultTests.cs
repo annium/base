@@ -15,6 +15,7 @@ namespace Annium.Extensions.Shell.Tests;
 /// so a failing command was indistinguishable from a succeeding one.
 /// Skipped on Windows — these tests drive POSIX utilities.
 /// </summary>
+[Collection("LogConfigMutating")]
 public class ShellResultTests : TestBase
 {
     /// <summary>
