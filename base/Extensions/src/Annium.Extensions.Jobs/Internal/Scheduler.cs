@@ -83,8 +83,24 @@ internal class Scheduler : IScheduler, IAsyncDisposable, ILogSubject
 
                 await Task.Delay(total, cts.Token);
 
-                if (!cts.IsCancellationRequested)
+                if (cts.IsCancellationRequested)
+                    continue;
+
+                try
+                {
                     await handler();
+                }
+                catch (OperationCanceledException)
+                {
+                    // shutdown, not a failed run
+                }
+                catch (Exception e)
+                {
+                    // the loop IS the scheduled task, so letting a failed run escape ends the schedule for
+                    // good: the caller holds only a cancellation handle and would never learn the job had
+                    // stopped firing
+                    this.Error(e);
+                }
             }
         });
 

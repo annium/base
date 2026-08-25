@@ -75,11 +75,25 @@ internal sealed class WorkerManager<TKey> : IWorkerManager<TKey>, IAsyncDisposab
                 _entries[key] = entry = new Entry(_sp.Resolve<WorkerBase<TKey>>());
                 _executor.Schedule(async () =>
                 {
-                    this.Trace("await init of entry {entry} for {key}", entry.GetFullId(), key);
-                    await entry.WorkerBase.InitAsync(key);
+                    try
+                    {
+                        this.Trace("await init of entry {entry} for {key}", entry.GetFullId(), key);
+                        await entry.WorkerBase.InitAsync(key);
 
-                    this.Trace("mark started entry {entry} for {key}", entry.GetFullId(), key);
-                    entry.SetStarted();
+                        this.Trace("mark started entry {entry} for {key}", entry.GetFullId(), key);
+                        entry.SetStarted();
+                    }
+                    catch (Exception e)
+                    {
+                        // the caller is waiting on WhenStarted: the executor would otherwise log this and
+                        // move on, leaving StartAsync awaiting a signal nobody will ever set. The entry is
+                        // dropped too, so a later StartAsync builds a fresh worker instead of awaiting the
+                        // failure of this one forever
+                        this.Error(e);
+                        lock (_entries)
+                            _entries.Remove(key);
+                        entry.SetStartFailed(e);
+                    }
                 });
             }
         }
@@ -118,15 +132,27 @@ internal sealed class WorkerManager<TKey> : IWorkerManager<TKey>, IAsyncDisposab
                 entry.SetIsStopping();
                 _executor.Schedule(async () =>
                 {
-                    this.Trace("await disposal of entry {entry} for {key}", entry.GetFullId(), key);
-                    await entry.WorkerBase.DisposeAsync();
+                    try
+                    {
+                        this.Trace("await disposal of entry {entry} for {key}", entry.GetFullId(), key);
+                        await entry.WorkerBase.DisposeAsync();
 
-                    this.Trace("remove entry of entry {entry} for {key}", entry.GetFullId(), key);
-                    lock (_entries)
-                        _entries.Remove(key);
+                        this.Trace("remove entry of entry {entry} for {key}", entry.GetFullId(), key);
+                        lock (_entries)
+                            _entries.Remove(key);
 
-                    this.Trace("mark stopped entry of entry {entry} for {key}", entry.GetFullId(), key);
-                    entry.SetStopped();
+                        this.Trace("mark stopped entry of entry {entry} for {key}", entry.GetFullId(), key);
+                        entry.SetStopped();
+                    }
+                    catch (Exception e)
+                    {
+                        // same reasoning as the start path: a worker that fails to stop is still gone from
+                        // the manager, and the caller learns why instead of waiting forever
+                        this.Error(e);
+                        lock (_entries)
+                            _entries.Remove(key);
+                        entry.SetStopFailed(e);
+                    }
                 });
             }
         }
@@ -202,7 +228,13 @@ internal sealed class WorkerManager<TKey> : IWorkerManager<TKey>, IAsyncDisposab
         /// <summary>
         /// Marks the worker as started by completing the start task
         /// </summary>
-        public void SetStarted() => _startedTcs.SetResult();
+        public void SetStarted() => _startedTcs.TrySetResult();
+
+        /// <summary>
+        /// Fails the start task, so a caller awaiting the worker's start observes the failure
+        /// </summary>
+        /// <param name="error">The failure raised while starting the worker</param>
+        public void SetStartFailed(Exception error) => _startedTcs.TrySetException(error);
 
         /// <summary>
         /// Marks the worker as currently stopping
@@ -212,6 +244,12 @@ internal sealed class WorkerManager<TKey> : IWorkerManager<TKey>, IAsyncDisposab
         /// <summary>
         /// Marks the worker as stopped by completing the stop task
         /// </summary>
-        public void SetStopped() => _stoppedTcs.SetResult();
+        public void SetStopped() => _stoppedTcs.TrySetResult();
+
+        /// <summary>
+        /// Fails the stop task, so a caller awaiting the worker's stop observes the failure
+        /// </summary>
+        /// <param name="error">The failure raised while stopping the worker</param>
+        public void SetStopFailed(Exception error) => _stoppedTcs.TrySetException(error);
     }
 }
