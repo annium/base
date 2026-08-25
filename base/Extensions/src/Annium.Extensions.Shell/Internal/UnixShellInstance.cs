@@ -33,12 +33,15 @@ internal class UnixShellInstance : ShellInstanceBase
         process.StartInfo.RedirectStandardError = true;
 
         process.StartInfo.FileName = Cmd[0];
-        process.StartInfo.Arguments = string.Join(' ', Cmd.Skip(1));
+        // ArgumentList passes each argument to the process untouched; assigning the joined Arguments string
+        // instead would have it re-parsed, so an argument containing a space or a quote would not survive
+        foreach (var arg in Cmd.Skip(1))
+            process.StartInfo.ArgumentList.Add(arg);
 
         this.Trace<string, string>(
             "shell: {fileName} {arguments}",
             process.StartInfo.FileName,
-            process.StartInfo.Arguments
+            string.Join(' ', process.StartInfo.ArgumentList)
         );
 
         return process;

@@ -1,11 +1,12 @@
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using Annium.Logging;
 
 namespace Annium.Extensions.Shell.Internal;
 
 /// <summary>
-/// Windows-specific implementation of shell command execution using cmd.exe
+/// Windows-specific implementation of shell command execution
 /// </summary>
 internal class WindowsShellInstance : ShellInstanceBase
 {
@@ -18,8 +19,14 @@ internal class WindowsShellInstance : ShellInstanceBase
         : base(cmd, logger) { }
 
     /// <summary>
-    /// Creates and configures a Windows process for command execution using cmd.exe
+    /// Creates and configures a Windows process for command execution
     /// </summary>
+    /// <remarks>
+    /// The target executable is launched directly rather than through <c>cmd.exe /C</c>: routing the whole
+    /// command line through the shell made every metacharacter in an argument — and arguments here are
+    /// paths and branch names, i.e. outside input — interpreted by cmd rather than passed to the program.
+    /// Shell builtins are not available as a consequence.
+    /// </remarks>
     /// <returns>A configured Process instance ready for Windows execution</returns>
     protected override Process GetProcess()
     {
@@ -31,13 +38,14 @@ internal class WindowsShellInstance : ShellInstanceBase
         process.StartInfo.RedirectStandardOutput = true;
         process.StartInfo.RedirectStandardError = true;
 
-        process.StartInfo.FileName = "cmd.exe";
-        process.StartInfo.Arguments = $"/C {string.Join(' ', Cmd)}";
+        process.StartInfo.FileName = Cmd[0];
+        foreach (var arg in Cmd.Skip(1))
+            process.StartInfo.ArgumentList.Add(arg);
 
         this.Trace<string, string>(
             "shell: {fileName} {arguments}",
             process.StartInfo.FileName,
-            process.StartInfo.Arguments
+            string.Join(' ', process.StartInfo.ArgumentList)
         );
 
         return process;
