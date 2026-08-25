@@ -53,12 +53,15 @@ internal class IntervalResolver : IIntervalResolver
                 23,
                 ZonedDateTimeProperty(zonedTime, nameof(ZonedDateTime.Hour))
             ),
-            GetPartExpression("day", intervals[2], 0, 30, ZonedDateTimeProperty(zonedTime, nameof(ZonedDateTime.Day))),
+            // ZonedDateTime.Day and .Month are 1-based, so the bounds must be too - otherwise the last day
+            // of the month and December are rejected as out of range, and day 0 is accepted as a schedule
+            // that can never match
+            GetPartExpression("day", intervals[2], 1, 31, ZonedDateTimeProperty(zonedTime, nameof(ZonedDateTime.Day))),
             GetPartExpression(
                 "month",
                 intervals[3],
-                0,
-                11,
+                1,
+                12,
                 ZonedDateTimeProperty(zonedTime, nameof(ZonedDateTime.Month))
             ),
             GetPartExpression(
@@ -71,9 +74,7 @@ internal class IntervalResolver : IIntervalResolver
                     typeof(int)
                 )
             ),
-        }
-            .OfType<Expression>()
-            .ToArray();
+        }.OfType<Expression>().ToArray();
 
         var match = parts.Length == 0 ? Expression.Constant(true) : parts[0];
         foreach (var part in parts.Skip(1))

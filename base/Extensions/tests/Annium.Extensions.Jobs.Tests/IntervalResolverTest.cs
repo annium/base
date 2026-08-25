@@ -66,6 +66,41 @@ public class IntervalResolverTest
     }
 
     /// <summary>
+    /// A day-of-month schedule matches that calendar day. ZonedDateTime.Day is 1-based, so bounds that are
+    /// not make the last day of the month unschedulable.
+    /// </summary>
+    [Fact]
+    public void DayOfMonth_LastDay_Works()
+    {
+        // arrange
+        var resolver = GetResolver();
+
+        // act
+        var isMatch = resolver.GetMatcher("0 0 31 * *");
+
+        // assert
+        isMatch(GetInstant(2000, 1, 31, 0, 0, 0)).IsTrue();
+        isMatch(GetInstant(2000, 1, 30, 0, 0, 0)).IsFalse();
+    }
+
+    /// <summary>
+    /// The same holds for months: December is the twelfth, not the eleventh.
+    /// </summary>
+    [Fact]
+    public void Month_December_Works()
+    {
+        // arrange
+        var resolver = GetResolver();
+
+        // act
+        var isMatch = resolver.GetMatcher("0 0 1 12 *");
+
+        // assert
+        isMatch(GetInstant(2000, 12, 1, 0, 0, 0)).IsTrue();
+        isMatch(GetInstant(2000, 11, 1, 0, 0, 0)).IsFalse();
+    }
+
+    /// <summary>
     /// Gets an interval resolver instance for testing
     /// </summary>
     /// <returns>An IIntervalResolver instance</returns>
