@@ -137,6 +137,23 @@ internal sealed class WorkerManager<TKey> : IWorkerManager<TKey>, IAsyncDisposab
                 {
                     try
                     {
+                        // the executor is concurrent, so this task can begin while the entry's own init
+                        // task is still running. Disposing then runs the worker's StopAsync alongside its
+                        // StartAsync, on the same instance, tearing down what the start has not finished
+                        // setting up
+                        this.Trace("await start of entry {entry} for {key}", entry.GetFullId(), key);
+                        try
+                        {
+#pragma warning disable VSTHRD003
+                            await entry.WhenStarted;
+#pragma warning restore VSTHRD003
+                        }
+                        catch (Exception)
+                        {
+                            // a worker that failed to start has already reported that to whoever asked for
+                            // the start; disposing it anyway releases whatever it opened before failing
+                        }
+
                         this.Trace("await disposal of entry {entry} for {key}", entry.GetFullId(), key);
                         await entry.WorkerBase.DisposeAsync();
 
