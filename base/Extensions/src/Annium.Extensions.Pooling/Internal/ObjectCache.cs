@@ -80,15 +80,17 @@ internal sealed class ObjectCache<TKey, TValue> : IObjectCache<TKey, TValue>, IL
                         }
                     );
                 }
-                catch
+                catch (Exception e)
                 {
                     // factory failure — populate-after-success invariant requires removing the
                     // placeholder so that a subsequent GetAsync(key) triggers a FRESH factory
-                    // call. Release any waiters first so they observe the missing value and
-                    // throw, rather than hanging forever on WaitAsync. The orphaned entry
-                    // (its AutoResetEvent) is GC-collectable once no waiters reference it.
+                    // call. The failure is recorded on the entry and the gate opened: the gate is
+                    // an AutoResetEvent, so it wakes exactly one waiter, and that waiter passes the
+                    // wake-up along before throwing. Releasing without recording the failure woke
+                    // one waiter, which then failed on the unset value and broke the chain, leaving
+                    // every other waiter blocked for good.
                     _entries.TryRemove(key, out _);
-                    entry.Release();
+                    entry.SetFailed(e);
                     throw;
                 }
 
@@ -98,6 +100,15 @@ internal sealed class ObjectCache<TKey, TValue> : IObjectCache<TKey, TValue>, IL
             {
                 this.Trace("Get by {key}: wait entry {entry}", key, entry);
                 await entry.WaitAsync();
+
+                if (entry.Error is not null)
+                {
+                    this.Trace("Get by {key}: entry {entry} failed to initialize", key, entry);
+                    // hand the wake-up to the next waiter before leaving
+                    entry.Release();
+
+                    throw new InvalidOperationException($"Failed to create value for key '{key}'", entry.Error);
+                }
             }
 
             // if not initializing and entry has no references - it is suspended, need to resume
@@ -223,6 +234,11 @@ internal sealed class ObjectCache<TKey, TValue> : IObjectCache<TKey, TValue>, IL
         public bool HasReferences => _references != 0;
 
         /// <summary>
+        /// Gets the failure raised while creating the value, or null when creation did not fail.
+        /// </summary>
+        public Exception? Error { get; private set; }
+
+        /// <summary>
         /// Synchronization gate for coordinating access to the entry.
         /// </summary>
         private readonly AutoResetEvent _gate = new(initialState: false);
@@ -259,6 +275,17 @@ internal sealed class ObjectCache<TKey, TValue> : IObjectCache<TKey, TValue>, IL
                 _value = value;
             else
                 throw new InvalidOperationException("Can't change CacheEntry Value");
+        }
+
+        /// <summary>
+        /// Records that creating the value failed, and wakes a waiter so the failure travels down the
+        /// chain instead of leaving everyone blocked.
+        /// </summary>
+        /// <param name="error">The failure raised by the factory.</param>
+        public void SetFailed(Exception error)
+        {
+            Error = error;
+            _gate.Set();
         }
 
         /// <summary>
