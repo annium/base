@@ -92,6 +92,37 @@ internal class ConfigurationBuilder : IConfigurationBuilder
     }
 
     /// <summary>
+    /// Fails when the command line carries input that none of the given configuration types takes.
+    /// </summary>
+    /// <param name="args">Array of command line arguments to check</param>
+    /// <param name="configurationTypes">Every configuration type the command binds</param>
+    public void EnsureNothingIsLeftOver(string[] args, params Type[] configurationTypes)
+    {
+        var raw = _argumentProcessor.Compose(args, OptionSpec.Empty);
+
+        var declaredPositions = configurationTypes
+            .Select(type => _configurationProcessor.GetPropertiesWithAttribute<PositionAttribute>(type).Length)
+            .DefaultIfEmpty(0)
+            .Max();
+
+        // read past and dropped, a surplus argument let a mistyped invocation run as though it had never
+        // been typed
+        if (raw.Positions.Count > declaredPositions)
+            throw new ArgumentParseException(
+                $"Unexpected positional arguments: {string.Join(", ", raw.Positions.Skip(declaredPositions).Select(x => $"'{x}'"))}"
+            );
+
+        // likewise for what was typed past the delimiter, which was parsed and then discarded
+        if (
+            raw.Raw.Length > 0
+            && configurationTypes.All(type =>
+                _configurationProcessor.GetPropertiesWithAttribute<RawAttribute>(type).Length == 0
+            )
+        )
+            throw new ArgumentParseException($"Raw arguments '{raw.Raw}' given, but nothing takes them");
+    }
+
+    /// <summary>
     /// Sets positional argument values on the configuration object based on position attributes.
     /// </summary>
     /// <typeparam name="T">The configuration type</typeparam>
@@ -120,13 +151,6 @@ internal class ConfigurationBuilder : IConfigurationBuilder
             property.SetValue(value, GetValue(property, property.PropertyType, positions[i - 1]));
             i++;
         }
-
-        // arguments read past and dropped let a mistyped invocation run as though the surplus had never
-        // been typed
-        if (positions.Length >= i)
-            throw new ArgumentParseException(
-                $"Unexpected positional arguments: {string.Join(", ", positions.Skip(i - 1).Select(x => $"'{x}'"))}"
-            );
     }
 
     /// <summary>
@@ -224,15 +248,7 @@ internal class ConfigurationBuilder : IConfigurationBuilder
             .FirstOrDefault();
 
         if (property != null!)
-        {
             property.SetValue(value, GetValue(property, property.PropertyType, raw));
-
-            return;
-        }
-
-        // parsed and then discarded: whoever typed them past the delimiter meant them for something
-        if (raw.Length > 0)
-            throw new ArgumentParseException($"Raw arguments '{raw}' given, but nothing takes them");
     }
 
     /// <summary>

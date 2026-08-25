@@ -33,6 +33,8 @@ public abstract class Command : CommandBase
             return Task.CompletedTask;
         }
 
+        Root.ConfigurationBuilder.EnsureNothingIsLeftOver(args);
+
         Handle(ct);
         return Task.CompletedTask;
     }

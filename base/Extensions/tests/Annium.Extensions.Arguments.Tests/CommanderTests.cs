@@ -168,6 +168,29 @@ public class CommanderTests : TestBase
     }
 
     /// <summary>
+    /// A command built from more than one configuration type binds them all from the same command line, so
+    /// what one of them takes is not surplus to another. Checking that per type made every multi-config
+    /// command with a positional argument fail.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public async Task RunAsync_MultiConfigCommandWithAPosition_Runs()
+    {
+        // arrange
+        var trace = Get<Trace>();
+
+        // act
+        await Commander.RunAsync<PairGroup>(
+            Provider,
+            ["pair", "here", "-name", "world"],
+            TestContext.Current.CancellationToken
+        );
+
+        // assert
+        trace.Calls.Has(1).At(0).Is("pair here world");
+    }
+
+    /// <summary>
     /// Runs the given call with the console redirected, and returns what it printed.
     /// </summary>
     /// <param name="act">The call to run.</param>
@@ -502,5 +525,80 @@ public class ClashingGroup : Group, ICommandDescriptor
     {
         Add<GreetCommand>();
         Add<OtherGreetCommand>();
+    }
+}
+
+/// <summary>
+/// The positional half of a two-part configuration.
+/// </summary>
+public class WhereConfiguration
+{
+    /// <summary>
+    /// Gets or sets where to work.
+    /// </summary>
+    [Position(1)]
+    public string Where { get; set; } = string.Empty;
+}
+
+/// <summary>
+/// Command taking two configuration types, only one of which declares a position.
+/// </summary>
+public class PairCommand : Command<WhereConfiguration, GreetConfiguration>, ICommandDescriptor
+{
+    /// <summary>
+    /// Gets the identifier this command is invoked by.
+    /// </summary>
+    public static string Id => "pair";
+
+    /// <summary>
+    /// Gets the description of this command.
+    /// </summary>
+    public static string Description => "takes two configurations";
+
+    /// <summary>
+    /// The trace this command records into.
+    /// </summary>
+    private readonly Trace _trace;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="PairCommand"/> class.
+    /// </summary>
+    /// <param name="trace">The trace to record into.</param>
+    public PairCommand(Trace trace)
+    {
+        _trace = trace;
+    }
+
+    /// <summary>
+    /// Records both halves.
+    /// </summary>
+    /// <param name="where">The positional half.</param>
+    /// <param name="greet">The option half.</param>
+    /// <param name="ct">Cancellation token.</param>
+    public override void Handle(WhereConfiguration where, GreetConfiguration greet, CancellationToken ct) =>
+        _trace.Add($"pair {where.Where} {greet.Name}");
+}
+
+/// <summary>
+/// A group holding the two-configuration command.
+/// </summary>
+public class PairGroup : Group, ICommandDescriptor
+{
+    /// <summary>
+    /// Gets the identifier of this group.
+    /// </summary>
+    public static string Id => string.Empty;
+
+    /// <summary>
+    /// Gets the description of this group.
+    /// </summary>
+    public static string Description => "a group with a two-configuration command";
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="PairGroup"/> class.
+    /// </summary>
+    public PairGroup()
+    {
+        Add<PairCommand>();
     }
 }

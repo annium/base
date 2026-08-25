@@ -40,6 +40,8 @@ public abstract class AsyncCommand<T1, T2> : CommandBase
             return;
         }
 
+        Root.ConfigurationBuilder.EnsureNothingIsLeftOver(args, typeof(T1), typeof(T2));
+
         var cfg1 = Root.ConfigurationBuilder.Build<T1>(args);
         var cfg2 = Root.ConfigurationBuilder.Build<T2>(args);
         await HandleAsync(cfg1, cfg2, ct);

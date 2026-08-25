@@ -42,6 +42,8 @@ public abstract class Command<T1, T2, T3> : CommandBase
             return Task.CompletedTask;
         }
 
+        Root.ConfigurationBuilder.EnsureNothingIsLeftOver(args, typeof(T1), typeof(T2), typeof(T3));
+
         var cfg1 = Root.ConfigurationBuilder.Build<T1>(args);
         var cfg2 = Root.ConfigurationBuilder.Build<T2>(args);
         var cfg3 = Root.ConfigurationBuilder.Build<T3>(args);

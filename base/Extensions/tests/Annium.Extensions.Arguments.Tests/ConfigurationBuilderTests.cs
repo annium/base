@@ -362,15 +362,37 @@ public class ConfigurationBuilderTests : TestBase
 
     /// <summary>
     /// More positional arguments than the command declares is a usage error. They used to be read past and
-    /// dropped, so a mistyped invocation ran as though the surplus had never been typed.
+    /// dropped, so a mistyped invocation ran as though the surplus had never been typed. The check belongs
+    /// to the command rather than to one configuration type: a command binding several of them takes them
+    /// all from the same command line.
     /// </summary>
     [Fact]
-    public void Build_MorePositionsThanDeclared_Throws()
+    public void EnsureNothingIsLeftOver_MorePositionsThanDeclared_Throws()
     {
         // act & assert
-        var error = Wrap.It(() => Build<PositionalConfiguration>("build", "release", "extra"))
+        var error = Wrap.It(() => LeftOver(["build", "release", "extra"], typeof(PositionalConfiguration)))
             .Throws<ArgumentParseException>();
         error.Message.Contains("extra").IsTrue("the message must name what could not be placed");
+    }
+
+    /// <summary>
+    /// What a command does declare is not surplus.
+    /// </summary>
+    [Fact]
+    public void EnsureNothingIsLeftOver_AsManyPositionsAsDeclared_Passes()
+    {
+        // act & assert
+        LeftOver(["build", "release"], typeof(PositionalConfiguration));
+    }
+
+    /// <summary>
+    /// A position declared by one of a command's configuration types is not surplus to another.
+    /// </summary>
+    [Fact]
+    public void EnsureNothingIsLeftOver_PositionDeclaredByAnotherType_Passes()
+    {
+        // act & assert
+        LeftOver(["build"], typeof(AliasedConfiguration), typeof(PositionalConfiguration));
     }
 
     /// <summary>
@@ -378,10 +400,21 @@ public class ConfigurationBuilderTests : TestBase
     /// parsed and then discarded.
     /// </summary>
     [Fact]
-    public void Build_RawWithoutSomewhereToPutIt_Throws()
+    public void EnsureNothingIsLeftOver_RawWithoutSomewhereToPutIt_Throws()
     {
         // act & assert
-        Wrap.It(() => Build<PositionalConfiguration>("build", "--", "secret")).Throws<ArgumentParseException>();
+        Wrap.It(() => LeftOver(["build", "--", "secret"], typeof(PositionalConfiguration)))
+            .Throws<ArgumentParseException>();
+    }
+
+    /// <summary>
+    /// A raw tail one of the command's configuration types takes is fine.
+    /// </summary>
+    [Fact]
+    public void EnsureNothingIsLeftOver_RawTaken_Passes()
+    {
+        // act & assert
+        LeftOver(["run", "--", "-force", "value"], typeof(RawTailConfiguration));
     }
 
     /// <summary>
@@ -392,6 +425,14 @@ public class ConfigurationBuilderTests : TestBase
     /// <returns>The bound configuration.</returns>
     private T Build<T>(params string[] args)
         where T : new() => Get<Root>().ConfigurationBuilder.Build<T>(args);
+
+    /// <summary>
+    /// Checks a command line against the configuration types a command binds.
+    /// </summary>
+    /// <param name="args">The command line to check.</param>
+    /// <param name="configurationTypes">The configuration types the command binds.</param>
+    private void LeftOver(string[] args, params Type[] configurationTypes) =>
+        Get<Root>().ConfigurationBuilder.EnsureNothingIsLeftOver(args, configurationTypes);
 }
 
 /// <summary>
