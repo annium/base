@@ -43,7 +43,7 @@ public class TrackCompletionTest : TestBase
         subject.OnCompleted();
 
         // assert
-        await Bounded(completed.Task);
+        await Bounded.AwaitAsync(completed.Task);
         received.Has(2).At(0).Is(1);
         received.At(1).Is(2);
     }
@@ -67,7 +67,7 @@ public class TrackCompletionTest : TestBase
         using var subscription = tracked.Subscribe(_ => { }, () => completed.TrySetResult());
 
         // assert - bounded, because without the replay the subscriber simply waits
-        await Bounded(completed.Task);
+        await Bounded.AwaitAsync(completed.Task);
     }
 
     /// <summary>
@@ -94,25 +94,8 @@ public class TrackCompletionTest : TestBase
             .TrackCompletion(Logger);
 
         // act & assert
-        await Bounded(observable.WhenCompletedAsync(Logger));
-        await Bounded(observable.WhenCompletedAsync(Logger));
-    }
-
-    /// <summary>
-    /// Fails the test if the given task has not finished within five seconds, so a regression that turns a
-    /// completion into an unbounded wait is reported as such instead of hanging the run.
-    /// </summary>
-    /// <param name="task">The task being bounded.</param>
-    /// <returns>A task representing the asynchronous test operation.</returns>
-    private static async Task Bounded(Task task)
-    {
-#pragma warning disable VSTHRD003
-        var completed = await Task.WhenAny(
-            task,
-            Task.Delay(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken)
-        );
-#pragma warning restore VSTHRD003
-        (completed == task).IsTrue("a completed source must not leave the caller waiting");
+        await Bounded.AwaitAsync(observable.WhenCompletedAsync(Logger));
+        await Bounded.AwaitAsync(observable.WhenCompletedAsync(Logger));
     }
 }
 

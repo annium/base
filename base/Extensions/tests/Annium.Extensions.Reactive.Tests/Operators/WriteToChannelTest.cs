@@ -57,7 +57,7 @@ public class WriteToChannelTest
         // assert - drained first: an unbounded channel reports completion only once it is empty
         (await channel.Reader.ReadAsync(TestContext.Current.CancellationToken)).Is(1);
 #pragma warning disable VSTHRD003
-        await Bounded(channel.Reader.Completion);
+        await Bounded.AwaitAsync(channel.Reader.Completion);
 #pragma warning restore VSTHRD003
     }
 
@@ -80,29 +80,12 @@ public class WriteToChannelTest
 
         // assert
 #pragma warning disable VSTHRD003
-        await Bounded(channel.Reader.Completion);
+        await Bounded.AwaitAsync(channel.Reader.Completion);
 #pragma warning restore VSTHRD003
 #pragma warning disable VSTHRD003
         var error = await Wrap.It(async () => await channel.Reader.Completion).ThrowsAsync<InvalidOperationException>();
 #pragma warning restore VSTHRD003
         error.Message.Is("source failed");
-    }
-
-    /// <summary>
-    /// Fails the test if the given task has not finished within five seconds, so a regression that turns an
-    /// end-of-source into an unbounded wait is reported as such instead of hanging the run.
-    /// </summary>
-    /// <param name="task">The task being bounded.</param>
-    /// <returns>A task representing the asynchronous test operation.</returns>
-    private static async Task Bounded(Task task)
-    {
-#pragma warning disable VSTHRD003
-        var completed = await Task.WhenAny(
-            task,
-            Task.Delay(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken)
-        );
-#pragma warning restore VSTHRD003
-        (completed == task).IsTrue("a source that ended must not leave the reader waiting");
     }
 
     /// <summary>

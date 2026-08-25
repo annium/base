@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Linq;
+using System.Reactive.Threading.Tasks;
 using System.Threading;
 using System.Threading.Tasks;
 using Annium.Logging;
@@ -62,7 +63,7 @@ public class StaticObservableInstanceTest : TestBase
         instance.Subscribe(log1.Add);
         instance.Subscribe(log2.Add);
 
-        await instance;
+        await Bounded.AwaitAsync(instance.ToTask(TestContext.Current.CancellationToken));
 
         log1.Has(5);
         log2.Has(5);
@@ -101,7 +102,7 @@ public class StaticObservableInstanceTest : TestBase
 
         var first = new TaskCompletionSource();
         var subscription = instance.Subscribe(_ => { }, () => first.TrySetResult());
-        await Bounded(first.Task);
+        await Bounded.AwaitAsync(first.Task);
         // VSTHRD103: IDisposable is the only shape Rx subscriptions offer
 #pragma warning disable VSTHRD103
         subscription.Dispose();
@@ -112,25 +113,8 @@ public class StaticObservableInstanceTest : TestBase
         using var lateSubscription = instance.Subscribe(_ => { }, () => second.TrySetResult());
 
         // assert
-        await Bounded(second.Task);
+        await Bounded.AwaitAsync(second.Task);
         Volatile.Read(ref runs).Is(1, "the factory must not run again for a later subscriber");
-    }
-
-    /// <summary>
-    /// Fails the test if the given task has not finished within five seconds, so a regression that leaves a
-    /// subscriber waiting is reported as such instead of hanging the run.
-    /// </summary>
-    /// <param name="task">The task being bounded.</param>
-    /// <returns>A task representing the asynchronous test operation.</returns>
-    private static async Task Bounded(Task task)
-    {
-#pragma warning disable VSTHRD003
-        var completed = await Task.WhenAny(
-            task,
-            Task.Delay(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken)
-        );
-#pragma warning restore VSTHRD003
-        (completed == task).IsTrue("the subscriber must not be left waiting");
     }
 
     /// <summary>

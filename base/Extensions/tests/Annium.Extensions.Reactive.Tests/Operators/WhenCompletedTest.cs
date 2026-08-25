@@ -31,7 +31,9 @@ public class WhenCompletedTest : TestBase
         var log = new TestLog<long>();
 
         // act
-        await Observable.Interval(TimeSpan.FromMilliseconds(20)).Take(5).Do(log.Add).WhenCompletedAsync(Get<ILogger>());
+        await Bounded.AwaitAsync(
+            Observable.Interval(TimeSpan.FromMilliseconds(20)).Take(5).Do(log.Add).WhenCompletedAsync(Get<ILogger>())
+        );
 
         log.IsEqual(new[] { 0, 1, 2, 3, 4 });
     }

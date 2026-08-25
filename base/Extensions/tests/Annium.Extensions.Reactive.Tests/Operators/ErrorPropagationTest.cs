@@ -39,7 +39,7 @@ public class ErrorPropagationTest : TestBase
         );
 
         // act & assert - bounded, because the defect being pinned is an unbounded wait
-        await Bounded(wait);
+        await Bounded.AwaitAsync(wait);
 #pragma warning disable VSTHRD003
         await Wrap.It(async () => await wait).ThrowsAsync<InvalidOperationException>();
 #pragma warning restore VSTHRD003
@@ -193,13 +193,13 @@ public class ErrorPropagationTest : TestBase
         subject.OnError(new InvalidOperationException("source failed"));
 
         // assert - the subscriber present at the time hears about it
-        await Bounded(early.Task);
+        await Bounded.AwaitAsync(early.Task);
         (await early.Task).As<InvalidOperationException>().Message.Is("source failed");
 
         // and one arriving afterwards is not left subscribed to a source that will never speak again
         var late = new TaskCompletionSource();
         using var lateSubscription = tracked.Subscribe(_ => { }, _ => late.TrySetResult(), () => late.TrySetResult());
-        await Bounded(late.Task);
+        await Bounded.AwaitAsync(late.Task);
     }
 
     /// <summary>
@@ -218,7 +218,7 @@ public class ErrorPropagationTest : TestBase
         subject.OnError(new InvalidOperationException("source failed"));
 
         // assert
-        await Bounded(tcs.Task);
+        await Bounded.AwaitAsync(tcs.Task);
         (await tcs.Task).As<InvalidOperationException>().Message.Is("source failed");
     }
 
@@ -241,7 +241,7 @@ public class ErrorPropagationTest : TestBase
         subject.OnNext(1);
 
         // assert
-        await Bounded(tcs.Task);
+        await Bounded.AwaitAsync(tcs.Task);
         (await tcs.Task).As<InvalidOperationException>().Message.Is("handler failed");
     }
 
@@ -277,7 +277,7 @@ public class ErrorPropagationTest : TestBase
             );
 
         // assert
-        await Bounded(terminal.Task);
+        await Bounded.AwaitAsync(terminal.Task);
         var error = await terminal.Task;
         error.IsNotDefault("the handler failure must not be lost to the source's completion");
         error.As<InvalidOperationException>().Message.Is("handler failed");
@@ -290,22 +290,5 @@ public class ErrorPropagationTest : TestBase
         if (sequential)
             lock (received)
                 received.Contains(4).IsFalse("nothing after the failing item may run on a sequential executor");
-    }
-
-    /// <summary>
-    /// Fails the test if the given task has not finished within five seconds, so a regression that turns a
-    /// failure into an unbounded wait is reported as such instead of hanging the run.
-    /// </summary>
-    /// <param name="task">The task being bounded.</param>
-    /// <returns>A task representing the asynchronous test operation.</returns>
-    private static async Task Bounded(Task task)
-    {
-#pragma warning disable VSTHRD003
-        var completed = await Task.WhenAny(
-            task,
-            Task.Delay(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken)
-        );
-#pragma warning restore VSTHRD003
-        (completed == task).IsTrue("a failing source must not leave the caller waiting");
     }
 }

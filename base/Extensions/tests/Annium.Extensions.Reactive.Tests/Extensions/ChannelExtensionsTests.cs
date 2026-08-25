@@ -40,7 +40,7 @@ public class ChannelExtensionsTests : TestBase
         channel.Writer.Complete();
 
         // assert
-        await Bounded(completed.Task);
+        await Bounded.AwaitAsync(completed.Task);
     }
 
     /// <summary>
@@ -61,25 +61,8 @@ public class ChannelExtensionsTests : TestBase
         channel.Writer.Complete(new InvalidOperationException("writer failed"));
 
         // assert
-        await Bounded(failure.Task);
+        await Bounded.AwaitAsync(failure.Task);
         (await failure.Task).As<InvalidOperationException>().Message.Is("writer failed");
-    }
-
-    /// <summary>
-    /// Fails the test if the given task has not finished within five seconds, so a regression that turns an
-    /// end-of-channel into an unbounded wait is reported as such instead of hanging the run.
-    /// </summary>
-    /// <param name="task">The task being bounded.</param>
-    /// <returns>A task representing the asynchronous test operation.</returns>
-    private static async Task Bounded(Task task)
-    {
-#pragma warning disable VSTHRD003
-        var completed = await Task.WhenAny(
-            task,
-            Task.Delay(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken)
-        );
-#pragma warning restore VSTHRD003
-        (completed == task).IsTrue("a channel that ended must not leave the consumer waiting");
     }
 
     /// <summary>

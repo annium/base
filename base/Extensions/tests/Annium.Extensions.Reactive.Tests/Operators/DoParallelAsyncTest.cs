@@ -43,7 +43,7 @@ public class DoParallelAsyncTest : TestBase
             })
             .Subscribe(_ => { }, tcs.SetResult);
 
-        await tcs.Task;
+        await Bounded.AwaitAsync(tcs.Task);
 
         log.Has(200);
         var starts = log.Select((x, i) => (x, i)).Where(x => x.x.StartsWith("start:")).Select(x => x.i).ToArray();

@@ -58,7 +58,7 @@ public class CatchAsyncTest
                 }
             );
 
-        await tcs.Task;
+        await Bounded.AwaitAsync(tcs.Task);
 
         log.Has(6);
         log[4].Is("err: 3");

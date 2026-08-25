@@ -54,7 +54,7 @@ public class SubscribeAsyncTest : TestBase
                 Logger
             );
 
-        await tcs.Task;
+        await Bounded.AwaitAsync(tcs.Task);
 
         log.Has(3);
         log[2].Is("err: 3");
@@ -91,7 +91,7 @@ public class SubscribeAsyncTest : TestBase
                 Logger
             );
 
-        await tcs.Task;
+        await Bounded.AwaitAsync(tcs.Task);
 
         log.Has(6);
         log[5].Is("done");
@@ -122,7 +122,7 @@ public class SubscribeAsyncTest : TestBase
                 },
                 Logger
             );
-        await tcs.Task;
+        await Bounded.AwaitAsync(tcs.Task);
 
         // assert
         await Expect.ToAsync(() =>
