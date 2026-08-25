@@ -82,6 +82,16 @@ public abstract class Group : CommandBase
         }
 
         if (configurationBuilder.Build<HelpConfiguration>(args).Help)
+        {
             Console.WriteLine(helpBuilder.BuildHelp(id, description, _commands));
+            return;
+        }
+
+        // nothing matched and there is no default command to fall back to. Saying so and showing what the
+        // group does understand beats exiting silently, which is indistinguishable from having worked
+        if (args.Length > 0)
+            Console.WriteLine($"Unknown command: {args[0]}");
+
+        Console.WriteLine(helpBuilder.BuildHelp(id, description, _commands));
     }
 }
