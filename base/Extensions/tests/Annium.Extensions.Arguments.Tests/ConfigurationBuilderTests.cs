@@ -218,6 +218,46 @@ public class ConfigurationBuilderTests : TestBase
     }
 
     /// <summary>
+    /// A property named as an acronym is matched the same way as any other. The lexer normalises the
+    /// token it reads, so the names it is compared against have to be normalised too.
+    /// </summary>
+    [Fact]
+    public void Build_AcronymNamedFlagFollowedByAPosition_KeepsBoth()
+    {
+        // act
+        var cfg = Build<AcronymConfiguration>("-url", "report.txt");
+
+        // assert
+        cfg.URL.IsTrue("the flag must be recognised despite its name not surviving normalisation as-is");
+        cfg.Path.Is("report.txt");
+    }
+
+    /// <summary>
+    /// The same holds for an acronym-named option carrying a value.
+    /// </summary>
+    [Fact]
+    public void Build_AcronymNamedOption_Binds()
+    {
+        // act
+        var cfg = Build<AcronymConfiguration>("-id", "42");
+
+        // assert
+        cfg.ID.Is("42");
+    }
+
+    /// <summary>
+    /// Two properties claiming the same name are a wiring mistake, and are reported as one rather than
+    /// silently routing a value to whichever happened to win.
+    /// </summary>
+    [Fact]
+    public void Build_TwoPropertiesClaimingOneName_Throws()
+    {
+        // act & assert
+        var error = Wrap.It(() => Build<CollidingConfiguration>("-output", "dist")).Throws<ArgumentParseException>();
+        error.Message.Contains("Output").IsTrue("the message must name the token both properties claim");
+    }
+
+    /// <summary>
     /// Builds a configuration of the given type from a command line.
     /// </summary>
     /// <typeparam name="T">The configuration type to build.</typeparam>
@@ -346,4 +386,46 @@ public class FlagAndPositionConfiguration
     /// </summary>
     [Position(1, isRequired: false)]
     public string Path { get; set; } = string.Empty;
+}
+
+/// <summary>
+/// Configuration whose property names do not survive normalisation unchanged.
+/// </summary>
+public class AcronymConfiguration
+{
+    /// <summary>
+    /// Gets or sets whether to print the URL.
+    /// </summary>
+    [Option]
+    public bool URL { get; set; }
+
+    /// <summary>
+    /// Gets or sets the identifier.
+    /// </summary>
+    [Option]
+    public string ID { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the path to work on.
+    /// </summary>
+    [Position(1, isRequired: false)]
+    public string Path { get; set; } = string.Empty;
+}
+
+/// <summary>
+/// Configuration where one property's alias is another property's name.
+/// </summary>
+public class CollidingConfiguration
+{
+    /// <summary>
+    /// Gets or sets the output directory.
+    /// </summary>
+    [Option]
+    public string Output { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets whether to force, under an alias that collides with Output.
+    /// </summary>
+    [Option("output")]
+    public bool Force { get; set; }
 }

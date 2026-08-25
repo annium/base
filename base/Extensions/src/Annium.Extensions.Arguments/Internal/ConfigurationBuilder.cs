@@ -55,15 +55,16 @@ internal class ConfigurationBuilder : IConfigurationBuilder
     public T Build<T>(string[] args)
         where T : new()
     {
-        // the lexer cannot tell a flag from an option by shape, so it is told which names are flags
-        var flagNames = _configurationProcessor
-            .GetPropertiesWithAttribute<OptionAttribute>(typeof(T))
+        var options = _configurationProcessor.GetPropertiesWithAttribute<OptionAttribute>(typeof(T));
+
+        EnsureNamesAreUnique(options);
+
+        // the lexer cannot tell a flag from an option by shape, so it is told which names are flags. The
+        // names are normalised the same way the lexer normalises the token it reads - a property whose own
+        // name does not survive that unchanged, an acronym like URL, would otherwise never match
+        var flagNames = options
             .Where(e => e.property.PropertyType == typeof(bool))
-            .SelectMany(e =>
-                e.attribute.Alias is null
-                    ? new[] { e.property.Name }
-                    : new[] { e.property.Name, e.attribute.Alias.PascalCase() }
-            )
+            .SelectMany(e => Names(e.property.Name, e.attribute.Alias))
             .ToHashSet();
 
         var raw = _argumentProcessor.Compose(args, flagNames);
@@ -216,6 +217,9 @@ internal class ConfigurationBuilder : IConfigurationBuilder
     /// <returns>The matching option name if found, null otherwise</returns>
     private string? FindOptionName(IReadOnlyCollection<string> names, string name, string? alias)
     {
+        // the names to match against come from the lexer, which normalised them; so must these
+        name = name.PascalCase();
+
         if (alias == null)
             return names.Contains(name) ? name : null;
 
@@ -228,6 +232,36 @@ internal class ConfigurationBuilder : IConfigurationBuilder
             return name;
 
         return null;
+    }
+
+    /// <summary>
+    /// The normalised names an option answers to: its property name, and its alias when it has one.
+    /// </summary>
+    /// <param name="name">The property name.</param>
+    /// <param name="alias">The alias, if any.</param>
+    /// <returns>The names the option answers to.</returns>
+    private static IEnumerable<string> Names(string name, string? alias) =>
+        alias is null ? [name.PascalCase()] : [name.PascalCase(), alias.PascalCase()];
+
+    /// <summary>
+    /// Fails if two properties answer to the same name, which would otherwise route a value to whichever
+    /// of them happened to be looked up first - and, when one of them is a flag, make the other's option
+    /// lex as a flag for the whole type.
+    /// </summary>
+    /// <param name="options">The option-bearing properties of the configuration type.</param>
+    private static void EnsureNamesAreUnique(
+        IReadOnlyCollection<(PropertyInfo property, OptionAttribute attribute)> options
+    )
+    {
+        var claims = new Dictionary<string, string>();
+        foreach (var (property, attribute) in options)
+        foreach (var claimed in Names(property.Name, attribute.Alias))
+        {
+            if (claims.TryGetValue(claimed, out var other) && other != property.Name)
+                throw new ArgumentParseException($"Options '{other}' and '{property.Name}' both answer to '{claimed}'");
+
+            claims[claimed] = property.Name;
+        }
     }
 
     /// <summary>
