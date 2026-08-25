@@ -76,6 +76,46 @@ public class ErrorPropagationTest : TestBase
         AssertForwardsError(source => source.SelectSequentialAsync(x => Task.FromResult(x)));
 
     /// <summary>
+    /// A throwing handler reaches the subscriber of DoParallelAsync.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public Task DoParallelAsync_HandlerThrows_ForwardsError() =>
+        AssertForwardsHandlerFailure(source =>
+            source.DoParallelAsync(_ => throw new InvalidOperationException("handler failed"))
+        );
+
+    /// <summary>
+    /// A throwing handler reaches the subscriber of DoSequentialAsync.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public Task DoSequentialAsync_HandlerThrows_ForwardsError() =>
+        AssertForwardsHandlerFailure(source =>
+            source.DoSequentialAsync(_ => throw new InvalidOperationException("handler failed"))
+        );
+
+    /// <summary>
+    /// A throwing selector reaches the subscriber of SelectParallelAsync.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public Task SelectParallelAsync_SelectorThrows_ForwardsError() =>
+        AssertForwardsHandlerFailure(source =>
+            source.SelectParallelAsync<int, int>(_ => throw new InvalidOperationException("handler failed"))
+        );
+
+    /// <summary>
+    /// A throwing selector reaches the subscriber of SelectSequentialAsync.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public Task SelectSequentialAsync_SelectorThrows_ForwardsError() =>
+        AssertForwardsHandlerFailure(source =>
+            source.SelectSequentialAsync<int, int>(_ => throw new InvalidOperationException("handler failed"))
+        );
+
+    /// <summary>
     /// A tracked source that fails tells its subscribers so, and does not leave a later subscriber waiting
     /// for a sequence that has already ended.
     /// </summary>
@@ -120,6 +160,29 @@ public class ErrorPropagationTest : TestBase
         // assert
         await Bounded(tcs.Task);
         (await tcs.Task).As<InvalidOperationException>().Message.Is("source failed");
+    }
+
+    /// <summary>
+    /// Subscribes to the operator under test and asserts a failure raised by the caller's own handler
+    /// reaches the subscriber. These operators run the handler on an executor built with a VoidLogger, so
+    /// a handler that throws is discarded twice over unless the operator forwards it: the item vanishes
+    /// and nothing is written down.
+    /// </summary>
+    /// <param name="apply">Applies the operator to a source.</param>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    private static async Task AssertForwardsHandlerFailure(Func<IObservable<int>, IObservable<int>> apply)
+    {
+        // arrange
+        var tcs = new TaskCompletionSource<Exception>();
+        var subject = new Subject<int>();
+        using var subscription = apply(subject).Subscribe(_ => { }, e => tcs.TrySetResult(e), () => { });
+
+        // act
+        subject.OnNext(1);
+
+        // assert
+        await Bounded(tcs.Task);
+        (await tcs.Task).As<InvalidOperationException>().Message.Is("handler failed");
     }
 
     /// <summary>

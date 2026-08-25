@@ -32,7 +32,18 @@ public static class SelectParallelAsyncOperatorExtensions
                 x =>
                     executor.Schedule(async () =>
                     {
-                        observer.OnNext(await selector(x));
+                        try
+                        {
+                            observer.OnNext(await selector(x));
+                        }
+                        catch (Exception e)
+                        {
+                            // the executor logs into a VoidLogger, so an exception from the caller's
+                            // own handler is discarded there - the item vanishes and the sequence
+                            // carries on as if nothing happened. Forwarding it ends the sequence, as a
+                            // throwing selector does in Rx's own Select
+                            ExecutorTeardown.FailInBackground(executor, observer, e);
+                        }
                     }),
                 // without an onError the source's failure had nowhere to go: the downstream
                 // observer never heard of it and the executor was left running
