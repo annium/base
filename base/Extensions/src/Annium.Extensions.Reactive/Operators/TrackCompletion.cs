@@ -108,7 +108,17 @@ file record CompletionContext<T> : ILogSubject
 
                 this.Trace("done");
 
-                return subscription;
+                // the source subscription alone left the observer in the tracked list, so a subscriber
+                // that let go before the source ended was held until it did. Rx stops a disposed observer
+                // itself, so nothing was delivered to it - it was simply kept alive. Both sibling
+                // implementations of this shape drop the observer on unsubscribe; this one did not
+                return Disposable.Create(() =>
+                {
+                    lock (this)
+                        _incompleteObservers.Remove(observer);
+
+                    subscription.Dispose();
+                });
             }
 
             error = Error;
