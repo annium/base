@@ -59,15 +59,7 @@ internal class ConfigurationBuilder : IConfigurationBuilder
 
         EnsureNamesAreUnique(options);
 
-        // the lexer cannot tell a flag from an option by shape, so it is told which names are flags. The
-        // names are normalised the same way the lexer normalises the token it reads - a property whose own
-        // name does not survive that unchanged, an acronym like URL, would otherwise never match
-        var flagNames = options
-            .Where(e => e.property.PropertyType == typeof(bool))
-            .SelectMany(e => Names(e.property.Name, e.attribute.Alias))
-            .ToHashSet();
-
-        var raw = _argumentProcessor.Compose(args, flagNames);
+        var raw = _argumentProcessor.Compose(args, Spec(options));
 
         var value = new T();
 
@@ -232,6 +224,34 @@ internal class ConfigurationBuilder : IConfigurationBuilder
             return name;
 
         return null;
+    }
+
+    /// <summary>
+    /// Describes the type's options for the lexer: every spelling mapped to the option it names, and which
+    /// of those options are flags or collections. The spellings are normalised the same way the lexer
+    /// normalises the token it reads - a property whose own name does not survive that unchanged, an
+    /// acronym like URL, would otherwise never match.
+    /// </summary>
+    /// <param name="options">The option-bearing properties of the configuration type.</param>
+    /// <returns>The spec describing them.</returns>
+    private static OptionSpec Spec(IReadOnlyCollection<(PropertyInfo property, OptionAttribute attribute)> options)
+    {
+        var names = new Dictionary<string, string>();
+        var kinds = new Dictionary<string, OptionKind>();
+
+        foreach (var (property, attribute) in options)
+        {
+            var canonical = property.Name.PascalCase();
+            foreach (var spelling in Names(property.Name, attribute.Alias))
+                names[spelling] = canonical;
+
+            kinds[canonical] =
+                property.PropertyType == typeof(bool) ? OptionKind.Flag
+                : property.PropertyType.IsArray ? OptionKind.Many
+                : OptionKind.Single;
+        }
+
+        return new OptionSpec(names, kinds);
     }
 
     /// <summary>

@@ -258,6 +258,70 @@ public class ConfigurationBuilderTests : TestBase
     }
 
     /// <summary>
+    /// A negative number is a value, not an option. Reading the leading dash as an option sign made the
+    /// option and its value both lex as flags, and the number never reached the property.
+    /// </summary>
+    [Fact]
+    public void Build_NegativeNumberValue_Binds()
+    {
+        // act
+        var cfg = Build<NumericConfiguration>("-count", "-5");
+
+        // assert
+        cfg.Count.Is(-5);
+    }
+
+    /// <summary>
+    /// The same for a negative number in a positional argument.
+    /// </summary>
+    [Fact]
+    public void Build_NegativeNumberPosition_Binds()
+    {
+        // act
+        var cfg = Build<NumericConfiguration>("-12");
+
+        // assert
+        cfg.Offset.Is(-12);
+    }
+
+    /// <summary>
+    /// An array option collects values given under either spelling. Keying by the token rather than by the
+    /// property left the two spellings in separate buckets, and only one of them survived.
+    /// </summary>
+    [Fact]
+    public void Build_ArrayOptionByNameAndAlias_CollectsBoth()
+    {
+        // act
+        var cfg = Build<AliasedArrayConfiguration>("-include", "a", "-i", "b");
+
+        // assert
+        cfg.Include.Has(2, "values given under either spelling belong to the same option");
+    }
+
+    /// <summary>
+    /// A scalar option given twice is a usage error rather than a silently dropped value. Promoting it to
+    /// a multi-option left it in a bucket the binder never reads for a non-array property.
+    /// </summary>
+    [Fact]
+    public void Build_ScalarOptionGivenTwice_Throws()
+    {
+        // act & assert
+        var error = Wrap.It(() => Build<AliasedConfiguration>("-output", "a", "-output", "b"))
+            .Throws<ArgumentParseException>();
+        error.Message.Contains("Output").IsTrue("the message must name the option given twice");
+    }
+
+    /// <summary>
+    /// The same when the two occurrences use different spellings of the one option.
+    /// </summary>
+    [Fact]
+    public void Build_ScalarOptionGivenTwiceUnderBothSpellings_Throws()
+    {
+        // act & assert
+        Wrap.It(() => Build<AliasedConfiguration>("-output", "a", "-o", "b")).Throws<ArgumentParseException>();
+    }
+
+    /// <summary>
     /// Builds a configuration of the given type from a command line.
     /// </summary>
     /// <typeparam name="T">The configuration type to build.</typeparam>
@@ -428,4 +492,34 @@ public class CollidingConfiguration
     /// </summary>
     [Option("output")]
     public bool Force { get; set; }
+}
+
+/// <summary>
+/// Configuration taking numbers, which may be negative.
+/// </summary>
+public class NumericConfiguration
+{
+    /// <summary>
+    /// Gets or sets how many.
+    /// </summary>
+    [Option]
+    public int Count { get; set; }
+
+    /// <summary>
+    /// Gets or sets the offset.
+    /// </summary>
+    [Position(1, isRequired: false)]
+    public int Offset { get; set; }
+}
+
+/// <summary>
+/// Configuration with an aliased array option.
+/// </summary>
+public class AliasedArrayConfiguration
+{
+    /// <summary>
+    /// Gets or sets the values to include.
+    /// </summary>
+    [Option("i")]
+    public string[] Include { get; set; } = Array.Empty<string>();
 }
