@@ -119,6 +119,89 @@ public class WorkerTests : TestBase
     }
 
     /// <summary>
+    /// SetState starts or stops the worker for a key, so callers holding a boolean do not have to branch.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public async Task SetState_StartsAndStops()
+    {
+        // arrange
+        var log = Get<SharedLog>();
+        var keyA = new WorkerData("A");
+        var manager = Get<IWorkerManager<WorkerData>>();
+
+        // act & assert
+        await manager.SetStateAsync(keyA, true);
+        log.GetLog(keyA).IsEqual(new[] { "start A" });
+        await manager.SetStateAsync(keyA, false);
+        log.GetLog(keyA).IsEqual(new[] { "start A", "done A" });
+    }
+
+    /// <summary>
+    /// Moving an active worker to a new key stops the old one and starts the new one.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public async Task SetStateWithKeyUpdate_ActiveOnNewKey_MovesTheWorker()
+    {
+        // arrange
+        var log = Get<SharedLog>();
+        var keyA = new WorkerData("A");
+        var keyB = new WorkerData("B");
+        var manager = Get<IWorkerManager<WorkerData>>();
+        await manager.StartAsync(keyA);
+
+        // act
+        await manager.SetStateWithKeyUpdateAsync(keyA, keyB, true);
+
+        // assert
+        log.GetLog(keyA).IsEqual(new[] { "start A", "done A" });
+        log.GetLog(keyB).IsEqual(new[] { "start B" });
+    }
+
+    /// <summary>
+    /// Moving an inactive worker to a new key stops the old one and starts nothing.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public async Task SetStateWithKeyUpdate_InactiveOnNewKey_StartsNothing()
+    {
+        // arrange
+        var log = Get<SharedLog>();
+        var keyA = new WorkerData("A");
+        var keyB = new WorkerData("B");
+        var manager = Get<IWorkerManager<WorkerData>>();
+        await manager.StartAsync(keyA);
+
+        // act
+        await manager.SetStateWithKeyUpdateAsync(keyA, keyB, false);
+
+        // assert
+        log.GetLog(keyA).IsEqual(new[] { "start A", "done A" });
+        log.GetLog(keyB).IsEmpty("an inactive worker must not be started under its new key");
+    }
+
+    /// <summary>
+    /// An unchanged key is a plain state change, not a move: the running worker is left alone.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public async Task SetStateWithKeyUpdate_SameKeyStillActive_LeavesItRunning()
+    {
+        // arrange
+        var log = Get<SharedLog>();
+        var keyA = new WorkerData("A");
+        var manager = Get<IWorkerManager<WorkerData>>();
+        await manager.StartAsync(keyA);
+
+        // act
+        await manager.SetStateWithKeyUpdateAsync(keyA, keyA, true);
+
+        // assert
+        log.GetLog(keyA).IsEqual(new[] { "start A" });
+    }
+
+    /// <summary>
     /// Disposing the manager stops the workers it is still holding. They own whatever they opened on start,
     /// so dropping them leaves that open with nothing left to close it.
     /// </summary>
