@@ -441,16 +441,12 @@ public static class BaseRuleExtensions
         string regex,
         string message = ""
     ) =>
-        rule.Add(
-            (context, value) =>
-            {
-                var re = new Regex(
-                    regex,
-                    RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.ExplicitCapture
-                );
-                if (value is not null && !re.IsMatch(value))
-                    context.Error(string.IsNullOrEmpty(message) ? "Value doesn't match specified regex" : message);
-            }
+        // built once, as the rule is registered. Constructing it inside the per-value delegate paid the
+        // cost of compiling the pattern again for every value validated, and put the pattern's own syntax
+        // errors on the first request rather than on wiring the validator up
+        rule.Matches(
+            new Regex(regex, RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.ExplicitCapture),
+            message
         );
 
     /// <summary>
