@@ -26,6 +26,7 @@ public class WorkerSequencingTests : TestBase
         {
             container.Add<Overlap>().AsSelf().Singleton();
             container.AddWorkers<SlowWorkerData, SlowWorker>();
+            container.AddWorkers<SlowStopWorkerData, SlowStopWorker>();
         });
     }
 
@@ -54,6 +55,37 @@ public class WorkerSequencingTests : TestBase
         // if the second StartAsync reported a running worker, stopping again must actually stop one
         await manager.StopAsync(key);
         overlap.Stops.Is(2, "a start that reported success must leave a worker that can be stopped");
+    }
+
+    /// <summary>
+    /// Disposing the manager while a start is parked waiting for a pending stop fails that start rather
+    /// than leaving it waiting forever. Once the manager is gone there is nothing to run the worker the
+    /// caller asked for, so the caller has to be told.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public async Task Dispose_WhileStartWaitsForAPendingStop_FailsTheStart()
+    {
+        // arrange
+        var manager = Get<IWorkerManager<SlowStopWorkerData>>();
+        var key = new SlowStopWorkerData("A");
+        await manager.StartAsync(key);
+
+        // act - the stop is slow, so this start parks on it; the manager then goes away
+        var stop = manager.StopAsync(key);
+        var start = manager.StartAsync(key);
+        await ((IAsyncDisposable)manager).DisposeAsync();
+
+        // assert - bounded, because the failure being pinned is an unbounded wait
+        var completed = await Task.WhenAny(
+            start,
+            Task.Delay(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken)
+        );
+        (completed == start).IsTrue("a start the manager can no longer run must not wait forever");
+#pragma warning disable VSTHRD003
+        await Wrap.It(async () => await start).ThrowsAsync<ObjectDisposedException>();
+        await stop;
+#pragma warning restore VSTHRD003
     }
 
     /// <summary>
@@ -190,5 +222,50 @@ public class SlowWorker : WorkerBase<SlowWorkerData>, ILogSubject
         _overlap.EnterStop();
 
         return ValueTask.CompletedTask;
+    }
+}
+
+/// <summary>
+/// Test data model identifying a worker whose stop is slow.
+/// </summary>
+/// <param name="Id">The unique identifier for the worker.</param>
+public record SlowStopWorkerData(string Id);
+
+/// <summary>
+/// Worker whose stop takes long enough for a start to park behind it.
+/// </summary>
+public class SlowStopWorker : WorkerBase<SlowStopWorkerData>, ILogSubject
+{
+    /// <summary>
+    /// Gets the logger instance for this worker.
+    /// </summary>
+    public ILogger Logger { get; }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SlowStopWorker"/> class.
+    /// </summary>
+    /// <param name="logger">Logger used for tracing.</param>
+    public SlowStopWorker(ILogger logger)
+    {
+        Logger = logger;
+    }
+
+    /// <summary>
+    /// Starts at once.
+    /// </summary>
+    /// <param name="ct">The cancellation token to monitor for cancellation requests.</param>
+    /// <returns>A task representing the asynchronous start operation.</returns>
+    protected override ValueTask StartAsync(CancellationToken ct) => ValueTask.CompletedTask;
+
+    /// <summary>
+    /// Takes its time stopping.
+    /// </summary>
+    /// <returns>A task representing the asynchronous stop operation.</returns>
+    protected override async ValueTask StopAsync()
+    {
+        // xUnit1051: a stop that keeps going is exactly what this worker is for
+#pragma warning disable xUnit1051
+        await Task.Delay(TimeSpan.FromMilliseconds(300));
+#pragma warning restore xUnit1051
     }
 }

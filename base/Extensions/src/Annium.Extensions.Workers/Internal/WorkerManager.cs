@@ -65,6 +65,11 @@ internal sealed class WorkerManager<TKey> : IWorkerManager<TKey>, IAsyncDisposab
 
         while (true)
         {
+            // re-checked each time round: this loop awaits a pending stop, and the manager can be disposed
+            // while it does. Creating an entry after that leaves the caller waiting on a worker that the
+            // disposed executor will never run
+            EnsureIsNotDisposed();
+
             Entry? entry;
             Task? pendingStop = null;
             lock (_entries)
@@ -88,7 +93,7 @@ internal sealed class WorkerManager<TKey> : IWorkerManager<TKey>, IAsyncDisposab
                     // traced after the assignment: reading `entry` before it exists logged a null id for
                     // the one case this line is meant to make visible
                     this.Trace("create and schedule init of entry {entry} for {key}", entry.GetFullId(), key);
-                    _executor.Schedule(async () =>
+                    var scheduled = _executor.Schedule(async () =>
                     {
                         try
                         {
@@ -110,6 +115,15 @@ internal sealed class WorkerManager<TKey> : IWorkerManager<TKey>, IAsyncDisposab
                             entry.SetStartFailed(e);
                         }
                     });
+
+                    // an executor that refused the work will never signal the entry, and the caller is
+                    // about to await exactly that signal
+                    if (!scheduled)
+                    {
+                        this.Trace("executor refused init of entry {entry} for {key}", entry.GetFullId(), key);
+                        _entries.Remove(key);
+                        entry.SetStartFailed(new ObjectDisposedException(nameof(WorkerManager<>)));
+                    }
                 }
             }
 
