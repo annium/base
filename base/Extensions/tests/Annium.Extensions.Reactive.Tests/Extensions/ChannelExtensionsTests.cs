@@ -55,8 +55,10 @@ public class ChannelExtensionsTests : TestBase
         disposable += observable.Subscribe(log.Add);
 
         // assert
+        // the reader is drained asynchronously - waiting for the count rather than asserting it outright
+        // keeps this a failure rather than a race if reading ever stops completing synchronously
         this.Trace("assert log is complete");
-        log.Has(data.Length);
+        await Expect.ToAsync(() => log.Has(data.Length));
 
         this.Trace("assert log matches data and dispose callback is not called");
         log.SequenceEqual(data).IsTrue();
