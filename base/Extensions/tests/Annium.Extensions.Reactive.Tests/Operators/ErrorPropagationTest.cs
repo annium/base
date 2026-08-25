@@ -116,6 +116,56 @@ public class ErrorPropagationTest : TestBase
         );
 
     /// <summary>
+    /// A handler that fails partway through a source that then finishes still reports the failure. The
+    /// source's completion and the handler's failure both tear the operator down; only one terminal
+    /// notification reaches the observer, and it has to be the failure.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public Task DoSequentialAsync_HandlerThrowsMidSequence_ReportsTheFailure() =>
+        AssertFailureBeatsCompletion(source =>
+            source.DoSequentialAsync(x =>
+                x == 3 ? throw new InvalidOperationException("handler failed") : Task.CompletedTask
+            )
+        );
+
+    /// <summary>
+    /// The same for SelectSequentialAsync.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public Task SelectSequentialAsync_SelectorThrowsMidSequence_ReportsTheFailure() =>
+        AssertFailureBeatsCompletion(source =>
+            source.SelectSequentialAsync(x =>
+                x == 3 ? throw new InvalidOperationException("handler failed") : Task.FromResult(x)
+            )
+        );
+
+    /// <summary>
+    /// The same for DoParallelAsync.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public Task DoParallelAsync_HandlerThrowsMidSequence_ReportsTheFailure() =>
+        AssertFailureBeatsCompletion(source =>
+            source.DoParallelAsync(x =>
+                x == 3 ? throw new InvalidOperationException("handler failed") : Task.CompletedTask
+            )
+        );
+
+    /// <summary>
+    /// The same for SelectParallelAsync.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public Task SelectParallelAsync_SelectorThrowsMidSequence_ReportsTheFailure() =>
+        AssertFailureBeatsCompletion(source =>
+            source.SelectParallelAsync(x =>
+                x == 3 ? throw new InvalidOperationException("handler failed") : Task.FromResult(x)
+            )
+        );
+
+    /// <summary>
     /// A tracked source that fails tells its subscribers so, and does not leave a later subscriber waiting
     /// for a sequence that has already ended.
     /// </summary>
@@ -183,6 +233,28 @@ public class ErrorPropagationTest : TestBase
         // assert
         await Bounded(tcs.Task);
         (await tcs.Task).As<InvalidOperationException>().Message.Is("handler failed");
+    }
+
+    /// <summary>
+    /// Runs the operator over a source that emits five values and completes at once, with the handler
+    /// failing on the third, and asserts the observer is told about the failure rather than about the
+    /// completion that was in flight at the same time.
+    /// </summary>
+    /// <param name="apply">Applies the operator to a source.</param>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    private static async Task AssertFailureBeatsCompletion(Func<IObservable<int>, IObservable<int>> apply)
+    {
+        // arrange - Range emits and completes synchronously, so the completion is scheduled while the
+        // handler for the third value has not run yet
+        var terminal = new TaskCompletionSource<Exception?>();
+        using var subscription = apply(Observable.Range(1, 5))
+            .Subscribe(_ => { }, e => terminal.TrySetResult(e), () => terminal.TrySetResult(null));
+
+        // assert
+        await Bounded(terminal.Task);
+        var error = await terminal.Task;
+        error.IsNotDefault("the handler failure must not be lost to the source's completion");
+        error.As<InvalidOperationException>().Message.Is("handler failed");
     }
 
     /// <summary>

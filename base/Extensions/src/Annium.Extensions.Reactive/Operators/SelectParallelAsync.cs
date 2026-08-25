@@ -28,10 +28,15 @@ public static class SelectParallelAsyncOperatorExtensions
         return Observable.Create<TResult>(observer =>
         {
             var executor = Executor.Parallel<IObservable<TSource>>(VoidLogger.Instance).Start();
+            var teardown = new ExecutorTeardown<TResult>(executor, observer);
             return source.Subscribe(
                 x =>
                     executor.Schedule(async () =>
                     {
+                        // work queued behind a failure must not emit values after it
+                        if (teardown.HasFailed)
+                            return;
+
                         try
                         {
                             observer.OnNext(await selector(x));
@@ -42,13 +47,13 @@ public static class SelectParallelAsyncOperatorExtensions
                             // own handler is discarded there - the item vanishes and the sequence
                             // carries on as if nothing happened. Forwarding it ends the sequence, as a
                             // throwing selector does in Rx's own Select
-                            ExecutorTeardown.FailInBackground(executor, observer, e);
+                            teardown.Fail(e);
                         }
                     }),
                 // without an onError the source's failure had nowhere to go: the downstream
                 // observer never heard of it and the executor was left running
-                e => ExecutorTeardown.FailInBackground(executor, observer, e),
-                () => ExecutorTeardown.CompleteInBackground(executor, observer)
+                teardown.Fail,
+                teardown.Complete
             );
         });
     }
