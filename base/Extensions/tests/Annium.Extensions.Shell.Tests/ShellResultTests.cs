@@ -1,7 +1,9 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Annium.Logging;
 using Annium.Testing;
 using Xunit;
 
@@ -22,7 +24,61 @@ public class ShellResultTests : TestBase
     public ShellResultTests(ITestOutputHelper outputHelper)
         : base(outputHelper)
     {
+        // the command trace is written at Trace level - without this the leak these tests pin is
+        // invisible to them rather than absent
+        OverrideLogLevel(LogLevel.Trace);
         Register(container => container.AddShell());
+    }
+
+    /// <summary>
+    /// A command marked sensitive keeps its arguments out of the logs - that is the whole point of the
+    /// flag, and a secret passed as an argument is exactly what it is used for.
+    /// Skipped on Windows - these tests drive POSIX utilities.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
+    [Fact]
+    public async Task RunAsync_MarkedSensitive_KeepsTheArgumentsOutOfTheLogs()
+    {
+        if (OperatingSystem.IsWindows())
+            return;
+
+        // arrange
+        var shell = Get<IShell>();
+        var secret = $"s3cr3t-{Guid.NewGuid():N}";
+
+        // act
+        var result = await shell
+            .Cmd("sh", "-c", $"echo {secret}")
+            .MarkSensitive()
+            .RunAsync(TestContext.Current.CancellationToken);
+
+        // assert - the command ran, and nothing wrote the secret down
+        result.Output.Trim().Is(secret);
+        Logs.Any(x => x.Message.Contains(secret))
+            .IsFalse("a command marked sensitive must not have its arguments logged");
+    }
+
+    /// <summary>
+    /// Without the flag the command is traced, so the test above is pinning the flag rather than an
+    /// absence of logging altogether.
+    /// Skipped on Windows - these tests drive POSIX utilities.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
+    [Fact]
+    public async Task RunAsync_NotMarkedSensitive_LogsTheCommand()
+    {
+        if (OperatingSystem.IsWindows())
+            return;
+
+        // arrange
+        var shell = Get<IShell>();
+        var marker = $"marker-{Guid.NewGuid():N}";
+
+        // act
+        await shell.Cmd("sh", "-c", $"echo {marker}").RunAsync(TestContext.Current.CancellationToken);
+
+        // assert
+        Logs.Any(x => x.Message.Contains(marker)).IsTrue("an ordinary command is traced as before");
     }
 
     /// <summary>

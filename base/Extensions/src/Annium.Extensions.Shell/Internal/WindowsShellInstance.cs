@@ -42,12 +42,6 @@ internal class WindowsShellInstance : ShellInstanceBase
         foreach (var arg in Cmd.Skip(1))
             process.StartInfo.ArgumentList.Add(arg);
 
-        this.Trace<string, string>(
-            "shell: {fileName} {arguments}",
-            process.StartInfo.FileName,
-            string.Join(' ', process.StartInfo.ArgumentList)
-        );
-
         return process;
     }
 }

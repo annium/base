@@ -286,5 +286,9 @@ internal abstract class ShellInstanceBase : IShellInstance, ILogSubject
     /// <param name="process">The process to get command string for</param>
     /// <returns>A formatted command string with filename and arguments</returns>
     private string GetCommand(Process process) =>
-        $"{process.StartInfo.FileName} {string.Join(' ', process.StartInfo.ArgumentList)}";
+        // the arguments are where a secret is passed, so a sensitive command is identified by its
+        // executable alone - this is reached from the kill and kill-failed logs, which are not gated
+        _isSensitive
+            ? process.StartInfo.FileName
+            : $"{process.StartInfo.FileName} {string.Join(' ', process.StartInfo.ArgumentList)}";
 }

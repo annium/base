@@ -25,6 +25,13 @@ public interface IShellInstance
     IShellInstance Print(bool print);
 
     /// <summary>
+    /// Marks the command as carrying sensitive information, keeping it out of the logs
+    /// </summary>
+    /// <param name="isSensitive">True to keep the command out of the logs, false otherwise</param>
+    /// <returns>The shell instance for method chaining</returns>
+    IShellInstance MarkSensitive(bool isSensitive = true);
+
+    /// <summary>
     /// Runs the shell command with a timeout
     /// </summary>
     /// <param name="timeout">The maximum execution time. <see cref="TimeSpan.Zero"/> means no limit</param>
