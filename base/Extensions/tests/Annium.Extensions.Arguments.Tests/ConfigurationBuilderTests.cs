@@ -361,112 +361,6 @@ public class ConfigurationBuilderTests : TestBase
     }
 
     /// <summary>
-    /// More positional arguments than the command declares is a usage error. They used to be read past and
-    /// dropped, so a mistyped invocation ran as though the surplus had never been typed. The check belongs
-    /// to the command rather than to one configuration type: a command binding several of them takes them
-    /// all from the same command line.
-    /// </summary>
-    [Fact]
-    public void EnsureNothingIsLeftOver_MorePositionsThanDeclared_Throws()
-    {
-        // act & assert
-        var error = Wrap.It(() => LeftOver(["build", "release", "extra"], typeof(PositionalConfiguration)))
-            .Throws<ArgumentParseException>();
-        error.Message.Contains("extra").IsTrue("the message must name what could not be placed");
-    }
-
-    /// <summary>
-    /// What a command does declare is not surplus.
-    /// </summary>
-    [Fact]
-    public void EnsureNothingIsLeftOver_AsManyPositionsAsDeclared_Passes()
-    {
-        // act & assert
-        LeftOver(["build", "release"], typeof(PositionalConfiguration));
-    }
-
-    /// <summary>
-    /// A position declared by one of a command's configuration types is not surplus to another.
-    /// </summary>
-    [Fact]
-    public void EnsureNothingIsLeftOver_PositionDeclaredByAnotherType_Passes()
-    {
-        // act & assert
-        LeftOver(["build"], typeof(AliasedConfiguration), typeof(PositionalConfiguration));
-    }
-
-    /// <summary>
-    /// The check reads the command line the same way binding does. Reading it without knowing which
-    /// options are flags let a flag swallow the position after it, so a genuinely surplus argument moved
-    /// into the flag's place and the check saw nothing wrong.
-    /// </summary>
-    [Fact]
-    public void EnsureNothingIsLeftOver_SurplusAfterAFlag_Throws()
-    {
-        // act & assert
-        var error = Wrap.It(() => LeftOver(["-verbose", "extra", "surplus"], typeof(FlagAndPositionConfiguration)))
-            .Throws<ArgumentParseException>();
-        error.Message.Contains("surplus").IsTrue("the message must name what could not be placed");
-    }
-
-    /// <summary>
-    /// And a command line the type does account for still passes, flag and all.
-    /// </summary>
-    [Fact]
-    public void EnsureNothingIsLeftOver_FlagAndItsDeclaredPosition_Passes()
-    {
-        // act & assert
-        LeftOver(["-verbose", "extra"], typeof(FlagAndPositionConfiguration));
-    }
-
-    /// <summary>
-    /// Two of a command's configuration types claiming one spelling is a wiring mistake, and is reported
-    /// as one. The check reads the command line against all of them at once, so a collision there made it
-    /// resolve the spelling to the wrong option and complain about a positional argument instead.
-    /// </summary>
-    [Fact]
-    public void EnsureNothingIsLeftOver_TypesClaimingOneName_ReportsTheCollision()
-    {
-        // act & assert
-        var error = Wrap.It(() => LeftOver(["-name", "foo"], typeof(NamedConfiguration), typeof(NameFlagConfiguration)))
-            .Throws<ArgumentParseException>();
-        error.Message.Contains("Verbose").IsTrue("the message must name the options that collide");
-        error.Message.Contains("Name").IsTrue("and the spelling they both claim");
-    }
-
-    /// <summary>
-    /// Two types coincidentally declaring the same option is not a collision - it is one option.
-    /// </summary>
-    [Fact]
-    public void EnsureNothingIsLeftOver_TypesDeclaringTheSameOption_Passes()
-    {
-        // act & assert
-        LeftOver(["-name", "foo"], typeof(NamedConfiguration), typeof(NamedConfiguration));
-    }
-
-    /// <summary>
-    /// Arguments after the raw delimiter need somewhere to go. With no property to receive them they were
-    /// parsed and then discarded.
-    /// </summary>
-    [Fact]
-    public void EnsureNothingIsLeftOver_RawWithoutSomewhereToPutIt_Throws()
-    {
-        // act & assert
-        Wrap.It(() => LeftOver(["build", "--", "secret"], typeof(PositionalConfiguration)))
-            .Throws<ArgumentParseException>();
-    }
-
-    /// <summary>
-    /// A raw tail one of the command's configuration types takes is fine.
-    /// </summary>
-    [Fact]
-    public void EnsureNothingIsLeftOver_RawTaken_Passes()
-    {
-        // act & assert
-        LeftOver(["run", "--", "-force", "value"], typeof(RawTailConfiguration));
-    }
-
-    /// <summary>
     /// Builds a configuration of the given type from a command line.
     /// </summary>
     /// <typeparam name="T">The configuration type to build.</typeparam>
@@ -474,14 +368,6 @@ public class ConfigurationBuilderTests : TestBase
     /// <returns>The bound configuration.</returns>
     private T Build<T>(params string[] args)
         where T : new() => Get<Root>().ConfigurationBuilder.Build<T>(args);
-
-    /// <summary>
-    /// Checks a command line against the configuration types a command binds.
-    /// </summary>
-    /// <param name="args">The command line to check.</param>
-    /// <param name="configurationTypes">The configuration types the command binds.</param>
-    private void LeftOver(string[] args, params Type[] configurationTypes) =>
-        Get<Root>().ConfigurationBuilder.EnsureNothingIsLeftOver(args, configurationTypes);
 }
 
 /// <summary>
@@ -699,28 +585,4 @@ public class NullableConfiguration
     /// </summary>
     [Option]
     public int? Count { get; set; }
-}
-
-/// <summary>
-/// Configuration with a plain named option.
-/// </summary>
-public class NamedConfiguration
-{
-    /// <summary>
-    /// Gets or sets the name.
-    /// </summary>
-    [Option]
-    public string Name { get; set; } = string.Empty;
-}
-
-/// <summary>
-/// Configuration whose flag is aliased to the other one's option name.
-/// </summary>
-public class NameFlagConfiguration
-{
-    /// <summary>
-    /// Gets or sets whether to be verbose, under an alias that collides.
-    /// </summary>
-    [Option("name")]
-    public bool Verbose { get; set; }
 }

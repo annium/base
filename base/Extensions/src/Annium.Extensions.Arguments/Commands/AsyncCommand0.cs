@@ -34,8 +34,6 @@ public abstract class AsyncCommand : CommandBase
             return;
         }
 
-        Root.ConfigurationBuilder.EnsureNothingIsLeftOver(args);
-
         await HandleAsync(ct);
     }
 }

@@ -1,5 +1,3 @@
-using System;
-
 namespace Annium.Extensions.Arguments.Internal;
 
 /// <summary>
@@ -27,15 +25,4 @@ internal interface IConfigurationBuilder
     /// the command legitimately takes.
     /// </remarks>
     bool IsHelpRequested(string[] args);
-
-    /// <summary>
-    /// Fails when the command line carries input that none of the given configuration types takes.
-    /// </summary>
-    /// <param name="args">Array of command line arguments to check</param>
-    /// <param name="configurationTypes">Every configuration type the command binds</param>
-    /// <remarks>
-    /// This belongs to the command rather than to any one of its configuration types: a command built from
-    /// several of them binds each from the same command line, so what one takes is not surplus to another.
-    /// </remarks>
-    void EnsureNothingIsLeftOver(string[] args, params Type[] configurationTypes);
 }

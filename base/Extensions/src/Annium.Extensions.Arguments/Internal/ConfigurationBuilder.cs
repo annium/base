@@ -92,48 +92,6 @@ internal class ConfigurationBuilder : IConfigurationBuilder
     }
 
     /// <summary>
-    /// Fails when the command line carries input that none of the given configuration types takes.
-    /// </summary>
-    /// <param name="args">Array of command line arguments to check</param>
-    /// <param name="configurationTypes">Every configuration type the command binds</param>
-    public void EnsureNothingIsLeftOver(string[] args, params Type[] configurationTypes)
-    {
-        // read the same way binding will read it: without knowing which options are flags, a flag swallows
-        // the position after it and a surplus argument moves into its place unnoticed
-        var options = configurationTypes
-            .SelectMany(type => _configurationProcessor.GetPropertiesWithAttribute<OptionAttribute>(type))
-            .ToArray();
-
-        // the same guard Build<T> applies per type, applied to the set this reads against: without it a
-        // collision between two of the command's types would resolve a spelling to the wrong option here
-        // and nowhere else, and be reported as a stray positional argument
-        EnsureNamesAreUnique(options);
-
-        var raw = _argumentProcessor.Compose(args, Spec(options));
-
-        var declaredPositions = configurationTypes
-            .Select(type => _configurationProcessor.GetPropertiesWithAttribute<PositionAttribute>(type).Length)
-            .DefaultIfEmpty(0)
-            .Max();
-
-        // read past and dropped, a surplus argument let a mistyped invocation run as though it had never
-        // been typed
-        if (raw.Positions.Count > declaredPositions)
-            throw new ArgumentParseException(
-                $"Unexpected positional arguments: {string.Join(", ", raw.Positions.Skip(declaredPositions).Select(x => $"'{x}'"))}"
-            );
-
-        // likewise for what was typed past the delimiter, which was parsed and then discarded
-        if (
-            raw.Raw.Length > 0
-            && configurationTypes.All(type =>
-                _configurationProcessor.GetPropertiesWithAttribute<RawAttribute>(type).Length == 0
-            )
-        )
-            throw new ArgumentParseException($"Raw arguments '{raw.Raw}' given, but nothing takes them");
-    }
-
-    /// <summary>
     /// Sets positional argument values on the configuration object based on position attributes.
     /// </summary>
     /// <typeparam name="T">The configuration type</typeparam>
