@@ -322,6 +322,18 @@ public class ConfigurationBuilderTests : TestBase
     }
 
     /// <summary>
+    /// An alias that starts with a digit cannot be told from a negative number on a command line, so it is
+    /// refused when the configuration is built rather than read as a number every time.
+    /// </summary>
+    [Fact]
+    public void Build_DigitLedAlias_Throws()
+    {
+        // act & assert
+        var error = Wrap.It(() => Build<DigitAliasConfiguration>()).Throws<ArgumentParseException>();
+        error.Message.Contains("2").IsTrue("the message must name the alias that cannot work");
+    }
+
+    /// <summary>
     /// Builds a configuration of the given type from a command line.
     /// </summary>
     /// <typeparam name="T">The configuration type to build.</typeparam>
@@ -522,4 +534,16 @@ public class AliasedArrayConfiguration
     /// </summary>
     [Option("i")]
     public string[] Include { get; set; } = Array.Empty<string>();
+}
+
+/// <summary>
+/// Configuration whose alias cannot be told from a negative number.
+/// </summary>
+public class DigitAliasConfiguration
+{
+    /// <summary>
+    /// Gets or sets whether to do the thing.
+    /// </summary>
+    [Option("2")]
+    public bool Two { get; set; }
 }

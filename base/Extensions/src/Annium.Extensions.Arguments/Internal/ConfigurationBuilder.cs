@@ -277,6 +277,13 @@ internal class ConfigurationBuilder : IConfigurationBuilder
         foreach (var (property, attribute) in options)
         foreach (var claimed in Names(property.Name, attribute.Alias))
         {
+            // a spelling starting with a digit cannot be told from a negative number on a command line;
+            // saying so here beats reading it as a number on every invocation
+            if (char.IsAsciiDigit(claimed[0]))
+                throw new ArgumentParseException(
+                    $"Option '{property.Name}' answers to '{claimed}', which reads as a number"
+                );
+
             if (claims.TryGetValue(claimed, out var other) && other != property.Name)
                 throw new ArgumentParseException($"Options '{other}' and '{property.Name}' both answer to '{claimed}'");
 
