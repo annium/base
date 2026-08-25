@@ -70,12 +70,13 @@ public class ObjectCacheFailureTests : TestBase
     }
 
     /// <summary>
-    /// Callers already waiting on the in-flight creation observe the failure instead of hanging on a
-    /// placeholder that will never be filled.
+    /// Nobody hangs when the one in-flight creation fails, and the failure is actually reported to at
+    /// least the callers that were waiting on it. Callers arriving after the failed entry was dropped
+    /// legitimately create a fresh one and may succeed — that is the retry, not a swallowed error.
     /// </summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Fact]
-    public async Task GetAsync_ConcurrentWhileFactoryThrows_AllFail()
+    public async Task GetAsync_ConcurrentWhileFactoryThrows_NobodyHangsAndTheFailureIsReported()
     {
         // arrange
         var provider = Get<FlakyProvider>();
@@ -88,13 +89,33 @@ public class ObjectCacheFailureTests : TestBase
             .Select(_ => Task.Run(async () => await cache.GetAsync("shared"), TestContext.Current.CancellationToken))
             .ToArray();
 
-        // assert - bounded, because the failure being pinned is an unbounded wait
+        // assert - bounded first, because the failure being pinned is an unbounded wait
         var all = Task.WhenAll(attempts);
+#pragma warning disable VSTHRD003
         var completed = await Task.WhenAny(
             all,
             Task.Delay(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken)
         );
         (completed == all).IsTrue("waiters must not hang on a creation that failed");
+
+        // and the failure reached a caller rather than being swallowed: finishing quickly would be no
+        // better than hanging if everyone silently came back with a value the factory never produced
+        var failures = 0;
+        foreach (var attempt in attempts)
+        {
+            try
+            {
+                await using var reference = await attempt;
+                reference.Value.Key.Is("shared", "a caller that succeeded must hold a real value");
+            }
+            catch (InvalidOperationException)
+            {
+                failures++;
+            }
+        }
+#pragma warning restore VSTHRD003
+
+        (failures > 0).IsTrue("the factory failure must be reported to the callers waiting on it");
     }
 }
 

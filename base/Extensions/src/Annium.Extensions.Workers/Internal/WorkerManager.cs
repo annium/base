@@ -71,8 +71,10 @@ internal sealed class WorkerManager<TKey> : IWorkerManager<TKey>, IAsyncDisposab
             }
             else
             {
-                this.Trace("create and schedule init of entry {entry} for {key}", entry.GetFullId(), key);
                 _entries[key] = entry = new Entry(_sp.Resolve<WorkerBase<TKey>>());
+                // traced after the assignment: reading `entry` before it exists logged a null id for the
+                // one case this line is meant to make visible
+                this.Trace("create and schedule init of entry {entry} for {key}", entry.GetFullId(), key);
                 _executor.Schedule(async () =>
                 {
                     try

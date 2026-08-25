@@ -147,7 +147,7 @@ internal abstract class ShellInstanceBase : IShellInstance, ILogSubject
                 "shell: [{dir}] {fileName} {arguments}",
                 process.StartInfo.WorkingDirectory,
                 process.StartInfo.FileName,
-                process.StartInfo.Arguments
+                string.Join(' ', process.StartInfo.ArgumentList)
             );
 
         var tcs = new TaskCompletionSource<ShellResult>();
@@ -279,5 +279,5 @@ internal abstract class ShellInstanceBase : IShellInstance, ILogSubject
     /// <param name="process">The process to get command string for</param>
     /// <returns>A formatted command string with filename and arguments</returns>
     private string GetCommand(Process process) =>
-        $"{process.StartInfo.FileName} {string.Join(' ', process.StartInfo.Arguments)}";
+        $"{process.StartInfo.FileName} {string.Join(' ', process.StartInfo.ArgumentList)}";
 }
