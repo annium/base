@@ -30,6 +30,33 @@ public class WorkerSequencingTests : TestBase
     }
 
     /// <summary>
+    /// Starting a key whose worker is still being stopped waits for that stop and starts a fresh worker,
+    /// rather than reporting success over the one being torn down. The mirror of the case above: the
+    /// manager owns the sequencing, so a caller that gets a start back has a worker that is running.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public async Task StartAsync_WhileStopping_WaitsAndStartsAfresh()
+    {
+        // arrange
+        var overlap = Get<Overlap>();
+        var manager = Get<IWorkerManager<SlowWorkerData>>();
+        var key = new SlowWorkerData("A");
+        await manager.StartAsync(key);
+
+        // act - a start arrives while the stop is still in flight
+        var stop = manager.StopAsync(key);
+        await manager.StartAsync(key);
+#pragma warning disable VSTHRD003
+        await stop;
+#pragma warning restore VSTHRD003
+
+        // if the second StartAsync reported a running worker, stopping again must actually stop one
+        await manager.StopAsync(key);
+        overlap.Stops.Is(2, "a start that reported success must leave a worker that can be stopped");
+    }
+
+    /// <summary>
     /// Stopping a worker whose start has not finished waits for that start instead of racing it.
     /// </summary>
     /// <returns>A task representing the asynchronous test operation.</returns>

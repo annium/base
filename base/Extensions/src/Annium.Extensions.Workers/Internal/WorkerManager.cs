@@ -63,48 +63,80 @@ internal sealed class WorkerManager<TKey> : IWorkerManager<TKey>, IAsyncDisposab
 
         EnsureIsNotDisposed();
 
-        Entry? entry;
-        lock (_entries)
+        while (true)
         {
-            if (_entries.TryGetValue(key, out entry))
+            Entry? entry;
+            Task? pendingStop = null;
+            lock (_entries)
             {
-                this.Trace("skip, already created entry {entry} for {key}", entry.GetFullId(), key);
-            }
-            else
-            {
-                _entries[key] = entry = new Entry(_sp.Resolve<WorkerBase<TKey>>());
-                // traced after the assignment: reading `entry` before it exists logged a null id for the
-                // one case this line is meant to make visible
-                this.Trace("create and schedule init of entry {entry} for {key}", entry.GetFullId(), key);
-                _executor.Schedule(async () =>
+                if (_entries.TryGetValue(key, out entry))
                 {
-                    try
+                    // an entry on its way out is not something to hand back as started: the caller would be
+                    // told its worker is running while that worker is being torn down. Wait for the stop to
+                    // finish, then build a fresh one
+                    if (entry.IsStopping)
                     {
-                        this.Trace("await init of entry {entry} for {key}", entry.GetFullId(), key);
-                        await entry.WorkerBase.InitAsync(key);
+                        this.Trace("await stop of entry {entry} for {key}", entry.GetFullId(), key);
+                        pendingStop = entry.WhenStopped;
+                    }
+                    else
+                        this.Trace("skip, already created entry {entry} for {key}", entry.GetFullId(), key);
+                }
+                else
+                {
+                    _entries[key] = entry = new Entry(_sp.Resolve<WorkerBase<TKey>>());
+                    // traced after the assignment: reading `entry` before it exists logged a null id for
+                    // the one case this line is meant to make visible
+                    this.Trace("create and schedule init of entry {entry} for {key}", entry.GetFullId(), key);
+                    _executor.Schedule(async () =>
+                    {
+                        try
+                        {
+                            this.Trace("await init of entry {entry} for {key}", entry.GetFullId(), key);
+                            await entry.WorkerBase.InitAsync(key);
 
-                        this.Trace("mark started entry {entry} for {key}", entry.GetFullId(), key);
-                        entry.SetStarted();
-                    }
-                    catch (Exception e)
-                    {
-                        // the caller is waiting on WhenStarted: the executor would otherwise log this and
-                        // move on, leaving StartAsync awaiting a signal nobody will ever set. The entry is
-                        // dropped too, so a later StartAsync builds a fresh worker instead of awaiting the
-                        // failure of this one forever
-                        this.Error(e);
-                        lock (_entries)
-                            _entries.Remove(key);
-                        entry.SetStartFailed(e);
-                    }
-                });
+                            this.Trace("mark started entry {entry} for {key}", entry.GetFullId(), key);
+                            entry.SetStarted();
+                        }
+                        catch (Exception e)
+                        {
+                            // the caller is waiting on WhenStarted: the executor would otherwise log this
+                            // and move on, leaving StartAsync awaiting a signal nobody will ever set. The
+                            // entry is dropped too, so a later StartAsync builds a fresh worker instead of
+                            // awaiting the failure of this one forever
+                            this.Error(e);
+                            lock (_entries)
+                                _entries.Remove(key);
+                            entry.SetStartFailed(e);
+                        }
+                    });
+                }
             }
+
+            if (pendingStop is not null)
+            {
+                try
+                {
+#pragma warning disable VSTHRD003
+                    await pendingStop;
+#pragma warning restore VSTHRD003
+                }
+                catch (Exception)
+                {
+                    // a worker that failed to stop is gone from the manager either way, and whoever asked
+                    // for that stop was told; this caller only needs the key free
+                }
+
+                continue;
+            }
+
+            this.Trace("await start of entry {entry} for {key}", entry.GetFullId(), key);
+            await entry.WhenStarted;
+
+            this.Trace("done for {key}", key);
+
+            return;
         }
-
-        this.Trace("await start of entry {entry} for {key}", entry.GetFullId(), key);
-        await entry.WhenStarted;
-
-        this.Trace("done for {key}", key);
     }
 
     /// <summary>
