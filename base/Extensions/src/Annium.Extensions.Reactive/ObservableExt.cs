@@ -13,11 +13,6 @@ public static class ObservableExt
 {
     #region Instance
 
-    // public static IObservableInstance<T> Dynamic<T>(Func<ObserverContext<T>, Task<Func<Task>>> factory)
-    // {
-    //     return new DynamicObservableInstance<T>(factory);
-    // }
-
     /// <summary>
     /// Creates a static observable instance that runs asynchronously
     /// </summary>
