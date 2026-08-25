@@ -63,6 +63,10 @@ internal class CompositionExecutor<TValue> : IComposer<TValue>
     /// <param name="value">The value to compose</param>
     /// <param name="label">Optional label for error reporting context</param>
     /// <returns>A status result indicating the success or failure of the composition operation</returns>
+    /// <remarks>
+    /// A type with no registered composer composes successfully: there is nothing to apply. That also means
+    /// a composer whose assembly was never scanned is indistinguishable from one that was never written.
+    /// </remarks>
     public async Task<IStatusResult<OperationStatus>> ComposeAsync(TValue? value, string label = "")
     {
         var hasLabel = !string.IsNullOrWhiteSpace(label);

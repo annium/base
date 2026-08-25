@@ -227,6 +227,30 @@ public class ComposerTest : TestBase
     /// <summary>
     /// Test class representing a bad configuration
     /// </summary>
+    /// <summary>
+    /// A type nobody wrote a composer for comes back composed successfully. The composer set is resolved by
+    /// reflection, so "no rules registered" and "rules written but the assembly was never scanned" look the
+    /// same from here — this pins which of the two the library reports.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public async Task Compose_TypeWithoutComposer_Succeeds()
+    {
+        // arrange
+        var composer = GetComposer<Bad>();
+        var value = new Bad { Name = "unchanged" };
+
+        // act
+        var result = await composer.ComposeAsync(value);
+
+        // assert - nothing composed it, and that is reported as success
+        result.IsOk.IsTrue("a type with no composer has nothing to compose");
+        value.Name.Is("unchanged");
+    }
+
+    /// <summary>
+    /// A type deliberately left without a composer, used to pin the no-composer path.
+    /// </summary>
     private class Bad
     {
         /// <summary>
