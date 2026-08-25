@@ -38,6 +38,14 @@ public abstract class Group : CommandBase
                 .SingleOrDefault(x => x.PureName() == _configurationTypesName)
                 ?.GetGenericArguments()
             ?? Type.EmptyTypes;
+        // dispatch takes the first command registered for an id, so a second one answering to the same id
+        // is unreachable - and silently so, which is worse than not compiling
+        var clash = _commands.FirstOrDefault(e => e.Id == T.Id);
+        if (clash != null)
+            throw new ArgumentParseException(
+                $"Commands '{clash.Type.FriendlyName()}' and '{typeof(T).FriendlyName()}' both answer to '{T.Id}'"
+            );
+
         _commands.Add(new CommandInfo(T.Id, T.Description, typeof(T), configurationTypes));
 
         return this;

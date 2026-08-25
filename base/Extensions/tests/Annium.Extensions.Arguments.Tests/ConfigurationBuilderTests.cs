@@ -334,6 +334,33 @@ public class ConfigurationBuilderTests : TestBase
     }
 
     /// <summary>
+    /// A nullable value type binds like the type it wraps. The nullable type was handed to the mapper as-is,
+    /// which has no conversion for it, so every such property failed whatever value was given.
+    /// </summary>
+    [Fact]
+    public void Build_NullableValue_Binds()
+    {
+        // act
+        var cfg = Build<NullableConfiguration>("-count", "5");
+
+        // assert
+        cfg.Count.Is(5);
+    }
+
+    /// <summary>
+    /// A nullable option left out stays null rather than becoming the type's default.
+    /// </summary>
+    [Fact]
+    public void Build_NullableValueAbsent_StaysNull()
+    {
+        // act
+        var cfg = Build<NullableConfiguration>();
+
+        // assert
+        cfg.Count.IsDefault();
+    }
+
+    /// <summary>
     /// Builds a configuration of the given type from a command line.
     /// </summary>
     /// <typeparam name="T">The configuration type to build.</typeparam>
@@ -546,4 +573,16 @@ public class DigitAliasConfiguration
     /// </summary>
     [Option("2")]
     public bool Two { get; set; }
+}
+
+/// <summary>
+/// Configuration with a nullable value-typed option.
+/// </summary>
+public class NullableConfiguration
+{
+    /// <summary>
+    /// Gets or sets how many, if given.
+    /// </summary>
+    [Option]
+    public int? Count { get; set; }
 }

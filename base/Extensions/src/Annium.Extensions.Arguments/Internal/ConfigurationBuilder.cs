@@ -311,7 +311,10 @@ internal class ConfigurationBuilder : IConfigurationBuilder
         // usage errors to print help missed exactly the most ordinary mistake of all
         try
         {
-            return _mapper.Map(value, type);
+            // a nullable value type is mapped as the type it wraps: the mapper has no conversion for the
+            // wrapper, so handing it one failed every such property whatever value was given. The boxed
+            // result assigns to the nullable property as it stands
+            return _mapper.Map(value, Nullable.GetUnderlyingType(type) ?? type);
         }
         catch (Exception e)
         {

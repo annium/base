@@ -156,6 +156,18 @@ public class CommanderTests : TestBase
     }
 
     /// <summary>
+    /// Two commands answering to one id is a wiring mistake: dispatch takes the first registered, so every
+    /// later one is unreachable with nothing said about it. Adding the second is refused instead.
+    /// </summary>
+    [Fact]
+    public void Add_TwoCommandsWithOneId_Throws()
+    {
+        // act & assert
+        var error = Wrap.It(() => new ClashingGroup()).Throws<ArgumentParseException>();
+        error.Message.Contains("greet").IsTrue("the message must name the id both commands answer to");
+    }
+
+    /// <summary>
     /// Runs the given call with the console redirected, and returns what it printed.
     /// </summary>
     /// <param name="act">The call to run.</param>
@@ -443,4 +455,52 @@ public class EmptyGroup : Group, ICommandDescriptor
     /// Gets the description of this group.
     /// </summary>
     public static string Description => "a group with nothing in it";
+}
+
+/// <summary>
+/// A second command answering to the same id as GreetCommand.
+/// </summary>
+public class OtherGreetCommand : Command<GreetConfiguration>, ICommandDescriptor
+{
+    /// <summary>
+    /// Gets the identifier this command is invoked by - the same as GreetCommand's.
+    /// </summary>
+    public static string Id => "greet";
+
+    /// <summary>
+    /// Gets the description of this command.
+    /// </summary>
+    public static string Description => "greets someone else";
+
+    /// <summary>
+    /// Does nothing.
+    /// </summary>
+    /// <param name="cfg">The command configuration.</param>
+    /// <param name="ct">Cancellation token.</param>
+    public override void Handle(GreetConfiguration cfg, CancellationToken ct) { }
+}
+
+/// <summary>
+/// A group registering two commands that answer to one id.
+/// </summary>
+public class ClashingGroup : Group, ICommandDescriptor
+{
+    /// <summary>
+    /// Gets the identifier of this group.
+    /// </summary>
+    public static string Id => string.Empty;
+
+    /// <summary>
+    /// Gets the description of this group.
+    /// </summary>
+    public static string Description => "a group with two commands of one id";
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ClashingGroup"/> class.
+    /// </summary>
+    public ClashingGroup()
+    {
+        Add<GreetCommand>();
+        Add<OtherGreetCommand>();
+    }
 }
