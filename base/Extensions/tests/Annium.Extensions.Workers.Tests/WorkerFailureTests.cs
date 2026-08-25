@@ -73,6 +73,64 @@ public class WorkerFailureTests : TestBase
         await Wrap.It(async () => await stop).ThrowsAsync<InvalidOperationException>();
 #pragma warning restore VSTHRD003
     }
+
+    /// <summary>
+    /// Once the manager is disposed it refuses further work rather than quietly accepting a start that
+    /// nothing will ever run — its executor is already gone by then.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public async Task StartAsync_AfterDispose_Throws()
+    {
+        // arrange
+        var manager = Get<IWorkerManager<FailingWorkerData>>();
+        await ((IAsyncDisposable)manager).DisposeAsync();
+
+        // act & assert - bounded: without the guard the call does not fail, it waits forever on a
+        // worker the disposed executor will never run
+        var start = manager.StartAsync(new FailingWorkerData("late", FailOn.Start));
+        await Bounded(start);
+#pragma warning disable VSTHRD003
+        await Wrap.It(async () => await start).ThrowsAsync<ObjectDisposedException>();
+#pragma warning restore VSTHRD003
+    }
+
+    /// <summary>
+    /// The same holds for stopping.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public async Task StopAsync_AfterDispose_Throws()
+    {
+        // arrange
+        var manager = Get<IWorkerManager<FailingWorkerData>>();
+        await ((IAsyncDisposable)manager).DisposeAsync();
+
+        // act & assert - bounded, for the same reason
+        var stop = manager.StopAsync(new FailingWorkerData("late", FailOn.Stop));
+        await Bounded(stop);
+#pragma warning disable VSTHRD003
+        await Wrap.It(async () => await stop).ThrowsAsync<ObjectDisposedException>();
+#pragma warning restore VSTHRD003
+    }
+
+    /// <summary>
+    /// Fails the test if the given call has not finished within five seconds, so a regression that turns a
+    /// failure into an unbounded wait is reported as such instead of hanging the run.
+    /// </summary>
+    /// <param name="call">The call being bounded.</param>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    private static async Task Bounded(Task call)
+    {
+        // VSTHRD003: the call is the test's own, handed in precisely so its completion can be bounded
+#pragma warning disable VSTHRD003
+        var completed = await Task.WhenAny(
+            call,
+            Task.Delay(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken)
+        );
+#pragma warning restore VSTHRD003
+        (completed == call).IsTrue("the call must not wait indefinitely");
+    }
 }
 
 /// <summary>
