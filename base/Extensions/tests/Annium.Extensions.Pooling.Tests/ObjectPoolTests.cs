@@ -253,4 +253,17 @@ public class ObjectPoolTests
             _log($"{_id} {Disposed}");
         }
     }
+
+    /// <summary>
+    /// A capacity that cannot work is rejected with the value that was given. The message used to name
+    /// the parameter rather than its value, so the offending number appeared nowhere in it.
+    /// </summary>
+    [Fact]
+    public void Ctor_NonPositiveCapacity_NamesTheValue()
+    {
+        // act & assert
+        var error = Wrap.It(() => new ServiceContainer().AddObjectPool<object>(-3, ServiceLifetime.Singleton))
+            .Throws<ArgumentOutOfRangeException>();
+        error.Message.Contains("-3").IsTrue("the message must name the capacity that was rejected");
+    }
 }

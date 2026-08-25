@@ -84,7 +84,7 @@ internal class ConfigurationBuilder : IConfigurationBuilder
         {
             if (attribute.Position != i)
                 throw new ArgumentParseException(
-                    $"Position argument expected to have position '{i}', but got position '{attribute.Position}"
+                    $"Position argument expected to have position '{i}', but got position '{attribute.Position}'"
                 );
 
             if (i > positions.Length)

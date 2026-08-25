@@ -1,3 +1,4 @@
+using System;
 using Annium.Core.DependencyInjection;
 using Annium.Extensions.Jobs.Internal;
 using Annium.Testing;
@@ -189,6 +190,21 @@ public class IntervalParserTest
     /// <param name="x">The number of seconds</param>
     /// <returns>A Duration representing the specified seconds</returns>
     private static Duration Sec(int x) => Duration.FromSeconds(x);
+
+    /// <summary>
+    /// A modulo that is not a number is reported with the token that was actually typed. Reporting the
+    /// parse result instead named 0 every time - the one value the caller already knows is not theirs.
+    /// </summary>
+    [Fact]
+    public void Modulo_NotANumber_NamesTheToken()
+    {
+        // arrange
+        var parser = GetParser();
+
+        // act & assert
+        var error = Wrap.It(() => parser.GetDelayResolver("*/x * * * *")).Throws<ArgumentException>();
+        error.Message.Contains("'x'").IsTrue("the message must quote the token that was not understood");
+    }
 
     /// <summary>
     /// Gets an interval parser instance for testing
