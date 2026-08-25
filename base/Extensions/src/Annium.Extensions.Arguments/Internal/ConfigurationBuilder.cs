@@ -104,6 +104,11 @@ internal class ConfigurationBuilder : IConfigurationBuilder
             .SelectMany(type => _configurationProcessor.GetPropertiesWithAttribute<OptionAttribute>(type))
             .ToArray();
 
+        // the same guard Build<T> applies per type, applied to the set this reads against: without it a
+        // collision between two of the command's types would resolve a spelling to the wrong option here
+        // and nowhere else, and be reported as a stray positional argument
+        EnsureNamesAreUnique(options);
+
         var raw = _argumentProcessor.Compose(args, Spec(options));
 
         var declaredPositions = configurationTypes

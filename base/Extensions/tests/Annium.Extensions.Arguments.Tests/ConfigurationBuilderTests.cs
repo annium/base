@@ -420,6 +420,31 @@ public class ConfigurationBuilderTests : TestBase
     }
 
     /// <summary>
+    /// Two of a command's configuration types claiming one spelling is a wiring mistake, and is reported
+    /// as one. The check reads the command line against all of them at once, so a collision there made it
+    /// resolve the spelling to the wrong option and complain about a positional argument instead.
+    /// </summary>
+    [Fact]
+    public void EnsureNothingIsLeftOver_TypesClaimingOneName_ReportsTheCollision()
+    {
+        // act & assert
+        var error = Wrap.It(() => LeftOver(["-name", "foo"], typeof(NamedConfiguration), typeof(NameFlagConfiguration)))
+            .Throws<ArgumentParseException>();
+        error.Message.Contains("Verbose").IsTrue("the message must name the options that collide");
+        error.Message.Contains("Name").IsTrue("and the spelling they both claim");
+    }
+
+    /// <summary>
+    /// Two types coincidentally declaring the same option is not a collision - it is one option.
+    /// </summary>
+    [Fact]
+    public void EnsureNothingIsLeftOver_TypesDeclaringTheSameOption_Passes()
+    {
+        // act & assert
+        LeftOver(["-name", "foo"], typeof(NamedConfiguration), typeof(NamedConfiguration));
+    }
+
+    /// <summary>
     /// Arguments after the raw delimiter need somewhere to go. With no property to receive them they were
     /// parsed and then discarded.
     /// </summary>
@@ -674,4 +699,28 @@ public class NullableConfiguration
     /// </summary>
     [Option]
     public int? Count { get; set; }
+}
+
+/// <summary>
+/// Configuration with a plain named option.
+/// </summary>
+public class NamedConfiguration
+{
+    /// <summary>
+    /// Gets or sets the name.
+    /// </summary>
+    [Option]
+    public string Name { get; set; } = string.Empty;
+}
+
+/// <summary>
+/// Configuration whose flag is aliased to the other one's option name.
+/// </summary>
+public class NameFlagConfiguration
+{
+    /// <summary>
+    /// Gets or sets whether to be verbose, under an alias that collides.
+    /// </summary>
+    [Option("name")]
+    public bool Verbose { get; set; }
 }
