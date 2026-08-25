@@ -92,6 +92,12 @@ public static class Cli
                 case ConsoleKey.Enter:
                     break;
                 default:
+                    // arrows, Tab, Escape and the like report a control character - usually '\0'. Taking
+                    // those as input puts a character the user never typed into the secret, masked as a '*'
+                    // like any other, so nothing on screen says the value is not what was typed
+                    if (char.IsControl(key.KeyChar))
+                        break;
+
                     result.Push(key.KeyChar);
                     Console.Write('*');
                     pos++;

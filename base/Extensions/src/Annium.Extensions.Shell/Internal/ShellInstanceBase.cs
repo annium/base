@@ -90,10 +90,11 @@ internal abstract class ShellInstanceBase : IShellInstance, ILogSubject
     /// <summary>
     /// Executes the shell command with a specified timeout
     /// </summary>
-    /// <param name="timeout">Maximum time to wait for command completion</param>
+    /// <param name="timeout">Maximum time to wait for command completion, or zero for no limit</param>
     /// <returns>The result of the shell command execution</returns>
     public async Task<ShellResult> RunAsync(TimeSpan timeout)
     {
+        // zero means no limit, not "expire at once"
         if (timeout == TimeSpan.Zero)
             return await RunAsync(CancellationToken.None);
 

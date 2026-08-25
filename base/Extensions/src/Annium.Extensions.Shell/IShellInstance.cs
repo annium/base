@@ -27,8 +27,12 @@ public interface IShellInstance
     /// <summary>
     /// Runs the shell command with a timeout
     /// </summary>
-    /// <param name="timeout">The maximum execution time</param>
+    /// <param name="timeout">The maximum execution time. <see cref="TimeSpan.Zero"/> means no limit</param>
     /// <returns>The shell execution result</returns>
+    /// <remarks>
+    /// A caller computing a remaining budget should check for a non-positive result itself rather than
+    /// pass it here: zero is read as "no limit", not as "expire at once".
+    /// </remarks>
     Task<ShellResult> RunAsync(TimeSpan timeout);
 
     /// <summary>

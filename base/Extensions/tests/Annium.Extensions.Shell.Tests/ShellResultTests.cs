@@ -26,6 +26,29 @@ public class ShellResultTests : TestBase
     }
 
     /// <summary>
+    /// A zero timeout means no limit rather than expiring at once, which is the opposite of what the name
+    /// suggests and worth pinning.
+    /// Skipped on Windows - these tests drive POSIX utilities.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
+    [Fact]
+    public async Task RunAsync_ZeroTimeout_RunsWithoutLimit()
+    {
+        if (OperatingSystem.IsWindows())
+            return;
+
+        // arrange
+        var shell = Get<IShell>();
+
+        // act - long enough that an immediate expiry would show
+        var result = await shell.Cmd("sh", "-c", "sleep 0.2; echo done").RunAsync(TimeSpan.Zero);
+
+        // assert
+        result.IsSuccess.IsTrue();
+        result.Output.Trim().Is("done");
+    }
+
+    /// <summary>
     /// A failing command reports its own exit code rather than a generic failure.
     /// </summary>
     /// <returns>A task that represents the asynchronous test.</returns>
