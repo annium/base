@@ -145,6 +145,10 @@ public class ObjectCacheFailureTests : TestBase
 
         // assert
         await Expect.ToAsync(() => provider.Suspends.Is(1, "releasing the last reference must suspend the entry"));
+
+        // and the provider's own reference belongs to the entry, so it goes when the cache does
+        await ((IAsyncDisposable)cache).DisposeAsync();
+        provider.ReferenceDisposals.Is(1, "the cache must release the reference its provider handed back");
     }
 
     /// <summary>
@@ -280,9 +284,19 @@ public class ReferencingProvider : ObjectCacheProvider<string, Referenced>
     public int Suspends => Volatile.Read(ref _suspends);
 
     /// <summary>
+    /// Gets how many times the reference this provider handed back was released.
+    /// </summary>
+    public int ReferenceDisposals => Volatile.Read(ref _referenceDisposals);
+
+    /// <summary>
     /// Number of suspends observed.
     /// </summary>
     private int _suspends;
+
+    /// <summary>
+    /// Number of times the handed-back reference was released.
+    /// </summary>
+    private int _referenceDisposals;
 
     /// <summary>
     /// Creates a value wrapped in the provider's own reference.
@@ -296,7 +310,15 @@ public class ReferencingProvider : ObjectCacheProvider<string, Referenced>
     ) =>
         Task.FromResult(
             OneOf<Referenced, IDisposableReference<Referenced>>.FromT1(
-                Disposable.Reference(new Referenced(id), () => ValueTask.CompletedTask)
+                Disposable.Reference(
+                    new Referenced(id),
+                    () =>
+                    {
+                        Interlocked.Increment(ref _referenceDisposals);
+
+                        return ValueTask.CompletedTask;
+                    }
+                )
             )
         );
 

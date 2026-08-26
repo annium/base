@@ -25,6 +25,32 @@ public class ShellStdoutTests : TestBase
     }
 
     /// <summary>
+    /// A command short enough to exit before the caller has finished attaching to its output still
+    /// reports it. The exit handler releases the process as soon as it fires, so a process that ends
+    /// during setup could be gone by the time the streams were read.
+    /// Skipped on Windows - this test drives a POSIX shell.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
+    [Fact]
+    public async Task RunAsync_CommandExitsImmediately_IsStillCaptured()
+    {
+        if (OperatingSystem.IsWindows())
+            return;
+
+        // arrange
+        var shell = Get<IShell>();
+
+        // act & assert - repeated, because the window this closes is a race
+        for (var i = 0; i < 50; i++)
+        {
+            var result = await shell.Cmd("sh", "-c", "echo done").RunAsync(TestContext.Current.CancellationToken);
+
+            result.IsSuccess.IsTrue($"run {i} must succeed");
+            result.Output.Trim().Is("done", $"run {i} must report its output");
+        }
+    }
+
+    /// <summary>
     /// A command started rather than awaited still reports its whole output through its result. The output
     /// and error streams are drained internally and deliberately not handed out - two readers on one stream
     /// split the bytes between them.

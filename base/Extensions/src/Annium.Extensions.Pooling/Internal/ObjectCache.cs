@@ -195,7 +195,25 @@ internal sealed class ObjectCache<TKey, TValue> : IObjectCache<TKey, TValue>, IL
                     await entry.WaitAsync();
                     this.Trace("dispose {entry}", entry);
                     entry.Dispose();
+                }
+                catch (Exception e)
+                {
+                    this.Error(e);
+                }
+
+                // the provider's reference and the provider's own teardown release different things, so a
+                // failure in one must not skip the other - the same reasoning as the loop around them
+                try
+                {
                     await entry.DisposeOwnedReferenceAsync();
+                }
+                catch (Exception e)
+                {
+                    this.Error(e);
+                }
+
+                try
+                {
                     await _provider.DisposeAsync(key, entry.Value);
                 }
                 catch (Exception e)

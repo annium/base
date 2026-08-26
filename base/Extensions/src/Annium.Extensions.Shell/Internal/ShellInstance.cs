@@ -200,6 +200,11 @@ internal sealed class ShellInstance : IShellInstance, ILogSubject
         Task stdoutTask = Task.CompletedTask;
         Task stderrTask = Task.CompletedTask;
 
+        // a short command can exit before the lines below attach to its output. The exit handler releases
+        // the process as soon as it fires, so without this the attach would run against a process that had
+        // already been disposed
+        var pipesAttached = new TaskCompletionSource();
+
         // track token cancellation and kill process if requested
         var registration = ct.Register(() =>
         {
@@ -230,6 +235,7 @@ internal sealed class ShellInstance : IShellInstance, ILogSubject
         // exits while pipe drains are still in flight
         stdoutTask = PipeOutAsync(process.StandardOutput, stdout, Console.Out, _print, ct);
         stderrTask = PipeOutAsync(process.StandardError, stderr, Console.Error, _print, ct);
+        pipesAttached.SetResult();
 
         return tcs;
 
@@ -242,6 +248,10 @@ internal sealed class ShellInstance : IShellInstance, ILogSubject
             // event; the tcs is only completed after both pipes drain
             _ = Task.Run(async () =>
             {
+#pragma warning disable VSTHRD003
+                await pipesAttached.Task;
+#pragma warning restore VSTHRD003
+
                 try
                 {
 #pragma warning disable VSTHRD003
