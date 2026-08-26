@@ -119,7 +119,18 @@ internal sealed class ObjectCache<TKey, TValue> : IObjectCache<TKey, TValue>, IL
             if (!isNew && !entry.HasReferences)
             {
                 this.Trace("Get by {key}: resume entry {entry}", key, entry);
-                await _provider.ResumeAsync(key, entry.Value);
+
+                try
+                {
+                    await _provider.ResumeAsync(key, entry.Value);
+                }
+                catch (Exception)
+                {
+                    // same reasoning as the suspend path: the gate goes back before the failure travels on
+                    entry.Release();
+
+                    throw;
+                }
             }
 
             // create reference, incrementing reference counter
@@ -154,15 +165,23 @@ internal sealed class ObjectCache<TKey, TValue> : IObjectCache<TKey, TValue>, IL
             this.Trace("Release by {key}: wait entry {entry}", key, entry);
             await entry.WaitAsync();
 
-            this.Trace("Release by {key}: remove reference from entry {entry}", key, entry);
-            entry.RemoveReference();
-            if (!entry.HasReferences)
+            try
             {
-                this.Trace("Release by {key}: suspend entry {entry}", key, entry);
-                await _provider.SuspendAsync(key, entry.Value);
+                this.Trace("Release by {key}: remove reference from entry {entry}", key, entry);
+                entry.RemoveReference();
+                if (!entry.HasReferences)
+                {
+                    this.Trace("Release by {key}: suspend entry {entry}", key, entry);
+                    await _provider.SuspendAsync(key, entry.Value);
+                }
             }
-
-            entry.Release();
+            finally
+            {
+                // the gate is taken to do this and has to go back whatever happened: a provider that threw
+                // while suspending used to keep it, and every later use of the key - the cache's own
+                // disposal included - then waited on a gate nobody would hand back
+                entry.Release();
+            }
         }
         catch (Exception e)
         {
@@ -303,8 +322,16 @@ internal sealed class ObjectCache<TKey, TValue> : IObjectCache<TKey, TValue>, IL
                     // one that is creating the value still hands it to whoever is left. Swapping the gate for a
                     // semaphore would give cancellation for free but not this: the gate's Set is idempotent and
                     // the wake-up is passed along by re-setting it, which a bounded semaphore rejects
-                    if (WaitHandle.WaitAny([_gate, ct.WaitHandle]) != 0)
-                        ct.ThrowIfCancellationRequested();
+                    try
+                    {
+                        if (WaitHandle.WaitAny([_gate, ct.WaitHandle]) != 0)
+                            ct.ThrowIfCancellationRequested();
+                    }
+                    catch (ObjectDisposedException)
+                    {
+                        // the entry was disposed while this call waited for it - there is nothing left to
+                        // wait for, and returning beats waiting on a handle that will never signal
+                    }
                 },
                 CancellationToken.None
             );
@@ -379,7 +406,10 @@ internal sealed class ObjectCache<TKey, TValue> : IObjectCache<TKey, TValue>, IL
         /// </summary>
         public void Dispose()
         {
-            _gate.Reset();
+            // set before disposing: a caller parked on this gate with no token of its own would otherwise
+            // wait on a handle that never signals again. Waking it first turns that into a prompt return,
+            // and WaitAsync tolerates the disposal landing first
+            _gate.Set();
             _gate.Dispose();
         }
     }

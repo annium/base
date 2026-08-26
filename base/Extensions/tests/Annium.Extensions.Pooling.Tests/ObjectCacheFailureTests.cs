@@ -33,6 +33,10 @@ public class ObjectCacheFailureTests : TestBase
             container.Add<BrittleProvider>().AsSelf().Singleton();
             container.Add<ReferencingProvider>().AsSelf().Singleton();
             container.Add<SlowProvider>().AsSelf().Singleton();
+            container.Add<SuspendableProvider>().AsSelf().Singleton();
+            container.AddObjectCache<string, Suspendable, SuspendableProvider>(
+                Annium.Core.DependencyInjection.ServiceLifetime.Singleton
+            );
             container.AddObjectCache<string, Slow, SlowProvider>(
                 Annium.Core.DependencyInjection.ServiceLifetime.Singleton
             );
@@ -196,6 +200,32 @@ public class ObjectCacheFailureTests : TestBase
             provider.Finish();
             await using var _ = await first;
         }
+#pragma warning restore VSTHRD003
+    }
+
+    /// <summary>
+    /// A provider that fails to suspend a value does not wedge its key. The gate is taken to release a
+    /// reference and was only handed back after the provider had been asked to suspend, so a provider that
+    /// threw kept it - and every later use of that key, including the cache's own disposal, waited on a
+    /// gate nobody would ever hand back.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public async Task ReleaseAsync_SuspendThrows_DoesNotWedgeTheKey()
+    {
+        // arrange
+        var cache = Get<IObjectCache<string, Suspendable>>();
+        await (await cache.GetAsync("key", TestContext.Current.CancellationToken)).DisposeAsync();
+
+        // act & assert - the key is still usable, bounded because the failure pinned is an unbounded wait
+        var again = cache.GetAsync("key", TestContext.Current.CancellationToken);
+#pragma warning disable VSTHRD003
+        var completed = await Task.WhenAny(
+            again,
+            Task.Delay(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken)
+        );
+        (completed == again).IsTrue("a failed suspend must not wedge the key it was for");
+        await using var _ = await again;
 #pragma warning restore VSTHRD003
     }
 
@@ -430,4 +460,36 @@ public class SlowProvider : ObjectCacheProvider<string, Slow>
 
         return new Slow(id);
     }
+}
+
+/// <summary>
+/// A cached value whose suspension fails.
+/// </summary>
+/// <param name="Key">The key this value was created for.</param>
+public sealed record Suspendable(string Key);
+
+/// <summary>
+/// Provider that cannot suspend what it created.
+/// </summary>
+public class SuspendableProvider : ObjectCacheProvider<string, Suspendable>
+{
+    /// <summary>
+    /// Creates a value.
+    /// </summary>
+    /// <param name="id">The key to create a value for.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>The created value.</returns>
+    public override Task<OneOf<Suspendable, IDisposableReference<Suspendable>>> CreateAsync(
+        string id,
+        CancellationToken ct
+    ) => Task.FromResult<OneOf<Suspendable, IDisposableReference<Suspendable>>>(new Suspendable(id));
+
+    /// <summary>
+    /// Fails to suspend.
+    /// </summary>
+    /// <param name="key">The key identifying the value.</param>
+    /// <param name="value">The value to suspend.</param>
+    /// <returns>Nothing - this always throws.</returns>
+    public override Task SuspendAsync(string key, Suspendable value) =>
+        throw new InvalidOperationException($"cannot suspend '{key}'");
 }
