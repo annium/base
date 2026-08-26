@@ -32,6 +32,10 @@ public class ObjectCacheFailureTests : TestBase
             );
             container.Add<BrittleProvider>().AsSelf().Singleton();
             container.Add<ReferencingProvider>().AsSelf().Singleton();
+            container.Add<SlowProvider>().AsSelf().Singleton();
+            container.AddObjectCache<string, Slow, SlowProvider>(
+                Annium.Core.DependencyInjection.ServiceLifetime.Singleton
+            );
             container.AddObjectCache<string, Referenced, ReferencingProvider>(
                 Annium.Core.DependencyInjection.ServiceLifetime.Singleton
             );
@@ -149,6 +153,50 @@ public class ObjectCacheFailureTests : TestBase
         // and the provider's own reference belongs to the entry, so it goes when the cache does
         await ((IAsyncDisposable)cache).DisposeAsync();
         provider.ReferenceDisposals.Is(1, "the cache must release the reference its provider handed back");
+    }
+
+    /// <summary>
+    /// A caller waiting on somebody else's slow creation can give up. GetAsync takes a token and used to
+    /// consult it only on the path that creates the value - everyone who arrived second waited for that
+    /// creation however long it took, whatever their own deadline said.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public async Task GetAsync_WaitingOnAnotherCaller_CanBeCancelled()
+    {
+        // arrange - the first caller holds the key while its creation crawls
+        var provider = Get<SlowProvider>();
+        var cache = Get<IObjectCache<string, Slow>>();
+        var first = Task.Run(
+            async () => await cache.GetAsync("shared", TestContext.Current.CancellationToken),
+            TestContext.Current.CancellationToken
+        );
+        await provider.Started;
+
+        // act - the second arrives with a deadline of its own
+        using var cts = new CancellationTokenSource();
+        var second = cache.GetAsync("shared", cts.Token);
+        await cts.CancelAsync();
+
+#pragma warning disable VSTHRD003
+        try
+        {
+            // assert - bounded, because the failure being pinned is an unbounded wait
+            var completed = await Task.WhenAny(
+                second,
+                Task.Delay(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken)
+            );
+            (completed == second).IsTrue("a waiter that gave up must not be held by another caller");
+            await Wrap.It(async () => await second).ThrowsAsync<OperationCanceledException>();
+        }
+        finally
+        {
+            // whatever happened above, the creation has to be let go: the cache's own disposal waits for
+            // it, so leaving it held would hang the run rather than fail this test
+            provider.Finish();
+            await using var _ = await first;
+        }
+#pragma warning restore VSTHRD003
     }
 
     /// <summary>
@@ -333,5 +381,53 @@ public class ReferencingProvider : ObjectCacheProvider<string, Referenced>
         Interlocked.Increment(ref _suspends);
 
         return Task.CompletedTask;
+    }
+}
+
+/// <summary>
+/// A cached value whose creation is held open by the test.
+/// </summary>
+/// <param name="Key">The key this value was created for.</param>
+public sealed record Slow(string Key);
+
+/// <summary>
+/// Provider whose creation blocks until the test lets it finish.
+/// </summary>
+public class SlowProvider : ObjectCacheProvider<string, Slow>
+{
+    /// <summary>
+    /// Gets a task that completes once creation has begun.
+    /// </summary>
+    public Task Started => _started.Task;
+
+    /// <summary>
+    /// Signals that creation has begun.
+    /// </summary>
+    private readonly TaskCompletionSource _started = new();
+
+    /// <summary>
+    /// Held until the test releases it.
+    /// </summary>
+    private readonly TaskCompletionSource _finish = new();
+
+    /// <summary>
+    /// Lets the creation complete.
+    /// </summary>
+    public void Finish() => _finish.TrySetResult();
+
+    /// <summary>
+    /// Creates a value, once allowed to.
+    /// </summary>
+    /// <param name="id">The key to create a value for.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>The created value.</returns>
+    public override async Task<OneOf<Slow, IDisposableReference<Slow>>> CreateAsync(string id, CancellationToken ct)
+    {
+        _started.TrySetResult();
+#pragma warning disable VSTHRD003
+        await _finish.Task;
+#pragma warning restore VSTHRD003
+
+        return new Slow(id);
     }
 }

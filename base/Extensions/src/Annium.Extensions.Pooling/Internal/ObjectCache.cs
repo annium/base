@@ -103,7 +103,7 @@ internal sealed class ObjectCache<TKey, TValue> : IObjectCache<TKey, TValue>, IL
             else
             {
                 this.Trace("Get by {key}: wait entry {entry}", key, entry);
-                await entry.WaitAsync();
+                await entry.WaitAsync(ct);
 
                 if (entry.Error is not null)
                 {
@@ -293,8 +293,21 @@ internal sealed class ObjectCache<TKey, TValue> : IObjectCache<TKey, TValue>, IL
         /// <summary>
         /// Asynchronously waits for the entry to be ready for access.
         /// </summary>
+        /// <param name="ct">Cancellation token for giving up the wait.</param>
         /// <returns>A task that completes when the entry is ready.</returns>
-        public Task WaitAsync() => Task.Run(() => _gate.WaitOne());
+        public Task WaitAsync(CancellationToken ct = default) =>
+            Task.Run(
+                () =>
+                {
+                    // waiting on both means a caller that gave up stops waiting without taking the gate, so the
+                    // one that is creating the value still hands it to whoever is left. Swapping the gate for a
+                    // semaphore would give cancellation for free but not this: the gate's Set is idempotent and
+                    // the wake-up is passed along by re-setting it, which a bounded semaphore rejects
+                    if (WaitHandle.WaitAny([_gate, ct.WaitHandle]) != 0)
+                        ct.ThrowIfCancellationRequested();
+                },
+                CancellationToken.None
+            );
 
         /// <summary>
         /// Signals that the entry is ready for access.
