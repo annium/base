@@ -225,8 +225,17 @@ public class ComposerTest : TestBase
     }
 
     /// <summary>
-    /// Test class representing a bad configuration
+    /// Two composers loading the same property is reported when the executor is built. They would race to
+    /// set it, so whichever won would be arbitrary - and silent.
     /// </summary>
+    [Fact]
+    public void Compose_TwoComposersForOneProperty_Throws()
+    {
+        // act & assert
+        var error = Wrap.It(() => GetComposer<Contested>()).Throws<InvalidOperationException>();
+        error.Message.Contains(nameof(Contested.Value)).IsTrue("the message must name the contested property");
+    }
+
     /// <summary>
     /// A type nobody wrote a composer for comes back composed successfully. The composer set is resolved by
     /// reflection, so "no rules registered" and "rules written but the assembly was never scanned" look the
@@ -257,5 +266,44 @@ public class ComposerTest : TestBase
         /// Gets or sets the name
         /// </summary>
         public string Name { get; set; } = string.Empty;
+    }
+}
+
+/// <summary>
+/// Model whose single property two composers both claim.
+/// </summary>
+public class Contested
+{
+    /// <summary>
+    /// Gets or sets the contested value.
+    /// </summary>
+    public string Value { get; set; } = string.Empty;
+}
+
+/// <summary>
+/// One of the two composers claiming Contested.Value.
+/// </summary>
+public class ContestedComposerOne : Composer<Contested>
+{
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ContestedComposerOne"/> class.
+    /// </summary>
+    public ContestedComposerOne()
+    {
+        Field(x => x.Value).LoadWith(_ => "one");
+    }
+}
+
+/// <summary>
+/// The other composer claiming Contested.Value.
+/// </summary>
+public class ContestedComposerTwo : Composer<Contested>
+{
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ContestedComposerTwo"/> class.
+    /// </summary>
+    public ContestedComposerTwo()
+    {
+        Field(x => x.Value).LoadWith(_ => "two");
     }
 }
