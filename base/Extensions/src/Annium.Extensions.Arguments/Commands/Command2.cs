@@ -39,6 +39,8 @@ public abstract class Command<T1, T2> : CommandBase
             return Task.CompletedTask;
         }
 
+        Root.ConfigurationBuilder.EnsureTypesReadAlike(args, typeof(T1), typeof(T2));
+
         var cfg1 = Root.ConfigurationBuilder.Build<T1>(args);
         var cfg2 = Root.ConfigurationBuilder.Build<T2>(args);
 

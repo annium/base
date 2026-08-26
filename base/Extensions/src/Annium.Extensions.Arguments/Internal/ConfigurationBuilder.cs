@@ -92,6 +92,110 @@ internal class ConfigurationBuilder : IConfigurationBuilder
     }
 
     /// <summary>
+    /// Fails when a command's configuration types would not read the given command line the same way.
+    /// </summary>
+    /// <param name="args">Array of command line arguments the command was given</param>
+    /// <param name="configurationTypes">Every configuration type the command binds</param>
+    public void EnsureTypesReadAlike(string[] args, params Type[] configurationTypes)
+    {
+        if (configurationTypes.Length < 2)
+            return;
+
+        var options = configurationTypes
+            .SelectMany(type => _configurationProcessor.GetPropertiesWithAttribute<OptionAttribute>(type))
+            .ToArray();
+
+        EnsureNamesAreUnique(options);
+
+        // what the command as a whole makes of the line, with every option it declares in view
+        var whole = _argumentProcessor.Compose(args, Spec(options));
+
+        foreach (var type in configurationTypes)
+        {
+            var own = _argumentProcessor.Compose(
+                args,
+                Spec(_configurationProcessor.GetPropertiesWithAttribute<OptionAttribute>(type))
+            );
+
+            var difference = DifferenceThatMatters(type, whole, own);
+            if (difference is not null)
+                throw new ArgumentParseException(
+                    $"Configuration '{type.FriendlyName()}' would bind {difference} differently from the rest of the command"
+                );
+        }
+    }
+
+    /// <summary>
+    /// What a configuration type would bind differently when it reads the command line on its own instead
+    /// of as the command reads it, or null when the two readings give it the same values.
+    /// </summary>
+    /// <param name="type">The configuration type.</param>
+    /// <param name="whole">The reading taken with every option the command declares.</param>
+    /// <param name="own">The reading taken with this type's options alone.</param>
+    /// <returns>A description of what would differ, or null.</returns>
+    /// <remarks>
+    /// Only what this type actually binds counts. Two readings routinely differ over an option the type
+    /// does not declare - the value has nowhere to go either way - and failing on that would reject the
+    /// ordinary pairing of a command's own configuration with a shared one.
+    ///
+    /// The raw-tail comparison and the alias lookup in <see cref="Claimed"/> are defensive rather than
+    /// exercised: the delimiter is always option-like, so no reading can swallow it and every reading ends
+    /// the tail at the same token; and a type's own reading is always composed with a spec carrying its own
+    /// options, so its values sit under the canonical name in both readings. Both are kept so the
+    /// comparison stays complete if either invariant is ever relaxed.
+    /// </remarks>
+    private string? DifferenceThatMatters(Type type, RawConfiguration whole, RawConfiguration own)
+    {
+        var positions = _configurationProcessor.GetPropertiesWithAttribute<PositionAttribute>(type).Length;
+        if (positions > 0)
+        {
+            var wholePositions = whole.Positions.Take(positions).ToArray();
+            var ownPositions = own.Positions.Take(positions).ToArray();
+            if (!wholePositions.SequenceEqual(ownPositions))
+                return $"position {Math.Min(wholePositions.Length, ownPositions.Length) + 1}";
+        }
+
+        foreach (var (property, attribute) in _configurationProcessor.GetPropertiesWithAttribute<OptionAttribute>(type))
+        {
+            var name = property.Name.PascalCase();
+            var alias = attribute.Alias?.PascalCase();
+
+            if (Claimed(whole, name, alias) != Claimed(own, name, alias))
+                return $"'-{property.Name.KebabCase()}'";
+        }
+
+        if (_configurationProcessor.GetPropertiesWithAttribute<RawAttribute>(type).Length > 0 && whole.Raw != own.Raw)
+            return "what follows '--'";
+
+        return null;
+    }
+
+    /// <summary>
+    /// What a reading gives an option, as a single comparable string, or null when it gives it nothing.
+    /// </summary>
+    /// <param name="raw">The reading.</param>
+    /// <param name="name">The option's canonical name.</param>
+    /// <param name="alias">The option's alias, if any.</param>
+    /// <returns>What the option was given, or null.</returns>
+    private static string? Claimed(RawConfiguration raw, string name, string? alias)
+    {
+        var spellings = alias is null ? new[] { name } : new[] { name, alias };
+        foreach (var spelling in spellings)
+        {
+            if (raw.Flags.Contains(spelling))
+                return "flag";
+
+            if (raw.Options.TryGetValue(spelling, out var value))
+                return $"={value}";
+
+            if (raw.MultiOptions.TryGetValue(spelling, out var values))
+                return $"={string.Join(',', values)}";
+        }
+
+        return null;
+    }
+
+    /// <summary>
     /// Sets positional argument values on the configuration object based on position attributes.
     /// </summary>
     /// <typeparam name="T">The configuration type</typeparam>
