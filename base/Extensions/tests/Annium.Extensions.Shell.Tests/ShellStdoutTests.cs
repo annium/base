@@ -1,5 +1,7 @@
 using System;
 using System.IO;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Annium.Testing;
 using Xunit;
@@ -25,9 +27,41 @@ public class ShellStdoutTests : TestBase
     }
 
     /// <summary>
+    /// Starting a command that cannot start, with a token already cancelled, fails and leaves nothing
+    /// behind. The cancellation callback runs synchronously in that case, so the exit handler is already
+    /// waiting on the setup that is about to throw.
+    /// Skipped on Windows - this test drives a POSIX shell.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
+    [Fact]
+    public async Task RunAsync_CancelledTokenAndUnstartableCommand_DoesNotStrandWork()
+    {
+        if (OperatingSystem.IsWindows())
+            return;
+
+        // arrange
+        var shell = Get<IShell>();
+        using var cts = new CancellationTokenSource();
+        await cts.CancelAsync();
+
+        // act & assert - it fails, as it must
+        await Wrap.It(async () => await shell.Cmd("no-such-binary-here").RunAsync(cts.Token)).ThrowsAsync<Exception>();
+
+        // and the shell still works afterwards, so nothing is holding it up
+        var result = await shell.Cmd("sh", "-c", "echo after").RunAsync(TestContext.Current.CancellationToken);
+        result.Output.Trim().Is("after");
+    }
+
+    /// <summary>
     /// A command short enough to exit before the caller has finished attaching to its output still
     /// reports it. The exit handler releases the process as soon as it fires, so a process that ends
     /// during setup could be gone by the time the streams were read.
+    ///
+    /// This is a best-effort net, not a proof: removing the fix does not make this test fail on its own,
+    /// even with these concurrent runs. The window needs the machine busy enough to delay the thread doing
+    /// the attaching, which in practice means the whole suite running at once - that is where the original
+    /// failure showed up, two runs in five. Kept because it costs a second and is the shape that would
+    /// catch a regression there.
     /// Skipped on Windows - this test drives a POSIX shell.
     /// </summary>
     /// <returns>A task that represents the asynchronous test.</returns>
@@ -40,14 +74,31 @@ public class ShellStdoutTests : TestBase
         // arrange
         var shell = Get<IShell>();
 
-        // act & assert - repeated, because the window this closes is a race
-        for (var i = 0; i < 50; i++)
-        {
-            var result = await shell.Cmd("sh", "-c", "echo done").RunAsync(TestContext.Current.CancellationToken);
+        // act - run in parallel rather than in sequence: the window this closes needs the thread that
+        // attaches to the output to be delayed, which only happens when something else wants the CPU
+        var runs = Enumerable
+            .Range(0, 8)
+            .Select(worker =>
+                Task.Run(
+                    async () =>
+                    {
+                        for (var i = 0; i < 10; i++)
+                        {
+                            var result = await shell
+                                .Cmd("sh", "-c", "echo done")
+                                .RunAsync(TestContext.Current.CancellationToken);
 
-            result.IsSuccess.IsTrue($"run {i} must succeed");
-            result.Output.Trim().Is("done", $"run {i} must report its output");
-        }
+                            result.IsSuccess.IsTrue($"worker {worker} run {i} must succeed");
+                            result.Output.Trim().Is("done", $"worker {worker} run {i} must report its output");
+                        }
+                    },
+                    TestContext.Current.CancellationToken
+                )
+            )
+            .ToArray();
+
+        // assert
+        await Task.WhenAll(runs);
     }
 
     /// <summary>

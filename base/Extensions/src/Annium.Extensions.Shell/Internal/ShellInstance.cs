@@ -228,14 +228,23 @@ internal sealed class ShellInstance : IShellInstance, ILogSubject
             HandleExit();
         };
 
-        process.Start();
+        try
+        {
+            process.Start();
 
-        // setup output capture — capture the pipe tasks so HandleExit can await them
-        // before reporting the result; prevents stdout/stderr truncation when the process
-        // exits while pipe drains are still in flight
-        stdoutTask = PipeOutAsync(process.StandardOutput, stdout, Console.Out, _print, ct);
-        stderrTask = PipeOutAsync(process.StandardError, stderr, Console.Error, _print, ct);
-        pipesAttached.SetResult();
+            // setup output capture — capture the pipe tasks so HandleExit can await them
+            // before reporting the result; prevents stdout/stderr truncation when the process
+            // exits while pipe drains are still in flight
+            stdoutTask = PipeOutAsync(process.StandardOutput, stdout, Console.Out, _print, ct);
+            stderrTask = PipeOutAsync(process.StandardError, stderr, Console.Error, _print, ct);
+        }
+        finally
+        {
+            // in a finally because starting can throw - an already-cancelled token runs its callback
+            // synchronously, so the exit handler may already be waiting on this, and leaving it unset
+            // would strand that task for the life of the process
+            pipesAttached.TrySetResult();
+        }
 
         return tcs;
 
