@@ -191,6 +191,58 @@ public class CommanderTests : TestBase
     }
 
     /// <summary>
+    /// A command whose configuration types would bind one command line differently fails, saying so. Each
+    /// type is bound from the same arguments using only its own options, so a flag declared by one of them
+    /// is an unknown option to another, which swallows the token after it - here the very token the other
+    /// type declares as its position. Binding used to produce whatever each type made of the line on its
+    /// own, or a misleading error about a missing argument.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public async Task RunAsync_ConfigurationsThatReadTheLineDifferently_Fails()
+    {
+        // arrange - Loud declares the flag, Named declares the position that follows it
+        var trace = Get<Trace>();
+
+        // act
+        var run = Commander.RunAsync<DivergentGroup>(
+            Provider,
+            ["divergent", "-loud", "here"],
+            TestContext.Current.CancellationToken
+        );
+
+        // assert
+        // VSTHRD003: `run` is this test's own call, awaited to see how the failure surfaces
+#pragma warning disable VSTHRD003
+        var error = await Wrap.It(async () => await run).ThrowsAsync<ArgumentParseException>();
+#pragma warning restore VSTHRD003
+        error.Message.Contains("PlaceConfiguration").IsTrue("the message must name the configuration that differs");
+        error.Message.Contains("position 1").IsTrue("and what it would bind differently");
+        trace.Calls.IsEmpty("nothing must run on a command line the command cannot agree on");
+    }
+
+    /// <summary>
+    /// A command whose configuration types do agree still runs.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public async Task RunAsync_ConfigurationsThatAgree_Run()
+    {
+        // arrange
+        var trace = Get<Trace>();
+
+        // act
+        await Commander.RunAsync<PairGroup>(
+            Provider,
+            ["pair", "here", "-name", "world"],
+            TestContext.Current.CancellationToken
+        );
+
+        // assert
+        trace.Calls.Has(1).At(0).Is("pair here world");
+    }
+
+    /// <summary>
     /// Runs the given call with the console redirected, and returns what it printed.
     /// </summary>
     /// <param name="act">The call to run.</param>
@@ -600,5 +652,92 @@ public class PairGroup : Group, ICommandDescriptor
     public PairGroup()
     {
         Add<PairCommand>();
+    }
+}
+
+/// <summary>
+/// Configuration declaring a flag.
+/// </summary>
+public class LoudConfiguration
+{
+    /// <summary>
+    /// Gets or sets whether to be loud.
+    /// </summary>
+    [Option]
+    public bool Loud { get; set; }
+}
+
+/// <summary>
+/// Configuration declaring the position that follows that flag.
+/// </summary>
+public class PlaceConfiguration
+{
+    /// <summary>
+    /// Gets or sets where.
+    /// </summary>
+    [Position(1)]
+    public string Place { get; set; } = string.Empty;
+}
+
+/// <summary>
+/// Command whose two configuration types read one command line differently.
+/// </summary>
+public class DivergentCommand : Command<LoudConfiguration, PlaceConfiguration>, ICommandDescriptor
+{
+    /// <summary>
+    /// Gets the identifier this command is invoked by.
+    /// </summary>
+    public static string Id => "divergent";
+
+    /// <summary>
+    /// Gets the description of this command.
+    /// </summary>
+    public static string Description => "cannot agree with itself";
+
+    /// <summary>
+    /// The trace this command records into.
+    /// </summary>
+    private readonly Trace _trace;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DivergentCommand"/> class.
+    /// </summary>
+    /// <param name="trace">The trace to record into.</param>
+    public DivergentCommand(Trace trace)
+    {
+        _trace = trace;
+    }
+
+    /// <summary>
+    /// Records the call, if it ever gets that far.
+    /// </summary>
+    /// <param name="loud">The flag half.</param>
+    /// <param name="place">The position half.</param>
+    /// <param name="ct">Cancellation token.</param>
+    public override void Handle(LoudConfiguration loud, PlaceConfiguration place, CancellationToken ct) =>
+        _trace.Add($"divergent {loud.Loud} {place.Place}");
+}
+
+/// <summary>
+/// A group holding the command that cannot agree with itself.
+/// </summary>
+public class DivergentGroup : Group, ICommandDescriptor
+{
+    /// <summary>
+    /// Gets the identifier of this group.
+    /// </summary>
+    public static string Id => string.Empty;
+
+    /// <summary>
+    /// Gets the description of this group.
+    /// </summary>
+    public static string Description => "a group with a self-contradicting command";
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DivergentGroup"/> class.
+    /// </summary>
+    public DivergentGroup()
+    {
+        Add<DivergentCommand>();
     }
 }

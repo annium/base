@@ -1,3 +1,5 @@
+using System;
+
 namespace Annium.Extensions.Arguments.Internal;
 
 /// <summary>
@@ -25,4 +27,17 @@ internal interface IConfigurationBuilder
     /// the command legitimately takes.
     /// </remarks>
     bool IsHelpRequested(string[] args);
+
+    /// <summary>
+    /// Fails when a command's configuration types would not read the given command line the same way.
+    /// </summary>
+    /// <param name="args">Array of command line arguments the command was given</param>
+    /// <param name="configurationTypes">Every configuration type the command binds</param>
+    /// <remarks>
+    /// Each type is bound from the same arguments using only its own options in view, so a flag declared by
+    /// one of them is an unknown option to another, which swallows the token after it. This judges the
+    /// command's configuration, not the input: if the types cannot agree on what they were given, whatever
+    /// they bind is arbitrary, and saying so beats handing back two disagreeing readings.
+    /// </remarks>
+    void EnsureTypesReadAlike(string[] args, params Type[] configurationTypes);
 }

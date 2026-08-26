@@ -361,6 +361,23 @@ public class ConfigurationBuilderTests : TestBase
     }
 
     /// <summary>
+    /// A command's own configuration paired with a shared one is the ordinary shape, and stays working.
+    /// The two readings of a command line routinely differ over an option only one of them declares - the
+    /// value has nowhere to go in the other either way - and failing on that would reject every command
+    /// built this way.
+    /// </summary>
+    [Fact]
+    public void EnsureTypesReadAlike_OwnConfigurationPairedWithAShared_Passes()
+    {
+        // arrange
+        var builder = Get<Root>().ConfigurationBuilder;
+
+        // act & assert - a flag of one paired with the other, and each on its own
+        foreach (var line in new[] { new[] { "-f", "src" }, new[] { "-c" }, new[] { "src" }, new[] { "-f" } })
+            builder.EnsureTypesReadAlike(line, typeof(XsBuildConfiguration), typeof(XsDiscoverConfiguration));
+    }
+
+    /// <summary>
     /// Builds a configuration of the given type from a command line.
     /// </summary>
     /// <typeparam name="T">The configuration type to build.</typeparam>
@@ -585,4 +602,40 @@ public class NullableConfiguration
     /// </summary>
     [Option]
     public int? Count { get; set; }
+}
+
+/// <summary>
+/// The shape of an xs command configuration.
+/// </summary>
+public class XsBuildConfiguration
+{
+    /// <summary>
+    /// Gets or sets whether to force.
+    /// </summary>
+    [Option("f")]
+    public bool Force { get; set; }
+
+    /// <summary>
+    /// Gets or sets the solution to build.
+    /// </summary>
+    [Position(1, isRequired: false)]
+    public string Solution { get; set; } = string.Empty;
+}
+
+/// <summary>
+/// The shape of the discover configuration every xs command pairs with.
+/// </summary>
+public class XsDiscoverConfiguration
+{
+    /// <summary>
+    /// Gets or sets the roots.
+    /// </summary>
+    [Option("cwd")]
+    public string[] Roots { get; set; } = Array.Empty<string>();
+
+    /// <summary>
+    /// Gets or sets whether only changed.
+    /// </summary>
+    [Option("c")]
+    public bool Changed { get; set; }
 }
