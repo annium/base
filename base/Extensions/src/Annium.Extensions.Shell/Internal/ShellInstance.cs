@@ -220,7 +220,8 @@ internal sealed class ShellInstance : IShellInstance, ILogSubject
 
         var tcs = new TaskCompletionSource<ShellResult>();
 
-        // as far as there's no way to know if process was killed or finished on it's own - track it manually
+        // as far as there's no way to know if process was killed or finished on it's own - track it manually.
+        // Written from the cancellation callback and read from the exit handler, so both go through Volatile
         var killed = false;
 
         // gate for exactly-once HandleExit invocation; both the CT-registration callback
@@ -257,7 +258,7 @@ internal sealed class ShellInstance : IShellInstance, ILogSubject
         // kill lands rather than being swallowed
         registration = ct.Register(() =>
         {
-            killed = true;
+            Volatile.Write(ref killed, true);
             this.Trace<string>("Kill process {command} due token cancellation", GetCommand(process));
             try
             {
@@ -318,7 +319,10 @@ internal sealed class ShellInstance : IShellInstance, ILogSubject
                 // the task first let RunAsync's `using` dispose the very same process from its own thread
                 // while this one was still disposing it. A later, sequential second Dispose from that
                 // `using` is harmless — two concurrent ones are not
-                var result = killed ? null : GetResult(process.ExitCode, stdout, stderr);
+                // read once and used for both decisions below: read twice, a cancellation landing between
+                // them would discard a result that had already been taken from a run that finished
+                var wasKilled = Volatile.Read(ref killed);
+                var result = wasKilled ? null : GetResult(process.ExitCode, stdout, stderr);
 
                 try
                 {
@@ -329,7 +333,7 @@ internal sealed class ShellInstance : IShellInstance, ILogSubject
                     this.Warn("Process.Dispose() failed: {e}", ex);
                 }
 
-                if (killed)
+                if (wasKilled)
                     tcs.TrySetCanceled();
                 else
                     tcs.TrySetResult(result!);
