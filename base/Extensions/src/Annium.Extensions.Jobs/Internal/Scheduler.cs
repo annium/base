@@ -74,37 +74,65 @@ internal class Scheduler : IScheduler, IAsyncDisposable, ILogSubject
 
         _executor.Schedule(async () =>
         {
-            while (!cts.IsCancellationRequested)
+            try
             {
-                var time = _timeProvider.Now.InUtc().LocalDateTime;
-                var delay = resolveDelay(time.CeilToSecond());
-                var ms = Duration.FromMilliseconds(1000 - time.Millisecond);
-                var total = (delay + ms).ToTimeSpan();
-
-                await Task.Delay(total, cts.Token);
-
-                if (cts.IsCancellationRequested)
-                    continue;
-
-                try
+                while (!cts.IsCancellationRequested)
                 {
-                    await handler();
+                    var time = _timeProvider.Now.InUtc().LocalDateTime;
+                    var delay = resolveDelay(time.CeilToSecond());
+                    var ms = Duration.FromMilliseconds(1000 - time.Millisecond);
+                    var total = (delay + ms).ToTimeSpan();
+
+                    await Task.Delay(total, cts.Token);
+
+                    if (cts.IsCancellationRequested)
+                        continue;
+
+                    try
+                    {
+                        await handler();
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        // shutdown, not a failed run
+                    }
+                    catch (Exception e)
+                    {
+                        // the loop IS the scheduled task, so letting a failed run escape ends the schedule for
+                        // good: the caller holds only a cancellation handle and would never learn the job had
+                        // stopped firing
+                        this.Error(e);
+                    }
                 }
-                catch (OperationCanceledException)
-                {
-                    // shutdown, not a failed run
-                }
-                catch (Exception e)
-                {
-                    // the loop IS the scheduled task, so letting a failed run escape ends the schedule for
-                    // good: the caller holds only a cancellation handle and would never learn the job had
-                    // stopped firing
-                    this.Error(e);
-                }
+            }
+            catch (OperationCanceledException)
+            {
+                // the delay was cancelled: this is the schedule being torn down, not a failed run
+            }
+            finally
+            {
+                // a linked source holds a registration on the one it was linked to, so leaving it undisposed
+                // keeps every stopped schedule reachable for as long as the scheduler itself lives
+                // VSTHRD103: CancellationTokenSource has no async disposal
+#pragma warning disable VSTHRD103
+                cts.Dispose();
+#pragma warning restore VSTHRD103
             }
         });
 
-        return Disposable.Create(() => cts.Cancel());
+        return Disposable.Create(() =>
+        {
+            // the loop disposes the source once it has stopped, so a handle disposed afterwards finds it
+            // already gone - which is not the caller's mistake
+            try
+            {
+                cts.Cancel();
+            }
+            catch (ObjectDisposedException)
+            {
+                // already stopped
+            }
+        });
     }
 
     /// <summary>

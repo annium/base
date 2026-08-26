@@ -125,14 +125,24 @@ internal sealed class ShellInstance : IShellInstance, ILogSubject
     {
         var process = GetProcess();
 
-        var result = StartProcess(process, ct).Task;
+        try
+        {
+            var result = StartProcess(process, ct).Task;
 
-        // nothing was started when the token had already been given up on, so there are no streams to hand
-        // out - saying that beats failing on a process that does not exist
-        if (result.IsCanceled)
-            throw new OperationCanceledException(ct);
+            // nothing was started when the token had already been given up on, so there are no streams to
+            // hand out - saying that beats failing on a process that does not exist
+            if (result.IsCanceled)
+                throw new OperationCanceledException(ct);
 
-        return new ShellAsyncResult(process.StandardInput, result);
+            return new ShellAsyncResult(process.StandardInput, result);
+        }
+        catch (Exception)
+        {
+            // RunAsync gets this from its `using`; nothing started here means nothing will dispose it
+            process.Dispose();
+
+            throw;
+        }
     }
 
     /// <summary>
@@ -248,6 +258,11 @@ internal sealed class ShellInstance : IShellInstance, ILogSubject
 
             HandleExit();
         });
+
+        // the Exited handler disposes the registration, and it was subscribed before the assignment above
+        // landed - so an exit in between disposed nothing. Now that it has landed, dispose it here instead
+        if (Volatile.Read(ref exitHandledFlag) != 0)
+            registration.Dispose();
 
         // a command short enough to finish before the subscription above may never raise Exited for us;
         // HandleExit runs at most once, so asking directly is safe

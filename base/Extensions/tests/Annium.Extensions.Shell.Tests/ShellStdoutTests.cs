@@ -27,6 +27,26 @@ public class ShellStdoutTests : TestBase
     }
 
     /// <summary>
+    /// A command that cannot start fails the caller rather than half-succeeding, whether it is awaited or
+    /// merely started. The started form has no using of its own, so nothing else would release what it
+    /// created.
+    /// Skipped on Windows - this test drives a POSIX shell.
+    /// </summary>
+    [Fact]
+    public void Start_UnstartableCommand_Throws()
+    {
+        if (OperatingSystem.IsWindows())
+            return;
+
+        // arrange
+        var shell = Get<IShell>();
+
+        // act & assert
+        Wrap.It(() => shell.Cmd("no-such-binary-here").Start(TestContext.Current.CancellationToken))
+            .Throws<Exception>();
+    }
+
+    /// <summary>
     /// The same holds for a command started rather than awaited: it reports cancellation rather than
     /// failing on the streams of a process that was never started.
     /// Skipped on Windows - this test drives a POSIX shell.
