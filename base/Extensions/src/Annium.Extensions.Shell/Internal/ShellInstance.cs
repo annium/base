@@ -113,7 +113,7 @@ internal sealed class ShellInstance : IShellInstance, ILogSubject
     {
         using var process = GetProcess();
 
-        return await StartProcess(process, ct).Task;
+        return await StartProcess(process, out _, ct).Task;
     }
 
     /// <summary>
@@ -127,14 +127,14 @@ internal sealed class ShellInstance : IShellInstance, ILogSubject
 
         try
         {
-            var result = StartProcess(process, ct).Task;
+            var result = StartProcess(process, out var input, ct).Task;
 
             // nothing was started when the token had already been given up on, so there are no streams to
             // hand out - saying that beats failing on a process that does not exist
-            if (result.IsCanceled)
+            if (result.IsCanceled || input is null)
                 throw new OperationCanceledException(ct);
 
-            return new ShellAsyncResult(process.StandardInput, result);
+            return new ShellAsyncResult(input, result);
         }
         catch (Exception)
         {
@@ -182,9 +182,19 @@ internal sealed class ShellInstance : IShellInstance, ILogSubject
     /// Starts the process and sets up monitoring for completion and cancellation
     /// </summary>
     /// <param name="process">The process to start and monitor</param>
+    /// <param name="input">The started process's standard input, or null when nothing was started</param>
     /// <param name="ct">Cancellation token for operation cancellation</param>
     /// <returns>A task completion source that will complete when the process exits</returns>
-    private TaskCompletionSource<ShellResult> StartProcess(Process process, CancellationToken ct)
+    /// <remarks>
+    /// The input writer is handed back from here rather than read off the process afterwards: the exit
+    /// handler releases the process as soon as the command finishes, and a short command can be gone
+    /// before the caller gets a chance to ask for it.
+    /// </remarks>
+    private TaskCompletionSource<ShellResult> StartProcess(
+        Process process,
+        out StreamWriter? input,
+        CancellationToken ct
+    )
     {
         // nothing is started when the caller has already given up. The kill registered below runs
         // synchronously for a token in this state, so it fired against a process that did not exist yet
@@ -193,6 +203,7 @@ internal sealed class ShellInstance : IShellInstance, ILogSubject
         if (ct.IsCancellationRequested)
         {
             this.Trace("skip start, already cancelled");
+            input = null;
             var cancelled = new TaskCompletionSource<ShellResult>();
             cancelled.TrySetCanceled(ct);
 
@@ -232,6 +243,7 @@ internal sealed class ShellInstance : IShellInstance, ILogSubject
         // a process exiting while a drain is still in flight truncates what the caller is given
         var stdoutTask = PipeOutAsync(process.StandardOutput, stdout, Console.Out, _print, ct);
         var stderrTask = PipeOutAsync(process.StandardError, stderr, Console.Error, _print, ct);
+        input = process.StandardInput;
 
         CancellationTokenRegistration registration = default;
 
@@ -264,10 +276,20 @@ internal sealed class ShellInstance : IShellInstance, ILogSubject
         if (Volatile.Read(ref exitHandledFlag) != 0)
             registration.Dispose();
 
-        // a command short enough to finish before the subscription above may never raise Exited for us;
-        // HandleExit runs at most once, so asking directly is safe
-        if (process.HasExited)
-            HandleExit();
+        // a command short enough to finish before the subscription above may never raise Exited for us, so
+        // ask directly - but the exit-driven path disposes the process, and asking a disposed one whether
+        // it exited throws. The gate rules out the case where that has already happened; the catch covers
+        // it happening between the two
+        if (Volatile.Read(ref exitHandledFlag) == 0)
+            try
+            {
+                if (process.HasExited)
+                    HandleExit();
+            }
+            catch (InvalidOperationException)
+            {
+                // the process is already gone, so its exit was handled after all
+            }
 
         return tcs;
 

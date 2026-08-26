@@ -38,11 +38,7 @@ public class WorkerFailureTests : TestBase
 
         // act & assert - bounded, because the failure this pins is an unbounded wait
         var start = manager.StartAsync(key);
-        var completed = await Task.WhenAny(
-            start,
-            Task.Delay(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken)
-        );
-        (completed == start).IsTrue("StartAsync must not wait for a worker that already failed");
+        await Bounded(start);
         // VSTHRD003: `start` is this test's own call, awaited to observe how the failure surfaces
 #pragma warning disable VSTHRD003
         await Wrap.It(async () => await start).ThrowsAsync<InvalidOperationException>();
@@ -63,11 +59,7 @@ public class WorkerFailureTests : TestBase
 
         // act & assert
         var stop = manager.StopAsync(key);
-        var completed = await Task.WhenAny(
-            stop,
-            Task.Delay(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken)
-        );
-        (completed == stop).IsTrue("StopAsync must not wait for a worker that already failed");
+        await Bounded(stop);
         // VSTHRD003: `stop` is this test's own call
 #pragma warning disable VSTHRD003
         await Wrap.It(async () => await stop).ThrowsAsync<InvalidOperationException>();
