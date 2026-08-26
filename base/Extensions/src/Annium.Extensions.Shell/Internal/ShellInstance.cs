@@ -171,6 +171,19 @@ internal sealed class ShellInstance : IShellInstance, ILogSubject
     /// <returns>A task completion source that will complete when the process exits</returns>
     private TaskCompletionSource<ShellResult> StartProcess(Process process, CancellationToken ct)
     {
+        // nothing is started when the caller has already given up. The kill registered below runs
+        // synchronously for a token in this state, so it fired against a process that did not exist yet
+        // and was swallowed - leaving the command to run to completion while the caller was told it had
+        // been cancelled
+        if (ct.IsCancellationRequested)
+        {
+            this.Trace("skip start, already cancelled");
+            var cancelled = new TaskCompletionSource<ShellResult>();
+            cancelled.TrySetCanceled(ct);
+
+            return cancelled;
+        }
+
         if (!_isSensitive)
             this.Trace<string, string, string>(
                 "shell: [{dir}] {fileName} {arguments}",

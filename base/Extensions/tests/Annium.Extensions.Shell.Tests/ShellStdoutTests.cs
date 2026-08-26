@@ -27,6 +27,41 @@ public class ShellStdoutTests : TestBase
     }
 
     /// <summary>
+    /// A command asked for with a token already cancelled does not run at all. Registering the kill before
+    /// starting meant the kill fired against a process that did not exist yet, was swallowed, and the
+    /// command then ran to completion while the caller was told it had been cancelled.
+    /// Skipped on Windows - this test drives a POSIX shell.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
+    [Fact]
+    public async Task RunAsync_TokenAlreadyCancelled_DoesNotRunTheCommand()
+    {
+        if (OperatingSystem.IsWindows())
+            return;
+
+        // arrange - a command whose having run is visible afterwards
+        var marker = Path.Combine(Path.GetTempPath(), $"annium-shell-{Guid.NewGuid():N}");
+        var shell = Get<IShell>();
+        using var cts = new CancellationTokenSource();
+        await cts.CancelAsync();
+
+        try
+        {
+            // act
+            await Wrap.It(async () => await shell.Cmd("sh", "-c", $"touch {marker}").RunAsync(cts.Token))
+                .ThrowsAsync<OperationCanceledException>();
+
+            // assert - and it really did not run, rather than running unwatched
+            await Task.Delay(TimeSpan.FromMilliseconds(300), TestContext.Current.CancellationToken);
+            File.Exists(marker).IsFalse("a command reported as cancelled must not have run");
+        }
+        finally
+        {
+            File.Delete(marker);
+        }
+    }
+
+    /// <summary>
     /// Starting a command that cannot start, with a token already cancelled, fails and leaves nothing
     /// behind. The cancellation callback runs synchronously in that case, so the exit handler is already
     /// waiting on the setup that is about to throw.
