@@ -137,6 +137,12 @@ internal class ConfigurationBuilder : IConfigurationBuilder
     /// Only what this type actually binds counts. Two readings routinely differ over an option the type
     /// does not declare - the value has nowhere to go either way - and failing on that would reject the
     /// ordinary pairing of a command's own configuration with a shared one.
+    ///
+    /// The raw-tail comparison and the alias lookup in <see cref="Claimed"/> are defensive rather than
+    /// exercised: the delimiter is always option-like, so no reading can swallow it and every reading ends
+    /// the tail at the same token; and a type's own reading is always composed with a spec carrying its own
+    /// options, so its values sit under the canonical name in both readings. Both are kept so the
+    /// comparison stays complete if either invariant is ever relaxed.
     /// </remarks>
     private string? DifferenceThatMatters(Type type, RawConfiguration whole, RawConfiguration own)
     {
