@@ -27,6 +27,27 @@ public class ShellStdoutTests : TestBase
     }
 
     /// <summary>
+    /// The same holds for a command started rather than awaited: it reports cancellation rather than
+    /// failing on the streams of a process that was never started.
+    /// Skipped on Windows - this test drives a POSIX shell.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
+    [Fact]
+    public async Task Start_TokenAlreadyCancelled_ReportsCancellation()
+    {
+        if (OperatingSystem.IsWindows())
+            return;
+
+        // arrange
+        var shell = Get<IShell>();
+        using var cts = new CancellationTokenSource();
+        await cts.CancelAsync();
+
+        // act & assert
+        Wrap.It(() => shell.Cmd("sh", "-c", "echo never").Start(cts.Token)).Throws<OperationCanceledException>();
+    }
+
+    /// <summary>
     /// A command asked for with a token already cancelled does not run at all. Registering the kill before
     /// starting meant the kill fired against a process that did not exist yet, was swallowed, and the
     /// command then ran to completion while the caller was told it had been cancelled.

@@ -127,6 +127,11 @@ internal sealed class ShellInstance : IShellInstance, ILogSubject
 
         var result = StartProcess(process, ct).Task;
 
+        // nothing was started when the token had already been given up on, so there are no streams to hand
+        // out - saying that beats failing on a process that does not exist
+        if (result.IsCanceled)
+            throw new OperationCanceledException(ct);
+
         return new ShellAsyncResult(process.StandardInput, result);
     }
 
@@ -206,20 +211,29 @@ internal sealed class ShellInstance : IShellInstance, ILogSubject
         var stdout = new StringBuilder();
         var stderr = new StringBuilder();
 
-        // pipe tasks are assigned after process.Start(); HandleExit may fire from either
-        // the cancellation token or the Exited event and must await them before reporting
-        // the result — initialise to CompletedTask so the closure sees a non-null task even
-        // in the extremely rare case of exit firing before pipe setup
-        Task stdoutTask = Task.CompletedTask;
-        Task stderrTask = Task.CompletedTask;
+        // everything that can end the run is wired up only once the process exists and its output is
+        // attached. Registering the kill first meant a token cancelling before the start killed a process
+        // that was not there yet - the failure was swallowed, the run marked cancelled, and the command
+        // then ran to completion unwatched; and an exit arriving mid-setup released the process before the
+        // output was attached to it. Ordering this way removes both windows rather than guarding them
+        process.Start();
 
-        // a short command can exit before the lines below attach to its output. The exit handler releases
-        // the process as soon as it fires, so without this the attach would run against a process that had
-        // already been disposed
-        var pipesAttached = new TaskCompletionSource();
+        // capture the pipe tasks so HandleExit can await them before reporting the result: without that,
+        // a process exiting while a drain is still in flight truncates what the caller is given
+        var stdoutTask = PipeOutAsync(process.StandardOutput, stdout, Console.Out, _print, ct);
+        var stderrTask = PipeOutAsync(process.StandardError, stderr, Console.Error, _print, ct);
 
-        // track token cancellation and kill process if requested
-        var registration = ct.Register(() =>
+        CancellationTokenRegistration registration = default;
+
+        process.Exited += (_, _) =>
+        {
+            registration.Dispose();
+            HandleExit();
+        };
+
+        // a token already cancelled by now runs this synchronously, against a process that exists - so the
+        // kill lands rather than being swallowed
+        registration = ct.Register(() =>
         {
             killed = true;
             this.Trace<string>("Kill process {command} due token cancellation", GetCommand(process));
@@ -235,29 +249,10 @@ internal sealed class ShellInstance : IShellInstance, ILogSubject
             HandleExit();
         });
 
-        process.Exited += (_, _) =>
-        {
-            registration.Dispose();
+        // a command short enough to finish before the subscription above may never raise Exited for us;
+        // HandleExit runs at most once, so asking directly is safe
+        if (process.HasExited)
             HandleExit();
-        };
-
-        try
-        {
-            process.Start();
-
-            // setup output capture — capture the pipe tasks so HandleExit can await them
-            // before reporting the result; prevents stdout/stderr truncation when the process
-            // exits while pipe drains are still in flight
-            stdoutTask = PipeOutAsync(process.StandardOutput, stdout, Console.Out, _print, ct);
-            stderrTask = PipeOutAsync(process.StandardError, stderr, Console.Error, _print, ct);
-        }
-        finally
-        {
-            // in a finally because starting can throw - an already-cancelled token runs its callback
-            // synchronously, so the exit handler may already be waiting on this, and leaving it unset
-            // would strand that task for the life of the process
-            pipesAttached.TrySetResult();
-        }
 
         return tcs;
 
@@ -270,10 +265,6 @@ internal sealed class ShellInstance : IShellInstance, ILogSubject
             // event; the tcs is only completed after both pipes drain
             _ = Task.Run(async () =>
             {
-#pragma warning disable VSTHRD003
-                await pipesAttached.Task;
-#pragma warning restore VSTHRD003
-
                 try
                 {
 #pragma warning disable VSTHRD003
