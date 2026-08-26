@@ -31,6 +31,10 @@ public class ObjectCacheFailureTests : TestBase
                 Annium.Core.DependencyInjection.ServiceLifetime.Singleton
             );
             container.Add<BrittleProvider>().AsSelf().Singleton();
+            container.Add<ReferencingProvider>().AsSelf().Singleton();
+            container.AddObjectCache<string, Referenced, ReferencingProvider>(
+                Annium.Core.DependencyInjection.ServiceLifetime.Singleton
+            );
             container.AddObjectCache<string, Brittle, BrittleProvider>(
                 Annium.Core.DependencyInjection.ServiceLifetime.Singleton
             );
@@ -120,6 +124,27 @@ public class ObjectCacheFailureTests : TestBase
 #pragma warning restore VSTHRD003
 
         (failures > 0).IsTrue("the factory failure must be reported to the callers waiting on it");
+    }
+
+    /// <summary>
+    /// A provider that hands back its own reference does not thereby opt out of the cache's reference
+    /// counting. The count was incremented for the creating caller either way, but that caller was given
+    /// the provider's handle, which does not release it - so the entry never dropped to zero references
+    /// and was never suspended.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public async Task GetAsync_ProviderReturnsItsOwnReference_StillSuspendsWhenReleased()
+    {
+        // arrange
+        var provider = Get<ReferencingProvider>();
+        var cache = Get<IObjectCache<string, Referenced>>();
+
+        // act - taken and released by the caller that created it
+        await using (await cache.GetAsync("key", TestContext.Current.CancellationToken)) { }
+
+        // assert
+        await Expect.ToAsync(() => provider.Suspends.Is(1, "releasing the last reference must suspend the entry"));
     }
 
     /// <summary>
@@ -235,5 +260,56 @@ public class BrittleProvider : ObjectCacheProvider<string, Brittle>
         Interlocked.Increment(ref _disposeAttempts);
 
         throw new InvalidOperationException($"cannot dispose '{key}'");
+    }
+}
+
+/// <summary>
+/// A cached value the provider wraps in a reference of its own.
+/// </summary>
+/// <param name="Key">The key this value was created for.</param>
+public sealed record Referenced(string Key);
+
+/// <summary>
+/// Provider that returns its own disposable reference rather than a bare value.
+/// </summary>
+public class ReferencingProvider : ObjectCacheProvider<string, Referenced>
+{
+    /// <summary>
+    /// Gets how many times an entry was suspended.
+    /// </summary>
+    public int Suspends => Volatile.Read(ref _suspends);
+
+    /// <summary>
+    /// Number of suspends observed.
+    /// </summary>
+    private int _suspends;
+
+    /// <summary>
+    /// Creates a value wrapped in the provider's own reference.
+    /// </summary>
+    /// <param name="id">The key to create a value for.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>The provider's reference to the created value.</returns>
+    public override Task<OneOf<Referenced, IDisposableReference<Referenced>>> CreateAsync(
+        string id,
+        CancellationToken ct
+    ) =>
+        Task.FromResult(
+            OneOf<Referenced, IDisposableReference<Referenced>>.FromT1(
+                Disposable.Reference(new Referenced(id), () => ValueTask.CompletedTask)
+            )
+        );
+
+    /// <summary>
+    /// Records the suspend.
+    /// </summary>
+    /// <param name="key">The key identifying the value.</param>
+    /// <param name="value">The suspended value.</param>
+    /// <returns>A task representing the asynchronous suspend operation.</returns>
+    public override Task SuspendAsync(string key, Referenced value)
+    {
+        Interlocked.Increment(ref _suspends);
+
+        return Task.CompletedTask;
     }
 }

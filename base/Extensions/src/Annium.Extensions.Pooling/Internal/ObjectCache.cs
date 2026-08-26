@@ -75,7 +75,11 @@ internal sealed class ObjectCache<TKey, TValue> : IObjectCache<TKey, TValue>, IL
                         x => entry.SetValue(x),
                         x =>
                         {
-                            reference = x;
+                            // the provider's own reference belongs to the entry, not to whoever happened to
+                            // create it: handing it back as the caller's would leave the release that the
+                            // cache counts on unwired, so the entry never dropped to zero references and
+                            // was never suspended
+                            entry.SetOwnedReference(x);
                             entry.SetValue(x.Value);
                         }
                     );
@@ -121,7 +125,7 @@ internal sealed class ObjectCache<TKey, TValue> : IObjectCache<TKey, TValue>, IL
             // create reference, incrementing reference counter
             this.Trace("Get by {key}: add entry {entry} reference", key, entry);
             entry.AddReference();
-            reference ??= Disposable.Reference(
+            reference = Disposable.Reference(
                 entry.Value,
                 async () => await ReleaseAsync(key, entry).ConfigureAwait(false)
             );
@@ -191,6 +195,7 @@ internal sealed class ObjectCache<TKey, TValue> : IObjectCache<TKey, TValue>, IL
                     await entry.WaitAsync();
                     this.Trace("dispose {entry}", entry);
                     entry.Dispose();
+                    await entry.DisposeOwnedReferenceAsync();
                     await _provider.DisposeAsync(key, entry.Value);
                 }
                 catch (Exception e)
@@ -263,6 +268,11 @@ internal sealed class ObjectCache<TKey, TValue> : IObjectCache<TKey, TValue>, IL
         private uint _references;
 
         /// <summary>
+        /// The reference the provider returned alongside the value, owned by this entry.
+        /// </summary>
+        private IDisposableReference<TValue>? _ownedReference;
+
+        /// <summary>
         /// Asynchronously waits for the entry to be ready for access.
         /// </summary>
         /// <returns>A task that completes when the entry is ready.</returns>
@@ -295,6 +305,26 @@ internal sealed class ObjectCache<TKey, TValue> : IObjectCache<TKey, TValue>, IL
         {
             Error = error;
             _gate.Set();
+        }
+
+        /// <summary>
+        /// Takes ownership of the reference the provider returned alongside the value, so that it is
+        /// released when the entry goes rather than when whoever created it lets go.
+        /// </summary>
+        /// <param name="reference">The provider's reference to the value.</param>
+        public void SetOwnedReference(IDisposableReference<TValue> reference) => _ownedReference = reference;
+
+        /// <summary>
+        /// Releases the provider's reference, if it gave one.
+        /// </summary>
+        /// <returns>A task representing the asynchronous operation.</returns>
+        public async ValueTask DisposeOwnedReferenceAsync()
+        {
+            if (_ownedReference is null)
+                return;
+
+            await _ownedReference.DisposeAsync();
+            _ownedReference = null;
         }
 
         /// <summary>
