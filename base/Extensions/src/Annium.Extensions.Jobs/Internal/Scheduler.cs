@@ -72,7 +72,7 @@ internal class Scheduler : IScheduler, IAsyncDisposable, ILogSubject
         // warm up resolver
         resolveDelay(_timeProvider.Now.InUtc().LocalDateTime);
 
-        _executor.Schedule(async () =>
+        var scheduled = _executor.Schedule(async () =>
         {
             try
             {
@@ -119,6 +119,17 @@ internal class Scheduler : IScheduler, IAsyncDisposable, ILogSubject
 #pragma warning restore VSTHRD103
             }
         });
+
+        // a call made after teardown is refused by the linked source above, which is built on a token this
+        // scheduler's own source no longer has. A call that races teardown gets past that and reaches an
+        // executor that has since stopped: it refuses the work, the loop that would dispose the linked
+        // source never runs, and a handle to work that will never run is what the caller is left holding
+        if (!scheduled)
+        {
+            cts.Dispose();
+
+            throw new ObjectDisposedException(nameof(Scheduler));
+        }
 
         return Disposable.Create(() =>
         {

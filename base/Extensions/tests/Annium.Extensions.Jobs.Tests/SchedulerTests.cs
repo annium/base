@@ -91,6 +91,25 @@ public class SchedulerTests : TestBase
     }
 
     /// <summary>
+    /// Scheduling onto a scheduler that has been torn down fails the caller rather than handing back a
+    /// handle to work that will never run. The same refusal has to hold for a call that races the
+    /// teardown and reaches the executor after it stopped - a handle that looks live is the one outcome
+    /// a caller cannot act on.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public async Task Schedule_AfterDispose_Throws()
+    {
+        // arrange
+        var scheduler = Get<IScheduler>();
+        await ((IAsyncDisposable)scheduler).DisposeAsync();
+
+        // act & assert
+        Wrap.It(() => scheduler.Schedule(() => Task.CompletedTask, Interval.Secondly))
+            .Throws<ObjectDisposedException>();
+    }
+
+    /// <summary>
     /// Polls until the condition holds, failing the test if it does not within 15 seconds.
     /// </summary>
     /// <param name="condition">The condition to wait for.</param>
