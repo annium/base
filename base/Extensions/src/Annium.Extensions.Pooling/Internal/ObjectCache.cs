@@ -103,7 +103,11 @@ internal sealed class ObjectCache<TKey, TValue> : IObjectCache<TKey, TValue>, IL
             else
             {
                 this.Trace("Get by {key}: wait entry {entry}", key, entry);
-                await entry.WaitAsync(ct);
+                if (!await entry.WaitAsync(ct))
+                    throw new ObjectDisposedException(
+                        nameof(ObjectCache<,>),
+                        $"Cache entry for key '{key}' was disposed while waiting for it"
+                    );
 
                 if (entry.Error is not null)
                 {
@@ -163,7 +167,13 @@ internal sealed class ObjectCache<TKey, TValue> : IObjectCache<TKey, TValue>, IL
         try
         {
             this.Trace("Release by {key}: wait entry {entry}", key, entry);
-            await entry.WaitAsync();
+            if (!await entry.WaitAsync())
+            {
+                // the entry is already gone, and with it whatever this reference was holding
+                this.Trace("Release by {key}: entry {entry} already disposed", key, entry);
+
+                return;
+            }
 
             try
             {
@@ -292,7 +302,13 @@ internal sealed class ObjectCache<TKey, TValue> : IObjectCache<TKey, TValue>, IL
         /// <summary>
         /// Synchronization gate for coordinating access to the entry.
         /// </summary>
-        private readonly AutoResetEvent _gate = new(initialState: false);
+        private readonly SemaphoreSlim _gate = new(0, 1);
+
+        /// <summary>
+        /// Cancelled when the entry is torn down, so everyone waiting for it is told, rather than one of
+        /// them being woken as though the entry were theirs to use
+        /// </summary>
+        private readonly CancellationTokenSource _disposing = new();
 
         /// <summary>
         /// The cached value.
@@ -314,32 +330,50 @@ internal sealed class ObjectCache<TKey, TValue> : IObjectCache<TKey, TValue>, IL
         /// </summary>
         /// <param name="ct">Cancellation token for giving up the wait.</param>
         /// <returns>A task that completes when the entry is ready.</returns>
-        public Task WaitAsync(CancellationToken ct = default) =>
-            Task.Run(
-                () =>
-                {
-                    // waiting on both means a caller that gave up stops waiting without taking the gate, so the
-                    // one that is creating the value still hands it to whoever is left. Swapping the gate for a
-                    // semaphore would give cancellation for free but not this: the gate's Set is idempotent and
-                    // the wake-up is passed along by re-setting it, which a bounded semaphore rejects
-                    try
-                    {
-                        if (WaitHandle.WaitAny([_gate, ct.WaitHandle]) != 0)
-                            ct.ThrowIfCancellationRequested();
-                    }
-                    catch (ObjectDisposedException)
-                    {
-                        // the entry was disposed while this call waited for it - there is nothing left to
-                        // wait for, and returning beats waiting on a handle that will never signal
-                    }
-                },
-                CancellationToken.None
-            );
+        public async Task<bool> WaitAsync(CancellationToken ct = default)
+        {
+            using var linked = CancellationTokenSource.CreateLinkedTokenSource(ct, _disposing.Token);
+
+            try
+            {
+                await _gate.WaitAsync(linked.Token);
+
+                return true;
+            }
+            catch (OperationCanceledException) when (!ct.IsCancellationRequested)
+            {
+                // the entry was torn down while this call waited for it: not the caller's cancellation, and
+                // not an acquisition either - which of the two it was is what the return value carries
+                return false;
+            }
+            catch (ObjectDisposedException)
+            {
+                // teardown landed between the check and the wait
+                return false;
+            }
+        }
 
         /// <summary>
         /// Signals that the entry is ready for access.
         /// </summary>
-        public void Release() => _gate.Set();
+        public void Release()
+        {
+            if (_disposing.IsCancellationRequested)
+                return;
+
+            try
+            {
+                _gate.Release();
+            }
+            catch (ObjectDisposedException)
+            {
+                // teardown got between the check and the release; nobody is left to hand it to
+            }
+            catch (SemaphoreFullException)
+            {
+                // already free: the entry's creator hands it over without ever having taken it
+            }
+        }
 
         /// <summary>
         /// Sets the cached value. Can only be called once.
@@ -362,7 +396,7 @@ internal sealed class ObjectCache<TKey, TValue> : IObjectCache<TKey, TValue>, IL
         public void SetFailed(Exception error)
         {
             Error = error;
-            _gate.Set();
+            Release();
         }
 
         /// <summary>
@@ -406,11 +440,12 @@ internal sealed class ObjectCache<TKey, TValue> : IObjectCache<TKey, TValue>, IL
         /// </summary>
         public void Dispose()
         {
-            // set before disposing: a caller parked on this gate with no token of its own would otherwise
-            // wait on a handle that never signals again. Waking it first turns that into a prompt return,
-            // and WaitAsync tolerates the disposal landing first
-            _gate.Set();
+            // cancelled before anything is disposed: disposing the semaphore does not wake what waits on
+            // it, and a bare release would wake exactly one waiter as though the entry were still theirs to
+            // use. Cancelling tells every one of them, and tells them which it was
+            _disposing.Cancel();
             _gate.Dispose();
+            _disposing.Dispose();
         }
     }
 }
