@@ -89,7 +89,7 @@ internal sealed class ObjectCache<TKey, TValue> : IObjectCache<TKey, TValue>, IL
                     // factory failure — populate-after-success invariant requires removing the
                     // placeholder so that a subsequent GetAsync(key) triggers a FRESH factory
                     // call. The failure is recorded on the entry and the gate opened: the gate is
-                    // an AutoResetEvent, so it wakes exactly one waiter, and that waiter passes the
+                    // a single-permit semaphore, so it wakes exactly one waiter, and that waiter passes the
                     // wake-up along before throwing. Releasing without recording the failure woke
                     // one waiter, which then failed on the unset value and broke the chain, leaving
                     // every other waiter blocked for good.
@@ -371,7 +371,9 @@ internal sealed class ObjectCache<TKey, TValue> : IObjectCache<TKey, TValue>, IL
             }
             catch (SemaphoreFullException)
             {
-                // already free: the entry's creator hands it over without ever having taken it
+                // not expected: the creator hands over exactly one permit and every acquire is matched by
+                // one release. Caught so that a slip in that would not mask the failure this often runs
+                // alongside, in the finally of a path that is already throwing
             }
         }
 
