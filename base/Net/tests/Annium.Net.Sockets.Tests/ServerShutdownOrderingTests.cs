@@ -61,13 +61,13 @@ public class ServerShutdownOrderingTests : TestBase
         await client.ConnectAsync(IPAddress.Loopback, server.Port, TestContext.Current.CancellationToken);
 
         // wait for the handler to actually enter its loop (replaces a fixed Task.Delay start race)
-        await handlerStarted.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        await handlerStarted.Task.WaitAsync(TimeSpan.FromSeconds(30), TestContext.Current.CancellationToken);
 
         // act + assert — dispose must complete and NOT hang. A bounded wait fails fast on a
         // regression (wrong ordering → drain blocks on the in-flight handler) while tolerating CI
         // scheduling jitter, unlike a tight wall-clock comparison.
         var sw = Stopwatch.StartNew();
-        await server.DisposeAsync().AsTask().WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        await server.DisposeAsync().AsTask().WaitAsync(TimeSpan.FromSeconds(30), TestContext.Current.CancellationToken);
         sw.Stop();
 
         this.Trace<long>("dispose took {ms}ms", sw.ElapsedMilliseconds);

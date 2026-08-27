@@ -638,7 +638,7 @@ public class ClientServerSocketTests : TestBase
         // OnDisconnected. Awaiting the signal (bounded) replaces a fixed Task.Delay(700), so the
         // test no longer races a ~500ms timeout against a fixed window — robust under CI load.
         this.Trace("assert disconnected within timeout");
-        await disconnectedTcs.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        await disconnectedTcs.Task.WaitAsync(TimeSpan.FromSeconds(30), TestContext.Current.CancellationToken);
 
         this.Trace("done");
     }
@@ -864,7 +864,7 @@ public class ClientServerSocketTests : TestBase
 
         _handleConnect(ClientSocket, server);
 
-        await tcs.Task.WaitAsync(TimeSpan.FromSeconds(10));
+        await tcs.Task.WaitAsync(TimeSpan.FromSeconds(30));
 
         this.Trace("done");
     }

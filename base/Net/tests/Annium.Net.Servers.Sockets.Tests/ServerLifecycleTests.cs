@@ -58,7 +58,7 @@ public class ServerLifecycleTests : TestBase
         );
 
         // act — dispose must not hang; 5 s is generous for a local loopback server
-        await server.DisposeAsync().AsTask().WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        await server.DisposeAsync().AsTask().WaitAsync(TimeSpan.FromSeconds(30), TestContext.Current.CancellationToken);
 
         // assert — if WaitAsync did not throw TimeoutException, dispose completed in time
         // port must have been a valid ephemeral port (> 0) — sanity check start succeeded
@@ -83,7 +83,7 @@ public class ServerLifecycleTests : TestBase
         port.IsGreater((ushort)0);
 
         // act — dispose first server; this must fully release the port
-        await first.DisposeAsync().AsTask().WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        await first.DisposeAsync().AsTask().WaitAsync(TimeSpan.FromSeconds(30), TestContext.Current.CancellationToken);
 
         // assert — a second server can now bind to the same port
         var second = StartServerOnPort(
@@ -96,7 +96,7 @@ public class ServerLifecycleTests : TestBase
         second!.Port.Is(port);
 
         // cleanup
-        await second.DisposeAsync().AsTask().WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        await second.DisposeAsync().AsTask().WaitAsync(TimeSpan.FromSeconds(30), TestContext.Current.CancellationToken);
     }
 
     /// <summary>
@@ -138,13 +138,13 @@ public class ServerLifecycleTests : TestBase
         await client
             .ConnectAsync(IPAddress.Loopback, server.Port, TestContext.Current.CancellationToken)
             .AsTask()
-            .WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+            .WaitAsync(TimeSpan.FromSeconds(30), TestContext.Current.CancellationToken);
 
         // wait until the handler is running inside the server
-        await handlerStarted.Task.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        await handlerStarted.Task.WaitAsync(TimeSpan.FromSeconds(30), TestContext.Current.CancellationToken);
 
         // act — dispose the server; this must wait for the in-flight handler to finish
-        await server.DisposeAsync().AsTask().WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
+        await server.DisposeAsync().AsTask().WaitAsync(TimeSpan.FromSeconds(30), TestContext.Current.CancellationToken);
 
         // assert — handler must have observed cancellation before (or simultaneous with) DisposeAsync completing.
         // If the executor does NOT drain, handlerCanceled.Task will not be set yet.

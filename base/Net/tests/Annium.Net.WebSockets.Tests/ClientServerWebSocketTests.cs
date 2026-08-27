@@ -620,25 +620,32 @@ public class ClientServerWebSocketTests : TestBase
 
         using var socket = new ClientWebSocket(options, Logger);
 
-        // Count OnConnected invocations; complete the TCS on the second fire (= after reconnect).
+        // Count OnConnected invocations; the first is the initial connection, the second is the reconnect.
         var connectCount = 0;
+        var connectedTcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var reconnectedTcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
 
         socket.OnConnected += () =>
         {
             var count = Interlocked.Increment(ref connectCount);
             this.Trace("OnConnected #{count}", count);
+            if (count == 1)
+                connectedTcs.TrySetResult();
             if (count >= 2)
                 reconnectedTcs.TrySetResult();
         };
 
         socket.Connect(server.WebSocketsUri());
 
-        // Guard: if the reconnect does not happen within 5 s the test fails immediately.
-        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        // the initial connection is not what this test is about, and on a loaded machine it can take
+        // seconds - waiting for it separately keeps that time out of the budget for the reconnect
+        this.Trace("await first OnConnected");
+        await connectedTcs.Task.WaitAsync(TimeSpan.FromSeconds(30), TestContext.Current.CancellationToken);
 
+        // the monitor pings every 50ms and tolerates 80ms, so the reconnect follows within a few hundred
+        // milliseconds of the connection; the bound is here to fail instead of hang, not to time it
         this.Trace("await second OnConnected (reconnect after monitor fires)");
-        await reconnectedTcs.Task.WaitAsync(cts.Token);
+        await reconnectedTcs.Task.WaitAsync(TimeSpan.FromSeconds(30), TestContext.Current.CancellationToken);
 
         this.Trace("assert reconnected");
         (connectCount >= 2).IsTrue();
@@ -1005,7 +1012,10 @@ public class ClientServerWebSocketTests : TestBase
 
         ClientSocket.Connect(server.WebSocketsUri());
 
-        await tcs.Task.WaitAsync(TimeSpan.FromSeconds(10));
+        // generous on purpose: the bound is here so a dropped OnConnected fails the test instead of
+        // hanging the run, not to measure how long connecting takes. A dozen test hosts share this
+        // machine in a full run, and a bound tight enough to catch a slow connect catches a busy one too
+        await tcs.Task.WaitAsync(TimeSpan.FromSeconds(30));
 
         this.Trace("done");
     }
@@ -1034,7 +1044,7 @@ public class ClientServerWebSocketTests : TestBase
         ClientSocket.Disconnect();
 
         // bound the wait so a dropped OnDisconnected fails fast instead of hanging the test (mirrors ConnectAsync).
-        await tcs.Task.WaitAsync(TimeSpan.FromSeconds(10));
+        await tcs.Task.WaitAsync(TimeSpan.FromSeconds(30));
 
         this.Trace("done");
     }

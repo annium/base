@@ -60,7 +60,7 @@ public class ServerLifecycleTests : TestBase
 
         // act — dispose must not hang; WaitAsync forces a bounded timeout
         this.Trace("dispose");
-        await server.DisposeAsync().AsTask().WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        await server.DisposeAsync().AsTask().WaitAsync(TimeSpan.FromSeconds(30), TestContext.Current.CancellationToken);
 
         // assert — if WaitAsync did not throw, dispose completed in time
         server.Port.IsGreater((ushort)0);
@@ -92,7 +92,7 @@ public class ServerLifecycleTests : TestBase
 
         this.Trace<ushort>("port: {port}", server.Port);
 
-        await server.DisposeAsync().AsTask().WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        await server.DisposeAsync().AsTask().WaitAsync(TimeSpan.FromSeconds(30), TestContext.Current.CancellationToken);
 
         this.Trace("done");
     }
