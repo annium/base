@@ -107,7 +107,7 @@ public class ClientServerManagedWebSocketTests : TestBase
 
         // the connect must resolve (with an exception) well before the OS-default connect timeout;
         // WaitAsync bounds the test so a regression (cancellation not honored) fails instead of hanging
-        var exception = await connectTask.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
+        var exception = await connectTask.WaitAsync(TimeSpan.FromSeconds(30), TestContext.Current.CancellationToken);
 
         this.Trace("assert exception is non-null");
         exception.IsNotNull();

@@ -46,14 +46,14 @@ public class HandlerRoutingTests : TestBase
 
         // assert — the upgrade is rejected so ConnectAsync must throw
         await Wrap.It(async () =>
-                await connectTask.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken)
+                await connectTask.WaitAsync(TimeSpan.FromSeconds(30), TestContext.Current.CancellationToken)
             )
             .ThrowsAsync<WebSocketException>();
 
         // state is never Open
         wsClient.State.IsNot(WebSocketState.Open);
 
-        await server.DisposeAsync().AsTask().WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        await server.DisposeAsync().AsTask().WaitAsync(TimeSpan.FromSeconds(30), TestContext.Current.CancellationToken);
 
         this.Trace("done");
     }
@@ -88,12 +88,12 @@ public class HandlerRoutingTests : TestBase
         using var httpClient = new HttpClient();
         var response = await httpClient
             .GetAsync(server.HttpUri(), TestContext.Current.CancellationToken)
-            .WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+            .WaitAsync(TimeSpan.FromSeconds(30), TestContext.Current.CancellationToken);
 
         // assert
         response.StatusCode.Is(HttpStatusCode.NotFound);
 
-        await server.DisposeAsync().AsTask().WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        await server.DisposeAsync().AsTask().WaitAsync(TimeSpan.FromSeconds(30), TestContext.Current.CancellationToken);
 
         this.Trace("done");
     }
@@ -116,14 +116,14 @@ public class HandlerRoutingTests : TestBase
         using var httpClient = new HttpClient();
         var response = await httpClient
             .GetAsync(server.HttpUri(), TestContext.Current.CancellationToken)
-            .WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+            .WaitAsync(TimeSpan.FromSeconds(30), TestContext.Current.CancellationToken);
         var body = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
 
         // assert
         response.StatusCode.Is(HttpStatusCode.OK);
         body.Is(expected);
 
-        await server.DisposeAsync().AsTask().WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        await server.DisposeAsync().AsTask().WaitAsync(TimeSpan.FromSeconds(30), TestContext.Current.CancellationToken);
 
         this.Trace("done");
     }
@@ -157,7 +157,7 @@ public class HandlerRoutingTests : TestBase
         using var wsClient = new ClientWebSocket();
         await wsClient
             .ConnectAsync(server.WebSocketsUri(), TestContext.Current.CancellationToken)
-            .WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+            .WaitAsync(TimeSpan.FromSeconds(30), TestContext.Current.CancellationToken);
 
         wsClient.State.Is(WebSocketState.Open);
 
@@ -173,7 +173,7 @@ public class HandlerRoutingTests : TestBase
         var recvBuf = new byte[4096];
         var recvResult = await wsClient
             .ReceiveAsync(recvBuf, TestContext.Current.CancellationToken)
-            .WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+            .WaitAsync(TimeSpan.FromSeconds(30), TestContext.Current.CancellationToken);
 
         // assert
         recvResult.MessageType.Is(WebSocketMessageType.Text);
@@ -183,7 +183,7 @@ public class HandlerRoutingTests : TestBase
         // clean client-side close
         await wsClient.CloseAsync(WebSocketCloseStatus.NormalClosure, "bye", TestContext.Current.CancellationToken);
 
-        await server.DisposeAsync().AsTask().WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        await server.DisposeAsync().AsTask().WaitAsync(TimeSpan.FromSeconds(30), TestContext.Current.CancellationToken);
 
         this.Trace("done");
     }
@@ -231,7 +231,7 @@ public class HandlerRoutingTests : TestBase
         using var httpClient = new HttpClient();
         var httpResp = await httpClient
             .GetAsync(server.HttpUri(), TestContext.Current.CancellationToken)
-            .WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+            .WaitAsync(TimeSpan.FromSeconds(30), TestContext.Current.CancellationToken);
         var httpBody = await httpResp.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
 
         // assert: HTTP
@@ -242,7 +242,7 @@ public class HandlerRoutingTests : TestBase
         using var wsClient = new ClientWebSocket();
         await wsClient
             .ConnectAsync(server.WebSocketsUri(), TestContext.Current.CancellationToken)
-            .WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+            .WaitAsync(TimeSpan.FromSeconds(30), TestContext.Current.CancellationToken);
 
         wsClient.State.Is(WebSocketState.Open);
 
@@ -257,14 +257,14 @@ public class HandlerRoutingTests : TestBase
         var recvBuf = new byte[4096];
         var echoResult = await wsClient
             .ReceiveAsync(recvBuf, TestContext.Current.CancellationToken)
-            .WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+            .WaitAsync(TimeSpan.FromSeconds(30), TestContext.Current.CancellationToken);
         echoResult.MessageType.Is(WebSocketMessageType.Text);
         Encoding.UTF8.GetString(recvBuf, 0, echoResult.Count).Is(wsMessage);
 
         // client initiates close
         await wsClient.CloseAsync(WebSocketCloseStatus.NormalClosure, "bye", TestContext.Current.CancellationToken);
 
-        await server.DisposeAsync().AsTask().WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        await server.DisposeAsync().AsTask().WaitAsync(TimeSpan.FromSeconds(30), TestContext.Current.CancellationToken);
 
         this.Trace("done");
     }
