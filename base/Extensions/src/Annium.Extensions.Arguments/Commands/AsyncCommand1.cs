@@ -31,7 +31,7 @@ public abstract class AsyncCommand<T> : CommandBase
     /// <returns>A task representing the asynchronous operation</returns>
     public override async Task ProcessAsync(string id, string description, string[] args, CancellationToken ct)
     {
-        if (Root.ConfigurationBuilder.Build<HelpConfiguration>(args).Help)
+        if (Root.ConfigurationBuilder.IsHelpRequested(args))
         {
             Console.WriteLine(Root.HelpBuilder.BuildHelp(id, description, typeof(T)));
             return;

@@ -34,7 +34,9 @@ public class BaseRulesTest : TestBase
 
     /// <summary>
     /// Tests that the Required rule works correctly for nullable properties.
-    /// Verifies that null values and non-zero values pass, but zero values fail validation.
+    /// A required nullable field must carry a value, and that value must not be the default one - the same
+    /// contract the string and non-nullable overloads hold. No value at all is the plainest way to be
+    /// missing, and it is the one case this rule used to let through.
     /// </summary>
     /// <returns>A task representing the asynchronous test operation</returns>
     [Fact]
@@ -44,14 +46,14 @@ public class BaseRulesTest : TestBase
         var validator = GetValidator<Person>();
 
         // act
-        var resultGood = await validator.ValidateAsync(new Person { Nullable = null });
-        var resultGood2 = await validator.ValidateAsync(new Person { Nullable = 2 });
-        var resultBad = await validator.ValidateAsync(new Person { Nullable = 0 });
+        var resultGood = await validator.ValidateAsync(new Person { Nullable = 2 });
+        var resultNull = await validator.ValidateAsync(new Person { Nullable = null });
+        var resultDefault = await validator.ValidateAsync(new Person { Nullable = 0 });
 
         // assert
         resultGood.LabeledErrors.ContainsKey(nameof(Person.Nullable)).IsFalse();
-        resultGood2.LabeledErrors.ContainsKey(nameof(Person.Nullable)).IsFalse();
-        resultBad.LabeledErrors.At(nameof(Person.Nullable)).At(0).Is("Value is required");
+        resultNull.LabeledErrors.At(nameof(Person.Nullable)).At(0).Is("Value is required");
+        resultDefault.LabeledErrors.At(nameof(Person.Nullable)).At(0).Is("Value is required");
     }
 
     /// <summary>

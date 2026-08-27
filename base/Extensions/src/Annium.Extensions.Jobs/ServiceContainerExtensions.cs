@@ -9,13 +9,12 @@ namespace Annium.Extensions.Jobs;
 public static class ServiceContainerExtensions
 {
     /// <summary>
-    /// Registers all job scheduling services including interval parser, resolver, and scheduler
+    /// Registers the job scheduling services: the interval parser and the scheduler
     /// </summary>
     /// <param name="container">The service container to register services in</param>
     /// <returns>The service container for method chaining</returns>
     public static IServiceContainer AddScheduler(this IServiceContainer container)
     {
-        container.Add<IIntervalResolver, IntervalResolver>().Singleton();
         container.Add<IIntervalParser, IntervalParser>().Singleton();
         container.Add<IScheduler, Scheduler>().Singleton();
 

@@ -1,3 +1,4 @@
+using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
 using Annium.Execution.Background;
@@ -28,14 +29,42 @@ public static class SelectSequentialAsyncOperatorExtensions
         return Observable.Create<TResult>(observer =>
         {
             var executor = Executor.Sequential<IObservable<TSource>>(VoidLogger.Instance).Start();
-            return source.Subscribe(
+            var teardown = new ExecutorTeardown<TResult>(executor, observer);
+            var subscription = source.Subscribe(
                 x =>
                     executor.Schedule(async () =>
                     {
-                        observer.OnNext(await selector(x));
+                        // work that has not started yet can skip the handler once the sequence has
+                        // failed - on the parallel executor the items already in flight still finish
+                        if (teardown.HasFailed)
+                            return;
+
+                        try
+                        {
+                            teardown.Next(await selector(x));
+                        }
+                        catch (Exception e)
+                        {
+                            // the executor logs into a VoidLogger, so an exception from the caller's
+                            // own handler is discarded there - the item vanishes and the sequence
+                            // carries on as if nothing happened. Forwarding it ends the sequence, as a
+                            // throwing selector does in Rx's own Select
+                            teardown.Fail(e);
+                        }
                     }),
-                () => ExecutorTeardown.CompleteInBackground(executor, observer)
+                // without an onError the source's failure had nowhere to go: the downstream
+                // observer never heard of it and the executor was left running
+                teardown.Fail,
+                teardown.Complete
             );
+
+            // the source subscription alone would leave the executor's background loop running for a
+            // subscriber that disposed before the source ever ended
+            return Disposable.Create(() =>
+            {
+                subscription.Dispose();
+                teardown.Cancel();
+            });
         });
     }
 }

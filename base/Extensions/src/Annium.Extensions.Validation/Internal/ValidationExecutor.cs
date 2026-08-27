@@ -55,6 +55,11 @@ internal class ValidationExecutor<TValue> : IValidator<TValue>
     /// <param name="value">The value to validate</param>
     /// <param name="label">Optional label for error message context</param>
     /// <returns>Validation result containing any errors found</returns>
+    /// <remarks>
+    /// A type with no registered validator validates successfully: an unconstrained type has nothing to
+    /// fail. That also means a validator whose assembly was never scanned is indistinguishable from one
+    /// that was never written — both leave the value unchecked and reported as valid.
+    /// </remarks>
     public async Task<IResult> ValidateAsync(TValue value, string? label = null)
     {
         var hasLabel = !string.IsNullOrWhiteSpace(label);

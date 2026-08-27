@@ -40,14 +40,34 @@ public static class ThrottleByOperatorExtensions
                     var now = clock.GetCurrentInstant().ToUnixTimeMilliseconds();
                     var key = getKey(x);
 
-                    var stamp = keys.AddOrUpdate(
-                        key,
-                        static (_, data) => data.now + data.interval,
-                        static (_, value, data) => value <= data.now ? data.now + data.interval : value,
-                        (now, interval: intervalMs)
-                    );
+                    // the stored stamp is the moment this key last emitted. Deciding by comparing a
+                    // recomputed stamp to the stored one could not tell "we just advanced it" from "it
+                    // already held that value", so a burst arriving within a single millisecond passed
+                    // through whole — exactly the case throttling exists for. Emission is now claimed:
+                    // only the caller that wins the add or the update gets to emit.
+                    var emit = false;
+                    while (true)
+                    {
+                        if (!keys.TryGetValue(key, out var last))
+                        {
+                            if (!keys.TryAdd(key, now))
+                                continue;
 
-                    if (stamp == now + intervalMs)
+                            emit = true;
+                            break;
+                        }
+
+                        if (now - last < intervalMs)
+                            break;
+
+                        if (!keys.TryUpdate(key, now, last))
+                            continue;
+
+                        emit = true;
+                        break;
+                    }
+
+                    if (emit)
                         observer.OnNext(x);
                 },
                 observer.OnError,

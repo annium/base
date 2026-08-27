@@ -27,6 +27,21 @@ internal class StaticObservableInstance<T> : ObservableInstanceBase<T>, IObserva
     private readonly CancellationToken _ct;
 
     /// <summary>
+    /// Whether the factory has been started. It runs once per instance
+    /// </summary>
+    private bool _isStarted;
+
+    /// <summary>
+    /// Whether the factory has finished, however it finished
+    /// </summary>
+    private bool _isEnded;
+
+    /// <summary>
+    /// The failure the run ended with, or null if it completed normally
+    /// </summary>
+    private Exception? _error;
+
+    /// <summary>
     /// Initializes a new instance of the StaticObservableInstance class
     /// </summary>
     /// <param name="factory">Factory function that produces an async disposal function</param>
@@ -55,16 +70,38 @@ internal class StaticObservableInstance<T> : ObservableInstanceBase<T>, IObserva
     {
         lock (Lock)
         {
-            Subscribers.Add(observer);
-            if (Subscribers.Count == 1)
-                Start();
+            if (!_isEnded)
+            {
+                Subscribers.Add(observer);
+
+                // once per instance, not once per time the subscriber count passes through one: starting
+                // again after the first run reran the factory over the first run's disposal state, which
+                // failed immediately and left the new subscriber with nothing at all
+                if (!_isStarted)
+                {
+                    _isStarted = true;
+                    Start();
+                }
+
+                return Disposable.Create(() =>
+                {
+                    lock (Lock)
+                        Subscribers.Remove(observer);
+                });
+            }
         }
 
-        return Disposable.Create(() =>
-        {
-            lock (Lock)
-                Subscribers.Remove(observer);
-        });
+        // there is nothing left to join. Saying so beats attaching to a source that will never speak again -
+        // and it has to be what actually happened: replaying a completion over a failure swallows it just
+        // as thoroughly as replaying nothing at all
+        var error = Volatile.Read(ref _error);
+        this.Trace("already ended - terminate subscriber at once");
+        if (error is null)
+            observer.OnCompleted();
+        else
+            observer.OnError(error);
+
+        return Disposable.Empty;
     }
 
     /// <summary>
@@ -96,13 +133,30 @@ internal class StaticObservableInstance<T> : ObservableInstanceBase<T>, IObserva
             this.Trace("dispose");
             await disposeAsync();
             this.Trace("invoke onCompleted");
-            ctx.OnCompleted();
+            End(null);
+            Terminate(null);
             this.Trace("done");
         }
         catch (Exception e)
         {
             this.Trace("Error: {e}", e);
-            ctx.OnError(e);
+            End(e);
+            Terminate(e);
+        }
+    }
+
+    /// <summary>
+    /// Marks the run as finished, before the terminal notification rather than after it: a subscriber
+    /// arriving while that notification is being delivered would otherwise be added to a run that has
+    /// nothing left to say
+    /// </summary>
+    /// <param name="error">The failure the run ended with, or null if it completed normally</param>
+    private void End(Exception? error)
+    {
+        lock (Lock)
+        {
+            _error = error;
+            _isEnded = true;
         }
     }
 }

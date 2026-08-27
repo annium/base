@@ -35,7 +35,7 @@ public static class BaseRuleExtensions
         );
 
     /// <summary>
-    /// Validates that a nullable value type field has a value and is not the default value
+    /// Validates that a nullable value type field has a value and that the value is not the default one
     /// </summary>
     /// <typeparam name="TValue">The type of the value being validated</typeparam>
     /// <typeparam name="TField">The value type of the field being validated</typeparam>
@@ -50,7 +50,9 @@ public static class BaseRuleExtensions
         rule.Add(
             (context, value) =>
             {
-                if (value.HasValue && AreEqual(value, default(TField)))
+                // no value at all is the plainest way for a required field to be missing, and it used to be
+                // the one case this rule let through - accepting null while rejecting a present 0
+                if (!value.HasValue || AreEqual(value, default(TField)))
                     context.Error(string.IsNullOrEmpty(message) ? "Value is required" : message);
             }
         );
@@ -307,10 +309,10 @@ public static class BaseRuleExtensions
         rule.Add(
             (context, value) =>
             {
-                if (value?.CompareTo(min) == -1)
+                if (value?.CompareTo(min) < 0)
                     context.Error(string.IsNullOrEmpty(message) ? "Value is less, than given minimum" : message);
 
-                if (value?.CompareTo(max) == 1)
+                if (value?.CompareTo(max) > 0)
                     context.Error(string.IsNullOrEmpty(message) ? "Value is greater, than given maximum" : message);
             }
         );
@@ -441,16 +443,12 @@ public static class BaseRuleExtensions
         string regex,
         string message = ""
     ) =>
-        rule.Add(
-            (context, value) =>
-            {
-                var re = new Regex(
-                    regex,
-                    RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.ExplicitCapture
-                );
-                if (value is not null && !re.IsMatch(value))
-                    context.Error(string.IsNullOrEmpty(message) ? "Value doesn't match specified regex" : message);
-            }
+        // built once, as the rule is registered. Constructing it inside the per-value delegate paid the
+        // cost of compiling the pattern again for every value validated, and put the pattern's own syntax
+        // errors on the first request rather than on wiring the validator up
+        rule.Matches(
+            new Regex(regex, RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.ExplicitCapture),
+            message
         );
 
     /// <summary>

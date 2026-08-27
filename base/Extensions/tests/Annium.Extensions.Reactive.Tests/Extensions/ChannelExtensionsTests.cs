@@ -23,6 +23,49 @@ public class ChannelExtensionsTests : TestBase
         : base(outputHelper) { }
 
     /// <summary>
+    /// A channel that finishes completes the observable, so a consumer awaiting its end is not left waiting
+    /// for a channel nobody will write to again.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public async Task Completed_Channel_CompletesTheObservable()
+    {
+        // arrange
+        var channel = Channel.CreateUnbounded<int>();
+        var completed = new TaskCompletionSource();
+        using var subscription = channel.Reader.AsObservable().Subscribe(_ => { }, () => completed.TrySetResult());
+
+        // act
+        await channel.Writer.WriteAsync(1, TestContext.Current.CancellationToken);
+        channel.Writer.Complete();
+
+        // assert
+        await Bounded.AwaitAsync(completed.Task);
+    }
+
+    /// <summary>
+    /// A channel completed with a failure hands that failure on rather than passing for a clean end.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public async Task Failed_Channel_FailsTheObservable()
+    {
+        // arrange
+        var channel = Channel.CreateUnbounded<int>();
+        var failure = new TaskCompletionSource<Exception>();
+        using var subscription = channel
+            .Reader.AsObservable()
+            .Subscribe(_ => { }, e => failure.TrySetResult(e), () => { });
+
+        // act
+        channel.Writer.Complete(new InvalidOperationException("writer failed"));
+
+        // assert
+        await Bounded.AwaitAsync(failure.Task);
+        (await failure.Task).As<InvalidOperationException>().Message.Is("writer failed");
+    }
+
+    /// <summary>
     /// Tests that events are emitted correctly when converting a channel reader to an observable,
     /// including proper disposal behavior.
     /// </summary>
@@ -38,8 +81,11 @@ public class ChannelExtensionsTests : TestBase
         var data = Enumerable.Range(0, dataSize).ToArray();
         var channel = Channel.CreateUnbounded<int>();
 
+        // written directly rather than through WriteToChannel: that ends the channel with its source, and
+        // this test is about a channel that is still open when its subscription is disposed
         this.Trace("write to channel");
-        Observable.Range(0, dataSize).WriteToChannel(channel.Writer, CancellationToken.None);
+        foreach (var item in data)
+            channel.Writer.TryWrite(item);
         var log = new TestLog<int>();
         var disposeCounter = 0;
 
@@ -55,8 +101,10 @@ public class ChannelExtensionsTests : TestBase
         disposable += observable.Subscribe(log.Add);
 
         // assert
+        // the reader is drained asynchronously - waiting for the count rather than asserting it outright
+        // keeps this a failure rather than a race if reading ever stops completing synchronously
         this.Trace("assert log is complete");
-        log.Has(data.Length);
+        await Expect.ToAsync(() => log.Has(data.Length));
 
         this.Trace("assert log matches data and dispose callback is not called");
         log.SequenceEqual(data).IsTrue();

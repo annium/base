@@ -39,7 +39,7 @@ public class DoSequentialAsyncTest
                 tcs.SetResult
             );
 
-        await tcs.Task;
+        await Bounded.AwaitAsync(tcs.Task);
 
         log.Has(300);
         var expectedLog = Enumerable

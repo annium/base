@@ -38,6 +38,14 @@ public abstract class Group : CommandBase
                 .SingleOrDefault(x => x.PureName() == _configurationTypesName)
                 ?.GetGenericArguments()
             ?? Type.EmptyTypes;
+        // dispatch takes the first command registered for an id, so a second one answering to the same id
+        // is unreachable - and silently so, which is worse than not compiling
+        var clash = _commands.FirstOrDefault(e => e.Id == T.Id);
+        if (clash != null)
+            throw new ArgumentParseException(
+                $"Commands '{clash.Type.FriendlyName()}' and '{typeof(T).FriendlyName()}' both answer to '{T.Id}'"
+            );
+
         _commands.Add(new CommandInfo(T.Id, T.Description, typeof(T), configurationTypes));
 
         return this;
@@ -81,7 +89,17 @@ public abstract class Group : CommandBase
             return;
         }
 
-        if (configurationBuilder.Build<HelpConfiguration>(args).Help)
+        if (configurationBuilder.IsHelpRequested(args))
+        {
             Console.WriteLine(helpBuilder.BuildHelp(id, description, _commands));
+            return;
+        }
+
+        // nothing matched and there is no default command to fall back to. Saying so and showing what the
+        // group does understand beats exiting silently, which is indistinguishable from having worked
+        if (args.Length > 0)
+            Console.WriteLine($"Unknown command: {args[0]}");
+
+        Console.WriteLine(helpBuilder.BuildHelp(id, description, _commands));
     }
 }

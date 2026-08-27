@@ -17,12 +17,17 @@ public static class SubscribeAsyncOperatorExtensions
     /// <typeparam name="T">The type of items emitted by the observable</typeparam>
     /// <param name="source">The source observable to subscribe to</param>
     /// <param name="onError">Asynchronous function to handle errors</param>
+    /// <param name="logger">Logger the subscription's executor reports handler failures to</param>
     /// <returns>An async disposable that can be used to unsubscribe</returns>
 #pragma warning disable VSTHRD200
-    public static IAsyncDisposable SubscribeAsync<T>(this IObservable<T> source, Func<Exception, ValueTask> onError)
+    public static IAsyncDisposable SubscribeAsync<T>(
+        this IObservable<T> source,
+        Func<Exception, ValueTask> onError,
+        ILogger logger
+    )
 #pragma warning restore VSTHRD200
     {
-        var executor = Executor.Parallel<IObservable<T>>(VoidLogger.Instance).Start();
+        var executor = Executor.Parallel<IObservable<T>>(logger).Start();
         var subscription = source.Subscribe(Noop, ex => executor.Schedule(() => onError(ex)));
 
         return Disposable.Create(async () =>
@@ -38,12 +43,17 @@ public static class SubscribeAsyncOperatorExtensions
     /// <typeparam name="T">The type of items emitted by the observable</typeparam>
     /// <param name="source">The source observable to subscribe to</param>
     /// <param name="onCompleted">Asynchronous function to handle completion</param>
+    /// <param name="logger">Logger the subscription's executor reports handler failures to</param>
     /// <returns>An async disposable that can be used to unsubscribe</returns>
 #pragma warning disable VSTHRD200
-    public static IAsyncDisposable SubscribeAsync<T>(this IObservable<T> source, Func<ValueTask> onCompleted)
+    public static IAsyncDisposable SubscribeAsync<T>(
+        this IObservable<T> source,
+        Func<ValueTask> onCompleted,
+        ILogger logger
+    )
 #pragma warning restore VSTHRD200
     {
-        var executor = Executor.Parallel<IObservable<T>>(VoidLogger.Instance).Start();
+        var executor = Executor.Parallel<IObservable<T>>(logger).Start();
         var subscription = source.Subscribe(Noop, () => executor.Schedule(onCompleted));
 
         return Disposable.Create(async () =>
@@ -60,16 +70,18 @@ public static class SubscribeAsyncOperatorExtensions
     /// <param name="source">The source observable to subscribe to</param>
     /// <param name="onError">Asynchronous function to handle errors</param>
     /// <param name="onCompleted">Asynchronous function to handle completion</param>
+    /// <param name="logger">Logger the subscription's executor reports handler failures to</param>
     /// <returns>An async disposable that can be used to unsubscribe</returns>
 #pragma warning disable VSTHRD200
     public static IAsyncDisposable SubscribeAsync<T>(
 #pragma warning restore VSTHRD200
         this IObservable<T> source,
         Func<Exception, ValueTask> onError,
-        Func<ValueTask> onCompleted
+        Func<ValueTask> onCompleted,
+        ILogger logger
     )
     {
-        var executor = Executor.Parallel<IObservable<T>>(VoidLogger.Instance).Start();
+        var executor = Executor.Parallel<IObservable<T>>(logger).Start();
         var subscription = source.Subscribe(
             Noop,
             ex => executor.Schedule(() => onError(ex)),
@@ -89,12 +101,17 @@ public static class SubscribeAsyncOperatorExtensions
     /// <typeparam name="T">The type of items emitted by the observable</typeparam>
     /// <param name="source">The source observable to subscribe to</param>
     /// <param name="onNext">Asynchronous function to handle each emitted value</param>
+    /// <param name="logger">Logger the subscription's executor reports handler failures to</param>
     /// <returns>An async disposable that can be used to unsubscribe</returns>
 #pragma warning disable VSTHRD200
-    public static IAsyncDisposable SubscribeAsync<T>(this IObservable<T> source, Func<T, ValueTask> onNext)
+    public static IAsyncDisposable SubscribeAsync<T>(
+        this IObservable<T> source,
+        Func<T, ValueTask> onNext,
+        ILogger logger
+    )
 #pragma warning restore VSTHRD200
     {
-        var executor = Executor.Parallel<IObservable<T>>(VoidLogger.Instance).Start();
+        var executor = Executor.Parallel<IObservable<T>>(logger).Start();
         var subscription = source.Subscribe(x => executor.Schedule(() => onNext(x)));
 
         return Disposable.Create(async () =>
@@ -111,16 +128,18 @@ public static class SubscribeAsyncOperatorExtensions
     /// <param name="source">The source observable to subscribe to</param>
     /// <param name="onNext">Asynchronous function to handle each emitted value</param>
     /// <param name="onError">Asynchronous function to handle errors</param>
+    /// <param name="logger">Logger the subscription's executor reports handler failures to</param>
     /// <returns>An async disposable that can be used to unsubscribe</returns>
 #pragma warning disable VSTHRD200
     public static IAsyncDisposable SubscribeAsync<T>(
 #pragma warning restore VSTHRD200
         this IObservable<T> source,
         Func<T, ValueTask> onNext,
-        Func<Exception, ValueTask> onError
+        Func<Exception, ValueTask> onError,
+        ILogger logger
     )
     {
-        var executor = Executor.Parallel<IObservable<T>>(VoidLogger.Instance).Start();
+        var executor = Executor.Parallel<IObservable<T>>(logger).Start();
         var subscription = source.Subscribe(
             x => executor.Schedule(() => onNext(x)),
             ex => executor.Schedule(() => onError(ex))
@@ -140,16 +159,18 @@ public static class SubscribeAsyncOperatorExtensions
     /// <param name="source">The source observable to subscribe to</param>
     /// <param name="onNext">Asynchronous function to handle each emitted value</param>
     /// <param name="onCompleted">Asynchronous function to handle completion</param>
+    /// <param name="logger">Logger the subscription's executor reports handler failures to</param>
     /// <returns>An async disposable that can be used to unsubscribe</returns>
 #pragma warning disable VSTHRD200
     public static IAsyncDisposable SubscribeAsync<T>(
 #pragma warning restore VSTHRD200
         this IObservable<T> source,
         Func<T, ValueTask> onNext,
-        Func<ValueTask> onCompleted
+        Func<ValueTask> onCompleted,
+        ILogger logger
     )
     {
-        var executor = Executor.Parallel<IObservable<T>>(VoidLogger.Instance).Start();
+        var executor = Executor.Parallel<IObservable<T>>(logger).Start();
         var subscription = source.Subscribe(
             x => executor.Schedule(() => onNext(x)),
             () => executor.Schedule(onCompleted)
@@ -170,6 +191,7 @@ public static class SubscribeAsyncOperatorExtensions
     /// <param name="onNext">Asynchronous function to handle each emitted value</param>
     /// <param name="onError">Asynchronous function to handle errors</param>
     /// <param name="onCompleted">Asynchronous function to handle completion</param>
+    /// <param name="logger">Logger the subscription's executor reports handler failures to</param>
     /// <returns>An async disposable that can be used to unsubscribe</returns>
 #pragma warning disable VSTHRD200
     public static IAsyncDisposable SubscribeAsync<T>(
@@ -177,10 +199,11 @@ public static class SubscribeAsyncOperatorExtensions
         this IObservable<T> source,
         Func<T, ValueTask> onNext,
         Func<Exception, ValueTask> onError,
-        Func<ValueTask> onCompleted
+        Func<ValueTask> onCompleted,
+        ILogger logger
     )
     {
-        var executor = Executor.Parallel<IObservable<T>>(VoidLogger.Instance).Start();
+        var executor = Executor.Parallel<IObservable<T>>(logger).Start();
         var subscription = source.Subscribe(
             x => executor.Schedule(() => onNext(x)),
             ex => executor.Schedule(() => onError(ex)),

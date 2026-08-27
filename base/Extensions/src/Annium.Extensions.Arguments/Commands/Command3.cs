@@ -36,11 +36,13 @@ public abstract class Command<T1, T2, T3> : CommandBase
     /// <returns>A completed task</returns>
     public override Task ProcessAsync(string id, string description, string[] args, CancellationToken ct)
     {
-        if (Root.ConfigurationBuilder.Build<HelpConfiguration>(args).Help)
+        if (Root.ConfigurationBuilder.IsHelpRequested(args))
         {
             Console.WriteLine(Root.HelpBuilder.BuildHelp(id, description, typeof(T1), typeof(T2), typeof(T3)));
             return Task.CompletedTask;
         }
+
+        Root.ConfigurationBuilder.EnsureTypesReadAlike(args, typeof(T1), typeof(T2), typeof(T3));
 
         var cfg1 = Root.ConfigurationBuilder.Build<T1>(args);
         var cfg2 = Root.ConfigurationBuilder.Build<T2>(args);

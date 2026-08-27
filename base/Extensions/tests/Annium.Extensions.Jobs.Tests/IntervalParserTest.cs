@@ -1,3 +1,4 @@
+using System;
 using Annium.Core.DependencyInjection;
 using Annium.Extensions.Jobs.Internal;
 using Annium.Testing;
@@ -189,6 +190,52 @@ public class IntervalParserTest
     /// <param name="x">The number of seconds</param>
     /// <returns>A Duration representing the specified seconds</returns>
     private static Duration Sec(int x) => Duration.FromSeconds(x);
+
+    /// <summary>
+    /// A modulo that is not a number is reported with the token that was actually typed. Reporting the
+    /// parse result instead named 0 every time - the one value the caller already knows is not theirs.
+    /// </summary>
+    [Fact]
+    public void Modulo_NotANumber_NamesTheToken()
+    {
+        // arrange
+        var parser = GetParser();
+
+        // act & assert
+        var error = Wrap.It(() => parser.GetDelayResolver("*/x * * * *")).Throws<ArgumentException>();
+        error.Message.Contains("'x'").IsTrue("the message must quote the token that was not understood");
+    }
+
+    /// <summary>
+    /// An interval that is not five parts is rejected rather than parsed as far as it goes. A short
+    /// expression otherwise reaches the per-part handlers with whatever happens to be at each index,
+    /// which schedules something - just not what was asked for.
+    /// </summary>
+    [Fact]
+    public void PartCount_NotFive_Throws()
+    {
+        // arrange
+        var parser = GetParser();
+
+        // act & assert
+        Wrap.It(() => parser.GetDelayResolver("* * * *")).Throws<ArgumentException>();
+        Wrap.It(() => parser.GetDelayResolver("* * * * * *")).Throws<ArgumentException>();
+    }
+
+    /// <summary>
+    /// Constraining both the day-of-month and the day-of-week is rejected. The two are alternatives, not
+    /// filters that combine, and the parser has no answer for what their conjunction should mean.
+    /// </summary>
+    [Fact]
+    public void DayAndDayOfWeek_BothConstrained_Throws()
+    {
+        // arrange
+        var parser = GetParser();
+
+        // act & assert
+        var error = Wrap.It(() => parser.GetDelayResolver("0 0 0 1 1")).Throws<ArgumentException>();
+        error.Message.Contains("day-of-week").IsTrue("the message must say which pair of parts conflicts");
+    }
 
     /// <summary>
     /// Gets an interval parser instance for testing

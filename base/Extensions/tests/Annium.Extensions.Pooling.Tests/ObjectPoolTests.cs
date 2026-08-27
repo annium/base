@@ -150,6 +150,34 @@ public class ObjectPoolTests
     }
 
     /// <summary>
+    /// What the two load modes actually decide is which instance a <c>Get</c> reaches for first, not when
+    /// instances are built: neither mode builds anything until the pool is used. Eager prefers a new
+    /// instance while below capacity, so a pool used one caller at a time still fills up; lazy reuses the
+    /// free one it already has, so it never grows past what concurrent demand needs.
+    /// </summary>
+    [Fact]
+    public void LoadMode_DecidesWhatGetReachesFor_NotWhenInstancesAreBuilt()
+    {
+        // arrange
+        var (eager, eagerLogs) = CreatePool(PoolLoadMode.Eager, PoolStorageMode.Fifo);
+        var (lazy, lazyLogs) = CreatePool(PoolLoadMode.Lazy, PoolStorageMode.Fifo);
+
+        // assert - constructing a pool builds nothing, whichever mode it is in
+        eagerLogs.Where(x => x.Contains(Created)).IsEmpty("an unused pool must not have built anything");
+        lazyLogs.Where(x => x.Contains(Created)).IsEmpty("an unused pool must not have built anything");
+
+        // act - the same sequential use of each: take one, give it back, take one again
+        eager.Return(eager.Get());
+        eager.Return(eager.Get());
+        lazy.Return(lazy.Get());
+        lazy.Return(lazy.Get());
+
+        // assert
+        eagerLogs.Where(x => x.Contains(Created)).Has(2, "eager prefers a new instance while below capacity");
+        lazyLogs.Where(x => x.Contains(Created)).Has(1, "lazy reuses the free instance it already has");
+    }
+
+    /// <summary>
     /// Test item used exclusively by the faulting-factory test.
     /// </summary>
     /// <param name="Id">Identifier for diagnostic output.</param>
@@ -252,5 +280,18 @@ public class ObjectPoolTests
         {
             _log($"{_id} {Disposed}");
         }
+    }
+
+    /// <summary>
+    /// A capacity that cannot work is rejected with the value that was given. The message used to name
+    /// the parameter rather than its value, so the offending number appeared nowhere in it.
+    /// </summary>
+    [Fact]
+    public void Ctor_NonPositiveCapacity_NamesTheValue()
+    {
+        // act & assert
+        var error = Wrap.It(() => new ServiceContainer().AddObjectPool<object>(-3, ServiceLifetime.Singleton))
+            .Throws<ArgumentOutOfRangeException>();
+        error.Message.Contains("-3").IsTrue("the message must name the capacity that was rejected");
     }
 }

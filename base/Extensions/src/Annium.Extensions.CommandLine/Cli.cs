@@ -70,7 +70,6 @@ public static class Cli
     {
         Console.Write(label);
         var result = new Stack<char>();
-        var pos = Console.CursorLeft;
         ConsoleKeyInfo key;
 
         do
@@ -83,18 +82,24 @@ public static class Cli
                     if (result.Count > 0)
                     {
                         result.Pop();
-                        Console.CursorLeft = --pos;
+                        var (left, top) = StepBack(Console.CursorLeft, Console.CursorTop, Console.BufferWidth);
+                        Console.SetCursorPosition(left, top);
                         Console.Write(' ');
-                        Console.CursorLeft = pos;
+                        Console.SetCursorPosition(left, top);
                     }
 
                     break;
                 case ConsoleKey.Enter:
                     break;
                 default:
+                    // arrows, Tab, Escape and the like report a control character - usually '\0'. Taking
+                    // those as input puts a character the user never typed into the secret, masked as a '*'
+                    // like any other, so nothing on screen says the value is not what was typed
+                    if (char.IsControl(key.KeyChar))
+                        break;
+
                     result.Push(key.KeyChar);
                     Console.Write('*');
-                    pos++;
                     break;
             }
         }
@@ -104,6 +109,24 @@ public static class Cli
         Console.WriteLine();
 
         return string.Join(string.Empty, result.Reverse());
+    }
+
+    /// <summary>
+    /// Returns the position one character back from the given one, going up a row when it is at the start
+    /// of one. A secret longer than the terminal is wide wraps as it is typed, and a column counter that
+    /// keeps growing past the buffer width is not a position the console will accept.
+    /// </summary>
+    /// <param name="left">Current cursor column.</param>
+    /// <param name="top">Current cursor row.</param>
+    /// <param name="width">Console buffer width.</param>
+    /// <returns>The column and row one character back, or the same position when already at the start.</returns>
+    internal static (int Left, int Top) StepBack(int left, int top, int width)
+    {
+        if (left > 0)
+            return (left - 1, top);
+
+        // at the start of the very first row there is nothing behind to step onto
+        return top > 0 ? (width - 1, top - 1) : (0, 0);
     }
 
     /// <summary>

@@ -245,7 +245,9 @@ internal class IntervalParser : IIntervalParser
 
         var moduloString = interval[2..];
         if (!int.TryParse(moduloString, out var value))
-            throw new ArgumentException($"'{name}' modulo {value} is not valid");
+            // reporting `value` here named the parse result, which is 0 whenever the parse failed - the
+            // one thing the caller already knows, instead of the token they actually typed
+            throw new ArgumentException($"'{name}' modulo '{moduloString}' is not valid");
 
         if (value < min || value > max)
             throw new ArgumentOutOfRangeException(

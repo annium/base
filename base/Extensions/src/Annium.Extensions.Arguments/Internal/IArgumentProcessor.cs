@@ -9,6 +9,7 @@ internal interface IArgumentProcessor
     /// Processes command line arguments and composes them into a structured raw configuration.
     /// </summary>
     /// <param name="args">Array of command line arguments to process</param>
+    /// <param name="spec">What the configuration type's options are - see <see cref="OptionSpec"/></param>
     /// <returns>A raw configuration containing parsed argument data</returns>
-    RawConfiguration Compose(string[] args);
+    RawConfiguration Compose(string[] args, OptionSpec spec);
 }

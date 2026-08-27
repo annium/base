@@ -10,7 +10,8 @@ namespace Annium.Extensions.Arguments;
 public class PositionAttribute : BaseAttribute
 {
     /// <summary>
-    /// Gets the position of the argument in the command line
+    /// Gets the one-based position of the argument in the command line - the first positional argument
+    /// is 1, and the declared positions must run 1, 2, 3 with no gaps
     /// </summary>
     public int Position { get; }
 
@@ -22,7 +23,7 @@ public class PositionAttribute : BaseAttribute
     /// <summary>
     /// Initializes a new instance of the <see cref="PositionAttribute"/> class.
     /// </summary>
-    /// <param name="position">Zero-based index of the positional argument.</param>
+    /// <param name="position">One-based index of the positional argument - the first is 1, not 0.</param>
     /// <param name="isRequired">Whether the argument must be supplied.</param>
     public PositionAttribute(int position, bool isRequired = true)
     {

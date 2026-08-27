@@ -55,7 +55,11 @@ internal class ConfigurationBuilder : IConfigurationBuilder
     public T Build<T>(string[] args)
         where T : new()
     {
-        var raw = _argumentProcessor.Compose(args);
+        var options = _configurationProcessor.GetPropertiesWithAttribute<OptionAttribute>(typeof(T));
+
+        EnsureNamesAreUnique(options);
+
+        var raw = _argumentProcessor.Compose(args, Spec(options));
 
         var value = new T();
 
@@ -65,6 +69,135 @@ internal class ConfigurationBuilder : IConfigurationBuilder
         SetRaw(value, raw.Raw);
 
         return value;
+    }
+
+    /// <summary>
+    /// Determines whether the command line asks for help, without binding it to anything.
+    /// </summary>
+    /// <param name="args">Array of command line arguments to inspect</param>
+    /// <returns>True when help was asked for</returns>
+    public bool IsHelpRequested(string[] args)
+    {
+        foreach (var arg in args)
+        {
+            // everything past the delimiter belongs to the command, not to this
+            if (arg.Length > 0 && arg.All(c => c == Constants.OptionSign))
+                return false;
+
+            if (arg.StartsWith(Constants.OptionSign) && arg.PascalCase() == HelpName)
+                return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Fails when a command's configuration types would not read the given command line the same way.
+    /// </summary>
+    /// <param name="args">Array of command line arguments the command was given</param>
+    /// <param name="configurationTypes">Every configuration type the command binds</param>
+    public void EnsureTypesReadAlike(string[] args, params Type[] configurationTypes)
+    {
+        if (configurationTypes.Length < 2)
+            return;
+
+        var options = configurationTypes
+            .SelectMany(type => _configurationProcessor.GetPropertiesWithAttribute<OptionAttribute>(type))
+            .ToArray();
+
+        EnsureNamesAreUnique(options);
+
+        // what the command as a whole makes of the line, with every option it declares in view
+        var whole = _argumentProcessor.Compose(args, Spec(options));
+
+        foreach (var type in configurationTypes)
+        {
+            var own = _argumentProcessor.Compose(
+                args,
+                Spec(_configurationProcessor.GetPropertiesWithAttribute<OptionAttribute>(type))
+            );
+
+            var difference = DifferenceThatMatters(type, whole, own);
+            if (difference is not null)
+                throw new ArgumentParseException(
+                    $"Configuration '{type.FriendlyName()}' would bind {difference} differently from the rest of the command"
+                );
+        }
+    }
+
+    /// <summary>
+    /// What a configuration type would bind differently when it reads the command line on its own instead
+    /// of as the command reads it, or null when the two readings give it the same values.
+    /// </summary>
+    /// <param name="type">The configuration type.</param>
+    /// <param name="whole">The reading taken with every option the command declares.</param>
+    /// <param name="own">The reading taken with this type's options alone.</param>
+    /// <returns>A description of what would differ, or null.</returns>
+    /// <remarks>
+    /// Only what this type actually binds counts. Two readings routinely differ over an option the type
+    /// does not declare - the value has nowhere to go either way - and failing on that would reject the
+    /// ordinary pairing of a command's own configuration with a shared one.
+    ///
+    /// Only the position comparison is reachable today; the other three are defensive. An option's value
+    /// cannot differ between the readings, because for a preceding unknown token to swallow it the token
+    /// after that one would have to be non-option-like, and an option spelling never is - a digit-led
+    /// spelling, the one thing that would read as a number, is rejected outright. The raw tail cannot
+    /// differ either, since the delimiter is always option-like, so no reading can swallow it and every
+    /// reading ends the tail at the same token. The alias lookup in <see cref="Claimed"/> cannot fire
+    /// because a type's own reading is always composed with a spec carrying its own options, so its values
+    /// sit under the canonical name in both readings. All three are kept so the comparison stays complete
+    /// if any of those invariants is ever relaxed - uniqueness across the union, in particular, is what
+    /// rules out one type's alias colliding with another's name.
+    /// </remarks>
+    private string? DifferenceThatMatters(Type type, RawConfiguration whole, RawConfiguration own)
+    {
+        var positions = _configurationProcessor.GetPropertiesWithAttribute<PositionAttribute>(type).Length;
+        if (positions > 0)
+        {
+            var wholePositions = whole.Positions.Take(positions).ToArray();
+            var ownPositions = own.Positions.Take(positions).ToArray();
+            if (!wholePositions.SequenceEqual(ownPositions))
+                return $"position {Math.Min(wholePositions.Length, ownPositions.Length) + 1}";
+        }
+
+        foreach (var (property, attribute) in _configurationProcessor.GetPropertiesWithAttribute<OptionAttribute>(type))
+        {
+            var name = property.Name.PascalCase();
+            var alias = attribute.Alias?.PascalCase();
+
+            if (Claimed(whole, name, alias) != Claimed(own, name, alias))
+                return $"'-{property.Name.KebabCase()}'";
+        }
+
+        if (_configurationProcessor.GetPropertiesWithAttribute<RawAttribute>(type).Length > 0 && whole.Raw != own.Raw)
+            return "what follows '--'";
+
+        return null;
+    }
+
+    /// <summary>
+    /// What a reading gives an option, as a single comparable string, or null when it gives it nothing.
+    /// </summary>
+    /// <param name="raw">The reading.</param>
+    /// <param name="name">The option's canonical name.</param>
+    /// <param name="alias">The option's alias, if any.</param>
+    /// <returns>What the option was given, or null.</returns>
+    private static string? Claimed(RawConfiguration raw, string name, string? alias)
+    {
+        var spellings = alias is null ? new[] { name } : new[] { name, alias };
+        foreach (var spelling in spellings)
+        {
+            if (raw.Flags.Contains(spelling))
+                return "flag";
+
+            if (raw.Options.TryGetValue(spelling, out var value))
+                return $"={value}";
+
+            if (raw.MultiOptions.TryGetValue(spelling, out var values))
+                return $"={string.Join(',', values)}";
+        }
+
+        return null;
     }
 
     /// <summary>
@@ -83,13 +216,13 @@ internal class ConfigurationBuilder : IConfigurationBuilder
         foreach (var (property, attribute) in properties)
         {
             if (attribute.Position != i)
-                throw new Exception(
-                    $"Position argument expected to have position '{i}', but got position '{attribute.Position}"
+                throw new ArgumentParseException(
+                    $"Position argument expected to have position '{i}', but got position '{attribute.Position}'"
                 );
 
             if (i > positions.Length)
                 if (attribute.IsRequired)
-                    throw new Exception($"Required position argument '{property.Name}' has no value");
+                    throw new ArgumentParseException($"Required position argument '{property.Name}' has no value");
                 else
                     break;
 
@@ -145,7 +278,7 @@ internal class ConfigurationBuilder : IConfigurationBuilder
             var key = FindOptionName(plainOptionsKeys, property.Name, attribute.Alias);
             if (key == null)
                 if (attribute.IsRequired)
-                    throw new Exception($"Required option argument '{property.Name}' has no value");
+                    throw new ArgumentParseException($"Required option argument '{property.Name}' has no value");
                 else
                     continue;
 
@@ -167,7 +300,7 @@ internal class ConfigurationBuilder : IConfigurationBuilder
             else if ((key = FindOptionName(plainOptionsKeys, property.Name, attribute.Alias)) != null)
                 raw = new[] { plainOptions[key] };
             else if (attribute.IsRequired)
-                throw new Exception($"Required multi option argument '{property.Name}' has no value");
+                throw new ArgumentParseException($"Required multi option argument '{property.Name}' has no value");
             else
                 continue;
 
@@ -205,6 +338,9 @@ internal class ConfigurationBuilder : IConfigurationBuilder
     /// <returns>The matching option name if found, null otherwise</returns>
     private string? FindOptionName(IReadOnlyCollection<string> names, string name, string? alias)
     {
+        // the names to match against come from the lexer, which normalised them; so must these
+        name = name.PascalCase();
+
         if (alias == null)
             return names.Contains(name) ? name : null;
 
@@ -220,6 +356,76 @@ internal class ConfigurationBuilder : IConfigurationBuilder
     }
 
     /// <summary>
+    /// Describes the type's options for the lexer: every spelling mapped to the option it names, and which
+    /// of those options are flags or collections. The spellings are normalised the same way the lexer
+    /// normalises the token it reads - a property whose own name does not survive that unchanged, an
+    /// acronym like URL, would otherwise never match.
+    /// </summary>
+    /// <param name="options">The option-bearing properties of the configuration type.</param>
+    /// <returns>The spec describing them.</returns>
+    private static OptionSpec Spec(IReadOnlyCollection<(PropertyInfo property, OptionAttribute attribute)> options)
+    {
+        var names = new Dictionary<string, string>();
+        var kinds = new Dictionary<string, OptionKind>();
+
+        foreach (var (property, attribute) in options)
+        {
+            var canonical = property.Name.PascalCase();
+            foreach (var spelling in Names(property.Name, attribute.Alias))
+                names[spelling] = canonical;
+
+            kinds[canonical] =
+                property.PropertyType == typeof(bool) ? OptionKind.Flag
+                : property.PropertyType.IsArray ? OptionKind.Many
+                : OptionKind.Single;
+        }
+
+        return new OptionSpec(names, kinds);
+    }
+
+    /// <summary>
+    /// The normalised spelling the help flag answers to.
+    /// </summary>
+    private const string HelpName = "Help";
+
+    /// <summary>
+    /// The normalised names an option answers to: its property name, and its alias when it has one.
+    /// </summary>
+    /// <param name="name">The property name.</param>
+    /// <param name="alias">The alias, if any.</param>
+    /// <returns>The names the option answers to.</returns>
+    private static IEnumerable<string> Names(string name, string? alias) =>
+        alias is null ? [name.PascalCase()] : [name.PascalCase(), alias.PascalCase()];
+
+    /// <summary>
+    /// Fails if two properties answer to the same name, which would otherwise route a value to whichever
+    /// of them happened to be looked up first - and, when one of them is a flag, make the other's option
+    /// lex as a flag for the whole type.
+    /// </summary>
+    /// <param name="options">The option-bearing properties of the configuration type.</param>
+    private static void EnsureNamesAreUnique(
+        IReadOnlyCollection<(PropertyInfo property, OptionAttribute attribute)> options
+    )
+    {
+        var claims = new Dictionary<string, string>();
+        foreach (var (property, attribute) in options)
+        foreach (var claimed in Names(property.Name, attribute.Alias))
+        {
+            // a spelling starting with a digit cannot be told from a negative number on a command line;
+            // saying so here beats reading it as a number on every invocation
+            if (char.IsAsciiDigit(claimed[0]))
+                throw new ArgumentParseException(
+                    $"Option '{property.Name}' answers to '{claimed}', which reads as a number"
+                );
+
+            if (claims.TryGetValue(claimed, out var other) && other != property.Name)
+                throw new ArgumentParseException($"Options '{other}' and '{property.Name}' both answer to '{claimed}'");
+
+            claims[claimed] = property.Name;
+        }
+    }
+
+    /// <summary>
     /// Converts a string value to the target type, validating against allowed values if specified.
     /// </summary>
     /// <param name="property">The property information for validation context</param>
@@ -230,8 +436,26 @@ internal class ConfigurationBuilder : IConfigurationBuilder
     {
         var values = property.GetCustomAttribute<ValuesAttribute>()?.Values;
         if (values != null && !values.Contains(value))
-            throw new Exception($"Given value '{value}' isn't in allowed values: {string.Join(", ", values)}");
+            throw new ArgumentParseException(
+                $"Given value '{value}' isn't in allowed values: {string.Join(", ", values)}"
+            );
 
-        return _mapper.Map(value, type);
+        // every other way a command line can be wrong is reported as an ArgumentParseException; a value the
+        // mapper cannot convert used to come out as whatever the conversion threw, so a caller catching
+        // usage errors to print help missed exactly the most ordinary mistake of all
+        try
+        {
+            // a nullable value type is mapped as the type it wraps: the mapper has no conversion for the
+            // wrapper, so handing it one failed every such property whatever value was given. The boxed
+            // result assigns to the nullable property as it stands
+            return _mapper.Map(value, Nullable.GetUnderlyingType(type) ?? type);
+        }
+        catch (Exception e)
+        {
+            throw new ArgumentParseException(
+                $"Given value '{value}' for '{property.Name}' is not a valid {type.FriendlyName()}",
+                e
+            );
+        }
     }
 }

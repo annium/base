@@ -37,11 +37,13 @@ public abstract class AsyncCommand<T1, T2, T3> : CommandBase
     /// <returns>A task representing the asynchronous operation</returns>
     public override async Task ProcessAsync(string id, string description, string[] args, CancellationToken ct)
     {
-        if (Root.ConfigurationBuilder.Build<HelpConfiguration>(args).Help)
+        if (Root.ConfigurationBuilder.IsHelpRequested(args))
         {
             Console.WriteLine(Root.HelpBuilder.BuildHelp(id, description, typeof(T1), typeof(T2), typeof(T3)));
             return;
         }
+
+        Root.ConfigurationBuilder.EnsureTypesReadAlike(args, typeof(T1), typeof(T2), typeof(T3));
 
         var cfg1 = Root.ConfigurationBuilder.Build<T1>(args);
         var cfg2 = Root.ConfigurationBuilder.Build<T2>(args);

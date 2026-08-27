@@ -36,7 +36,7 @@ public record ObjectPoolConfig<T>
             throw new ArgumentOutOfRangeException(
                 nameof(capacity),
                 capacity,
-                $"Capacity = '{nameof(capacity)}', but must be greater than zero."
+                $"Capacity = '{capacity}', but must be greater than zero."
             );
 
         Capacity = capacity;

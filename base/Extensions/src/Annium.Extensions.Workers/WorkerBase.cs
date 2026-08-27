@@ -22,6 +22,12 @@ public abstract class WorkerBase<TKey> : IAsyncDisposable
     private readonly CancellationTokenSource _cts = new();
 
     /// <summary>
+    /// Guards against stopping twice: a managed worker is disposed by its manager and again by the
+    /// container that owns it, and StopAsync is not written expecting to run more than once
+    /// </summary>
+    private int _isDisposed;
+
+    /// <summary>
     /// Initializes the worker with the specified key and starts it
     /// </summary>
     /// <param name="key">The key to identify this worker instance</param>
@@ -35,9 +41,9 @@ public abstract class WorkerBase<TKey> : IAsyncDisposable
     /// <summary>
     /// Starts the worker with the provided cancellation token
     /// </summary>
-    /// <param name="сt">Cancellation token for stopping the worker</param>
+    /// <param name="ct">Cancellation token for stopping the worker</param>
     /// <returns>A task that completes when the worker has started</returns>
-    protected abstract ValueTask StartAsync(CancellationToken сt);
+    protected abstract ValueTask StartAsync(CancellationToken ct);
 
     /// <summary>
     /// Stops the worker and cleans up any resources
@@ -51,6 +57,9 @@ public abstract class WorkerBase<TKey> : IAsyncDisposable
     /// <returns>A task that completes when disposal is finished</returns>
     public async ValueTask DisposeAsync()
     {
+        if (Interlocked.Exchange(ref _isDisposed, 1) == 1)
+            return;
+
         await _cts.CancelAsync();
         await StopAsync();
     }

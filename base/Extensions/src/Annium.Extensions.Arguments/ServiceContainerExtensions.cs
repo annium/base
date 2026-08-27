@@ -13,7 +13,8 @@ public static class ServiceContainerExtensions
     /// Adds argument processing services to the service container
     /// </summary>
     /// <param name="container">The service container</param>
-    public static void AddArguments(this IServiceContainer container)
+    /// <returns>The service container for method chaining</returns>
+    public static IServiceContainer AddArguments(this IServiceContainer container)
     {
         container.Add<IArgumentProcessor, ArgumentProcessor>().Singleton();
         container.Add<IConfigurationBuilder, ConfigurationBuilder>().Singleton();
@@ -23,5 +24,7 @@ public static class ServiceContainerExtensions
 
         // groups and commands
         container.AddAll().AssignableTo<CommandBase>().AsSelf().Singleton();
+
+        return container;
     }
 }

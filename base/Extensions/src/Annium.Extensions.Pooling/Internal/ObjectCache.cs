@@ -75,20 +75,26 @@ internal sealed class ObjectCache<TKey, TValue> : IObjectCache<TKey, TValue>, IL
                         x => entry.SetValue(x),
                         x =>
                         {
-                            reference = x;
+                            // the provider's own reference belongs to the entry, not to whoever happened to
+                            // create it: handing it back as the caller's would leave the release that the
+                            // cache counts on unwired, so the entry never dropped to zero references and
+                            // was never suspended
+                            entry.SetOwnedReference(x);
                             entry.SetValue(x.Value);
                         }
                     );
                 }
-                catch
+                catch (Exception e)
                 {
                     // factory failure — populate-after-success invariant requires removing the
                     // placeholder so that a subsequent GetAsync(key) triggers a FRESH factory
-                    // call. Release any waiters first so they observe the missing value and
-                    // throw, rather than hanging forever on WaitAsync. The orphaned entry
-                    // (its AutoResetEvent) is GC-collectable once no waiters reference it.
+                    // call. The failure is recorded on the entry and the gate opened: the gate is
+                    // a single-permit semaphore, so it wakes exactly one waiter, and that waiter passes the
+                    // wake-up along before throwing. Releasing without recording the failure woke
+                    // one waiter, which then failed on the unset value and broke the chain, leaving
+                    // every other waiter blocked for good.
                     _entries.TryRemove(key, out _);
-                    entry.Release();
+                    entry.SetFailed(e);
                     throw;
                 }
 
@@ -97,20 +103,44 @@ internal sealed class ObjectCache<TKey, TValue> : IObjectCache<TKey, TValue>, IL
             else
             {
                 this.Trace("Get by {key}: wait entry {entry}", key, entry);
-                await entry.WaitAsync();
+                if (!await entry.WaitAsync(ct))
+                    throw new ObjectDisposedException(
+                        nameof(ObjectCache<,>),
+                        $"Cache entry for key '{key}' was disposed while waiting for it"
+                    );
+
+                if (entry.Error is not null)
+                {
+                    this.Trace("Get by {key}: entry {entry} failed to initialize", key, entry);
+                    // hand the wake-up to the next waiter before leaving
+                    entry.Release();
+
+                    throw new InvalidOperationException($"Failed to create value for key '{key}'", entry.Error);
+                }
             }
 
             // if not initializing and entry has no references - it is suspended, need to resume
             if (!isNew && !entry.HasReferences)
             {
                 this.Trace("Get by {key}: resume entry {entry}", key, entry);
-                await _provider.ResumeAsync(key, entry.Value);
+
+                try
+                {
+                    await _provider.ResumeAsync(key, entry.Value);
+                }
+                catch (Exception)
+                {
+                    // same reasoning as the suspend path: the gate goes back before the failure travels on
+                    entry.Release();
+
+                    throw;
+                }
             }
 
             // create reference, incrementing reference counter
             this.Trace("Get by {key}: add entry {entry} reference", key, entry);
             entry.AddReference();
-            reference ??= Disposable.Reference(
+            reference = Disposable.Reference(
                 entry.Value,
                 async () => await ReleaseAsync(key, entry).ConfigureAwait(false)
             );
@@ -137,17 +167,31 @@ internal sealed class ObjectCache<TKey, TValue> : IObjectCache<TKey, TValue>, IL
         try
         {
             this.Trace("Release by {key}: wait entry {entry}", key, entry);
-            await entry.WaitAsync();
-
-            this.Trace("Release by {key}: remove reference from entry {entry}", key, entry);
-            entry.RemoveReference();
-            if (!entry.HasReferences)
+            if (!await entry.WaitAsync())
             {
-                this.Trace("Release by {key}: suspend entry {entry}", key, entry);
-                await _provider.SuspendAsync(key, entry.Value);
+                // the entry is already gone, and with it whatever this reference was holding
+                this.Trace("Release by {key}: entry {entry} already disposed", key, entry);
+
+                return;
             }
 
-            entry.Release();
+            try
+            {
+                this.Trace("Release by {key}: remove reference from entry {entry}", key, entry);
+                entry.RemoveReference();
+                if (!entry.HasReferences)
+                {
+                    this.Trace("Release by {key}: suspend entry {entry}", key, entry);
+                    await _provider.SuspendAsync(key, entry.Value);
+                }
+            }
+            finally
+            {
+                // the gate is taken to do this and has to go back whatever happened: a provider that threw
+                // while suspending used to keep it, and every later use of the key - the cache's own
+                // disposal included - then waited on a gate nobody would hand back
+                entry.Release();
+            }
         }
         catch (Exception e)
         {
@@ -172,11 +216,39 @@ internal sealed class ObjectCache<TKey, TValue> : IObjectCache<TKey, TValue>, IL
 
             foreach (var (key, entry) in cacheEntries)
             {
-                this.Trace("await {entry} value", entry);
-                await entry.WaitAsync();
-                this.Trace("dispose {entry}", entry);
-                entry.Dispose();
-                await _provider.DisposeAsync(key, entry.Value);
+                // each entry holds a resource of its own, so a failure disposing one must not stop the rest
+                // from being disposed
+                try
+                {
+                    this.Trace("await {entry} value", entry);
+                    await entry.WaitAsync();
+                    this.Trace("dispose {entry}", entry);
+                    entry.Dispose();
+                }
+                catch (Exception e)
+                {
+                    this.Error(e);
+                }
+
+                // the provider's reference and the provider's own teardown release different things, so a
+                // failure in one must not skip the other - the same reasoning as the loop around them
+                try
+                {
+                    await entry.DisposeOwnedReferenceAsync();
+                }
+                catch (Exception e)
+                {
+                    this.Error(e);
+                }
+
+                try
+                {
+                    await _provider.DisposeAsync(key, entry.Value);
+                }
+                catch (Exception e)
+                {
+                    this.Error(e);
+                }
             }
 
             this.Trace("done");
@@ -223,9 +295,20 @@ internal sealed class ObjectCache<TKey, TValue> : IObjectCache<TKey, TValue>, IL
         public bool HasReferences => _references != 0;
 
         /// <summary>
+        /// Gets the failure raised while creating the value, or null when creation did not fail.
+        /// </summary>
+        public Exception? Error { get; private set; }
+
+        /// <summary>
         /// Synchronization gate for coordinating access to the entry.
         /// </summary>
-        private readonly AutoResetEvent _gate = new(initialState: false);
+        private readonly SemaphoreSlim _gate = new(0, 1);
+
+        /// <summary>
+        /// Cancelled when the entry is torn down, so everyone waiting for it is told, rather than one of
+        /// them being woken as though the entry were theirs to use
+        /// </summary>
+        private readonly CancellationTokenSource _disposing = new();
 
         /// <summary>
         /// The cached value.
@@ -238,15 +321,73 @@ internal sealed class ObjectCache<TKey, TValue> : IObjectCache<TKey, TValue>, IL
         private uint _references;
 
         /// <summary>
+        /// The reference the provider returned alongside the value, owned by this entry.
+        /// </summary>
+        private IDisposableReference<TValue>? _ownedReference;
+
+        /// <summary>
         /// Asynchronously waits for the entry to be ready for access.
         /// </summary>
+        /// <param name="ct">Cancellation token for giving up the wait.</param>
         /// <returns>A task that completes when the entry is ready.</returns>
-        public Task WaitAsync() => Task.Run(() => _gate.WaitOne());
+        public async Task<bool> WaitAsync(CancellationToken ct = default)
+        {
+            // reading the token is its own step because it throws once the entry has been torn down, and an
+            // entry released after the cache is gone is the ordinary shutdown order, not something to report
+            CancellationToken disposing;
+            try
+            {
+                disposing = _disposing.Token;
+            }
+            catch (ObjectDisposedException)
+            {
+                return false;
+            }
+
+            using var linked = CancellationTokenSource.CreateLinkedTokenSource(ct, disposing);
+
+            try
+            {
+                await _gate.WaitAsync(linked.Token);
+
+                return true;
+            }
+            catch (OperationCanceledException) when (!ct.IsCancellationRequested)
+            {
+                // the entry was torn down while this call waited for it: not the caller's cancellation, and
+                // not an acquisition either - which of the two it was is what the return value carries
+                return false;
+            }
+            catch (ObjectDisposedException)
+            {
+                // teardown landed between the check and the wait
+                return false;
+            }
+        }
 
         /// <summary>
         /// Signals that the entry is ready for access.
         /// </summary>
-        public void Release() => _gate.Set();
+        public void Release()
+        {
+            if (_disposing.IsCancellationRequested)
+                return;
+
+            try
+            {
+                _gate.Release();
+            }
+            catch (ObjectDisposedException)
+            {
+                // teardown got between the check and the release; nobody is left to hand it to
+            }
+            catch (SemaphoreFullException)
+            {
+                // not expected: the creator hands over exactly one permit and every acquire is matched by
+                // one release. Caught so that a slip in that would not mask the failure this often runs
+                // alongside, in the finally of a path that is already throwing
+            }
+        }
 
         /// <summary>
         /// Sets the cached value. Can only be called once.
@@ -259,6 +400,37 @@ internal sealed class ObjectCache<TKey, TValue> : IObjectCache<TKey, TValue>, IL
                 _value = value;
             else
                 throw new InvalidOperationException("Can't change CacheEntry Value");
+        }
+
+        /// <summary>
+        /// Records that creating the value failed, and wakes a waiter so the failure travels down the
+        /// chain instead of leaving everyone blocked.
+        /// </summary>
+        /// <param name="error">The failure raised by the factory.</param>
+        public void SetFailed(Exception error)
+        {
+            Error = error;
+            Release();
+        }
+
+        /// <summary>
+        /// Takes ownership of the reference the provider returned alongside the value, so that it is
+        /// released when the entry goes rather than when whoever created it lets go.
+        /// </summary>
+        /// <param name="reference">The provider's reference to the value.</param>
+        public void SetOwnedReference(IDisposableReference<TValue> reference) => _ownedReference = reference;
+
+        /// <summary>
+        /// Releases the provider's reference, if it gave one.
+        /// </summary>
+        /// <returns>A task representing the asynchronous operation.</returns>
+        public async ValueTask DisposeOwnedReferenceAsync()
+        {
+            if (_ownedReference is null)
+                return;
+
+            await _ownedReference.DisposeAsync();
+            _ownedReference = null;
         }
 
         /// <summary>
@@ -282,8 +454,12 @@ internal sealed class ObjectCache<TKey, TValue> : IObjectCache<TKey, TValue>, IL
         /// </summary>
         public void Dispose()
         {
-            _gate.Reset();
+            // cancelled before anything is disposed: disposing the semaphore does not wake what waits on
+            // it, and a bare release would wake exactly one waiter as though the entry were still theirs to
+            // use. Cancelling tells every one of them, and tells them which it was
+            _disposing.Cancel();
             _gate.Dispose();
+            _disposing.Dispose();
         }
     }
 }
