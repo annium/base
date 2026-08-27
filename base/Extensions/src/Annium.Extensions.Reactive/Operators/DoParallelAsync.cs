@@ -38,7 +38,7 @@ public static class DoParallelAsyncOperatorExtensions
                         try
                         {
                             await handle(x);
-                            observer.OnNext(x);
+                            teardown.Next(x);
                         }
                         catch (Exception e)
                         {

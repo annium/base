@@ -120,6 +120,22 @@ public class ConfigurationBuilderTests : TestBase
     }
 
     /// <summary>
+    /// A raw tail that happens to contain '-help' is the command's own argument, not a request for usage.
+    /// Everything past the delimiter belongs to whatever the command hands it to, and reading it here
+    /// would turn a command that is asked to pass '-help' along into one that refuses to run.
+    /// </summary>
+    [Fact]
+    public void IsHelpRequested_HelpInsideTheRawTail_IsNotHelp()
+    {
+        // arrange
+        var builder = Get<Root>().ConfigurationBuilder;
+
+        // act & assert
+        builder.IsHelpRequested(["run", "--", "-help"]).IsFalse("the tail belongs to the command");
+        builder.IsHelpRequested(["run", "-help"]).IsTrue("outside the tail it is a request for usage");
+    }
+
+    /// <summary>
     /// An array option collects a repeated option, and a single occurrence still yields one element.
     /// </summary>
     [Fact]

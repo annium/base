@@ -6,9 +6,9 @@ using Annium.Execution.Background;
 namespace Annium.Extensions.Reactive.Internal;
 
 /// <summary>
-/// The single way the parallel/sequential reactive operators end a subscription: it disposes the
-/// executor on a background task and then sends the one terminal notification the observer is allowed
-/// to receive.
+/// The single way the parallel/sequential reactive operators reach their observer: every notification
+/// goes through here, and ending the subscription disposes the executor on a background task before
+/// sending the one terminal notification the observer is allowed to receive.
 /// </summary>
 /// <typeparam name="T">The observed sequence element type</typeparam>
 /// <remarks>
@@ -44,6 +44,13 @@ internal sealed class ExecutorTeardown<T>
     private readonly IObserver<T> _observer;
 
     /// <summary>
+    /// Held for the duration of every notification. Rx observers are written against a grammar in which
+    /// notifications never overlap, so on the parallel executor - where several items are in flight at
+    /// once - the work runs in parallel but its delivery does not.
+    /// </summary>
+    private readonly Lock _gate = new();
+
+    /// <summary>
     /// The failure that ended the sequence, if any. The first one recorded wins.
     /// </summary>
     private Exception? _error;
@@ -62,6 +69,16 @@ internal sealed class ExecutorTeardown<T>
     {
         _executor = executor;
         _observer = observer;
+    }
+
+    /// <summary>
+    /// Passes a value on to the observer, one at a time.
+    /// </summary>
+    /// <param name="value">The value to deliver.</param>
+    public void Next(T value)
+    {
+        lock (_gate)
+            _observer.OnNext(value);
     }
 
     /// <summary>
@@ -131,10 +148,13 @@ internal sealed class ExecutorTeardown<T>
             }
 
             var error = Volatile.Read(ref _error);
-            if (error is null)
-                _observer.OnCompleted();
-            else
-                _observer.OnError(error);
+            lock (_gate)
+            {
+                if (error is null)
+                    _observer.OnCompleted();
+                else
+                    _observer.OnError(error);
+            }
         });
     }
 }

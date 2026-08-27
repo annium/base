@@ -41,7 +41,7 @@ public static class SelectSequentialAsyncOperatorExtensions
 
                         try
                         {
-                            observer.OnNext(await selector(x));
+                            teardown.Next(await selector(x));
                         }
                         catch (Exception e)
                         {

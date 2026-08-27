@@ -138,11 +138,16 @@ internal class ConfigurationBuilder : IConfigurationBuilder
     /// does not declare - the value has nowhere to go either way - and failing on that would reject the
     /// ordinary pairing of a command's own configuration with a shared one.
     ///
-    /// The raw-tail comparison and the alias lookup in <see cref="Claimed"/> are defensive rather than
-    /// exercised: the delimiter is always option-like, so no reading can swallow it and every reading ends
-    /// the tail at the same token; and a type's own reading is always composed with a spec carrying its own
-    /// options, so its values sit under the canonical name in both readings. Both are kept so the
-    /// comparison stays complete if either invariant is ever relaxed.
+    /// Only the position comparison is reachable today; the other three are defensive. An option's value
+    /// cannot differ between the readings, because for a preceding unknown token to swallow it the token
+    /// after that one would have to be non-option-like, and an option spelling never is - a digit-led
+    /// spelling, the one thing that would read as a number, is rejected outright. The raw tail cannot
+    /// differ either, since the delimiter is always option-like, so no reading can swallow it and every
+    /// reading ends the tail at the same token. The alias lookup in <see cref="Claimed"/> cannot fire
+    /// because a type's own reading is always composed with a spec carrying its own options, so its values
+    /// sit under the canonical name in both readings. All three are kept so the comparison stays complete
+    /// if any of those invariants is ever relaxed - uniqueness across the union, in particular, is what
+    /// rules out one type's alias colliding with another's name.
     /// </remarks>
     private string? DifferenceThatMatters(Type type, RawConfiguration whole, RawConfiguration own)
     {

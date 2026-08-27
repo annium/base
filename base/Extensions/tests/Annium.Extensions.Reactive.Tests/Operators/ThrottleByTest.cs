@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using System.Threading;
 using System.Threading.Tasks;
 using Annium.Testing;
 using NodaTime;
@@ -14,6 +16,52 @@ namespace Annium.Extensions.Reactive.Tests.Operators;
 /// </summary>
 public class ThrottleByTest
 {
+    /// <summary>
+    /// One emission per key per window holds even when the values arrive from several threads at once.
+    /// A source is not supposed to notify concurrently, and this one deliberately does: the operator
+    /// claims the right to emit rather than checking and then emitting, and what that claim buys is only
+    /// visible under contention. The rounds are repeated because a single burst does not reliably collide
+    /// on the one instruction that matters.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public async Task ThrottleBy_SameKeyFromManyThreads_EmitsOnce()
+    {
+        // arrange
+        const int rounds = 500;
+        const int writers = 32;
+        var emitted = 0;
+
+        // act - each round is its own key, offered by every writer at once; one of them may pass
+        for (var round = 0; round < rounds; round++)
+        {
+            var subject = new Subject<string>();
+            using var subscription = subject
+                .ThrottleBy(x => x[..1], Duration.FromSeconds(30))
+                .Subscribe(_ => Interlocked.Increment(ref emitted));
+
+            var start = new ManualResetEventSlim();
+            var burst = Enumerable
+                .Range(0, writers)
+                .Select(_ =>
+                    Task.Run(
+                        () =>
+                        {
+                            start.Wait(TestContext.Current.CancellationToken);
+                            subject.OnNext("k");
+                        },
+                        TestContext.Current.CancellationToken
+                    )
+                )
+                .ToArray();
+            start.Set();
+            await Task.WhenAll(burst);
+        }
+
+        // assert
+        Volatile.Read(ref emitted).Is(rounds, "each window admits one value, however many threads offer one");
+    }
+
     /// <summary>
     /// Within one window a key emits once, while a different key passes independently.
     /// </summary>
