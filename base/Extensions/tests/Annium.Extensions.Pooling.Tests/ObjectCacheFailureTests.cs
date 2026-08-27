@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Annium.Core.DependencyInjection;
+using Annium.Logging;
 using Annium.Testing;
 using OneOf;
 using Xunit;
@@ -249,6 +250,28 @@ public class ObjectCacheFailureTests : TestBase
 
         // assert
         provider.DisposeAttempts.Is(3, "every entry must be disposed, not just the ones before the first failure");
+    }
+
+    /// <summary>
+    /// A reference released after the whole cache is gone is a no-op, not an error.
+    /// Nothing is left to release it into, and the caller did nothing wrong by holding it -
+    /// this is the ordinary order in which a host shuts down.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public async Task ReleaseReference_AfterCacheDisposed_IsSilent()
+    {
+        // arrange
+        var cache = Get<IObjectCache<string, Flaky>>();
+        var reference = await cache.GetAsync("ok", TestContext.Current.CancellationToken);
+
+        // act - the cache goes first, the reference the caller still holds goes after
+        await ((IAsyncDisposable)cache).DisposeAsync();
+        await reference.DisposeAsync();
+
+        // assert
+        Logs.Where(x => x.Level >= LogLevel.Error)
+            .IsEmpty("releasing into a disposed cache must be a no-op, not something the host has to explain");
     }
 }
 

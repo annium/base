@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 using Annium.Core.DependencyInjection;
@@ -107,6 +108,33 @@ public class WorkerFailureTests : TestBase
     }
 
     /// <summary>
+    /// One worker failing to stop does not strand the others. Disposal is the last thing that knows a
+    /// started worker exists, so a failure there that ends the loop leaves whatever those workers opened
+    /// open for good - and which worker the loop reaches first is not something a caller controls.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public async Task DisposeAsync_OneWorkerFailsToStop_TheRestAreStillStopped()
+    {
+        // arrange - the failing one is started first and last, so neither iteration order spares it
+        var manager = Get<IWorkerManager<FailingWorkerData>>();
+        await manager.StartAsync(new FailingWorkerData("dispose-first", FailOn.None));
+        await manager.StartAsync(new FailingWorkerData("dispose-bad", FailOn.Stop));
+        await manager.StartAsync(new FailingWorkerData("dispose-last", FailOn.None));
+
+        // act
+        await ((IAsyncDisposable)manager).DisposeAsync();
+
+        // assert
+        FailingWorker
+            .Stopped.ContainsKey("dispose-first")
+            .IsTrue("a worker reached before the failing one must be stopped");
+        FailingWorker
+            .Stopped.ContainsKey("dispose-last")
+            .IsTrue("a worker reached after the failing one must be stopped too");
+    }
+
+    /// <summary>
     /// Fails the test if the given call has not finished within five seconds, so a regression that turns a
     /// failure into an unbounded wait is reported as such instead of hanging the run.
     /// </summary>
@@ -130,6 +158,11 @@ public class WorkerFailureTests : TestBase
 /// </summary>
 file enum FailOn
 {
+    /// <summary>
+    /// The worker does not throw at all.
+    /// </summary>
+    None,
+
     /// <summary>
     /// The worker throws while starting.
     /// </summary>
@@ -168,6 +201,12 @@ file class FailingWorker : WorkerBase<FailingWorkerData>, ILogSubject
     }
 
     /// <summary>
+    /// Gets the ids of the workers whose stop ran to completion, so a test can tell a worker that was
+    /// stopped from one that was skipped.
+    /// </summary>
+    public static ConcurrentDictionary<string, byte> Stopped { get; } = new();
+
+    /// <summary>
     /// Throws if the key says the start step should fail.
     /// </summary>
     /// <param name="ct">The cancellation token to monitor for cancellation requests.</param>
@@ -188,6 +227,8 @@ file class FailingWorker : WorkerBase<FailingWorkerData>, ILogSubject
     {
         if (Key.Fails == FailOn.Stop)
             throw new InvalidOperationException($"worker {Key.Id} failed to stop");
+
+        Stopped[Key.Id] = 0;
 
         return ValueTask.CompletedTask;
     }

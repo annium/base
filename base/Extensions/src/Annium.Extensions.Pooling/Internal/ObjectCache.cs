@@ -332,7 +332,19 @@ internal sealed class ObjectCache<TKey, TValue> : IObjectCache<TKey, TValue>, IL
         /// <returns>A task that completes when the entry is ready.</returns>
         public async Task<bool> WaitAsync(CancellationToken ct = default)
         {
-            using var linked = CancellationTokenSource.CreateLinkedTokenSource(ct, _disposing.Token);
+            // reading the token is its own step because it throws once the entry has been torn down, and an
+            // entry released after the cache is gone is the ordinary shutdown order, not something to report
+            CancellationToken disposing;
+            try
+            {
+                disposing = _disposing.Token;
+            }
+            catch (ObjectDisposedException)
+            {
+                return false;
+            }
+
+            using var linked = CancellationTokenSource.CreateLinkedTokenSource(ct, disposing);
 
             try
             {
