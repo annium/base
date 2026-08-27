@@ -263,6 +263,10 @@ public class ErrorPropagationTest : TestBase
         var terminal = new TaskCompletionSource<Exception?>();
         var received = new List<int>();
         var afterTerminal = 0;
+        // counted rather than only awaited: a TaskCompletionSource takes the first answer and drops the
+        // rest, so a second terminal notification - which the observer must never see - looks identical
+        // to none at all from the awaiting side
+        var terminals = 0;
         using var subscription = apply(Observable.Range(1, 5))
             .Subscribe(
                 x =>
@@ -272,8 +276,16 @@ public class ErrorPropagationTest : TestBase
                     lock (received)
                         received.Add(x);
                 },
-                e => terminal.TrySetResult(e),
-                () => terminal.TrySetResult(null)
+                e =>
+                {
+                    Interlocked.Increment(ref terminals);
+                    terminal.TrySetResult(e);
+                },
+                () =>
+                {
+                    Interlocked.Increment(ref terminals);
+                    terminal.TrySetResult(null);
+                }
             );
 
         // assert
@@ -284,6 +296,11 @@ public class ErrorPropagationTest : TestBase
 
         // nothing may arrive after the sequence has ended, whichever executor is underneath
         Volatile.Read(ref afterTerminal).Is(0, "no value may be emitted after the terminal notification");
+
+        // the source and the failing handler both end the sequence, and they can do so at once - the
+        // observer is still owed exactly one notification. Given a moment for a second one to land
+        await Task.Delay(100);
+        Volatile.Read(ref terminals).Is(1, "the observer must be told the sequence ended exactly once");
 
         // and on the sequential executor nothing after the failing item runs at all - items go one at a
         // time, so the failure is seen before the next one starts

@@ -68,14 +68,21 @@ public class ShellStdoutTests : TestBase
     }
 
     /// <summary>
-    /// A command that finishes as its deadline elapses is reported as having finished, not as cancelled.
-    /// The two are decided by whichever happens first, and a run that ended on its own is not the
-    /// cancellation's to claim - reporting it as cancelled would throw away a result that was there.
+    /// A run that comes back from a deadline it nearly missed carries everything it produced. Whether the
+    /// command finished or the deadline did is decided by whichever happened first, and a run that ended
+    /// on its own is not the cancellation's to claim.
+    /// <para>
+    /// What this pins is the half that can be asserted: a returned result must be complete. It cannot
+    /// assert the other half - that a completed run is never *reported* as cancelled - because that
+    /// report arrives as an exception carrying nothing to distinguish it from a genuine deadline. The
+    /// boundary is approached by repetition, so this is a net rather than a proof; the atomic outcome it
+    /// guards is not otherwise reachable from outside the process.
+    /// </para>
     /// Skipped on Windows - this test drives a POSIX shell.
     /// </summary>
     /// <returns>A task that represents the asynchronous test.</returns>
     [Fact]
-    public async Task RunAsync_FinishingAtTheDeadline_IsNotReportedAsCancelled()
+    public async Task RunAsync_NearTheDeadline_ResultsThatComeBackAreComplete()
     {
         if (OperatingSystem.IsWindows())
             return;

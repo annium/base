@@ -126,6 +126,12 @@ internal sealed class ExecutorTeardown<T>
     /// notifies, and reads the recorded failure after the executor has drained, so a failure raised while
     /// draining is still the one reported.
     /// </summary>
+    /// <remarks>
+    /// Removing the once-guard is not observable from outside: Rx's own observer wrapper drops anything
+    /// sent after a terminal notification, and both callers would read the same failure anyway, since the
+    /// read happens after the drain that the failing handler is part of. What the guard prevents is a
+    /// second concurrent disposal of the executor and the background task that carries it.
+    /// </remarks>
     private void Terminate()
     {
         if (Interlocked.Exchange(ref _teardownStarted, 1) == 1)
