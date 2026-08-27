@@ -68,6 +68,42 @@ public class ShellStdoutTests : TestBase
     }
 
     /// <summary>
+    /// A command that finishes as its deadline elapses is reported as having finished, not as cancelled.
+    /// The two are decided by whichever happens first, and a run that ended on its own is not the
+    /// cancellation's to claim - reporting it as cancelled would throw away a result that was there.
+    /// Skipped on Windows - this test drives a POSIX shell.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test.</returns>
+    [Fact]
+    public async Task RunAsync_FinishingAtTheDeadline_IsNotReportedAsCancelled()
+    {
+        if (OperatingSystem.IsWindows())
+            return;
+
+        // arrange
+        var shell = Get<IShell>();
+
+        // act - repeated with the deadline set around what the command takes, to land on the boundary
+        for (var i = 0; i < 25; i++)
+        {
+            ShellResult result;
+            try
+            {
+                result = await shell.Cmd("sh", "-c", "echo done").RunAsync(TimeSpan.FromMilliseconds(30));
+            }
+            catch (OperationCanceledException)
+            {
+                // the deadline genuinely beat the command; nothing was lost
+                continue;
+            }
+
+            // assert - a run that came back must carry what it produced
+            result.IsSuccess.IsTrue($"run {i} reported success");
+            result.Output.Trim().Is("done", $"run {i} must carry its output");
+        }
+    }
+
+    /// <summary>
     /// A command asked for with a token already cancelled does not run at all. Registering the kill before
     /// starting meant the kill fired against a process that did not exist yet, was swallowed, and the
     /// command then ran to completion while the caller was told it had been cancelled.

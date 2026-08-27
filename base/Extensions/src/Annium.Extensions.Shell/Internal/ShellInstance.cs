@@ -220,9 +220,14 @@ internal sealed class ShellInstance : IShellInstance, ILogSubject
 
         var tcs = new TaskCompletionSource<ShellResult>();
 
-        // as far as there's no way to know if process was killed or finished on it's own - track it manually.
-        // Written from the cancellation callback and read from the exit handler, so both go through Volatile
-        var killed = false;
+        // how the run ended, decided once by whichever of the two paths gets here first. Tracking "killed"
+        // separately from the exactly-once gate let the cancellation callback still claim a run that had
+        // already ended on its own, so a command finishing right on its deadline was reported as cancelled
+        // and its result thrown away
+        const int running = 0;
+        const int ended = 1;
+        const int killedByUs = 2;
+        var outcome = running;
 
         // gate for exactly-once HandleExit invocation; both the CT-registration callback
         // and the process.Exited event can fire concurrently — Interlocked.CompareExchange
@@ -250,6 +255,7 @@ internal sealed class ShellInstance : IShellInstance, ILogSubject
 
         process.Exited += (_, _) =>
         {
+            Interlocked.CompareExchange(ref outcome, ended, running);
             registration.Dispose();
             HandleExit();
         };
@@ -258,7 +264,11 @@ internal sealed class ShellInstance : IShellInstance, ILogSubject
         // kill lands rather than being swallowed
         registration = ct.Register(() =>
         {
-            Volatile.Write(ref killed, true);
+            // the process may have ended on its own between the deadline elapsing and this running: it is
+            // then not ours to kill, and not ours to report as cancelled either
+            if (Interlocked.CompareExchange(ref outcome, killedByUs, running) != running)
+                return;
+
             this.Trace<string>("Kill process {command} due token cancellation", GetCommand(process));
             try
             {
@@ -319,9 +329,7 @@ internal sealed class ShellInstance : IShellInstance, ILogSubject
                 // the task first let RunAsync's `using` dispose the very same process from its own thread
                 // while this one was still disposing it. A later, sequential second Dispose from that
                 // `using` is harmless — two concurrent ones are not
-                // read once and used for both decisions below: read twice, a cancellation landing between
-                // them would discard a result that had already been taken from a run that finished
-                var wasKilled = Volatile.Read(ref killed);
+                var wasKilled = Volatile.Read(ref outcome) == killedByUs;
                 var result = wasKilled ? null : GetResult(process.ExitCode, stdout, stderr);
 
                 try
