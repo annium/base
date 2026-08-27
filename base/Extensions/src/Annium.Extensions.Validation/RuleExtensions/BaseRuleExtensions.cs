@@ -35,7 +35,7 @@ public static class BaseRuleExtensions
         );
 
     /// <summary>
-    /// Validates that a nullable value type field has a value and is not the default value
+    /// Validates that a nullable value type field has a value and that the value is not the default one
     /// </summary>
     /// <typeparam name="TValue">The type of the value being validated</typeparam>
     /// <typeparam name="TField">The value type of the field being validated</typeparam>
@@ -50,7 +50,9 @@ public static class BaseRuleExtensions
         rule.Add(
             (context, value) =>
             {
-                if (value.HasValue && AreEqual(value, default(TField)))
+                // no value at all is the plainest way for a required field to be missing, and it used to be
+                // the one case this rule let through - accepting null while rejecting a present 0
+                if (!value.HasValue || AreEqual(value, default(TField)))
                     context.Error(string.IsNullOrEmpty(message) ? "Value is required" : message);
             }
         );
