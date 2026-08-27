@@ -13,6 +13,24 @@ namespace Annium.Extensions.CommandLine.Tests;
 public class CliTests
 {
     /// <summary>
+    /// Stepping the cursor back over a mask that wrapped goes up a row, rather than asking the console for
+    /// a column it does not have. A flat column counter is what a masked prompt naively keeps, and it walks
+    /// straight past the buffer width as soon as the secret is longer than the terminal is wide.
+    /// </summary>
+    [Fact]
+    public void StepBack_FromWrappedColumn_GoesUpARow()
+    {
+        // arrange & act & assert - within a row, it is just the previous column
+        Cli.StepBack(5, 3, 80).Is((4, 3));
+
+        // at the start of a row, it is the last column of the row above
+        Cli.StepBack(0, 3, 80).Is((79, 2));
+
+        // at the very start of the buffer there is nowhere to go, and asking for one would throw
+        Cli.StepBack(0, 0, 80).Is((0, 0));
+    }
+
+    /// <summary>
     /// Colors set for the duration of a write are put back afterwards, so a coloured line does not tint
     /// everything printed after it.
     /// </summary>
