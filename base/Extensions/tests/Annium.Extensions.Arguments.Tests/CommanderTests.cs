@@ -243,6 +243,69 @@ public class CommanderTests : TestBase
     }
 
     /// <summary>
+    /// The async command family dispatches like the synchronous one. Each arity hand-repeats the same
+    /// steps in its own file, so nothing keeps the four in step with their four counterparts but tests.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public async Task RunAsync_AsyncCommand_RunsItWithItsOptions()
+    {
+        // arrange
+        var trace = Get<Trace>();
+
+        // act
+        await Commander.RunAsync<AsyncGroup>(
+            Provider,
+            ["greet-async", "-name", "world"],
+            TestContext.Current.CancellationToken
+        );
+
+        // assert
+        trace.Calls.Has(1).At(0).Is("async greet world");
+    }
+
+    /// <summary>
+    /// And an async command built from two configuration types binds both.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public async Task RunAsync_AsyncCommandWithTwoConfigurations_BindsBoth()
+    {
+        // arrange
+        var trace = Get<Trace>();
+
+        // act
+        await Commander.RunAsync<AsyncGroup>(
+            Provider,
+            ["pair-async", "here", "-name", "world"],
+            TestContext.Current.CancellationToken
+        );
+
+        // assert
+        trace.Calls.Has(1).At(0).Is("async pair here world");
+    }
+
+    /// <summary>
+    /// Asking an async command for help prints its usage rather than running it.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public async Task RunAsync_AsyncCommandWithHelp_PrintsItsUsage()
+    {
+        // arrange
+        var trace = Get<Trace>();
+
+        // act
+        var output = await CaptureAsync(() =>
+            Commander.RunAsync<AsyncGroup>(Provider, ["greet-async", "-help"], TestContext.Current.CancellationToken)
+        );
+
+        // assert
+        trace.Calls.IsEmpty("asking for help must not run the command");
+        output.Contains("greet-async").IsTrue("the usage line must name the command");
+    }
+
+    /// <summary>
     /// Runs the given call with the console redirected, and returns what it printed.
     /// </summary>
     /// <param name="act">The call to run.</param>
@@ -739,5 +802,117 @@ public class DivergentGroup : Group, ICommandDescriptor
     public DivergentGroup()
     {
         Add<DivergentCommand>();
+    }
+}
+
+/// <summary>
+/// Async counterpart of the greet command.
+/// </summary>
+public class AsyncGreetCommand : AsyncCommand<GreetConfiguration>, ICommandDescriptor
+{
+    /// <summary>
+    /// Gets the identifier this command is invoked by.
+    /// </summary>
+    public static string Id => "greet-async";
+
+    /// <summary>
+    /// Gets the description of this command.
+    /// </summary>
+    public static string Description => "greets someone, eventually";
+
+    /// <summary>
+    /// The trace this command records into.
+    /// </summary>
+    private readonly Trace _trace;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AsyncGreetCommand"/> class.
+    /// </summary>
+    /// <param name="trace">The trace to record into.</param>
+    public AsyncGreetCommand(Trace trace)
+    {
+        _trace = trace;
+    }
+
+    /// <summary>
+    /// Records the greeting.
+    /// </summary>
+    /// <param name="cfg">The command configuration.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    public override Task HandleAsync(GreetConfiguration cfg, CancellationToken ct)
+    {
+        _trace.Add($"async greet {cfg.Name}");
+
+        return Task.CompletedTask;
+    }
+}
+
+/// <summary>
+/// Async command taking two configuration types.
+/// </summary>
+public class AsyncPairCommand : AsyncCommand<WhereConfiguration, GreetConfiguration>, ICommandDescriptor
+{
+    /// <summary>
+    /// Gets the identifier this command is invoked by.
+    /// </summary>
+    public static string Id => "pair-async";
+
+    /// <summary>
+    /// Gets the description of this command.
+    /// </summary>
+    public static string Description => "takes two configurations, eventually";
+
+    /// <summary>
+    /// The trace this command records into.
+    /// </summary>
+    private readonly Trace _trace;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AsyncPairCommand"/> class.
+    /// </summary>
+    /// <param name="trace">The trace to record into.</param>
+    public AsyncPairCommand(Trace trace)
+    {
+        _trace = trace;
+    }
+
+    /// <summary>
+    /// Records both halves.
+    /// </summary>
+    /// <param name="where">The positional half.</param>
+    /// <param name="greet">The option half.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    public override Task HandleAsync(WhereConfiguration where, GreetConfiguration greet, CancellationToken ct)
+    {
+        _trace.Add($"async pair {where.Where} {greet.Name}");
+
+        return Task.CompletedTask;
+    }
+}
+
+/// <summary>
+/// A group holding the async commands.
+/// </summary>
+public class AsyncGroup : Group, ICommandDescriptor
+{
+    /// <summary>
+    /// Gets the identifier of this group.
+    /// </summary>
+    public static string Id => string.Empty;
+
+    /// <summary>
+    /// Gets the description of this group.
+    /// </summary>
+    public static string Description => "a group of async commands";
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AsyncGroup"/> class.
+    /// </summary>
+    public AsyncGroup()
+    {
+        Add<AsyncGreetCommand>();
+        Add<AsyncPairCommand>();
     }
 }
