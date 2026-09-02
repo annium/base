@@ -93,23 +93,15 @@ public static class AsResponseExtensions
         if (response.IsAbort)
             return new HttpResponse<OneOf<TSuccess, TFailure?>>(response, default(TFailure));
 
-        try
-        {
-            var success = await ContentParser.ParseAsync<TSuccess>(request.GetSerializer(), response.Content);
-            if (!Equals(success, default(TSuccess)))
-                return new HttpResponse<OneOf<TSuccess, TFailure?>>(response, success);
+        var (success, successParsed, _) = await TryParseAsync<TSuccess>(request, response);
+        if (successParsed)
+            return new HttpResponse<OneOf<TSuccess, TFailure?>>(response, success);
 
-            var failure = await ContentParser.ParseAsync<TFailure>(request.GetSerializer(), response.Content);
-            if (!Equals(failure, default(TFailure)))
-                return new HttpResponse<OneOf<TSuccess, TFailure?>>(response, failure);
+        var (failure, failureParsed, _) = await TryParseAsync<TFailure>(request, response);
+        if (failureParsed)
+            return new HttpResponse<OneOf<TSuccess, TFailure?>>(response, failure);
 
-            return new HttpResponse<OneOf<TSuccess, TFailure?>>(response, default(TFailure));
-        }
-        catch (Exception e)
-        {
-            request.Error(e);
-            return new HttpResponse<OneOf<TSuccess, TFailure?>>(response, default(TFailure));
-        }
+        return new HttpResponse<OneOf<TSuccess, TFailure?>>(response, default(TFailure));
     }
 
     /// <summary>
@@ -141,27 +133,58 @@ public static class AsResponseExtensions
                 await getFailure(HttpFailureReason.Abort, response, null)
             );
 
+        var (success, successParsed, successError) = await TryParseAsync<TSuccess>(request, response);
+        if (successParsed)
+            return new HttpResponse<OneOf<TSuccess, TFailure>>(response, success);
+
+        var (failure, failureParsed, failureError) = await TryParseAsync<TFailure>(request, response);
+        if (failureParsed)
+            return new HttpResponse<OneOf<TSuccess, TFailure>>(response, failure);
+
+        // neither shape read. An exception from either attempt is the more specific answer, and the
+        // success one is reported in preference because it is the shape the caller asked for
+        var error = successError ?? failureError;
+
+        return new HttpResponse<OneOf<TSuccess, TFailure>>(
+            response,
+            error is null
+                ? await getFailure(HttpFailureReason.Parse, response, null)
+                : await getFailure(HttpFailureReason.Exception, response, error)
+        );
+    }
+
+    /// <summary>
+    /// Attempts to read the response body as <typeparamref name="T"/>, reporting whether it produced
+    /// anything and what stopped it if not.
+    /// </summary>
+    /// <remarks>
+    /// Each shape of a union is tried independently, and that is the point of this method existing. Parsing
+    /// them in one <c>try</c> meant a throw on the first abandoned the second: a body that is an error
+    /// object, against a success type that is a collection, threw and the error shape was never read - so
+    /// the caller was told the response could not be parsed while the server had said plainly what was
+    /// wrong. The two shapes are alternatives; failing to be one is not a reason to stop asking about the
+    /// other.
+    /// </remarks>
+    /// <typeparam name="T">The type to read the body as.</typeparam>
+    /// <param name="request">The request, used for its serializer and to log a failed attempt.</param>
+    /// <param name="response">The response whose body is read.</param>
+    /// <returns>The value, whether it parsed into something other than its default, and any exception raised.</returns>
+    private static async Task<(T Value, bool Parsed, Exception? Error)> TryParseAsync<T>(
+        IHttpRequest request,
+        IHttpResponse response
+    )
+    {
         try
         {
-            var success = await ContentParser.ParseAsync<TSuccess>(request.GetSerializer(), response.Content);
-            if (!Equals(success, default(TSuccess)))
-                return new HttpResponse<OneOf<TSuccess, TFailure>>(response, success);
+            var value = await ContentParser.ParseAsync<T>(request.GetSerializer(), response.Content);
 
-            var failure = await ContentParser.ParseAsync<TFailure>(request.GetSerializer(), response.Content);
-            if (!Equals(failure, default(TFailure)))
-                return new HttpResponse<OneOf<TSuccess, TFailure>>(response, failure);
-
-            return new HttpResponse<OneOf<TSuccess, TFailure>>(
-                response,
-                await getFailure(HttpFailureReason.Parse, response, null)
-            );
+            return (value, !Equals(value, default(T)), null);
         }
         catch (Exception e)
         {
-            return new HttpResponse<OneOf<TSuccess, TFailure>>(
-                response,
-                await getFailure(HttpFailureReason.Exception, response, e)
-            );
+            request.Error(e);
+
+            return (default!, false, e);
         }
     }
 }

@@ -314,4 +314,85 @@ public class HttpRequestTests : TestBase
 
         this.Trace("done");
     }
+
+    /// <summary>
+    /// A union reads the failure shape even when the success shape throws while being read.
+    /// </summary>
+    /// <remarks>
+    /// The two shapes are alternatives, and failing to be one is not a reason to stop asking about the
+    /// other. They used to be parsed inside one try, so a throw on the success attempt abandoned the
+    /// failure attempt with it - and a body that is an error object, against a success type that is a
+    /// collection, throws every time. The caller was told the response could not be parsed while the
+    /// server had said plainly what was wrong.
+    /// </remarks>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact]
+    public async Task AsResponse_Union_ReadsTheFailureWhenTheSuccessShapeThrows()
+    {
+        this.Trace("start");
+
+        // arrange - an error object, against a success type that can only be an array
+        await using var server = RunServer(
+            async (_, response) =>
+            {
+                var payload = Encoding.UTF8.GetBytes(@"{""code"":-2015,""msg"":""Invalid API-key.""}");
+                response.StatusCode = (int)HttpStatusCode.Unauthorized;
+                response.ContentType = "application/json";
+                response.ContentLength64 = payload.Length;
+                await response.OutputStream.WriteAsync(payload);
+            }
+        );
+
+        // act
+        var response = await _httpRequestFactory
+            .New(server.HttpUri())
+            .Get("/")
+            .AsResponseAsync<int[], Failure>(TestContext.Current.CancellationToken);
+
+        // assert
+        response.Data.IsT1.IsTrue("the failure shape must be read even though the success shape threw");
+        response.Data.AsT1.NotNull().Code.Is(-2015);
+        response.Data.AsT1.NotNull().Msg.Is("Invalid API-key.");
+
+        this.Trace("done");
+    }
+
+    /// <summary>
+    /// A body that is neither shape still reports as neither, rather than being forced into one.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact]
+    public async Task AsResponse_Union_ReadsNeitherWhenTheBodyIsNeither()
+    {
+        this.Trace("start");
+
+        // arrange
+        await using var server = RunServer(
+            async (_, response) =>
+            {
+                var payload = Encoding.UTF8.GetBytes(@"""just a string""");
+                response.StatusCode = (int)HttpStatusCode.BadRequest;
+                response.ContentType = "application/json";
+                response.ContentLength64 = payload.Length;
+                await response.OutputStream.WriteAsync(payload);
+            }
+        );
+
+        // act
+        var response = await _httpRequestFactory
+            .New(server.HttpUri())
+            .Get("/")
+            .AsResponseAsync<int[], Failure>(TestContext.Current.CancellationToken);
+
+        // assert
+        response.Data.IsT1.IsTrue();
+        response.Data.AsT1.IsDefault("a body matching neither shape must not be presented as either");
+
+        this.Trace("done");
+    }
+
+    /// <summary>An error payload shaped the way many APIs report one.</summary>
+    /// <param name="Code">The provider's own error code.</param>
+    /// <param name="Msg">The provider's own error message.</param>
+    private sealed record Failure(int Code, string Msg);
 }
