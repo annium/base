@@ -6,7 +6,7 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="../Annium.Analyzers/Annium.Analyzers.csproj" OutputItemType="Analyzer" />
+    <ProjectReference Include="../Annium.Analyzers/Annium.Analyzers.csproj" OutputItemType="Analyzer" PrivateAssets="all" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="NodaTime" />
