@@ -9,15 +9,18 @@
     <PackageVersion Include="MessagePack" Version="3.1.8" />
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing.XUnit" Version="1.1.2" />
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.CodeFix.Testing.XUnit" Version="1.1.2" />
-    <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="5.0.0" />
-    <!-- Annium.Analyzers is loaded by the compiler that ships with the SDK, so this cannot move ahead
-         of that compiler's own Roslyn version: 5.9.0 builds, then every consuming project fails with
-         CS9057 ("references version 5.9.0.0 of the compiler, which is newer than 5.0.0.0"). Raise it
-         only together with the SDK, and leave it behind when `xs update all` offers to bump it. -->
-    <!-- Held at the Roslyn version the SDK's compiler runs. Annium.Analyzers is loaded by that compiler,
-         and an analyzer built against a newer one is refused outright: "cannot be used because it
-         references version X of the compiler, which is newer than the currently running version Y".
-         `xs update` has no way to exclude a package, so it raises this every time - put it back. -->
+    <!-- Held at the Roslyn version the SDK's compiler runs, and the one entry in this file that must not
+         be bumped on its own. Annium.Analyzers is loaded by that compiler, and an analyzer built against a
+         newer one is refused outright: 5.9.0 builds here, then every consuming project fails with CS9057
+         ("references version 5.9.0.0 of the compiler, which is newer than 5.0.0.0"). Raise it only
+         together with the SDK. `xs update` has no way to exclude a package, so it offers the bump every
+         time - put it back.
+
+         This is the only Microsoft.CodeAnalysis.* entry the pin belongs on: Annium.Analyzers is the sole
+         project referencing any of them directly, and it references Workspaces. A sibling pin on
+         Microsoft.CodeAnalysis.CSharp sat here carrying the same comment while no project asked for that
+         package at all - inert under central package management, and misleading about where the ceiling
+         actually applies. -->
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="5.0.0" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.11" />
     <PackageVersion Include="Microsoft.Extensions.DependencyModel" Version="10.0.11" />
